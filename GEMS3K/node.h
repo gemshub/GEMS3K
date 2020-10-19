@@ -63,6 +63,7 @@
 #include "datach.h"
 #include "databr.h"
 #include "activities.h"
+#include "gems3k_impex.h"
 
 class TActivity;
 class TKinetics;
@@ -157,7 +158,7 @@ protected:
     ///  Reads the contents of the work instance of the DATABR structure from a disk file with path name dbr_file.
     ///   \param dbr_file  string containing a full path to the DBR disk file to be read.
     ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
-    void  read_dbr_format_file( const std::string& dbr_file, int type_f );
+    void  read_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f );
 
     /// Writes the contents of the work instance of the DATABR structure into a disk file with path name  dbr_file.
     ///   \param dbr_file  string containing a full path to the DBR disk file to be read.
@@ -166,7 +167,37 @@ protected:
     ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
     ///                 If   false (0), comments will not be written.
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
-    void  write_dbr_format_file( const std::string& dbr_file, int type_f, bool with_comments, bool brief_mode );
+    void  write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode );
+
+
+    ///  Reads the contents of the work instance of the DATABR structure from a stream.
+    ///   \param stream    string or file stream.
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    void  read_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f );
+
+    /// Writes the contents of the work instance of the DATABR structure into a stream.
+    ///   \param stream    string or file stream.
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
+    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
+    ///                 If   false (0), comments will not be written.
+    ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+    void  write_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode ) const;
+
+    ///  Reads the contents of the work instance of the DATACH structure from a stream.
+    ///   \param stream    string or file stream.
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    void  read_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f );
+
+    /// Writes the contents of the work instance of the DATACH structure into a stream.
+    ///   \param stream    string or file stream.
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
+    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
+    ///                 If   false (0), comments will not be written.
+    ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+    void  write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode ) const;
+
 
     // Methods to perform output to vtk files
 
@@ -558,7 +589,7 @@ long int GEM_step_MT( const long int step )
 /// \param fname     Null-terminated (C) string containing a full path to the input DBR disk file.
 /// \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2)
 /// \return  0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred.
-   long int GEM_read_dbr( const char* fname, int  type_f );
+   long int GEM_read_dbr( const char* fname, GEMS3KGenerator::IOModes type_f );
 
 /// (2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure
 ///   and metastability constraints provided in the work instance of DATABR structure.
@@ -596,7 +627,7 @@ long int GEM_step_MT( const long int step )
 ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
 ///                 If   false (0), comments will not be written.
 ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
-   void  GEM_write_dbr( const char* fname, int  type_f=0,
+   void  GEM_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f,
 		                  bool with_comments = true, bool brief_mode = false);
 
 /// (4) Produces a formatted text file with detailed contents (scalars and arrays) of the GEM IPM work structure.

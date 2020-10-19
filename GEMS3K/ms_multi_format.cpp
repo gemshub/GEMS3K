@@ -172,11 +172,6 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
     char PSigm;
     get_PAalp_PSigm( PAalp, PSigm);
 
-//#ifndef USE_OLD_KV_IO_FILES
-//    io_formats::NlohmannJsonWrite out_format( ff );
-//#else
-//    io_formats::KeyValueWrite out_format( ff );
-//#endif
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
     io_formats::TPrintArrays<TIO>  prar( 80, MULTI_dynamic_fields, out_format );
 
@@ -646,12 +641,6 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     pm.PLIM  = 1;
 
     // static arrays
-//#ifndef USE_OLD_KV_IO_FILES
-//    io_formats::NlohmannJsonRead in_format( ff1 );
-//#else
-//    io_formats::KeyValueRead in_format( ff1 );
-//#endif
-
     io_formats::TReadArrays<TIO> rdar( 8, MULTI_static_fields, in_format);
     rdar.readNext( "ID_key");
     rdar.readArray( "ID_key", pm.stkey,  1, EQ_RKLEN);
@@ -1186,34 +1175,88 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 std::string TMultiBase::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
 {
     std::stringstream ss;
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonWrite out_format( ss );
-#else
-    io_formats::KeyValueWrite out_format( ss );
-#endif
-    to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
+    write_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, addMui, with_comments, brief_mode );
     return ss.str();
 }
 
 /// Reads Multi structure from a json/key-value string
 bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH )
 {
+    if( data.empty() )
+        return false;
+
     std::stringstream ss;
     ss.str(data);
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonRead in_format( ss );
-#else
-    io_formats::KeyValueRead in_format( ss );
-#endif
-    from_text_file_gemipm( in_format, dCH );
+    read_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, dCH );
     return true;
 }
 
+void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes  type_f, DATACH  *dCH  )
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+        break;
+    case GEMS3KGenerator::f_nlohmanjson:
+#ifndef USE_OLD_KV_IO_FILES
+    {
+        io_formats::NlohmannJsonRead in_format( stream );
+        from_text_file_gemipm( in_format, dCH );
+    }
+        break;
+#endif
+    case GEMS3KGenerator::f_json:
+    {
+        io_formats::SimdJsonRead in_format( stream );
+        from_text_file_gemipm( in_format, dCH );
+    }
+        break;
+    case GEMS3KGenerator::f_key_value:
+    {
+        io_formats::KeyValueRead in_format( stream );
+        from_text_file_gemipm( in_format, dCH );
+    }
+        break;
+    }
+}
+
+void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
+                                           bool addMui, bool with_comments, bool brief_mode )
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+        break;
+    case GEMS3KGenerator::f_nlohmanjson:
+#ifndef USE_OLD_KV_IO_FILES
+    {
+        io_formats::NlohmannJsonWrite out_format( stream );
+        to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
+    }
+        break;
+#endif
+    case GEMS3KGenerator::f_json:
+    {
+        io_formats::SimdJsonWrite out_format( stream );
+        to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
+    }
+        break;
+    case GEMS3KGenerator::f_key_value:
+    {
+        io_formats::KeyValueWrite out_format( stream );
+        to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
+    }
+        break;
+    }
+}
+
+
 #ifndef USE_OLD_KV_IO_FILES
 template void TMultiBase::from_text_file_gemipm<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& in_format,  DATACH  *dCH );
-template void TMultiBase::from_text_file_gemipm<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& in_format,  DATACH  *dCH );
 template void TMultiBase::to_text_file_gemipm<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 #endif
+template void TMultiBase::from_text_file_gemipm<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& in_format,  DATACH  *dCH );
+template void TMultiBase::to_text_file_gemipm<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 template void TMultiBase::from_text_file_gemipm<io_formats::KeyValueRead>( io_formats::KeyValueRead& in_format,  DATACH  *dCH );
 template void TMultiBase::to_text_file_gemipm<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 

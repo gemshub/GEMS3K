@@ -24,10 +24,9 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#ifndef USE_OLD_KV_IO_FILES
 
 #include "io_simdjson.h"
-#include "simdjson.cpp"
+#include "simdjson/simdjson.cpp"
 #include "v_detail.h"
 
 
@@ -67,10 +66,10 @@ io_formats::SimdJsonRead::SimdJsonRead(std::iostream &ff): json_data()
     buffer << ff.rdbuf();
     auto input_str = buffer.str();
 
-    simdjson::dom::parser parser;
     auto error = parser.parse(input_str).get(json_data); // do the parsing
     test_simdjson_error( error );
     json_it = json_data.begin();
+//    std::cout <<  json_data << std::endl;
 }
 
 bool SimdJsonRead::has_next(std::string &next_field_name)
@@ -78,8 +77,9 @@ bool SimdJsonRead::has_next(std::string &next_field_name)
     next_field_name.clear();
     if( json_it != json_data.end() )
     {
-        next_field_name = json_it.key();
-        trim(next_field_name, "<>");
+        auto key = json_it.key();
+        next_field_name = std::string( key.begin(), key.end() );
+        //trim(next_field_name, "<>");
         json_it++;
         return true;
     }
@@ -138,4 +138,3 @@ void SimdJsonRead::read_array(const std::string &field_name, std::vector<double>
 
 }  // io_formats
 
-#endif

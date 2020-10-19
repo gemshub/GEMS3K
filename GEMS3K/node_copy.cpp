@@ -28,14 +28,13 @@
 #include  <iomanip>
 #include  <iostream>
 #include  <sstream>
-#include "v_detail.h"
 #include "node.h"
-#include "gdatastream.h"
 #include "num_methods.h"
+#include "gdatastream.h"
 #include "io_keyvalue.h"
 #include "io_nlohmann.h"
 #include "io_simdjson.h"
-#include "gems3k_impex.h"
+#include "v_detail.h"
 
 // Writes CSD (DATACH structure) to a json/key-value string
 // \param brief_mode - Do not write data items that contain only default values
@@ -43,26 +42,19 @@
 std::string TNode::datach_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonWrite out_format( ss );
-#else
-    io_formats::KeyValueWrite out_format( ss );
-#endif
-    datach_to_text_file( out_format, with_comments, brief_mode );
+    write_dch_format_stream( ss, GEMS3KGenerator::default_type_f, with_comments, brief_mode );
     return ss.str();
 }
 
 // Reads CSD (DATACH structure) from a json/key-value string
 bool TNode::datach_from_string( const std::string& data )
 {
+    if( data.empty() )
+        return false;
+
     std::stringstream ss;
     ss.str(data);
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonRead in_format( ss );
-#else
-    io_formats::KeyValueRead in_format( ss );
-#endif
-    datach_from_text_file( in_format );
+    read_dch_format_stream( ss, GEMS3KGenerator::default_type_f );
     return true;
 }
 
@@ -72,12 +64,7 @@ bool TNode::datach_from_string( const std::string& data )
 std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonWrite out_format( ss );
-#else
-    io_formats::KeyValueWrite out_format( ss );
-#endif
-    databr_to_text_file( out_format, with_comments, brief_mode );
+    write_dbr_format_stream( ss, GEMS3KGenerator::default_type_f, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -89,74 +76,165 @@ bool TNode::databr_from_string( const std::string& data )
 
     std::stringstream ss;
     ss.str(data);
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonRead in_format( ss );
-#else
-    io_formats::KeyValueRead in_format( ss );
-#endif
-    databr_from_text_file( in_format );
+    read_dbr_format_stream( ss, GEMS3KGenerator::default_type_f );
     return true;
 }
 
-
-void  TNode::read_dbr_format_file( const std::string& dbr_file, int type_f )
+void  TNode::read_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes  type_f )
 {
     switch( type_f )
     {
-    case GEMS3KImpexGenerator::f_binary:
+    case GEMS3KGenerator::f_binary:
     {
         GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
         databr_from_file(in_br);
     }
         break;
-    case GEMS3KImpexGenerator::f_json:
-#ifndef USE_OLD_KV_IO_FILES
+    default:
     {
         std::fstream in_br( dbr_file, std::ios::in );
         ErrorIf( !in_br.good() , dbr_file, "DBR_DAT fileopen error");
-        //io_formats::NlohmannJsonRead in_format( in_br );
-        io_formats::SimdJsonRead in_format( in_br );
-        databr_from_text_file(in_format);
-    }
-        break;
-#endif
-    case GEMS3KImpexGenerator::f_key_value:
-    {
-        std::fstream in_br( dbr_file, std::ios::in );
-        ErrorIf( !in_br.good() , dbr_file, "DBR_DAT fileopen error");
-        io_formats::KeyValueRead in_format( in_br );
-        databr_from_text_file(in_format);
+        read_dbr_format_stream( in_br, type_f );
     }
         break;
     }
-
 }
 
-void  TNode::write_dbr_format_file( const std::string& dbr_file, int type_f,
+void  TNode::write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f,
                                     bool with_comments, bool brief_mode )
 {
     switch( type_f )
     {
-    case GEMS3KImpexGenerator::f_binary:
+    case GEMS3KGenerator::f_binary:
     {
         GemDataStream  f_br( dbr_file, std::ios::out|std::ios::binary );
         databr_to_file(f_br);
     }
         break;
-    case GEMS3KImpexGenerator::f_json:
-#ifndef USE_OLD_KV_IO_FILES
+    default:
     {
         std::fstream  f_br( dbr_file, std::ios::out);
-        io_formats::NlohmannJsonWrite out_format( f_br );
+        write_dbr_format_stream( f_br, type_f, with_comments, brief_mode );
+    }
+        break;
+    }
+}
+
+void  TNode::read_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes  type_f )
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+        break;
+    case GEMS3KGenerator::f_nlohmanjson:
+#ifndef USE_OLD_KV_IO_FILES
+    {
+        io_formats::NlohmannJsonRead in_format( stream );
+        databr_from_text_file(in_format);
+    }
+        break;
+#endif
+    case GEMS3KGenerator::f_json:
+    {
+        io_formats::SimdJsonRead in_format( stream );
+        databr_from_text_file(in_format);
+    }
+        break;
+    case GEMS3KGenerator::f_key_value:
+    {
+        io_formats::KeyValueRead in_format( stream );
+        databr_from_text_file(in_format);
+    }
+        break;
+    }
+}
+
+
+void  TNode::write_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
+                                    bool with_comments, bool brief_mode ) const
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+        break;
+    case GEMS3KGenerator::f_nlohmanjson:
+#ifndef USE_OLD_KV_IO_FILES
+    {
+        io_formats::NlohmannJsonWrite out_format( stream );
         databr_to_text_file( out_format, with_comments, brief_mode );
     }
         break;
 #endif
-    case GEMS3KImpexGenerator::f_key_value:
+    case GEMS3KGenerator::f_json:
     {
-        std::fstream  f_br( dbr_file, std::ios::out);
-        io_formats::KeyValueWrite out_format( f_br );
+        io_formats::SimdJsonWrite out_format( stream );
         databr_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+    case GEMS3KGenerator::f_key_value:
+    {
+        io_formats::KeyValueWrite out_format( stream );
+        databr_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+    }
+}
+
+void  TNode::read_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes  type_f )
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+        break;
+    case GEMS3KGenerator::f_nlohmanjson:
+#ifndef USE_OLD_KV_IO_FILES
+    {
+        io_formats::NlohmannJsonRead in_format( stream );
+        datach_from_text_file(in_format);
+    }
+        break;
+#endif
+    case GEMS3KGenerator::f_json:
+    {
+        io_formats::SimdJsonRead in_format( stream );
+        datach_from_text_file(in_format);
+    }
+        break;
+    case GEMS3KGenerator::f_key_value:
+    {
+        io_formats::KeyValueRead in_format( stream );
+        datach_from_text_file(in_format);
+    }
+        break;
+    }
+}
+
+
+void  TNode::write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
+                                    bool with_comments, bool brief_mode ) const
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+        break;
+    case GEMS3KGenerator::f_nlohmanjson:
+#ifndef USE_OLD_KV_IO_FILES
+    {
+        io_formats::NlohmannJsonWrite out_format( stream );
+        datach_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+#endif
+    case GEMS3KGenerator::f_json:
+    {
+        io_formats::SimdJsonWrite out_format( stream );
+        datach_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+    case GEMS3KGenerator::f_key_value:
+    {
+        io_formats::KeyValueWrite out_format( stream );
+        datach_to_text_file( out_format, with_comments, brief_mode );
     }
         break;
     }
@@ -196,11 +274,11 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
     {
         //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
         //       "<DBR_DAT file1 name>" [ ...  "<DBR_DAT fileN name>"]
-        GEMS3KImpexGenerator generator( ipmfiles_lst_name );
+        GEMS3KGenerator generator( ipmfiles_lst_name );
 
         switch( generator.files_mode() )
         {
-        case GEMS3KImpexGenerator::f_binary:
+        case GEMS3KGenerator::f_binary:
         {
             GemDataStream f_ch( generator.get_dch_path(), std::ios::in|std::ios::binary );
             datach_from_file(f_ch);
@@ -209,34 +287,15 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
             multi->read_multi(f_m, CSD);
         }
             break;
-        case GEMS3KImpexGenerator::f_json:
-#ifndef USE_OLD_KV_IO_FILES
+        default:
         {
             std::fstream f_ch( generator.get_dch_path(), std::ios::in );
             ErrorIf( !f_ch.good() , generator.get_dch_path(), "DCH_DAT fileopen error");
-            //io_formats::NlohmannJsonRead in_format( f_ch );
-            io_formats::SimdJsonRead in_format( f_ch );
-            datach_from_text_file(in_format);
+            read_dch_format_stream( f_ch, generator.files_mode() );
 
             std::fstream ff( generator.get_ipm_path(), std::ios::in );
             ErrorIf( !ff.good() , generator.get_ipm_path(), "Fileopen error");
-            //io_formats::NlohmannJsonRead in_ipm( ff );
-            io_formats::SimdJsonRead in_ipm( ff );
-            multi->from_text_file_gemipm( in_ipm, CSD);
-        }
-            break;
-#endif
-        case GEMS3KImpexGenerator::f_key_value:
-        {
-            std::fstream f_ch( generator.get_dch_path(), std::ios::in );
-            ErrorIf( !f_ch.good() , generator.get_dch_path(), "DCH_DAT fileopen error");
-            io_formats::KeyValueRead in_format( f_ch );
-            datach_from_text_file(in_format);
-
-            std::fstream ff( generator.get_ipm_path(), std::ios::in );
-            ErrorIf( !ff.good() , generator.get_ipm_path(), "Fileopen error");
-            io_formats::KeyValueRead in_ipm( ff );
-            multi->from_text_file_gemipm( in_ipm, CSD);
+            multi->read_ipm_format_stream( ff,generator.files_mode(), CSD);
         }
             break;
         }
@@ -350,7 +409,7 @@ void TNode::init_into_gems3k()
 //                 If   false (0), comments will not be written.
 //   brief_mode     if true (1), tells not to write data items that contain only default values.
 //
-void  TNode::GEM_write_dbr( const char* fname, int  type_f, bool with_comments, bool brief_mode )
+void  TNode::GEM_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode )
 {
     std::string str_file;
     if( fname == 0)
@@ -384,7 +443,7 @@ void  TNode::GEM_print_ipm( const char* fname )
 //    fname       Null-terminated (C) string containing a full path to the input DBR disk file.
 //    binary_f    Flag defining whether the file specified in fname is in text fromat (false or 0, default) or in binary format (true or 1)
 // Return values:     0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred.
-long int  TNode::GEM_read_dbr( const char* fname, int  type_f )
+long int  TNode::GEM_read_dbr( const char* fname, GEMS3KGenerator::IOModes type_f )
 {
     try
     {

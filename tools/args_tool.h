@@ -1,22 +1,11 @@
-#ifndef GEMS3K_IMPEX_H
-#define GEMS3K_IMPEX_H
-
-#include "sstream"
-#include "v_detail.h"
-
+#pragma once
+#include "gems3k_impex.h"
 
 /// Descripton of data to generate MULTI, DATACH and DATABR files structure prepared from GEMS.
 class GEMS3KImpexData
 {
 
 public:
-
-    /// These are used io formats
-    enum FileIOModes {
-        f_key_value,
-        f_binary,
-        f_json
-    };
 
     /// IPM work structure file path&name
     std::string ipmfiles_lst_name;
@@ -25,7 +14,7 @@ public:
     long int nIV = 1;
 
     /// Write IPM, DCH and DBR files in binary, txt or json mode)
-    FileIOModes io_mode = f_json;
+    GEMS3KGenerator::IOModes io_mode = GEMS3KGenerator::f_json;
 
     /// Do not write data items that contain only default values
     bool brief_mode = false;
@@ -42,6 +31,3 @@ public:
 
 };
 
-
-
-#endif // GEMS3K_IMPEX_H

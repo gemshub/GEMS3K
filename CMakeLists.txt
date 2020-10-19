@@ -71,6 +71,8 @@ endif()
 # Set the jsonio14 source directory path
 set(GEMS3K_SOURCE_DIR ${CMAKE_SOURCE_DIR}/GEMS3K)
 set(GEMS3K_HEADER_DIR ${CMAKE_SOURCE_DIR}/GEMS3K)
+include_directories(${GEMS3K_HEADER_DIR})
+include_directories(${CMAKE_SOURCE_DIR})
 
 # Set the include directories
 include_directories(${GEMS3K_HEADER_DIR})

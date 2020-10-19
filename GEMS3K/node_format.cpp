@@ -1277,9 +1277,13 @@ template void  TNode::databr_to_text_file<io_formats::NlohmannJsonWrite>( io_for
 template void  TNode::databr_from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
 template void  TNode::datach_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TNode::datach_from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
-template void  TNode::databr_from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format );
-template void  TNode::datach_from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format );
 #endif
+
+template void  TNode::databr_to_text_file<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TNode::databr_from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format );
+template void  TNode::datach_to_text_file<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TNode::datach_from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format );
+
 template void  TNode::databr_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TNode::databr_from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format );
 template void  TNode::datach_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode ) const;

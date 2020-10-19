@@ -41,6 +41,7 @@
 // TsorpMod and TKinMet
 #include "s_sorpmod.h"
 #include "s_kinmet.h"
+#include "gems3k_impex.h"
 
 class GemDataStream;
 
@@ -619,12 +620,29 @@ public:
                               bool with_comments = true, bool brief_mode = false );
     template<typename TIO>
     void from_text_file_gemipm( TIO& in_format,  DATACH  *dCH );
+
     /// Writes Multi to a json/key-value string
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries
     std::string gemipm_to_string( bool addMui, bool with_comments = true, bool brief_mode = false );
     /// Reads Multi structure from a json/key-value string
     bool gemipm_from_string( const std::string& data,  DATACH  *dCH );
+
+    ///  Reads the contents of the work instance of the DATABR structure from a stream.
+    ///   \param stream    string or file stream.
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    void  read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, DATACH  *dCH );
+
+    /// Writes the contents of the work instance of the DATABR structure into a stream.
+    ///   \param stream    string or file stream.
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
+    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
+    ///                 If   false (0), comments will not be written.
+    ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+    void  write_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
+                                   bool addMui, bool with_comments, bool brief_mode );
+
     virtual void copyMULTI( const TMultiBase& otherMulti );
     void read_multi(GemDataStream &ff, DATACH *dCH);
     /// Writing structure MULTI (GEM IPM work structure) to binary file

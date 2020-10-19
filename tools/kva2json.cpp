@@ -117,14 +117,15 @@ void show_usage( const std::string &name )
     std::cout << "Usage: " << name << " [ option(s) ] -i|--import-from PATH_IMPORT  -e|--export-to PATH_EXPORT"
               << "\nRecalculate task and export to other mode\n"
               << "Options:\n"
-              << "\t-h,\t--help\t\tshow this help message\n"
+              << "\t-h,\t--help\t\tshow this help message\n\n"
                  // file type
-              << "\t-j,\t--json      \twrite IPM, DCH and DBR files in json mode (default) \n"
-              << "\t-t,\t--key-value \twrite IPM, DCH and DBR files in txt mode \n"
-              << "\t-b,\t--binary    \twrite IPM, DCH and DBR files in binary mode \n"
+              << "\t-j,\t--json        \twrite IPM, DCH and DBR files in json mode (default) \n"
+              << "\t-n,\t--nlohmanjson \twrite IPM, DCH and DBR files in json mode  \n"
+              << "\t-t,\t--key-value   \twrite IPM, DCH and DBR files in txt mode \n"
+              << "\t-b,\t--binary      \twrite IPM, DCH and DBR files in binary mode \n\n"
                  // method
-              << "\t-d,\t--brife    \tdo not write data items that contain only default values (default false) \n"
-              << "\t-c,\t--comments \twrite files with comments for all data entries ( in text mode ) (default false) \n\n"
+              << "\t-d,\t--brife       \tdo not write data items that contain only default values (default false) \n"
+              << "\t-c,\t--comments    \twrite files with comments for all data entries ( in text mode ) (default false) \n\n"
               << std::endl;
 }
 
@@ -142,15 +143,19 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImp
         }
         else if ((arg == "-j") || (arg == "--json"))
         {
-            export_data.io_mode = GEMS3KImpexData::f_json;
+            export_data.io_mode = GEMS3KGenerator::f_json;
+        }
+        else if ((arg == "-n") || (arg == "--nlohmanjson"))
+        {
+            export_data.io_mode = GEMS3KGenerator::f_json;
         }
         else if ((arg == "-t") || (arg == "--key-value"))
         {
-            export_data.io_mode = GEMS3KImpexData::f_key_value;
+            export_data.io_mode = GEMS3KGenerator::f_key_value;
         }
         else if ((arg == "-b") || (arg == "--binary"))
         {
-            export_data.io_mode = GEMS3KImpexData::f_binary;
+            export_data.io_mode = GEMS3KGenerator::f_binary;
         }
         else if ((arg == "-d") || (arg == "--brife"))
         {

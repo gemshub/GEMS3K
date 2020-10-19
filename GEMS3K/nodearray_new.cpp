@@ -397,7 +397,7 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
     {
         //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
         //       "<DBR_DAT file1 name>" [ ...  "<DBR_DAT fileN name>"]
-        GEMS3KImpexGenerator generator( ipmfiles_lst_name );
+        GEMS3KGenerator generator( ipmfiles_lst_name );
         // Reading DBR_DAT files from dbrfiles_lst_name
         if(  dbrfiles_lst_name )
             InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, generator.files_mode()  );
@@ -431,7 +431,7 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
 //   type_f    defines if the file is in binary format (1), in text format (0) or in json format (2)
 //-------------------------------------------------------------------
 void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
-                                 long int *nodeTypes, bool getNodT1, int type_f  )
+                                 long int *nodeTypes, bool getNodT1, GEMS3KGenerator::IOModes type_f  )
 {
     int i;
     std::string datachbr_fn;
@@ -500,7 +500,7 @@ void  TNodeArray::checkNodeArray(
 //
 //-------------------------------------------------------------------
 
-void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, int type_f )
+void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, GEMS3KGenerator::IOModes type_f )
 {
     replace( dbr_file, "dbr-0-","dbr-1-" );
     calcNode->read_dbr_format_file( dbr_file,  type_f );
@@ -514,12 +514,12 @@ void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, int type_f 
 // Writing dataCH, dataBR structure to binary/text files
 // and other necessary GEM2MT files
 std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, ProcessProgressFunction message,
-                                              long int nIV, int type_f, bool brief_mode, bool with_comments,
-                                              bool putNodT1, bool addMui )
+                                              long int nIV, GEMS3KGenerator::IOModes type_f, bool brief_mode,
+                                              bool with_comments,   bool putNodT1, bool addMui )
 {
     std::fstream fout_dat_lst;
     std::fstream fout_dbr_lst;
-    GEMS3KImpexGenerator generator( filepath, nIV, static_cast<GEMS3KImpexGenerator::FileIOModes>(type_f) );
+    GEMS3KGenerator generator( filepath, nIV, type_f );
 
     // open *-dat.lst
     fout_dat_lst.open( filepath, std::ios::out );
@@ -531,7 +531,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
 
     switch( generator.files_mode() )
     {
-    case GEMS3KImpexGenerator::f_binary:
+    case GEMS3KGenerator::f_binary:
     {
         GemDataStream  ff( generator.get_ipm_path(), std::ios::out|std::ios::binary );
         calcNode->multi->out_multi( ff  );
@@ -540,30 +540,14 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         calcNode->datach_to_file( f_ch);
     }
         break;
-    case GEMS3KImpexGenerator::f_json:
-#ifndef USE_OLD_KV_IO_FILES
+    default:
     {
         std::fstream ff( generator.get_ipm_path(), std::ios::out );
         ErrorIf( !ff.good(), generator.get_ipm_path(), "Fileopen error");
-        io_formats::NlohmannJsonWrite out_ipm( ff );
-        calcNode->multi->to_text_file_gemipm( out_ipm, addMui, with_comments, brief_mode );
+        calcNode->multi->write_ipm_format_stream( ff, generator.files_mode(), addMui, with_comments, brief_mode );
 
         std::fstream  f_ch( generator.get_dch_path(), std::ios::out);
-       io_formats::NlohmannJsonWrite out_format( f_ch );
-        calcNode->datach_to_text_file( out_format, with_comments, brief_mode );
-    }
-        break;
-#endif
-    case GEMS3KImpexGenerator::f_key_value:
-    {
-        std::fstream ff( generator.get_ipm_path(), std::ios::out );
-        ErrorIf( !ff.good(), generator.get_ipm_path(), "Fileopen error");
-        io_formats::KeyValueWrite out_ipm( ff );
-        calcNode->multi->to_text_file_gemipm( out_ipm, addMui, with_comments, brief_mode );
-
-        std::fstream  f_ch( generator.get_dch_path(), std::ios::out);
-        io_formats::KeyValueWrite out_format( f_ch );
-        calcNode->datach_to_text_file( out_format, with_comments, brief_mode );
+        calcNode->write_dch_format_stream( f_ch, generator.files_mode(), with_comments, brief_mode );
     }
         break;
     }
@@ -599,7 +583,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
 }
 
 
-void  TNodeArray::GEMS3k_write_dbr( const char* fname, int  type_f,
+void  TNodeArray::GEMS3k_write_dbr( const char* fname, GEMS3KGenerator::IOModes  type_f,
                                     bool with_comments, bool brief_mode )
 {
     calcNode->packDataBr();

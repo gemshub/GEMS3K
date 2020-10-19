@@ -146,12 +146,6 @@ public:
             out_format.write_comment( line );
     }
 
-    template < typename T >
-    void writeValue( const T& value )
-    {
-        out_format.writeValue( value );
-    }
-
     /// Writes long field to a text file.
     /// <flds[f_num].name> value
     /// \param with_comments - Write files with comments for all data entries

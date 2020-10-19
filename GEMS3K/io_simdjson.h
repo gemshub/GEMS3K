@@ -25,10 +25,9 @@
 
 #pragma once
 
-#ifndef USE_OLD_KV_IO_FILES
 
 #include <nlohmann/json.hpp>
-#include "simdjson.h"
+#include "simdjson/simdjson.h"
 #include <fstream>
 #include "verror.h"
 
@@ -66,12 +65,12 @@ public:
 
     void write_comment( const std::string&  ) {}
 
-    template < typename T >
-    void writeValue( const T& value )
-    {
-        if( json_data.is_array() )
-            json_data.push_back(value);
-    }
+//    template < typename T >
+//    void writeValue( const T& value )
+//    {
+//        if( json_data.is_array() )
+//            json_data.push_back(value);
+//    }
 
     /// Writes integral field to a json.
     template <class T>
@@ -139,21 +138,6 @@ public:
 class SimdJsonRead
 {
 
-    /// Internal structure of file data
-    simdjson::dom::object json_data;
-    simdjson::dom::object::iterator json_it;
-
-    std::string key( const std::string& name ) const
-    {
-        return name;
-    }
-
-    void test_simdjson_error( simdjson::error_code  error ) const
-    {
-        ErrorIf( error, std::string("SimdJson read error :") + std::to_string(error) ,
-                 simdjson::error_message(error) );
-    }
-
 public:
 
     /// Constructor
@@ -187,46 +171,12 @@ public:
 
         if( json_arr.type() != simdjson::dom::element_type::ARRAY &&  size==1 )
         {
-            error = json_arr.get<T>(*arr);
-            test_simdjson_error( error );
+            read_value( *arr, json_arr );
         }
         else
         {
             for( long int ii=0; ii<size; ++ii )
-            {
-                error = json_arr.at(ii).get<T>(arr[ii]);
-                // error if different size
-                test_simdjson_error( error );
-            }
-        }
-    }
-
-    /// Reads array from a TIO format.
-    void read_array(  const std::string& field_name, short* arr, long int size )
-    {
-        int64_t value;
-        std::string msg;
-        std::string jkey = key( field_name );
-        simdjson::dom::element json_arr;
-
-        auto error = json_data.at_key(jkey).get(json_arr);
-        test_simdjson_error( error );
-
-        if( json_arr.type() != simdjson::dom::element_type::ARRAY &&  size==1 )
-        {
-            error = json_arr.get<int64_t>(value);
-            *arr = value;
-            test_simdjson_error( error );
-        }
-        else
-        {
-            for( long int ii=0; ii<size; ++ii )
-            {
-                error = json_arr.at(ii).get<int64_t>(value);
-                arr[ii]  = value;
-                // error if different size
-                test_simdjson_error( error );
-            }
+                read_value( arr[ii], json_arr.at(ii) );
         }
     }
 
@@ -235,6 +185,44 @@ public:
 
     /// Reads double vector from a text file.
     void read_array( const std::string& name, std::vector<double> arr );
+
+protected:
+
+    // Internal structure of file data
+    simdjson::dom::parser parser;
+    simdjson::dom::object json_data;
+    simdjson::dom::object::iterator json_it;
+
+    std::string key( const std::string& name ) const
+    {
+        return name;
+    }
+
+    void test_simdjson_error( simdjson::error_code  error ) const
+    {
+        ErrorIf( error, std::string("SimdJson read error :") + std::to_string(error) ,
+                 simdjson::error_message(error) );
+    }
+
+    /// Reads array from a text file.
+    template <class T,
+              typename std::enable_if<std::is_integral<T>::value,T>::type* = nullptr>
+    void read_value( T&  arr_value, const simdjson::dom::element json_arr )
+    {
+        auto [ ival, error] = json_arr.get<int64_t>();
+        test_simdjson_error( error );
+        arr_value = static_cast<T>(ival);
+    }
+
+    /// Reads array from a text file.
+    template <class T,
+              typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+    void read_value( T& arr_value, const simdjson::dom::element json_arr )
+    {
+        auto [ dval, error] = json_arr.get<double>();
+        test_simdjson_error( error );
+        arr_value = static_cast<T>(dval);
+    }
 
 };
 
@@ -246,4 +234,3 @@ template <> void SimdJsonWrite::write_key_value( const std::string& field_name, 
 
 }  // io_formats
 
-#endif

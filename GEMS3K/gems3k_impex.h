@@ -1,32 +1,40 @@
-#ifndef GEMS3K_IMPEX_H
-#define GEMS3K_IMPEX_H
 
+#pragma once
 #include "vector"
-#include "v_detail.h"
+#include "string"
 
 /// Descripton of data to generate MULTI, DATACH and DATABR files structure prepared from GEMS.
-class GEMS3KImpexGenerator
+class GEMS3KGenerator
 {
 
 public:
 
     /// These are used io formats
-    enum FileIOModes {
+    enum IOModes {
         f_key_value,
         f_binary,
-        f_json
+        f_json,
+        f_nlohmanjson
     };
 
-    static std::string ext( FileIOModes type )
+    /// Default output/exchange file types
+    static IOModes default_type_f;
+
+    /// Default output/exchange file extension
+    static std::string default_ext()
+    {
+      return ext( default_type_f );
+    }
+
+    static std::string ext( IOModes type )
     {
         switch( type )
         {
         case f_binary:
             return "bin";
-#ifndef USE_OLD_KV_IO_FILES
+        case f_nlohmanjson:
         case f_json:
             return "json";
-#endif
         default:
         case f_key_value:
             break;
@@ -37,7 +45,7 @@ public:
     /// Constructor
     /// Reads MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// \param filepath - IPM work structure file path&name
-    explicit GEMS3KImpexGenerator(  const std::string& filepath ):
+    explicit GEMS3KGenerator(  const std::string& filepath ):
         ipmfiles_lst_name( filepath )
     {
         set_internal_data();
@@ -53,14 +61,14 @@ public:
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments -Write files with comments for all data entries ( in text mode)
     /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
-    explicit GEMS3KImpexGenerator(  const std::string& filepath, long int anIV, FileIOModes file_mode ):
+    explicit GEMS3KGenerator(  const std::string& filepath, long int anIV, IOModes file_mode ):
         ipmfiles_lst_name(filepath), nIV(anIV), io_mode(file_mode)
     {
         set_internal_data();
     }
 
     /// Get selected file output mode
-    FileIOModes files_mode() const
+    IOModes files_mode() const
     {
         return io_mode;
     }
@@ -123,7 +131,7 @@ protected:
     long int nIV = 1;
 
     /// Write IPM, DCH and DBR files in binary, txt or json mode)
-    FileIOModes io_mode = f_json;
+    IOModes io_mode = f_json;
 
     std::string impex_dir;
     std::string base_name;
@@ -144,6 +152,3 @@ protected:
 
 };
 
-
-
-#endif // GEMS3K_IMPEX_H

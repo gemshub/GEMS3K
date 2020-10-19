@@ -197,7 +197,7 @@ protected:
     ///  \param getNodT1     optional parameter used only when reading multiple DBR files after modeling
     ///                      task interruption  in GEM-Selektor
     ///  \param type_f       defines if the file is in binary format (1), in text format (0) or in json format (2)
-    void  InitNodeArray( const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, int type_f  );
+    void  InitNodeArray( const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, GEMS3KGenerator::IOModes type_f  );
 
     //---------------------------------------------------------
 
@@ -248,7 +248,7 @@ public:
     /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
     /// \return DATABR list file name
     std::string genGEMS3KInputFiles(  const std::string& filepath, ProcessProgressFunction message,
-                                  long int nIV, int type_f, bool brief_mode, bool with_comments,
+                                  long int nIV, GEMS3KGenerator::IOModes type_f, bool brief_mode, bool with_comments,
                                   bool putNodT1, bool addMui );
 
     ///  Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
@@ -260,13 +260,13 @@ public:
     ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
     ///                 If   false (0), comments will not be written.
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
-    void  GEMS3k_write_dbr( const char* fname, int  type_f=0,
+    void  GEMS3k_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f,
                             bool with_comments = true, bool brief_mode = false);
 
     /// Reads DATABR files saved by GEMS as a break point of the FMT calculation.
     /// Copying data from work DATABR structure into the node array NodT0
     /// and read DATABR structure into the node array NodT1 from file dbr_file
-    virtual void  setNodeArray( std::string& dbr_file, long int ndx, int type_f );
+    virtual void  setNodeArray( std::string& dbr_file, long int ndx, GEMS3KGenerator::IOModes type_f );
 
     // Used in GEMIPM2 standalone module only
     /// Constructors for 1D arrangement of nodes
