@@ -10,15 +10,15 @@ CONFIG -= qt
 CONFIG += warn_on
 CONFIG += debug
 CONFIG += thread
-#CONFIG += windows
 CONFIG += console
+CONFIG += c++17
 
 DEFINES += IPMGEMPLUGIN
 DEFINES += NODEARRAYLEVEL
 #DEFINES += useOMP
 #DEFINES += NOPARTICLEARRAY
 #DEFINES += SEPGEM2MTMODE
-#DEFINES += USE_OLD_KV_IO_FILES
+#DEFINES += USE_OLD_NLOHMANJSON
 
 !win32 {
   DEFINES += __unix
@@ -43,15 +43,14 @@ LIBS += -lgomp -lpthread
 #QMAKE_LFLAGS += -pg
 OBJECTS_DIR = obj
 
+include($$GEMS3K_CPP/gems3k.pri)
 
 HEADERS	 +=  m_gem2mt.h \
              particlearray.h
 
 SOURCES  +=   main.cpp \
               particlearray.cpp \
+              m_gem2mtsep.cpp \
               m_gem2mtt.cpp \
               m_gem2mtbox.cpp \
-              m_gem2mtfor.cpp \
-              m_gem2mtsep.cpp
-
-include($$GEMS3K_CPP/gems3k.pri)
+              m_gem2mtfor.cpp

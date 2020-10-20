@@ -16,9 +16,10 @@
 #include <iomanip>
 #include "m_gem2mt.h"
 
-#include "GEMS3K/io_template.h"
-#include "GEMS3K/io_nlohmann.h"
-#include "GEMS3K/io_keyvalue.h"
+#include "io_template.h"
+#include "io_nlohmann.h"
+#include "io_simdjson.h"
+#include "io_keyvalue.h"
 
 extern const char* _GEMIPM_version_stamp;
 
@@ -848,10 +849,12 @@ void TGEM2MT::from_text_file(TIO& in_format)
 
 }
 
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
 template void  TGEM2MT::to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TGEM2MT::from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
 #endif
+template void  TGEM2MT::to_text_file<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TGEM2MT::from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format );
 template void  TGEM2MT::to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TGEM2MT::from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format );
 

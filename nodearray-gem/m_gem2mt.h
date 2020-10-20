@@ -20,7 +20,9 @@
 #define _m_gem2mt_h_
 
 
+#ifndef NOPARTICLEARRAY
 #include "particlearray.h"
+#endif
 
 namespace  io_formats {
 class TRWArrays;
@@ -362,8 +364,8 @@ class TGEM2MT
     std::string title;           // changed titler to title
 #endif
 
-  TNodeArray* na;       // pointer to nodearray class instance
-  TParticleArray* pa_mt;       // pointer to TParticleArray class instance
+  TNodeArray* na = nullptr;       // pointer to nodearray class instance
+  TParticleArray* pa_mt = nullptr;       // pointer to TParticleArray class instance
 
     std::string pathVTK;
     std::string nameVTK;
@@ -419,9 +421,9 @@ protected:
          nstep,     // number of steps
          naccept,   // number of permissible steps
          nrejct;    // number of unpermissible steps
-    double *x;
-    double *dx;
-    double *tv;
+    double *x = nullptr;
+    double *dx = nullptr;
+    double *tv = nullptr;
 
     // Flow-through box-flux transport simulations
     void  BoxFluxTransportStart();

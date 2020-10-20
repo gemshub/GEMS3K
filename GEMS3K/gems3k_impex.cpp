@@ -45,7 +45,7 @@ void GEMS3KGenerator::load_dat_lst_file()
 {
     std::string mode, dbr_name;
     std::fstream f_lst( ipmfiles_lst_name, std::ios::in );
-    ErrorIf( !f_lst.good() , ipmfiles_lst_name, "Fileopen error");
+    ErrorIf( !f_lst.good() , ipmfiles_lst_name, " fileopen error");
 
     f_getline(f_lst, mode, ' ');
     trim(mode);
