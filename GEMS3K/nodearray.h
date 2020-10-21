@@ -263,6 +263,13 @@ public:
     void  GEMS3k_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f,
                             bool with_comments = true, bool brief_mode = false);
 
+    ///  Reads the contents of the work instance of the DATABR structure from a disk file with path name  fname.
+    ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
+    ///
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    void  GEMS3k_read_dbr( long int ndx, std::string& dbr_file, GEMS3KGenerator::IOModes  type_f );
+
+
     /// Reads DATABR files saved by GEMS as a break point of the FMT calculation.
     /// Copying data from work DATABR structure into the node array NodT0
     /// and read DATABR structure into the node array NodT1 from file dbr_file

@@ -42,7 +42,7 @@
 
 
 void show_usage( const std::string &name );
-int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImpexData& export_data );
+int extract_args( int argc, char* argv[], std::string& input_lst_path, std::string& dbr_lst_path, GEMS3KImpexData& export_data );
 
 
 // -j -i solvus-in/series1-dat.lst -e solvus-out/series1-dat.lst
@@ -51,14 +51,17 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImp
 // -t -c -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-out/pHtitr-dat.lst
 // -j  -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-json/pHtitr-dat.lst
 
+// -t -c -i process/Kaolinite_G_pHtitrKa-dat.lst -e process-kv/Kaolinite_G_pHtitrKa-dat.lst -l process/Kaolinite_G_pHtitrKa-dbr.lst
+
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
 {
     try{
         std::string input_lst_path;
+        std::string  dbr_lst_path;
         GEMS3KImpexData export_data;
 
-        if( extract_args( argc, argv, input_lst_path, export_data ))
+        if( extract_args( argc, argv, input_lst_path, dbr_lst_path, export_data ))
             return 1;
 
         // Creates TNodeArray structure instance accessible through the "node_arr" pointer
@@ -73,14 +76,15 @@ int main( int argc, char* argv[] )
             return 1;
         }
 
-        // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
         TestModeGEMParam calc_param;  // use default data
         FILE* diffile = fopen( "tools-ICdif-log.dat", "w+" );
-        if( !diffile)
-          return 1;
+        if( !diffile )
+            return 1;
+
+        // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
         if( !node_arr->CalcIPM_List( calc_param, 0, export_data.nIV-1, diffile ) )
         {
-            std::cout << "error occured during calculation" << std::endl;
+            std::cout << "error occured during inital calculation" << std::endl;
             return 1;
         }
 
@@ -93,6 +97,48 @@ int main( int argc, char* argv[] )
         auto dbr_list =  node_arr->genGEMS3KInputFiles(  export_data.ipmfiles_lst_name, messageF, export_data.nIV,
                                                          export_data.io_mode, export_data.brief_mode,
                                                          export_data.with_comments, export_data.putNodT1, export_data.add_mui );
+
+        // (4) Here a possible loop on more dbr files begins
+        if( !dbr_lst_path.empty() )
+        {
+            GEMS3KGenerator input_data( input_lst_path );
+            auto number_files = input_data.load_dbr_lst_file( dbr_lst_path );
+
+            std::string export_dir, export_name, export_ext, tmp;
+            u_splitpath( export_data.ipmfiles_lst_name, export_dir, export_name, export_ext );
+
+            std::string dbr_name;
+            u_splitpath( dbr_lst_path, tmp, dbr_name, export_ext );
+            auto export_dbr_lst_name = u_makepath( export_dir, dbr_name, export_ext);
+            std::ofstream export_dbr_fout( export_dbr_lst_name );
+
+            for(size_t dbr_index=0; dbr_index < number_files; dbr_index++ )
+            {
+                auto dbr_file = input_data.get_next_dbr_file( dbr_index );
+                if( dbr_file.empty() )
+                    continue;
+
+                // (5) Reading the next DBR file with different input composition or temperature
+                node_arr->GEMS3k_read_dbr( 0, dbr_file, input_data.files_mode() );
+
+                if( !node_arr->CalcIPM_One( calc_param, 0, diffile ) )
+                {
+                    std::cout << "error occured during calculation: " << dbr_file <<  std::endl;
+                    return 1;
+                }
+
+                u_splitpath( dbr_file, tmp, export_name, export_ext );
+                export_ext = GEMS3KGenerator::ext( export_data.io_mode );
+                auto export_dbr_file = u_makepath( export_dir, export_name, export_ext );
+
+                if( dbr_index )
+                    export_dbr_fout << ",";
+                export_dbr_fout <<  " \"" << export_name << "." << export_ext << "\"";
+
+                node_arr->GEMS3k_write_dbr( export_dbr_file.c_str(), export_data.io_mode,
+                                            export_data.with_comments,export_data.brief_mode );
+            }
+        }
 
         return 0;
     }
@@ -113,7 +159,7 @@ int main( int argc, char* argv[] )
 
 void show_usage( const std::string &name )
 {
-    std::cout << "Usage: " << name << " [ option(s) ] -i|--import-from PATH_IMPORT  -e|--export-to PATH_EXPORT"
+    std::cout << "Usage: " << name << " [ option(s) ] -i|--import-from PATH_IMPORT  -e|--export-to PATH_EXPORT [ -l|--dbr-list DBR_LIST_FILE ]"
               << "\nRecalculate task and export to other mode\n"
               << "Options:\n"
               << "\t-h,\t--help\t\tshow this help message\n\n"
@@ -129,7 +175,8 @@ void show_usage( const std::string &name )
 }
 
 
-int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImpexData& export_data )
+int extract_args( int argc, char* argv[], std::string& input_lst_path,
+                  std::string& dbr_lst_path, GEMS3KImpexData& export_data )
 {
     int i=0;
     for( i = 1; i < argc; ++i)
@@ -137,7 +184,7 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImp
         std::string arg = argv[i];
         if ((arg == "-h") || (arg == "--help"))
         {
-            show_usage( "tools" );;
+            show_usage( "kva2json" );;
             return 1;
         }
         else if ((arg == "-j") || (arg == "--json"))
@@ -164,13 +211,21 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImp
         {
             export_data.with_comments = true;
         }
-
         else if ((arg == "-i") || (arg == "--import-from"))
         {
             if (i + 1 < argc) {
                 input_lst_path = argv[++i];
             } else {
                 std::cerr << "--import-from option requires one argument." << std::endl;
+                return 1;
+            }
+        }
+        else if ((arg == "-l") || (arg == "--dbr-list"))
+        {
+            if (i + 1 < argc) {
+                dbr_lst_path = argv[++i];
+            } else {
+                std::cerr << "--dbr-list option requires one argument." << std::endl;
                 return 1;
             }
         }

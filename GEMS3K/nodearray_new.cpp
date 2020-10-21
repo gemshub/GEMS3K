@@ -395,12 +395,14 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
     std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
     try
     {
-        //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
-        //       "<DBR_DAT file1 name>" [ ...  "<DBR_DAT fileN name>"]
-        GEMS3KGenerator generator( ipmfiles_lst_name );
         // Reading DBR_DAT files from dbrfiles_lst_name
         if(  dbrfiles_lst_name )
+        {
+            //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
+            //       "<DBR_DAT file1 name>" [ ...  "<DBR_DAT fileN name>"]
+            GEMS3KGenerator generator( ipmfiles_lst_name );
             InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, generator.files_mode()  );
+        }
         else
             if( nNodes() ==1 )
                 setNodeArray( 0 , nullptr  );
@@ -588,6 +590,18 @@ void  TNodeArray::GEMS3k_write_dbr( const char* fname, GEMS3KGenerator::IOModes 
 {
     calcNode->packDataBr();
     calcNode->GEM_write_dbr( fname,  type_f, with_comments, brief_mode );
+}
+
+void  TNodeArray::GEMS3k_read_dbr( long int ndx, std::string& dbr_file, GEMS3KGenerator::IOModes  type_f )
+{
+    calcNode->read_dbr_format_file( dbr_file,  type_f );
+
+    if( !NodT0[ndx] )
+        NodT0[ndx] = allocNewDBR( calcNode);
+    if( !NodT1[ndx] )
+        NodT1[ndx] = allocNewDBR( calcNode);
+    MoveWorkNodeToArray(calcNode, ndx, anNodes, NodT0);
+    MoveWorkNodeToArray(calcNode, ndx, anNodes, NodT1);
 }
 
 #endif

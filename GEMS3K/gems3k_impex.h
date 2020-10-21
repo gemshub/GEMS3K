@@ -122,6 +122,18 @@ public:
     /// Generate dbr lst file path
     std::string get_dbr_file_lst_path() const;
 
+    /// Read dbr lst file
+    size_t load_dbr_lst_file( const std::string &dbr_lst_path );
+
+    /// Generate dataBR file name
+    std::string get_next_dbr_file( size_t index ) const
+    {
+       if( index < databr_file_names.size() )
+         return impex_dir+"/"+databr_file_names[index];
+       else
+         return "";
+    }
+
 protected:
 
     /// IPM work structure file path&name

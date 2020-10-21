@@ -98,3 +98,27 @@ std::string GEMS3KGenerator::mode() const
     }
     return "-t";
 }
+
+size_t GEMS3KGenerator::load_dbr_lst_file( const std::string& dbr_lst_path )
+{
+    std::string dbr_name, dbr_name_full;
+    if( dbr_lst_path.find_first_of("/\\") == std::string::npos )
+       dbr_name_full = impex_dir+"/"+dbr_lst_path;
+    else
+       dbr_name_full = dbr_lst_path;
+
+    std::fstream f_lst( dbr_name_full, std::ios::in );
+    ErrorIf( !f_lst.good() , dbr_name_full, " fileopen error");
+
+    databr_file_names.clear();
+    while( f_lst.good() )
+    {
+        f_getline( f_lst, dbr_name, ',' );
+        trim( dbr_name );
+        trim( dbr_name, "\"");
+        if( !dbr_name.empty() )
+              databr_file_names.push_back(dbr_name);
+    }
+    return databr_file_names.size();
+}
+
