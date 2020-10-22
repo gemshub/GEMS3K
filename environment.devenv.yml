@@ -7,7 +7,6 @@ dependencies:
   - make  # [win]
   - git
   - ccache  # [unix]
-  - cppzmq
   - nlohmann_json
 
 environment:
