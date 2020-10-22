@@ -159,7 +159,7 @@ int main( int argc, char* argv[] )
 
 void show_usage( const std::string &name )
 {
-    std::cout << "Usage: " << name << " [ option(s) ] -i|--import-from PATH_IMPORT  -e|--export-to PATH_EXPORT [ -l|--dbr-list DBR_LIST_FILE ]"
+    std::cout << "Usage: " << name << " [ option(s) ] -i|--import-from LST_IMPORT -e|--export-to LST_EXPORT [ -l|--dbr-list DBR_LIST ]"
               << "\nRecalculate task and export to other mode\n"
               << "Options:\n"
               << "\t-h,\t--help\t\tshow this help message\n\n"

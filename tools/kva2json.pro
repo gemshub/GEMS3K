@@ -3,7 +3,7 @@
  
 TEMPLATE = app
 LANGUAGE = C++
-TARGET = tools
+TARGET = kva2json
 VERSION = 3.4.6
 
 CONFIG -= qt
