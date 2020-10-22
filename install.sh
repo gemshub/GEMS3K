@@ -2,7 +2,7 @@
 
 #./install-dependencies.sh
 
-threads=3
+threads=1
 BRANCH_GEMS3K=master
 BuildType=Release
 InstallPrefix=/usr/local

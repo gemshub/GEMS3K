@@ -50,21 +50,16 @@ int main( int argc, char* argv[] )
 {
     try{
 
-        long nRecipes = 0;
-        char (*recipes)[fileNameLength] = nullptr;
-
         // Analyzing command line arguments
         // Default arguments
         char input_system_file_list_name[256] = "system-dat.lst";
-        char input_recipes_file_list_name[256] = "more_recipes.lst";
 
+        // list of DCH, IPM and DBR input files for initializing GEMS3K
         if (argc >= 2 )
             strncpy( input_system_file_list_name, argv[1], 256);
-        GEMS3KGenerator input_data(input_system_file_list_name);
-        // list of DCH, IPM and DBR input files for initializing GEMS3K
 
         // Creates TNode structure instance accessible through the "node" pointer
-        TNode* node  = new TNode();
+        std::shared_ptr<TNode> node( new TNode() );
 
         // (1) Initialization of GEMS3K internal data by reading  files
         //     whose names are given in the input_system_file_list_name
@@ -112,6 +107,7 @@ int main( int argc, char* argv[] )
         // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
         long NodeStatusCH = node->GEM_run( false );
 
+        GEMS3KGenerator input_data(input_system_file_list_name);
         if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
         {    // (3) Writing results in default DBR file
             node->GEM_write_dbr( nullptr, input_data.files_mode(), true, false );
@@ -150,26 +146,23 @@ int main( int argc, char* argv[] )
         cout << "U0   Ca+2: " << node->DC_U0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_U0( xCal, node->cP(), node->cTK() ) << endl;
 
         // Here a possible loop on more input recipes begins
-        if (argc >= 3 )
+        if( argc >= 3 )
         {
-            char NextRecipeFileName[256];
-            char NextRecipeOutFileName[300];
-            char input_recipes_file_list_path[256-fileNameLength] = "";
-
-            strncpy( input_recipes_file_list_name, argv[2], 256);
+            std::string  input_recipes_file_list_name = argv[2];
+            std::string  NextRecipeFileName, NextRecipeOutFileName;
             // list of additional recipes (dbr.dat files) e.g. for simulation
             // of a titration or another irreversible process
             // Reading list of recipes names from file
-            recipes = f_getfiles(  input_recipes_file_list_name,
-                                   input_recipes_file_list_path, nRecipes, ',');
+            auto nRecipes = input_data.load_dbr_lst_file( input_recipes_file_list_name );
 
-            for(int cRecipe=0; cRecipe < nRecipes; cRecipe++ )
+            for(size_t cRecipe=0; cRecipe < nRecipes; cRecipe++ )
             {
-                // Trying to read the next file name
-                sprintf(NextRecipeFileName , "%s\\%s", input_recipes_file_list_path, recipes[cRecipe] );
+                NextRecipeFileName = input_data.get_next_dbr_file( cRecipe );
+                if( NextRecipeFileName.empty() )
+                    continue;
 
                 // (5) Reading the next DBR file with different input composition or temperature
-                node->GEM_read_dbr( NextRecipeFileName, input_data.files_mode() );
+                node->GEM_read_dbr( NextRecipeFileName.c_str(), input_data.files_mode() );
 
                 // Asking GEM IPM2 to run (faster) with smart initial approximation
                 dBR->NodeStatusCH = NEED_GEM_SIA;
@@ -177,22 +170,21 @@ int main( int argc, char* argv[] )
                 NodeStatusCH = node->GEM_run( false );
 
                 if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
-                {    sprintf(NextRecipeOutFileName , "%s.nc.out", NextRecipeFileName );
-                    node->GEM_write_dbr( NextRecipeOutFileName, input_data.files_mode(), false, false );
-                    sprintf(NextRecipeOutFileName , "%s.nc.Dump.out", NextRecipeFileName );
-                    node->GEM_print_ipm( NextRecipeOutFileName );
+                {
+                    NextRecipeOutFileName = NextRecipeFileName + ".nc.out";
+                    node->GEM_write_dbr( NextRecipeOutFileName.c_str(), input_data.files_mode(), false, false );
+                    NextRecipeOutFileName = NextRecipeFileName + ".nc.Dump.out";
+                    node->GEM_print_ipm( NextRecipeOutFileName.c_str() );
                 }
                 else {
                     // error message, debugging printout
-                    sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
-                    node->GEM_print_ipm( NextRecipeOutFileName );
+                    NextRecipeOutFileName = NextRecipeFileName + ".Dump.out";
+                    node->GEM_print_ipm( NextRecipeOutFileName.c_str() );
                     //              return 5; // GEM IPM did not converge properly - error message needed
                 }
             }
         }
         // end of possible loop on input recipes
-        delete node;
-        if( recipes ) delete[] recipes;
 
         // End of example
         return 0;
@@ -212,64 +204,5 @@ int main( int argc, char* argv[] )
     return 1;
 }
    
-const int bGRAN = 20;
-
-// Get Path of file and Reading list of file names from it, return number of files
-char  (* f_getfiles(const char *f_name, char *Path,
-        long int& nElem, char delim ))[fileNameLength]
-{
-  int ii, bSize = bGRAN;
-  char  (*filesList)[fileNameLength];
-  char  (*filesListNew)[fileNameLength];
-  filesList = new char[bSize][fileNameLength];
-  string name;
-
-// Get path
-   string path_;
-   string flst_name = f_name;
-   size_t pos = flst_name.rfind("/");
-   path_ = "";
-   if( pos < string::npos )
-      path_ = flst_name.substr(0, pos+1);
-   strncpy( Path, path_.c_str(), 256-fileNameLength);
-   Path[255] = '\0';
-
-//  open file stream for the file names list file
-   fstream f_lst( f_name/*flst_name.c_str()*/, ios::in );
-   ErrorIf( !f_lst.good(), f_name, "Fileopen error");
-
-// Reading list of names from file
-  nElem = 0;
-  while( !f_lst.eof() )
-  {
-    f_getline( f_lst, name, delim);
-    if( nElem >= bSize )
-    {    bSize = bSize+bGRAN;
-         filesListNew = new char[bSize][fileNameLength];
-         for( ii=0; ii<nElem-1; ii++ )
-           strncpy( filesListNew[ii], filesList[ii], fileNameLength);
-         delete[] filesList;
-         filesList =  filesListNew;
-    }
-    strncpy( filesList[nElem], name.c_str(), fileNameLength);
-    filesList[nElem][fileNameLength-1] = '\0';
-    nElem++;
-  }
-
-
-  // Realloc memory for reading size
-  if( nElem != bSize )
-  {
-    filesListNew = new char[nElem][fileNameLength];
-    for(  ii=0; ii<nElem; ii++ )
-      strncpy( filesListNew[ii], filesList[ii], fileNameLength);
-    delete[] filesList;
-    filesList =  filesListNew;
-  }
-
-  return filesList;
-}
-
-
 //---------------------------------------------------------------------------
 // end of main.cpp for TNode class usage - GEMS3K single calculation example
