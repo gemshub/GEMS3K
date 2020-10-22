@@ -5,7 +5,6 @@ INCLUDEPATH += $$SJSON_H
 
  HEADERS	 += $$GEMS3K_H/verror.h  \
                     $$GEMS3K_H/gdatastream.h  \
-                    ##$$GEMS3K_H/v_user.h \
                     $$GEMS3K_H/tnt_i_refvec.h \
                     $$GEMS3K_H/tnt_array1d.h \
                     $$GEMS3K_H/tnt_array2d.h \
@@ -16,7 +15,6 @@ INCLUDEPATH += $$SJSON_H
                     $$GEMS3K_H/s_solmod.h \
                     $$GEMS3K_H/s_sorpmod.h \
                     $$GEMS3K_H/s_kinmet.h \
-                    ##$$GEMS3K_H/m_param.h  \
                     $$GEMS3K_H/m_const_base.h  \
                     $$GEMS3K_H/ms_multi.h \
                     $$GEMS3K_H/databr.h \
@@ -24,8 +22,6 @@ INCLUDEPATH += $$SJSON_H
                     $$GEMS3K_H/node.h \
                     $$GEMS3K_H/nodearray.h \
 #                    $$GEMS3K_H/particlearray.h \
-                    #$$GEMS3K_H/io_arrays.h \
-                    #$$GEMS3K_H/io_json.h \
                     $$GEMS3K_H/io_template.h \
                     $$GEMS3K_H/io_nlohmann.h \
                     $$GEMS3K_H/io_keyvalue.h \
@@ -60,8 +56,6 @@ INCLUDEPATH += $$SJSON_H
 #                      $$GEMS3K_CPP/particlearray.cpp \
                       $$GEMS3K_CPP/ms_multi_file.cpp \
                       $$GEMS3K_CPP/ms_multi_format.cpp \
-                      #$$GEMS3K_CPP/io_arrays.cpp \
-                      #$$GEMS3K_CPP/io_json.cpp \
                       $$GEMS3K_CPP/io_template.cpp \
                       $$GEMS3K_CPP/io_nlohmann.cpp \
                       $$GEMS3K_CPP/io_keyvalue.cpp \
@@ -73,9 +67,7 @@ INCLUDEPATH += $$SJSON_H
                       $$GEMS3K_CPP/s_activity.cpp \
                       $$GEMS3K_CPP/s_activity2.cpp \
                       $$GEMS3K_CPP/s_activity3.cpp  \
-                      #$$GEMS3K_CPP/ms_param.cpp \
                       $$GEMS3K_CPP/v_detail.cpp \
-                      $$GEMS3K_CPP/io_simdjson.cpp \
- \                      #$$SJSON_CPP/simdjson.cpp
-    $$PWD/../simdjson/simdjson.cpp
+                      $$GEMS3K_CPP/io_simdjson.cpp
+                      #$$SJSON_CPP/simdjson.cpp
 

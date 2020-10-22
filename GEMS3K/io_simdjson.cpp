@@ -26,7 +26,7 @@
 
 
 #include "io_simdjson.h"
-//#include "simdjson/simdjson.cpp"
+#include "simdjson/simdjson.cpp"
 #include "v_detail.h"
 
 namespace  io_formats {

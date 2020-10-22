@@ -5,7 +5,7 @@ file(GLOB HEADER_FILES *.h)
 file(GLOB SOURCE_FILES *.cpp)
 
 # Recursively collect all source files from the current directory
-file(GLOB SIMDJSON_FILES ${CMAKE_SOURCE_DIR}/simdjson/simdjson.cpp)
+#file(GLOB SIMDJSON_FILES ${CMAKE_SOURCE_DIR}/simdjson/simdjson.cpp)
 
 # Set some necessary definitions
 #add_definitions(-DIPMGEMPLUGIN)
@@ -14,7 +14,7 @@ add_definitions(-DNODEARRAYLEVEL)
 #add_definitions(-DUSE_OLD_NLOHMANJSON)
 
 # Compile the C++ source code into object files
-add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES} ${SIMDJSON_FILES} )
+add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES}  )
 
 # Check if a shared library is to be built
 if(BUILD_SHARED_LIBS)
