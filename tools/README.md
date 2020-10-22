@@ -6,7 +6,7 @@
 
 ## Application
 
-```
+```sh
 Usage: kva2json [ option(s) ] -i|--import-from LST_IMPORT -e|--export-to LST_EXPORT [ -l|--dbr-list DBR_LIST ]
 Recalculate task and export to other mode
 Options:
@@ -26,22 +26,26 @@ Options:
 
 * convert from key-value to json
 
-```
+```sh
 > kva2json -j -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-json/pHtitr-dat.lst
 
 ```
 
 * convert from json to key-value
 
-```
+```sh
 > kva2json -t -c -i solvus-in/series1-dat.lst -e solvus-kv/series1-dat.lst
 
 ```
 
 > Note: into very old *-ipm.dat* files need change
->  ```# ID key of the initial chemical system definition
->  "Kaolinite G  pHtitr      0    0       1       25      0   "```
+>  ```
+>  # ID key of the initial chemical system definition
+>  "Kaolinite G  pHtitr      0    0       1       25      0   "
+>  ```
 > to 
->  ```# ID key of the initial chemical system definition
->  <ID_key> "Kaolinite G  pHtitr      0    0       1       25      0   "```
+>  ```
+>  # ID key of the initial chemical system definition
+>  <ID_key> "Kaolinite G  pHtitr      0    0       1       25      0   "
+> ```
 
