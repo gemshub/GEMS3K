@@ -3,7 +3,7 @@
 /// \file io_template.h
 /// Various service functions for writing/reading arrays in files
 //
-// Copyright (C) 2006-2012 S.Dmytriyeva
+// Copyright (C) 2020 S.Dmytriyeva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling

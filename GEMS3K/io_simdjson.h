@@ -3,7 +3,7 @@
 /// \file io_simdjson.h
 /// Various service functions for writing/reading arrays in files
 //
-// Copyright (C) 2006-2012 S.Dmytriyeva
+// Copyright (C) 2020 S.Dmytriyeva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -25,8 +25,9 @@
 
 #pragma once
 
-#include "simdjson/simdjson.h"
 #include <fstream>
+#include <vector>
+#include <memory>
 #include "verror.h"
 
 namespace  io_formats {
@@ -175,6 +176,7 @@ private:
 
 };
 
+class SimdJsonImpl;
 
 /// Read fields of structure
 class SimdJsonRead
@@ -186,19 +188,13 @@ public:
     SimdJsonRead( std::iostream& ff );
 
     /// Reset json loop
-    void reset()
-    {
-        json_it = json_data.begin();
-    }
+    void reset();
 
     /// Read next name from file
     bool  has_next( std::string& next_field_name );
 
     /// Read next label from file ( must be exist, otherwise error )
-    bool test_next_is( const std::string& label )
-    {
-        return  !json_data.at_key( key(label) ).error();
-    }
+    bool test_next_is( const std::string& label );
 
     /// Reads array from a TIO format.
     template <class T,
@@ -246,43 +242,9 @@ public:
 protected:
 
     // Internal structure of file data
-    simdjson::dom::parser parser;
-    simdjson::dom::object json_data;
-    simdjson::dom::object::iterator json_it;
-
-    std::string key( const std::string& name ) const
-    {
-        return name;
-    }
-
-    void test_simdjson_error( simdjson::error_code  error ) const
-    {
-        ErrorIf( error, std::string("SimdJson read error :") + std::to_string(error) ,
-                 simdjson::error_message(error) );
-    }
-
-//    /// Reads array from a text file.
-//    template <class T,
-//              typename std::enable_if<std::is_integral<T>::value,T>::type* = nullptr>
-//    void read_value( T&  arr_value, const simdjson::dom::element json_arr )
-//    {
-//        auto [ ival, error] = json_arr.get<int64_t>();
-//        test_simdjson_error( error );
-//        arr_value = static_cast<T>(ival);
-//    }
-
-//    /// Reads array from a text file.
-//    template <class T,
-//              typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
-//    void read_value( T& arr_value, const simdjson::dom::element json_arr )
-//    {
-//        auto [ dval, error] = json_arr.get<double>();
-//        test_simdjson_error( error );
-//        arr_value = static_cast<T>(dval);
-//    }
+    std::shared_ptr<SimdJsonImpl> impl;
 
 };
-
 
 
 template <> void SimdJsonWrite::add_value( const double& );

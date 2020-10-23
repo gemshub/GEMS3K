@@ -47,7 +47,7 @@ endif()
 
 # Set the list of compiler flags for Clang compiler
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-    add_compile_options(-Wall -Wno-ignored-attributes -Wno-pedantic -Wno-variadic-macros -Wno-deprecated)
+    add_compile_options(-mavx2 -Wall -Wno-ignored-attributes -Wno-pedantic -Wno-variadic-macros -Wno-deprecated)
 endif()
 
 # Set the list of compiler flags for Intel compiler
@@ -68,14 +68,14 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 endif()
 
 
-# Set the jsonio14 source directory path
+# Set the source directory path
 set(GEMS3K_SOURCE_DIR ${CMAKE_SOURCE_DIR}/GEMS3K)
 set(GEMS3K_HEADER_DIR ${CMAKE_SOURCE_DIR}/GEMS3K)
-include_directories(${GEMS3K_HEADER_DIR})
-include_directories(${CMAKE_SOURCE_DIR})
 
 # Set the include directories
 include_directories(${GEMS3K_HEADER_DIR})
+include_directories(${CMAKE_SOURCE_DIR})
+
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     include_directories("/usr/local/include")
     link_directories("/usr/local/lib")
@@ -88,7 +88,6 @@ include(GEMS3KFindDeps)
 add_subdirectory(GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/lib)
-
 
 add_subdirectory(tools)
 

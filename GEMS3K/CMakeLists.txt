@@ -19,14 +19,9 @@ add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES}  )
 # Check if a shared library is to be built
 if(BUILD_SHARED_LIBS)
     add_library(GEMS3K_SHARED SHARED $<TARGET_OBJECTS:GEMS3K_OBJECT>)
-    if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-        target_link_libraries(GEMS3K_SHARED libzmq )
-    else()
-        target_link_libraries(GEMS3K_SHARED zmq )
-endif()
     set_target_properties(GEMS3K_SHARED PROPERTIES OUTPUT_NAME GEMS3K)
-    install(TARGETS GEMS3K_SHARED 
-    EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
+    install( TARGETS GEMS3K_SHARED
+             EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
 endif()
 
 
@@ -34,8 +29,8 @@ endif()
 if(BUILD_STATIC_LIBS)
    add_library(GEMS3K_STATIC STATIC $<TARGET_OBJECTS:GEMS3K_OBJECT>)
    set_target_properties(GEMS3K_STATIC PROPERTIES OUTPUT_NAME GEMS3K-static)
-   install(TARGETS GEMS3K_STATIC 
-   EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
+   install( TARGETS GEMS3K_STATIC
+           EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
 endif()
 
 # Install debug symbols
@@ -52,6 +47,6 @@ endif()
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/GEMS3K
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers
     FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/simdjson
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers
-        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+#install(DIRECTORY ${CMAKE_SOURCE_DIR}/simdjson
+#        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers
+#        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")

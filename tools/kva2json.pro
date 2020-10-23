@@ -1,5 +1,5 @@
-#  qmake project file for the gemcalc example (part of GEMS3K standalone code)
-# (c) 2012-2020 GEMS Developer Team
+#  qmake project file for the kva2json example (part of GEMS3K standalone code)
+# (c) 2020 GEMS Developer Team
  
 TEMPLATE = app
 LANGUAGE = C++
@@ -19,7 +19,8 @@ DEFINES += NOPARTICLEARRAY
 DEFINES += USE_OLD_NLOHMANJSON
 
 !win32 {
-  DEFINES += __unix
+
+DEFINES += __unix
 QMAKE_CFLAGS += pedantic -Wall -Wextra -Wwrite-strings -Werror
 
 QMAKE_CXXFLAGS += -Wall -Wextra -Wformat-nonliteral -Wcast-align -Wpointer-arith \
@@ -32,11 +33,9 @@ QMAKE_CXXFLAGS += -Wall -Wextra -Wformat-nonliteral -Wcast-align -Wpointer-arith
 GEMS3K_CPP = ../GEMS3K
 GEMS3K_H   = $$GEMS3K_CPP
 
-DEPENDPATH +=
 DEPENDPATH += .
 DEPENDPATH += $$GEMS3K_H
 
-INCLUDEPATH += 
 INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 
