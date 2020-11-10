@@ -2,6 +2,21 @@
 #include <istream>
 #include "v_detail.h"
 
+TError::~TError()
+{}
+
+[[ noreturn ]] void Error (const std::string& title, const std::string& message)
+{
+    throw TError(title, message);
+}
+
+void ErrorIf (bool error, const std::string& title, const std::string& message)
+{
+    if(error)
+        throw TError(title, message);
+}
+
+
 void strip(std::string& str)
 {
   std::string::size_type pos1 = str.find_first_not_of(' ');

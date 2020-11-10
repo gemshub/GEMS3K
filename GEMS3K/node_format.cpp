@@ -176,7 +176,6 @@ io_formats::outField DataCH_dynamic_fields[30] =  { //+4
 template<typename TIO>
 void TNode::databr_to_text_file( TIO& out_format, bool with_comments, bool brief_mode ) const
 {
-
     bool _comment = with_comments;
 
 //#ifdef USE_OLD_NLOHMANJSON

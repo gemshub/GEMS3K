@@ -363,9 +363,6 @@ public:
     long int  GEM_init( const char* ipmfiles_lst_name,
                         const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1);
 
-//    ///  Here we run command to setup GEMS3_server for GEM calculation in boxes from  start_node to end_node
-//    bool InitNodeServer();
-
     // end of new stuff -------------------------------------------------------
 
     // Methods for working with node arrays (access to data from DBR)

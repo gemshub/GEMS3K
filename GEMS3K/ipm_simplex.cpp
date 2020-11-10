@@ -861,7 +861,7 @@ void TMultiBase::multiConstInit_PN()
 /// Do it before calculations
 void TMultiBase::MultiConstInit() // from MultiRemake
 {
-    const BASE_PARAM *pa_p = pa_p_ptr();
+   // const BASE_PARAM *pa_p = pa_p_ptr();
 
     pm.FI1 = 0;
     pm.FI1s = 0;

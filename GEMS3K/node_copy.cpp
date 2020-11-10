@@ -557,7 +557,6 @@ void TNode::databr_copy( DATABR* otherCNode )
     copyValues( CNode->omPH, otherCNode->omPH, CSD->nPHb );
 }
 
-//#endif
 
 // allocating DataCH structure
 void TNode::datach_realloc()

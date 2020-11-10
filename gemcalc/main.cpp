@@ -32,18 +32,14 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>
 //-------------------------------------------------------------------
 
-#include <time.h>
-#include <math.h>
+#include <ctime>
+#include <cmath>
 #include <string>
 #include <iomanip>
 #include "node.h"
 #include "v_detail.h"
 using namespace std;
 
-#define fileNameLength 64
-/// Get Path of file and Reading list of file names from it, return number of files
-char  (* f_getfiles(const char *f_name, char *Path,
-                    long int& nElem, char delim ))[fileNameLength];
 
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
@@ -66,7 +62,7 @@ int main( int argc, char* argv[] )
         if( node->GEM_init( input_system_file_list_name ) )
         {
             // error occured during reading the files
-            cout << "error occured during reading the files" << endl;
+            std::cout << "error occured during reading the files" << std::endl;
             return 1;
         }
 
@@ -120,6 +116,7 @@ int main( int argc, char* argv[] )
         }
         cout << "SatIndx aq" << node->Ph_SatInd(0) << " gas " << node->Ph_SatInd(1) << " s1 " << node->Ph_SatInd(2)
              << " s2 " << node->Ph_SatInd(3) << " s3 " << node->Ph_SatInd(4) << " s4 " << node->Ph_SatInd(5) << endl;
+   
         // test internal functions
         cout << "Ph_Volume   Aq: " << node->Ph_Volume(xbaq) <<  " Calcite: " << node->Ph_Volume(xbCalcite) << endl;
         cout << "Ph_Mass     Aq: " << node->Ph_Mass(xbaq) <<  " Calcite: " << node->Ph_Mass(xbCalcite) << endl;
@@ -203,6 +200,6 @@ int main( int argc, char* argv[] )
     }
     return 1;
 }
-   
+
 //---------------------------------------------------------------------------
 // end of main.cpp for TNode class usage - GEMS3K single calculation example

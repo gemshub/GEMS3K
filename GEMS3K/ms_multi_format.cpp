@@ -35,7 +35,7 @@
 #include "io_keyvalue.h"
 #include "ms_multi.h"
 
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.7.0 c.fdcdd2b5 ";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.7.1 c.b0d3f02 ";
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string

@@ -44,7 +44,7 @@ struct TError
         title(other.title)
     {}
 
-    virtual ~TError() {};
+    virtual ~TError();
 };
 
 
@@ -65,16 +65,8 @@ struct TFatalError:
 };
 
 
-[[ noreturn ]] inline void Error( const std::string& title, const std::string& message )
-{
-    throw TError(title, message);
-}
-
-inline void ErrorIf( bool error, const std::string& title, const std::string& message )
-{
-    if(error)
-        throw TError(title, message);
-}
+[[ noreturn ]]  void Error ( const std::string& title, const std::string& message );
+void ErrorIf ( bool error, const std::string& title, const std::string& message );
 
 
 #endif  // VERROR_H

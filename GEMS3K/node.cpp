@@ -1078,7 +1078,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
      for(xdc = xdcb; xdc < xdce; xdc++ )
      {
           xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC
-          // Retrieves (interpolated) molar entropy S0(P,TK) value for Dependent Component (in J/K/mol)
+          // Retrieves (interpolated) heat capacity Cp0(TK) value for Dependent Component (in J/K/mol)
           cap = DC_Cp0( xch, CNode->P, CNode->TK );
           if( noZero(cap) )
               capp += cap * (CNode->xDC[xdc]);
