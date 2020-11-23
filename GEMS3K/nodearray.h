@@ -51,7 +51,8 @@ enum  PTCODE /// Codes of particle type
 
 struct  LOCATION /// Location (coordinates) of a point in space
         /// for implementation of particle transport algorithms
-{  double x,
+{
+    double x,
     y,
     z;
 
@@ -61,8 +62,8 @@ struct  LOCATION /// Location (coordinates) of a point in space
     LOCATION( double ax, double ay=0., double az=0. ):
         x(ax), y (ay), z(az) {}
 
-    LOCATION( const LOCATION& loc ):
-        x(loc.x), y (loc.y), z(loc.z) {}
+//    LOCATION( const LOCATION& loc ):
+//        x(loc.x), y (loc.y), z(loc.z) {}
 
     //   const LOCATION& operator= (const LOCATION& loc);
     //   {
@@ -96,8 +97,8 @@ protected:
 
     std::shared_ptr<TNode> internal_Node;
     TNode* calcNode;
-    DATABR* (*NodT0);  ///< array of nodes for previous time point
-    DATABR* (*NodT1);  ///< array of nodes for current time point
+    DATABR** NodT0;  ///< array of nodes for previous time point
+    DATABR** NodT1;  ///< array of nodes for current time point
 
     long int anNodes;  ///< Number of allocated nodes
     long int sizeN;	   ///< Number of nodes along x direction

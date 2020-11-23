@@ -706,20 +706,20 @@ protected:
 
     // From here move to activities.h or node.h
     long int sizeFIs;     ///< current size of phSolMod
-    TSolMod* (*phSolMod); ///< size current FIs - number of multicomponent phases
+    TSolMod** phSolMod; ///< size current FIs - number of multicomponent phases
 
     void Alloc_TSolMod( long int newFIs );
     void Free_TSolMod();
 
     // new - allocation of TsorpMod and TKinMet
     long int sizeFIa;       ///< current size of phSorpMod
-    TSorpMod* (*phSorpMod); ///< size current FIa - number of adsorption phases
+    TSorpMod** phSorpMod; ///< size current FIa - number of adsorption phases
 
     void Alloc_TSorpMod( long int newFIa );
     void Free_TSorpMod();
 
     long int sizeFI;      ///< current size of phKinMet
-    TKinMet* (*phKinMet); ///< size current FI -   number of phases
+    TKinMet** phKinMet; ///< size current FI -   number of phases
 
     void Alloc_TKinMet( long int newFI );
     void Free_TKinMet();
