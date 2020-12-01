@@ -134,10 +134,14 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<double>
 
     if(  json_arr.type() == simdjson::dom::element_type::ARRAY  )
     {
-        for (simdjson::dom::element arr_element : json_arr)
+//        for (simdjson::dom::element arr_element : json_arr)
+//        {
+//            error = arr_element.get(value);
+//            test_simdjson_error( error );
+//            arr.push_back(value);
+//        }
+        for (double value : json_arr)
         {
-            error = arr_element.get(value);
-            test_simdjson_error( error );
             arr.push_back(value);
         }
     }
@@ -160,10 +164,14 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<int64_t
 
     if(  json_arr.type() == simdjson::dom::element_type::ARRAY  )
     {
-        for (simdjson::dom::element arr_element : json_arr)
+//        for (simdjson::dom::element arr_element : json_arr)
+//        {
+//            error = arr_element.get(value);
+//            test_simdjson_error( error );
+//            arr.push_back(value);
+//        }
+        for (int64_t value : json_arr)
         {
-            error = arr_element.get(value);
-            test_simdjson_error( error );
             arr.push_back(value);
         }
     }
