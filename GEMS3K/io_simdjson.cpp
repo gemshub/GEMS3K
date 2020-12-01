@@ -42,7 +42,10 @@ public:
     /// Constructor
     explicit SimdJsonImpl( const std::string& json_string ): json_data()
     {
-        auto error = parser.parse(json_string).get(json_data); // do the parsing
+        auto input_string = json_string;
+        replaceall( input_string, "inf", "0");
+        std::cout << input_string << std::endl;
+        auto error = parser.parse(input_string).get(json_data); // do the parsing
         test_simdjson_error( error );
         json_it = json_data.begin();
         //    std::cout <<  json_data << std::endl;
@@ -125,7 +128,6 @@ void SimdJsonImpl::read_strings_array(const std::string &field_name, char *arr, 
 
 void SimdJsonImpl::read_array(const std::string &field_name, std::vector<double>& arr)
 {
-    double value;
     arr.clear();
 
     simdjson::dom::element json_arr;
@@ -134,12 +136,6 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<double>
 
     if(  json_arr.type() == simdjson::dom::element_type::ARRAY  )
     {
-//        for (simdjson::dom::element arr_element : json_arr)
-//        {
-//            error = arr_element.get(value);
-//            test_simdjson_error( error );
-//            arr.push_back(value);
-//        }
         for (double value : json_arr)
         {
             arr.push_back(value);
@@ -147,6 +143,7 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<double>
     }
     else
     {
+        double value;
         error = json_arr.get(value);
         test_simdjson_error( error );
         arr.push_back(value);
@@ -155,7 +152,6 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<double>
 
 void SimdJsonImpl::read_array(const std::string &field_name, std::vector<int64_t>& arr)
 {
-    int64_t value;
     arr.clear();
 
     simdjson::dom::element json_arr;
@@ -164,12 +160,6 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<int64_t
 
     if(  json_arr.type() == simdjson::dom::element_type::ARRAY  )
     {
-//        for (simdjson::dom::element arr_element : json_arr)
-//        {
-//            error = arr_element.get(value);
-//            test_simdjson_error( error );
-//            arr.push_back(value);
-//        }
         for (int64_t value : json_arr)
         {
             arr.push_back(value);
@@ -177,6 +167,7 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<int64_t
     }
     else
     {
+        int64_t value;
         error = json_arr.get(value);
         test_simdjson_error( error );
         arr.push_back(value);

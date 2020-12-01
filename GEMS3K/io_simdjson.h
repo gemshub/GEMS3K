@@ -41,7 +41,8 @@ public:
     /// Constructor
     SimdJsonWrite( std::iostream& ff, bool not_brief ): fout(ff), dense(not_brief)
     {
-      if( fout.tellp() == 0 )
+      size_t fpos = fout.tellp();
+      if( fpos == 0 )
       {
         first = true;
         fout << "{";

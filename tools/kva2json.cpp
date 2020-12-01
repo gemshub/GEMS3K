@@ -44,7 +44,7 @@
 void show_usage( const std::string &name );
 int extract_args( int argc, char* argv[], std::string& input_lst_path, std::string& dbr_lst_path, GEMS3KImpexData& export_data );
 
-
+// -j -i GEOTHERM/Test2-dat.lst -e GEOTHERM-out/Test2-dat.lst
 // -j -i solvus-in/series1-dat.lst -e solvus-out/series1-dat.lst
 // -t -i solvus-in/series1-dat.lst -e solvus-kv/series1-dat.lst
 

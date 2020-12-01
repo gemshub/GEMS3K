@@ -37,6 +37,20 @@ void replace( std::string& str, const char* old_part, const char* new_part)
     }
 }
 
+void replaceall( std::string& str, const char* old_part, const char* new_part)
+{
+    size_t posb=0, pos = str.find( old_part ); //rfind( old_part );
+    while( pos != std::string::npos )
+    {
+        std::string res(str.substr(0, pos));
+        res += new_part;
+        res += str.substr( pos+strlen(old_part) );
+        str = res;
+        posb = pos + strlen(new_part);
+        pos = str.find( old_part, posb );
+    }
+}
+
 void replaceall(std::string& str, char ch1, char ch2)
 {
   for(size_t ii=0; ii<str.length(); ii++ )
