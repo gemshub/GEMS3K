@@ -24,7 +24,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-
+#include <cmath>
 #include "io_simdjson.h"
 #include "simdjson/simdjson.h"
 #include "simdjson/simdjson.cpp"
