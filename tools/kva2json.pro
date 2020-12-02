@@ -28,6 +28,11 @@ QMAKE_CXXFLAGS += -Wall -Wextra -Wformat-nonliteral -Wcast-align -Wpointer-arith
  -Wcast-qual -Wshadow -Wwrite-strings -Wno-unused-parameter \
  -Wfloat-equal -pedantic -ansi
 
+
+#QMAKE_CXXFLAGS += -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong \
+#-fno-plt -O2 -ffunction-sections -pipe -isystem -O3 -DNDEBUG -fPIC -Wall -Wno-misleading-indentation -Wno-ignored-attributes -Wno-pedantic \
+#-Wno-variadic-macros -Wno-deprecated -std=gnu++1z -MD -MT
+
 }
 
 GEMS3K_CPP = ../GEMS3K

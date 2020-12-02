@@ -25,9 +25,9 @@
 //-------------------------------------------------------------------
 
 #include <cmath>
-#include "io_simdjson.h"
 #include "simdjson/simdjson.h"
 #include "simdjson/simdjson.cpp"
+#include "io_simdjson.h"
 #include "v_detail.h"
 
 namespace  io_formats {
@@ -195,8 +195,8 @@ public:
         }
         catch( simdjson::simdjson_error& err )
         {
-            Error( std::string("SimdJson read error :") + std::to_string(err.error()) ,
-                   err.what() );
+           std::cout << std::to_string(err.error()) <<  err.what() << std::endl;
+           Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
         }
 
     }
@@ -265,8 +265,7 @@ void SimdJsonImpl::read_strings_array(const std::string &field_name, char *arr, 
     }
     catch( simdjson::simdjson_error& err )
     {
-        Error( std::string("SimdJson read error :") + std::to_string(err.error()) ,
-               err.what() );
+        Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
     }
 }
 
@@ -289,8 +288,7 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<double>
     }
     catch( simdjson::simdjson_error& err )
     {
-        Error( std::string("SimdJson read error :") + std::to_string(err.error()) ,
-               err.what() );
+        Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
     }
 }
 
@@ -313,8 +311,7 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<int64_t
     }
     catch( simdjson::simdjson_error& err )
     {
-        Error( std::string("SimdJson read error :") + std::to_string(err.error()) ,
-               err.what() );
+        Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
     }
 }
 
