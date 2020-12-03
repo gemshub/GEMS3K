@@ -25,6 +25,7 @@
 //-------------------------------------------------------------------
 
 #include <cmath>
+#include <iostream>
 #include "simdjson/simdjson.h"
 #include "simdjson/simdjson.cpp"
 #include "io_simdjson.h"
@@ -404,3 +405,4 @@ void SimdJsonWrite::write_array(const std::string &field_name, const std::vector
 
 }  // io_formats
 
+// https://stackoverflow.com/questions/8610571/what-is-rvalue-reference-for-this/8610714#8610714
