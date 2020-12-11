@@ -39,10 +39,10 @@ struct TError
         title(titl)
     {}
 
-    TError( const TError& other ):
-        mess(other.mess),
-        title(other.title)
-    {}
+//    TError( const TError& other ):
+//        mess(other.mess),
+//        title(other.title)
+//    {}
 
     virtual ~TError();
 };

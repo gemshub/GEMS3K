@@ -23,7 +23,7 @@ DEFINES += USE_OLD_NLOHMANJSON
 DEFINES += __unix
 QMAKE_CFLAGS += -pedantic -Wall -Wextra -Wwrite-strings -Werror
 
-QMAKE_CXXFLAGS += -Wall -Wextra -Wformat-nonliteral -Wcast-align -Wpointer-arith \
+QMAKE_CXXFLAGS += -fPIC -Wall -Wextra -Wformat-nonliteral -Wcast-align -Wpointer-arith \
  -Wmissing-declarations -Winline \ # -Wundef \ #-Weffc++ \
  -Wcast-qual -Wshadow -Wwrite-strings -Wno-unused-parameter \
  -Wfloat-equal -pedantic -ansi
