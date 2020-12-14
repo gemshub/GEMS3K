@@ -51,7 +51,8 @@ enum  PTCODE /// Codes of particle type
 
 struct  LOCATION /// Location (coordinates) of a point in space
         /// for implementation of particle transport algorithms
-{  double x,
+{
+    double x,
     y,
     z;
 
@@ -61,8 +62,8 @@ struct  LOCATION /// Location (coordinates) of a point in space
     LOCATION( double ax, double ay=0., double az=0. ):
         x(ax), y (ay), z(az) {}
 
-    LOCATION( const LOCATION& loc ):
-        x(loc.x), y (loc.y), z(loc.z) {}
+//    LOCATION( const LOCATION& loc ):
+//        x(loc.x), y (loc.y), z(loc.z) {}
 
     //   const LOCATION& operator= (const LOCATION& loc);
     //   {
@@ -96,8 +97,8 @@ protected:
 
     std::shared_ptr<TNode> internal_Node;
     TNode* calcNode;
-    DATABR* (*NodT0);  ///< array of nodes for previous time point
-    DATABR* (*NodT1);  ///< array of nodes for current time point
+    DATABR** NodT0;  ///< array of nodes for previous time point
+    DATABR** NodT1;  ///< array of nodes for current time point
 
     long int anNodes;  ///< Number of allocated nodes
     long int sizeN;	   ///< Number of nodes along x direction
@@ -174,6 +175,33 @@ protected:
     virtual void pVisor_Message( bool , long int =0, long int =0 ) {}
     // end of new stuff -------------------------------------------------------
 
+    /// Calls GEM IPM calculation for a node with absolute index ndx
+    long int RunGEM( TNode* wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray );
+
+    /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1)
+    /// in a loop with an optional openmp parallelization
+    void RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes );
+
+    /// Calls GEM IPM for one node with three indexes (along x,y,z)
+    long int  RunGEM( TNode* wrkNode, long int indN, long int indM, long int indK,
+                      long int Mode, DATABRPTR* nodeArray  )
+    { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode, nodeArray ); }
+    // (both calls clean the work node DATABR structure)
+
+    /// Initialization of TNodeArray data structures. Reads in the DBR text input files and
+    /// copying data from work DATABR structure into the node array
+    ///  \param dbrfiles_lst_name  pointer to a null-terminated C string with a path to a text file
+    ///                      containing the list of names of  DBR input files.
+    ///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
+    ///  \param nodeTypes    the initial node contents from DATABR files will be distributed among nodes in array
+    ///                      according to the distribution list nodeTypes
+    ///  \param getNodT1     optional parameter used only when reading multiple DBR files after modeling
+    ///                      task interruption  in GEM-Selektor
+    ///  \param type_f       defines if the file is in binary format (1), in text format (0) or in json format (2)
+    void  InitNodeArray( const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, GEMS3KGenerator::IOModes type_f  );
+
+    //---------------------------------------------------------
+
 public:
 
     static TNodeArray* na;   ///< static pointer to this class
@@ -209,144 +237,50 @@ public:
     inline long int Ph_xDB_to_xCH( const long int xBR ) const
     { return calcNode->Ph_xDB_to_xCH( xBR ); }
 
-//#ifndef IPMGEMPLUGIN
-//    // These calls are used only inside of GEMS-PSI GEM2MT module
-
-//    /// Constructor for integration in GEM2MT module of GEMS-PSI
-//    TNodeArray( long int nNodes, TMultiBase *apm );
-
-//    /// Constructor that uses 3D node arrangement
-//    TNodeArray( long int asizeN, long int asizeM, long int asizeK, TMultiBase *apm );
-
-//    /// Prints MULTI, DATACH and DATABR files structure prepared from GEMS.
-//    /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
-//    /// or if putNodT1 == true  as a break point for the running FMT calculation
-//    /// \param nIV - Number of allocated nodes
-//    /// \param bin_mode - Write IPM, DCH and DBR files in binary mode ( false - txt mode)
-//    /// \param brief_mode - Do not write data items that contain only default values
-//    /// \param with_comments -Write files with comments for all data entries ( in text mode)
-//    /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
-//    std::string PutGEM2MTFiles(  QWidget* par, long int nIV,
-//                             bool bin_mode = false, bool brief_mode = false, bool with_comments = true,
-//                             bool putNodT1=false, bool addMui=false );
-
     /// Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
     /// or if putNodT1 == true  as a break point for the running FMT calculation
     /// \param filepath - IPM work structure file path&name
     /// \param message - callback message function
     /// \param nIV - Number of allocated nodes
-    /// \param bin_mode - Write IPM, DCH and DBR files in binary mode ( false - txt mode)
+    /// \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments -Write files with comments for all data entries ( in text mode)
     /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
     /// \return DATABR list file name
     std::string genGEMS3KInputFiles(  const std::string& filepath, ProcessProgressFunction message,
-                                  long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
+                                  long int nIV, GEMS3KGenerator::IOModes type_f, bool brief_mode, bool with_comments,
                                   bool putNodT1, bool addMui );
 
     ///  Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
     ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
     ///                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
     ///                 will be used, extended with ".out".  Usually the dbr_file_name field contains the path to the last input DBR file.
-    ///   \param binary_f      defines if the file is to be written in binary format (true or 1, good for interruption of coupled modeling task
-    ///                 if called in the loop for each node), or in text format (false or 0, default).
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
     ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
     ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
     ///                 If   false (0), comments will not be written.
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
-    void  GEMS3k_write_dbr( const char* fname,  bool binary_f=false,
+    void  GEMS3k_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f,
                             bool with_comments = true, bool brief_mode = false);
+
+    ///  Reads the contents of the work instance of the DATABR structure from a disk file with path name  fname.
+    ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
+    ///
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    void  GEMS3k_read_dbr( long int ndx, std::string& dbr_file, GEMS3KGenerator::IOModes  type_f );
+
 
     /// Reads DATABR files saved by GEMS as a break point of the FMT calculation.
     /// Copying data from work DATABR structure into the node array NodT0
     /// and read DATABR structure into the node array NodT1 from file dbr_file
-    virtual void  setNodeArray( std::string& dbr_file, long int ndx, bool binary_f );
-
-//    /// Overloaded variant - takes lists of ICs, DCs and phases according to
-//    /// already existing index vectors axIC, axDC, axPH (with anICb, anDCb,
-//    /// anPHb, respectively)
-//    void InitCalcNodeStructures(  long int anICb, long int anDCb,  long int anPHb,
-//                                  long int* axIC, long int* axDC,  long int* axPH, bool no_interpolat,
-//                                  double* Tai, double* Pai,  long int nTp_,
-//                                  long int nPp_, double Ttol_, double Ptol_  )
-//    {
-//        calcNode->MakeNodeStructures(  anICb, anDCb,  anPHb,
-//                                      axIC, axDC,  axPH, no_interpolat,
-//                                      Tai,  Pai,  nTp_,  nPp_, Ttol_,  Ptol_  ) ;
-//    }
-
-//    /// Makes start DATACH and DATABR data using GEMS internal data (MULTI and other)
-//    /// interaction variant. The user must select ICs, DCs and phases to be included
-//    /// in DATABR lists
-//    /// Lookup arays from iterators
-//    void MakeNodeStructuresOne( QWidget* par, bool select_all,
-//                                double Tai[4], double Pai[4]  )
-//    {
-//        calcNode->MakeNodeStructures( par, select_all,  Tai, Pai  );
-//        // setup dataBR and NodeT0 data
-//        NodT0[0] = allocNewDBR( calcNode);
-//        NodT1[0] = allocNewDBR( calcNode);
-//        MoveWorkNodeToArray( calcNode, 0, 1, na->pNodT0() );
-//        MoveWorkNodeToArray( calcNode, 0, 1, na->pNodT1() );
-//    }
-
-//    /// Makes start DATACH and DATABR data using GEMS internal data (MULTI and other)
-//    /// interaction variant. The user must select ICs, DCs and phases to be included
-//    /// in DATABR lists
-//    void MakeNodeStructuresOne( QWidget* par, bool select_all,bool no_interpolat,
-//                                double *Tai, double *Pai, long int nTp_ = 1 ,
-//                                long int nPp_ = 1 , double Ttol_ = 1., double Ptol_ =1. )
-//    {
-//        calcNode->MakeNodeStructures( par, select_all, no_interpolat,
-//                                     Tai, Pai, nTp_, nPp_, Ttol_, Ptol_ );
-//        NodT0[0] = allocNewDBR( calcNode);
-//        NodT1[0] = allocNewDBR( calcNode);
-//        MoveWorkNodeToArray( calcNode, 0, 1, na->pNodT0() );
-//        MoveWorkNodeToArray( calcNode, 0, 1, na->pNodT1() );
-//    }
-
-//    const TNode& LinkToNode( long int ndx, long int nNodes, DATABRPTR* anyNodeArray )
-//    {
-//        CopyWorkNodeFromArray( calcNode, ndx, nNodes, anyNodeArray );
-//        return calcNode;
-//    }
-
-//    void SaveToNode( long int ndx, long int nNodes, DATABRPTR* anyNodeArray )
-//    {
-//        // Save databr
-//        calcNode->packDataBr();
-//        if( !NodT0[ndx] )
-//            NodT0[ndx] = allocNewDBR( calcNode);
-//        if( !NodT1[ndx] )
-//            NodT1[ndx] = allocNewDBR( calcNode);
-//        MoveWorkNodeToArray( calcNode, ndx, nNodes, anyNodeArray );
-//    }
-
-//    DATABR *reallocDBR( long int ndx, long int nNodes, DATABRPTR* anyNodeArray)
-//    {
-//        if( ndx < 0 || ndx>= nNodes )
-//            return nullptr;
-//        // free old memory
-//        if( anyNodeArray[ndx] )
-//        {
-//            anyNodeArray[ndx] = calcNode->databr_free( anyNodeArray[ndx] );
-//            delete[] anyNodeArray[ndx];
-//        }
-//        anyNodeArray[ndx] = allocNewDBR( calcNode );
-//        if( !NodT1[ndx] )
-//            NodT1[ndx] = allocNewDBR( calcNode);
-//        return anyNodeArray[ndx];
-//    }
-
-//#else
+    virtual void  setNodeArray( std::string& dbr_file, long int ndx, GEMS3KGenerator::IOModes type_f );
 
     // Used in GEMIPM2 standalone module only
     /// Constructors for 1D arrangement of nodes
     TNodeArray( long int nNod );
     /// Constructor that uses 3D node arrangement
     TNodeArray( long int asizeN, long int asizeM, long int asizeK );
-//#endif
 
     /// Makes one absolute node index from three spatial coordinate indexes
     inline long int iNode( long int indN, long int indM, long int indK ) const
@@ -430,36 +364,8 @@ public:
     long int  GEM_init( const char* ipmfiles_lst_name,
                         const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1);
 
-//    ///  Here we run command to setup GEMS3_server for GEM calculation in boxes from  start_node to end_node
-//    bool InitNodeServer();
-
     // end of new stuff -------------------------------------------------------
 
-    /// Calls GEM IPM calculation for a node with absolute index ndx
-    long int RunGEM( TNode* wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray );
-    
-    /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1)
-    /// in a loop with an optional openmp parallelization
-    void RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes );
-
-    /// Calls GEM IPM for one node with three indexes (along x,y,z)
-    long int  RunGEM( TNode* wrkNode, long int indN, long int indM, long int indK,
-                      long int Mode, DATABRPTR* nodeArray  )
-    { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode, nodeArray ); }
-    // (both calls clean the work node DATABR structure)
-
-    /// Initialization of TNodeArray data structures. Reads in the DBR text input files and
-    /// copying data from work DATABR structure into the node array
-    ///  \param dbrfiles_lst_name  pointer to a null-terminated C string with a path to a text file
-    ///                      containing the list of names of  DBR input files.
-    ///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
-    ///  \param nodeTypes    the initial node contents from DATABR files will be distributed among nodes in array
-    ///                      according to the distribution list nodeTypes
-    ///  \param getNodT1     optional parameter used only when reading multiple DBR files after modeling
-    ///                      task interruption  in GEM-Selektor
-    void  InitNodeArray( const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, bool binary_f  );
-
-    //---------------------------------------------------------
     // Methods for working with node arrays (access to data from DBR)
     /// Calculate phase (carrier) mass, kg  of single component phase
     double get_mPH( long int ia, long int nodex, long int PHx );

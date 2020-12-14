@@ -14,8 +14,9 @@
 #include <time.h>
 #include <math.h>
 #include <iomanip>
-#include "io_arrays.h"
 #include "m_gem2mt.h"
+#include "io_keyvalue.h"
+#include "io_simdjson.h"
 
 #include <dirent.h>
 #include <sys/stat.h>
@@ -106,12 +107,25 @@ void TGEM2MT::RecCalc()
 // read TGEM2MT structure from file
 int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
 {
+
  // read GEM2MT structure from file
   try
   {
-   std::fstream ff(gem2mt_in1, std::ios::in );
-   ErrorIf( !ff.good() , gem2mt_in1, "Fileopen error");
-   from_text_file( ff );
+   std::string gem2mt_in = gem2mt_in1;
+   std::fstream ff(gem2mt_in, std::ios::in );
+   ErrorIf( !ff.good() , gem2mt_in, "Fileopen error");
+
+   if( gem2mt_in.rfind(".json") != std::string::npos )
+   {
+       io_formats::SimdJsonRead in_format( ff );
+       from_text_file( in_format );
+   }
+   else
+   {
+       io_formats::KeyValueRead in_format( ff );
+       from_text_file( in_format );
+   }
+
    pathVTK = vtk_dir;
    if( !pathVTK.empty() )
    {
@@ -130,14 +144,26 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
 }
 
 // Write TGEM2MT structure to file
-int TGEM2MT::WriteTask( const char *gem2mt_out )
+int TGEM2MT::WriteTask( const char *gem2mt_out1 )
 {
  // write GEM2MT structure to file
   try
   {
+   std::string gem2mt_out = gem2mt_out1;
    std::fstream ff(gem2mt_out, std::ios::out );
    ErrorIf( !ff.good() , gem2mt_out, "Fileopen error");
-   to_text_file( ff, true, false, gem2mt_out );
+
+   if( gem2mt_out.rfind(".json") != std::string::npos )
+   {
+       io_formats::SimdJsonWrite out_format( ff, true );
+       to_text_file( out_format, true, false );
+   }
+   else
+   {
+       io_formats::KeyValueWrite out_format( ff );
+       to_text_file( out_format, true, false );
+   }
+
    return 0;
   }
   catch(TError& err)
@@ -180,6 +206,7 @@ int TGEM2MT::MassTransInit( const char *lst_f_name, const char *dbr_lst_f_name )
   nameVTK = lst_in;
   prefixVTK = lst_in;
 
+
   // The NodeArray must be allocated here
   TNodeArray::na = na = new TNodeArray( /* mtp->xC,mtp->yC,mtp->zC */ mtp->nC );
 
@@ -192,6 +219,7 @@ int TGEM2MT::MassTransInit( const char *lst_f_name, const char *dbr_lst_f_name )
   // if mtp->iStat == AS_RUN we resume calculation
   if( na->GEM_init( lst_f_name, dbr_lst_f_name, nodeType, mtp->iStat == AS_RUN ) )
         return 1;  // error reading files
+
   CalcIPM( NEED_GEM_AIA, 0, mtp->nC, 0 ); //recalc all nodes ?
 
   for( ii=0; ii< mtp->nTai; ii++)

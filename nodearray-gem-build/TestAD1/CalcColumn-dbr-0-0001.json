@@ -1,9 +1,9 @@
 {
-"<NodeStatusCH>": 1,
-"<NodeStatusFMT>": 1,
-"<P>": 100000.0,
-"<TK>": 298.15,
-"<bIC>": [
+"NodeStatusCH": 1,
+"NodeStatusFMT": 1,
+"P": 100000.0,
+"TK": 298.15,
+"bIC": [
 0.00035,
 0.00025,
 2e-07,

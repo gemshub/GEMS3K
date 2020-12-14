@@ -27,7 +27,8 @@
 #include <cmath>
 
 #include "v_detail.h"
-#include "io_arrays.h"
+#include "io_template.h"
+#include "io_keyvalue.h"
 #include "ms_multi.h"
 #include "node.h"
 #include "gdatastream.h"
@@ -457,7 +458,7 @@ pm.GamFs = nullptr;
 }
 
 /// Writing structure MULTI (GEM IPM work structure) to binary file
-void TMultiBase::out_multi( GemDataStream& ff, std::string& /*path*/  )
+void TMultiBase::out_multi( GemDataStream& ff  )
 {
      short arr[10];
 
@@ -1110,12 +1111,13 @@ void TMultiBase::to_text_file( const char *path, bool append )
   std::fstream ff(path, mod );
   ErrorIf( !ff.good() , path, "Fileopen error");
 
-  if( append )
-   ff << "\nNext record" << std::endl;
-  ff << pm.stkey << std::endl;
-//  TProfil::pm->pa.p.write(ff);
+  io_formats::KeyValueWrite out_format( ff );
+  io_formats::TPrintArrays<io_formats::KeyValueWrite>  prar( 0, nullptr, out_format );
 
-  TPrintArrays  prar(0,0,ff);
+  if( append )
+   prar.writeComment( true,"\nNext record" );
+  prar.writeComment( true, std::string(pm.stkey)+"\n" );
+  //  TProfil::pm->pa.p.write(ff);
 
   prar.writeArray( "Short_PARAM",  &pa_p_ptr()->PC, 10L );
   prar.writeArray( "Double_PARAM",  &pa_p_ptr()->DG, 28L );
@@ -1126,13 +1128,12 @@ void TMultiBase::to_text_file( const char *path, bool append )
   prar.writeArray(  "EpsWg", pm.epsWg, 5);
   prar.writeArray(  "DenW", pm.denW, 5);
   prar.writeArray(  "DenWg", pm.denWg, 5);
-  ff << std::endl << "Error Code " << pm.errorCode << std::endl;
-  ff << "Error Message" << pm.errorBuf << std::endl;
+  prar.writeComment( true, std::string("Error Code ")+ pm.errorCode);
+  prar.writeComment( true, std::string("Error Message") + pm.errorBuf);
 
    //dynamic values
 
     // Part 1
-
     /* need  always to alloc vectors */
   prar.writeArray(  "L1", pm.L1,  pm.FI);
   prar.writeArray(  "muk", pm.muk, pm.FI);

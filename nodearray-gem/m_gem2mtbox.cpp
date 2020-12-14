@@ -10,8 +10,8 @@
 // modelling by Gibbs energy minimization
 // Uses: GEM-Selektor GUI GUI DBMS library, gems/lib/gemvizor.lib
 //
-// This file may be distributed under the terms of GEMS3 Development
-// Quality Assurance Licence (GEMS3.QAL)
+// This file may be distributed under the GPL v.3 license
+
 //
 // See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
@@ -20,7 +20,6 @@
 #include <cmath>
 #include <cstdio>
 #include <iomanip>
-#include "io_arrays.h"
 
 
 #ifndef IPMGEMPLUGIN
@@ -541,7 +540,6 @@ TGEM2MT::BoxEqStatesUpdate(  long int Ni, long int /*pr*/, double tcur, double s
       Vmessage += buf;
       Vmessage += ". Please, wait (may take time)...";
 
-#ifdef Use_mt_mode
     if( mtp->PsSmode != S_OFF  )
     {
       STEP_POINT2();
@@ -549,10 +547,7 @@ TGEM2MT::BoxEqStatesUpdate(  long int Ni, long int /*pr*/, double tcur, double s
     else
       iRet = pVisor->Message( window(), GetName(),Vmessage.c_str(),
                            nstep, mtp->ntM );
-#else
-      iRet = pVisor->Message( window(), GetName(),Vmessage.c_str(),
-                             nstep, mtp->ntM );
-#endif
+
 
    if( iRet )
          Error("GEM2MT Box-Flux model", "Cancelled by the user");
@@ -713,7 +708,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 #endif
 
 // na->CopyWorkNodeFromArray( 0, mtp->nC,  na->pNodT1() );
-// na->GEM_write_dbr( "node0000.dat",  false, false );
+// na->GEM_write_dbr( "node0000.dat",  0, false );
 
     // In this mode, no start calculation of equilibria in all nodes!
     // Index of aq phase in DBR
@@ -768,7 +763,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 
 //sprintf(buf, "node_0000_wave_0000_noeq_dbr.dat" );
 //na->CopyWorkNodeFromArray( 0, mtp->nC,  na->pNodT1() );
-//na->GEM_write_dbr( buf, false, false );
+//na->GEM_write_dbr( buf, 0, false );
 
   //  This loop contains the overall transport time step (wave)
   do {
@@ -783,18 +778,15 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
       Vmessage += buf;
       Vmessage += ". Please, wait (may take time)...";
 
-#ifdef Use_mt_mode
-    if( mtp->PsSmode != S_OFF  )
-    {
-      STEP_POINT2();
-    }
-     else
-      iRet = pVisor->Message( window(), GetName(),Vmessage.c_str(),
-                           mtp->ct, mtp->ntM, UseGraphMonitoring );
-#else
-      iRet = pVisor->Message( window(), GetName(),Vmessage.c_str(),
-                             mtp->ct, mtp->ntM, UseGraphMonitoring );
-#endif
+      if( mtp->PsSmode != S_OFF  )
+      {
+          STEP_POINT2();
+      }
+      else
+      {
+          iRet = pVisor->Message( window(), GetName(),Vmessage.c_str(),
+                                  mtp->ct, mtp->ntM, UseGraphMonitoring );
+      }
 
       if( iRet )
              return iRet;// Error("GEM2MT SeqReac model", "Cancel by the user");
@@ -830,7 +822,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 
 //sprintf(buf, "node_%4.4d_wave_%4.4d_in_dbr.dat", p, mtp->ct );
 //na->CopyWorkNodeFromArray( p, mtp->nC,  na->pNodT1() );
-//na->GEM_write_dbr( buf,  false, false);
+//na->GEM_write_dbr( buf,  0, false);
 
          // calculate equilibrium state in q-th box
          node1_Tm( p ) = mtp->cTau;
@@ -843,7 +835,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 //             break;
 //sprintf(buf, "node_%4.4d_wave_%4.4d_out_dbr.dat", p, mtp->ct );
 //na->CopyWorkNodeFromArray( p, mtp->nC,  na->pNodT1() );
-//na->GEM_write_dbr( buf,  false, false);
+//na->GEM_write_dbr( buf,  0, false);
          // Calculation of current box reactive IC masses in kg
          BoxMasses( p );
          // Calculation of MGP bulk compositions in boxes (in moles of ICs)

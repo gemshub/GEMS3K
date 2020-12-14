@@ -33,20 +33,11 @@
 #include "kinetics.h"
 #include "activities.h"
 
-
 #include <cmath>
 #include <algorithm>
 
 #ifdef _MSC_VER
 #include <io.h>
-#endif
-
-#ifndef USE_OLD_KV_IO_FILES
-  const char *dat_ext = "json";
-  const char *dat_filt = "*.json";
-#else
-const char *dat_ext = "dat";
-const char *dat_filt = "*.dat";
 #endif
 
 // Conversion factors
@@ -328,7 +319,7 @@ long int TNode::GEM_run( bool uPrimalSol )
     CNode->IterDone = NumIterFIA+NumIterIPM;
 //**************************************************************
 // only for testing output results for files
-//    GEM_write_dbr( "calculated_dbr.dat",  false );
+//    GEM_write_dbr( "calculated_dbr.dat",  2 /*json*/ );
 //    GEM_print_ipm( "calc_multi.ipm" );
 // *********************************************************
 
@@ -403,256 +394,6 @@ long int TNode::GEM_Iterations( long int& PrecLoops_, long int& NumIterFIA_, lon
 	NumIterFIA_ = NumIterFIA;
 	NumIterIPM_ = NumIterIPM;
 	return NumIterFIA+NumIterIPM;
-}
-
-// (5) Reads another DBR file (with input system composition, T,P etc.). The DBR file must be compatible with
-// the currently loaded IPM and DCH files (see description  of GEM_init() function call).
-// Parameters:
-//    fname       Null-terminated (C) string containing a full path to the input DBR disk file.
-//    binary_f    Flag defining whether the file specified in fname is in text fromat (false or 0, default) or in binary format (true or 1)
-// Return values:     0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred.
-long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
-{
-  try
-  {
-    if( binary_f )
-	{
-       std::string str_file = fname;
-       GemDataStream in_br(str_file, std::ios::in|std::ios::binary);
-       databr_from_file(in_br);
-	}
-   else
-   {   std::fstream in_br(fname, std::ios::in );
-       ErrorIf( !in_br.good() , fname, "DataBR Fileopen error");
-       databr_from_text_file(in_br);
-   }
-
-    dbr_file_name = fname;
-
-  } catch(TError& err)
-    {
-      std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-      f_log << "GEMS3K input : file " << fname << std::endl;
-      f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
-        err.title.c_str() << ":" <<  err.mess.c_str() << std::endl;
-      return 1;
-    }
-    catch(...)
-    {
-      return -1;
-    }
-  return 0;
-}
-
-//-------------------------------------------------------------------
-// (1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs
-//  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files.
-//  Parameters:
-//  ipmfiles_lst_name - name of a text file that contains:
-//    " -t/-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name>
-//  dbfiles_lst_name - name of a text file that contains:
-//    <dataBR  file name1>, ... , <dataBR file nameN> "
-//    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
-//    exist in the same directory where the ipmfiles_lst_name file is located.
-//    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
-//    and must contain valid initial chemical systems (of the same structure
-//    as described in the DCH_DAT file) to set up the initial state of the FMT
-//    node array. If -t flag or nothing is specified then all data files must
-//    be in text (ASCII) format; if -b flag is specified then all data files
-//    are  assumed to be binary (little-endian) files.
-//  nodeTypes[nNodes] - optional parameter used only on the TNodeArray level,
-//    array of node type (fortran) indexes of DBR_DAT files
-//    in the ipmfiles_lst_name list. This array (handle for each FMT node),
-//    specifies from which DBR_DAT file the initial chemical system should
-//    be taken.
-//  getNodT1 - optional flag, used only (if true) when reading multiple DBR files
-//    after the coupled modeling task interruption in GEM-Selektor
-//  This function returns:
-//   0: OK; 1: GEM IPM read file error; -1: System error (e.g. memory allocation)
-//
-//-------------------------------------------------------------------
-long int  TNode::GEM_init( const char* ipmfiles_lst_name )
-{
-
-   // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
-  std::string curPath = ""; //current reading file path
-  std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-  try
-    {
-     bool binary_f = false;
-     std::string lst_in = ipmfiles_lst_name;
-     std::string Path = "";         // was " "   fixed 10.12.2009 by DK
-// Get path
-      size_t pos = lst_in.rfind("\\");
-      if( pos == std::string::npos )
-         pos = lst_in.rfind("/");
-      else
-         pos = std::max(pos, lst_in.rfind("/") );
-      if( pos < std::string::npos )
-      Path = lst_in.substr(0, pos+1);
-
-//  open file stream for the file names list file
-    std::fstream f_lst( lst_in.c_str(), std::ios::in );
-    ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
-
-     std::string datachbr_fn;
-     f_getline( f_lst, datachbr_fn, ' ');
-
-//  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
-//       "<DBR_DAT file1 name>" [, ... , "<DBR_DAT fileN name>"]
-
-//Testing flag "-t" or "-b" (by default "-t")   // use binary or text files
-      pos = datachbr_fn.find( '-');
-      if( pos != std::string::npos )
-      {
-         if( datachbr_fn[pos+1] == 'b' )
-            binary_f = true;
-         f_getline( f_lst, datachbr_fn, ' ');
-      }
- //     f_getline( f_lst, datachbr_fn, ' ');
-      // Reading name of DCH_DAT file
-      std::string dat_ch = Path + datachbr_fn;
-
-      // Reading name of IPM_DAT file for structure MULTI (GEM IPM work structure)
-      f_getline( f_lst, datachbr_fn, ' ');
-      std::string mult_in = Path + datachbr_fn;
-
-// Reading DCH_DAT file in binary or text format
-      curPath = dat_ch;
-      if( binary_f )
-      {  GemDataStream f_ch(dat_ch, std::ios::in|std::ios::binary);
-         datach_from_file(f_ch);
-       }
-      else
-      { std::fstream f_ch(dat_ch.c_str(), std::ios::in );
-         ErrorIf( !f_ch.good() , dat_ch.c_str(), "DCH_DAT fileopen error");
-         datach_from_text_file(f_ch);
-      }
-
-// Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
-curPath = mult_in;
-if( binary_f )
- {
-   GemDataStream f_m(mult_in, std::ios::in|std::ios::binary);
-   multi->read_multi(f_m, CSD);
- }
-  else
-  {
-    std::fstream ff( mult_in, std::ios::in );
-    ErrorIf( !ff.good() , mult_in, "Fileopen error");
-    multi->from_text_file_gemipm( ff, CSD);
-  }
-
-  // copy intervals for minimizatiom
-   pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
-   pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
-   pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
-   pmm->Pai[3] = CSD->Ptol/bar_to_Pa;
-
-   pmm->Tai[0] = CSD->TKval[0]-C_to_K;
-   pmm->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
-   pmm->Tai[2] = getStep( pmm->Tai, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
-   pmm->Tai[3] = CSD->Ttol;
-
-  pmm->Fdev1[0] = 0.;
-  pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
-  pmm->Fdev2[0] = 0.;
-  pmm->Fdev2[1] = 1e-6;
-
-  // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
-       f_getline( f_lst, datachbr_fn, ' ');
-
-        std::string dbr_file = Path + datachbr_fn;
-        curPath = dbr_file;
-        if( binary_f )
-        {
-               GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
-               databr_from_file(in_br);
-        }
-        else
-        {   std::fstream in_br(dbr_file.c_str(), std::ios::in );
-                   ErrorIf( !in_br.good() , datachbr_fn.c_str(),
-                      "DBR_DAT fileopen error");
-                 databr_from_text_file(in_br);
-        }
-        curPath = "";
-        dbr_file_name = dbr_file;
-
-// Creating and initializing the TActivity class instance for this TNode instance
-        init_into_gems3k();
-   return 0;
-
-    }
-    catch(TError& err)
-    {
-      if( !curPath.empty() )
-          f_log << "GEMS3K input : file " << curPath.c_str() << std::endl;
-      f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
-    }
-    catch(...)
-    {
-        return -1;
-    }
-    return 1;
-}
-
-
-//  Parameters:
-//  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
-//  @param ipm_json -  Multi structure as a json/key-value string
-//  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
-long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json )
-{
-    load_thermodynamic_data = false; // need load thermo
-    std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-  try
-    {
-    // Reading DCH_DAT data
-    datach_from_string(dch_json);
-
-    // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
-    multi->gemipm_from_string( ipm_json,CSD );
-
-  // copy intervals for minimizatiom
-   pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
-   pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
-   pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
-   pmm->Pai[3] = CSD->Ptol/bar_to_Pa;
-
-   pmm->Tai[0] = CSD->TKval[0]-C_to_K;
-   pmm->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
-   pmm->Tai[2] = getStep( pmm->Tai, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
-   pmm->Tai[3] = CSD->Ttol;
-
-  pmm->Fdev1[0] = 0.;
-  pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
-  pmm->Fdev2[0] = 0.;
-  pmm->Fdev2[1] = 1e-6;
-
-  // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
-  databr_from_string(dbr_json);
-
-   // Creating and initializing the TActivity class instance for this TNode instance
-   init_into_gems3k();
-   return 0;
-
-    }
-    catch(TError& err)
-    {
-      f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
-    }
-    catch(...)
-    {
-        return -1;
-    }
-    return 1;
-}
-
-void TNode::init_into_gems3k()
-{
-    //InitReadActivities( mult_in.c_str(),CSD ); // from DCH file in future?
-    multi->InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
-    this->InitCopyActivities( CSD, pmm, CNode );
 }
 
 
@@ -1309,7 +1050,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
           xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC
           // Retrieves (interpolated) molar entropy S0(P,TK) value for Dependent Component (in J/K/mol)
           ent = DC_S0( xch, CNode->P, CNode->TK );
-          if( ent != 0.0 )
+          if( noZero(ent) )
               entr += ent * (CNode->xDC[xdc]);
           // else out of P or T range of interpolation
   //        std::cout << "        xdc: " << xdc << " xch: " << xch << " ent: " << ent << " entr: " << entr << std::endl;
@@ -1337,9 +1078,9 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
      for(xdc = xdcb; xdc < xdce; xdc++ )
      {
           xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC
-          // Retrieves (interpolated) molar entropy S0(P,TK) value for Dependent Component (in J/K/mol)
+          // Retrieves (interpolated) heat capacity Cp0(TK) value for Dependent Component (in J/K/mol)
           cap = DC_Cp0( xch, CNode->P, CNode->TK );
-          if( cap != 0.0 )
+          if( noZero(cap) )
               capp += cap * (CNode->xDC[xdc]);
           // else out of P or T range of interpolation
   //        std::cout << "        xdc: " << xdc << " xch: " << xch << " cap: " << cap << " capp: " << capp << std::endl;
@@ -2400,59 +2141,6 @@ void TNode::unpackDataBr( bool uPrimalSol )
 
 //  End
 }
-
-
-// (3) Writes the contents of the work instance of DATABR structure into a disk file with path name fname.
-//   Parameters:
-//   fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
-//                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
-//                 will be used, extended with ".out".  Usually the dbr_file_name field contains the path to the last input DBR file.
-//   binary_f      defines if the file is to be written in binary format (true or 1, good for interruption of coupled modeling task
-//                 if called in the loop for each node), or in text format (false or 0, default).
-//   with_comments (text format only): defines the mode of output of comments written before each data tag and  content
-//                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
-//                 If   false (0), comments will not be written.
-//  brief_mode     if true (1), tells not to write data items that contain only default values.
-//
-void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments, bool brief_mode )
-   {
-       std::string str_file;
-       if( fname == 0)
-           str_file = dbr_file_name;//+".out";
-       else
-           str_file = fname;
-
-
-       if( binary_f )
-       {
-            // std::string str_file = fname;
-              GemDataStream out_br(str_file, std::ios::out|std::ios::binary);
-              databr_to_file(out_br);
-       }
-       else
-       {  std::fstream out_br(str_file.c_str(), std::ios::out );
-         ErrorIf( !out_br.good() , str_file.c_str(), "DataBR text make error");
-         databr_to_text_file(out_br, with_comments, brief_mode, str_file.c_str() );
-       }
-   }
-
-// (4) Produces a formatted text file with detailed contents (scalars and arrays) of the GEM IPM work structure.
-// This call is useful when GEM_run() returns with a NodeStatusCH value indicating a GEM calculation error
-// (see  above).  Another use is for a detailed comparison of a test system calculation after the version upgrade of GEMS3K.
-// Parameters: fname   null-terminated (C) string containing a full path to the disk file to be written.
-//                     NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance will be used,
-//                     extended with ".dump.out".  Usually the dbr_file_name field contains the path to the last input DBR file.
-//
-   void  TNode::GEM_print_ipm( const char* fname )
-   {
-     std::string str_file;
-     if( fname == 0)
-    	   str_file = dbr_file_name + ".Dump.out";
-     else
-           str_file = fname;
-
-       multi->to_text_file(str_file.c_str());//profil1->outMultiTxt( str_file.c_str()  );
-   }
 
 
 // (9) Optional, for passing the current mass transport time and time step into the work

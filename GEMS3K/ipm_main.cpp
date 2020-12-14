@@ -289,7 +289,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
            double AmThExp, AmountThreshold, ChemPotDiffCutoff = 1e-2;
      //      long int eRet;
 
-           AmThExp = (double)abs(pa_p->PRD);
+           AmThExp = abs(pa_p->PRD);
            if( AmThExp < 4.)
                AmThExp = 4.;
            AmountThreshold = pow(10,-AmThExp);

@@ -9,8 +9,8 @@
 // modelling by Gibbs energy minimization
 // Uses: GEM-Selektor GUI GUI DBMS library, gems/lib/gemvizor.lib
 //
-// This file may be distributed under the terms of GEMS3 Development
-// Quality Assurance Licence (GEMS3.QAL)
+// This file may be distributed under the GPL v.3 license
+
 //
 // See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
@@ -20,12 +20,18 @@
 #define _m_gem2mt_h_
 
 
+#ifndef NOPARTICLEARRAY
 #include "particlearray.h"
+#endif
+
+namespace  io_formats {
 class TRWArrays;
+}
 
 #ifndef IPMGEMPLUGIN
 
 #include "m_param.h"
+#include "nodearray_gui.h"
 #include "v_ipnc.h"
 #include "graph_window.h"
 
@@ -358,8 +364,8 @@ class TGEM2MT
     std::string title;           // changed titler to title
 #endif
 
-  TNodeArray* na;       // pointer to nodearray class instance
-  TParticleArray* pa_mt;       // pointer to TParticleArray class instance
+  TNodeArray* na = nullptr;       // pointer to nodearray class instance
+  TParticleArray* pa_mt = nullptr;       // pointer to TParticleArray class instance
 
     std::string pathVTK;
     std::string nameVTK;
@@ -415,9 +421,9 @@ protected:
          nstep,     // number of steps
          naccept,   // number of permissible steps
          nrejct;    // number of unpermissible steps
-    double *x;
-    double *dx;
-    double *tv;
+    double *x = nullptr;
+    double *dx = nullptr;
+    double *tv = nullptr;
 
     // Flow-through box-flux transport simulations
     void  BoxFluxTransportStart();
@@ -519,9 +525,11 @@ public:
 #endif
 
     // for separate
-    void checkAlws(TRWArrays&  prar1, TRWArrays&  prar);
-    void to_text_file( std::fstream& ff, bool with_comments, bool brief_mode, const char* path );
-    void from_text_file( std::fstream& ff);
+    void checkAlws(io_formats::TRWArrays&  prar1, io_formats::TRWArrays&  prar) const;
+    template<typename TIO>
+    void to_text_file( TIO& out_format, bool with_comments, bool brief_mode ) const;
+    template<typename TIO>
+    void from_text_file(TIO& ff);
 
     bool userCancel;
     bool stepWise;

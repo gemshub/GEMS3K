@@ -1,15 +1,14 @@
 #  qmake project file for the gemcalc example (part of GEMS3K standalone code)
-# (c) 2012-2019 GEMS Developer Team
+# (c) 2012-2020 GEMS Developer Team
  
 TEMPLATE = app
 LANGUAGE = C++
 TARGET = gemcalc
-VERSION = 3.4.6
+VERSION = 3.7.0
 
 CONFIG -= qt
 CONFIG -= warn_on
 CONFIG += debug
-#CONFIG += windows
 CONFIG += console
 CONFIG += c++17
 
@@ -17,14 +16,14 @@ CONFIG += c++17
 #DEFINES += IPMGEMPLUGIN
 DEFINES += NODEARRAYLEVEL
 DEFINES += NOPARTICLEARRAY
-DEFINES += USE_OLD_KV_IO_FILES
+#DEFINES += USE_OLD_NLOHMANJSON
 
 !win32 {
   DEFINES += __unix
 QMAKE_CFLAGS += pedantic -Wall -Wextra -Wwrite-strings -Werror
 
 QMAKE_CXXFLAGS += -Wall -Wextra -Wformat-nonliteral -Wcast-align -Wpointer-arith \
- -Wmissing-declarations -Winline -Wundef \ #-Weffc++ \
+ -Wmissing-declarations -Winline \ #-Wundef -Weffc++ \
  -Wcast-qual -Wshadow -Wwrite-strings -Wno-unused-parameter \
  -Wfloat-equal -pedantic -ansi
 

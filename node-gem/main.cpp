@@ -34,16 +34,9 @@
 #include <time.h>
 time_t start,stop;
 
-#define fileNameLength 64
-/// Get Path of file and Reading list of file names from it, return number of files
-char  (* f_getfiles(const char *f_name, char *Path,
-        long int& nElem, char delim ))[fileNameLength];
-
 //The case of data exchange in computer memory
 int main( int argc, char* argv[] )
 {
-   char (*recipes)[fileNameLength] = 0;
-
    // Analyzing command line arguments ( Default arguments)
    char input_system_file_list_name[256] = "system-dat.lst";
    char input_recipes_file_list_name[256] = "more_recipes.lst";
@@ -55,7 +48,7 @@ int main( int argc, char* argv[] )
        strncpy( input_recipes_file_list_name, argv[2], 256);
 
     // Creates TNode structure instance accessible trough the "node" pointer
-    TNode* node  = new TNode();
+    std::shared_ptr<TNode> node( new TNode());
 
     // (1) Initialization of GEMS3K internal data by reading  files
     //     whose names are given in the ipm_input_system_file_list_name
@@ -112,22 +105,21 @@ int main( int argc, char* argv[] )
 
     if (argc >= 3 )  // Read DATABR structure from text file
     {
-       char NextRecipeFileName[256];
-       //char NextRecipeOutFileName[300];
-       char input_recipes_file_list_path[256-fileNameLength] = "";
-
+       std::string  NextRecipeFileName, NextRecipeOutFileName;
        // Reading list of recipes names from file
-       recipes = f_getfiles(  input_recipes_file_list_name,
-                  input_recipes_file_list_path, mt.nRecipes, ',');
+       GEMS3KGenerator input_data(input_system_file_list_name);
+       mt.nRecipes = input_data.load_dbr_lst_file( input_recipes_file_list_name );
        // in this example, nRecipes = 1 (one additional input recipe)
 
        for(  in=0; in<min(mt.nRecipes, mt.nNodes); in++ )
        {
           // Trying to read the next DBR file name
-          sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path, recipes[in] );
+           NextRecipeFileName = input_data.get_next_dbr_file( in );
+           if( NextRecipeFileName.empty() )
+               continue;
 
           // (5) Reading the next DBR file (boundary condition on the left)
-          node->GEM_read_dbr( NextRecipeFileName );
+          node->GEM_read_dbr( NextRecipeFileName.c_str(), input_data.files_mode() );
           // Asking GEM IPM to run with automatic initial approximation
           dBR->NodeStatusCH = NEED_GEM_AIA;
           node->GEM_from_MT_time( 0., -1. );
@@ -253,8 +245,6 @@ int main( int argc, char* argv[] )
    // Final output e.g. of total simulation time or of the final distribution of
    //  components and phases in all nodes can be implemented here
 
-   // deleting GEM IPM and data exchange memory structures
-   delete node;
    // end of example
    return 0;
 }
@@ -466,62 +456,6 @@ double TMyTransport::OneTimeStepRun_CN( long int *ICndx, long int nICndx )
     return dt;
 }
 
-const int bGRAN = 20;
-
-// Get Path of file and Reading list of file names from it, return number of files
-char  (* f_getfiles(const char *f_name, char *Path,
-        long int& nElem, char delim ))[fileNameLength]
-{
-  int ii, bSize = bGRAN;
-  char  (*filesList)[fileNameLength];
-  char  (*filesListNew)[fileNameLength];
-  filesList = new char[bSize][fileNameLength];
-  string name;
-
-// Get path
-   string path_;
-   string flst_name = f_name;
-   size_t pos = flst_name.rfind("/");
-   path_ = "";
-   if( pos < string::npos )
-      path_ = flst_name.substr(0, pos+1);
-   strncpy( Path, path_.c_str(), 256-fileNameLength);
-   Path[255] = '\0';
-
-//  open file stream for the file names list file
-   fstream f_lst( f_name/*flst_name.c_str()*/, ios::in );
-   ErrorIf( !f_lst.good(), f_name, "Fileopen error");
-
-// Reading list of names from file
-  nElem = 0;
-  while( !f_lst.eof() )
-  {
-    f_getline( f_lst, name, delim);
-    if( nElem >= bSize )
-    {    bSize = bSize+bGRAN;
-         filesListNew = new char[bSize][fileNameLength];
-         for( ii=0; ii<nElem-1; ii++ )
-           strncpy( filesListNew[ii], filesList[ii], fileNameLength);
-         delete[] filesList;
-         filesList =  filesListNew;
-    }
-    strncpy( filesList[nElem], name.c_str(), fileNameLength);
-    filesList[nElem][fileNameLength-1] = '\0';
-    nElem++;
-  }
-
-  // Realloc memory for reading size
-  if( nElem != bSize )
-  {
-    filesListNew = new char[nElem][fileNameLength];
-    for(  ii=0; ii<nElem; ii++ )
-      strncpy( filesListNew[ii], filesList[ii], fileNameLength);
-    delete[] filesList;
-    filesList =  filesListNew;
-  }
-
-  return filesList;
-}
 
 //---------------------------------------------------------------------------
 // end of main.cpp for the node-gem (TNode-level usage) coupled-code example

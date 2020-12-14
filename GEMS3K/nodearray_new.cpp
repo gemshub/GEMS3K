@@ -37,14 +37,12 @@
 #include "v_detail.h"
 
 #ifdef NODEARRAYLEVEL
-
-#ifndef NOPARTICLEARRAY
-#include "particlearray.h"
-#endif
 #include "nodearray.h"
-#include "io_arrays.h"
 #include "gdatastream.h"
-
+#include "io_keyvalue.h"
+#include "io_nlohmann.h"
+#include "io_simdjson.h"
+#include "gems3k_impex.h"
 
 TNodeArray::TNodeArray( long int nNod  ):
     internal_Node(new TNode()), calcNode(internal_Node.get()),
@@ -390,32 +388,21 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
                                 const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
 {
 
-    calcNode->GEM_init( ipmfiles_lst_name );
-    // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
-    std::string curPath = ""; //current reading file path
+    auto ret = calcNode->GEM_init( ipmfiles_lst_name );
+    if( ret )
+        return ret;
+
     std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
     try
     {
-        bool binary_f = false;
-
-        //  open file stream for the file names list file
-        std::fstream f_lst( ipmfiles_lst_name, std::ios::in );
-        ErrorIf( !f_lst.good() , ipmfiles_lst_name, "Fileopen error");
-
-        std::string datachbr_fn;
-        f_getline( f_lst, datachbr_fn, ' ');
-
-        //Testing flag "-t" or "-b" (by default "-t")   // use binary or text files
-        size_t pos = datachbr_fn.find( '-');
-        if( pos != std::string::npos )
-        {
-            if( datachbr_fn[pos+1] == 'b' )
-                binary_f = true;
-            f_getline( f_lst, datachbr_fn, ' ');
-        }
         // Reading DBR_DAT files from dbrfiles_lst_name
         if(  dbrfiles_lst_name )
-            InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, binary_f  );
+        {
+            //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
+            //       "<DBR_DAT file1 name>" [ ...  "<DBR_DAT fileN name>"]
+            GEMS3KGenerator generator( ipmfiles_lst_name );
+            InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, generator.files_mode()  );
+        }
         else
             if( nNodes() ==1 )
                 setNodeArray( 0 , nullptr  );
@@ -424,12 +411,14 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
         return 0;
 
     }
-    catch(TError& err) {
-        if( !curPath.empty() )
-            f_log << "GEMS3K input : file " << curPath.c_str() << std::endl;
+    catch(TError& err)
+    {
+        if( ipmfiles_lst_name )
+            f_log << "GEMS3K input : file " << ipmfiles_lst_name << std::endl;
         f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
     }
-    catch(...) {
+    catch(...)
+    {
         return -1;
     }
     return 1;
@@ -441,67 +430,41 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
 // copying data from work DATABR structure into the node array
 // (as specified in nodeTypes array, ndx index of dataBR files in
 //    the dbrfiles_lst_name list).
-//
+//   type_f    defines if the file is in binary format (1), in text format (0) or in json format (2)
 //-------------------------------------------------------------------
 void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
-                                 long int *nodeTypes, bool getNodT1, bool binary_f  )
+                                 long int *nodeTypes, bool getNodT1, GEMS3KGenerator::IOModes type_f  )
 {
     int i;
     std::string datachbr_fn;
-
-    std::string curPath = ""; //current reading file path
     std::string lst_in = dbrfiles_lst_name;
-    std::string Path = "";
-
-    // Get path
-    size_t pos = lst_in.rfind("\\");
-    if( pos == std::string::npos )
-        pos = lst_in.rfind("/");
-    else
-        pos = std::max(pos, lst_in.rfind("/") );
-
-    if( pos < std::string::npos )
-        Path = lst_in.substr(0, pos+1);
+    std::string dir_path = u_getpath( lst_in )  + "/";
 
     //  open file stream for the file names list file
-    std::fstream f_lst( lst_in.c_str(), std::ios::in );
-    ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
-
+    std::fstream f_lst( lst_in, std::ios::in );
+    ErrorIf( !f_lst.good() , lst_in, "Fileopen error");
 
     // Prepare for reading DBR_DAT files
     i = 0;
     while( !f_lst.eof() )  // For all DBR_DAT files listed
     {
-
-        pVisor_Message(false, i, nNodes() );
+        pVisor_Message( false, i, nNodes() );
 
         // Reading DBR_DAT file into work DATABR structure
-        if( i )  // Comma only after the first DBR_DAT file!
-            f_getline( f_lst, datachbr_fn, ',');
-        else
-            f_getline( f_lst, datachbr_fn, ' ');
+        getline( f_lst, datachbr_fn, ',');
+        trim( datachbr_fn );
+        trim( datachbr_fn, "\"" );
 
-        std::string dbr_file = Path + datachbr_fn;
-        curPath = dbr_file;
-        if( binary_f )
-        {
-            GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
-            calcNode->databr_from_file(in_br);
-        }
-        else
-        {   std::fstream in_br(dbr_file.c_str(), std::ios::in );
-            ErrorIf( !in_br.good() , datachbr_fn.c_str(),
-                     "DBR_DAT fileopen error");
-            calcNode->databr_from_text_file(in_br);
-        }
-        curPath = "";
+        std::string dbr_file = dir_path + datachbr_fn;
+        calcNode->read_dbr_format_file( dbr_file,  type_f );
+
         // Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
         //    unpackDataBr();
 
         if( getNodT1 )  // optional parameter used only when reading multiple
             // DBR files after coupled modeling task interruption in GEM-Selektor
         {
-            setNodeArray( dbr_file, i, binary_f );
+            setNodeArray( dbr_file, i, type_f );
         }
         else
         {
@@ -539,20 +502,10 @@ void  TNodeArray::checkNodeArray(
 //
 //-------------------------------------------------------------------
 
-void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, bool binary_f )
+void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, GEMS3KGenerator::IOModes type_f )
 {
-    replace(dbr_file, "dbr-0-","dbr-1-");
-    if( binary_f )
-    {
-        GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
-        calcNode->databr_from_file(in_br);
-    }
-    else
-    {   std::fstream in_br(dbr_file.c_str(), std::ios::in );
-        ErrorIf( !in_br.good() , dbr_file.c_str(),
-                 "DataBR Fileopen error");
-        calcNode->databr_from_text_file(in_br);
-    }
+    replace( dbr_file, "dbr-0-","dbr-1-" );
+    calcNode->read_dbr_format_file( dbr_file,  type_f );
 
     NodT0[ndx] = allocNewDBR( calcNode);
     NodT1[ndx] = allocNewDBR( calcNode);
@@ -560,122 +513,45 @@ void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, bool binary
     MoveWorkNodeToArray(calcNode, ndx, anNodes, NodT1);
 }
 
-//// Writing dataCH, dataBR structure to binary/text files
-//// and other necessary GEM2MT files
-//std::string TNodeArray::PutGEM2MTFiles(  QWidget* par, long int nIV,
-//                                     bool bin_mode, bool brief_mode, bool with_comments,
-//                                     bool putNodT1, bool addMui )
-//{
-//    // Get name of filenames structure
-//    std::string path = std::string( rt[RT_SYSEQ].FldKey(2), 0, rt[RT_SYSEQ].FldLen(2));;
-//    strip(path);
-//    if( bin_mode )
-//        path += "-bin.lst";
-//    else
-//        path += "-dat.lst";
-
-//AGAIN:
-//    // open file to output
-//    if( vfChooseFileSave(par, path, "Please, enter IPM work structure file name", "*.lst" ) == false )
-//        return "";
-
-//    if( !access(path.c_str(), 0 ) ) //file exists
-//        switch( vfQuestion3( par, path.c_str(), "This set of files exists!",
-//                             "&Overwrite", "&Rename", "&Cancel") )
-//        {
-//        case VF3_2:
-//            goto AGAIN;
-//        case VF3_1:
-//            break;
-//        case VF3_3:
-//            return path;
-//        }
-
-//    ProcessProgressFunction messageF = [nIV, par](const std::string& message, long point){
-//        return  pVisor->Message( par, "GEM2MT node array",  message.c_str() , point, nIV );
-//    };
-//    genGEMS3KInputFiles(  path, messageF, nIV, bin_mode, brief_mode, with_comments,
-//                          putNodT1, addMui );
-
-//    pVisor->CloseMessage();
-//    return path;
-//}
-
 // Writing dataCH, dataBR structure to binary/text files
 // and other necessary GEM2MT files
 std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, ProcessProgressFunction message,
-                                              long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
-                                              bool putNodT1, bool addMui )
+                                              long int nIV, GEMS3KGenerator::IOModes type_f, bool brief_mode,
+                                              bool with_comments,   bool putNodT1, bool addMui )
 {
-    std::fstream fout;
-    std::fstream fout2;
-    std::string Path_;
-    std::string dir;
-    std::string name;
-    std::string newname;
-    std::string path;
-    char buf[20];
+    std::fstream fout_dat_lst;
+    std::fstream fout_dbr_lst;
+    GEMS3KGenerator generator( filepath, nIV, type_f );
 
-    path = filepath;
-    u_splitpath( path, dir, name, newname );
+    // open *-dat.lst
+    fout_dat_lst.open( filepath, std::ios::out );
+    fout_dat_lst << generator.gen_dat_lst_head();
 
-    // get name
-    auto pos = name.rfind("-");
-    if( pos != std::string::npos )
-        name = name.substr(0, pos);
+    // open *-dbr.lst
+    std::string dbr_lst_file_path = generator.get_dbr_file_lst_path();
+    fout_dbr_lst.open( dbr_lst_file_path, std::ios::out);
 
-    // making special files
-    // put data to pmfiles-bin.lst file
-    if( bin_mode )
+    switch( generator.files_mode() )
     {
-        fout.open(path.c_str(), std::ios::out);
-        fout << "-b \"" << name.c_str() << "-dch.bin\"";
-        fout << " \"" << name.c_str() << ".ipm\" ";
-    }
-    // put data to pmfiles-dat.lst file
-    else
-    {   fout.open(path.c_str(), std::ios::out);
-        fout << "-t \"" << name.c_str() << "-dch."<<dat_ext << "\"";
-        fout << " \"" << name.c_str() << "-ipm."<<dat_ext << "\" ";
-    }
-
-    std::string path2 = name;
-    path2 += "-dbr";
-    path2 = u_makepath( dir, path2, "lst" );
-    fout2.open(path2.c_str(), std::ios::out);
-
-    if( bin_mode )
+    case GEMS3KGenerator::f_binary:
     {
-        //  putting MULTI to binary file
-        Path_ = u_makepath( dir, name, "ipm" );
-        GemDataStream  ff(Path_, std::ios::out|std::ios::binary);
-        calcNode->multi->out_multi( ff, Path_  );
-    }
-    else
-    {
-        // output MULTI to txt file
-        newname = name+"-ipm";
-        Path_ = u_makepath( dir, newname, dat_ext );
-        std::fstream ff( Path_.c_str(), std::ios::out );
-        ErrorIf( !ff.good() , Path_, "Fileopen error");
-        calcNode->multi->to_text_file_gemipm( ff, addMui, with_comments, brief_mode );
-    }
+        GemDataStream  ff( generator.get_ipm_path(), std::ios::out|std::ios::binary );
+        calcNode->multi->out_multi( ff  );
 
-    // out dataCH to binary file
-    newname = name+"-dch";
-    if( bin_mode )
-    {  Path_ = u_makepath( dir, newname, "bin" );
-        GemDataStream  f_ch1(Path_, std::ios::out|std::ios::binary);
-        calcNode->datach_to_file(f_ch1);
-        f_ch1.close();
+        GemDataStream  f_ch( generator.get_dch_path(), std::ios::out|std::ios::binary);
+        calcNode->datach_to_file( f_ch);
     }
-    // out dataCH to text file
-    else
-    {  //newname = name+"-dch";
-        Path_ = u_makepath( dir, newname, dat_ext );
-        std::fstream  f_ch2(Path_.c_str(), std::ios::out);
-        calcNode->datach_to_text_file(f_ch2, with_comments, brief_mode, Path_.c_str() );
-        f_ch2.close();
+        break;
+    default:
+    {
+        std::fstream ff( generator.get_ipm_path(), std::ios::out );
+        ErrorIf( !ff.good(), generator.get_ipm_path(), "Fileopen error");
+        calcNode->multi->write_ipm_format_stream( ff, generator.files_mode(), addMui, with_comments, brief_mode );
+
+        std::fstream  f_ch( generator.get_dch_path(), std::ios::out);
+        calcNode->write_dch_format_stream( f_ch, generator.files_mode(), with_comments, brief_mode );
+    }
+        break;
     }
 
     nIV = std::min( nIV, nNodes() );
@@ -686,78 +562,48 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
             continue;
 
         message( "Writing to disk a set of node array files from interrupted RMT task. \nPlease, wait...", ii );
-        // Save databr
         CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT0 );
+        auto dbr_file_name = generator.gen_dbr_file_name( 0, ii );
+        calcNode->write_dbr_format_file( generator.get_path(dbr_file_name), generator.files_mode(), with_comments, brief_mode );
 
-        sprintf( buf, "%4.4ld", ii );
-        // dataBR files - binary
-        if( bin_mode )
-        {
-            newname =  name + + "-dbr-0-"  + buf;
-            Path_ = u_makepath( dir, newname, "bin" );
-            GemDataStream  f_br1(Path_, std::ios::out|std::ios::binary);
-            calcNode->databr_to_file(f_br1);
-            f_br1.close();
-            if( first )
-                fout << " \"" << newname.c_str() << ".bin\"";
-            if( !first )
-                fout2 << ",";
-            fout2 << " \"" << newname.c_str() << ".bin\"";
-        }
-        else
-        {
-            newname = name + "-dbr-0-" + buf;
-            Path_ = u_makepath( dir, newname, dat_ext );
-            std::fstream  f_br2(Path_.c_str(), std::ios::out);
-            calcNode->databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
-            f_br2.close();
-            if( first )
-                fout << " \"" << newname.c_str() << "."<<dat_ext << "\"";
-            if( !first )
-                fout2 << ",";
-            fout2 << " \"" << newname.c_str() << "."<<dat_ext << "\"";
-        }
+        fout_dat_lst << " \"" << dbr_file_name << "\"";
+        if( !first )
+            fout_dbr_lst << ",";
+        fout_dbr_lst << " \"" << dbr_file_name << "\"";
         first = false;
 
         if( putNodT1 && NodT1[ii]) // put NodT1[ii] data
         {
 
-            // Save databr
             CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT1 );
-
-            // dataBR files - binary
-            if( bin_mode )
-            {
-                newname =  name +  "-dbr-1-"  + buf;
-                Path_ = u_makepath( dir, newname, "bin" );
-                GemDataStream  f_br1(Path_, std::ios::out|std::ios::binary);
-                calcNode->databr_to_file(f_br1);
-                f_br1.close();
-                //         fout << ", \"" << newname.c_str() << ".bin\"";
-            }
-            else
-            {
-                newname = name + "-dbr-1-" + buf;
-                Path_ = u_makepath( dir, newname, dat_ext );
-                std::fstream  f_br2(Path_.c_str(), std::ios::out);
-                calcNode->databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
-                f_br2.close();
-                //         fout << ", \"" << newname.c_str() << "."<< dat_ext << "\"";
-            }
+            auto dbr2_file_name = generator.gen_dbr_file_name( 1, ii );
+            calcNode->write_dbr_format_file( generator.get_path(dbr2_file_name), generator.files_mode(), with_comments, brief_mode );
         }
     } // ii
 
-    return path2; // dbr list file
+    return dbr_lst_file_path;
 }
 
 
-
-void  TNodeArray::GEMS3k_write_dbr( const char* fname,  bool binary_f,
+void  TNodeArray::GEMS3k_write_dbr( const char* fname, GEMS3KGenerator::IOModes  type_f,
                                     bool with_comments, bool brief_mode )
 {
     calcNode->packDataBr();
-    calcNode->GEM_write_dbr( fname,  binary_f, with_comments, brief_mode );
+    calcNode->GEM_write_dbr( fname,  type_f, with_comments, brief_mode );
+}
+
+void  TNodeArray::GEMS3k_read_dbr( long int ndx, std::string& dbr_file, GEMS3KGenerator::IOModes  type_f )
+{
+    calcNode->read_dbr_format_file( dbr_file,  type_f );
+
+    if( !NodT0[ndx] )
+        NodT0[ndx] = allocNewDBR( calcNode);
+    if( !NodT1[ndx] )
+        NodT1[ndx] = allocNewDBR( calcNode);
+    MoveWorkNodeToArray(calcNode, ndx, anNodes, NodT0);
+    MoveWorkNodeToArray(calcNode, ndx, anNodes, NodT1);
 }
 
 #endif
+
 //-----------------------End of nodearray_new.cpp--------------------------
