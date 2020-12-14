@@ -1,7 +1,7 @@
 name: GEMS3K
 
 dependencies:
-  - gxx_linux-64=8.5.0  # [linux]
+  - gxx_linux-64=9.3.0  # [linux]
   - cmake>=3.7
   - ninja # [unix]
   - make  # [win]
