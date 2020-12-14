@@ -26,6 +26,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <string_view>
 #include "simdjson/simdjson.h"
 #include "simdjson/simdjson.cpp"
 #include "io_simdjson.h"
