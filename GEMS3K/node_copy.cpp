@@ -28,11 +28,13 @@
 #include  <iomanip>
 #include  <iostream>
 #include  <sstream>
-#include "v_detail.h"
 #include "node.h"
-#include "gdatastream.h"
 #include "num_methods.h"
-
+#include "gdatastream.h"
+#include "io_keyvalue.h"
+#include "io_nlohmann.h"
+#include "io_simdjson.h"
+#include "v_detail.h"
 
 // Writes CSD (DATACH structure) to a json/key-value string
 // \param brief_mode - Do not write data items that contain only default values
@@ -40,16 +42,19 @@
 std::string TNode::datach_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
-    datach_to_text_file( ss, with_comments, brief_mode );
+    write_dch_format_stream( ss, GEMS3KGenerator::default_type_f, with_comments, brief_mode );
     return ss.str();
 }
 
 // Reads CSD (DATACH structure) from a json/key-value string
 bool TNode::datach_from_string( const std::string& data )
 {
+    if( data.empty() )
+        return false;
+
     std::stringstream ss;
     ss.str(data);
-    datach_from_text_file( ss );
+    read_dch_format_stream( ss, GEMS3KGenerator::default_type_f );
     return true;
 }
 
@@ -59,7 +64,7 @@ bool TNode::datach_from_string( const std::string& data )
 std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
-    databr_to_text_file( ss, with_comments, brief_mode );
+    write_dbr_format_stream( ss, GEMS3KGenerator::default_type_f, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -71,8 +76,393 @@ bool TNode::databr_from_string( const std::string& data )
 
     std::stringstream ss;
     ss.str(data);
-    databr_from_text_file( ss );
+    read_dbr_format_stream( ss, GEMS3KGenerator::default_type_f );
     return true;
+}
+
+void  TNode::read_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes  type_f )
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+    {
+        GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
+        databr_from_file(in_br);
+    }
+        break;
+    default:
+    {
+        std::fstream in_br( dbr_file, std::ios::in );
+        ErrorIf( !in_br.good() , dbr_file, "DBR_DAT fileopen error");
+        read_dbr_format_stream( in_br, type_f );
+    }
+        break;
+    }
+}
+
+void  TNode::write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f,
+                                    bool with_comments, bool brief_mode )
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+    {
+        GemDataStream  f_br( dbr_file, std::ios::out|std::ios::binary );
+        databr_to_file(f_br);
+    }
+        break;
+    default:
+    {
+        std::fstream  f_br( dbr_file, std::ios::out);
+        write_dbr_format_stream( f_br, type_f, with_comments, brief_mode );
+    }
+        break;
+    }
+}
+
+void  TNode::read_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes  type_f )
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+        break;
+    case GEMS3KGenerator::f_nlohmanjson:
+#ifdef USE_OLD_NLOHMANJSON
+    {
+        io_formats::NlohmannJsonRead in_format( stream );
+        databr_from_text_file(in_format);
+    }
+        break;
+#endif
+    case GEMS3KGenerator::f_json:
+    {
+        io_formats::SimdJsonRead in_format( stream );
+        databr_from_text_file(in_format);
+    }
+        break;
+    case GEMS3KGenerator::f_key_value:
+    {
+        io_formats::KeyValueRead in_format( stream );
+        databr_from_text_file(in_format);
+    }
+        break;
+    }
+}
+
+
+void  TNode::write_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
+                                    bool with_comments, bool brief_mode ) const
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+        break;
+    case GEMS3KGenerator::f_nlohmanjson:
+#ifdef USE_OLD_NLOHMANJSON
+    {
+        io_formats::NlohmannJsonWrite out_format( stream );
+        databr_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+#endif
+    case GEMS3KGenerator::f_json:
+    {
+        io_formats::SimdJsonWrite out_format( stream, with_comments );
+        databr_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+    case GEMS3KGenerator::f_key_value:
+    {
+        io_formats::KeyValueWrite out_format( stream );
+        databr_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+    }
+}
+
+void  TNode::read_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes  type_f )
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+        break;
+    case GEMS3KGenerator::f_nlohmanjson:
+#ifdef USE_OLD_NLOHMANJSON
+    {
+        io_formats::NlohmannJsonRead in_format( stream );
+        datach_from_text_file(in_format);
+    }
+        break;
+#endif
+    case GEMS3KGenerator::f_json:
+    {
+        io_formats::SimdJsonRead in_format( stream );
+        datach_from_text_file(in_format);
+    }
+        break;
+    case GEMS3KGenerator::f_key_value:
+    {
+        io_formats::KeyValueRead in_format( stream );
+        datach_from_text_file(in_format);
+    }
+        break;
+    }
+}
+
+
+void  TNode::write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
+                                    bool with_comments, bool brief_mode ) const
+{
+    switch( type_f )
+    {
+    case GEMS3KGenerator::f_binary:
+        break;
+    case GEMS3KGenerator::f_nlohmanjson:
+#ifdef USE_OLD_NLOHMANJSON
+    {
+        io_formats::NlohmannJsonWrite out_format( stream );
+        datach_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+#endif
+    case GEMS3KGenerator::f_json:
+    {
+        io_formats::SimdJsonWrite out_format( stream, with_comments );
+        datach_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+    case GEMS3KGenerator::f_key_value:
+    {
+        io_formats::KeyValueWrite out_format( stream );
+        datach_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+    }
+}
+
+//-------------------------------------------------------------------
+// (1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs
+//  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files.
+//  Parameters:
+//  ipmfiles_lst_name - name of a text file that contains:
+//    " -t/-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name>
+//  dbfiles_lst_name - name of a text file that contains:
+//    <dataBR  file name1>, ... , <dataBR file nameN> "
+//    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
+//    exist in the same directory where the ipmfiles_lst_name file is located.
+//    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
+//    and must contain valid initial chemical systems (of the same structure
+//    as described in the DCH_DAT file) to set up the initial state of the FMT
+//    node array. If -t flag or nothing is specified then all data files must
+//    be in text (ASCII) format; if -b flag is specified then all data files
+//    are  assumed to be binary (little-endian) files.
+//  nodeTypes[nNodes] - optional parameter used only on the TNodeArray level,
+//    array of node type (fortran) indexes of DBR_DAT files
+//    in the ipmfiles_lst_name list. This array (handle for each FMT node),
+//    specifies from which DBR_DAT file the initial chemical system should
+//    be taken.
+//  getNodT1 - optional flag, used only (if true) when reading multiple DBR files
+//    after the coupled modeling task interruption in GEM-Selektor
+//  This function returns:
+//   0: OK; 1: GEM IPM read file error; -1: System error (e.g. memory allocation)
+//
+//-------------------------------------------------------------------
+long int  TNode::GEM_init( const char* ipmfiles_lst_name )
+{
+    std::fstream f_log( TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+    try
+    {
+        //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
+        //       "<DBR_DAT file1 name>" [ ...  "<DBR_DAT fileN name>"]
+        GEMS3KGenerator generator( ipmfiles_lst_name );
+
+        switch( generator.files_mode() )
+        {
+        case GEMS3KGenerator::f_binary:
+        {
+            GemDataStream f_ch( generator.get_dch_path(), std::ios::in|std::ios::binary );
+            datach_from_file(f_ch);
+
+            GemDataStream f_m( generator.get_ipm_path(), std::ios::in|std::ios::binary );
+            multi->read_multi(f_m, CSD);
+        }
+            break;
+        default:
+        {
+            std::fstream f_ch( generator.get_dch_path(), std::ios::in );
+            ErrorIf( !f_ch.good() , generator.get_dch_path(), "DCH_DAT fileopen error");
+            read_dch_format_stream( f_ch, generator.files_mode() );
+
+            std::fstream ff( generator.get_ipm_path(), std::ios::in );
+            ErrorIf( !ff.good() , generator.get_ipm_path(), "Fileopen error");
+            multi->read_ipm_format_stream( ff,generator.files_mode(), CSD);
+        }
+            break;
+        }
+
+        // copy intervals for minimizatiom
+        pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
+        pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
+        pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+        pmm->Pai[3] = CSD->Ptol/bar_to_Pa;
+
+        pmm->Tai[0] = CSD->TKval[0]-C_to_K;
+        pmm->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
+        pmm->Tai[2] = getStep( pmm->Tai, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+        pmm->Tai[3] = CSD->Ttol;
+
+        pmm->Fdev1[0] = 0.;
+        pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
+        pmm->Fdev2[0] = 0.;
+        pmm->Fdev2[1] = 1e-6;
+
+        // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
+        std::string dbr_file = generator.get_dbr_path( 0 );
+        ErrorIf( dbr_file.empty() , ipmfiles_lst_name, " Undefined DBR_DAT file name");
+        read_dbr_format_file( dbr_file, generator.files_mode() );
+        dbr_file_name = dbr_file;
+
+        // Creating and initializing the TActivity class instance for this TNode instance
+        init_into_gems3k();
+        return 0;
+    }
+    catch(TError& err)
+    {
+        if( ipmfiles_lst_name )
+            f_log << "GEMS3K input : file " << ipmfiles_lst_name << std::endl;
+        f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
+    }
+    catch(...)
+    {
+        return -1;
+    }
+    return 1;
+}
+
+
+//  Parameters:
+//  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
+//  @param ipm_json -  Multi structure as a json/key-value string
+//  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
+long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json )
+{
+    load_thermodynamic_data = false; // need load thermo
+    std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+    try
+    {
+        // Reading DCH_DAT data
+        datach_from_string(dch_json);
+
+        // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
+        multi->gemipm_from_string( ipm_json,CSD );
+
+        // copy intervals for minimizatiom
+        pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
+        pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
+        pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+        pmm->Pai[3] = CSD->Ptol/bar_to_Pa;
+
+        pmm->Tai[0] = CSD->TKval[0]-C_to_K;
+        pmm->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
+        pmm->Tai[2] = getStep( pmm->Tai, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+        pmm->Tai[3] = CSD->Ttol;
+
+        pmm->Fdev1[0] = 0.;
+        pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
+        pmm->Fdev2[0] = 0.;
+        pmm->Fdev2[1] = 1e-6;
+
+        // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
+        databr_from_string(dbr_json);
+
+        // Creating and initializing the TActivity class instance for this TNode instance
+        init_into_gems3k();
+        return 0;
+
+    }
+    catch(TError& err)
+    {
+        f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
+    }
+    catch(...)
+    {
+        return -1;
+    }
+    return 1;
+}
+
+void TNode::init_into_gems3k()
+{
+    //InitReadActivities( mult_in.c_str(),CSD ); // from DCH file in future?
+    multi->InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
+    this->InitCopyActivities( CSD, pmm, CNode );
+}
+
+// (3) Writes the contents of the work instance of DATABR structure into a disk file with path name fname.
+//   Parameters:
+//   fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
+//                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
+//                 will be used, extended with ".out".  Usually the dbr_file_name field contains the path to the last input DBR file.
+//   type_f    defines if the file is in binary format (1), in text format (0) or in json format (2)
+//   with_comments (text format only): defines the mode of output of comments written before each data tag and  content
+//                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
+//                 If   false (0), comments will not be written.
+//   brief_mode     if true (1), tells not to write data items that contain only default values.
+//
+void  TNode::GEM_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode )
+{
+    std::string str_file;
+    if( fname == 0)
+        str_file = dbr_file_name;//+".out";
+    else
+        str_file = fname;
+    write_dbr_format_file( str_file, type_f, with_comments, brief_mode );
+}
+
+// (4) Produces a formatted text file with detailed contents (scalars and arrays) of the GEM IPM work structure.
+// This call is useful when GEM_run() returns with a NodeStatusCH value indicating a GEM calculation error
+// (see  above).  Another use is for a detailed comparison of a test system calculation after the version upgrade of GEMS3K.
+// Parameters: fname   null-terminated (C) string containing a full path to the disk file to be written.
+//                     NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance will be used,
+//                     extended with ".dump.out".  Usually the dbr_file_name field contains the path to the last input DBR file.
+//
+void  TNode::GEM_print_ipm( const char* fname )
+{
+    std::string str_file;
+    if( fname == 0)
+        str_file = dbr_file_name + ".Dump.out";
+    else
+        str_file = fname;
+
+    multi->to_text_file(str_file.c_str());//profil1->outMultiTxt( str_file.c_str()  );
+}
+
+// (5) Reads another DBR file (with input system composition, T,P etc.). The DBR file must be compatible with
+// the currently loaded IPM and DCH files (see description  of GEM_init() function call).
+// Parameters:
+//    fname       Null-terminated (C) string containing a full path to the input DBR disk file.
+//    binary_f    Flag defining whether the file specified in fname is in text fromat (false or 0, default) or in binary format (true or 1)
+// Return values:     0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred.
+long int  TNode::GEM_read_dbr( const char* fname, GEMS3KGenerator::IOModes type_f )
+{
+    try
+    {
+        read_dbr_format_file( fname, type_f );
+        dbr_file_name = fname;
+    }
+    catch(TError& err)
+    {
+        std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+        f_log << "GEMS3K input : file " << fname << std::endl;
+        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
+                 err.title.c_str() << ":" <<  err.mess.c_str() << std::endl;
+        return 1;
+    }
+    catch(...)
+    {
+        return -1;
+    }
+    return 0;
 }
 
 
@@ -167,7 +557,6 @@ void TNode::databr_copy( DATABR* otherCNode )
     copyValues( CNode->omPH, otherCNode->omPH, CSD->nPHb );
 }
 
-//#endif
 
 // allocating DataCH structure
 void TNode::datach_realloc()

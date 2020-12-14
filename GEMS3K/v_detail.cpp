@@ -2,6 +2,21 @@
 #include <istream>
 #include "v_detail.h"
 
+TError::~TError()
+{}
+
+[[ noreturn ]] void Error (const std::string& title, const std::string& message)
+{
+    throw TError(title, message);
+}
+
+void ErrorIf (bool error, const std::string& title, const std::string& message)
+{
+    if(error)
+        throw TError(title, message);
+}
+
+
 void strip(std::string& str)
 {
   std::string::size_type pos1 = str.find_first_not_of(' ');
@@ -19,6 +34,20 @@ void replace( std::string& str, const char* old_part, const char* new_part)
         res += new_part;
         res += str.substr( pos+strlen(old_part));
         str = res;
+    }
+}
+
+void replaceall( std::string& str, const char* old_part, const char* new_part)
+{
+    size_t posb=0, pos = str.find( old_part ); //rfind( old_part );
+    while( pos != std::string::npos )
+    {
+        std::string res(str.substr(0, pos));
+        res += new_part;
+        res += str.substr( pos+strlen(old_part) );
+        str = res;
+        posb = pos + strlen(new_part);
+        pos = str.find( old_part, posb );
     }
 }
 
@@ -52,8 +81,7 @@ std::istream& f_getline(std::istream& is, std::string& str, char delim)
 }
 
 std::string
-u_makepath(const std::string& dir,
-           const std::string& name, const std::string& ext)
+u_makepath(const std::string& dir,  const std::string& name, const std::string& ext)
 {
     std::string Path(dir);
     if( dir != "")
@@ -65,12 +93,20 @@ u_makepath(const std::string& dir,
     return Path;
 }
 
+std::string u_getpath( const std::string& file_path )
+{
+    std::size_t pos = file_path.find_last_of("/\\");
+    if( pos != std::string::npos )
+        return file_path.substr(0, pos);
+    return "";
+}
 
-void
-u_splitpath(const std::string& Path, std::string& dir,
+
+void u_splitpath(const std::string& Path, std::string& dir,
             std::string& name, std::string& ext)
 {
-    size_t pos = Path.rfind("/");
+    // Get path
+    std::size_t pos = Path.find_last_of("/\\");
     if( pos != std::string::npos )
     {
         dir = Path.substr(0, pos);
@@ -81,15 +117,15 @@ u_splitpath(const std::string& Path, std::string& dir,
         dir = "";
         pos = 0;
     }
-    size_t pose = Path.rfind(".");
+    name = Path.substr(pos);
+    size_t pose = name.rfind(".");
     if( pose != std::string::npos )
     {
-        ext = Path.substr( pose+1, std::string::npos );
-        name = Path.substr(pos, pose-pos);
+        ext = name.substr( pose+1, std::string::npos );
+        name = name.substr(0, pose);
     }
     else
     {
         ext = "";
-        name = Path.substr(pos, std::string::npos);
     }
 }

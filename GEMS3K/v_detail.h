@@ -28,7 +28,7 @@
 
 #include <limits>
 #include <cmath>
-//#include <algorithm>
+#include <algorithm>
 #include "verror.h"
 
 
@@ -42,9 +42,19 @@ std::istream& f_getline(std::istream& is, std::string& str, char delim);
 std::string u_makepath(const std::string& dir,
            const std::string& name, const std::string& ext);
 
-/// Splits full pathname to path, directory, name and extension
-void u_splitpath(const std::string& Path, std::string& dir,
+/// Replace all characters to character in string (in place).
+inline void replace_all(std::string &s, const std::string &characters, char to_character )
+{
+    std::replace_if( s.begin(), s.end(), [=](char ch) {
+        return characters.find_first_of(ch)!=std::string::npos;
+    }, to_character );
+}
+
+/// Splitting full pathname to path, directory, name and extension
+void u_splitpath(const std::string& pathname, std::string& dir,
             std::string& name, std::string& ext);
+/// Get directory from full pathname
+std::string u_getpath( const std::string& pathname );
 
 inline int ROUND(double x )
 {
@@ -143,6 +153,52 @@ template<typename T>
 bool noZero( const T& a, const T& epsilon = std::numeric_limits<T>::epsilon() )
 {
     return fabs(a) >  epsilon;
+}
+
+/// Trim all whitespace characters from start (in place).
+inline void ltrim(std::string &s )
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+        return !isspace(ch);
+    }));
+}
+
+/// Trim all whitespace characters from end (in place).
+inline void rtrim(std::string &s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+        return !isspace(ch);
+    }).base(), s.end());
+}
+
+/// Trim all whitespace characters from both ends (in place).
+inline void trim(std::string &s )
+{
+    ltrim(s);
+    rtrim(s);
+}
+
+/// Trim characters from start (in place).
+inline void ltrim(std::string &s, const std::string &characters )
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [=](char ch) {
+        return characters.find_first_of(ch)==std::string::npos;
+    }));
+}
+
+/// Trim characters from end (in place).
+inline void rtrim(std::string &s, const std::string &characters)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(), [=](char ch) {
+        return characters.find_first_of(ch)==std::string::npos;
+    }).base(), s.end());
+}
+
+/// Trim characters from both ends (in place).
+inline void trim(std::string &s, const std::string &characters )
+{
+    ltrim(s, characters);
+    rtrim(s, characters);
 }
 
 #endif // V_DETAIL_H

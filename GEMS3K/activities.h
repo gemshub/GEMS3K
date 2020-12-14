@@ -30,8 +30,10 @@
 //-------------------------------------------------------------------
 //
 #ifndef Activity_H_
+
 #define Activity_H_
 
+//#include "node.h"
 #include "datach.h"
 #include "databr.h"
 #include "s_solmod.h"
@@ -345,6 +347,7 @@ public:
         long int  getXvolume();
 
     // ipm_chemical2.cpp
+        void GasParcP();
         void phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] );
         void phase_bfc( long int k, long int jj );
         double bfc_mass( void );
@@ -355,6 +358,7 @@ public:
 
 //  Surface activity coefficient terms
 //        long int SurfaceActivityCoeff( long int jb, long int je, long int jpb, long int jdb, long int k );
+//    void SurfaceActivityTerm( long int jb, long int je, long int k );  // Obsolete / deleted
 
 //  ipm_chemical3.cpp
 //        void IS_EtaCalc();
@@ -392,6 +396,8 @@ public:
     void updateActivities(); // compute primal activities
     void updateChemicalData();
 };
+
+
 
 #endif
 // -----------------------------------------------------------------------------
