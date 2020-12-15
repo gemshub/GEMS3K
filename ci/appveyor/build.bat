@@ -10,3 +10,4 @@ echo "Configuring..."
 cmake -G"Visual Studio 15 2017" -A x64 -S . -B build
 echo "Building..."
 cmake --build build --config %CONFIGURATION% --target install
+if errorlevel 1 exit 1
