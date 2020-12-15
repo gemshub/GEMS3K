@@ -26,9 +26,11 @@ cmake -GNinja \
     -DCMAKE_INSTALL_LIBDIR=lib \
     ..
 ninja install
-if [ $? -eq 1 ]
+if [ $? -eq 0 ]
 then
-echo "The install failed" >&2
-exit 1
+    echo "The make step ran OK"
+else
+    echo "The make step failed" >&2
+    exit 1
 fi
 conda list
