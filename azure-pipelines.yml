@@ -4,7 +4,8 @@
 # https://docs.microsoft.com/azure/devops/pipelines/apps/c-cpp/gcc
 
 trigger:
-- main
+- master
+- releases/*
 
 pool:
   vmImage: 'ubuntu-latest'
