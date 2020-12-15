@@ -1,6 +1,6 @@
 # GEMS3K
 
-[![Build Status](https://travis-ci.com/gemshub/GEMS3K.svg?branch=master)](https://travis-ci.com/gemshub/GEMS3K)
+[![Build Status](https://dev.azure.com/mirondanro/gemshub/_apis/build/status/gemshub.GEMS3K?branchName=master)](https://dev.azure.com/mirondanro/gemshub/_build/latest?definitionId=5&branchName=master)
 [![Build status](https://ci.appveyor.com/api/projects/status/o6sqwb9xamhi7txn?svg=true)](https://ci.appveyor.com/project/gdmiron/gems3k)
 [![Conda Forge](https://anaconda.org/conda-forge/gems3k/badges/version.svg)](https://anaconda.org/conda-forge/gems3k)
 
