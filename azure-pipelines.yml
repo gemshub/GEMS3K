@@ -7,10 +7,12 @@ trigger:
 - master
 - releases/*
 
-pool:
-  vmImage: 'ubuntu-latest'
+jobs:
+- job: Linux
+  pool:
+    vmImage: 'ubuntu-16.04'
 
-steps:
-- task: Bash@3
-  inputs:
-    filePath: 'ci/pipelines/install.sh'
+  steps:
+  - task: Bash@3
+    inputs:
+      filePath: 'ci/pipelines/install.sh'
