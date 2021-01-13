@@ -195,7 +195,7 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path,
         }
         else if ((arg == "-n") || (arg == "--nlohmanjson"))
         {
-            export_data.io_mode = GEMS3KGenerator::f_json;
+            export_data.io_mode = GEMS3KGenerator::f_nlohmanjson;
         }
         else if ((arg == "-t") || (arg == "--key-value"))
         {

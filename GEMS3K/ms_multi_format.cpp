@@ -172,7 +172,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
     char PSigm;
     get_PAalp_PSigm( PAalp, PSigm);
 
-    out_format.put_head( "", "ipm");
+    out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
     io_formats::TPrintArrays<TIO>  prar( 80, MULTI_dynamic_fields, out_format );
 

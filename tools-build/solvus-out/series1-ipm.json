@@ -1,5 +1,6 @@
 [
 {
+  "_key" : "series1-ipm",
   "set" : "series1",
   "ipm" : {
     "ID_key": "Node:0:time:0:dt:0",

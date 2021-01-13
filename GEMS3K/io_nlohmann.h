@@ -41,6 +41,7 @@ class NlohmannJsonWrite
     nlohmann::json top_data;
     std::iostream& fout;
     std::string current_set_name;
+    std::string field_name;
 
     template <class T>
     void add_value( const T& value, nlohmann::json& json_arr  )
@@ -57,22 +58,23 @@ public:
 
     /// Constructor
     NlohmannJsonWrite( std::iostream& ff, const std::string& test_set_name ):
-        top_data(), fout(ff), current_set_name(test_set_name)
+        json_data(), top_data(), fout(ff), current_set_name(test_set_name)
     {}
     const std::string& set_name() const
     {
       return current_set_name;
     }
 
-    void put_head( const std::string &key_name, const std::string &field_name )
+    void put_head( const std::string &key_name, const std::string &the_field_name )
     {
+      field_name = the_field_name;
       top_data["set"] = current_set_name;
       top_data["_key"] = key_name;
-      json_data = top_data[field_name];
     }
 
     void dump( bool not_brief )
     {
+        top_data[field_name] = json_data;
         auto json_array =  nlohmann::json::array();
         json_array.push_back(top_data);
         fout << json_array.dump(( not_brief ? 4 : 0 ));
@@ -175,7 +177,7 @@ public:
         if( !test_set_name.empty() )
         {
             auto json_set = json_data["set"];
-            if( json_set == test_set_name )
+            if( json_set.get<std::string>().find(test_set_name) == std::string::npos )
                 std::cout << "Read the document from another set: " <<  json_set
                           << " , current set " << test_set_name  <<  std::endl;
         }
