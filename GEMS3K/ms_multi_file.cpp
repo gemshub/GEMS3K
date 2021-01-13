@@ -1112,6 +1112,7 @@ void TMultiBase::to_text_file( const char *path, bool append )
   ErrorIf( !ff.good() , path, "Fileopen error");
 
   io_formats::KeyValueWrite out_format( ff );
+  out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
   io_formats::TPrintArrays<io_formats::KeyValueWrite>  prar( 0, nullptr, out_format );
 
   if( append )

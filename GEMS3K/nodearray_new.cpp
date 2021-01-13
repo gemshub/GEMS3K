@@ -522,6 +522,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     std::fstream fout_dat_lst;
     std::fstream fout_dbr_lst;
     GEMS3KGenerator generator( filepath, nIV, type_f );
+    calcNode->current_output_set_name = generator.set_name();
 
     // open *-dat.lst
     fout_dat_lst.open( filepath, std::ios::out );
@@ -546,7 +547,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     {
         std::fstream ff( generator.get_ipm_path(), std::ios::out );
         ErrorIf( !ff.good(), generator.get_ipm_path(), "Fileopen error");
-        calcNode->multi->write_ipm_format_stream( ff, generator.files_mode(), addMui, with_comments, brief_mode );
+        calcNode->multi->write_ipm_format_stream( ff, generator.files_mode(), addMui, with_comments, brief_mode, calcNode->output_set_name() );
 
         std::fstream  f_ch( generator.get_dch_path(), std::ios::out);
         calcNode->write_dch_format_stream( f_ch, generator.files_mode(), with_comments, brief_mode );

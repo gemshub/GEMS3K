@@ -459,6 +459,7 @@ void TGEM2MT::to_text_file( TIO& out_format, bool with_comments, bool brief_mode
 {
     bool _comment = with_comments;
 
+    out_format.put_head( "", "gem2mt");
     io_formats::TPrintArrays<TIO>  prar1(57, GEM2MT_static_fields, out_format );
     io_formats::TPrintArrays<TIO>  prar(26, GEM2MT_dynamic_fields, out_format );
 

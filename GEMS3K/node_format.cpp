@@ -178,12 +178,7 @@ void TNode::databr_to_text_file( TIO& out_format, bool with_comments, bool brief
 {
     bool _comment = with_comments;
 
-//#ifdef USE_OLD_NLOHMANJSON
-//    io_formats::NlohmannJsonWrite out_format( ff );
-//#else
-//    io_formats::KeyValueWrite out_format( ff );
-//#endif
-
+    out_format.put_head( GEMS3KGenerator::gen_dbr_name(out_format.set_name(), 0, CNode->NodeHandle), "dbr");
     io_formats::TPrintArrays<TIO>  prar( f_omph+1/*55*/, DataBR_fields, out_format );
 
     if( _comment )
@@ -322,11 +317,6 @@ void TNode::databr_from_text_file( TIO& in_format )
     // mem_set( &CNode->Tm, 0, 19*sizeof(double));
     databr_reset( CNode );
 
-//#ifdef USE_OLD_NLOHMANJSON
-//    io_formats::NlohmannJsonRead in_format( ff );
-//#else
-//    io_formats::KeyValueRead in_format( ff );
-//#endif
     io_formats::TReadArrays<TIO>  rdar(f_omph+1/*55*/, DataBR_fields, in_format);
 
     long int nfild = rdar.findNext();
@@ -500,11 +490,7 @@ void TNode::datach_to_text_file(  TIO& out_format, bool with_comments, bool brie
 {
     bool _comment = with_comments;
 
-//#ifdef USE_OLD_NLOHMANJSON
-//    io_formats::NlohmannJsonWrite out_format( ff );
-//#else
-//    io_formats::KeyValueWrite out_format( ff );
-//#endif
+    out_format.put_head( GEMS3KGenerator::gen_dch_name( out_format.set_name() ), "dch");
     io_formats::TPrintArrays<TIO>  prar1(14, DataCH_static_fields, out_format );
     io_formats::TPrintArrays<TIO>  prar( 30, DataCH_dynamic_fields, out_format );
 
@@ -608,13 +594,19 @@ void TNode::datach_to_text_file(  TIO& out_format, bool with_comments, bool brie
         prar.writeArray(  f_epsW, CSD->epsW,  5*(gridTP()), gridTP(), _comment, brief_mode );
         prar.writeArray(  f_epsWg, CSD->epsWg, 5*(gridTP()),  gridTP(), _comment, brief_mode );
     }
-    prar.writeArray(  f_V0, CSD->V0,  CSD->nDC*gridTP(), gridTP(), _comment, brief_mode );
+    if( !isAllZero( CSD->V0,  CSD->nDC*gridTP() ))
+        prar.writeArray(  f_V0, CSD->V0,  CSD->nDC*gridTP(), gridTP(), _comment, brief_mode );
     prar.writeArray(  f_G0, CSD->G0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode );
-    prar.writeArray(  f_H0, CSD->H0,  CSD->nDC*gridTP(),gridTP(), _comment, brief_mode );
-    prar.writeArray(  f_S0, CSD->S0,CSD->nDC*gridTP(),  gridTP(), _comment, brief_mode  );
-    prar.writeArray(  f_Cp0, CSD->Cp0,CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
-    prar.writeArray(  f_A0, CSD->A0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
-    prar.writeArray(  f_U0, CSD->U0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
+    if( !isAllZero( CSD->H0,  CSD->nDC*gridTP() ))
+        prar.writeArray(  f_H0, CSD->H0,  CSD->nDC*gridTP(),gridTP(), _comment, brief_mode );
+    if( !isAllZero( CSD->S0,  CSD->nDC*gridTP() ))
+        prar.writeArray(  f_S0, CSD->S0,CSD->nDC*gridTP(),  gridTP(), _comment, brief_mode  );
+    if( !isAllZero( CSD->Cp0,  CSD->nDC*gridTP() ))
+        prar.writeArray(  f_Cp0, CSD->Cp0,CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
+    if( !isAllZero( CSD->A0,  CSD->nDC*gridTP() ))
+        prar.writeArray(  f_A0, CSD->A0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
+    if( !isAllZero( CSD->U0,  CSD->nDC*gridTP() ))
+        prar.writeArray(  f_U0, CSD->U0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
 
     if( CSD->iGrd  )
         prar.writeArray(  f_DD, CSD->DD, CSD->nDCs*gridTP(),  gridTP(),  _comment, brief_mode);
@@ -629,13 +621,7 @@ void TNode::datach_from_text_file(TIO& in_format)
   long int ii;
 
   // static arrays
-//#ifdef USE_OLD_NLOHMANJSON
-//    io_formats::NlohmannJsonRead in_format( ff );
-//#else
-//    io_formats::KeyValueRead in_format( ff );
-//#endif
-
-    io_formats::TReadArrays<TIO> rdar( 14, DataCH_static_fields, in_format);
+  io_formats::TReadArrays<TIO> rdar( 14, DataCH_static_fields, in_format);
 
  long int nfild = rdar.findNext();
  while( nfild >=0 )

@@ -36,6 +36,7 @@
 #include <math.h>
 #include <string>
 #include <iomanip>
+#include <memory>
 #include "nodearray.h"
 #include "v_detail.h"
 #include "args_tool.h"
@@ -44,14 +45,15 @@
 void show_usage( const std::string &name );
 int extract_args( int argc, char* argv[], std::string& input_lst_path, std::string& dbr_lst_path, GEMS3KImpexData& export_data );
 
-// -j -i GEOTHERM/Test2-dat.lst -e GEOTHERM-out/Test2-dat.lst
-// -j -i solvus-in/series1-dat.lst -e solvus-out/series1-dat.lst
+
+// -j -c -i solvus-in/series1-dat.lst -e solvus-out/series1-dat.lst
 // -t -i solvus-in/series1-dat.lst -e solvus-kv/series1-dat.lst
 
 // -t -c -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-out/pHtitr-dat.lst
-// -j  -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-json/pHtitr-dat.lst
+// -j  -c -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-json/pHtitr-dat.lst
+// -t  -c -i Kaolinite-json/pHtitr-dat.lst -e Kaolinite-out/pHtitr-dat.lst
 
-// -t -c -i process/Kaolinite_G_pHtitrKa-dat.lst -e process-kv/Kaolinite_G_pHtitrKa-dat.lst -l process/Kaolinite_G_pHtitrKa-dbr.lst
+// -t -c -i process/Kaolinite-dat.lst -e process-kv/Kaolinite-dat.lst -l process/Kaolinite-dbr.lst
 
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )

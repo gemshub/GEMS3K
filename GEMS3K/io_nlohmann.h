@@ -26,6 +26,7 @@
 #ifdef USE_OLD_NLOHMANJSON
 
 #include <nlohmann/json.hpp>
+#include <iostream>
 #include <fstream>
 #include "verror.h"
 
@@ -37,7 +38,9 @@ class NlohmannJsonWrite
 
     /// Internal structure of file data
     nlohmann::json json_data;
+    nlohmann::json top_data;
     std::iostream& fout;
+    std::string current_set_name;
 
     template <class T>
     void add_value( const T& value, nlohmann::json& json_arr  )
@@ -53,12 +56,26 @@ class NlohmannJsonWrite
 public:
 
     /// Constructor
-    NlohmannJsonWrite( std::iostream& ff ): json_data(), fout(ff)
+    NlohmannJsonWrite( std::iostream& ff, const std::string& test_set_name ):
+        top_data(), fout(ff), current_set_name(test_set_name)
     {}
+    const std::string& set_name() const
+    {
+      return current_set_name;
+    }
+
+    void put_head( const std::string &key_name, const std::string &field_name )
+    {
+      top_data["set"] = current_set_name;
+      top_data["_key"] = key_name;
+      json_data = top_data[field_name];
+    }
 
     void dump( bool not_brief )
     {
-       fout << json_data.dump(( not_brief ? 4 : 0 ));
+        auto json_array =  nlohmann::json::array();
+        json_array.push_back(top_data);
+        fout << json_array.dump(( not_brief ? 4 : 0 ));
     }
 
     void write_comment( const std::string&  ) {}
@@ -148,9 +165,21 @@ class NlohmannJsonRead
 public:
 
     /// Constructor
-    NlohmannJsonRead( std::iostream& ff ): json_data()
+    NlohmannJsonRead( std::iostream& ff, const std::string& test_set_name,  const std::string& field_name ):
+    json_data()
     {
-        ff >> json_data;
+        nlohmann::json json_arr;
+        ff >> json_arr;
+
+        json_data = json_arr[0];
+        if( !test_set_name.empty() )
+        {
+            auto json_set = json_data["set"];
+            if( json_set == test_set_name )
+                std::cout << "Read the document from another set: " <<  json_set
+                          << " , current set " << test_set_name  <<  std::endl;
+        }
+        json_data =  json_data[field_name];
         json_it = json_data.begin();
     }
 

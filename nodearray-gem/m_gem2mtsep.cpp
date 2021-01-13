@@ -117,7 +117,7 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
 
    if( gem2mt_in.rfind(".json") != std::string::npos )
    {
-       io_formats::SimdJsonRead in_format( ff );
+       io_formats::SimdJsonRead in_format( ff, "", "gem2mt" );
        from_text_file( in_format );
    }
    else
@@ -155,7 +155,7 @@ int TGEM2MT::WriteTask( const char *gem2mt_out1 )
 
    if( gem2mt_out.rfind(".json") != std::string::npos )
    {
-       io_formats::SimdJsonWrite out_format( ff, true );
+       io_formats::SimdJsonWrite out_format( ff, "", true );
        to_text_file( out_format, true, false );
    }
    else

@@ -43,6 +43,11 @@ public:
     /// Constructor
     KeyValueWrite( std::iostream& ff ): fout(ff) {}
 
+    std::string set_name() const
+    {
+      return "";
+    }
+    void put_head( const std::string&, const std::string ) { }
     void dump( bool _comment )
     {
        if( _comment )

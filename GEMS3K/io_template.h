@@ -148,7 +148,7 @@ public:
 
     /// Writes long field to a text file.
     /// <flds[f_num].name> value
-    /// \param with_comments - Write files with comments for all data entries
+    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
     /// \param brief_mode - Do not write data items that contain only default values
     template < typename T >
     void writeField( long f_num, const T& value, bool with_comments, bool brief_mode  )
@@ -177,7 +177,7 @@ public:
     /// Writes array to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
-    /// \param with_comments - Write files with comments for all data entries
+    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
     /// \param brief_mode - Do not write data items that contain only default values
     template < typename T >
     void writeArray( long f_num,  T* arr,  long int size, long int l_size,
@@ -194,7 +194,7 @@ public:
     /// Writes double vector to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
-    /// \param with_comments - Write files with comments for all data entries
+    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
     /// \param brief_mode - Do not write data items that contain only default values
     void writeArray( long f_num, const std::vector<double>& arr, long int l_size=0,
                      bool with_comments = false, bool brief_mode = false)
@@ -210,7 +210,7 @@ public:
     /// Writes char array to a text file.
     /// <flds[f_num].name> "arr[0]" ... "arr[size-1]"
     /// \param l_size - Setup number of characters in one element
-    /// \param with_comments - Write files with comments for all data entries
+    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
     /// \param brief_mode - Do not write data items that contain only default values
     void writeArrayF( long f_num, char* arr,  long int size, long int l_size,
                       bool with_comments = false, bool brief_mode = false )
