@@ -245,7 +245,7 @@ public:
     /// \param nIV - Number of allocated nodes
     /// \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
     /// \param brief_mode - Do not write data items that contain only default values
-    /// \param with_comments -Write files with comments for all data entries ( in text mode)
+    /// \param with_comments -Write files with comments for all data entries ( in text mode)  or as "pretty JSON"  ( json mode )
     /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
     /// \return DATABR list file name
     std::string genGEMS3KInputFiles(  const std::string& filepath, ProcessProgressFunction message,
@@ -259,7 +259,9 @@ public:
     ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
     ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
     ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
-    ///                 If   false (0), comments will not be written.
+    ///                 If   false (0), comments will not be written;
+    ///                         (json format): interpret the flag with_comments=true as "pretty JSON" and
+    ///                                   with_comments=false as "condensed JSON"
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
     void  GEMS3k_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f,
                             bool with_comments = true, bool brief_mode = false);

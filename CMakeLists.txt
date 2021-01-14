@@ -39,6 +39,7 @@ endif()
 # Define which types of libraries to build
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
+option(BUILD_TOOLS "Build tools" OFF)
 
 # Set the list of compiler flags for GNU compiler
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
@@ -89,7 +90,9 @@ add_subdirectory(GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 
-add_subdirectory(tools)
+if(BUILD_TOOLS)
+   add_subdirectory(tools)
+endif()
 
 # Install the cmake config files that permit users to use find_package(gems3k)
 #include(GEMS3KInstallCMakeConfigFiles)

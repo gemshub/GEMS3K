@@ -38,7 +38,7 @@
 
 // Writes CSD (DATACH structure) to a json/key-value string
 // \param brief_mode - Do not write data items that contain only default values
-// \param with_comments - Write files with comments for all data entries
+// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
 std::string TNode::datach_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
@@ -60,7 +60,7 @@ bool TNode::datach_from_string( const std::string& data )
 
 // Writes work node (DATABR structure) to a json/key-value string
 // \param brief_mode - Do not write data items that contain only default values
-// \param with_comments - Write files with comments for all data entries
+// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
 std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
@@ -129,14 +129,14 @@ void  TNode::read_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOM
     case GEMS3KGenerator::f_nlohmanjson:
 #ifdef USE_OLD_NLOHMANJSON
     {
-        io_formats::NlohmannJsonRead in_format( stream );
+        io_formats::NlohmannJsonRead in_format( stream, current_input_set_name, "dbr" );
         databr_from_text_file(in_format);
     }
         break;
 #endif
     case GEMS3KGenerator::f_json:
     {
-        io_formats::SimdJsonRead in_format( stream );
+        io_formats::SimdJsonRead in_format( stream, current_input_set_name, "dbr" );
         databr_from_text_file(in_format);
     }
         break;
@@ -160,14 +160,14 @@ void  TNode::write_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IO
     case GEMS3KGenerator::f_nlohmanjson:
 #ifdef USE_OLD_NLOHMANJSON
     {
-        io_formats::NlohmannJsonWrite out_format( stream );
+        io_formats::NlohmannJsonWrite out_format( stream, current_output_set_name );
         databr_to_text_file( out_format, with_comments, brief_mode );
     }
         break;
 #endif
     case GEMS3KGenerator::f_json:
     {
-        io_formats::SimdJsonWrite out_format( stream, with_comments );
+        io_formats::SimdJsonWrite out_format( stream, current_output_set_name, with_comments );
         databr_to_text_file( out_format, with_comments, brief_mode );
     }
         break;
@@ -189,14 +189,14 @@ void  TNode::read_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOM
     case GEMS3KGenerator::f_nlohmanjson:
 #ifdef USE_OLD_NLOHMANJSON
     {
-        io_formats::NlohmannJsonRead in_format( stream );
+        io_formats::NlohmannJsonRead in_format( stream, current_input_set_name, "dch" );
         datach_from_text_file(in_format);
     }
         break;
 #endif
     case GEMS3KGenerator::f_json:
     {
-        io_formats::SimdJsonRead in_format( stream );
+        io_formats::SimdJsonRead in_format( stream, current_input_set_name, "dch" );
         datach_from_text_file(in_format);
     }
         break;
@@ -220,14 +220,14 @@ void  TNode::write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IO
     case GEMS3KGenerator::f_nlohmanjson:
 #ifdef USE_OLD_NLOHMANJSON
     {
-        io_formats::NlohmannJsonWrite out_format( stream );
+        io_formats::NlohmannJsonWrite out_format( stream, current_output_set_name );
         datach_to_text_file( out_format, with_comments, brief_mode );
     }
         break;
 #endif
     case GEMS3KGenerator::f_json:
     {
-        io_formats::SimdJsonWrite out_format( stream, with_comments );
+        io_formats::SimdJsonWrite out_format( stream, current_output_set_name, with_comments );
         datach_to_text_file( out_format, with_comments, brief_mode );
     }
         break;
@@ -275,6 +275,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
         //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
         //       "<DBR_DAT file1 name>" [ ...  "<DBR_DAT fileN name>"]
         GEMS3KGenerator generator( ipmfiles_lst_name );
+        current_output_set_name = current_input_set_name = generator.set_name();
 
         switch( generator.files_mode() )
         {
@@ -295,12 +296,12 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 
             std::fstream ff( generator.get_ipm_path(), std::ios::in );
             ErrorIf( !ff.good() , generator.get_ipm_path(), "Fileopen error");
-            multi->read_ipm_format_stream( ff,generator.files_mode(), CSD);
+            multi->read_ipm_format_stream( ff,generator.files_mode(), CSD, current_input_set_name);
         }
             break;
         }
 
-        // copy intervals for minimizatiom
+        // copy intervals for minimization
         pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
         pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
         pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
@@ -348,15 +349,25 @@ long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_j
 {
     load_thermodynamic_data = false; // need load thermo
     std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-    try
+    
+   try
     {
+        if( GEMS3KGenerator::default_type_f  == GEMS3KGenerator::f_json )
+        {
+            current_output_set_name = current_input_set_name = extract_string_json( "set", dch_json );
+            auto ipm_set =  extract_string_json( "set", ipm_json );
+            auto dbr_set =  extract_string_json( "set", dbr_json );
+            ErrorIf(  ipm_set!=current_input_set_name,  "GEM_init error", "Multi structure as a json has different set name:  "+ipm_set );
+            ErrorIf(  dbr_set!=current_input_set_name,  "GEM_init error", "The data bridge structure as a json has different set name:  "+dbr_set );
+        }
+
         // Reading DCH_DAT data
         datach_from_string(dch_json);
 
         // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
-        multi->gemipm_from_string( ipm_json,CSD );
+        multi->gemipm_from_string( ipm_json, CSD, current_input_set_name );
 
-        // copy intervals for minimizatiom
+        // copy intervals for minimization
         pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
         pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
         pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
@@ -398,18 +409,25 @@ void TNode::init_into_gems3k()
     this->InitCopyActivities( CSD, pmm, CNode );
 }
 
-// (3) Writes the contents of the work instance of DATABR structure into a disk file with path name fname.
-//   Parameters:
-//   fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
-//                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
-//                 will be used, extended with ".out".  Usually the dbr_file_name field contains the path to the last input DBR file.
-//   type_f    defines if the file is in binary format (1), in text format (0) or in json format (2)
-//   with_comments (text format only): defines the mode of output of comments written before each data tag and  content
-//                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
-//                 If   false (0), comments will not be written.
-//   brief_mode     if true (1), tells not to write data items that contain only default values.
-//
-void  TNode::GEM_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode )
+long int  TNode::GEM_write_dbr( std::string& dbr_json )
+{
+    // Writes work node (DATABR structure) into a json string
+    try
+    {
+        std::stringstream ss;
+        write_dbr_format_stream( ss, GEMS3KGenerator::f_json, false, false );
+        dbr_json =  ss.str();
+    }
+    catch(...)
+    {
+        std::fstream f_log( ipmLogFile, std::ios::out|std::ios::app );
+        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt << std::endl;
+        return -1;
+    }
+    return 0;
+}
+
+void TNode::GEM_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode )
 {
     std::string str_file;
     if( fname == 0)
@@ -436,6 +454,41 @@ void  TNode::GEM_print_ipm( const char* fname )
 
     multi->to_text_file(str_file.c_str());//profil1->outMultiTxt( str_file.c_str()  );
 }
+
+
+/// (5j) Reads another DBR 0bject (with input system composition, T,P etc.) from JSON string \ . 
+long int TNode::GEM_read_dbr( const std::string& dbr_json, const bool check_dch_compatibility )
+{
+    // Reads work node (DATABR structure) from a json string
+    try
+    {
+        if( dbr_json.empty() )
+            return 1;
+
+        if( check_dch_compatibility )
+        {
+            auto dbr_set =  extract_string_json( "set", dbr_json );
+            if(  dbr_set!=current_input_set_name )
+                return 2;
+        }
+        std::stringstream ss;
+        ss.str(dbr_json);
+        read_dbr_format_stream( ss, GEMS3KGenerator::f_json );
+     }
+    catch(TError& err)
+    {
+        std::fstream f_log( ipmLogFile, std::ios::out|std::ios::app );
+        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
+                 err.title.c_str() << ":" <<  err.mess.c_str() << std::endl;
+        return 1;
+    }
+    catch(...)
+    {
+        return -1;
+    }
+    return 0;
+}
+
 
 // (5) Reads another DBR file (with input system composition, T,P etc.). The DBR file must be compatible with
 // the currently loaded IPM and DCH files (see description  of GEM_init() function call).

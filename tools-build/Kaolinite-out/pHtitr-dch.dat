@@ -1,5 +1,5 @@
 
-#  GEMS3K v.3.7.0 c.fdcdd2b5 
+#  GEMS3K v.3.8.1 c.0aa600e 
 # Comments can be marked with # $ ; as the first character in the line
 # DCH text input file (should be read before IPM and DBR files)
 
@@ -134,7 +134,7 @@
 # denWg: Look-up array for the density of water vapour, kg/m3, and its derivatives [5*nPp*nTp]
 <denWg>
 0.767104546309221 
--0 
+0 
 0 
 0 
 0 

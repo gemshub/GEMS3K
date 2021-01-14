@@ -35,150 +35,6 @@
 namespace  io_formats {
 
 
-
-///// Read fields of structure
-//class SimdJsonImplOld
-//{
-
-//public:
-
-//    /// Constructor
-//    explicit SimdJsonImplOld( const std::string& json_string ): json_data()
-//    {
-//        auto input_string = json_string;
-//        replaceall( input_string, "inf", "0");
-//        std::cout << input_string << std::endl;
-//        auto error = parser.parse(input_string).get(json_data); // do the parsing
-//        test_simdjson_error( error );
-//        json_it = json_data.begin();
-//        //    std::cout <<  json_data << std::endl;
-//    }
-
-//    /// Reset json loop
-//    void reset()
-//    {
-//        json_it = json_data.begin();
-//    }
-
-//    /// Read next name from file
-//    bool  has_next( std::string& next_field_name )
-//    {
-//        next_field_name.clear();
-//        if( json_it != json_data.end() )
-//        {
-//            auto key = json_it.key();
-//            next_field_name = std::string( key.begin(), key.end() );
-//            json_it++;
-//            return true;
-//        }
-//        return false;
-//    }
-
-//    /// Read next label from file ( must be exist, otherwise error )
-//    bool test_next_is( const std::string& label )
-//    {
-//        return  !json_data.at_key( label ).error();
-//    }
-
-//    /// Reads strings array from a text file.
-//    void read_strings_array( const std::string& field_name, char* arr, long int size, long int el_size );
-//    /// Reads double vector from a text file.
-//    void read_array( const std::string& name, std::vector<double>& arr );
-//    /// Reads int vector from a text file.
-//    void read_array(const std::string &field_name, std::vector<int64_t>& arr);
-
-//protected:
-
-//    // Internal structure of file data
-//    simdjson::dom::parser parser;
-//    simdjson::dom::object json_data;
-//    simdjson::dom::object::iterator json_it;
-
-//    void test_simdjson_error( simdjson::error_code  error ) const
-//    {
-//        ErrorIf( error, std::string("SimdJson read error :") + std::to_string(error) ,
-//                 simdjson::error_message(error) );
-//    }
-
-//};
-
-//void SimdJsonImplOld::read_strings_array(const std::string &field_name, char *arr, long size, long el_size)
-//{
-//        std::string msg;
-//        std::string_view val;
-
-//        simdjson::dom::element json_arr;
-//        auto error = json_data.at_key(field_name).get(json_arr);
-//        test_simdjson_error( error );
-
-//        if( json_arr.type() != simdjson::dom::element_type::ARRAY &&  size==1 )
-//        {
-//            error = json_arr.get( val );
-//            test_simdjson_error( error );
-//            memcpy( arr, val.data(), el_size );
-//        }
-//        else
-//        {
-//            for( long int ii=0; ii<size; ++ii )
-//            {
-//                error = json_arr.at(ii).get(val);
-//                // error if different size
-//                test_simdjson_error( error );
-//                memcpy( arr +(ii*el_size), val.data(), el_size );
-//            }
-//        }
-//}
-
-//void SimdJsonImplOld::read_array(const std::string &field_name, std::vector<double>& arr)
-//{
-//    arr.clear();
-
-//    simdjson::dom::element json_arr;
-//    auto error = json_data.at_key(field_name).get(json_arr);
-//    test_simdjson_error( error );
-
-//    if(  json_arr.type() == simdjson::dom::element_type::ARRAY  )
-//    {
-//        for (double value : json_arr)
-//        {
-//            arr.push_back(value);
-//        }
-//    }
-//    else
-//    {
-//        double value;
-//        error = json_arr.get(value);
-//        test_simdjson_error( error );
-//        arr.push_back(value);
-//    }
-//}
-
-//void SimdJsonImplOld::read_array(const std::string &field_name, std::vector<int64_t>& arr)
-//{
-//    arr.clear();
-
-//    simdjson::dom::element json_arr;
-//    auto error = json_data.at_key(field_name).get(json_arr);
-//    test_simdjson_error( error );
-
-//    if(  json_arr.type() == simdjson::dom::element_type::ARRAY  )
-//    {
-//        for (int64_t value : json_arr)
-//        {
-//            arr.push_back(value);
-//        }
-//    }
-//    else
-//    {
-//        int64_t value;
-//        error = json_arr.get(value);
-//        test_simdjson_error( error );
-//        arr.push_back(value);
-//    }
-//}
-
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111
-
 /// Read fields of structure
 class SimdJsonImpl
 {
@@ -186,19 +42,29 @@ class SimdJsonImpl
 public:
 
     /// Constructor
-    explicit SimdJsonImpl( const std::string& json_string ): json_data()
+    explicit SimdJsonImpl( const std::string& json_string, const std::string& test_set_name,  const std::string& field_name ): json_data()
     {
         try {
             auto input_string = json_string;
+            trim(input_string);
+            trim(input_string, "[]");
             replaceall( input_string, "inf", "0");
             json_data = parser.parse( input_string );
+
+            if( !test_set_name.empty() )
+            {
+                std::string_view json_set = json_data["set"];
+                if( json_set.compare( test_set_name.c_str() ))
+                    std::cout << "Read the document from another set: " <<  json_set << " , current set " << test_set_name  <<  std::endl;
+            }
+            json_data =  json_data[field_name];
             json_it = json_data.begin();
             //    std::cout <<  json_data << std::endl;
         }
         catch( simdjson::simdjson_error& err )
         {
-           std::cout << std::to_string(err.error()) <<  err.what() << std::endl;
-           Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
+            std::cout << std::to_string(err.error()) <<  err.what() << std::endl;
+            Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
         }
 
     }
@@ -322,12 +188,12 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<int64_t
 //------------------------------------------------------------------------------------------
 
 
-SimdJsonRead::SimdJsonRead(std::iostream &ff): impl()
+SimdJsonRead::SimdJsonRead(std::iostream &ff, const std::string& test_set_name,  const std::string& field_name): impl()
 {
     std::stringstream buffer;
     buffer << ff.rdbuf();
     auto input_str = buffer.str();
-    impl = std::make_shared<SimdJsonImpl>(input_str);
+    impl = std::make_shared<SimdJsonImpl>(input_str, test_set_name, field_name );
 }
 
 void SimdJsonRead::reset()
@@ -364,16 +230,38 @@ void SimdJsonRead::read_array(const std::string &field_name, std::vector<int64_t
 //-------------------------------------------------------------------------------------
 
 
+
+void SimdJsonWrite::put_head(const std::string &key_name, const std::string &field_name)
+{
+    first = true;
+    fout << ( dense ? "[\n{" : "[{" );
+    fout << ( dense ? "\n  " : "" );
+    fout << "\"_key\"" << ( dense ? " : \"" : ":\"" ) << key_name << "\",";
+    fout << ( dense ? "\n  " : "" );
+    fout << "\"set\"" << ( dense ? " : \"" : ":\"" ) << current_set_name << "\",";
+    fout << ( dense ? "\n  " : "" );
+    fout << "\"" << field_name << ( dense ? "\" : " : "\":" );
+    fout << "{";
+}
+
+
+void SimdJsonWrite::dump(bool)
+{
+    fout << ( dense ? "\n  " : "" );
+    fout << ( dense ? "}\n}\n]" : "}}]" );
+
+}
+
 /// Write float value to file
 template <> void SimdJsonWrite::add_value( const float& val )
 {
-  fout << std::setprecision(15) << val;
+    fout << std::setprecision(15) << val;
 }
 
 /// Write double value to file
 template <> void SimdJsonWrite::add_value( const double& val )
 {
-   fout << std::setprecision(15) << val;
+    fout << std::setprecision(15) << val;
 }
 
 /// Write double value to file

@@ -35,7 +35,7 @@
 #include "io_keyvalue.h"
 #include "ms_multi.h"
 
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.8.0 c.4d90e0b ";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.8.1 c.0aa600e ";
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
@@ -172,6 +172,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
     char PSigm;
     get_PAalp_PSigm( PAalp, PSigm);
 
+    out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
     io_formats::TPrintArrays<TIO>  prar( 80, MULTI_dynamic_fields, out_format );
 
@@ -1171,27 +1172,27 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 
 /// Writes Multi to a json/key-value string
 /// \param brief_mode - Do not write data items that contain only default values
-/// \param with_comments - Write files with comments for all data entries
-std::string TMultiBase::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
+/// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
+std::string TMultiBase::gemipm_to_string( bool addMui, const std::string& test_set_name, bool with_comments, bool brief_mode )
 {
     std::stringstream ss;
-    write_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, addMui, with_comments, brief_mode );
+    write_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, addMui, with_comments, brief_mode, test_set_name );
     return ss.str();
 }
 
 /// Reads Multi structure from a json/key-value string
-bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH )
+bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH, const std::string& test_set_name )
 {
     if( data.empty() )
         return false;
 
     std::stringstream ss;
     ss.str(data);
-    read_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, dCH );
+    read_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, dCH, test_set_name );
     return true;
 }
 
-void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes  type_f, DATACH  *dCH  )
+void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes  type_f, DATACH  *dCH, const std::string& test_set_name )
 {
     switch( type_f )
     {
@@ -1200,14 +1201,14 @@ void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator
     case GEMS3KGenerator::f_nlohmanjson:
 #ifdef USE_OLD_NLOHMANJSON
     {
-        io_formats::NlohmannJsonRead in_format( stream );
+        io_formats::NlohmannJsonRead in_format( stream, test_set_name, "ipm" );
         from_text_file_gemipm( in_format, dCH );
     }
         break;
 #endif
     case GEMS3KGenerator::f_json:
     {
-        io_formats::SimdJsonRead in_format( stream );
+        io_formats::SimdJsonRead in_format( stream, test_set_name, "ipm");
         from_text_file_gemipm( in_format, dCH );
     }
         break;
@@ -1221,7 +1222,7 @@ void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator
 }
 
 void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
-                                           bool addMui, bool with_comments, bool brief_mode )
+                                           bool addMui, bool with_comments, bool brief_mode, const std::string& test_set_name )
 {
     switch( type_f )
     {
@@ -1230,14 +1231,14 @@ void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerato
     case GEMS3KGenerator::f_nlohmanjson:
 #ifdef USE_OLD_NLOHMANJSON
     {
-        io_formats::NlohmannJsonWrite out_format( stream );
+        io_formats::NlohmannJsonWrite out_format( stream, test_set_name );
         to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
     }
         break;
 #endif
     case GEMS3KGenerator::f_json:
     {
-        io_formats::SimdJsonWrite out_format( stream, with_comments );
+        io_formats::SimdJsonWrite out_format( stream, test_set_name, with_comments );
         to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
     }
         break;
