@@ -1,7 +1,6 @@
 if [ ! -f $HOME/miniconda/bin/conda ]; then
     echo "Downloading and installing miniconda"
-    if [ $TRAVIS_OS_NAME = "linux" ]; then OS=Linux-x86_64; else OS=MacOSX-x86_64; fi
-    wget -O miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-$OS.sh
+    wget -O miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
     rm -rf $HOME/miniconda
     bash miniconda.sh -b -p $HOME/miniconda
 fi
@@ -24,14 +23,11 @@ cd build
 cmake -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_LIBDIR=lib \
-    -DBUILD_TOOLS=OFF \
     ..
 ninja install
-if [ $? -eq 0 ]
+if [ $? -eq 1 ]
 then
-    echo "The make step ran OK"
-else
-    echo "The make step failed" >&2
-    exit 1
+echo "The install failed" >&2
+exit 1
 fi
 conda list
