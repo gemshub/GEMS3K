@@ -411,7 +411,7 @@ void TNode::init_into_gems3k()
 
 long int  TNode::GEM_write_dbr( std::string& dbr_json )
 {
-    // Writes work node (DATABR structure) to a json string
+    // Writes work node (DATABR structure) into a json string
     try
     {
         std::stringstream ss;
@@ -427,7 +427,7 @@ long int  TNode::GEM_write_dbr( std::string& dbr_json )
     return 0;
 }
 
-void  TNode::GEM_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode )
+void TNode::GEM_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode )
 {
     std::string str_file;
     if( fname == 0)
