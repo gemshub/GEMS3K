@@ -85,6 +85,11 @@ class TNode
 {
     friend class TNodeArray;
 
+    /// The same GEMS3K input set (currently GEM-Selektor asks for the "set" name as .lst file name)
+    std::string current_input_set_name = "";
+    /// The same GEMS3K output set (currently GEM-Selektor asks for the "set" name as .lst file name)
+    std::string current_output_set_name = "";
+
 
 protected:
 
@@ -140,7 +145,7 @@ protected:
     // Text i/o functions
     /// Writes CSD (DATACH structure) to a text DCH file
     /// \param brief_mode - Do not write data items that contain only default values
-    /// \param with_comments - Write files with comments for all data entries
+    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
     template<typename TIO>
     void datach_to_text_file( TIO& out_format, bool with_comments = true, bool brief_mode = false ) const;
     /// Reads CSD (DATACH structure) from a text DCH file
@@ -148,7 +153,7 @@ protected:
     void datach_from_text_file( TIO& in_format );
     /// Writes work node (DATABR structure) to a text DBR file
     /// \param brief_mode - Do not write data items that contain only default values
-    /// \param with_comments - Write files with comments for all data entries
+    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
     template<typename TIO>
     void databr_to_text_file( TIO& out_format, bool with_comments = true, bool brief_mode = false ) const;
     /// Reads work node (DATABR structure) from a text DBR file
@@ -164,8 +169,10 @@ protected:
     ///   \param dbr_file  string containing a full path to the DBR disk file to be read.
     ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
     ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
-    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
-    ///                 If   false (0), comments will not be written.
+    ///                           in the DBR file. If set to true (1), the comments will be written for all data entries (default).
+    ///                           If   false (0), comments will not be written.
+    ///                         (json format): interpret the flag with_comments=on as "pretty JSON" and
+    ///                                   with_comments=off as "condensed JSON"
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
     void  write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode );
 
@@ -180,7 +187,9 @@ protected:
     ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
     ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
     ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
-    ///                 If   false (0), comments will not be written.
+    ///                 If   false (0), comments will not be written;
+    ///                         (json format): interpret the flag with_comments=on as "pretty JSON" and
+    ///                                   with_comments=off as "condensed JSON"
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
     void  write_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode ) const;
 
@@ -194,7 +203,9 @@ protected:
     ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
     ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
     ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
-    ///                 If   false (0), comments will not be written.
+    ///                 If   false (0), comments will not be written;
+    ///                         (json format): interpret the flag with_comments=on as "pretty JSON" and
+    ///                                   with_comments=off as "condensed JSON"
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
     void  write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode ) const;
 
@@ -354,11 +365,12 @@ public:
   long int  GEM_init( const char *ipmfiles_lst_name );
 
 /// (1)
-/// Initialization of GEM IPM3 data structures in coupled programs
-/// that use GEMS3K module. Also reads data from the IPM, DCH and one DBR  input string.
+/// Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module. 
+/// Also reads the input data from the IPM, DCH and one DBR JSON input string 
+/// (e.g. exported from GEM-Selektor or retrieved from JSON database).
 /// Parameters:
 ///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
-///  @param ipm_json -  Multi structure as a json/key-value string
+///  @param ipm_json -  Parameters and settings for GEMS3K IPM-3 algorithm as a json/key-value string
 ///  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
   long int  GEM_init( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json );
 
@@ -366,26 +378,39 @@ public:
   // String i/o functions
   /// Writes CSD (DATACH structure) to a json/key-value string
   /// \param brief_mode - Do not write data items that contain only default values
-  /// \param with_comments - Write files with comments for all data entries
+  /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
   std::string datach_to_string( bool with_comments = true, bool brief_mode = false ) const;
   /// Reads CSD (DATACH structure) from a json/key-value string
   bool datach_from_string( const std::string& data );
   /// Writes work node (DATABR structure) to a json/key-value string
   /// \param brief_mode - Do not write data items that contain only default values
-  /// \param with_comments - Write files with comments for all data entries
+  /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
   std::string databr_to_string( bool with_comments = true, bool brief_mode = false ) const;
   /// Reads work node (DATABR structure) from a json/key-value string
   bool databr_from_string( const std::string& data );
   /// Writes Multi to a json/key-value string
   /// \param brief_mode - Do not write data items that contain only default values
-  /// \param with_comments - Write files with comments for all data entries
+  /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
   std::string gemipm_to_string( bool addMui, bool with_comments = true, bool brief_mode = false )
   {
-      return multi->gemipm_to_string( addMui, with_comments, brief_mode );
+      return  multi->gemipm_to_string( addMui, current_output_set_name, with_comments, brief_mode );
   }
+
   /// Deletes fields of DATABR structure indicated by data_BR_
   /// and sets the pointer data_BR_ to NULL
   DATABR* databr_free( DATABR* data_BR_ );
+
+  /// Return current set name
+  const std::string& input_set_name() const
+  {
+    return current_input_set_name;
+  }
+
+  /// Return current set name
+  const std::string& output_set_name() const
+  {
+    return current_output_set_name;
+  }
 
   /// Return code of error in IPM
   std::string code_error_IPM() const
@@ -591,6 +616,15 @@ long int GEM_step_MT( const long int step )
 /// \return  0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred.
    long int GEM_read_dbr( const char* fname, GEMS3KGenerator::IOModes type_f );
 
+/// (5j) Reads another DBR 0bject (with input system composition, T,P etc.) from JSON string \ . 
+/// It must be compatible with the currently loaded IPM and DCH files 
+///  (see descriptions of GEM_init() methods).
+/// \param dbr_json  String containing a JSON document for the input DBR object.
+/// \param check_dch_compatibility  If true, forces checking the compatibility of DBR object with active DCH/IPM
+/// \return  0  if successful; 1 if input JSON string is empty or corrupt;-1 if internal memory allocation error occurred;
+///          2 if checking the not compatibility of DBR object with active DCH/IPM.
+   long int GEM_read_dbr( const std::string& dbr_json, const bool check_dch_compatibility = true );
+
 /// (2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure
 ///   and metastability constraints provided in the work instance of DATABR structure.
 ///   Actual calculation will be performed only when dBR->NodeStatusCH == NEED_GEM_SIA (5) or dBR->NodeStatusCH = NEED_GEM_AIA (1).
@@ -625,10 +659,16 @@ long int GEM_step_MT( const long int step )
 ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
 ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
 ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
-///                 If   false (0), comments will not be written.
+///                 If   false (0), comments will not be written;
+///                         (json format): interpret the flag with_comments=on as "pretty JSON" and
+///                                   with_comments=off as "condensed JSON"
 ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
    void  GEM_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f,
 		                  bool with_comments = true, bool brief_mode = false);
+
+/// (3j) Writes the contents of the node work instance (the DATABR structure) into provided string in JSON format.
+///   \param dbr_string  reference to a string where to write JSON string from the current DBR object.
+   long int  GEM_write_dbr( std::string& dbr_json );
 
 /// (4) Produces a formatted text file with detailed contents (scalars and arrays) of the GEM IPM work structure.
 /// This call is useful when GEM_run() returns with a NodeStatusCH value indicating a GEM calculation error

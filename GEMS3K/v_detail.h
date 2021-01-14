@@ -36,6 +36,15 @@ void strip( std::string& str);
 void replace( std::string& str, const char* old_part, const char* new_part);
 void replaceall( std::string& str, const char* old_part, const char* new_part);
 void replaceall(std::string& str, char ch1, char ch2);
+
+//// Extract the string value from data.
+std::string regexp_extract_string( const std::string& regstr, const std::string& data );
+/// Extract the string value by key from json string
+std::string extract_string_json( const std::string& key, const std::string& jsondata );
+/// Extract the int value by key from json string
+int extract_int_json( const std::string& key, const std::string& jsondata );
+
+
 /// read string as: "<characters>"
 std::istream& f_getline(std::istream& is, std::string& str, char delim);
 /// Combines path, directory, name and extension to full pathname
@@ -153,6 +162,18 @@ template<typename T>
 bool noZero( const T& a, const T& epsilon = std::numeric_limits<T>::epsilon() )
 {
     return fabs(a) >  epsilon;
+}
+
+template <class T, class IT>
+bool isAllZero( T* arr, IT size )
+{
+  if( !arr  )
+    return true;
+  for(IT ii=0; ii<size; ii++)
+    if(  !approximatelyZero (arr[ii]) )
+       return false;
+
+  return true;
 }
 
 /// Trim all whitespace characters from start (in place).

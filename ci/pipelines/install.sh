@@ -23,6 +23,7 @@ cd build
 cmake -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_LIBDIR=lib \
+    -DBUILD_TOOLS=OFF \
     ..
 ninja install
 if [ $? -eq 1 ]

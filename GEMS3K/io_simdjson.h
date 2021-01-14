@@ -39,20 +39,16 @@ class SimdJsonWrite
 public:
 
     /// Constructor
-    SimdJsonWrite( std::iostream& ff, bool not_brief ): fout(ff), dense(not_brief)
-    {
-      size_t fpos = fout.tellp();
-      if( fpos == 0 )
-      {
-        first = true;
-        fout << "{";
-      }
-    }
+    SimdJsonWrite( std::iostream& ff, const std::string& test_set_name, bool not_brief ):
+        fout(ff), dense(not_brief), current_set_name(test_set_name)
+    {}
 
-    void dump( bool  )
+    const std::string& set_name() const
     {
-        fout << "\n}\n";
+      return current_set_name;
     }
+    void put_head( const std::string &key_name, const std::string &field_name );
+    void dump( bool  );
 
     void write_comment( const std::string&  ) {}
 
@@ -68,7 +64,8 @@ public:
     /// Writes double vector to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
-    /// \param with_comments - Write files with comments for all data entries
+    /// \param with_comments - interpret the flag with_comments=true as "pretty JSON" and
+    ///                                   with_comments=false as "condensed JSON"
     /// \param brief_mode - Do not write data items that contain only default values
     void write_array( const std::string& field_name, const std::vector<double>& arr, long int l_size );
 
@@ -78,14 +75,14 @@ public:
     {
         LT jj=0, sz = ( l_size > 0 ? l_size: values_in_line );
         add_key( key( field_name ) );
-        fout  << ( dense ? "[\n        " : "[\n" );
+        fout  << ( dense ? "[\n        " : "[" );
 
         for( LT ii=0; ii<size; ii++, jj++ )
         {
             add_next( ii, jj, sz );
             add_value( arr[ii] );
         }
-        fout << ( dense ? "\n    ]" : "\n]" );
+        fout << ( dense ? "\n    ]" : "]" );
     }
 
     /// Writes char array to a json file.
@@ -97,7 +94,7 @@ public:
 
         LT jj=0, sz = values_in_line;
         add_key( key( field_name ) );
-        fout  << ( dense ? "[\n        " : "[\n" );
+        fout  << ( dense ? "[\n        " : "[" );
 
         for( LT ii=0; ii<size; ii++, jj++ )
         {
@@ -105,7 +102,7 @@ public:
             add_value( std::string( arr +(ii*arr_size), 0, arr_size ) );
         }
 
-        fout << ( dense ? "\n    ]" : "\n]" );
+        fout << ( dense ? "\n    ]" : "]" );
     }
 
     /// Writes selected elements from float array to a text file.
@@ -114,7 +111,7 @@ public:
     {
         LT jj=0, kk=0, sz = ( l_size > 0 ? l_size: values_in_line );
         add_key( key( field_name ) );
-        fout  << ( dense ? "[\n        " : "[\n" );
+        fout  << ( dense ? "[\n        " : "[" );
 
         for( LT ii=0; ii<size; ii++ )
         {
@@ -125,8 +122,9 @@ public:
             }
         }
 
-        fout << ( dense ? "\n    ]" : "\n]" );
+        fout << ( dense ? "\n    ]" : "]" );
     }
+
 
 private:
 
@@ -135,6 +133,7 @@ private:
     bool dense = false;
     bool first = false;
     const long values_in_line = 10;
+    std::string current_set_name;
 
     template <class T>
     void add_value( const T& value  )
@@ -148,24 +147,24 @@ private:
         if( first )
         {
             first = false;
-            fout << "\n";
+            fout << ( dense ? "\n" : "" );
         }
         else
         {
-            fout << ",\n";
+            fout << ( dense ? ",\n" : "," );
         }
         fout << ( dense ? "    \"" : "\"" );
-        fout << field_name << "\": ";
+        fout << field_name << ( dense ? "\": " : "\":" );
     }
 
     void add_next( long ndx, long& jj, long line_size )
     {
         if( ndx )
-            fout << ", ";
+            fout << ( dense ? ", " : "," );
         if( jj == line_size )
         {
             jj=0;
-            fout << ( dense ? "\n        " : "\n" );
+            fout << ( dense ? "\n        " : "" );
         }
     }
 
@@ -186,7 +185,7 @@ class SimdJsonRead
 public:
 
     /// Constructor
-    SimdJsonRead( std::iostream& ff );
+    SimdJsonRead( std::iostream& ff, const std::string& test_set_name,  const std::string& field_name );
 
     /// Reset json loop
     void reset();

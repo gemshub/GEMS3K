@@ -42,6 +42,22 @@ public:
         return "dat";
     }
 
+    /// Generate MULTI name
+    static std::string gen_ipm_name( const std::string the_name )
+    {
+        return the_name + "-ipm";
+    }
+
+    /// Generate dataCH name
+    static std::string gen_dch_name( const std::string the_name )
+    {
+        return the_name + "-dch";
+    }
+
+    /// Generate dataBR name
+    static std::string gen_dbr_name( const std::string the_name, int time_point, size_t index );
+
+
     /// Constructor
     /// Reads MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// \param filepath - IPM work structure file path&name
@@ -59,12 +75,18 @@ public:
     /// \param nIV - Number of allocated nodes
     /// \param bin_mode - Write IPM, DCH and DBR files in binary, txt or json mode
     /// \param brief_mode - Do not write data items that contain only default values
-    /// \param with_comments -Write files with comments for all data entries ( in text mode)
+    /// \param with_comments -Write files with comments for all data entries ( text mode ) or as "pretty JSON"  ( json mode )
     /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
     explicit GEMS3KGenerator(  const std::string& filepath, long int anIV, IOModes file_mode ):
         ipmfiles_lst_name(filepath), nIV(anIV), io_mode(file_mode)
     {
         set_internal_data();
+    }
+
+    /// Get same GEMS3K I/O set name (currently GEM-Selektor asks for the "set" name from .lst file name)
+    std::string set_name() const
+    {
+        return base_name;
     }
 
     /// Get selected file output mode

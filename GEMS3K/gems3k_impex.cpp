@@ -15,12 +15,19 @@ std::string GEMS3KGenerator::get_dbr_file_lst_path() const
 }
 
 
-std::string GEMS3KGenerator::gen_dbr_file_name(int time_point, size_t index) const
+std::string GEMS3KGenerator::gen_dbr_name(const std::string the_name, int time_point, size_t index)
 {
     char buf[10];
     snprintf( buf, 5, "%4.4ld", index );
-    std::string dbr_name = base_name + "-dbr-";
-    dbr_name += std::to_string(time_point) + "-" + buf +".";
+    std::string dbr_name = the_name + "-dbr-";
+    dbr_name += std::to_string(time_point) + "-" + buf;
+    return dbr_name;
+}
+
+std::string GEMS3KGenerator::gen_dbr_file_name(int time_point, size_t index) const
+{
+    std::string dbr_name = gen_dbr_name(base_name, time_point, index);
+    dbr_name +=  ".";
     dbr_name +=  extension();
     return dbr_name;
 }
