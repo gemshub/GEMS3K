@@ -216,4 +216,19 @@ void KeyValueRead::read_array( const std::string &, std::vector<double> arr )
     }
 }
 
+bool KeyValueRead::skip_line()
+{
+    char ch;
+    skip_space();
+    fin.get(ch);
+    if( ch ==  '<' )
+    {
+        fin.putback(ch);
+        return false;
+    }
+    char buf[300];
+    fin.getline( buf, 300, '\n');
+    return true;
+}
+
 }

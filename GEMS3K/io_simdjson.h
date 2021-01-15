@@ -239,6 +239,9 @@ public:
     /// Reads int vector from a text file.
     void read_array(const std::string &field_name, std::vector<int64_t>& arr);
 
+    /// Empty function
+    bool skip_line() { return false; }
+
 protected:
 
     // Internal structure of file data

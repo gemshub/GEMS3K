@@ -643,8 +643,11 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 
     // static arrays
     io_formats::TReadArrays<TIO> rdar( 8, MULTI_static_fields, in_format);
-    rdar.readNext( "ID_key");
-    rdar.readArray( "ID_key", pm.stkey,  1, EQ_RKLEN);
+    if( !in_format.skip_line() ) // Skip line without <ID_key> in old format
+    {
+      rdar.readNext( "ID_key");
+      rdar.readArray( "ID_key", pm.stkey,  1, EQ_RKLEN);
+    }
 
     nfild = rdar.findNext();
     while( nfild >=0 )
