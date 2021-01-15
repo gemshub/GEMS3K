@@ -21,12 +21,11 @@ source activate GEMS3K
 mkdir build
 cd build
 # Configure step
-cmake -GNinja \
+cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_LIBDIR=lib \
-    -DBUILD_TOOLS=OFF \
     ..
-ninja install
+make install
 if [ $? -eq 0 ]
 then
     echo "The make step ran OK"
