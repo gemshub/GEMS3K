@@ -4,7 +4,7 @@
 # (should be read after the DCH file and before DBR files)
 
 # ID key of the initial chemical system definition
-<ID_key> "Kaolinite G  pHtitr      0    0       1       25      0   "
+"Kaolinite G  pHtitr      0    0       1       25      0   "
 
 ## (1) Flags that affect memory allocation
 # PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)

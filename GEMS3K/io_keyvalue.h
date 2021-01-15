@@ -210,6 +210,8 @@ public:
     /// Reads double vector from a text file.
     void read_array( const std::string& name, std::vector<double> arr );
 
+    /// Skip old format non-empty line
+    bool skip_line();
 };
 
 

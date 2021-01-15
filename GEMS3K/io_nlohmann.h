@@ -242,6 +242,8 @@ public:
     /// Reads double vector from a text file.
     void read_array( const std::string& name, std::vector<double> arr );
 
+    /// Empty function
+    bool skip_line() { return false; }
 };
 
 
