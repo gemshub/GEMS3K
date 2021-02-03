@@ -277,7 +277,7 @@ std::string write_floating_point( const T& value )
         value_str = "-inf";
     else if( is_plusinf(value) )
         value_str = "inf";
-    if( is_nan(value) )
+    else if( is_nan(value) )
         value_str = "nan";
     else
     {
@@ -296,7 +296,7 @@ T read_floating_point( const std::string& value_str )
         value = InfMinus<T>();
     else if( value_str == "inf" )
         value = InfPlus<T>() ;
-    if( value_str == "nan" )
+    else if( value_str == "nan" )
         value = Nan<T>();
     else
         value = std::stod( value_str.c_str() );
