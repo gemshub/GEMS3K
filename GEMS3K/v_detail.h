@@ -3,7 +3,7 @@
 /// \file v_detail.h
 /// Declaration of platform-specific utility functions and classes
 //
-// Copyright (C) 1996,2001,2020 A.Rysin, S.Dmytriyeva
+// Copyright (C) 1996,2001,2021 A.Rysin, S.Dmytriyeva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
