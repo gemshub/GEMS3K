@@ -41,7 +41,7 @@ class NlohmannJsonWrite
     nlohmann::json top_data;
     std::iostream& fout;
     std::string current_set_name;
-    std::string field_name;
+    std::string top_field_name;
 
     template <class T>
     void add_value( const T& value, nlohmann::json& json_arr  )
@@ -67,14 +67,14 @@ public:
 
     void put_head( const std::string &key_name, const std::string &the_field_name )
     {
-      field_name = the_field_name;
+      top_field_name = the_field_name;
       top_data["set"] = current_set_name;
       top_data["_key"] = key_name;
     }
 
     void dump( bool not_brief )
     {
-        top_data[field_name] = json_data;
+        top_data[top_field_name] = json_data;
         auto json_array =  nlohmann::json::array();
         json_array.push_back(top_data);
         fout << json_array.dump(( not_brief ? 4 : 0 ));

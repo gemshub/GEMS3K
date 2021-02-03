@@ -37,8 +37,7 @@ template <> void KeyValueWrite::writeValue( const float& val )
     if( IsFloatEmpty( val ))
         fout << CHAR_EMPTY << " ";
     else
-        //    ff << setprecision(10) << scientific << arr[ii] << " ";
-        fout << std::setprecision(15) << val;
+        fout << write_floating_point( val );
 }
 
 /// Write double value to file
@@ -47,8 +46,7 @@ template <> void KeyValueWrite::writeValue( const double& val )
     if( IsDoubleEmpty( val ))
         fout << CHAR_EMPTY << " ";
     else
-        //    ff << setprecision(18) << scientific << arr[ii] << " ";
-        fout << std::setprecision(15) << val;
+        fout << write_floating_point( val );
 }
 
 /// Write double value to file
@@ -98,10 +96,10 @@ void KeyValueRead::read_value(float& val)
     skip_space();
     std::string buf;
     fin >> buf;
-    if( buf == "`" || buf == "inf" || buf == "-inf" )
+    if( buf == "`" )
         val = FLOAT_EMPTY;
     else
-        val = std::atof( buf.c_str());
+        val = read_floating_point<float>( buf );
 }
 
 void KeyValueRead::read_value(double& val)
@@ -109,10 +107,10 @@ void KeyValueRead::read_value(double& val)
     skip_space();
     std::string buf;
     fin >> buf;
-    if( buf == "`" || buf == "inf" || buf == "-inf" )
+    if( buf == "`" )
         val = DOUBLE_EMPTY;
     else
-        val = std::atof( buf.c_str());
+        val = read_floating_point<double>( buf );
 }
 
 

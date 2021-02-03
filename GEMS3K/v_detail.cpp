@@ -17,6 +17,31 @@ void ErrorIf (bool error, const std::string& title, const std::string& message)
         throw TError(title, message);
 }
 
+template <> double InfMinus()
+{
+  return DOUBLE_INFMINUS;
+}
+template <> double InfPlus()
+{
+  return DOUBLE_INFPLUS;
+}
+template <> double Nan()
+{
+  return DOUBLE_NAN;
+}
+
+template <> float InfMinus()
+{
+  return FLOAT_INFMINUS;
+}
+template <> float InfPlus()
+{
+  return FLOAT_INFPLUS;
+}
+template <> float Nan()
+{
+  return FLOAT_NAN;
+}
 
 void strip(std::string& str)
 {
@@ -38,16 +63,16 @@ void replace( std::string& str, const char* old_part, const char* new_part)
     }
 }
 
-void replaceall( std::string& str, const char* old_part, const char* new_part)
+void replaceall( std::string& str, const std::string& old_part, const std::string& new_part)
 {
     size_t posb=0, pos = str.find( old_part ); //rfind( old_part );
     while( pos != std::string::npos )
     {
         std::string res(str.substr(0, pos));
         res += new_part;
-        res += str.substr( pos+strlen(old_part) );
+        res += str.substr( pos+old_part.length() );
         str = res;
-        posb = pos + strlen(new_part);
+        posb = pos + new_part.length();
         pos = str.find( old_part, posb );
     }
 }

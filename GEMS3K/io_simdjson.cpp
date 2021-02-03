@@ -48,7 +48,9 @@ public:
             auto input_string = json_string;
             trim(input_string);
             trim(input_string, "[]");
-            replaceall( input_string, "inf", "0");
+            replaceall( input_string, "-inf", DOUBLE_INFMINUS_STR);
+            replaceall( input_string, "inf", DOUBLE_INFPLUS_STR);
+            replaceall( input_string, "nan", DOUBLE_NAN_STR);
             json_data = parser.parse( input_string );
 
             if( !test_set_name.empty() )
@@ -255,13 +257,13 @@ void SimdJsonWrite::dump(bool)
 /// Write float value to file
 template <> void SimdJsonWrite::add_value( const float& val )
 {
-    fout << std::setprecision(15) << val;
+    fout << write_floating_point( val );
 }
 
 /// Write double value to file
 template <> void SimdJsonWrite::add_value( const double& val )
 {
-    fout << std::setprecision(15) << val;
+    fout << write_floating_point( val );
 }
 
 /// Write double value to file

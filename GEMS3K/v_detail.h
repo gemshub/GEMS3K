@@ -29,12 +29,14 @@
 #include <limits>
 #include <cmath>
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include "verror.h"
 
 
 void strip( std::string& str);
-void replace( std::string& str, const char* old_part, const char* new_part);
-void replaceall( std::string& str, const char* old_part, const char* new_part);
+void replace( std::string& str, const char* old_part, const char* new_part );
+void replaceall( std::string& str, const std::string& old_part, const std::string& new_part );
 void replaceall(std::string& str, char ch1, char ch2);
 
 //// Extract the string value from data.
@@ -68,19 +70,6 @@ std::string u_getpath( const std::string& pathname );
 inline int ROUND(double x )
 {
     return int((x)+.5);
-}
-
-#define FLOAT_EMPTY	          1.17549435e-38F
-#define DOUBLE_EMPTY         2.2250738585072014e-308
-#define CHAR_EMPTY   	     '`'
-
-inline bool IsFloatEmpty( const float v )
-{
-    return ( v>0. && v <= FLOAT_EMPTY);
-}
-inline bool IsDoubleEmpty( const double v )
-{
-    return ( v>0. && v <= DOUBLE_EMPTY);
 }
 
 template <class T>
@@ -221,5 +210,106 @@ inline void trim(std::string &s, const std::string &characters )
     ltrim(s, characters);
     rtrim(s, characters);
 }
+
+#define FLOAT_EMPTY	          1.17549435e-38F
+#define DOUBLE_EMPTY         2.2250738585072014e-308
+#define CHAR_EMPTY   	     '`'
+
+inline bool IsFloatEmpty( const float v )
+{
+    return ( v>0. && v <= FLOAT_EMPTY);
+}
+inline bool IsDoubleEmpty( const double v )
+{
+    return ( v>0. && v <= DOUBLE_EMPTY);
+}
+
+const float FLOAT_INFPLUS = 3.4028230E+38F;
+const float FLOAT_INFMINUS = -3.4028230E+38F;
+const float FLOAT_NAN = 3.402800E+38F;
+const double DOUBLE_INFPLUS = 1.79769313486230000E+308;
+const double DOUBLE_INFMINUS = -1.79769313486230000E+308;
+const double DOUBLE_NAN = 1.797693000000000E+308;
+const std::string DOUBLE_INFPLUS_STR = std::to_string(DOUBLE_INFPLUS);
+const std::string DOUBLE_INFMINUS_STR = std::to_string(DOUBLE_INFMINUS);
+const std::string DOUBLE_NAN_STR = std::to_string(DOUBLE_NAN);
+
+template < typename T >
+T InfMinus()
+{
+  return std::numeric_limits<T>::min();
+}
+template < typename T >
+T InfPlus()
+{
+  return std::numeric_limits<T>::max();
+}
+template < typename T >
+T Nan()
+{
+  return std::numeric_limits<T>::min();
+}
+
+template < typename T >
+inline bool is_minusinf(const T& value)
+{
+  return approximatelyEqual( value, InfMinus<T>() );
+}
+
+template < typename T >
+inline bool is_plusinf(const T& value)
+{
+  return std::isinf(value) || approximatelyEqual( value, InfPlus<T>() );
+}
+
+template < typename T >
+inline bool is_nan(const T& value)
+{
+  return std::isnan(value) || approximatelyEqual( value, Nan<T>() );
+}
+
+template <class T,
+          typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+std::string write_floating_point( const T& value )
+{
+    std::string value_str;
+    if( is_minusinf(value) )
+        value_str = "-inf";
+    else if( is_plusinf(value) )
+        value_str = "inf";
+    if( is_nan(value) )
+        value_str = "nan";
+    else
+    {
+        std::ostringstream str_stream;
+        str_stream << std::setprecision(15) << value;
+        value_str = str_stream.str();
+    }
+    return value_str;
+}
+
+template < typename T >
+T read_floating_point( const std::string& value_str )
+{
+    T value;
+    if( value_str == "-inf" )
+        value = InfMinus<T>();
+    else if( value_str == "inf" )
+        value = InfPlus<T>() ;
+    if( value_str == "nan" )
+        value = Nan<T>();
+    else
+        value = std::stod( value_str.c_str() );
+
+    return value;
+}
+
+template <> double InfMinus();
+template <> double InfPlus();
+template <> double Nan();
+template <> float InfMinus();
+template <> float InfPlus();
+template <> float Nan();
+
 
 #endif // V_DETAIL_H
