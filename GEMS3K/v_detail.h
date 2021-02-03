@@ -295,7 +295,7 @@ T read_floating_point( const std::string& value_str )
     if( value_str == "-inf" )
         value = InfMinus<T>();
     else if( value_str == "inf" )
-        value = InfPlus<T>() ;
+        value = InfPlus<T>();
     else if( value_str == "nan" )
         value = Nan<T>();
     else

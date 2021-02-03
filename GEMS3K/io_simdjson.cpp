@@ -228,9 +228,21 @@ void SimdJsonRead::read_array(const std::string &field_name, std::vector<int64_t
     impl->read_array( field_name, arr);
 }
 
+template <> float SimdJsonRead::internal_cast( double value )
+{
+    float cast_value;
+    if( is_minusinf(value) )
+        cast_value = InfMinus<float>();
+    else if( is_plusinf(value) )
+        cast_value = InfPlus<float>();
+    else if( is_nan(value) )
+        cast_value = Nan<float>();
+    else
+        cast_value = static_cast<float>(value);
+    return cast_value;
+}
 
 //-------------------------------------------------------------------------------------
-
 
 
 void SimdJsonWrite::put_head(const std::string &key_name, const std::string &field_name)

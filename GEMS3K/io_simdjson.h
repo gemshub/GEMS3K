@@ -210,7 +210,7 @@ public:
 
         for( long int ii=0; ii<size; ++ii )
         {
-            arr[ii] = static_cast<T>(js_arr[ii]);
+            arr[ii] = internal_cast<T>(js_arr[ii]);
         }
     }
 
@@ -228,7 +228,7 @@ public:
 
         for( long int ii=0; ii<size; ++ii )
         {
-            arr[ii] = static_cast<T>(js_arr[ii]);
+            arr[ii] = internal_cast<T>(js_arr[ii]);
         }
     }
 
@@ -247,6 +247,11 @@ protected:
     // Internal structure of file data
     std::shared_ptr<SimdJsonImpl> impl;
 
+    template < typename T >
+    T internal_cast( double value )
+    {
+      return static_cast<T>(value);
+    }
 };
 
 
