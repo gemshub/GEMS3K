@@ -39,6 +39,7 @@
 #include <memory>
 #include "nodearray.h"
 #include "v_detail.h"
+#include "v_service.h"
 #include "args_tool.h"
 
 

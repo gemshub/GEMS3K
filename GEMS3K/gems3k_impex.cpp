@@ -3,6 +3,7 @@
 #include <sstream>
 #include "gems3k_impex.h"
 #include "v_detail.h"
+#include "v_service.h"
 
 
 GEMS3KGenerator::IOModes GEMS3KGenerator::default_type_f =

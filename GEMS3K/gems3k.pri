@@ -25,11 +25,12 @@ INCLUDEPATH += $$SJSON_H
                     $$GEMS3K_H/io_template.h \
                     $$GEMS3K_H/io_nlohmann.h \
                     $$GEMS3K_H/io_keyvalue.h \
+                    $$GEMS3K_H/io_simdjson.h \
                     $$GEMS3K_H/gems3k_impex.h \
                     $$GEMS3K_H/activities.h \
                     $$GEMS3K_H/kinetics.h \
                     $$GEMS3K_H/v_detail.h \
-                    $$GEMS3K_H/io_simdjson.h \
+                    $$GEMS3K_H/v_service.h \
                     $$SJSON_H/simdjson/simdjson.h
 
 
@@ -59,6 +60,7 @@ INCLUDEPATH += $$SJSON_H
                       $$GEMS3K_CPP/io_template.cpp \
                       $$GEMS3K_CPP/io_nlohmann.cpp \
                       $$GEMS3K_CPP/io_keyvalue.cpp \
+                      $$GEMS3K_CPP/io_simdjson.cpp \
                       $$GEMS3K_CPP/gems3k_impex.cpp \
                       $$GEMS3K_CPP/node_copy.cpp \
                       $$GEMS3K_CPP/ms_multi_copy.cpp \
@@ -68,6 +70,6 @@ INCLUDEPATH += $$SJSON_H
                       $$GEMS3K_CPP/s_activity2.cpp \
                       $$GEMS3K_CPP/s_activity3.cpp  \
                       $$GEMS3K_CPP/v_detail.cpp \
-                      $$GEMS3K_CPP/io_simdjson.cpp \
+                      $$GEMS3K_CPP/v_service.cpp \
                       #$$SJSON_CPP/simdjson.cpp
 

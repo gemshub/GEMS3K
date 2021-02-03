@@ -27,6 +27,7 @@
 #include <iomanip>
 #include "io_keyvalue.h"
 #include "v_detail.h"
+#include "v_service.h"
 
 
 namespace  io_formats {
@@ -37,7 +38,7 @@ template <> void KeyValueWrite::writeValue( const float& val )
     if( IsFloatEmpty( val ))
         fout << CHAR_EMPTY << " ";
     else
-        fout << write_floating_point( val );
+        fout << floating_point_to_string( val );
 }
 
 /// Write double value to file
@@ -46,7 +47,7 @@ template <> void KeyValueWrite::writeValue( const double& val )
     if( IsDoubleEmpty( val ))
         fout << CHAR_EMPTY << " ";
     else
-        fout << write_floating_point( val );
+        fout << floating_point_to_string( val );
 }
 
 /// Write double value to file
@@ -99,7 +100,7 @@ void KeyValueRead::read_value(float& val)
     if( buf == "`" )
         val = FLOAT_EMPTY;
     else
-        val = read_floating_point<float>( buf );
+        val = string_to_floating_point<float>( buf );
 }
 
 void KeyValueRead::read_value(double& val)
@@ -110,7 +111,7 @@ void KeyValueRead::read_value(double& val)
     if( buf == "`" )
         val = DOUBLE_EMPTY;
     else
-        val = read_floating_point<double>( buf );
+        val = string_to_floating_point<double>( buf );
 }
 
 

@@ -33,8 +33,7 @@
 #else
 #include <unistd.h>
 #endif
-#include <algorithm>
-#include "v_detail.h"
+#include "v_service.h"
 
 #ifdef NODEARRAYLEVEL
 #include "nodearray.h"

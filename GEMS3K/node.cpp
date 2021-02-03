@@ -26,7 +26,6 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include "v_detail.h"
 #include "node.h"
 #include "gdatastream.h"
 #include "num_methods.h"

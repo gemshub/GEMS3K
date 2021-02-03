@@ -27,7 +27,7 @@
 #ifdef USE_OLD_NLOHMANJSON
 
 #include "io_nlohmann.h"
-#include "v_detail.h"
+#include "v_service.h"
 
 
 namespace  io_formats {

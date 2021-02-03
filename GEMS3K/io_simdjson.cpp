@@ -31,6 +31,7 @@
 #include "simdjson/simdjson.cpp"
 #include "io_simdjson.h"
 #include "v_detail.h"
+#include "v_service.h"
 
 namespace  io_formats {
 
@@ -269,13 +270,13 @@ void SimdJsonWrite::dump(bool)
 /// Write float value to file
 template <> void SimdJsonWrite::add_value( const float& val )
 {
-    fout << write_floating_point( val );
+    fout << floating_point_to_string( val );
 }
 
 /// Write double value to file
 template <> void SimdJsonWrite::add_value( const double& val )
 {
-    fout << write_floating_point( val );
+    fout << floating_point_to_string( val );
 }
 
 /// Write double value to file

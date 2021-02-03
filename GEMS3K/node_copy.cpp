@@ -34,7 +34,7 @@
 #include "io_keyvalue.h"
 #include "io_nlohmann.h"
 #include "io_simdjson.h"
-#include "v_detail.h"
+#include "v_service.h"
 
 // Writes CSD (DATACH structure) to a json/key-value string
 // \param brief_mode - Do not write data items that contain only default values
