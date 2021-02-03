@@ -1,5 +1,4 @@
-//#include <cstring>
-//#include <istream>
+#include <istream>
 #include <regex>
 #include "v_service.h"
 

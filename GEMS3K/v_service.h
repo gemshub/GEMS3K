@@ -3,7 +3,7 @@
 /// \file v_service.h
 /// Declaration of platform-specific utility functions and classes
 //
-// Copyright (C) 1996,2001,2020 A.Rysin, S.Dmytriyeva
+// Copyright (C) 1996,2001,2021 A.Rysin, S.Dmytriyeva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -28,7 +28,6 @@
 
 #include <string>
 #include <algorithm>
-
 
 void strip( std::string& str);
 void replace( std::string& str, const char* old_part, const char* new_part );

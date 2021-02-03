@@ -28,7 +28,6 @@
 
 #include <limits>
 #include <cmath>
-#include <algorithm>
 #include <sstream>
 #include <iomanip>
 #include "verror.h"
