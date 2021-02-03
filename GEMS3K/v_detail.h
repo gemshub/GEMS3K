@@ -177,20 +177,37 @@ T string_to_floating_point( const std::string& value_str )
 }
 
 /// Read value from string.
-template <typename T>
-bool string_value( T& x, const std::string& s)
+template <class T,
+          typename std::enable_if<!std::is_floating_point<T>::value,T>::type* = nullptr>
+bool string2value( T& x, const std::string& s)
 {
     std::istringstream iss(s);
     return iss >> x && !iss.ignore();
 }
 
+template <class T,
+          typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+bool string2value( T& x, const std::string& s)
+{
+    x = string_to_floating_point<T>(s);
+    return true;
+}
+
 /// Serializations a numeric value to a string.
-template < typename T >
-std::string value_string( const T& value )
+template <class T,
+          typename std::enable_if<!std::is_floating_point<T>::value,T>::type* = nullptr>
+std::string value2string( const T& value, int )
 {
     std::ostringstream os;
     os << value;
     return os.str();
+}
+
+template <class T,
+          typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+std::string value2string( const T& value, int precision = 15 )
+{
+    return floating_point_to_string( value, precision );
 }
 
 template <> double InfMinus();
