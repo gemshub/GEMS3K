@@ -122,8 +122,7 @@ void  KeyValueRead::skip_space()
     if( fin.eof() )
         return;
     fin.get( input );
-    while( input == '#' || input == ' ' ||
-           input == '\n' || input == '\t')
+    while( input == '#' || isspace(input) )
     {
         if( input == '#' )
         {

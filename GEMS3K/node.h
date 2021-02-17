@@ -372,7 +372,7 @@ public:
 ///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
 ///  @param ipm_json -  Parameters and settings for GEMS3K IPM-3 algorithm as a json/key-value string
 ///  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
-  long int  GEM_init( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json );
+  long int  GEM_init( std::string dch_json, std::string ipm_json, std::string dbr_json );
 
 
   // String i/o functions
@@ -381,13 +381,13 @@ public:
   /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
   std::string datach_to_string( bool with_comments = true, bool brief_mode = false ) const;
   /// Reads CSD (DATACH structure) from a json/key-value string
-  bool datach_from_string( const std::string& data );
+  bool datach_from_string( std::string data );
   /// Writes work node (DATABR structure) to a json/key-value string
   /// \param brief_mode - Do not write data items that contain only default values
   /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
   std::string databr_to_string( bool with_comments = true, bool brief_mode = false ) const;
   /// Reads work node (DATABR structure) from a json/key-value string
-  bool databr_from_string( const std::string& data );
+  bool databr_from_string( std::string data );
   /// Writes Multi to a json/key-value string
   /// \param brief_mode - Do not write data items that contain only default values
   /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"

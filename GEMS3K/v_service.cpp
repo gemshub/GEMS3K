@@ -115,7 +115,7 @@ void u_splitpath(const std::string& Path, std::string& dir,
     }
 }
 
-std::string regexp_extract_string( const std::string& regstr, const std::string& data )
+std::string regexp_extract_string( std::string regstr, std::string data )
 {
     std::string token = "";
     std::regex re( regstr );
@@ -130,7 +130,38 @@ std::string regexp_extract_string( const std::string& regstr, const std::string&
 }
 
 // Extract the string value by key from jsonstring
-std::string extract_string_json( const std::string& key, const std::string& jsondata )
+std::string extract_string_json( std::string key, std::string jsondata )
+{
+    size_t key_size = key.length()+2;
+    std::string key_find = "\"" + key + "\"";
+    std::string field_value;
+
+    auto pos_set = jsondata.find( key_find, 0);
+    while( pos_set != std::string::npos )
+    {
+       pos_set += key_size;
+       while( isspace( jsondata[pos_set] ) )
+           ++pos_set;
+       if( jsondata[pos_set] == ':')
+       {
+          ++pos_set;
+          while( isspace( jsondata[pos_set] ) )
+               ++pos_set;
+          if( jsondata[pos_set] == '\"')
+          {
+            ++pos_set;
+            auto pos_end = jsondata.find_first_of( "\"", pos_set);
+            field_value =  jsondata.substr( pos_set, pos_end-pos_set);
+            break;
+          }
+       }
+       pos_set = jsondata.find( key_find, pos_set);
+    }
+    return field_value;
+}
+
+// Extract the string value by key from jsonstring
+std::string extract_string_json_old( std::string key, std::string jsondata )
 {
     std::string data = jsondata;
     replace_all( data, "\'", '\"');

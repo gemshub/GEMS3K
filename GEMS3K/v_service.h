@@ -35,9 +35,9 @@ void replaceall( std::string& str, const std::string& old_part, const std::strin
 void replaceall(std::string& str, char ch1, char ch2);
 
 //// Extract the string value from data.
-std::string regexp_extract_string( const std::string& regstr, const std::string& data );
+std::string regexp_extract_string( std::string regstr, std::string data );
 /// Extract the string value by key from json string
-std::string extract_string_json( const std::string& key, const std::string& jsondata );
+std::string extract_string_json( std::string key, std::string jsondata );
 /// Extract the int value by key from json string
 int extract_int_json( const std::string& key, const std::string& jsondata );
 

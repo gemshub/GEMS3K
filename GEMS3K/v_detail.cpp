@@ -1,6 +1,3 @@
-//#include <cstring>
-//#include <istream>
-//#include <regex>
 #include "v_detail.h"
 
 TError::~TError()

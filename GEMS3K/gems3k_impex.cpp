@@ -58,10 +58,19 @@ void GEMS3KGenerator::load_dat_lst_file()
 
     f_getline(f_lst, mode, ' ');
     trim(mode);
-    get_mode( mode );
+    if( mode[0] == '-' )
+    {
+        get_mode( mode );
+        f_getline( f_lst, datach_file_name, ' ');
+        trim(datach_file_name, "\"");
+    }
+    else
+    {
+        io_mode = f_key_value;
+        datach_file_name = mode;
+        trim(datach_file_name, "\"");
+    }
 
-    f_getline( f_lst, datach_file_name, ' ');
-    trim(datach_file_name, "\"");
     f_getline( f_lst, ipm_file_name, ' ');
     trim(ipm_file_name, "\"");
 
@@ -71,7 +80,7 @@ void GEMS3KGenerator::load_dat_lst_file()
         trim( dbr_name );
         trim( dbr_name, "\"");
         if( !dbr_name.empty() )
-              databr_file_names.push_back(dbr_name);
+            databr_file_names.push_back(dbr_name);
     }
     nIV = databr_file_names.size();
 }
@@ -112,9 +121,9 @@ size_t GEMS3KGenerator::load_dbr_lst_file( const std::string& dbr_lst_path )
 {
     std::string dbr_name, dbr_name_full;
     if( dbr_lst_path.find_first_of("/\\") == std::string::npos )
-       dbr_name_full = impex_dir+"/"+dbr_lst_path;
+        dbr_name_full = impex_dir+"/"+dbr_lst_path;
     else
-       dbr_name_full = dbr_lst_path;
+        dbr_name_full = dbr_lst_path;
 
     std::fstream f_lst( dbr_name_full, std::ios::in );
     ErrorIf( !f_lst.good() , dbr_name_full, " fileopen error");
@@ -126,7 +135,7 @@ size_t GEMS3KGenerator::load_dbr_lst_file( const std::string& dbr_lst_path )
         trim( dbr_name );
         trim( dbr_name, "\"");
         if( !dbr_name.empty() )
-              databr_file_names.push_back(dbr_name);
+            databr_file_names.push_back(dbr_name);
     }
     return databr_file_names.size();
 }

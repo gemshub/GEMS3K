@@ -5,7 +5,7 @@
 /// Copy constructor for TNode class
 /// DATACH and DATABR structures allocations
 //
-// Copyright (c) 2017 S.Dmytriyeva, D.Kulik
+// Copyright (c) 2017-2021 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -36,7 +36,7 @@
 #include "io_simdjson.h"
 #include "v_service.h"
 
-// Writes CSD (DATACH structure) to a json/key-value string
+// Writes CSD (DATACH structure) to a json string or key-value string
 // \param brief_mode - Do not write data items that contain only default values
 // \param with_comments - Write files with comments for all data entries or as "pretty JSON"
 std::string TNode::datach_to_string( bool with_comments, bool brief_mode ) const
@@ -46,8 +46,8 @@ std::string TNode::datach_to_string( bool with_comments, bool brief_mode ) const
     return ss.str();
 }
 
-// Reads CSD (DATACH structure) from a json/key-value string
-bool TNode::datach_from_string( const std::string& data )
+// Reads CSD (DATACH structure) from a json string or key-value string
+bool TNode::datach_from_string( std::string data )
 {
     if( data.empty() )
         return false;
@@ -58,7 +58,7 @@ bool TNode::datach_from_string( const std::string& data )
     return true;
 }
 
-// Writes work node (DATABR structure) to a json/key-value string
+// Writes work node (DATABR structure) to a json string or key-value string
 // \param brief_mode - Do not write data items that contain only default values
 // \param with_comments - Write files with comments for all data entries or as "pretty JSON"
 std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
@@ -68,8 +68,8 @@ std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
     return ss.str();
 }
 
-// Reads work node (DATABR structure) from a json/key-value string
-bool TNode::databr_from_string( const std::string& data )
+// Reads work node (DATABR structure) from a json string or key-value string
+bool TNode::databr_from_string( std::string data )
 {
     if( data.empty() )
         return false;
@@ -241,11 +241,11 @@ void  TNode::write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IO
 }
 
 //-------------------------------------------------------------------
-// (1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs
-//  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files.
-//  Parameters:
+// (1) Initialization of GEM IPM2 data structures in coupled RMT-GEM programs
+//  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files 
+//  in key-value, json or binary format. Parameters:
 //  ipmfiles_lst_name - name of a text file that contains:
-//    " -t/-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name>
+//    " -j | -t |-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name>
 //  dbfiles_lst_name - name of a text file that contains:
 //    <dataBR  file name1>, ... , <dataBR file nameN> "
 //    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
@@ -253,19 +253,16 @@ void  TNode::write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IO
 //    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
 //    and must contain valid initial chemical systems (of the same structure
 //    as described in the DCH_DAT file) to set up the initial state of the FMT
-//    node array. If -t flag or nothing is specified then all data files must
-//    be in text (ASCII) format; if -b flag is specified then all data files
-//    are  assumed to be binary (little-endian) files.
-//  nodeTypes[nNodes] - optional parameter used only on the TNodeArray level,
-//    array of node type (fortran) indexes of DBR_DAT files
-//    in the ipmfiles_lst_name list. This array (handle for each FMT node),
-//    specifies from which DBR_DAT file the initial chemical system should
-//    be taken.
-//  getNodT1 - optional flag, used only (if true) when reading multiple DBR files
-//    after the coupled modeling task interruption in GEM-Selektor
-//  This function returns:
-//   0: OK; 1: GEM IPM read file error; -1: System error (e.g. memory allocation)
-//
+//    node array. 
+//  If -t flag or no flag is specified then all data files must be in key-value text 
+//    (ASCII) format (and file names must have .dat extension);
+//  If -j flag is specified then all data files must be in JSON format (and file names 
+//    must have .json extension);
+//  if -b flag is specified then all data files are assumed to be binary (little-endian)
+//    files.
+//  This initialization method returns:
+//   0: OK; 1: GEM IPM read file error; -1: System error (e.g. memory allocation);
+//    2: Input file format error (for json or key-value format files).
 //-------------------------------------------------------------------
 long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 {
@@ -345,7 +342,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 //  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
 //  @param ipm_json -  Multi structure as a json/key-value string
 //  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
-long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json )
+long int  TNode::GEM_init( std::string dch_json, std::string ipm_json, std::string dbr_json )
 {
     load_thermodynamic_data = false; // need load thermo
     std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
