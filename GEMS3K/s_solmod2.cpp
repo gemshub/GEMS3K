@@ -667,21 +667,21 @@ long int TPRSVcalc::FugacityMix( double amix, double bmix, double &fugmix, doubl
 	vol1 = z1*R_CONST*Tk/Pbar;
 	vol2 = z2*R_CONST*Tk/Pbar;
 	vol3 = z3*R_CONST*Tk/Pbar;
-	if (z1 > B)
-		lnf1 = (-1.)*log(z1-B)
-			- A/(B*sqrt(8.))*log((z1+(1.+sqrt(2.))*B)/(z1+(1.-sqrt(2.))*B))+z1-1.;
-	else
-		lnf1 = 1000.;
-	if (z2 > B)
-		lnf2 = (-1.)*log(z2-B)
-			- A/(B*sqrt(8.))*log((z2+(1.+sqrt(2.))*B)/(z2+(1.-sqrt(2.))*B))+z2-1.;
-	else
-		lnf2 = 1000.;
-	if (z3 > B)
-		lnf3 = (-1.)*log(z3-B)
-			- A/(B*sqrt(8.))*log((z3+(1.+sqrt(2.))*B)/(z3+(1.-sqrt(2.))*B))+z3-1.;
-	else
-		lnf3 = 1000.;
+    if (z1 > B)
+        lnf1 = (-1.)*log(z1-B)
+                - A/(B*sqrt(8.))*log((z1+(1.+sqrt(2.))*B)/(z1+(1.-sqrt(2.))*B))+z1-1.;
+    else
+        lnf1 = 100.;
+    if (z2 > B)
+        lnf2 = (-1.)*log(z2-B)
+                - A/(B*sqrt(8.))*log((z2+(1.+sqrt(2.))*B)/(z2+(1.-sqrt(2.))*B))+z2-1.;
+    else
+        lnf2 = 100.;
+    if (z3 > B)
+        lnf3 = (-1.)*log(z3-B)
+                - A/(B*sqrt(8.))*log((z3+(1.+sqrt(2.))*B)/(z3+(1.-sqrt(2.))*B))+z3-1.;
+    else
+        lnf3 = 100.;
 
 	if (lnf2 < lnf1)
 	{
@@ -699,7 +699,7 @@ long int TPRSVcalc::FugacityMix( double amix, double bmix, double &fugmix, doubl
 	{
         ; // zmix = zmix; vmix = vmix; lnf = lnf;
 	}
-	fugmix = exp(lnf);
+    fugmix = exp(lnf);
         PhVol = vmix;
 	return 0;
 }
@@ -755,68 +755,78 @@ long int TPRSVcalc::FugacitySpec( double *fugpure )
 long int TPRSVcalc::ResidualFunct( double *fugpure )
 {
     long int i, j, iRet=0;
-	double fugmix=0., zmix=0., vmix=0., amix=0., bmix=0.;
+    double fugmix=0., zmix=0., vmix=0., amix=0., bmix=0.;
     double /*A,*/ B, K, dK, d2K, Q, dQ, d2Q, damix, d2amix, ai, aj, dai, daj, d2ai, d2aj,
-			cv, dPdT, dPdV, dVdT;
+            cv, dPdT, dPdV, dVdT;
 
     // Reload params to Pureparm (probably now obsolete?)
     for( j=0; j<NComp; j++ )
     {
-      Fugpure[j][0] = fugpure[j]/Pbar;
+        Fugpure[j][0] = fugpure[j]/Pbar;
     }
 
-	// retrieve properties of the mixture
-	iRet = MixParam( amix, bmix );
-	iRet = FugacityMix( amix, bmix, fugmix, zmix, vmix );
-    //A = amix*Pbar/(pow(R_CONST, 2.)*pow(Tk, 2.));
-	B = bmix*Pbar/(R_CONST*Tk);
+    // retrieve properties of the mixture
+    iRet = MixParam( amix, bmix );
+    if( noZero(bmix) )
+    {
+        iRet = FugacityMix( amix, bmix, fugmix, zmix, vmix );
+        //A = amix*Pbar/(pow(R_CONST, 2.)*pow(Tk, 2.));
+        B = bmix*Pbar/(R_CONST*Tk);
 
-	// calculate total state functions of the mixture
-	damix = 0.;
-	d2amix = 0.;
-	for (i=0; i<NComp; i++)
-	{
-		for (j=0; j<NComp; j++)
-		{
-			// pull parameters
-			ai = Pureparm[i][0];
-			aj = Pureparm[j][0];
-			dai = Pureparm[i][2];
-			daj = Pureparm[j][2];
-			d2ai = Pureparm[i][3];
-			d2aj = Pureparm[j][3];
-			K = KK[i][j];
-			dK = dKK[i][j];
-			d2K = d2KK[i][j];
+        // calculate total state functions of the mixture
+        damix = 0.;
+        d2amix = 0.;
+        for (i=0; i<NComp; i++)
+        {
+            for (j=0; j<NComp; j++)
+            {
+                // pull parameters
+                ai = Pureparm[i][0];
+                aj = Pureparm[j][0];
+                dai = Pureparm[i][2];
+                daj = Pureparm[j][2];
+                d2ai = Pureparm[i][3];
+                d2aj = Pureparm[j][3];
+                K = KK[i][j];
+                dK = dKK[i][j];
+                d2K = d2KK[i][j];
 
-			// increments to derivatives
-			Q = sqrt(ai*aj);
-			dQ = 0.5*( sqrt(aj/ai)*dai + sqrt(ai/aj)*daj );
-			d2Q = 0.5*( dai*daj/sqrt(ai*aj) + d2ai*sqrt(aj)/sqrt(ai) + d2aj*sqrt(ai)/sqrt(aj)
-					- 0.5*( pow(dai,2.)*sqrt(aj)/sqrt(pow(ai,3.))
-					+ pow(daj,2.)*sqrt(ai)/sqrt(pow(aj,3.)) ) );
-			damix = damix + x[i]*x[j] * ( dQ*(1.-K) - Q*dK );
-			d2amix = d2amix + x[i]*x[j] * ( d2Q*(1.-K) - 2.*dQ*dK - Q*d2K );
-		}
-	}
+                // increments to derivatives
+                Q = sqrt(ai*aj);
+                dQ = 0.5*( sqrt(aj/ai)*dai + sqrt(ai/aj)*daj );
+                d2Q = 0.5*( dai*daj/sqrt(ai*aj) + d2ai*sqrt(aj)/sqrt(ai) + d2aj*sqrt(ai)/sqrt(aj)
+                            - 0.5*( pow(dai,2.)*sqrt(aj)/sqrt(pow(ai,3.))
+                                    + pow(daj,2.)*sqrt(ai)/sqrt(pow(aj,3.)) ) );
+                damix = damix + x[i]*x[j] * ( dQ*(1.-K) - Q*dK );
+                d2amix = d2amix + x[i]*x[j] * ( d2Q*(1.-K) - 2.*dQ*dK - Q*d2K );
+            }
+        }
 
-	// calculate thermodynamic properties
-	Grs = (amix/(R_CONST*Tk*sqrt(8.)*bmix) * log((vmix+(1.-sqrt(2.))*bmix)
-		/ (vmix+(1.+sqrt(2.))*bmix))-log(zmix*(1.-bmix/vmix))+zmix-1.)*R_CONST*Tk;
-	Hrs = ((amix-Tk*damix)/(R_CONST*Tk*sqrt(8.)*bmix)*log((vmix+(1.-sqrt(2.))
-		*bmix)/(vmix+(1.+sqrt(2.))*bmix))+zmix-1.)*R_CONST*Tk;
-	Srs = (Hrs - Grs)/Tk;
+        // calculate thermodynamic properties
+        Grs = (amix/(R_CONST*Tk*sqrt(8.)*bmix) * log((vmix+(1.-sqrt(2.))*bmix)
+                                                     / (vmix+(1.+sqrt(2.))*bmix))-log(zmix*(1.-bmix/vmix))+zmix-1.)*R_CONST*Tk;
+        Hrs = ((amix-Tk*damix)/(R_CONST*Tk*sqrt(8.)*bmix)*log((vmix+(1.-sqrt(2.))
+                                                               *bmix)/(vmix+(1.+sqrt(2.))*bmix))+zmix-1.)*R_CONST*Tk;
+        Srs = (Hrs - Grs)/Tk;
 
-	// heat capacity part
-	cv = Tk*d2amix/(bmix*sqrt(8.))
-			 * log( (zmix+B*(1.+sqrt(2.)))/(zmix+B*(1.-sqrt(2.))) );
-	dPdT = R_CONST/(vmix-bmix) - damix/( vmix*(vmix+bmix) + bmix*(vmix-bmix) );
-	dPdV = - R_CONST*Tk/pow((vmix-bmix),2.) + 2.*amix*(vmix+bmix)/pow((vmix*(vmix+bmix)+bmix*(vmix-bmix)),2.);
-	dVdT = (-1.)*(1./dPdV)*dPdT;
-	CPrs = cv + Tk*dPdT*dVdT - R_CONST;
-	Vrs = vmix;
-
-	return iRet;
+        // heat capacity part
+        cv = Tk*d2amix/(bmix*sqrt(8.))
+                * log( (zmix+B*(1.+sqrt(2.)))/(zmix+B*(1.-sqrt(2.))) );
+        dPdT = R_CONST/(vmix-bmix) - damix/( vmix*(vmix+bmix) + bmix*(vmix-bmix) );
+        dPdV = - R_CONST*Tk/pow((vmix-bmix),2.) + 2.*amix*(vmix+bmix)/pow((vmix*(vmix+bmix)+bmix*(vmix-bmix)),2.);
+        dVdT = (-1.)*(1./dPdV)*dPdT;
+        CPrs = cv + Tk*dPdT*dVdT - R_CONST;
+        Vrs = vmix;
+    }
+    else {
+        // calculate thermodynamic properties
+        Grs = 0.;
+        Hrs = 0.;
+        Srs = (Hrs - Grs)/Tk;
+        CPrs = 0.;
+        Vrs = 0.;
+    }
+    return iRet;
 }
 
 

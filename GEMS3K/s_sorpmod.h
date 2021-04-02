@@ -28,6 +28,7 @@
 #define S_SORPTION_H
 
 //#include "s_fgl.h"
+
 // const int   MAXDCNAME = 16, MAXPHASENAME = 16, MST =   6;
 #include "m_const_base.h"
 

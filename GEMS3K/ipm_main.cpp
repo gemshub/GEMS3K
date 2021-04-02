@@ -1259,14 +1259,32 @@ void TMultiBase::WeightMultipliers( bool square )
       case LOWER_LIM:
            W1=(pm.Y[J]-pm.DLL[J]);
            if( square )
+           {
+             if(fabs(W1) > 1.34e120)    //  1.34e154
+             {
+                 if(signbit(W1))
+                      W1 = -1.34e120;
+                 else
+                     W1 = 1.34e120;
+             }
              pm.W[J]= W1 * W1;
-             else
+           }
+           else
              pm.W[J] = max( W1, 0. );
            break;
       case UPPER_LIM:
            W1=(pm.DUL[J]-pm.Y[J]);
            if( square )
-             pm.W[J]= W1 * W1;
+           {
+               if(fabs(W1) > 1.34e120)
+               {
+                  if(signbit(W1))
+                     W1 = -1.34e120;
+                  else
+                     W1 = 1.34e120;
+               }
+               pm.W[J]= W1 * W1;
+           }
            else
              pm.W[J] = max( W1, 0.);
            break;
@@ -1275,7 +1293,21 @@ void TMultiBase::WeightMultipliers( bool square )
            W2=(pm.DUL[J]-pm.Y[J]);
            if( square )
            {
+              if(fabs(W1) > 1.34e120)
+              {
+                 if(signbit(W1))
+                   W1 = -1.34e120;
+                 else
+                   W1 = 1.34e120;
+               }
              W1 = W1*W1;
+             if(fabs(W2) > 1.34e120)
+             {
+                if(signbit(W2))
+                   W2 = -1.34e120;
+                else
+                   W2 = 1.34e120;
+             }
              W2 = W2*W2;
            }
            pm.W[J]=( W1 < W2 ) ? W1 : W2 ;
@@ -1414,6 +1446,13 @@ double TMultiBase::DikinsCriterion(  long int N, bool initAppr )
       {
           Mu = DC_DualChemicalPotential( pm.Uefd, pm.A+J*pm.N, N, J );
           qMu = Mu*pm.W[J];
+          if( fabs(qMu) > 1.34e120 )  // workaround of NAN in PCI += qMu*qMu
+          {
+            if(signbit(qMu))
+              qMu = -1.34e120;
+            else
+              qMu = 1.34e120;
+          }
           pm.MU[J] = qMu;
           PCI += qMu*qMu;
 //          PCI += sqrt(fabs(qMu));  // Experimental - absolute differences?

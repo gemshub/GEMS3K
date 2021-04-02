@@ -26,6 +26,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 #include "v_detail.h"
 #include "v_service.h"
 #include "io_template.h"

@@ -1292,7 +1292,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
   // or returns 0.0 if there is no water in the node or no aqueous phase in DATACH
   double TNode::Get_mIC( const long xic ) const
   {
-     long int xaq = DC_name_to_xDB( "H2O@" );  // index of H2O aq in DATABR
+     long int xaq = pmm->LO; // DC_name_to_xDB( "H2O@" ); //  24.03.21 "H2O(l)" index of H2O aq in DATABR
      double nAQ, nIC, scICinH2O, m_tot;
      if( (CNode->xPA && CNode->xPA[0] <= 0.) || xaq < 0L )  // check phase code in DATACH
          return 0.; // no water or zero amount of water

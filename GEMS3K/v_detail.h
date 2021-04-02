@@ -81,8 +81,10 @@ bool isAllZero( T* arr, IT size )
   return true;
 }
 
-#define FLOAT_EMPTY	          1.17549435e-38F
-#define DOUBLE_EMPTY         2.2250738585072014e-308
+//#define FLOAT_EMPTY	          1.17549435e-38F
+//#define DOUBLE_EMPTY         2.2250738585072014e-308
+const float FLOAT_EMPTY = std::numeric_limits<float>::min();
+const double DOUBLE_EMPTY = std::numeric_limits<double>::min();
 #define CHAR_EMPTY   	     '`'
 
 inline bool IsFloatEmpty( const float v )
@@ -123,19 +125,19 @@ T Nan()
 template < typename T >
 inline bool is_minusinf(const T& value)
 {
-  return approximatelyEqual( value, InfMinus<T>() );
+  return value <= InfMinus<T>();
 }
 
 template < typename T >
 inline bool is_plusinf(const T& value)
 {
-  return std::isinf(value) || approximatelyEqual( value, InfPlus<T>() );
+  return std::isinf(value) || value >= InfPlus<T>();
 }
 
 template < typename T >
 inline bool is_nan(const T& value)
 {
-  return std::isnan(value) || approximatelyEqual( value, Nan<T>() );
+  return std::isnan(value) || value >= Nan<T>();
 }
 
 template <class T,

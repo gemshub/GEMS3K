@@ -32,6 +32,16 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>
 //-------------------------------------------------------------------
 
+#ifdef OVERFLOW_EXCEPT
+#ifdef __linux__
+#include <cfenv>
+#elif _MSC_VER
+#include <float.h>
+#else
+#include <cfenv>
+#endif
+#endif
+
 #include <time.h>
 #include <math.h>
 #include <string>
@@ -41,7 +51,6 @@
 #include "v_detail.h"
 #include "v_service.h"
 #include "args_tool.h"
-
 
 void show_usage( const std::string &name );
 int extract_args( int argc, char* argv[], std::string& input_lst_path, std::string& dbr_lst_path, GEMS3KImpexData& export_data );
@@ -59,6 +68,19 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, std::stri
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
 {
+
+#if  defined(OVERFLOW_EXCEPT)
+#ifdef __linux__
+feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
+#elif _MSC_VER
+    _clearfp();
+    _controlfp(_controlfp(0, 0) & ~(_EM_INVALID | _EM_ZERODIVIDE | _EM_OVERFLOW),
+               _MCW_EM);
+#else
+
+#endif
+#endif
+
     try{
         std::string input_lst_path;
         std::string  dbr_lst_path;

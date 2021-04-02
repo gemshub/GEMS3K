@@ -47,7 +47,7 @@ std::string TNode::datach_to_string( bool with_comments, bool brief_mode ) const
 }
 
 // Reads CSD (DATACH structure) from a json string or key-value string
-bool TNode::datach_from_string( std::string data )
+bool TNode::datach_from_string( const std::string data )
 {
     if( data.empty() )
         return false;
@@ -69,7 +69,7 @@ std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
 }
 
 // Reads work node (DATABR structure) from a json string or key-value string
-bool TNode::databr_from_string( std::string data )
+bool TNode::databr_from_string( const std::string data )
 {
     if( data.empty() )
         return false;
@@ -346,17 +346,18 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json, std::stri
 {
     load_thermodynamic_data = false; // need load thermo
     std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-    
-   try
+
+    try
     {
-        if( GEMS3KGenerator::default_type_f  == GEMS3KGenerator::f_json )
-        {
-            current_output_set_name = current_input_set_name = extract_string_json( "set", dch_json );
-            auto ipm_set =  extract_string_json( "set", ipm_json );
-            auto dbr_set =  extract_string_json( "set", dbr_json );
-            ErrorIf(  ipm_set!=current_input_set_name,  "GEM_init error", "Multi structure as a json has different set name:  "+ipm_set );
-            ErrorIf(  dbr_set!=current_input_set_name,  "GEM_init error", "The data bridge structure as a json has different set name:  "+dbr_set );
-        }
+        // This check of data consistency temporarily disabled for perfomance testing 
+        // if( GEMS3KGenerator::default_type_f  == GEMS3KGenerator::f_json )
+        // {
+        //     current_output_set_name = current_input_set_name = extract_string_json( "set", dch_json );
+        //     auto ipm_set =  extract_string_json( "set", ipm_json );
+        //     auto dbr_set =  extract_string_json( "set", dbr_json );
+        //     ErrorIf(  ipm_set!=current_input_set_name,  "GEM_init error", "Multi structure as a json has different set name:  "+ipm_set );
+        //     ErrorIf(  dbr_set!=current_input_set_name,  "GEM_init error", "The data bridge structure as a json has different set name:  "+dbr_set );
+        // }
 
         // Reading DCH_DAT data
         datach_from_string(dch_json);
@@ -454,7 +455,7 @@ void  TNode::GEM_print_ipm( const char* fname )
 
 
 /// (5j) Reads another DBR 0bject (with input system composition, T,P etc.) from JSON string \ . 
-long int TNode::GEM_read_dbr( const std::string& dbr_json, const bool check_dch_compatibility )
+long int TNode::GEM_read_dbr( std::string dbr_json, const bool check_dch_compatibility )
 {
     // Reads work node (DATABR structure) from a json string
     try
