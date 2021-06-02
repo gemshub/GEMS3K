@@ -24,6 +24,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#ifndef USE_NLOHMANNJSON
+
 #include <cmath>
 #include <iostream>
 #include <string_view>
@@ -310,3 +312,5 @@ void SimdJsonWrite::write_array(const std::string &field_name, const std::vector
 }  // io_formats
 
 // https://stackoverflow.com/questions/8610571/what-is-rvalue-reference-for-this/8610714#8610714
+
+#endif

@@ -44,15 +44,13 @@ const double bar_to_Pa = 1e5,
                m3_to_cm3 = 1e6,
                kg_to_g = 1e3;
 
-std::string TNode::ipmLogFile = "ipmlog.txt";
-
 TNode::TNode()
 {
   CSD = NULL;
   CNode = NULL;
   allocMemory();
   dbr_file_name = "dbr_file_name";
-  ipmLogFile = "ipmlog.txt";
+  ipmlog_file_name = "ipmlog.txt";
   load_thermodynamic_data = false;
 }
 
@@ -217,10 +215,10 @@ bool  TNode::check_TP( double TK, double P ) const
       }
       if( okT == false )
       {
-        std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+        std::fstream f_log(ipmLogFile(), std::ios::out|std::ios::app );
          f_log << "In node "<< CNode->NodeHandle << ",  Given TK= "<<  TK <<
              "  is beyond the interpolation range for thermodynamic data near boundary T_= "
-            << T_ << std::endl;
+     		<< T_ << std::endl;
        }
 
       if( P <= CSD->Pval[0] - CSD->Ptol )
@@ -235,7 +233,7 @@ bool  TNode::check_TP( double TK, double P ) const
       }
       if( !okP )
       {
-        std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+        std::fstream f_log(TNode::ipmLogFile(), std::ios::out|std::ios::app );
           f_log << "In node "<< CNode->NodeHandle << ", Given P= "<<  P <<
            "  is beyond the interpolation range for thermodynamic data near boundary P_= "
            << P_ << std::endl;
@@ -260,111 +258,117 @@ bool  TNode::check_TP( double TK, double P ) const
 //  Return values:    NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
 long int TNode::GEM_run( bool uPrimalSol )
 {
-  CalcTime = 0.0;
-  PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;
-//
-  try
-  {
-// f_log << " GEM_run() begin Mode= " << p_NodeStatusCH endl;
-//---------------------------------------------
-// Checking T and P  for interpolation intervals
-   check_TP( CNode->TK, CNode->P);
-// Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
-// setting up up PIA or AIA mode
-   if( CNode->NodeStatusCH == NEED_GEM_SIA )
-   {
-	   pmm->pNP = 1;
-	   unpackDataBr( uPrimalSol );
-   }
-   else if( CNode->NodeStatusCH == NEED_GEM_AIA )
-         {
+    CalcTime = 0.0;
+    PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;
+    clearipmLogError();
+
+    try
+    {
+        // f_log << " GEM_run() begin Mode= " << p_NodeStatusCH endl;
+        //---------------------------------------------
+        // Checking T and P  for interpolation intervals
+        check_TP( CNode->TK, CNode->P);
+        // Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
+        // setting up up PIA or AIA mode
+        if( CNode->NodeStatusCH == NEED_GEM_SIA )
+        {
+            pmm->pNP = 1;
+            unpackDataBr( uPrimalSol );
+        }
+        else if( CNode->NodeStatusCH == NEED_GEM_AIA )
+        {
             pmm->pNP = 0; // As default setting AIA mode
             if (CNode->dt > 0.)
-               uPrimalSol = true;
+                uPrimalSol = true;
             unpackDataBr( uPrimalSol );
-         }
+        }
         else
-	       return CNode->NodeStatusCH;
+            return CNode->NodeStatusCH;
 
-   // added 18.12.14 DK : setting chemical kinetics time counter and variables
-// cout << "dTime: " << CNode->dt << " TimeStep: " << CNode->NodeStatusFMT << " Time: " << CNode->Tm << endl;
-       if( CNode->dt <= 0. )
-       {  // no kinetics to consider
-           pmm->kTau = 0.;
-           pmm->kdT = 0.;
-           pmm->ITau = -1;
-           pmm->pKMM = 2;  // no need to allocate TKinMet instances
-       }
-       else {   // considering kinetics
-           pmm->kTau = CNode->Tm;
-           pmm->kdT = CNode->dt;
-           if( pmm->ITau < 0 && CNode->Tm/CNode->dt < 1e-9 )
-           {   // we need to initialize TKinMet
-               pmm->pKMM = -1;
-               pmm->ITau = -1;
-           }
-           else  // TKinMet exists, simulation continues
-               pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
-       }
+        // added 18.12.14 DK : setting chemical kinetics time counter and variables
+        // cout << "dTime: " << CNode->dt << " TimeStep: " << CNode->NodeStatusFMT << " Time: " << CNode->Tm << endl;
+        if( CNode->dt <= 0. )
+        {  // no kinetics to consider
+            pmm->kTau = 0.;
+            pmm->kdT = 0.;
+            pmm->ITau = -1;
+            pmm->pKMM = 2;  // no need to allocate TKinMet instances
+        }
+        else {   // considering kinetics
+            pmm->kTau = CNode->Tm;
+            pmm->kdT = CNode->dt;
+            if( pmm->ITau < 0 && CNode->Tm/CNode->dt < 1e-9 )
+            {   // we need to initialize TKinMet
+                pmm->pKMM = -1;
+                pmm->ITau = -1;
+            }
+            else  // TKinMet exists, simulation continues
+                pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
+        }
 
-   multi->to_text_file("React_before.dump.txt");//profil1->outMultiTxt( "React_before.dump.txt"  );
+   //multi->to_text_file("React_before.dump.txt");//profil1->outMultiTxt( "React_before.dump.txt"  );
    // GEM IPM calculation of equilibrium state
    //CalcTime = profil->ComputeEquilibriumState( /*PrecLoops,*/ NumIterFIA, NumIterIPM );
     CalcTime = multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
-    multi->to_text_file("React_after.dump.txt");//profil1->outMultiTxt( "React_after.dump.txt" );
+    //multi->to_text_file("React_after.dump.txt");//profil1->outMultiTxt( "React_after.dump.txt" );
 
-// Extracting and packing GEM IPM results into work DATABR structure
-    packDataBr();
-    CNode->IterDone = NumIterFIA+NumIterIPM;
-//**************************************************************
-// only for testing output results for files
-//    GEM_write_dbr( "calculated_dbr.dat",  2 /*json*/ );
-//    GEM_print_ipm( "calc_multi.ipm" );
-// *********************************************************
+        // Extracting and packing GEM IPM results into work DATABR structure
+        packDataBr();
+        CNode->IterDone = NumIterFIA+NumIterIPM;
+        //**************************************************************
+        // only for testing output results for files
+        //    GEM_write_dbr( "calculated_dbr.dat",  2 /*json*/ );
+        //    GEM_print_ipm( "calc_multi.ipm" );
+        // *********************************************************
 
-    // test error result GEM IPM calculation of equilibrium state in MULTI
-    long int erCode = multi->testMulti();
+        // test error result GEM IPM calculation of equilibrium state in MULTI
+        long int erCode =  multi->testMulti();
 
-    if( erCode )
-    {
-        if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-          CNode->NodeStatusCH = BAD_GEM_AIA;
+        if( erCode )
+        {
+            if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+                CNode->NodeStatusCH = BAD_GEM_AIA;
+            else
+                CNode->NodeStatusCH = BAD_GEM_SIA;
+
+            // internal multi error
+            ipmlog_error = pmm->errorCode+ std::string(": ") +  pmm->errorBuf;
+        }
         else
-          CNode->NodeStatusCH = BAD_GEM_SIA;
+        {
+            if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+                CNode->NodeStatusCH = OK_GEM_AIA;
+            else
+                CNode->NodeStatusCH = OK_GEM_SIA;
+        }
+
+        return CNode->NodeStatusCH;
     }
-    else
+    catch(TError& err)
     {
-      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-          CNode->NodeStatusCH = OK_GEM_AIA;
-      else
-         CNode->NodeStatusCH = OK_GEM_SIA;
+        ipmlog_error = err.title + std::string(": ") + err.mess;
+        if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+            CNode->NodeStatusCH = ERR_GEM_AIA;
+        else
+            CNode->NodeStatusCH = ERR_GEM_SIA;
+    }
+    catch(std::exception& e)
+    {
+        ipmlog_error = std::string("std::exception: ") + e.what();
+        CNode->NodeStatusCH = T_ERROR_GEM;
+    }
+    catch(...)
+    {
+        ipmlog_error = "unknown exception";
+        CNode->NodeStatusCH = T_ERROR_GEM;
     }
 
-   }
-  catch(TError& err)
-  {
-   if( multi->pa_p_ptr()->PSM  )
-   {
-       std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-       f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
-         err.title.c_str() << ":" << std::endl;
-      if( multi->pa_p_ptr()->PSM >= 2  )
-         f_log  << err.mess.c_str() << std::endl;
-   }
-   if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-     CNode->NodeStatusCH = ERR_GEM_AIA;
-   else
-     CNode->NodeStatusCH = ERR_GEM_SIA;
+    std::fstream f_log(ipmLogFile(), std::ios::out|std::ios::app );
+    f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt <<  std::endl;
+    if( multi->pa_p_ptr()->PSM >= 2   )
+        f_log  << "\n" << ipmlog_error << std::endl;
 
-  }
-  catch(...)
-  {
-   std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-   f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
-               << "gems3: Unknown exception: GEM calculation aborted" << std::endl;
-   CNode->NodeStatusCH = T_ERROR_GEM;
-   }
-  return CNode->NodeStatusCH;
+    return CNode->NodeStatusCH;
 }
 
 // Returns GEMIPM2 calculation time in seconds elapsed during the last call of GEM_run() -

@@ -651,22 +651,22 @@ long int TPRSVcalc::MixParam( double &amix, double &bmix )
 
 /// calculates fugacity of the bulk fluid mixture
 long int TPRSVcalc::FugacityMix( double amix, double bmix, double &fugmix, double &zmix,
-		double &vmix )
+                                 double &vmix )
 {
-	double A, B, a2, a1, a0, z1, z2, z3, vol1, vol2, vol3, lnf1, lnf2, lnf3, lnf;
+    double A, B, a2, a1, a0, z1, z2, z3, vol1, vol2, vol3, lnf1, lnf2, lnf3, lnf;
 
-	// solve cubic equation
-	A = amix*Pbar/(pow(R_CONST,2.)*pow(Tk,2.));
-	B = bmix*Pbar/(R_CONST*Tk);
-	a2 = B - 1.;
-	a1 = A - 3.*pow(B,2.) - 2.*B;
-	a0 = pow(B,3.) + pow(B,2.) - A*B;
-	Cardano( a2, a1, a0, z1, z2, z3 );
+    // solve cubic equation
+    A = amix*Pbar/(pow(R_CONST,2.)*pow(Tk,2.));
+    B = bmix*Pbar/(R_CONST*Tk);
+    a2 = B - 1.;
+    a1 = A - 3.*pow(B,2.) - 2.*B;
+    a0 = pow(B,3.) + pow(B,2.) - A*B;
+    Cardano( a2, a1, a0, z1, z2, z3 );
 
-	// find stable roots
-	vol1 = z1*R_CONST*Tk/Pbar;
-	vol2 = z2*R_CONST*Tk/Pbar;
-	vol3 = z3*R_CONST*Tk/Pbar;
+    // find stable roots
+    vol1 = z1*R_CONST*Tk/Pbar;
+    vol2 = z2*R_CONST*Tk/Pbar;
+    vol3 = z3*R_CONST*Tk/Pbar;
     if (z1 > B)
         lnf1 = (-1.)*log(z1-B)
                 - A/(B*sqrt(8.))*log((z1+(1.+sqrt(2.))*B)/(z1+(1.-sqrt(2.))*B))+z1-1.;
@@ -683,25 +683,25 @@ long int TPRSVcalc::FugacityMix( double amix, double bmix, double &fugmix, doubl
     else
         lnf3 = 100.;
 
-	if (lnf2 < lnf1)
-	{
-		zmix = z2; vmix = vol2; lnf = lnf2;
-	}
-	else
-	{
-		zmix = z1; vmix = vol1; lnf = lnf1;
-	}
-	if (lnf3 < lnf)
-	{
-		zmix = z3; vmix = vol3; lnf = lnf3;
-	}
-	else
-	{
+    if (lnf2 < lnf1)
+    {
+        zmix = z2; vmix = vol2; lnf = lnf2;
+    }
+    else
+    {
+        zmix = z1; vmix = vol1; lnf = lnf1;
+    }
+    if (lnf3 < lnf)
+    {
+        zmix = z3; vmix = vol3; lnf = lnf3;
+    }
+    else
+    {
         ; // zmix = zmix; vmix = vmix; lnf = lnf;
-	}
+    }
     fugmix = exp(lnf);
-        PhVol = vmix;
-	return 0;
+    PhVol = vmix;
+    return 0;
 }
 
 
@@ -710,43 +710,43 @@ long int TPRSVcalc::FugacityMix( double amix, double bmix, double &fugmix, doubl
 long int TPRSVcalc::FugacitySpec( double *fugpure )
 {
     long int i, j, iRet=0;
-	double fugmix=0., zmix=0., vmix=0., amix=0., bmix=0., sum=0.;
-	double A, B, lnfci, fci;
+    double fugmix=0., zmix=0., vmix=0., amix=0., bmix=0., sum=0.;
+    double A, B, lnfci, fci;
 
     // Reload params to Pureparm
     for( j=0; j<NComp; j++ )
     {
-      Fugpure[j][0] = fugpure[j]/Pbar;
+        Fugpure[j][0] = fugpure[j]/Pbar;
     }
 
-	// retrieve properties of the mixture
-	iRet = MixParam( amix, bmix );
-	iRet = FugacityMix( amix, bmix, fugmix, zmix, vmix );
-	A = amix*Pbar/(pow(R_CONST, 2.)*pow(Tk, 2.));
-	B = bmix*Pbar/(R_CONST*Tk);
+    // retrieve properties of the mixture
+    /*iRet =*/ MixParam( amix, bmix );
+    iRet = FugacityMix( amix, bmix, fugmix, zmix, vmix );
+    A = amix*Pbar/(pow(R_CONST, 2.)*pow(Tk, 2.));
+    B = bmix*Pbar/(R_CONST*Tk);
 
-	// calculate fugacity coefficient, fugacity and activity of species i
-	for (i=0; i<NComp; i++)
-	{
-		sum = 0.;
-		for (j=0; j<NComp; j++)
-		{
-			sum = sum + x[j]*AA[i][j];
-		}
-		lnfci = Pureparm[i][1]/bmix*(zmix-1.) - log(zmix-B)
-		      + A/(sqrt(8.)*B)*(2.*sum/amix-Pureparm[i][1]/bmix)
-                      * log((zmix+B*(1.-sqrt(2.)))/(zmix+B*(1.+sqrt(2.))));
-		fci = exp(lnfci);
-		Fugci[i][0] = fci;  // fugacity coefficient using engineering convention
-		Fugci[i][1] = x[i]*fci;  // fugacity coefficient using geology convention
-		Fugci[i][2] = Fugci[i][1]/Fugpure[i][0];  // activity of species
-		if (x[i]>1.0e-20)
-			Fugci[i][3] = Fugci[i][2]/x[i];  // activity coefficient of species
-		else
-			Fugci[i][3] = 1.0;
-	}
+    // calculate fugacity coefficient, fugacity and activity of species i
+    for (i=0; i<NComp; i++)
+    {
+        sum = 0.;
+        for (j=0; j<NComp; j++)
+        {
+            sum = sum + x[j]*AA[i][j];
+        }
+        lnfci = Pureparm[i][1]/bmix*(zmix-1.) - log(zmix-B)
+                + A/(sqrt(8.)*B)*(2.*sum/amix-Pureparm[i][1]/bmix)
+                * log((zmix+B*(1.-sqrt(2.)))/(zmix+B*(1.+sqrt(2.))));
+        fci = exp(lnfci);
+        Fugci[i][0] = fci;  // fugacity coefficient using engineering convention
+        Fugci[i][1] = x[i]*fci;  // fugacity coefficient using geology convention
+        Fugci[i][2] = Fugci[i][1]/Fugpure[i][0];  // activity of species
+        if (x[i]>1.0e-20)
+            Fugci[i][3] = Fugci[i][2]/x[i];  // activity coefficient of species
+        else
+            Fugci[i][3] = 1.0;
+    }
 
-	return iRet;
+    return iRet;
 }
 
 

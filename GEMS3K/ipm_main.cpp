@@ -51,7 +51,7 @@ void TMultiBase::GibbsEnergyMinimization()
   bool IAstatus;
   Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
 
-// fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
+// fstream f_log(node->ipmLogFile(), ios::out|ios::app );
 // f_log << " GEMIPM TC= " << pm.TCc  << endl;
 
 FORCED_AIA:
@@ -1770,7 +1770,7 @@ void TMultiBase::Reset_uDD( long int nr, bool trace )
     }
     if( pa_p_ptr()->PSM >= 3 )
     {
-      fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+      fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
       f_log << " UD3 trace: " << pm.stkey << " SIA= " << pm.pNP << endl;
       f_log << " Itr   C_D:   " << pm.SB1[0] ;
     }
@@ -1786,7 +1786,7 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
         return;
     if( pa_p_ptr()->PSM >= 3 )
     {
-       fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+       fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
        f_log << r << " " << pm.PCI << " ";
     }
     if( trace )
@@ -1826,7 +1826,7 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
       }
       if( pa_p_ptr()->PSM >= 3 )
       {
-          fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+          fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
           f_log << U_mean[i] << " ";
   //      f_log << pm.U[i] << " ";
   //      f_log << U_CV[i] << " ";
@@ -1868,7 +1868,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
     tol_gen *= pm.PCI;
     if( pa_p_ptr()->PSM >= 3 )
     {
-        fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+        fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
         f_log << " Tol= " << tol_gen << " |" << endl;
     }
     if( trace )
@@ -1921,7 +1921,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
             cout << "uDD ITG= " << pm.ITG << " |" << " Divergent ICs: ";
          if( pa_p_ptr()->PSM >= 3 )
          {
-            fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+            fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
             f_log << "uDD ITG= " << pm.ITG << " |" << " Divergent ICs: ";
          }
          FirstTime = false;
@@ -1934,7 +1934,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
       }
       if( pa_p_ptr()->PSM >= 3 )
       {
-          fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+          fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
           memcpy(buf, pm.SB[i], MAXICNAME );
           buf[MAXICNAME] = '\0';
           f_log << buf << " ln_bi= " << log_bi << " Tol= " << tolerance << " ";
@@ -1945,7 +1945,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
            cout << " |" << endl;
          if( pa_p_ptr()->PSM >= 3 )
          {
-             fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+             fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
              f_log << " |" << endl;
          }
     }

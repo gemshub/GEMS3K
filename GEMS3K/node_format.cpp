@@ -680,6 +680,9 @@ void TNode::datach_from_text_file(TIO& in_format)
   for( ii=0; ii< CSD->nDCs*gridTP(); ii++ )
   {
     if( CSD->DD ) CSD->DD[ii] = 0.;
+  }
+  for( ii=0; ii< CSD->nDC*gridTP(); ii++ )
+  {
     if( CSD->Cp0) CSD->Cp0[ii] = 0.;
     if( CSD->H0 ) CSD->H0[ii] = 0.;
     if( CSD->S0 ) CSD->S0[ii] = 0.;
@@ -1257,17 +1260,17 @@ void TNode::databr_to_vtk( std::fstream& ff, const char*name, double time, long 
    }
 }
 
-#ifdef USE_OLD_NLOHMANJSON
+#ifdef USE_NLOHMANNJSON
 template void  TNode::databr_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TNode::databr_from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
 template void  TNode::datach_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TNode::datach_from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
-#endif
-
+#else
 template void  TNode::databr_to_text_file<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TNode::databr_from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format );
 template void  TNode::datach_to_text_file<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TNode::datach_from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format );
+#endif
 
 template void  TNode::databr_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TNode::databr_from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format );

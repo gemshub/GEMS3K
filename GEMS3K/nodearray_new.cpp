@@ -391,7 +391,7 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
     if( ret )
         return ret;
 
-    std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+    std::fstream f_log( calcNode->ipmLogFile(), std::ios::out|std::ios::app );
     try
     {
         // Reading DBR_DAT files from dbrfiles_lst_name
@@ -406,20 +406,30 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
             if( nNodes() ==1 )
                 setNodeArray( 0 , nullptr  );
             else // undefined TNodeArray
-                Error( "GEM_init", "GEM_init() error: Undefined boundary condition!" );
+                Error( "GEM_init", "Undefined boundary condition!" );
         return 0;
 
     }
     catch(TError& err)
     {
-        if( ipmfiles_lst_name )
-            f_log << "GEMS3K input : file " << ipmfiles_lst_name << std::endl;
-        f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
+        calcNode->ipmlog_error = err.title + std::string(": ") + err.mess;
+    }
+    catch(std::exception& e)
+    {
+        calcNode->ipmlog_error = std::string("std::exception: ") + e.what();
     }
     catch(...)
     {
+        calcNode->ipmlog_error = "unknown exception";
         return -1;
     }
+
+    if( ipmfiles_lst_name )
+
+        f_log << "GEMS3K input : file " << ipmfiles_lst_name << std::endl;
+
+    f_log << calcNode->ipmLogError() << std::endl;
+
     return 1;
 }
 
@@ -437,7 +447,9 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
     int i;
     std::string datachbr_fn;
     std::string lst_in = dbrfiles_lst_name;
-    std::string dir_path = u_getpath( lst_in )  + "/";
+    std::string dir_path = u_getpath( lst_in );
+    if( !dir_path.empty() )
+            dir_path += "/";
 
     //  open file stream for the file names list file
     std::fstream f_lst( lst_in, std::ios::in );
@@ -476,7 +488,7 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
 
     pVisor_Message( true );
 
-    ErrorIf( i==0, datachbr_fn.c_str(), "GEM_init() error: No DBR_DAT files read!" );
+    ErrorIf( i==0, datachbr_fn.c_str(), "No DBR_DAT files read!" );
     checkNodeArray( i, nodeTypes, datachbr_fn.c_str()  );
 }
 
@@ -489,7 +501,7 @@ void  TNodeArray::checkNodeArray(
             {
                 std::cout << anNodes << " " << nodeTypes[ii] << " i = " << i<< std::endl;
                 Error( datachbr_file,
-                       "GEM_init() error: Undefined boundary condition!" );
+                       "Undefined boundary condition!" );
             }
 }
 

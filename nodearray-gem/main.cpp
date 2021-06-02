@@ -26,7 +26,7 @@
 int main( int argc, char* argv[] )
  {
 
-#ifndef USE_OLD_NLOHMANJSON
+#ifndef USE_NLOHMANNJSON
      std::string gem2mt_in1 = "TestAD/CalColumnAD.dat";
      std::string ipm_lst = "TestAD/CalcColumn-dat.lst";
      std::string dbr_lst = "TestAD/CalcColumn-dbr.lst";

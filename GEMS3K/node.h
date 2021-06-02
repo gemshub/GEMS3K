@@ -85,6 +85,11 @@ class TNode
 {
     friend class TNodeArray;
 
+    /// Full name of the ipmlog file
+    std::string ipmlog_file_name;
+    /// Last error message logged to the ipmlog file
+    std::string ipmlog_error;
+
     /// The same GEMS3K input set (currently GEM-Selektor asks for the "set" name as .lst file name)
     std::string current_input_set_name = "";
     /// The same GEMS3K output set (currently GEM-Selektor asks for the "set" name as .lst file name)
@@ -373,7 +378,7 @@ public:
 ///    must have .json extension);
 ///  if -b flag is specified then all data files are assumed to be binary (little-endian)
 ///    files.
-///  This initialization method returns:
+///  @returns:
 ///    0: OK;
 ///    1: GEM IPM read file or input file format error;
 ///   -1: System error (e.g. memory allocation).
@@ -387,9 +392,10 @@ public:
 ///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
 ///  @param ipm_json -  Parameters and settings for GEMS3K IPM-3 algorithm as a json/key-value string
 ///  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
-///  This initialization method returns:
-///    0: OK; 1: some or all input strings are empty; -1: System error (e.g. memory allocation);
-///    2: Input file format error (for json or key-value format files).
+///  @returns:
+///    0: OK;
+///    1: GEM IPM read file or input file format error;
+///   -1: System error (e.g. memory allocation).
   long int  GEM_init( std::string dch_json, std::string ipm_json, std::string dbr_json );
 
 
@@ -634,7 +640,7 @@ long int GEM_step_MT( const long int step )
 /// \return  0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred.
    long int GEM_read_dbr( const char* fname, GEMS3KGenerator::IOModes type_f );
 
-/// (5j) Reads another DBR 0bject (with input system composition, T,P etc.) from JSON string \ . 
+/// (5j) Reads another DBR object (with input system composition, T,P etc.) from JSON string \ .
 /// It must be compatible with the currently loaded IPM and DCH files 
 ///  (see descriptions of GEM_init() methods).
 /// \param dbr_json  String containing a JSON document for the input DBR object.
@@ -1394,8 +1400,25 @@ long int GEM_step_MT( const long int step )
     virtual void databr_to_vtk( std::fstream& ff, const char*name, double time, long int  cycle,
                               long int nFilds, long int (*Flds)[2]);
 
-    static std::string ipmLogFile;  ///< full name of the ipmlog file
+    /// Get full name of the ipmlog file
+    const std::string& ipmLogFile() const {
+        return ipmlog_file_name;
+    }
 
+    /// Set full name of the ipmlog file
+    void setipmLogFile(const std::string& logFile) {
+        ipmlog_file_name = logFile;
+    }
+
+    /// Get the last error message logged to the ipmlog file
+    const std::string& ipmLogError() const {
+        return ipmlog_error;
+    }
+
+    /// Clear error message
+    void clearipmLogError() {
+        ipmlog_error.clear();
+    }
 
 };
 

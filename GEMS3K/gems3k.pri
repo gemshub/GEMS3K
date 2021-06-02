@@ -1,7 +1,12 @@
-SJSON_CPP = $$GEMS3K_H/..
-SJSON_H   = $$SJSON_CPP
-DEPENDPATH += $$SJSON_H
-INCLUDEPATH += $$SJSON_H
+!contains(DEFINES, USE_NLOHMANNJSON) {
+  SJSON_CPP = $$GEMS3K_H/..
+  SJSON_H   = $$SJSON_CPP
+  DEPENDPATH += $$SJSON_H
+  INCLUDEPATH += $$SJSON_H
+
+  HEADERS	 += $$SJSON_H/simdjson/simdjson.h
+
+}
 
  HEADERS	 += $$GEMS3K_H/verror.h  \
                     $$GEMS3K_H/gdatastream.h  \

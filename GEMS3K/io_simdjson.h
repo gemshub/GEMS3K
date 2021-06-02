@@ -25,6 +25,8 @@
 
 #pragma once
 
+#ifndef USE_NLOHMANNJSON
+
 #include <fstream>
 #include <vector>
 #include <memory>
@@ -262,3 +264,4 @@ template <> void SimdJsonWrite::add_value( const std::string& value );
 
 }  // io_formats
 
+#endif

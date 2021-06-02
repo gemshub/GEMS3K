@@ -126,19 +126,18 @@ void  TNode::read_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOM
     {
     case GEMS3KGenerator::f_binary:
         break;
-    case GEMS3KGenerator::f_nlohmanjson:
-#ifdef USE_OLD_NLOHMANJSON
+    case GEMS3KGenerator::f_json:
+#ifdef USE_NLOHMANNJSON
     {
         io_formats::NlohmannJsonRead in_format( stream, current_input_set_name, "dbr" );
         databr_from_text_file(in_format);
     }
-        break;
-#endif
-    case GEMS3KGenerator::f_json:
+#else
     {
         io_formats::SimdJsonRead in_format( stream, current_input_set_name, "dbr" );
         databr_from_text_file(in_format);
     }
+#endif
         break;
     case GEMS3KGenerator::f_key_value:
     {
@@ -157,19 +156,18 @@ void  TNode::write_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IO
     {
     case GEMS3KGenerator::f_binary:
         break;
-    case GEMS3KGenerator::f_nlohmanjson:
-#ifdef USE_OLD_NLOHMANJSON
+    case GEMS3KGenerator::f_json:
+#ifdef USE_NLOHMANNJSON
     {
         io_formats::NlohmannJsonWrite out_format( stream, current_output_set_name );
         databr_to_text_file( out_format, with_comments, brief_mode );
     }
-        break;
-#endif
-    case GEMS3KGenerator::f_json:
+#else
     {
         io_formats::SimdJsonWrite out_format( stream, current_output_set_name, with_comments );
         databr_to_text_file( out_format, with_comments, brief_mode );
     }
+#endif
         break;
     case GEMS3KGenerator::f_key_value:
     {
@@ -186,19 +184,18 @@ void  TNode::read_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOM
     {
     case GEMS3KGenerator::f_binary:
         break;
-    case GEMS3KGenerator::f_nlohmanjson:
-#ifdef USE_OLD_NLOHMANJSON
+    case GEMS3KGenerator::f_json:
+#ifdef USE_NLOHMANNJSON
     {
         io_formats::NlohmannJsonRead in_format( stream, current_input_set_name, "dch" );
         datach_from_text_file(in_format);
     }
-        break;
-#endif
-    case GEMS3KGenerator::f_json:
+#else
     {
         io_formats::SimdJsonRead in_format( stream, current_input_set_name, "dch" );
         datach_from_text_file(in_format);
     }
+#endif
         break;
     case GEMS3KGenerator::f_key_value:
     {
@@ -217,19 +214,18 @@ void  TNode::write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IO
     {
     case GEMS3KGenerator::f_binary:
         break;
-    case GEMS3KGenerator::f_nlohmanjson:
-#ifdef USE_OLD_NLOHMANJSON
+    case GEMS3KGenerator::f_json:
+#ifdef USE_NLOHMANNJSON
     {
         io_formats::NlohmannJsonWrite out_format( stream, current_output_set_name );
         datach_to_text_file( out_format, with_comments, brief_mode );
     }
-        break;
-#endif
-    case GEMS3KGenerator::f_json:
+#else
     {
         io_formats::SimdJsonWrite out_format( stream, current_output_set_name, with_comments );
         datach_to_text_file( out_format, with_comments, brief_mode );
     }
+#endif
         break;
     case GEMS3KGenerator::f_key_value:
     {
@@ -260,13 +256,12 @@ void  TNode::write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IO
 //    must have .json extension);
 //  if -b flag is specified then all data files are assumed to be binary (little-endian)
 //    files.
-//  This initialization method returns:
-//   0: OK; 1: GEM IPM read file error; -1: System error (e.g. memory allocation);
-//    2: Input file format error (for json or key-value format files).
 //-------------------------------------------------------------------
 long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 {
-    std::fstream f_log( TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+    std::fstream f_log( ipmLogFile(), std::ios::out|std::ios::app );
+    clearipmLogError();
+
     try
     {
         //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
@@ -326,14 +321,21 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
     }
     catch(TError& err)
     {
-        if( ipmfiles_lst_name )
-            f_log << "GEMS3K input : file " << ipmfiles_lst_name << std::endl;
-        f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
+        ipmlog_error = err.title + std::string(": ") + err.mess;
+    }
+    catch(std::exception& e)
+    {
+        ipmlog_error = std::string("std::exception: ") + e.what();
     }
     catch(...)
     {
+        ipmlog_error = "unknown exception";
         return -1;
     }
+
+    if( ipmfiles_lst_name )
+        f_log << "GEMS3K input : file " << ipmfiles_lst_name << std::endl;
+    f_log << ipmlog_error << std::endl;
     return 1;
 }
 
@@ -345,7 +347,8 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 long int  TNode::GEM_init( std::string dch_json, std::string ipm_json, std::string dbr_json )
 {
     load_thermodynamic_data = false; // need load thermo
-    std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+    std::fstream f_log( ipmLogFile(), std::ios::out|std::ios::app );
+    clearipmLogError();
 
     try
     {
@@ -387,16 +390,22 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json, std::stri
         // Creating and initializing the TActivity class instance for this TNode instance
         init_into_gems3k();
         return 0;
-
     }
     catch(TError& err)
     {
-        f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
+        ipmlog_error = err.title + std::string(": ") + err.mess;
+    }
+    catch(std::exception& e)
+    {
+        ipmlog_error = std::string("std::exception: ") + e.what();
     }
     catch(...)
     {
+        ipmlog_error = "unknown exception";
         return -1;
     }
+
+    f_log << ipmlog_error << std::endl;
     return 1;
 }
 
@@ -415,14 +424,26 @@ long int  TNode::GEM_write_dbr( std::string& dbr_json )
         std::stringstream ss;
         write_dbr_format_stream( ss, GEMS3KGenerator::f_json, false, false );
         dbr_json =  ss.str();
+        return 0;
+    }
+    catch(TError& err)
+    {
+        ipmlog_error = err.title + std::string(": ") + err.mess;
+    }
+    catch(std::exception& e)
+    {
+        ipmlog_error = std::string("std::exception: ") + e.what();
     }
     catch(...)
     {
-        std::fstream f_log( ipmLogFile, std::ios::out|std::ios::app );
-        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt << std::endl;
+        ipmlog_error = "unknown exception";
         return -1;
     }
-    return 0;
+
+    std::fstream f_log( ipmLogFile(), std::ios::out|std::ios::app );
+    f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm <<
+             ":dt:" << CNode->dt<< "\n" << ipmlog_error << std::endl;
+    return 1;
 }
 
 void TNode::GEM_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode )
@@ -454,14 +475,14 @@ void  TNode::GEM_print_ipm( const char* fname )
 }
 
 
-/// (5j) Reads another DBR 0bject (with input system composition, T,P etc.) from JSON string \ . 
+// (5j) Reads another DBR object (with input system composition, T,P etc.) from JSON string \ .
 long int TNode::GEM_read_dbr( std::string dbr_json, const bool check_dch_compatibility )
 {
     // Reads work node (DATABR structure) from a json string
     try
     {
         if( dbr_json.empty() )
-            return 1;
+            Error( "GEM_read_dbr" , "Empty input string");
 
         if( check_dch_compatibility )
         {
@@ -472,19 +493,27 @@ long int TNode::GEM_read_dbr( std::string dbr_json, const bool check_dch_compati
         std::stringstream ss;
         ss.str(dbr_json);
         read_dbr_format_stream( ss, GEMS3KGenerator::f_json );
+        return 0;
      }
     catch(TError& err)
     {
-        std::fstream f_log( ipmLogFile, std::ios::out|std::ios::app );
-        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
-                 err.title.c_str() << ":" <<  err.mess.c_str() << std::endl;
-        return 1;
+        ipmlog_error = err.title + std::string(": ") + err.mess;
+    }
+    catch(std::exception& e)
+    {
+        ipmlog_error = std::string("std::exception: ") + e.what();
     }
     catch(...)
     {
+        ipmlog_error = "unknown exception";
         return -1;
     }
-    return 0;
+
+    std::fstream f_log( ipmLogFile(), std::ios::out|std::ios::app );
+    f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm <<
+             ":dt:" << CNode->dt<< "\n" << ipmlog_error << std::endl;
+    return 1;
+
 }
 
 
@@ -496,24 +525,33 @@ long int TNode::GEM_read_dbr( std::string dbr_json, const bool check_dch_compati
 // Return values:     0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred.
 long int  TNode::GEM_read_dbr( const char* fname, GEMS3KGenerator::IOModes type_f )
 {
+    clearipmLogError();
+
     try
     {
         read_dbr_format_file( fname, type_f );
         dbr_file_name = fname;
+        return 0;
     }
     catch(TError& err)
     {
-        std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-        f_log << "GEMS3K input : file " << fname << std::endl;
-        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
-                 err.title.c_str() << ":" <<  err.mess.c_str() << std::endl;
-        return 1;
+        ipmlog_error = err.title + std::string(": ") + err.mess;
+    }
+    catch(std::exception& e)
+    {
+        ipmlog_error = std::string("std::exception: ") + e.what();
     }
     catch(...)
     {
+        ipmlog_error = "unknown exception";
         return -1;
     }
-    return 0;
+
+    std::fstream f_log( ipmLogFile(), std::ios::out|std::ios::app );
+    f_log << "GEMS3K input : file " << fname << std::endl;
+    f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm <<
+             ":dt:" << CNode->dt<< "\n" << ipmlog_error << std::endl;
+    return 1;
 }
 
 
@@ -580,8 +618,8 @@ void TNode::databr_copy( DATABR* otherCNode )
     else
          copyValues( &CNode->TK, &otherCNode->TK, 15 );
 #else
-    std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-    ErrorIf(CNode->NodeStatusFMT != No_nodearray, TNode::ipmLogFile.c_str(),
+    std::fstream f_log(ipmLogFile(), std::ios::out|std::ios::app );
+    ErrorIf(CNode->NodeStatusFMT != No_nodearray, ipmLogFile(),
          "Error reading work dataBR structure from binary file (No_nodearray)");
      copyValues( &CNode->TK, &otherCNode->TK, 15 );
 #endif
