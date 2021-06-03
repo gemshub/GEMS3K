@@ -60,9 +60,9 @@ sudo make install
 The same will be done by executing the install.sh script instead (check that this file has executable status, if not, run a command "chmod +x ./install.sh"): 
 ~~~
 cd ~/gitGEMS3/standalone
-./install.sh
+sudo ./install.sh
 ~~~
-(will ask for typing sudo password).
+(will ask for typing sudo password). Edit this script if you need to install GEMS3K libraries to different place than /usr/local/lib, or you would like to use different options.
 
 For debugging purposes and for building examples, call cmake as follows: 
 ~~~

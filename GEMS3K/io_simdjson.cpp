@@ -24,6 +24,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#ifndef USE_NLOHMANNJSON
+
 #include <cmath>
 #include <iostream>
 #include <string_view>
@@ -31,6 +33,7 @@
 #include "simdjson/simdjson.cpp"
 #include "io_simdjson.h"
 #include "v_detail.h"
+#include "v_service.h"
 
 namespace  io_formats {
 
@@ -48,7 +51,9 @@ public:
             auto input_string = json_string;
             trim(input_string);
             trim(input_string, "[]");
-            replaceall( input_string, "inf", "0");
+            replaceall( input_string, "-inf", DOUBLE_INFMINUS_STR);
+            replaceall( input_string, "inf", DOUBLE_INFPLUS_STR);
+            replaceall( input_string, "nan", DOUBLE_NAN_STR);
             json_data = parser.parse( input_string );
 
             if( !test_set_name.empty() )
@@ -226,9 +231,21 @@ void SimdJsonRead::read_array(const std::string &field_name, std::vector<int64_t
     impl->read_array( field_name, arr);
 }
 
+template <> float SimdJsonRead::internal_cast( double value )
+{
+    float cast_value;
+    if( is_minusinf(value) )
+        cast_value = InfMinus<float>();
+    else if( is_plusinf(value) )
+        cast_value = InfPlus<float>();
+    else if( is_nan(value) )
+        cast_value = Nan<float>();
+    else
+        cast_value = static_cast<float>(value);
+    return cast_value;
+}
 
 //-------------------------------------------------------------------------------------
-
 
 
 void SimdJsonWrite::put_head(const std::string &key_name, const std::string &field_name)
@@ -255,13 +272,13 @@ void SimdJsonWrite::dump(bool)
 /// Write float value to file
 template <> void SimdJsonWrite::add_value( const float& val )
 {
-    fout << std::setprecision(15) << val;
+    fout << floating_point_to_string( val );
 }
 
 /// Write double value to file
 template <> void SimdJsonWrite::add_value( const double& val )
 {
-    fout << std::setprecision(15) << val;
+    fout << floating_point_to_string( val );
 }
 
 /// Write double value to file
@@ -295,3 +312,5 @@ void SimdJsonWrite::write_array(const std::string &field_name, const std::vector
 }  // io_formats
 
 // https://stackoverflow.com/questions/8610571/what-is-rvalue-reference-for-this/8610714#8610714
+
+#endif

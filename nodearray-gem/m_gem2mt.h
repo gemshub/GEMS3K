@@ -109,7 +109,7 @@ typedef struct
    PsSIA,    // Use smart initial approximation in GEM IPM (+); SIA internal (*); AIA (-)
    PsSdat, //  Save DataCH and inital DataBR files as text files (+) or binary (-)
    PsSdef, //  Do not write data items that contain only default values (+ -)
-   PsScom, //  Write files with comments for all data entries ( in text mode )(+ -)
+   PsScom, //  Write files with comments for all data entries ( text mode ) or as "pretty JSON"  ( json mode ) (+ -)
    PsTPai,  //  Create T,P values in Tval, Pval using iterator(+) or enter(-)
    PsTPpath,  //  Disable  Interpolation ( pre-defined TP paths ) (+ -)
    PsMO,     // Use non stop debug output from nodes (+ -)?

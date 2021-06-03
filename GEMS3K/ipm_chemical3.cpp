@@ -92,7 +92,9 @@ void TMultiBase::SetSmoothingFactor( long int mode )
         logr = log( inv_r );
         logr_m = log( 1./iim );
         al = dg + ( ag - dg ) / ( 1. + exp( logr_m - logr ) / dg );
-        al += exp( log( 1. - ag ) + logr );
+        if( ag != 1.) {
+           al += exp( log( 1. - ag ) + logr );
+        }
         if( al > 1. )
       	    al = 1.;
         TF = al;
@@ -122,7 +124,9 @@ void TMultiBase::SetSmoothingFactor( long int mode )
     	   	     break;
     	}
         al = dg + ( ag - dg ) / ( 1. + exp( dk - cd ) / dg );
-        al += exp( log( 1. - ag ) + cd );
+        if( ag != 1.) {
+           al += exp( log( 1. - ag ) + cd );
+        }
         if( al > 1. )
       	    al = 1.;
         TF = al;

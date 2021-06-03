@@ -20,7 +20,7 @@
 #include <cmath>
 #include <cstdio>
 #include <iomanip>
-
+#include "v_service.h"
 
 #ifndef IPMGEMPLUGIN
 

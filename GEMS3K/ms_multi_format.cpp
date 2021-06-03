@@ -24,18 +24,18 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <cmath>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
 #include "v_detail.h"
+#include "v_service.h"
 #include "io_template.h"
 #include "io_nlohmann.h"
 #include "io_simdjson.h"
 #include "io_keyvalue.h"
 #include "ms_multi.h"
 
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.8.1 c.0aa600e ";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.9.0 c.8c56c21 ";
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
@@ -1201,19 +1201,18 @@ void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator
     {
     case GEMS3KGenerator::f_binary:
         break;
-    case GEMS3KGenerator::f_nlohmanjson:
-#ifdef USE_OLD_NLOHMANJSON
+    case GEMS3KGenerator::f_json:
+#ifdef USE_NLOHMANNJSON
     {
         io_formats::NlohmannJsonRead in_format( stream, test_set_name, "ipm" );
         from_text_file_gemipm( in_format, dCH );
     }
-        break;
-#endif
-    case GEMS3KGenerator::f_json:
+#else
     {
         io_formats::SimdJsonRead in_format( stream, test_set_name, "ipm");
         from_text_file_gemipm( in_format, dCH );
     }
+#endif
         break;
     case GEMS3KGenerator::f_key_value:
     {
@@ -1231,19 +1230,18 @@ void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerato
     {
     case GEMS3KGenerator::f_binary:
         break;
-    case GEMS3KGenerator::f_nlohmanjson:
-#ifdef USE_OLD_NLOHMANJSON
+    case GEMS3KGenerator::f_json:
+#ifdef USE_NLOHMANNJSON
     {
         io_formats::NlohmannJsonWrite out_format( stream, test_set_name );
         to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
     }
-        break;
-#endif
-    case GEMS3KGenerator::f_json:
+#else
     {
         io_formats::SimdJsonWrite out_format( stream, test_set_name, with_comments );
         to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
     }
+#endif
         break;
     case GEMS3KGenerator::f_key_value:
     {
@@ -1255,12 +1253,13 @@ void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerato
 }
 
 
-#ifdef USE_OLD_NLOHMANJSON
+#ifdef USE_NLOHMANNJSON
 template void TMultiBase::from_text_file_gemipm<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& in_format,  DATACH  *dCH );
 template void TMultiBase::to_text_file_gemipm<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
-#endif
+#else
 template void TMultiBase::from_text_file_gemipm<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& in_format,  DATACH  *dCH );
 template void TMultiBase::to_text_file_gemipm<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
+#endif
 template void TMultiBase::from_text_file_gemipm<io_formats::KeyValueRead>( io_formats::KeyValueRead& in_format,  DATACH  *dCH );
 template void TMultiBase::to_text_file_gemipm<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 

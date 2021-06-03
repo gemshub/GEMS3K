@@ -1537,13 +1537,10 @@ void TPitzer::getAlp( long int c, long int a, double& alp, double& alp1 )
 /// calculate g
 double TPitzer::get_g( double x_alp )
 {
-    double g;
-
-    g = 2.*(1.-(1.+x_alp)*exp(-x_alp))/(x_alp*x_alp);
-
-    if( approximatelyZero(x_alp) )
+    double g = 0.0;
+    if( !approximatelyZero(x_alp) )
     {
-        g = 0.;
+        g = 2.*(1.-(1.+x_alp)*exp(-x_alp))/(x_alp*x_alp);
     }
     return g;
 }
@@ -1552,13 +1549,9 @@ double TPitzer::get_g( double x_alp )
 /// calculate gp
 double TPitzer::get_gp( double x_alp )
 {
-    double gp;
+    double gp = 0.0;
 
-    if( approximatelyZero(x_alp) )
-    {
-        gp = 0.;
-    }
-    else
+    if( !approximatelyZero(x_alp) )
     {
         gp = -2.*(1.-(1.+x_alp+x_alp*x_alp*0.5)*exp(-x_alp))/(x_alp*x_alp);
     }
@@ -2004,7 +1997,8 @@ long int TPitzer::ExcessProp( double *Zex )
     {
         for( N=0; N<Nn; N++ )
         {
-            neutSex += ( mc[M]* ( lnGammaN( N ) - OsmCoeffSex ) );
+            neutSex += ( mn[N]* ( lnGammaN( N ) - OsmCoeffSex ) );
+            // neutSex += ( mc[M]* ( lnGammaN( N ) - OsmCoeffSex ) );
         }
     }
 
@@ -2017,7 +2011,7 @@ long int TPitzer::ExcessProp( double *Zex )
     // Calculation of bulk Excess Heat Capacity per kilogram of water
     OsmCoeffCPex=0.0, catCPex=0.0, aniCPex=0.0, neutCPex=0.0;
 
-    // correct interaction parameters and Debye H�ckel term to T (and P) of system
+    // correct interaction parameters and Debye Hueckel term to T (and P) of system
     PTcalc( 2 );
     Ffac = F_Factor( d2AphidT2 );
 
@@ -2038,7 +2032,8 @@ long int TPitzer::ExcessProp( double *Zex )
     {
         for( N=0; N<Nn; N++ )
         {
-            neutCPex += ( mc[M]* ( lnGammaN( N ) - OsmCoeffCPex ) );
+            neutCPex += ( mn[N]* ( lnGammaN( N ) - OsmCoeffCPex ) );
+            // neutCPex += ( mc[M]* ( lnGammaN( N ) - OsmCoeffCPex ) );
         }
     }
 

@@ -39,6 +39,7 @@ endif()
 # Define which types of libraries to build
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
+option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
 option(BUILD_TOOLS "Build tools" ON)
 
 # Set the list of compiler flags for GNU compiler

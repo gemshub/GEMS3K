@@ -23,7 +23,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#ifdef USE_OLD_NLOHMANJSON
+#ifdef USE_NLOHMANNJSON
 
 #include <nlohmann/json.hpp>
 #include <iostream>
@@ -41,7 +41,7 @@ class NlohmannJsonWrite
     nlohmann::json top_data;
     std::iostream& fout;
     std::string current_set_name;
-    std::string field_name;
+    std::string top_field_name;
 
     template <class T>
     void add_value( const T& value, nlohmann::json& json_arr  )
@@ -67,14 +67,14 @@ public:
 
     void put_head( const std::string &key_name, const std::string &the_field_name )
     {
-      field_name = the_field_name;
+      top_field_name = the_field_name;
       top_data["set"] = current_set_name;
       top_data["_key"] = key_name;
     }
 
     void dump( bool not_brief )
     {
-        top_data[field_name] = json_data;
+        top_data[top_field_name] = json_data;
         auto json_array =  nlohmann::json::array();
         json_array.push_back(top_data);
         fout << json_array.dump(( not_brief ? 4 : 0 ));
@@ -167,23 +167,7 @@ class NlohmannJsonRead
 public:
 
     /// Constructor
-    NlohmannJsonRead( std::iostream& ff, const std::string& test_set_name,  const std::string& field_name ):
-    json_data()
-    {
-        nlohmann::json json_arr;
-        ff >> json_arr;
-
-        json_data = json_arr[0];
-        if( !test_set_name.empty() )
-        {
-            auto json_set = json_data["set"];
-            if( json_set.get<std::string>().find(test_set_name) == std::string::npos )
-                std::cout << "Read the document from another set: " <<  json_set
-                          << " , current set " << test_set_name  <<  std::endl;
-        }
-        json_data =  json_data[field_name];
-        json_it = json_data.begin();
-    }
+    NlohmannJsonRead( std::iostream& ff, const std::string& test_set_name,  const std::string& field_name );
 
     /// Reset json loop
     void reset()

@@ -25,7 +25,7 @@
 //-------------------------------------------------------------------
 
 #include <cmath>
-#include "v_detail.h"
+#include "v_service.h"
 #include "ms_multi.h"
 
 const double R_CONSTANT = 8.31451,
