@@ -39,7 +39,7 @@ io_formats::outField GEM2MT_static_fields[57] =  {
      { "PsSIA" , 0, 0, 0, "# PsSIA: Use smart initial approximation in GEM IPM (+); SIA internal (*); AIA (-)" },
      { "PsSdat" , 0, 0, 0, "# PsSdat:Save DataCH and inital DataBR files as text files (+) or binary (-)" },
      { "PsSdef" , 0, 0, 0, "# PsSdef:Do not write data items that contain only default values (+ -)" },
-     { "PsScom" , 0, 0, 0, "# PsScom:Write files with comments for all data entries ( in text mode )(+ -)" },
+     { "PsScom" , 0, 0, 0, "# PsScom:Write files with comments for all data entries ( text mode ) or as pretty JSON (+ -)" },
      { "PsMO" , 0, 0, 0, "# PsMO: Use non stop debug output for nodes (+ -)" },
      { "PsVTK" , 1, 0, 0, "# PsVTK: Use non stop debug output nodes to VTK format(+ -)" },
      { "PsMPh" , 1, 0, 0, "# PsMPh: Type flux Phase ( 0 undef, 1 - aq; 2 - gas; 3 - aq+gas, 4 - solids )" },
@@ -172,6 +172,8 @@ void TGEM2MT::set_def(int q)
     strcpy( mtp->notes, "`" );
     strcpy( mtp->xNames, "X" );
     strcpy( mtp->yNames, "Y" );
+    //memcpy( mtp->xNames, TProfil::pm->pa.GDpcc[0], MAXAXISNAME );
+    //memcpy( mtp->yNames, TProfil::pm->pa.GDpcc[1], MAXAXISNAME );
     memset( &mtp->nC, 0, sizeof(long int)*32 );
     memset( &mtp->Msysb, 0, sizeof(double)*20 );
     memset( mtp->size[0], 0, sizeof(float)*8 );
@@ -850,12 +852,13 @@ void TGEM2MT::from_text_file(TIO& in_format)
 
 }
 
-#ifdef USE_OLD_NLOHMANJSON
+#ifdef USE_NLOHMANNJSON
 template void  TGEM2MT::to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TGEM2MT::from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
-#endif
+#else
 template void  TGEM2MT::to_text_file<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TGEM2MT::from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format );
+#endif
 template void  TGEM2MT::to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TGEM2MT::from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format );
 

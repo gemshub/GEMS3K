@@ -35,10 +35,10 @@
 #include <ctime>
 #include <cmath>
 #include <string>
+#include <memory>
 #include <iomanip>
 #include "node.h"
 #include "v_detail.h"
-using namespace std;
 
 
 //The simplest case: data exchange using disk files only
@@ -159,7 +159,8 @@ int main( int argc, char* argv[] )
                     continue;
 
                 // (5) Reading the next DBR file with different input composition or temperature
-                node->GEM_read_dbr( NextRecipeFileName.c_str(), input_data.files_mode() );
+                if( node->GEM_read_dbr( NextRecipeFileName.c_str(), input_data.files_mode() ) )
+                    continue;
 
                 // Asking GEM IPM2 to run (faster) with smart initial approximation
                 dBR->NodeStatusCH = NEED_GEM_SIA;

@@ -175,19 +175,6 @@ protected:
     virtual void pVisor_Message( bool , long int =0, long int =0 ) {}
     // end of new stuff -------------------------------------------------------
 
-    /// Calls GEM IPM calculation for a node with absolute index ndx
-    long int RunGEM( TNode* wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray );
-
-    /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1)
-    /// in a loop with an optional openmp parallelization
-    void RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes );
-
-    /// Calls GEM IPM for one node with three indexes (along x,y,z)
-    long int  RunGEM( TNode* wrkNode, long int indN, long int indM, long int indK,
-                      long int Mode, DATABRPTR* nodeArray  )
-    { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode, nodeArray ); }
-    // (both calls clean the work node DATABR structure)
-
     /// Initialization of TNodeArray data structures. Reads in the DBR text input files and
     /// copying data from work DATABR structure into the node array
     ///  \param dbrfiles_lst_name  pointer to a null-terminated C string with a path to a text file
@@ -335,6 +322,19 @@ public:
     char* ptcNode() const /// Get pointer to boundary condition codes for nodes
     { return tcNode; }
     
+    /// Calls GEM IPM calculation for a node with absolute index ndx
+    long int RunGEM( TNode* wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray );
+
+    /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1)
+    /// in a loop with an optional openmp parallelization
+    void RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes );
+
+    /// Calls GEM IPM for one node with three indexes (along x,y,z)
+    long int  RunGEM( TNode* wrkNode, long int indN, long int indM, long int indK,
+                      long int Mode, DATABRPTR* nodeArray  )
+    { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode, nodeArray ); }
+    // (both calls clean the work node DATABR structure)
+
     /// New Stuff--------------------------------------------------------------
 
     ///  Here we do a GEM calculation in box ii

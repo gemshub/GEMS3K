@@ -26,7 +26,7 @@
 
 #include <cmath>
 
-#include "v_detail.h"
+#include "v_service.h"
 #include "io_template.h"
 #include "io_keyvalue.h"
 #include "ms_multi.h"
@@ -154,7 +154,7 @@ long int TMultiBase::testMulti()
   {
     if( pa_p_ptr()->PSM == 2 )
     {
-      std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+      std::fstream f_log(node1->ipmLogFile(), std::ios::out|std::ios::app );
       f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << std::endl;
       f_log << pm.errorBuf << std::endl;
     }

@@ -36,6 +36,7 @@
 #include "nodearray.h"
 
 #endif
+#include "v_service.h"
 
 // ===========================================================
 

@@ -51,7 +51,7 @@ void TMultiBase::GibbsEnergyMinimization()
   bool IAstatus;
   Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
 
-// fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
+// fstream f_log(node->ipmLogFile(), ios::out|ios::app );
 // f_log << " GEMIPM TC= " << pm.TCc  << endl;
 
 FORCED_AIA:
@@ -1259,14 +1259,32 @@ void TMultiBase::WeightMultipliers( bool square )
       case LOWER_LIM:
            W1=(pm.Y[J]-pm.DLL[J]);
            if( square )
+           {
+             if(fabs(W1) > 1.34e120)    //  1.34e154
+             {
+                 if(signbit(W1))
+                      W1 = -1.34e120;
+                 else
+                     W1 = 1.34e120;
+             }
              pm.W[J]= W1 * W1;
-             else
+           }
+           else
              pm.W[J] = max( W1, 0. );
            break;
       case UPPER_LIM:
            W1=(pm.DUL[J]-pm.Y[J]);
            if( square )
-             pm.W[J]= W1 * W1;
+           {
+               if(fabs(W1) > 1.34e120)
+               {
+                  if(signbit(W1))
+                     W1 = -1.34e120;
+                  else
+                     W1 = 1.34e120;
+               }
+               pm.W[J]= W1 * W1;
+           }
            else
              pm.W[J] = max( W1, 0.);
            break;
@@ -1275,7 +1293,21 @@ void TMultiBase::WeightMultipliers( bool square )
            W2=(pm.DUL[J]-pm.Y[J]);
            if( square )
            {
+              if(fabs(W1) > 1.34e120)
+              {
+                 if(signbit(W1))
+                   W1 = -1.34e120;
+                 else
+                   W1 = 1.34e120;
+               }
              W1 = W1*W1;
+             if(fabs(W2) > 1.34e120)
+             {
+                if(signbit(W2))
+                   W2 = -1.34e120;
+                else
+                   W2 = 1.34e120;
+             }
              W2 = W2*W2;
            }
            pm.W[J]=( W1 < W2 ) ? W1 : W2 ;
@@ -1414,6 +1446,13 @@ double TMultiBase::DikinsCriterion(  long int N, bool initAppr )
       {
           Mu = DC_DualChemicalPotential( pm.Uefd, pm.A+J*pm.N, N, J );
           qMu = Mu*pm.W[J];
+          if( fabs(qMu) > 1.34e120 )  // workaround of NAN in PCI += qMu*qMu
+          {
+            if(signbit(qMu))
+              qMu = -1.34e120;
+            else
+              qMu = 1.34e120;
+          }
           pm.MU[J] = qMu;
           PCI += qMu*qMu;
 //          PCI += sqrt(fabs(qMu));  // Experimental - absolute differences?
@@ -1731,7 +1770,7 @@ void TMultiBase::Reset_uDD( long int nr, bool trace )
     }
     if( pa_p_ptr()->PSM >= 3 )
     {
-      fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+      fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
       f_log << " UD3 trace: " << pm.stkey << " SIA= " << pm.pNP << endl;
       f_log << " Itr   C_D:   " << pm.SB1[0] ;
     }
@@ -1747,7 +1786,7 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
         return;
     if( pa_p_ptr()->PSM >= 3 )
     {
-       fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+       fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
        f_log << r << " " << pm.PCI << " ";
     }
     if( trace )
@@ -1787,7 +1826,7 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
       }
       if( pa_p_ptr()->PSM >= 3 )
       {
-          fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+          fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
           f_log << U_mean[i] << " ";
   //      f_log << pm.U[i] << " ";
   //      f_log << U_CV[i] << " ";
@@ -1829,7 +1868,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
     tol_gen *= pm.PCI;
     if( pa_p_ptr()->PSM >= 3 )
     {
-        fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+        fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
         f_log << " Tol= " << tol_gen << " |" << endl;
     }
     if( trace )
@@ -1882,7 +1921,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
             cout << "uDD ITG= " << pm.ITG << " |" << " Divergent ICs: ";
          if( pa_p_ptr()->PSM >= 3 )
          {
-            fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+            fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
             f_log << "uDD ITG= " << pm.ITG << " |" << " Divergent ICs: ";
          }
          FirstTime = false;
@@ -1895,7 +1934,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
       }
       if( pa_p_ptr()->PSM >= 3 )
       {
-          fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+          fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
           memcpy(buf, pm.SB[i], MAXICNAME );
           buf[MAXICNAME] = '\0';
           f_log << buf << " ln_bi= " << log_bi << " Tol= " << tolerance << " ";
@@ -1906,7 +1945,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
            cout << " |" << endl;
          if( pa_p_ptr()->PSM >= 3 )
          {
-             fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+             fstream f_log(node1->ipmLogFile(), ios::out|ios::app );
              f_log << " |" << endl;
          }
     }

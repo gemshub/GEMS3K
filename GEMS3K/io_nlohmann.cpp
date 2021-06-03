@@ -24,10 +24,12 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#ifdef USE_OLD_NLOHMANJSON
+#ifdef USE_NLOHMANNJSON
 
+#include <sstream>
 #include "io_nlohmann.h"
 #include "v_detail.h"
+#include "v_service.h"
 
 
 namespace  io_formats {
@@ -56,6 +58,29 @@ template <> void NlohmannJsonWrite::write_key_value( const std::string& field_na
     auto val = value;
     strip(val);
     json_data[ key( field_name ) ] = std::string(value);
+}
+
+NlohmannJsonRead::NlohmannJsonRead(std::iostream &ff, const std::string &test_set_name, const std::string &field_name):
+    json_data()
+{
+    std::stringstream buffer;
+    buffer << ff.rdbuf();
+    auto input_string = buffer.str();
+    replaceall( input_string, "-inf", DOUBLE_INFMINUS_STR);
+    replaceall( input_string, "inf", DOUBLE_INFPLUS_STR);
+    replaceall( input_string, "nan", DOUBLE_NAN_STR);
+    nlohmann::json json_arr = nlohmann::json::parse(input_string);
+
+    json_data = json_arr[0];
+    if( !test_set_name.empty() )
+    {
+        auto json_set = json_data["set"];
+        if( json_set.get<std::string>().find(test_set_name) == std::string::npos )
+            std::cout << "Read the document from another set: " <<  json_set
+                      << " , current set " << test_set_name  <<  std::endl;
+    }
+    json_data =  json_data[field_name];
+    json_it = json_data.begin();
 }
 
 bool NlohmannJsonRead::has_next(std::string &next_field_name)

@@ -3,7 +3,7 @@
 /// \file v_detail.h
 /// Declaration of platform-specific utility functions and classes
 //
-// Copyright (C) 1996,2001,2020 A.Rysin, S.Dmytriyeva
+// Copyright (C) 1996,2001,2021 A.Rysin, S.Dmytriyeva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -28,105 +28,10 @@
 
 #include <limits>
 #include <cmath>
-#include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include "verror.h"
 
-
-void strip( std::string& str);
-void replace( std::string& str, const char* old_part, const char* new_part);
-void replaceall( std::string& str, const char* old_part, const char* new_part);
-void replaceall(std::string& str, char ch1, char ch2);
-
-//// Extract the string value from data.
-std::string regexp_extract_string( const std::string& regstr, const std::string& data );
-/// Extract the string value by key from json string
-std::string extract_string_json( const std::string& key, const std::string& jsondata );
-/// Extract the int value by key from json string
-int extract_int_json( const std::string& key, const std::string& jsondata );
-
-
-/// read string as: "<characters>"
-std::istream& f_getline(std::istream& is, std::string& str, char delim);
-/// Combines path, directory, name and extension to full pathname
-std::string u_makepath(const std::string& dir,
-           const std::string& name, const std::string& ext);
-
-/// Replace all characters to character in string (in place).
-inline void replace_all(std::string &s, const std::string &characters, char to_character )
-{
-    std::replace_if( s.begin(), s.end(), [=](char ch) {
-        return characters.find_first_of(ch)!=std::string::npos;
-    }, to_character );
-}
-
-/// Splitting full pathname to path, directory, name and extension
-void u_splitpath(const std::string& pathname, std::string& dir,
-            std::string& name, std::string& ext);
-/// Get directory from full pathname
-std::string u_getpath( const std::string& pathname );
-
-inline int ROUND(double x )
-{
-    return int((x)+.5);
-}
-
-#define FLOAT_EMPTY	          1.17549435e-38F
-#define DOUBLE_EMPTY         2.2250738585072014e-308
-#define CHAR_EMPTY   	     '`'
-
-inline bool IsFloatEmpty( const float v )
-{
-    return ( v>0. && v <= FLOAT_EMPTY);
-}
-inline bool IsDoubleEmpty( const double v )
-{
-    return ( v>0. && v <= DOUBLE_EMPTY);
-}
-
-template <class T>
-inline void fillValue( T* arr, T value, int size )
-{
-  if( !arr )
-    return;
-  for(int ii=0; ii<size; ii++)
-    arr[ii] = value;
-}
-
-template <class T, class IT>
-inline void copyValues( T* arr, T* data, IT size )
-{
-  if( !arr || !data )
-    return;
-  for(IT ii=0; ii<size; ii++)
-    arr[ii] = data[ii];
-}
-
-template <class IT>
-inline void copyValues( double* arr, float* data, IT size )
-{
-  if( !arr || !data )
-    return;
-  for(IT ii=0; ii<size; ii++)
-    arr[ii] = static_cast<double>(data[ii]);
-}
-
-template <class IT>
-inline void copyValues( float* arr, double* data, IT size )
-{
-  if( !arr || !data )
-    return;
-  for(IT ii=0; ii<size; ii++)
-    arr[ii] = static_cast<float>(data[ii]);
-}
-
-template <class IT>
-inline void copyValues( long int* arr, short* data, IT size )
-{
-  if( !arr || !data )
-    return;
-  for(IT ii=0; ii<size; ii++)
-    arr[ii] = static_cast<long int>(data[ii]);
-}
 
 template<typename T>
 bool approximatelyEqual( const T& a, const T& b, const T& epsilon = std::numeric_limits<T>::epsilon() )
@@ -176,50 +81,142 @@ bool isAllZero( T* arr, IT size )
   return true;
 }
 
-/// Trim all whitespace characters from start (in place).
-inline void ltrim(std::string &s )
+//#define FLOAT_EMPTY	          1.17549435e-38F
+//#define DOUBLE_EMPTY         2.2250738585072014e-308
+const float FLOAT_EMPTY = std::numeric_limits<float>::min();
+const double DOUBLE_EMPTY = std::numeric_limits<double>::min();
+#define CHAR_EMPTY   	     '`'
+
+inline bool IsFloatEmpty( const float v )
 {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
-        return !isspace(ch);
-    }));
+    return ( v>0. && v <= FLOAT_EMPTY);
+}
+inline bool IsDoubleEmpty( const double v )
+{
+    return ( v>0. && v <= DOUBLE_EMPTY);
 }
 
-/// Trim all whitespace characters from end (in place).
-inline void rtrim(std::string &s)
+const float FLOAT_INFPLUS = 3.4028230E+38F;
+const float FLOAT_INFMINUS = -3.4028230E+38F;
+const float FLOAT_NAN = 3.402800E+38F;
+const double DOUBLE_INFPLUS = 1.79769313486230000E+308;
+const double DOUBLE_INFMINUS = -1.79769313486230000E+308;
+const double DOUBLE_NAN = 1.797693000000000E+308;
+const std::string DOUBLE_INFPLUS_STR = std::to_string(DOUBLE_INFPLUS);
+const std::string DOUBLE_INFMINUS_STR = std::to_string(DOUBLE_INFMINUS);
+const std::string DOUBLE_NAN_STR = std::to_string(DOUBLE_NAN);
+
+template < typename T >
+T InfMinus()
 {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
-        return !isspace(ch);
-    }).base(), s.end());
+  return std::numeric_limits<T>::min();
+}
+template < typename T >
+T InfPlus()
+{
+  return std::numeric_limits<T>::max();
+}
+template < typename T >
+T Nan()
+{
+  return std::numeric_limits<T>::max();
 }
 
-/// Trim all whitespace characters from both ends (in place).
-inline void trim(std::string &s )
+template < typename T >
+inline bool is_minusinf(const T& value)
 {
-    ltrim(s);
-    rtrim(s);
+  return value <= InfMinus<T>();
 }
 
-/// Trim characters from start (in place).
-inline void ltrim(std::string &s, const std::string &characters )
+template < typename T >
+inline bool is_plusinf(const T& value)
 {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [=](char ch) {
-        return characters.find_first_of(ch)==std::string::npos;
-    }));
+  return std::isinf(value) || value >= InfPlus<T>();
 }
 
-/// Trim characters from end (in place).
-inline void rtrim(std::string &s, const std::string &characters)
+template < typename T >
+inline bool is_nan(const T& value)
 {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [=](char ch) {
-        return characters.find_first_of(ch)==std::string::npos;
-    }).base(), s.end());
+  return std::isnan(value) || value >= Nan<T>();
 }
 
-/// Trim characters from both ends (in place).
-inline void trim(std::string &s, const std::string &characters )
+template <class T,
+          typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+std::string floating_point_to_string( const T& value, int precision = 15 )
 {
-    ltrim(s, characters);
-    rtrim(s, characters);
+    std::string value_str;
+    if( is_minusinf(value) )
+        value_str = "-inf";
+    else if( is_plusinf(value) )
+        value_str = "inf";
+    else if( is_nan(value) )
+        value_str = "nan";
+    else
+    {
+        std::ostringstream str_stream;
+        str_stream << std::setprecision(precision) << value;
+        value_str = str_stream.str();
+    }
+    return value_str;
 }
+
+template <class T,
+          typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+T string_to_floating_point( const std::string& value_str )
+{
+    T value;
+    if( value_str == "-inf" )
+        value = InfMinus<T>();
+    else if( value_str == "inf" )
+        value = InfPlus<T>();
+    else if( value_str == "nan" )
+        value = Nan<T>();
+    else
+        value = std::stod( value_str.c_str() );
+
+    return value;
+}
+
+/// Read value from string.
+template <class T,
+          typename std::enable_if<!std::is_floating_point<T>::value,T>::type* = nullptr>
+bool string2value( T& x, const std::string& s)
+{
+    std::istringstream iss(s);
+    return iss >> x && !iss.ignore();
+}
+
+template <class T,
+          typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+bool string2value( T& x, const std::string& s)
+{
+    x = string_to_floating_point<T>(s);
+    return true;
+}
+
+/// Serializations a numeric value to a string.
+template <class T,
+          typename std::enable_if<!std::is_floating_point<T>::value,T>::type* = nullptr>
+std::string value2string( const T& value, int )
+{
+    std::ostringstream os;
+    os << value;
+    return os.str();
+}
+
+template <class T,
+          typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+std::string value2string( const T& value, int precision = 15 )
+{
+    return floating_point_to_string( value, precision );
+}
+
+template <> double InfMinus();
+template <> double InfPlus();
+template <> double Nan();
+template <> float InfMinus();
+template <> float InfPlus();
+template <> float Nan();
+
 
 #endif // V_DETAIL_H

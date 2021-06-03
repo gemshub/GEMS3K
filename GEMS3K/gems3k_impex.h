@@ -13,8 +13,7 @@ public:
     enum IOModes {
         f_key_value,
         f_binary,
-        f_json,
-        f_nlohmanjson
+        f_json
     };
 
     /// Default output/exchange file types
@@ -32,7 +31,6 @@ public:
         {
         case f_binary:
             return "bin";
-        case f_nlohmanjson:
         case f_json:
             return "json";
         default:
@@ -151,7 +149,7 @@ public:
     std::string get_next_dbr_file( size_t index ) const
     {
        if( index < databr_file_names.size() )
-         return impex_dir+"/"+databr_file_names[index];
+         return ( impex_dir.empty() ? databr_file_names[index] : impex_dir+"/"+databr_file_names[index] );
        else
          return "";
     }

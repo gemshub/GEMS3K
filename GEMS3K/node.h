@@ -9,7 +9,7 @@
 /// Works with DATACH and work DATABR structures without using
 /// the TNodearray class.
 //
-// Copyright (c) 2006-2018 S.Dmytriyeva, D.Kulik, G.Kosakowski, G.D.Miron, A.Leal
+// Copyright (c) 2006-2021 S.Dmytriyeva, D.Kulik, G.Kosakowski, G.D.Miron, A.Leal
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -84,6 +84,11 @@ const long int
 class TNode
 {
     friend class TNodeArray;
+
+    /// Full name of the ipmlog file
+    std::string ipmlog_file_name;
+    /// Last error message logged to the ipmlog file
+    std::string ipmlog_error;
 
     /// The same GEMS3K input set (currently GEM-Selektor asks for the "set" name as .lst file name)
     std::string current_input_set_name = "";
@@ -353,26 +358,45 @@ public:
   virtual ~TNode();      ///< destructor
 
 // Typical sequence for using TNode class ----------------------------------
-/// (1)
-/// Initialization of GEM IPM3 data structures in coupled programs
-/// that use GEMS3K module. Also reads in the IPM, DCH and one or many DBR text input files.
-///  \param ipmfiles_lst_name  pointer to a null-terminated C string with a path to a text file
-///                      containing the list of names of  GEMS3K input files.
-///                      Example: file "test.lst" with a content:    -t "dch.dat" "ipm.dat" "dbr-0.dat"
-///                      (-t  tells that input files are in text format)
-///  \return 0  if successful; 1 if input file(s) were not found or corrupt;
-///                      -1 if internal memory allocation error occurred.
+/// (1) 
+/// Initialization of GEM IPM2 data structures in coupled RMT-GEM programs
+///  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files 
+///  in key-value, json or binary format. Parameters:
+///  ipmfiles_lst_name - name of a text file that contains:
+///    " -j | -t |-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name>
+///  dbfiles_lst_name - name of a text file that contains:
+///    <dataBR  file name1>, ... , <dataBR file nameN> "
+///    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
+///    exist in the same directory where the ipmfiles_lst_name file is located.
+///    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
+///    and must contain valid initial chemical systems (of the same structure
+///    as described in the DCH_DAT file) to set up the initial state of the FMT
+///    node array. 
+///  If -t flag or no flag is specified then all data files must be in key-value text 
+///    (ASCII) format (and file names must have .dat extension);
+///  If -j flag is specified then all data files must be in JSON format (and file names 
+///    must have .json extension);
+///  if -b flag is specified then all data files are assumed to be binary (little-endian)
+///    files.
+///  @returns:
+///    0: OK;
+///    1: GEM IPM read file or input file format error;
+///   -1: System error (e.g. memory allocation).
   long int  GEM_init( const char *ipmfiles_lst_name );
 
-/// (1)
+/// (1a)
 /// Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module. 
-/// Also reads the input data from the IPM, DCH and one DBR JSON input string 
+/// Also reads the input data from the IPM, DCH and one DBR JSON input strings 
 /// (e.g. exported from GEM-Selektor or retrieved from JSON database).
 /// Parameters:
 ///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
 ///  @param ipm_json -  Parameters and settings for GEMS3K IPM-3 algorithm as a json/key-value string
 ///  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
-  long int  GEM_init( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json );
+///  @returns:
+///    0: OK;
+///    1: GEM IPM read file or input file format error;
+///   -1: System error (e.g. memory allocation).
+  long int  GEM_init( std::string dch_json, std::string ipm_json, std::string dbr_json );
 
 
   // String i/o functions
@@ -381,13 +405,13 @@ public:
   /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
   std::string datach_to_string( bool with_comments = true, bool brief_mode = false ) const;
   /// Reads CSD (DATACH structure) from a json/key-value string
-  bool datach_from_string( const std::string& data );
+  bool datach_from_string( std::string data );
   /// Writes work node (DATABR structure) to a json/key-value string
   /// \param brief_mode - Do not write data items that contain only default values
   /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
   std::string databr_to_string( bool with_comments = true, bool brief_mode = false ) const;
   /// Reads work node (DATABR structure) from a json/key-value string
-  bool databr_from_string( const std::string& data );
+  bool databr_from_string( std::string data );
   /// Writes Multi to a json/key-value string
   /// \param brief_mode - Do not write data items that contain only default values
   /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
@@ -616,14 +640,14 @@ long int GEM_step_MT( const long int step )
 /// \return  0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred.
    long int GEM_read_dbr( const char* fname, GEMS3KGenerator::IOModes type_f );
 
-/// (5j) Reads another DBR 0bject (with input system composition, T,P etc.) from JSON string \ . 
+/// (5j) Reads another DBR object (with input system composition, T,P etc.) from JSON string \ .
 /// It must be compatible with the currently loaded IPM and DCH files 
 ///  (see descriptions of GEM_init() methods).
 /// \param dbr_json  String containing a JSON document for the input DBR object.
 /// \param check_dch_compatibility  If true, forces checking the compatibility of DBR object with active DCH/IPM
 /// \return  0  if successful; 1 if input JSON string is empty or corrupt;-1 if internal memory allocation error occurred;
 ///          2 if checking the not compatibility of DBR object with active DCH/IPM.
-   long int GEM_read_dbr( const std::string& dbr_json, const bool check_dch_compatibility = true );
+   long int GEM_read_dbr( std::string dbr_json, const bool check_dch_compatibility = true );
 
 /// (2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure
 ///   and metastability constraints provided in the work instance of DATABR structure.
@@ -1376,8 +1400,25 @@ long int GEM_step_MT( const long int step )
     virtual void databr_to_vtk( std::fstream& ff, const char*name, double time, long int  cycle,
                               long int nFilds, long int (*Flds)[2]);
 
-    static std::string ipmLogFile;  ///< full name of the ipmlog file
+    /// Get full name of the ipmlog file
+    const std::string& ipmLogFile() const {
+        return ipmlog_file_name;
+    }
 
+    /// Set full name of the ipmlog file
+    void setipmLogFile(const std::string& logFile) {
+        ipmlog_file_name = logFile;
+    }
+
+    /// Get the last error message logged to the ipmlog file
+    const std::string& ipmLogError() const {
+        return ipmlog_error;
+    }
+
+    /// Clear error message
+    void clearipmLogError() {
+        ipmlog_error.clear();
+    }
 
 };
 

@@ -1827,8 +1827,8 @@ else fRestore = true;
               gamma_primal = 1.;
 
           ln_ax_dual = lg_to_ln * pm.Y_la[j];  // DualTh activity
-          if( ln_ax_dual < -777. )
-              ln_ax_dual = -777.;
+          if( ln_ax_dual < -214.0 )
+              ln_ax_dual = -214.0;
           lnFugPur = pm.fDQF[j];  // Pure gas fugacity or end-member DQF parameter
 
           switch( pm.DCC[j] ) // choice of corrections for estimated mole fractions

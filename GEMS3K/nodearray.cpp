@@ -29,10 +29,9 @@
 
 #include <cmath>
 #include <algorithm>
-#include "v_detail.h"
+#include "v_service.h"
 
 #ifdef NODEARRAYLEVEL
-
 #include "nodearray.h"
 #ifndef NOPARTICLEARRAY
 #include "particlearray.h"
