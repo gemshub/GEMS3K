@@ -22,9 +22,6 @@
 #ifndef TNT_ARRAY1D_H
 #define TNT_ARRAY1D_H
 
-//#include <cstdlib>
-#include <iostream>
-
 #ifdef TNT_BOUNDS_CHECK
 #include <cassert>
 #endif
@@ -84,48 +81,28 @@ class Array1D
 
 };
 
-
-
-
 template <class T>
 Array1D<T>::Array1D() : v_(), n_(0), data_(0) {}
 
 template <class T>
 Array1D<T>::Array1D(const Array1D<T> &A) : v_(A.v_),  n_(A.n_), 
 		data_(A.data_)
-{
-#ifdef TNT_DEBUG
-	std::cout << "Created Array1D(const Array1D<T> &A) \n";
-#endif
-
-}
+{ }
 
 
 template <class T>
 Array1D<T>::Array1D(int n) : v_(n), n_(n), data_(v_.begin())
-{
-#ifdef TNT_DEBUG
-	std::cout << "Created Array1D(int n) \n";
-#endif
-}
+{ }
 
 template <class T>
 Array1D<T>::Array1D(int n, const T &val) : v_(n), n_(n), data_(v_.begin()) 
 {
-#ifdef TNT_DEBUG
-	std::cout << "Created Array1D(int n, const T& val) \n";
-#endif
 	set_(data_, data_+ n, val);
-
 }
 
 template <class T>
 Array1D<T>::Array1D(int n, T *a) : v_(a), n_(n) , data_(v_.begin())
-{
-#ifdef TNT_DEBUG
-	std::cout << "Created Array1D(int n, T* a) \n";
-#endif
-}
+{ }
 
 template <class T>
 inline Array1D<T>::operator T*()

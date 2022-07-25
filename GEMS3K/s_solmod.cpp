@@ -24,13 +24,12 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <cstdio>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-using namespace std;
 #include "s_solmod.h"
 #include "v_detail.h"
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+// Thread-safe logger to stdout with colors
+std::shared_ptr<spdlog::logger> TSolMod::solmod_logger = spdlog::stdout_color_mt("solmod");
 
 //=============================================================================================
 // TSolMod base class for multicomponent solid, liquid, fluid and aqueous mixtures

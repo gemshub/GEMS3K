@@ -29,6 +29,7 @@
 #include <string>
 #include <algorithm>
 
+std::string char_array_to_string(const char* data_ptr, size_t max_size) ;
 void strip( std::string& str);
 void replace( std::string& str, const char* old_part, const char* new_part );
 void replaceall( std::string& str, const std::string& old_part, const std::string& new_part );
@@ -156,6 +157,17 @@ inline void trim(std::string &s, const std::string &characters )
 {
     ltrim(s, characters);
     rtrim(s, characters);
+}
+
+
+template < typename T, typename LT >
+std::string to_string( T* arr, LT size )
+{
+    std::string logs;
+    for( LT ii=0; ii<size; ++ii) {
+        logs += std::to_string(arr[ii])+" ";
+    }
+    return logs;
 }
 
 #endif // V_SERVICE_H

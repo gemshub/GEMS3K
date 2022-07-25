@@ -26,9 +26,6 @@
 //-------------------------------------------------------------------
 //
 
-#include <cstdio>
-#include <iostream>
-#include <iomanip>
 #include <fstream>
 using namespace std;
 #include "verror.h"
@@ -168,13 +165,10 @@ long int TSIT::PTparam()
 long int TSIT::MixMod()
 {
     long int j, i1, i2, ip;
-    double sqI, lgI, Z2, lgGam, SumSIT, lg_to_ln;
+    double sqI=0.0, lgI=0.0, Z2, lgGam, SumSIT, lg_to_ln;
     lg_to_ln = 2.302585093;
 
     I = IonicStrength();
-    sqI = sqrt(I);
-    lgI = log10(I);
-
     // this check was already performed in CalculateActivityCoefficients()
     if( I < 1e-6 )
     {
@@ -182,6 +176,8 @@ long int TSIT::MixMod()
             lnGamma[j] = 0.;
         return 0;
     }
+    sqI = sqrt(I);
+    lgI = log10(I);
 
     // loop over species
     for( j=0; j<NComp; j++ )
@@ -253,11 +249,30 @@ long int TSIT::ExcessProp( double *Zex )
 {
     // (under construction)
     long int j, i1, i2, ip;
-    double sqI, lgI, Z2, SumSIT, lg_to_ln, g, dgt, d2gt, dgp;
+    double sqI=0.0, lgI=0.0, Z2, SumSIT, lg_to_ln, g, dgt, d2gt, dgp;
     lg_to_ln = 2.302585093;
     g = 0.; dgt = 0.; d2gt = 0.; dgp = 0.;
 
     I = IonicStrength();
+    // this check was already performed in CalculateActivityCoefficients()
+    if( I < 1e-6 )
+    {
+        for( j=0; j<NComp; j++)
+        {
+            LnG[j] = 0.;
+            dLnGdT[j] = 0.;
+            d2LnGdT2[j] = 0.;
+            dLnGdP[j] = 0.;
+        }
+        Zex[0] = Gex = 0.0;
+        Zex[1] = Hex = 0.0;
+        Zex[2] = Sex = 0.0;
+        Zex[3] = CPex = 0.0;
+        Zex[4] = Vex = 0.0;
+        Zex[5] = Aex = 0.0;
+        Zex[6] = Uex = 0.0;
+        return 0;
+    }
     sqI = sqrt(I);
     lgI = log10(I);
 
@@ -440,9 +455,9 @@ void TPitzer::alloc_internal()
     xcx = new long int[Nc];
     xax = new long int[Na];
     xnx = new long int[Nn];
-    mc = new double[Nc];
-    ma = new double[Na];
-    mn = new double[Nn];
+    pmc = new double[Nc];
+    pma = new double[Na];
+    pmn = new double[Nn];
     zc = new double[Nc];
     za = new double[Na];
 
@@ -666,9 +681,9 @@ void TPitzer::free_internal()
     delete[]xcx;
     delete[]xax;
     delete[]xnx;
-    delete[]mc;
-    delete[]ma;
-    delete[]mn;
+    delete[]pmc;
+    delete[]pma;
+    delete[]pmn;
     delete[]zc;
     delete[]za;
     delete[]McI_PT_array;
@@ -713,17 +728,17 @@ long int TPitzer::MixMod()
     long int ic, ia, in, iRet;
 
     for( ic=0; ic<Nc; ic++){
-        mc[ic] = aM[xcx[ic]];
+        pmc[ic] = aM[xcx[ic]];
         zc[ic] = aZ[xcx[ic]];
       }
 
     for(ia=0; ia<Na; ia++){
-        ma[ia] = aM[xax[ia]];
+        pma[ia] = aM[xax[ia]];
         za[ia] = aZ[xax[ia]];
      }
 
     for(in=0; in<Nn; in++){   //Important bugfix (was in>Nn) 17/12/2012 SD
-        mn[in] = aM[xnx[in]];
+        pmn[in] = aM[xnx[in]];
     }
 
     iRet = Pitzer_calc_Gamma();
@@ -842,17 +857,17 @@ void TPitzer::setIndexes()
     }
 
     for( ic=0; ic<Nc; ic++){
-    mc[ic] = aM[xcx[ic]];
+    pmc[ic] = aM[xcx[ic]];
     zc[ic] = aZ[xcx[ic]];
     }
 
     for(ia=0; ia<Na; ia++){
-    ma[ia] = aM[xax[ia]];
+    pma[ia] = aM[xax[ia]];
     za[ia] = aZ[xax[ia]];
     }
 
-    for(in=0; in>Nn; in++){
-    mn[in] = aM[xnx[in]];
+    for(in=0; in<Nn; in++){  //Important bugfix (was in>Nn) 16/06/2022 SD
+    pmn[in] = aM[xnx[in]];
     }
 
 }
@@ -870,8 +885,20 @@ double TPitzer::G_ex_par5(long int ii)
     return G_ex_par;
 }
 
+/// Pitzer parameters at T of interest (6 term)
+double TPitzer::G_ex_par6(long int ii)
+{
+    double Tr, G_ex_par;
 
-/// Pitzer parameters at T of interest (5 term)
+    Tr = 298.15;
+    G_ex_par = aIPc[ii * NPcoef + 0] + aIPc[ii * NPcoef + 1]*(1./Tk-1./Tr) +
+                    aIPc[ii * NPcoef + 2]*log(Tk/Tr) + aIPc[ii * NPcoef + 3]*(Tk-Tr) +
+                    aIPc[ii * NPcoef + 4]*(Tk*Tk-Tr*Tr) + aIPc[ii * NPcoef + 5]*(1/(Tk*Tk)-1/(Tr*Tr));
+    return G_ex_par;
+}
+
+
+/// Pitzer parameters at T of interest (8 term)
 double TPitzer::G_ex_par8(long int ii)
 {
     double G_ex_par;
@@ -891,6 +918,17 @@ double TPitzer::S_ex_par5(long int ii)
 
     S_ex_par = (-1.) * aIPc[ii * NPcoef + 1]*pow(Tk, (-2.)) + aIPc[ii * NPcoef + 2]*pow(Tk, (-1.)) +
                     aIPc[ii * NPcoef + 3] + 2. * aIPc[ii * NPcoef + 4]*Tk;
+
+    return S_ex_par;
+}
+
+/// first T derivative of Pitzer parameters (6-term)
+double TPitzer::S_ex_par6(long int ii)
+{
+    double S_ex_par;
+
+    S_ex_par = (-1.) * aIPc[ii * NPcoef + 1]*pow(Tk, (-2.)) + aIPc[ii * NPcoef + 2]*pow(Tk, (-1.)) +
+                    aIPc[ii * NPcoef + 3] + 2. * aIPc[ii * NPcoef + 4]*Tk - 2. * aIPc[ii * NPcoef + 5]/pow(Tk, (3.));
 
     return S_ex_par;
 }
@@ -916,6 +954,17 @@ double TPitzer::CP_ex_par5(long int ii)
 
     CP_ex_par = 2. * aIPc[ii * NPcoef + 1] *pow(Tk, (-3.)) - aIPc[ii * NPcoef + 2] *pow(Tk, (-2.)) +
                         2. * aIPc[ii * NPcoef + 4];
+
+    return CP_ex_par;
+}
+
+/// second T derivative of Pitzer parameters (6-term)
+double TPitzer::CP_ex_par6(long int ii)
+{
+    double CP_ex_par;
+
+    CP_ex_par = 2. * aIPc[ii * NPcoef + 1] *pow(Tk, (-3.)) - aIPc[ii * NPcoef + 2] *pow(Tk, (-2.)) +
+                        2. * aIPc[ii * NPcoef + 4] + 6. * aIPc[ii * NPcoef + 5] / pow(Tk, (4.));
 
     return CP_ex_par;
 }
@@ -946,6 +995,10 @@ double TPitzer::setvalue(long int ii, int Gex_or_Sex)
         {
             value = G_ex_par5(ii);
         }
+        else if( NPcoef == 6 )
+        {
+            value = G_ex_par6(ii);
+        }
         else if( NPcoef == 8 ){
             value = G_ex_par8(ii);
         }
@@ -956,6 +1009,10 @@ double TPitzer::setvalue(long int ii, int Gex_or_Sex)
         if ( NPcoef == 5)
         {
             value = S_ex_par5(ii);
+        }
+        else if ( NPcoef == 6)
+        {
+            value = S_ex_par6(ii);
         }
         else if( NPcoef == 8)
         {
@@ -968,6 +1025,10 @@ double TPitzer::setvalue(long int ii, int Gex_or_Sex)
         if ( NPcoef == 5)
         {
             value = CP_ex_par5(ii);
+        }
+        else if ( NPcoef == 6)
+        {
+            value = CP_ex_par6(ii);
         }
         else if( NPcoef == 8)
         {
@@ -1090,12 +1151,22 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 Lam1[in][ia] = setvalue(ii, Gex_or_Sex);
                 break;
 
+            case Lam2_:
+                in = getIn( aIPx[ii * MaxOrd + 0] );
+                i = getIn( aIPx[ii * MaxOrd + 1] );
+                ErrorIf( i<0||in<0, "PTcalc", "Only indexes of neutral species needed here"  );
+
+                // not implemented
+                //Lam1[in][i] = setvalue(ii, Gex_or_Sex);
+                break;
+
             case Theta_:
                 ic = getIc( aIPx[ii * MaxOrd + 0] );
                 i = getIc( aIPx[ii * MaxOrd + 1] );
                 ErrorIf( i<0||ic<0, "PTcalc", "Only indexes of cations needed here"  );
 
                 Theta[ic][i] = setvalue(ii, Gex_or_Sex);
+                Theta[i][ic] = Theta[ic][i]; // fix DM 22.04.2022 one parameter independent of index
                 break;
 
             case Theta1_:
@@ -1104,6 +1175,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 ErrorIf( i<0||ia<0, "PTcalc", "Only indexes of anions needed here"  );
 
                 Theta1[ia][i] = setvalue(ii, Gex_or_Sex);
+                Theta1[i][ia] = Theta1[ia][i]; // fix DM 22.04.2022 one parameter independet of index
                 break;
 
             case Psi_:
@@ -1128,6 +1200,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 ErrorIf( ic<0||ia<0||i<0, "PTcalc", "Index of anion and 2 indexes of cations needed here"  );
 
                 Psi[ic][i][ia] = setvalue(ii, Gex_or_Sex);
+                Psi[i][ic][ia] = Psi[ic][i][ia]; // ca-ca-an
                 break;
 
             case Psi1_:
@@ -1152,6 +1225,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 ErrorIf( ic<0||ia<0||i<0, "PTcalc", "Indexes of 2 anions and one cation needed here"  );
 
                 Psi1[ia][i][ic] = setvalue(ii, Gex_or_Sex);
+                Psi1[i][ia][ic] = Psi1[ia][i][ic]; // an-an-ca
                 break;
 
             case Zeta_:
@@ -1371,10 +1445,10 @@ double TPitzer::Z_Term()
     long int a, c;
 
     for( a=0; a<Na; a++)
-        Zan += za[a]*ma[a];
+        Zan += za[a]*pma[a];
 
     for( c=0; c<Nc; c++)
-        Zca +=zc[c]*mc[c];
+        Zca +=zc[c]*pmc[c];
 
     Z = fabs(Zan) + Zca;
 
@@ -1389,10 +1463,10 @@ double TPitzer::IonicStr( double& I1 )
     long int a, c;
 
     for( a=0; a<Na; a++ )
-        Ia += za[a]*za[a]* ma[a];
+        Ia += za[a]*za[a]* pma[a];
 
     for( c=0; c<Nc; c++ )
-        Ic += zc[c]* zc[c]* mc[c];
+        Ic += zc[c]* zc[c]* pmc[c];
 
     IS =0.5*(Ia+Ic);
     I1=IS;
@@ -1426,7 +1500,8 @@ double TPitzer::lnGammaH2O( double DH_term )
                 B3 = Bet0[c][a]+ Bet1[c][a]*exp(-h1);
             else
                 B3 = Bet0[c][a]+ Bet1[c][a]*exp(-h1)+(Bet2[c][a]*exp(-h2)); //Pitzer-Toughreact Report 2006 equation (A9)
-            OC2 +=(mc[c]*ma[a]*(B3+Zfac*(C) ));
+            OC2 +=(pmc[c]*pma[a]*(B3+Zfac*(C) ));
+            B3 = 0.0;
         }
     }
 
@@ -1438,14 +1513,15 @@ double TPitzer::lnGammaH2O( double DH_term )
         {
             for( a=0; a<Na; a++)
             {
-                OC3a += (ma[a]*Psi[c][c1][a]);
+                OC3a += (pma[a]*Psi[c][c1][a]);
             }
             z=zc[c];
             z1=zc[c1];
             Ecalc( z, z1, I, Aphi, Etheta,Ethetap);
             Theta[c1][c]=Theta[c][c1];
             Phiphi = Theta[c][c1] + Etheta + Ethetap * I;// * sqrt(I);	 Pitzer-Toughreact Report 2006, equation (A14)
-            OC3 += (mc[c]*mc[c1]*(Phiphi + OC3a));
+            OC3 += (pmc[c]*pmc[c1]*(Phiphi + OC3a));
+            OC3a = 0.0;
         }
     }
 
@@ -1457,14 +1533,15 @@ double TPitzer::lnGammaH2O( double DH_term )
         {
             for( c=0; c<Nc; c++)
             {
-                OC4a += (mc[c]*Psi1[a][a1][c]);
+                OC4a += (pmc[c]*Psi1[a][a1][c]);
             }
             z=za[a];
             z1=za[a1];
             Ecalc(z,z1,I,Aphi, Etheta,Ethetap);
             Theta1[a1][a]=Theta1[a][a1];
             Phiphi1 = Theta1[a][a1] + Etheta + Ethetap * I;	// Pitzer-Toughreact Report, 2006 equation (A14)
-            OC4 += (ma[a]*ma[a1]*(Phiphi1 + OC4a));
+            OC4 += (pma[a]*pma[a1]*(Phiphi1 + OC4a));
+            OC4a = 0.0;
         }
     }
 
@@ -1474,7 +1551,7 @@ double TPitzer::lnGammaH2O( double DH_term )
     {
         for( c=0; c<Nc; c++)
         {
-            OC5a +=(mn[n]*mc[c]*Lam[n][c]);
+            OC5a +=(pmn[n]*pmc[c]*Lam[n][c]);
         }
     }
 
@@ -1482,7 +1559,7 @@ double TPitzer::lnGammaH2O( double DH_term )
     {
         for( a=0; a<Na; a++)
         {
-            OC5b +=(mn[n]*ma[a]*Lam1[n][a]);
+            OC5b +=(pmn[n]*pma[a]*Lam1[n][a]);
         }
     }
     OC5=OC5a+OC5b;
@@ -1495,7 +1572,7 @@ double TPitzer::lnGammaH2O( double DH_term )
         {
             for( a=0; a<Na; a++)
             {
-                OC6 +=(mn[n]*mc[c]*ma[a]*Zeta[n][c][a]);
+                OC6 +=(pmn[n]*pmc[c]*pma[a]*Zeta[n][c][a]);
             }
         }
     }
@@ -1505,7 +1582,7 @@ double TPitzer::lnGammaH2O( double DH_term )
     OC = 1.+ (OCges / OCmol);
 
     // Activity of Water
-    Lna =(-18.1/1000.)*OC*OCmol;
+    Lna =(-18.01528/1000.)*OC*OCmol;
         // double activityH2O = exp(Lna);
 
     return Lna-log(x[Ns]);
@@ -1580,7 +1657,7 @@ double TPitzer::F_Factor( double DH_term )
             z1=zc[c1];
             Ecalc(z,z1,I,DH_term, Etheta,Ethetap);
             Phip = Ethetap;					//Pitzer-Toughreact Report 2006, equation (A16)
-            F2 +=(mc[c]*mc[c1]*(Phip));
+            F2 +=(pmc[c]*pmc[c1]*(Phip));
         }
     }
 
@@ -1595,7 +1672,7 @@ double TPitzer::F_Factor( double DH_term )
             z1=za[a1];
             Ecalc(z,z1,I,DH_term, Etheta,Ethetap);
             Phip1=Ethetap;      				//Pitzer-Toughreact Report 2006, equation (A16)
-            F3 +=(ma[a]*ma[a1]*(Phip1));
+            F3 +=(pma[a]*pma[a1]*(Phip1));
         }
     }
 
@@ -1612,7 +1689,7 @@ double TPitzer::F_Factor( double DH_term )
             x_alp = alp1*Is;
             g2 = get_gp( x_alp );
             B1= (Bet1[c][a]*g1)/I+ (Bet2[c][a]*g2)/I;
-            F4 = F4+ (mc[c]*ma[a]*B1);
+            F4 = F4+ (pmc[c]*pma[a]*B1);
         }
     }
     F = F1+F2+F3+F4;
@@ -1627,7 +1704,7 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
     long int a, n, c1, a1;
     double GM1, GM2, alp, alp1, g1, g2, B2, C, x_alp,
                 GM3, GM3a, Phi, z, z1, Q, GM4, GM5a, GM5, GM6a, GM6, GM;
-    //double actcoeffM;
+    double actcoeffM;
 
     // Calculate GM1
     GM1 = (zc[M]*zc[M])*Ffac;
@@ -1643,7 +1720,7 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
         x_alp = alp1*Is;
         g2 = get_g( x_alp );
         B2= Bet0[M][a]+(Bet1[M][a]*g1)+ (Bet2[M][a]*g2); // Pitzer-Toughreact Report 2006, equation (A10)
-        GM2 = GM2+(ma[a]*(2.*B2+Zfac*(C)));
+        GM2 = GM2+(pma[a]*(2.*B2+Zfac*(C)));
     }
 
 
@@ -1654,7 +1731,7 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
         for( a=0; a<Na; a++)
         {
             Psi[c1][M][a] = Psi[M][c1][a];
-            GM3a += ma[a]*Psi[M][c1][a];
+            GM3a += pma[a]*Psi[M][c1][a];
         }
         z = zc[M];
         z1 = zc[c1];
@@ -1670,7 +1747,8 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
         {
             Q=1;
         }
-        GM3=GM3+Q*mc[c1]*(2.*Phi+ GM3a);
+        GM3=GM3+Q*pmc[c1]*(2.*Phi+ GM3a);
+        GM3a= 0.0;
      }
 
     // Term GM4
@@ -1680,11 +1758,9 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
         for( a1=a+1; a1<Na; a1++)
         {
             Psi1[a1][a][M]=Psi1[a][a1][M];
-            GM4=GM4+(ma[a]*ma[a1]*Psi1[a][a1][M]);
+            GM4=GM4+(pma[a]*pma[a1]*Psi1[a][a1][M]);
         }
     }
-
-
 
     // Term GM5
     GM5a = 0.;
@@ -1693,7 +1769,7 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
         for( a=0; a<Na; a++)
         {
             C = Cphi[c1][a]/(2.*sqrt(fabs(za[a]*zc[c1])));			// Pitzer-Toughreact Report 2006, equation (A7)
-            GM5a = GM5a+(mc[c1]*ma[a]* (C) );
+            GM5a = GM5a+(pmc[c1]*pma[a]* (C) );
         }
     }
     GM5 = zc[M]*GM5a;
@@ -1703,14 +1779,14 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
     GM6a = 0;
     for( n=0; n<Nn; n++)
     {
-        GM6a += mn[n]*Lam[n][M];
+        GM6a += pmn[n]*Lam[n][M];
     }
     GM6 = 2*GM6a;
 
     // Term GM
     GM = GM1+GM2+GM3+GM4+GM5+GM6;
 
-    //actcoeffM = exp(GM);
+    actcoeffM = exp(GM);
     return GM;
 }
 
@@ -1726,7 +1802,8 @@ double TPitzer::lnGammaX( long int X, double DH_term )
     double GX4;
     double GX5a, GX5;
     double GX6a, GX6;
-    double GX;//, actcoeffX;
+    double GX;//,
+    double actcoeffX;
 
     // Term GX1 (Pitzer-Toughreact Report 2006, equation A4)
     GX1=(za[X]*za[X])*Ffac;
@@ -1742,7 +1819,7 @@ double TPitzer::lnGammaX( long int X, double DH_term )
         x_alp = alp1*Is;
         g2 = get_g( x_alp );
         B2= Bet0[c][X]+Bet1[c][X]*g1+ (Bet2[c][X]*g2);
-        GX2=GX2+(mc[c]*(2.*B2+Zfac*(C)));
+        GX2=GX2+(pmc[c]*(2.*B2+Zfac*(C)));
     }
 
     // Term GX3
@@ -1752,7 +1829,7 @@ double TPitzer::lnGammaX( long int X, double DH_term )
         for( c=0; c<Nc; c++)
         {
             Psi1[a1][X][c]=Psi1[X][a1][c];
-            GX3a += mc[c]*Psi1[X][a1][c];
+            GX3a += pmc[c]*Psi1[X][a1][c];
         }
         z = za[X];
         z1 = za[a1];
@@ -1768,9 +1845,9 @@ double TPitzer::lnGammaX( long int X, double DH_term )
         {
             Q = 1;
         }
-        GX3 = GX3+Q*ma[a1]*(2.*Phi1+GX3a);
+        GX3 = GX3+Q*pma[a1]*(2.*Phi1+GX3a);
+        GX3a=0.0;
     }
-
 
     // Term GX4
     GX4 = 0.;
@@ -1779,7 +1856,7 @@ double TPitzer::lnGammaX( long int X, double DH_term )
         for( c1 = c+1; c1<Nc; c1++)
         {
             Psi[c1][c][X] = Psi[c][c1][X];
-            GX4 = GX4+(mc[c]*mc[c1]*Psi[c][c1][X]);
+            GX4 = GX4+(pmc[c]*pmc[c1]*Psi[c][c1][X]);
         }
     }
 
@@ -1790,7 +1867,7 @@ double TPitzer::lnGammaX( long int X, double DH_term )
         for( a1=0; a1<Na; a1++)
         {
             C = Cphi[c][a1]/(2.*sqrt(fabs(za[a1]*zc[c])));	 // Pitzer-Toughreact Report 2006, equation (A7)
-            GX5a = GX5a+(mc[c]*ma[a1]* C);
+            GX5a = GX5a+(pmc[c]*pma[a1]* C);
         }
     }
     GX5 = fabs(za[X])*GX5a;
@@ -1798,13 +1875,13 @@ double TPitzer::lnGammaX( long int X, double DH_term )
     // Term GX6
     GX6a = 0.;
     for( n=0; n<Nn; n++)
-        GX6a += mn[n]*Lam1[n][X];
+        GX6a += pmn[n]*Lam1[n][X];
     GX6 = 2.*GX6a;
 
     // Term GX
     GX = GX1+GX2+GX3+GX4+GX5+GX6;
 
-    //actcoeffX = exp(GX);
+    actcoeffX = exp(GX);
 
     return GX;
 }
@@ -1814,17 +1891,18 @@ double TPitzer::lnGammaX( long int X, double DH_term )
 double TPitzer::lnGammaN( long int N )
 {
     long int c, a;
-    double GN1, GN2, GN3, GN;//, actcoeffN;
+    double GN1, GN2, GN3, GN;//,
+    double actcoeffN;
 
     // Term GN1
     GN1 = 0.;
     for( a=0; a<Na; a++)
-        GN1 = GN1+(ma[a]*2.*Lam1[N][a]);
+        GN1 = GN1+(pma[a]*2.*Lam1[N][a]);
 
     // Term GN2
     GN2 = 0.;
     for( c=0; c<Nc; c++)
-        GN2 = GN2+(mc[c]*2.*Lam[N][c]);
+        GN2 = GN2+(pmc[c]*2.*Lam[N][c]);
 
     // Term GN3
     GN3 = 0.;
@@ -1832,14 +1910,14 @@ double TPitzer::lnGammaN( long int N )
     {
         for( a=0; a<Na; a++)
         {
-            GN3 = GN3+(mc[c]*ma[a]*Zeta[N][c][a]);
+            GN3 = GN3+(pmc[c]*pma[a]*Zeta[N][c][a]);
         }
     }
 
     // Term GN
     GN = GN1+GN2+GN3;
 
-    //actcoeffN = exp(GN);
+    actcoeffN = exp(GN);
 
   return GN;
 }
@@ -1958,19 +2036,19 @@ long int TPitzer::ExcessProp( double *Zex )
 
     for( M=0; M<Nc; M++ )
     {
-        catGex += ( mc[M]* ( 1. - OsmCoeffGex + lnGammaM( M , Aphi  ) ) );
+        catGex += ( pmc[M]* ( 1. - OsmCoeffGex + lnGammaM( M , Aphi  ) ) );
     }
 
     for( X=0; X<Na; X++ )
     {
-        aniGex += ( ma[X]* ( 1. - OsmCoeffGex + lnGammaX( X , Aphi  ) ) );
+        aniGex += ( pma[X]* ( 1. - OsmCoeffGex + lnGammaX( X , Aphi  ) ) );
     }
 
     if( Nn > 0 )
     {
         for( N=0; N<Nn; N++ )
         {
-            neutGex += ( mn[N]* ( 1. - OsmCoeffGex + lnGammaN( N ) ) );
+            neutGex += ( pmn[N]* ( 1. - OsmCoeffGex + lnGammaN( N ) ) );
         }
     }
 
@@ -1985,19 +2063,19 @@ long int TPitzer::ExcessProp( double *Zex )
 
     for( M=0; M<Nc; M++ )
     {
-        catSex += ( mc[M]* ( lnGammaM( M , dAphidT ) - OsmCoeffSex  ) );
+        catSex += ( pmc[M]* ( lnGammaM( M , dAphidT ) - OsmCoeffSex  ) );
     }
 
     for( X=0; X<Na; X++ )
     {
-        aniSex += ( ma[X]* ( lnGammaX( X , dAphidT ) - OsmCoeffSex ) );
+        aniSex += ( pma[X]* ( lnGammaX( X , dAphidT ) - OsmCoeffSex ) );
     }
 
     if( Nn > 0 )
     {
         for( N=0; N<Nn; N++ )
         {
-            neutSex += ( mn[N]* ( lnGammaN( N ) - OsmCoeffSex ) );
+            neutSex += ( pmn[N]* ( lnGammaN( N ) - OsmCoeffSex ) );
             // neutSex += ( mc[M]* ( lnGammaN( N ) - OsmCoeffSex ) );
         }
     }
@@ -2020,20 +2098,20 @@ long int TPitzer::ExcessProp( double *Zex )
 
     for( M=0; M<Nc; M++ )
     {
-        catCPex += ( mc[M]* ( lnGammaM( M , d2AphidT2 ) - OsmCoeffCPex  ) );
+        catCPex += ( pmc[M]* ( lnGammaM( M , d2AphidT2 ) - OsmCoeffCPex  ) );
     }
 
     for( X=0; X<Na; X++ )
     {
-        aniCPex += ( ma[X]* ( lnGammaX( X , d2AphidT2 ) - OsmCoeffCPex ) );
+        aniCPex += ( pma[X]* ( lnGammaX( X , d2AphidT2 ) - OsmCoeffCPex ) );
     }
 
     if( Nn > 0 )
     {
         for( N=0; N<Nn; N++ )
         {
-            neutCPex += ( mn[N]* ( lnGammaN( N ) - OsmCoeffCPex ) );
-            // neutCPex += ( mc[M]* ( lnGammaN( N ) - OsmCoeffCPex ) );
+            neutCPex += ( pmn[N]* ( lnGammaN( N ) - OsmCoeffCPex ) );
+            // neutCPex += ( pmc[M]* ( lnGammaN( N ) - OsmCoeffCPex ) );
         }
     }
 
@@ -2051,6 +2129,8 @@ long int TPitzer::ExcessProp( double *Zex )
     Zex[5] = Aex;
     Zex[6] = Uex;
 
+    // Restore old values into Bet1 and other
+    PTcalc( 0 );
     return 0;
 }
 
@@ -2501,7 +2581,7 @@ void TEUNIQUAC::Euniquac_test_out( const char *path )
 {
     long int ii;//, c, a, n;
 
-    // const ios::open_mode OFSMODE = ios::out � ios::app;
+    // const ios::open_mode OFSMODE = ios::out  ios::app;
     ofstream ff(path, ios::app );
     ErrorIf( !ff.good() , path, "Fileopen error");
 
@@ -2509,7 +2589,7 @@ void TEUNIQUAC::Euniquac_test_out( const char *path )
     for( ii=0; ii<NPar; ii++ )
         ff << aIP[ii] << "  ";
 
-    ff << endl << "Debye-H�ckel contribution to Activity Coefficients" << endl;
+    ff << endl << "Debye-Huckel contribution to Activity Coefficients" << endl;
     for( ii=0; ii<NComp; ii++ )
         ff << gammaDH[ii] << "  ";
 

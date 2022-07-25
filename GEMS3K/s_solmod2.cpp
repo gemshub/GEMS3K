@@ -25,14 +25,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <cstdio>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <memory>
-using namespace std;
 #include "s_solmod.h"
-#include "verror.h"
 #include "v_detail.h"
 
 //=======================================================================================================
@@ -143,9 +136,7 @@ long int TPRSVcalc::PureSpecies()
 
     if ( retCode )
     {
-        char buf[150];
-        sprintf(buf, "PRSV fluid: calculation of pure fugacity failed");
-                Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ", "PRSV fluid: calculation of pure fugacity failed");
     }
     return 0;
 }
@@ -209,9 +200,7 @@ long int TPRSVcalc::MixMod()
     }
     if ( iRet )
     {
-    	char buf[150];
-    	sprintf(buf, "PRSV fluid: calculation failed");
-    	Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ",  "PRSV fluid: calculation failed");
     }
     return iRet;
 }
@@ -227,9 +216,7 @@ long int TPRSVcalc::ExcessProp( double *Zex )
 
     if ( iRet )
     {
-    	char buf[150];
-    	sprintf(buf, "PRSV fluid: calculation failed");
-    	Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ",  "PRSV fluid: calculation failed");
     }
 
     Ars = Grs - Vrs*Pbar;
@@ -1043,9 +1030,7 @@ long int TCGFcalc::PureSpecies()
 
 	if ( retCode )
 	{
-		char buf[150];
-		sprintf(buf, "CG fluid: calculation of pure fugacity failed");
-		Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ", "CG fluid: calculation of pure fugacity failed");
 	}
 	return 0;
 }
@@ -1091,9 +1076,7 @@ long int TCGFcalc::MixMod()
 		CGActivCoefPT( aX, EoSparam, FugCoefs, NComp, Pbar, Tk, roro );  // changed, 21.06.2008 (TW)
 		if (roro <= 0. )
 		{
-			char buf[150];
-			sprintf(buf, "CG fluid: bad calculation of density ro= %lg", roro);
-			Error( "E71IPM IPMgamma: ",  buf );
+            Error( "E71IPM IPMgamma: ", std::string("CG fluid: bad calculation of density ro= ")+std::to_string(roro));
 		}
 
 		// Phase volume of the fluid in cm3 (not needed any more?)
@@ -1128,9 +1111,7 @@ long int TCGFcalc::ExcessProp( double *Zex )
 		CGActivCoefPT( aX, EoSparam, FugCoefs, NComp, Pbar, Tk, roro );  // changed, 21.06.2008 (TW)
 		if (roro <= 0. )
 		{
-			char buf[150];
-			sprintf(buf, "CG fluid: bad calculation of density ro= %lg", roro);
-			Error( "E71IPM IPMgamma: ",  buf );
+            Error( "E71IPM IPMgamma: ", std::string("CG fluid: bad calculation of density ro= ")+std::to_string(roro));
 		}
 
 		// calculate residual functions
@@ -2185,8 +2166,8 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
 
      if ( i==FIRSTSEED || i==0 )
      {
-         printf( "Input pressure is too high!\n" );
-            // exit(1);
+         solmod_logger->error("Input pressure is too high!\n");
+         // exit(1);
          return (-1.0);
      }
      }
@@ -2566,9 +2547,7 @@ long int TSRKcalc::PureSpecies()
 
     if ( retCode )
     {
-        char buf[150];
-        sprintf(buf, "SRK fluid: calculation of pure fugacity failed");
-                                Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ",  "SRK fluid: calculation of pure fugacity failed");
     }
 
     return 0;
@@ -2632,9 +2611,7 @@ long int TSRKcalc::MixMod()
     }
     if ( iRet )
     {
-    	char buf[150];
-    	sprintf(buf, "SRK fluid: calculation failed");
-			Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ",  "SRK fluid: calculation failed");
     }
     return iRet;
 }
@@ -2650,9 +2627,7 @@ long int TSRKcalc::ExcessProp( double *Zex )
 
     if ( iRet )
     {
-    	char buf[150];
-    	sprintf(buf, "SRK fluid: calculation failed");
-    	Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ", "SRK fluid: calculation failed");
     }
 
 	Ars = Grs - Vrs*Pbar;
@@ -3370,9 +3345,7 @@ long int TPR78calc::PureSpecies()
 
     if ( retCode )
     {
-        char buf[150];
-        sprintf(buf, "PR78 fluid: calculation of pure fugacity failed");
-					Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ", "PR78 fluid: calculation of pure fugacity failed");
     }
 
     return 0;
@@ -3435,9 +3408,7 @@ long int TPR78calc::MixMod()
     }
     if ( iRet )
     {
-    	char buf[150];
-    	sprintf(buf, "PR78 fluid: calculation failed");
-			Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ", "PR78 fluid: calculation failed");
     }
     return iRet;
 }
@@ -3453,9 +3424,7 @@ long int TPR78calc::ExcessProp( double *Zex )
 
     if ( iRet )
     {
-    	char buf[150];
-    	sprintf(buf, "PR78 fluid: calculation failed");
-    	Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ", "PR78 fluid: calculation failed");
     }
 
 	Ars = Grs - Vrs*Pbar;
@@ -4203,9 +4172,7 @@ long int TCORKcalc::PureSpecies()
 
     if ( retCode )
     {
-            char buf[150];
-            sprintf(buf, "CORK fluid: calculation of pure fluid fugacity failed");
-                    Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ", "CORK fluid: calculation of pure fluid fugacity failed");
     }
 
     return 0;
@@ -4330,9 +4297,7 @@ long int TCORKcalc::ExcessProp( double *Zex )
 
     if ( iRet )
     {
-        char buf[150];
-        sprintf(buf, "CORK fluid: calculation failed");
-        Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ", "CORK fluid: calculation failed");
     }
 
     Ars = Grs - Vrs*Pbar;
@@ -5297,9 +5262,7 @@ long int TSTPcalc::PureSpecies()
 
     if ( iErr )
     {
-            char buf[150];
-            sprintf(buf, "STP fluid: calculation of pure fluid fugacity failed");
-                    Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ", "STP fluid: calculation of pure fluid fugacity failed");
     }
 
     return 0;
@@ -5419,9 +5382,7 @@ long int TSTPcalc::ExcessProp( double *Zex )
 
     if ( iErr )
     {
-        char buf[150];
-        sprintf(buf, "STP fluid: calculation failed");
-        Error( "E71IPM IPMgamma: ",  buf );
+        Error( "E71IPM IPMgamma: ", "STP fluid: calculation failed");
     }
 
     Ars = Grs - Vrs*Pbar;
