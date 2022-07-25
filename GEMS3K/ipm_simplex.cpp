@@ -40,7 +40,7 @@ void TMultiBase::AutoInitialApproximation( )
 {
     long int T,Q,*STR=0,*NMB=0;
     long int i,j,k;
-    double GZ,EPS,*DN=0,*DU=0,*AA=0,*B1=0;
+    double GZ,EPS,*DN=0,*DU=0,*AA1=0,*B1=0;
 
     try
     {  // Allocation of work arrays
@@ -79,10 +79,10 @@ void TMultiBase::AutoInitialApproximation( )
 
         // for(i=Q;i<Q+pm.N;i++) DU[i]=0.;
         // Allocation of arrays on T
-        AA= new double[T];
+        AA1= new double[T];
         STR= new long int[T];
         NMB= new long int[Q+1];
-        ErrorIf( !AA || !STR || !NMB, "AutoInitialApproximation()",
+        ErrorIf( !AA1 || !STR || !NMB, "AutoInitialApproximation()",
             "Memory allocation error #2");
         for( k=0; k<T; k++)
          STR[k] = 0;
@@ -99,7 +99,7 @@ void TMultiBase::AutoInitialApproximation( )
             if(fabs(pm.G[i])>1E-19)
             {
                 k++;
-                AA[k]=-pm.G[i];
+                AA1[k]=-pm.G[i];
                 NMB[i]=k+1;
             }
             else NMB[i]=k+2;
@@ -107,13 +107,13 @@ void TMultiBase::AutoInitialApproximation( )
                 if(fabs(*(pm.A+i*pm.N+j))>1E-19)
                 {
                     k++;
-                    AA[k]=*(pm.A+i*pm.N+j);
+                    AA1[k]=*(pm.A+i*pm.N+j);
                     STR[k]=j+1;
                 }
         }
         NMB[Q]=T+1;
         // Calling generic simplex solver
-        SolveSimplex(pm.N,Q,T,GZ,EPS,DN,DU,B1,pm.U,AA,STR,NMB);
+        SolveSimplex(pm.N,Q,T,GZ,EPS,DN,DU,B1,pm.U,AA1,STR,NMB);
 
         // unloading simplex solution into a copy of x vector
         for(i=0;i<pm.L;i++)
@@ -124,12 +124,14 @@ void TMultiBase::AutoInitialApproximation( )
         pm.FX = GX( 0.0 ); // calculation of initial G(X) value
         MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
 
-//        	for(long int i=0; i<pm.N; i++)
-//             cout << i << " C " << pm.C[i] << " B " << pm.B[i] << endl;
+        if(ipm_logger->should_log(spdlog::level::trace)) {
+            ipm_logger->trace("AutoInitialApproximation C = {}", to_string(pm.C, pm.N));
+            ipm_logger->trace("AutoInitialApproximation B = {}", to_string(pm.B, pm.N));
+        }
         // Deleting work arrays
         if( DN) delete[]DN;
         if( DU) delete[]DU;
-        if( AA) delete[]AA;
+        if( AA1) delete[]AA1;
         if( B1) delete[]B1;
         if( STR) delete[]STR;
         if( NMB) delete[]NMB;
@@ -138,7 +140,7 @@ void TMultiBase::AutoInitialApproximation( )
     {
         if( DN) delete[]DN;
         if( DU) delete[]DU;
-        if( AA) delete[]AA;
+        if( AA1) delete[]AA1;
         if( B1) delete[]B1;
         if( STR) delete[]STR;
         if( NMB) delete[]NMB;
@@ -149,7 +151,7 @@ void TMultiBase::AutoInitialApproximation( )
 /// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 ///  SPOS function
 //
-void TMultiBase::SPOS( double *P, long int STR[],long int NMB[],long int J,long int M, double AA[])
+void TMultiBase::SPOS( double *P, long int STR[],long int NMB[],long int J,long int M,double AA1[])
 {
     long int I,K;
     K=0;
@@ -157,7 +159,7 @@ void TMultiBase::SPOS( double *P, long int STR[],long int NMB[],long int J,long 
     {
         if( I==STR[NMB[J]+K-1])
         {
-            *(P+I)=AA[NMB[J]+K-1];
+            *(P+I)=AA1[NMB[J]+K-1];
             if( NMB[J]+K+1!=NMB[J+1])
                 K++;
         }
@@ -170,7 +172,7 @@ void TMultiBase::SPOS( double *P, long int STR[],long int NMB[],long int J,long 
 //
 void TMultiBase::START( long int T,long int *ITER,long int M,long int N,long int NMB[],
            double GZ,double EPS,long int STR[],long int *BASE, double B[],
-           double UND[],double UP[],double AA[],double *A, double *Q )
+           double UND[],double UP[],double AA1[],double *A, double *Q )
 {
     long int I,J;
 
@@ -188,7 +190,7 @@ void TMultiBase::START( long int T,long int *ITER,long int M,long int N,long int
             else if( UP[J]<0.)
                 Error("E00IPM: SolveSimplex()", "Inconsistent LP problem (negative UP[J] value(s) in START()) ");
         }
-        SPOS(Q, STR, NMB, J, M, AA);
+        SPOS(Q, STR, NMB, J, M, AA1);
         for( I=0;I<M;I++)
             B[I]-=Q[I+1]*UND[J];
     }
@@ -199,7 +201,7 @@ void TMultiBase::START( long int T,long int *ITER,long int M,long int N,long int
             B[I]=fabs(B[I]);
             for( J=0;J<T;J++)
                 if(STR[J]==I)
-                    AA[J]=-AA[J];
+                    AA1[J]=-AA1[J];
         }
     }
     *A=0.;
@@ -221,7 +223,7 @@ void TMultiBase::START( long int T,long int *ITER,long int M,long int N,long int
 //
 void TMultiBase::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,long int *J0,
                   long int *Z,long int STR[], long int NMB[], double UP[],
-                  double AA[], double *A)
+                  double AA1[], double *A)
 {
     long int I,J,J1;
     double MAX,A1;
@@ -232,7 +234,7 @@ void TMultiBase::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVE
     MAX=0.;
     for( J=J1+1;J<=N;J++)
     {
-        SPOS( P, STR, NMB, J-1, M, AA);
+        SPOS( P, STR, NMB, J-1, M, AA1);
         A1=-P[0];
         for( I=1;I<=M;I++)
             A1+=P[I]*(*(A+I));
@@ -259,7 +261,7 @@ MK3:
 
     for( J=1;J<J1;J++)
     {
-        SPOS(P, STR, NMB, J-1, M, AA);
+        SPOS(P, STR, NMB, J-1, M, AA1);
         A1=-P[0];
         for( I=1;I<=M;I++)
             A1+=P[I]*(*(A+I));
@@ -298,7 +300,7 @@ MK4:
 ///  WORK function
 //
 void TMultiBase::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,long int *ITER,
-                   long int M, long int STR[],long int NMB[],double AA[],
+                   long int M, long int STR[],long int NMB[],double AA1[],
                    long int BASE[],long int *UNO,double UP[],double *A,double Q[])
 {
     double MIM,A1;
@@ -309,7 +311,7 @@ void TMultiBase::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *
     *UNO=0;
     *ITER=*ITER+1;
     J=*J0-1;
-    SPOS(P, STR, NMB, J, M, AA);
+    SPOS(P, STR, NMB, J, M, AA1);
     for( I=0;I<=M;I++)
     {
         Q[I]=0.;
@@ -393,7 +395,7 @@ void TMultiBase::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *
 //
 void TMultiBase::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
                   long int BASE[],double UND[],double UP[],double U[],
-                  double AA[],double *A,double Q[],long int * /*ITER*/)
+                  double AA1[],double *A,double Q[],long int * /*ITER*/)
 {
     long int /* K,*/I,J;
     double *P;
@@ -415,7 +417,7 @@ void TMultiBase::FIN(double EPS,long int M,long int N,long int STR[],long int NM
     Q[0]=0.;
     for( J=1;J<=N;J++)
     {
-        SPOS( P, STR, NMB, J-1, M, AA);
+        SPOS( P, STR, NMB, J-1, M, AA1);
         UP[J-1]+=UND[J-1];
         for( I=0;I<=M;I++)
             Q[I]+=UP[J-1]*P[I];
@@ -449,7 +451,7 @@ void TMultiBase::FIN(double EPS,long int M,long int N,long int STR[],long int NM
 //
 void TMultiBase::SolveSimplex(long int M, long int N, long int T, double GZ, double EPS,
                       double *UND, double *UP, double *B, double *U,
-                      double *AA, long int *STR, long int *NMB )
+                      double *AA1, long int *STR, long int *NMB )
 {
     long int IT=200,I0=0,J0=0,Z,UNO,OPT=0,ITER, i;
     double LEVEL;
@@ -467,14 +469,14 @@ void TMultiBase::SolveSimplex(long int M, long int N, long int T, double GZ, dou
         fillValue(BASE, 0L, (M) );
 
         LEVEL=GZ;
-        START( T, &ITER, M, N, NMB, GZ, EPS, STR, BASE, B,  UND, UP, AA, A, Q );
+        START( T, &ITER, M, N, NMB, GZ, EPS, STR, BASE, B,  UND, UP, AA1, A, Q );
 
         for( i=0; i<IT; i++ )   // while(1) fixed  03.11.00
         {
-            NEW( &OPT, N, M,EPS, &LEVEL, &J0, &Z, STR, NMB, UP, AA, A);
+            NEW( &OPT, N, M,EPS, &LEVEL, &J0, &Z, STR, NMB, UP, AA1, A);
             if( OPT)
                 goto FINISH;  // Converged
-            WORK( GZ, EPS, &I0, &J0, &Z, &ITER, M, STR, NMB, AA, BASE, &UNO, UP, A, Q);
+            WORK( GZ, EPS, &I0, &J0, &Z, &ITER, M, STR, NMB, AA1, BASE, &UNO, UP, A, Q);
             if( UNO)
                 goto FINISH; // Solution at boundary of the constraints polyhedron
         }
@@ -483,7 +485,7 @@ void TMultiBase::SolveSimplex(long int M, long int N, long int T, double GZ, dou
          Error( "E01IPM: SolveSimplex()",
              "LP solution cannot be obtained with sufficient precision" );
         }
-FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);
+FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA1, A, Q, &ITER);
         delete[] A;
         delete[] Q;
         delete[] BASE;
@@ -518,7 +520,7 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
   pm.ITF = pm.ITG = 0;
 
  // New: Run of TKinMet class library
-// cout << "kMM: " << pm.pKMM << "  ITau: " << pm.ITau << "  kTau: " << pm.kTau << "  kdT: " << pm.kdT << endl;
+  ipm_logger->trace("kMM: {}  ITau: {}   kTau: {}   kdT: {}", pm.pKMM, pm.ITau, pm.kTau, pm.kdT);
   if( pm.pKMM < 2 )
   {
     if( pm.ITau < 0 || pm.pKMM != 1 )
@@ -812,42 +814,43 @@ void TMultiBase::InitalizeGEM_IPM_Data() // Reset internal data formerly MultiIn
    RescaleToSize( true );  // Added to set default cutoffs/inserts 30.08.2009 DK
 
    if(  pm.pNP )
-   {  //  Smart Initial Approximation mode
+    {  //  Smart Initial Approximation mode
+       long int j,k;
 
        loadData( false );  // unpack SysEq record into MULTI
 
-       bool AllPhasesPure = true;   // Added by DK on 09.03.2010
-       // checking if all phases are pure
-       for( long int k=0; k < pm.FI; k++ )
-           if( pm.L1[k] > 1 )
-               AllPhasesPure = false;
+     bool AllPhasesPure = true;   // Added by DK on 09.03.2010
+     // checking if all phases are pure
+     for( k=0; k < pm.FI; k++ )
+     if( pm.L1[k] > 1 )
+        AllPhasesPure = false;
 
-       for(long int j=0; j< pm.L; j++ )
-           pm.X[j] = pm.Y[j];
-       //       pm.IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
-       TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-       CalculateConcentrations( pm.X, pm.XF, pm.XFA);  // 13.03.2008  DK
+     for( j=0; j< pm.L; j++ )
+         pm.X[j] = pm.Y[j];
+//       pm.IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
+      TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+      CalculateConcentrations( pm.X, pm.XF, pm.XFA);  // 13.03.2008  DK
        // test multicomponent phases and load data for mixing models
        if( pm.FIs && AllPhasesPure == false )
        {
            // Load activity coeffs for phases-solutions
-           int k, jb, je=0;
-           for( k=0; k<pm.FIs; k++ )
-           { // loop on solution phases
-               jb = je;
-               je += pm.L1[k];
-               // Load activity coeffs for phases-solutions
-               for(auto j=jb; j< je; j++ )
-               {
-                   pm.lnGmo[j] = pm.lnGam[j];
-                   if( fabs( pm.lnGam[j] ) <= 84. )
-                       //                pm.Gamma[j] = exp( pm.lnGam[j] );
-                       pm.Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
-                   else pm.Gamma[j] = 1.0;
-               } // j
-           }  // k
+         int jb, je=0;
+         for( int kk=0; kk<pm.FIs; kk++ )
+         { // loop on solution phases
+            jb = je;
+            je += pm.L1[kk];
+            // Load activity coeffs for phases-solutions
+            for( j=jb; j< je; j++ )
+            {
+               pm.lnGmo[j] = pm.lnGam[j];
+               if( fabs( pm.lnGam[j] ) <= 84. )
+      //                pm.Gamma[j] = exp( pm.lnGam[j] );
+                      pm.Gamma[j] = PhaseSpecificGamma( j, jb, je, kk, 0 );
+               else pm.Gamma[j] = 1.0;
+             } // j
+          }  // kk
        }
-   }
+    }
 }
 
 void TMultiBase::multiConstInit_PN()
@@ -863,29 +866,29 @@ void TMultiBase::MultiConstInit() // from MultiRemake
 {
    // const BASE_PARAM *pa_p = pa_p_ptr();
 
-    pm.FI1 = 0;
-    pm.FI1s = 0;
-    pm.FI1a = 0;
-    pm.ITF = 0; pm.ITG = 0;
-    pm.PD =pa_p_ptr()->PD;
-    pm.Ec = pm.K2 = pm.MK = 0;
-    pm.W1 = 0;
-    pm.is = 0;
-    pm.js = 0;
-    pm.next  = 0;
-    pm.ln5551 = log( H2O_mol_to_kg );             // constant corrected 30.08.2008
-    pm.lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
-    pm.logXw = -16.;
-    pm.logYFk = -9.;
-    pm.DXM = pa_p_ptr()->DK;
+  pm.FI1 = 0;
+  pm.FI1s = 0;
+  pm.FI1a = 0;
+  pm.ITF = 0; pm.ITG = 0;
+  pm.PD = pa_p_ptr()->PD;
+  pm.Ec = pm.K2 = pm.MK = 0;
+  pm.W1 = 0;
+  pm.is = 0;
+  pm.js = 0;
+  pm.next  = 0;
+  pm.ln5551 = log( H2O_mol_to_kg );             // constant corrected 30.08.2008
+  pm.lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
+  pm.logXw = -16.;
+  pm.logYFk = -9.;
+  pm.DXM = pa_p_ptr()->DK;
 
-    //  ???????
-    pm.FX = 7777777.;
-    if( pm.pH < -15. || pm.pH > 16.  )   // Check for trash in pH - bugfix 19.06.2013
-        pm.pH = pm.Eh = pm.pe = 0.0;
-    pm.YMET = 0;                      // always 0.0 ????
-    pm.PCI = 1.0;
-    pm.FitVar[4] = 1.0;
+  //  ???????
+  pm.FX = 7777777.;
+  if( pm.pH < -15. || pm.pH > 16.  )   // Check for trash in pH - bugfix 19.06.2013
+      pm.pH = pm.Eh = pm.pe = 0.0;
+  pm.YMET = 0;                      // always 0.0 ????
+  pm.PCI = 1.0;
+  pm.FitVar[4] = 1.0;
 
     multiConstInit_PN();
 }
@@ -893,14 +896,14 @@ void TMultiBase::MultiConstInit() // from MultiRemake
 /// Calculation by IPM (internal step initialization)
 void TMultiBase::GEM_IPM_Init()
 {
-   int i,j;
+   int i,j,k;
 
    for( i=0; i<pm.N; i++ )
      pm.Uefd[i] = 0.;
 
    bool AllPhasesPure = true;   // Added by DK on 09.03.2010
   // checking if all phases are pure
-  for(int k=0; k < pm.FI; k++ )
+  for( k=0; k < pm.FI; k++ )
     if( pm.L1[k] > 1 )
         AllPhasesPure = false;
 
@@ -937,23 +940,24 @@ void TMultiBase::GEM_IPM_Init()
     {
       GEM_IPM_Init_gui1();
 
-      // Calc Eh, pe, pH,and other stuff
-      if( pm.E && pm.LO && pm.pNP )
+      
+        // Calc Eh, pe, pH,and other stuff
+       if( pm.E && pm.LO && pm.pNP )
        {
             CalculateConcentrations( pm.X, pm.XF, pm.XFA);
             IS_EtaCalc();
             if( pm.Lads )  // Calling this only when sorption models are present
             {
-               int k, jb, je=0;
-               for( k=0; k<pm.FIs; k++ )
+               int jb, je=0;
+               for(int kk=0; kk<pm.FIs; kk++ )
                { // loop on solution phases
                   jb = je;
-                  je += pm.L1[k];
-                  if( pm.PHC[k] == PH_POLYEL || pm.PHC[k] == PH_SORPTION )
+                  je += pm.L1[kk];
+                  if( pm.PHC[kk] == PH_POLYEL || pm.PHC[kk] == PH_SORPTION )
                   {
-                       if( pm.PHC[0] == PH_AQUEL && pm.XF[k] > pm.DSM
+                       if( pm.PHC[0] == PH_AQUEL && pm.XF[kk] > pm.DSM
                            && (pm.XFA[0] > pm.ScMinM && pm.XF[0] > pm.XwMinM )) // fixed 30.08.2009 DK
-                           GouyChapman( jb, je, k );  // getting PSIs - electrical potentials on surface planes
+                           GouyChapman( jb, je, kk );  // getting PSIs - electrical potentials on surface planes
                   }
                }
            }
@@ -975,6 +979,7 @@ void TMultiBase::GEM_IPM_Init()
   GEM_IPM_Init_gui2();
 }
 
+
 TSolMod * TMultiBase::pTSolMod (int xPH){
     return this->phSolMod[xPH];
 }
@@ -985,9 +990,7 @@ TSolMod * TMultiBase::pTSolMod (int xPH){
 //
 void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 {
-  long int j, jj, k, xTP, jb, je=0;
-  double Go, Gg=0., Ge=0., Vv, h0=0., S0 = 0., Cp0= 0., a0 = 0., u0 = 0.;
-  double TK, P, PPa;
+    double TK, PPa;
 
   const TNode* na = node1;
   if( aNa != nullptr )
@@ -996,156 +999,199 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
   TK =  na->cTK();
   PPa = na->cP();
 
-  DATACH  *dCH = na->pCSD();
-  P = PPa/bar_to_Pa;
 
-  if( dCH->nTp <1 || dCH->nPp <1 || na->check_TP( TK, PPa ) == false )
-  {
-          char buff[256];
-          sprintf( buff, " Temperature %g or pressure %g out of range, or no T/D data are provided\n",
-                          TK, PPa );
-          Error( "DCLoadThermodynamicData(): " , buff );
-      return;
-  }
-
- pm.T = pm.Tc = TK;
- pm.TC = pm.TCc = TK-C_to_K;
- if( P < 1e-5 )
-  { // Pressure at saturated H2O vapour at given temperature
-     long int xT = na->check_grid_T(TK);
-     if(xT>= 0)
-       P = dCH->Psat[xT]/bar_to_Pa;
-     else
-       P =  LagranInterp( &PPa, dCH->TKval, dCH->Psat, PPa, TK, dCH->nTp, 1,6 )/bar_to_Pa;
- }
- pm.P = pm.Pc = P;
- pm.RT = R_CONSTANT * pm.Tc;
- pm.FRT = F_CONSTANT/pm.RT;
- pm.lnP = log( P );
-
- xTP = na->check_grid_TP( TK, PPa );
-
- for( k=0; k<5; k++ )
-   {
-     jj =  k * na->gridTP();
-     if( xTP >= 0 )
-      {
-       pm.denW[k] = dCH->denW[jj+xTP]/1e3;
-       pm.epsW[k] = dCH->epsW[jj+xTP];
-       pm.denWg[k] = dCH->denWg[jj+xTP]/1e3;
-       pm.epsWg[k] = dCH->epsWg[jj+xTP];
-      }
-     else
-     {
-       pm.denW[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->denW+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp,6 )/1e3;// from test denW enough
-       pm.epsW[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->epsW+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp,5 );// from test epsW enough
-       pm.denWg[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->denWg+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp,5 )/1e3;
-       pm.epsWg[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->epsWg+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp,5 );
-     }
-  }
-
- long int xVol =  getXvolume();
-
- for( k=0; k<pm.FI; k++ )
- {
-   jb = je;
-   je += pm.L1[k];
-   // load t/d data from DC - to be extended for DCH->H0, DCH->S0, DCH->Cp0, DCH->DD
-   // depending on the presence of these arrays in DATACH and Multi structures
-    for( j=jb; j<je; j++ )
+#ifdef USE_THERMOFUN
+    // try generate thermodynamic data from ThermoEngine
+    if( !na->load_all_thermodynamic_from_thermo( TK, PPa ))
+#endif
     {
-      jj =  j * na->gridTP();
-      if( xTP >= 0 )
-      {
-        Go = dCH->G0[ jj+xTP];
-        Vv = dCH->V0[ jj+xTP]*1e5;
-        if( dCH->S0 ) S0 = dCH->S0[ jj+xTP];
-        if( dCH->H0 ) h0 = dCH->H0[ jj+xTP];
-        if( dCH->Cp0 ) Cp0 = dCH->Cp0[ jj+xTP];
-        if( dCH->A0 ) a0 = dCH->A0[ jj+xTP];
-        if( dCH->U0 ) h0 = dCH->U0[ jj+xTP];
-      }
-     else
-     {
-       Go = LagranInterp( dCH->Pval, dCH->TKval, dCH->G0+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp, 6 ); // from test G0[Ca+2] enough
-       Vv = LagranInterp( dCH->Pval, dCH->TKval, dCH->V0+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp, 5 )*1e5;
-       if( dCH->S0 ) S0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->S0+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp, 4 ); // from test S0[Ca+2] enough
-       if( dCH->H0 ) h0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->H0+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp,5 );
-       if( dCH->Cp0 ) Cp0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->Cp0+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp, 3 ); // from test Cp0[Ca+2] not more
-       if( dCH->A0 ) a0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->A0+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp,5 );
-       if( dCH->U0 ) u0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->U0+jj,
-                          PPa, TK, dCH->nTp, dCH->nPp,5 );
-     }
-//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
-//      if( TSyst::sm->GetSY()->Guns )  // This is used mainly in UnSpace calculations
-//             Gg = TSyst::sm->GetSY()->Guns[pm.muj[j]];    // User-set increment to G0 from project system
-// // SDGEX     if( syp->GEX && syp->PGEX != S_OFF )   // User-set increment to G0 from project system
-// //            Ge = syp->GEX[pm.muj[j]];     //now Ge is integrated into pm.G0 (since 07.03.2008) DK
-//#else
-      if( pm.tpp_G )
-             pm.tpp_G[j] = Go;
-      if( pm.Guns )
-             Gg = pm.Guns[j];
-      else
-             Gg = 0.;
+        load_all_thermodynamic_from_grid(na, TK, PPa );
+    }
+    pm.pTPD = 2;
+}
 
-      Ge = 0.;
-//#endif
-      pm.G0[j] = ConvertGj_toUniformStandardState( Go+Gg+Ge, j, k ); // formerly Cj_init_calc()
-      // Inside this function, pm.YOF[k] can be added!
 
-//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
-//     if( TMTparm::sm->GetTP()->PtvVm != S_ON )
-//        pm.Vol[j] = 0.;
-//     else
-//#endif
-     switch( pm.PV )
-     { // put molar volumes of components into A matrix or into the vector of molar volumes
-       // to be checked!
-       case VOL_CONSTR:
-//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
-//          if( TSyst::sm->GetSY()->Vuns )
-//             Vv += TSyst::sm->GetSY()->Vuns[j];
-//#else
-         if( pm.Vuns )
-            Vv += pm.Vuns[j];
-//#endif
-         if( xVol >= 0 )
-            pm.A[j*pm.N+xVol] = Vv;
-          [[fallthrough]];
-       case VOL_CALC:
-       case VOL_UNDEF:
-//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
-//         if( TSyst::sm->GetSY()->Vuns )
-//            Vv += TSyst::sm->GetSY()->Vuns[j];
-//#else
-         if( pm.tpp_Vm )
-               pm.tpp_Vm[j] = Vv;
-         if( pm.Vuns )
-               Vv += pm.Vuns[j];
-//#endif
-           pm.Vol[j] = Vv  * 10.;
-           break;
-     }
-     if( pm.S0 ) pm.S0[j] = S0;
-     if( pm.H0 ) pm.H0[j] = h0;
-     if( pm.Cp0 ) pm.Cp0[j] = Cp0;
-     if( pm.A0 ) pm.A0[j] = a0;
-     if( pm.U0 ) pm.U0[j] = u0;
+/// Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
+void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double PPa )
+{
+    long int j, jj, k, xTP, jb, je=0;
+    double Go, Gg=0., Ge=0., Vv, h0=0., S0 = 0., Cp0= 0., a0 = 0., u0 = 0.;
+    double P = PPa/bar_to_Pa;
+    DATACH  *dCH = aNa->pCSD();
 
- }  // j
-} // k
- pm.pTPD = 2;
+    ipm_logger->info("Calc Lookup T: {}  P: {}", TK, PPa);
+    if( dCH->nTp <1 || dCH->nPp <1 || aNa->check_TP( TK, PPa ) == false )
+    {
+        Error("load_all_thermodynamic_from_grid: ",
+               std::string(" Temperature ")+std::to_string(TK)+" or pressure "+
+               std::to_string(PPa)+" out of range, or no T/D data are provided" );
+        return;
+    }
+
+    pm.T = pm.Tc = TK;
+    pm.TC = pm.TCc = TK-C_to_K;
+    pm.Pc = P;
+    if( P < 1e-5 )
+    { // Pressure at saturated H2O vapour at given temperature
+        long int xT = aNa->check_grid_T(TK);
+        if(xT>= 0)
+            P = dCH->Psat[xT]/bar_to_Pa;
+        else
+            P =  LagranInterp( &PPa, dCH->TKval, dCH->Psat, PPa, TK, dCH->nTp, 1,6 )/bar_to_Pa;
+    }
+    pm.P = P;
+    pm.RT = R_CONSTANT * pm.Tc;
+    pm.FRT = F_CONSTANT/pm.RT;
+    pm.lnP = log( P );
+
+    xTP = aNa->check_grid_TP( TK, PPa );
+
+    for( k=0; k<5; k++ )
+    {
+        jj =  k * aNa->gridTP();
+        if( xTP >= 0 )
+        {
+            pm.denW[k] = dCH->denW[jj+xTP]/1e3;
+            pm.epsW[k] = dCH->epsW[jj+xTP];
+            pm.denWg[k] = dCH->denWg[jj+xTP]/1e3;
+            pm.epsWg[k] = dCH->epsWg[jj+xTP];
+        }
+        else
+        {
+            pm.denW[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->denW+jj,
+                                       PPa, TK, dCH->nTp, dCH->nPp,6 )/1e3;// from test denW enough
+            pm.epsW[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->epsW+jj,
+                                       PPa, TK, dCH->nTp, dCH->nPp,5 );// from test epsW enough
+            pm.denWg[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->denWg+jj,
+                                        PPa, TK, dCH->nTp, dCH->nPp,5 )/1e3;
+            pm.epsWg[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->epsWg+jj,
+                                        PPa, TK, dCH->nTp, dCH->nPp,5 );
+        }
+    }
+
+#ifdef  USE_THERMO_LOG
+    fstream f_log("thermodynamic-log-lookup.csv", ios::out/*|ios::app*/ );
+    f_log << "\nCalc ThermoEngine;T;" << TK << ";P;" << PPa << "\n";
+    f_log << "denW";
+    for( jj=0; jj<5; jj++)
+       f_log << ";" << floating_point_to_string(pm.denW[jj]);
+    f_log << "\nepsW";
+    for( jj=0; jj<5; jj++)
+       f_log << ";" << floating_point_to_string(pm.epsW[jj]);
+    f_log << "\ndenWg";
+    for( jj=0; jj<5; jj++)
+       f_log << ";" << floating_point_to_string(pm.denWg[jj]);
+    f_log << "\nepsWg";
+    for( jj=0; jj<5; jj++)
+       f_log << ";" << floating_point_to_string(pm.epsWg[jj]);
+#endif
+    long int xVol =  getXvolume();
+
+    for( k=0; k<pm.FI; k++ )
+    {
+        jb = je;
+        je += pm.L1[k];
+        // load t/d data from DC - to be extended for DCH->H0, DCH->S0, DCH->Cp0, DCH->DD
+        // depending on the presence of these arrays in DATACH and Multi structures
+        for( j=jb; j<je; j++ )
+        {
+            jj =  j * aNa->gridTP();
+            if( xTP >= 0 )
+            {
+                Go = dCH->G0[ jj+xTP];
+                Vv = dCH->V0[ jj+xTP]*1e5;
+                if( dCH->S0 ) S0 = dCH->S0[ jj+xTP];
+                if( dCH->H0 ) h0 = dCH->H0[ jj+xTP];
+                if( dCH->Cp0 ) Cp0 = dCH->Cp0[ jj+xTP];
+                if( dCH->A0 ) a0 = dCH->A0[ jj+xTP];
+                if( dCH->U0 ) h0 = dCH->U0[ jj+xTP];
+            }
+            else
+            {
+                Go = LagranInterp( dCH->Pval, dCH->TKval, dCH->G0+jj,
+                                   PPa, TK, dCH->nTp, dCH->nPp, 6 ); // from test G0[Ca+2] enough
+                Vv = LagranInterp( dCH->Pval, dCH->TKval, dCH->V0+jj,
+                                   PPa, TK, dCH->nTp, dCH->nPp, 5 )*1e5;
+                if( dCH->S0 ) S0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->S0+jj,
+                                                  PPa, TK, dCH->nTp, dCH->nPp, 4 ); // from test S0[Ca+2] enough
+                if( dCH->H0 ) h0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->H0+jj,
+                                                  PPa, TK, dCH->nTp, dCH->nPp,5 );
+                if( dCH->Cp0 ) Cp0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->Cp0+jj,
+                                                    PPa, TK, dCH->nTp, dCH->nPp, 3 ); // from test Cp0[Ca+2] not more
+                if( dCH->A0 ) a0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->A0+jj,
+                                                  PPa, TK, dCH->nTp, dCH->nPp,5 );
+                if( dCH->U0 ) u0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->U0+jj,
+                                                  PPa, TK, dCH->nTp, dCH->nPp,5 );
+            }
+#ifndef IPMGEMPLUGIN
+            if( TSyst::sm->GetSY()->Guns )  // This is used mainly in UnSpace calculations
+                Gg = TSyst::sm->GetSY()->Guns[pm.muj[j]];    // User-set increment to G0 from project system
+            // SDGEX     if( syp->GEX && syp->PGEX != S_OFF )   // User-set increment to G0 from project system
+            //            Ge = syp->GEX[pm.muj[j]];     //now Ge is integrated into pm.G0 (since 07.03.2008) DK
+#else
+            if( pm.tpp_G )
+                pm.tpp_G[j] = Go;
+            if( pm.Guns )
+                Gg = pm.Guns[j];
+            else
+                Gg = 0.;
+
+            Ge = 0.;
+#endif
+            pm.G0[j] = ConvertGj_toUniformStandardState( Go+Gg+Ge, j, k ); // formerly Cj_init_calc()
+            // Inside this function, pm.YOF[k] can be added!
+
+#ifndef IPMGEMPLUGIN
+            if( TMTparm::sm->GetTP()->PtvVm != S_ON )
+                pm.Vol[j] = 0.;
+            else
+#endif
+                switch( pm.PV )
+                { // put molar volumes of components into A matrix or into the vector of molar volumes
+                // to be checked!
+                case VOL_CONSTR:
+#ifndef IPMGEMPLUGIN
+                    if( TSyst::sm->GetSY()->Vuns )
+                        Vv += TSyst::sm->GetSY()->Vuns[j];
+#else
+                    if( pm.Vuns )
+                        Vv += pm.Vuns[j];
+#endif
+                    if( xVol >= 0 )
+                        pm.A[j*pm.N+xVol] = Vv;
+                    // [[fallthrough]];
+                case VOL_CALC:
+                case VOL_UNDEF:
+#ifndef IPMGEMPLUGIN
+                    if( TSyst::sm->GetSY()->Vuns )
+                        Vv += TSyst::sm->GetSY()->Vuns[j];
+#else
+                    if( pm.tpp_Vm )
+                        pm.tpp_Vm[j] = Vv;
+                    if( pm.Vuns )
+                        Vv += pm.Vuns[j];
+#endif
+                    pm.Vol[j] = Vv  * 10.;
+                    break;
+                }
+            if( pm.S0 ) pm.S0[j] = S0;
+            if( pm.H0 ) pm.H0[j] = h0;
+            if( pm.Cp0 ) pm.Cp0[j] = Cp0;
+            if( pm.A0 ) pm.A0[j] = a0;
+            if( pm.U0 ) pm.U0[j] = u0;
+
+#ifdef  USE_THERMO_LOG
+            f_log << "\n" << std::string(dCH->DCNL[j], 0, MaxDCN) << ";" << floating_point_to_string(Go)
+                   << ";" << floating_point_to_string(pm.G0[j])
+                   << ";" << floating_point_to_string(pm.Vol[j]);
+            if( dCH->S0 ) f_log << ";" << floating_point_to_string(pm.S0[j]);
+            if( dCH->H0 ) f_log << ";" << floating_point_to_string(pm.H0[j]);
+            if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pm.Cp0[j]);
+            if( dCH->A0 ) f_log << ";" << floating_point_to_string(pm.A0[j]);
+            if( dCH->U0 ) f_log << ";" << floating_point_to_string(pm.U0[j]);
+#endif
+        }  // j
+    } // k
 }
 
 

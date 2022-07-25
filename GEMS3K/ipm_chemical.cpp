@@ -27,11 +27,10 @@
 //-------------------------------------------------------------------
 //
 
-#include <iomanip>
-#include <algorithm>
+
 #include "ms_multi.h"
 #include "v_detail.h"
-// #define GEMITERTRACE
+#include "v_service.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculation of max.moles of surface species for SACT stabilization
@@ -139,11 +138,7 @@ void TMultiBase::XmaxSAT_IPM2()
                 if( xj0 < rIEPS )
                    xj0 = rIEPS;  // ensuring that it will not zero off
                 pm.DUL[j] = xj0;
-/*                if( pm.W1 != 1 && pm.IT > 0 && fabs( (pm.DUL[j] - oDUL)/pm.DUL[j] ) > 0.1 )
-                {
-cout << "XmaxSAT_IPM2 Comp. IT= " << pm.IT << " j= " << j << " oDUL=" << oDUL << " DUL=" << pm.DUL[j] << endl;
-                }
-*/                break;
+                break;
             case SAT_L_COMP:
             case SAT_QCA_NCOMP:
             case SAT_QCA1_NCOMP:
@@ -159,13 +154,7 @@ cout << "XmaxSAT_IPM2 Comp. IT= " << pm.IT << " j= " << j << " oDUL=" << oDUL <<
                  xj0 = fabs( pm.MASDJ[ja][PI_DEN] ) * XVk * Mm / 1e6
                       * pm.Nfsp[k][ist]; // in moles
                  pm.DUL[j] = xj0 - rIEPS;
-                 // Compare with old DUL from previous iteration!
-/*                if( pm.W1 != 1 && pm.IT > 0 && fabs( (pm.DUL[j] - oDUL)/pm.DUL[j] ) > 0.1 )
-                {
-cout << "XmaxSAT_IPM2 Ncomp IT= " << pm.IT << " j= " << j << " oDUL=" << oDUL << " DUL=" << pm.DUL[j] << endl;
-                }
-*/                break;
-
+                break;
             case SAT_SOLV:  // Neutral surface site (e.g. >O0.5H@ group)
                 rIEPS = pa_p_ptr()->IEPS;
                 XS0 = (std::max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
@@ -237,7 +226,7 @@ void TMultiBase::Set_DC_limits( bool InitState )
 {
     double XFL, XFU, XFS=0., XFM, MWXW, MXV, XL=0., XU=0.;
     long int jb, je, j,k, MpL;
-    char tbuf[150];
+    char tbuf[300];
 
     if( !pm.PLIM )
         return;  // no metastability limits to be set
@@ -502,7 +491,7 @@ if( k < pm.FIs )
                     XL = pm.DLL[j]*XFL*MWXW /
          TProfil::pm->MolWeight(pm.N, pm.Awt, pm.A+j*pm.N );
 
-#endif
+//#endif
                     break;
                 case CON_VOLFR:
                     XU = pm.DUL[j]*XFU*MXV/ pm.Vol[j];
@@ -820,10 +809,9 @@ TMultiBase::PrimalChemicalPotentials( double F[], double Y[], double YF[], doubl
             pm.YFk = YFA[k];
         if( Yf >= 1e6 )
         {                 // error - will result in zerodivide!
-           std::string pbuf(pm.SF[k],0,20);
-           char buf[200];
-           sprintf( buf, "Broken phase amount from primal approximation: Phase %s  Yf= %lg", pbuf.c_str(), Yf );
-           Error( "E13IPM: PrimalChemicalPotentials():", buf);
+           Error( "E13IPM: PrimalChemicalPotentials():",
+                  std::string("Broken phase amount from primal approximation: Phase "+
+                  char_array_to_string(pm.SF[k],20)+"  Yf= "+std::to_string(Yf)));
 //           Yf = pm.YFk;
         }
 //        if( pm.YFk > pm.lowPosNum*10. )
@@ -832,7 +820,11 @@ TMultiBase::PrimalChemicalPotentials( double F[], double Y[], double YF[], doubl
                         || ( pm.PHC[k] == PH_POLYEL && pm.YFk >= pm.ScMinM ) )
         {
             pm.logXw = log(pm.YFk);
-            NonLogTerm = 1.- pm.YFk / Yf;
+
+            if( pm.sMod[k][SPHAS_TYP] != SM_AQPITZ)
+            {
+               NonLogTerm = 1.- pm.YFk / Yf;
+            }
 #ifdef NOMUPNONLOGTERM
 NonLogTerm = 0.0;
 #endif
@@ -980,8 +972,8 @@ double TMultiBase::GX( double LM  )
 NEXT_PHASE:
         j = i;
     }  // k
-//cout << setprecision(16) << scientific << " LM " << LM << " GX  " <<  FX << endl;
-  return(FX);
+    ipm_logger->debug("GX  {}", FX);
+    return(FX);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1029,7 +1021,7 @@ case DC_SCM_SPECIES:
 //        if( pm.Pparc[j] != 1.0 && pm.Pparc[j] > 1e-30 )
 //           G += log( pm.Pparc[j] ); // log partial pressure/fugacity
 //        else
-               G += log( pm.Pc ); // log general pressure (changed 04.12.2006)
+               G += log( pm.P ); // log general pressure (changed 04.12.2006)
         }
         // non-electrolyte condensed mixtures
          [[fallthrough]];
@@ -1232,10 +1224,13 @@ void TMultiBase::KarpovsPhaseStabilityCriteria()
         if( pm.FIs && k<pm.FIs )
             pm.YFk = pm.YFA[k];
 //        if( pm.PHC[k] == PH_AQUEL ) {
-            if( pm.YFk > 1e-33 )   // amount of phase or carrier cannot be less than 1e-33 mol!
+         if( pm.YFk > 1e-33 )   // amount of phase or carrier cannot be less than 1e-33 mol!
             {
                pm.logXw = log(pm.YFk);
-               NonLogTerm = 1.- pm.YFk / YF;
+               if( pm.sMod[k][SPHAS_TYP] != SM_AQPITZ)
+               {
+                   NonLogTerm = 1.- pm.YFk / YF;
+               }
 #ifdef NOMUPNONLOGTERM
 NonLogTerm = 0.0;
 #endif
@@ -1776,7 +1771,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
        for(j=0;j<pm.L;j++)
           pm.Y[j]=pm.XY[j];
     }
-// cout << "CleanupStatus= " << CleanupStatus << endl;
+    ipm_logger->debug("CleanupStatus= {}", CleanupStatus);
     return status;
 }
 
@@ -1791,8 +1786,8 @@ void TMultiBase::StabilityIndexes( void )
     double lnPc = 0., Xw = 1., lnXw = 0., lnFugPur=0., YFk;
     bool fRestore; char sModPT = SM_UNDEF;
 
-    if( pm.Pc > 1e-29 )
-       lnPc = log( pm.Pc );
+    if( pm.P > 1e-29 )
+       lnPc = log( pm.P );
     if( pm.PHC[0] == PH_AQUEL && pm.YFA[0] >= pm.XwMinM  ) // number of moles of solvent
     {
         Xw = pm.YFA[0] / pm.YF[0];
@@ -1861,6 +1856,12 @@ else fRestore = true;
                   break;
              default:
                   break; // error in DC class code
+          }
+
+          // For IEEE-compatible type double, overflow is guaranteed if 709.8 < arg, and underflow is guaranteed if arg < -708.4
+          if( ln_ax_dual < -708.4 || ln_ax_dual >  709.8 ) {
+              Error( "E14IPM: StabilityIndexes():",
+                     std::string("For double overflow or underflow is guaranteed exp(")+to_string(ln_ax_dual)+").");
           }
           x_estimate = exp( ln_ax_dual )/ gamma_primal;   // estimate of DC concentration
           StabIndex += x_estimate;  // Increment to stability index

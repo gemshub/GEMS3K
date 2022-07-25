@@ -26,7 +26,6 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
 #include "ms_multi.h"
 
 //-  static double ICold=0.;
@@ -57,8 +56,10 @@ TMultiBase::CalculateKinMet( long int LinkMode  )
       ku = kue;
       ki = kie;
 
-//      for( j=jb; j<je; j++ )
-//cout << "LM: " << LinkMode << " k: " << k << " dul: " << pm.DUL[j] << " dll: " << pm.DLL[j] << endl;
+      if(gems_logger->should_log(spdlog::level::debug)) {
+          for(auto j=jb; j<je; j++ )
+              gems_logger->debug("LM = {}, k={}, j={}, dul={},  dll={}", LinkMode, k, j, pm.DUL[j], pm.DLL[j]);
+      }
 
    // Creating TKinMet instances for phases and passing data, if needed
    switch( LinkMode )
@@ -204,7 +205,7 @@ void TMultiBase::KM_Create( long int jb, long int k, long int kc, long int kp,
     if( phKinMet[k])
         if(  phKinMet[k]->testSizes( &kmd ) )
         {
-            phKinMet[k]->UpdatePT( pm.Tc, pm.Pc );
+            phKinMet[k]->UpdatePT( pm.Tc, pm.P );
             phKinMet[k]->UpdateTime( pm.kTau, pm.kdT );
             phKinMet[k]->UpdateFSA( pm.Aalp[k], pm.XF[k], pm.FWGT[k], pm.FVOL[k], pm.Falp[k],
                                     pm.PfFact[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh, PUL, PLL );
@@ -212,7 +213,7 @@ void TMultiBase::KM_Create( long int jb, long int k, long int kc, long int kp,
         }
 
     kmd.T_k_ = pm.Tc;     /// Temperature, K (initial)
-    kmd.P_bar_ = pm.Pc;   /// Pressure, bar (initial)
+    kmd.P_bar_ = pm.P;   /// Pressure, bar (initial)
     kmd.kTau_ = pm.kTau;  /// current time, s (initial)
     kmd.kdT_ = pm.kdT;    /// current time step (initial)
   //
@@ -336,15 +337,15 @@ TMultiBase::KM_ParPT( long int k, const char* kMod )
         {
             ErrorIf( !phKinMet[k], "KinMetParPT: ","Invalid index of phase");
             TMWReaKin* myKM = dynamic_cast<TMWReaKin*>(phKinMet[k]);
-             myKM->PTparam( pm.Tc, pm.Pc );
+             myKM->PTparam( pm.Tc, pm.P );
              break;
         }
         case KM_PRO_UPT_:
         {
             ErrorIf( !phKinMet[k], "KinMetParPT: ","Invalid index of phase");
             TUptakeKin* myKM = dynamic_cast<TUptakeKin*>(phKinMet[k]);
-            myKM->PTparam( pm.Tc, pm.Pc );
-            myKM->UptKinPTparam( pm.Tc, pm.Pc );
+            myKM->PTparam( pm.Tc, pm.P );
+            myKM->UptKinPTparam( pm.Tc, pm.P );
             break;
         }
         case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:

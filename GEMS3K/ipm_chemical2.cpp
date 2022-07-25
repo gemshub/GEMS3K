@@ -26,9 +26,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#include <iomanip>
-#include <cmath>
-#include <algorithm>
+
 #include "ms_multi.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -139,8 +137,8 @@ void TMultiBase::CalculateConcentrationsInPhase( double X[], double XF[], double
                case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:   // gases
                case DC_GAS_H2: case DC_GAS_N2:
                     pm.Y_la[j] = ln_to_lg * ( Muj - pm.G0[j] );
-                    if( pm.Pc > 1e-29 )
-                        pm.Y_la[j] += log10( pm.Pc );
+                    if( pm.P > 1e-29 )
+                        pm.Y_la[j] += log10( pm.P );
                     break;
                case DC_SOL_IDEAL: case DC_SOL_MINOR: case DC_SOL_MAJOR: case DC_SOL_MINDEP: case DC_SOL_MAJDEP:
                        case DC_SCM_SPECIES:
@@ -228,8 +226,8 @@ void TMultiBase::CalculateConcentrationsInPhase( double X[], double XF[], double
         case DC_GAS_N2:
             pm.FVOL[k] += pm.Vol[j]*X[j];
             pm.Y_la[j] = ln_to_lg * ( Muj - pm.G0[j] );
-            if( pm.Pc > 1e-9 )
-                pm.Y_la[j] += log10( pm.Pc );
+            if( pm.P > 1e-9 )
+                pm.Y_la[j] += log10( pm.P );
             break;
         case DC_SOL_IDEAL:
         case DC_SOL_MINOR:   //solution end member
@@ -379,7 +377,7 @@ void TMultiBase::CalculateConcentrations( double X[], double XF[], double XFA[])
                 if(pm.PHC[k] == PH_AQUEL ) // || pm.PHC[k] == PH_SORPTION ) corr. 06.10.10 DK
                    pm.Y_la[jj] += 1.74438;
                 if(pm.PHC[k] == PH_GASMIX || pm.PHC[k] == PH_PLASMA )
-                   pm.Y_la[jj] += log10( pm.Pc );
+                   pm.Y_la[jj] += log10( pm.P );
 //                pm.Fx[jj] *= pm.RT;     // el-chem potential
                 pm.lnGam[jj] = 0.0;
             }
@@ -462,8 +460,6 @@ void TMultiBase::CalculateConcentrations( double X[], double XF[], double XFA[])
         }
         // calculation of species concentrations in k-th phase
         CalculateConcentrationsInPhase( X, XF, XFA, Factor, MMC, Dsur, j, i, k );
-        //if( k == 0)
-        //cout << "Point !" << "X[0] " << setprecision(15)<< X[0] << " XF[0] " << XF[0] << " pm.Wx[0] " << pm.Wx[0] << endl;
 
 NEXT_PHASE:
         pm.VXc += pm.FVOL[k];
@@ -676,22 +672,19 @@ TMultiBase::GouyChapman(  long int, long int, long int k )
         // Limit maximum charge densities to prevent divergence
         if( fabs(XetaA[ist]) > 1.4 )
         {
-// cout << "EDL charge density A " << XetaA[ist] << " truncated to +- 0.7 C/m2" <<
-//        "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+            ipm_logger->debug("EDL charge density A {} truncated to +- 0.7 C/m2  IT={} k= {} ist= {}", XetaA[ist], pm.IT, k, ist);
             XetaA[ist] = XetaA[ist] < 0.0 ? -1.4: 1.4;
             status = 60;
         }
         if( fabs(XetaB[ist]) > 2.0 )
         {
-// cout << "EDL charge density B " << XetaB[ist] << " truncated to +- 1.7 C/m2" <<
-//        "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+            ipm_logger->debug("EDL charge density B {} truncated to +- 1.7 C/m2  IT={} k= {} ist= {}", XetaB[ist], pm.IT, k, ist);
             XetaB[ist] = XetaB[ist] < 0.0 ? -2.0: 2.0;
             status = 61;
         }
         if( fabs(XetaD[ist]) > 1.4 )
         {
-// cout << "EDL charge density D " << XetaD[ist] << " truncated to +- 0.7 C/m2" <<
-//        "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+            ipm_logger->debug("EDL charge density D {} truncated to +- 0.7 C/m2  IT={} k= {} ist= {}", XetaD[ist], pm.IT, k, ist);
             XetaD[ist] = XetaD[ist] < 0.0 ? -1.4: 1.4;
             status = 62;
         }
@@ -748,9 +741,8 @@ TMultiBase::GouyChapman(  long int, long int, long int k )
         }
 //        if( fabs( SigD ) > 1 )
 //        {
-//cout << "EDL charge density D " << SigD << " truncated to +- 1 C/m2" <<
-//        "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
-//            SigD = SigD < 0.0 ? -1.0: 1.0;
+//           ipm_logger->debug("EDL charge density D {} truncated to +- 1 C/m2  IT={} k= {} ist= {}", SigD, pm.IT, k, ist);
+//           SigD = SigD < 0.0 ? -1.0: 1.0;
 //        }
         // Gouy-Chapman equation
         // parameters of diffuse layer using [Damaskin, 1987,p.192-195]
@@ -771,7 +763,7 @@ TMultiBase::GouyChapman(  long int, long int, long int k )
 
         // SD: workaround because of problems with log argument
         f3 =  sqrt( 1.+Sig*Sig/(4.*A*A) ) - Sig/(2.*A);
-// std::cout<< f1  << ' ' << f3 << endl;
+        ipm_logger->trace(" f1={} f2={}", f1, f3);
         if( f3 < 1 )
         {
             f1 = exp( -3. * F2RT );
@@ -793,8 +785,7 @@ TMultiBase::GouyChapman(  long int, long int, long int k )
         // Truncating diffuse plane potential to avoid divergence
         if( fabs( PsiD ) > 0.4 )
         {
-// cout << "All EDL models: PsiD = " << PsiD << " truncated to +- 0.4 V" <<
-//      "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+            ipm_logger->debug("All EDL models: PsiD ={} truncated to +- 0.4 V IT={} k= {} ist= {}", PsiD, pm.IT, k, ist);
             PsiD = PsiD<0? -0.4: 0.4;
             status = 63;
         }
@@ -839,16 +830,14 @@ GEMU_CALC:
             PsiB = PsiD - SigDDL / pm.XcapB[k][ist];
             if( fabs( PsiB ) > 0.6)  // truncated B-plane potential
             {
-// cout << "EDL (MTL) PsiB = " << PsiB << " truncated to +- 0.6 V" <<
-//      "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+                ipm_logger->debug("EDL (MTL) PsiB = {} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 67;
             }
             PsiA = PsiB + SigA / pm.XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 )  // truncated 0 plane potential
             {
-// cout << "EDL (MTL) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
-//      "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+                ipm_logger->debug("EDL (MTL) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
                 PsiA = PsiA<0? -1.1: 1.1;
                 status = 68;
             }
@@ -859,16 +848,14 @@ GEMU_CALC:
             PsiB = PsiD - SigDDL / pm.XcapB[k][ist];
             if( fabs( PsiB ) > 0.6 )  // // truncated B-plane potential
             {
-// cout << "EDL (TLM) PsiB = " << PsiB << " truncated to +- 0.6 V" <<
-//      "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+                ipm_logger->debug("EDL (TLM) PsiB ={} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 69;
             }
             PsiA = PsiB + SigA / pm.XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 )  // truncated 0-plane potential
             {
-// cout << "EDL (TLM) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
-//      "  IT= " << k << " k= " << k << " ist= " << ist << endl;
+                ipm_logger->debug("EDL (TLM) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
                 PsiA = PsiA<0? -1.1: 1.1;
                 status = 70;
             }
@@ -877,25 +864,21 @@ GEMU_CALC:
             break;
         case SC_3LM: // Three-Layer Model [Hiemstra & van Riemsdijk 1996]
 //            PsiB = PsiD + SigD / pm.XcapB[k][ist];
-// cout << "EDL (3LM) PsiB(D) = " << PsiB << "  IT= " << pm.IT << " k= "
-// << k << " ist= " << ist << endl;
+            ipm_logger->debug("EDL (3LM) PsiB(D) ={} IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
             PsiB = PsiD + ( SigA + SigB ) / pm.XcapB[k][ist];  // Compare!
-// cout << "EDL (3LM) PsiB(AB) = " << PsiB << "  IT= " << pm.IT << " k= "
-// << k << " ist= " << ist << endl;
+            ipm_logger->debug("EDL (3LM) PsiB(AB) ={} IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
             if( fabs( PsiB ) > 0.6 )  // truncated B-plane potential
             {
-// cout << "EDL (3LM) PsiB = " << PsiB << " truncated to +- 0.6 V" <<
-//      "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+               ipm_logger->debug("EDL (3LM) PsiB ={} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 71;
             }
             PsiA = PsiB + SigA / pm.XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 )   // truncated 0-plane potential
             {
-// cout << "EDL (3LM) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
-//      "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
-                PsiA = PsiA<0? -1.1: 1.1;
-                status = 72;
+               ipm_logger->debug("EDL (3LM) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
+               PsiA = PsiA<0? -1.1: 1.1;
+               status = 72;
             }
             pm.XpsiA[k][ist] = PsiA;
             pm.XpsiB[k][ist] = PsiB;
@@ -904,16 +887,14 @@ GEMU_CALC:
             PsiB = PsiD;
             if( fabs( PsiB ) > 0.6 )  // truncated B-plane potential
             {
-//cout << "EDL (BSM) PsiB = " << PsiB << " truncated to +- 0.6 V" <<
-//      "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+               ipm_logger->debug("EDL (BSM) PsiB ={} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 73;
             }
             PsiA = PsiB + SigA / pm.XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 )  // truncated 0-plane potential
             {
-//cout << "EDL (BSM) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
-//      "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+                ipm_logger->debug("EDL (BSM) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
                 PsiA = PsiA<0? -1.1: 1.1;
                 status = 74;
             }
@@ -924,16 +905,14 @@ GEMU_CALC:
             PsiB = PsiD;
             if( fabs( PsiB ) > 0.6 )  // truncated B-plane potential
             {
-// cout << "EDL (MXC) PsiB = " << PsiB << " truncated to +- 0.6 V" <<
-//      "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+                ipm_logger->debug("EDL (MXC) PsiB ={} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 75;
             }
             PsiA = PsiB + SigA / pm.XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 ) // truncated 0-plane potential
             {
-// cout << "EDL (MXC) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
-//      "  IT= " << pm.IT << " k= " << k << " ist= " << ist << endl;
+                ipm_logger->debug("EDL (MXC) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
                 PsiA = PsiA<0? -1.1: 1.1;
                 status = 76;
             }
@@ -977,8 +956,6 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
     double XS0,  xj0, XVk, XSk, XSkC, xj, Mm, rIEPS, ISAT, XSs,
            SATst, xjn, q1, q2, aF, cN, eF, lnGamjo, lnDiff, lnFactor;
     const BASE_PARAM *pa_p = pa_p_ptr();
-
-    //cout << "Point 1 before " << "pm.lnGam[0] " << setprecision(15) << pm.lnGam[0] << " pm.lnGmo[0] " << pm.lnGmo[0] << endl;
 
     if( pm.XF[k] <= pm.DSM ) // No sorbent retained by the IPM - phase killed
         return status;
@@ -1372,9 +1349,7 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
             }
         }
     }  // j
-
-    //cout << "Point 1 after " << "pm.lnGam[0] " << setprecision(15) << pm.lnGam[0] << " pm.lnGmo[0] " << pm.lnGmo[0] << endl;
-    return status;
+   return status;
 }
 
 
