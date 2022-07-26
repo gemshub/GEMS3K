@@ -172,7 +172,7 @@ if( k < kin.FIs )
                     XL = kin.DLL[j]*XFL*MWXW /
          TProfil::pm->MolWeight(kin.N, kin.Awt, kin.A+j*kin.N );
 
-#endif
+//#endif
                     break;
                 case CON_VOLFR:
                     XU = kin.DUL[j]*XFU*MXV/ kin.Vol[j];
@@ -240,8 +240,10 @@ TKinetics::CalculateKinMet( long int LinkMode  )
       ku = kue;
       ki = kie;
 
-//      for( j=jb; j<je; j++ )
-//cout << "LM: " << LinkMode << " k: " << k << " dul: " << kin.DUL[j] << " dll: " << kin.DLL[j] << endl;
+      if(gems_logger->should_log(spdlog::level::debug)) {
+          for(auto j=jb; j<je; j++ )
+              gems_logger->debug("LM = {}, k={}, j={}, dul={},  dll={}", LinkMode, k, j, kin.DUL[j], kin.DLL[j]);
+      }
 
    // Creating TKinMet instances for phases and passing data, if needed
    switch( LinkMode )

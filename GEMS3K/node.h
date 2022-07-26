@@ -56,7 +56,6 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include <iostream>
 #include "ms_multi.h"
 #include "v_detail.h"
 // #include "allan_ipm.h"
@@ -64,6 +63,10 @@
 #include "databr.h"
 #include "activities.h"
 #include "gems3k_impex.h"
+
+#ifdef USE_THERMOFUN
+#include "ThermoFun/ThermoFun.h"
+#endif
 
 class TActivity;
 class TKinetics;
@@ -85,8 +88,12 @@ class TNode
 {
     friend class TNodeArray;
 
+    /// Default logger for TNode class
+    static std::shared_ptr<spdlog::logger> node_logger;
+
+
     /// Full name of the ipmlog file
-    std::string ipmlog_file_name;
+    //std::string ipmlog_file_name;
     /// Last error message logged to the ipmlog file
     std::string ipmlog_error;
 
@@ -98,7 +105,8 @@ class TNode
 
 protected:
 
-   std::string dbr_file_name;  ///< place for the *dbr. I/O file name
+   /// Place for the *dbr. I/O file name
+    std::string dbr_file_name;
 
    MULTI* pmm;  ///< \protected Pointer to GEM IPM work data structure (ms_multi.h)
    TMultiBase* multi = nullptr;     // GEM IPM3 implementation class
@@ -112,6 +120,10 @@ protected:
     DATABR* CNode;  ///< Pointer to a work node data bridge structure (node)
          ///< used for exchanging input data and results between FMT and GEM IPM
     ACTIVITY* AiP; ///< Pointer to DC activities in phases and related properties
+
+#ifdef USE_THERMOFUN
+    std::shared_ptr<ThermoFun::ThermoEngine> thermo_engine;
+#endif
 
     // These four values are set by the last GEM_run() call
     double CalcTime;  ///< \protected GEMIPM2 calculation time, s
@@ -136,6 +148,10 @@ protected:
 
     void databr_reset( DATABR *CNode, long int level=0 );
 
+    /// Deletes fields of DATABR structure indicated by data_BR_
+    /// and sets the pointer data_BR_ to NULL
+    DATABR* databr_free( DATABR* data_BR_ );
+
     // Binary i/o functions
     // including file i/o using GemDataStream class (with account for endianness)
       /// Writes CSD (DATACH structure) to a binary DCH file.
@@ -152,10 +168,10 @@ protected:
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
     template<typename TIO>
-    void datach_to_text_file( TIO& out_format, bool with_comments = true, bool brief_mode = false ) const;
+    void datach_to_text_file( TIO& out_format, bool use_thermofun, bool with_comments = true, bool brief_mode = false ) const;
     /// Reads CSD (DATACH structure) from a text DCH file
     template<typename TIO>
-    void datach_from_text_file( TIO& in_format );
+    void datach_from_text_file( TIO& in_format, bool use_thermofun );
     /// Writes work node (DATABR structure) to a text DBR file
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
@@ -214,6 +230,16 @@ protected:
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
     void  write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode ) const;
 
+    /// The export to ThermoFun JSON format file should include all IComp, DComp and ReacDC records
+    /// from the project database, not just the records needed for a particular system
+    /// (where some elements, DComps or ReacDCs can be switched off) as done in preparation of DCH lookup arrays.
+    ///  \param stream     stream to output json file
+    void  write_ThermoFun_format_stream( std::iostream& stream )
+    {
+#ifndef IPMGEMPLUGIN
+      profil->generate_ThermoFun_input_file_stream( stream );
+#endif
+    }
 
     // Methods to perform output to vtk files
 
@@ -240,13 +266,6 @@ protected:
     /// Reads node (work DATABR structure) data from other DBR.
     void databr_copy( DATABR* otherCNode );
 
-   /* alloc new memory
-    void allocNewDBR()
-    {
-        CNode = new DATABR;
-        databr_reset( CNode, 1 );
-        databr_realloc();
-    }*/
 
     /// Test to reload thermodynamic data from grid
     void CheckMtparam();
@@ -256,7 +275,6 @@ protected:
     virtual void init_into_gems3k();
 
 public:
-
 
 // Added by AL and DK in 2014-2018 as an alternative (more generic for the chemical system) Activity API
 
@@ -347,15 +365,20 @@ public:
 
     // long int updateKineticsMetastability( long int LinkMode );
 
-///#endif
 
-public:
+    void databr_free_internal(DATABR *CNode_);
+
+  /// Default logger for ipmLogFile
+  static std::shared_ptr<spdlog::logger> ipmlog_file;
 
 
   /// Constructor of the class instance in memory for standalone GEMS3K or coupled program
   TNode();
   TNode( const TNode& otherNode );
-  virtual ~TNode();      ///< destructor
+
+  /// Destructor
+  virtual ~TNode();
+
 
 // Typical sequence for using TNode class ----------------------------------
 /// (1) 
@@ -363,7 +386,8 @@ public:
 ///  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files 
 ///  in key-value, json or binary format. Parameters:
 ///  ipmfiles_lst_name - name of a text file that contains:
-///    " -j | -t |-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name>
+///    " -j | -t |-b <DCH_DAT file name> <IPM_DAT file name> [<>] <dataBR file name>
+///    or " -f <DCH_DAT file name> <IPM_DAT file name> <ThermoFun JSON format file> <dataBR file name>
 ///  dbfiles_lst_name - name of a text file that contains:
 ///    <dataBR  file name1>, ... , <dataBR file nameN> "
 ///    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
@@ -374,8 +398,10 @@ public:
 ///    node array. 
 ///  If -t flag or no flag is specified then all data files must be in key-value text 
 ///    (ASCII) format (and file names must have .dat extension);
-///  If -j flag is specified then all data files must be in JSON format (and file names 
+///  If -j and -f flag is specified then all data files must be in JSON format (and file names
 ///    must have .json extension);
+///  If -f flag is specified then the use of ThermoFun along with GEMS3K in place of the interpolation
+///  of lookup arrays for standard thermodynamic data for substances;
 ///  if -b flag is specified then all data files are assumed to be binary (little-endian)
 ///    files.
 ///  @returns:
@@ -422,7 +448,7 @@ public:
 
   /// Deletes fields of DATABR structure indicated by data_BR_
   /// and sets the pointer data_BR_ to NULL
-  DATABR* databr_free( DATABR* data_BR_ );
+  //DATABR* databr_free( DATABR* data_BR_ );
 
   /// Return current set name
   const std::string& input_set_name() const
@@ -771,7 +797,6 @@ long int GEM_step_MT( const long int step )
    {        return atp.get();       }
 
 ///#endif
-///
     // These methods get contents of fields in the work node structure
     double cTC() const     /// Get current node Temperature T, Celsius
     {  return CNode->TK-C_to_K;   }
@@ -1075,7 +1100,7 @@ long int GEM_step_MT( const long int step )
       /// \param xph is DBR phase index
       /// \return the current phase volume in moles or 0.0, if the phase mole amount is very close to zero.
        double  Ph_Moles( const long int xBR ) const; // Added for consistency on Oct 1, 2020
-       double  Ph_Mole( const long int xBR );  // obsolete, not recommended to use in new coupled codes
+       double  Ph_Mole( const long int xBR ) const; // obsolete, not recommended to use in new coupled codes
 
      /// Retrieves the phase mass in kg.
      /// Works for multicomponent and for single-component phases.
@@ -1400,16 +1425,6 @@ long int GEM_step_MT( const long int step )
     virtual void databr_to_vtk( std::fstream& ff, const char*name, double time, long int  cycle,
                               long int nFilds, long int (*Flds)[2]);
 
-    /// Get full name of the ipmlog file
-    const std::string& ipmLogFile() const {
-        return ipmlog_file_name;
-    }
-
-    /// Set full name of the ipmlog file
-    void setipmLogFile(const std::string& logFile) {
-        ipmlog_file_name = logFile;
-    }
-
     /// Get the last error message logged to the ipmlog file
     const std::string& ipmLogError() const {
         return ipmlog_error;
@@ -1419,6 +1434,12 @@ long int GEM_step_MT( const long int step )
     void clearipmLogError() {
         ipmlog_error.clear();
     }
+
+
+#ifdef USE_THERMOFUN
+    /// Generate thermodynamic data from ThermoEngine
+    bool load_all_thermodynamic_from_thermo( double TK, double PPa );
+#endif
 
 };
 

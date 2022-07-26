@@ -31,9 +31,7 @@
 #ifndef MS_MULTI_BASE_H
 #define MS_MULTI_BASE_H
 
-#include <iostream>
 #include <memory>
-#include <ctime>
 #include "m_const_base.h"
 #include "datach.h"
 // TSolMod header
@@ -111,7 +109,7 @@ struct BASE_PARAM
 typedef struct
 {  // MULTI is base structure to Project (local values)
     char
-    stkey[EQ_RKLEN+1],   ///< Record key identifying IPM minimization problem
+    stkey[EQ_RKLEN+5],   ///< Record key identifying IPM minimization problem
     // NV_[MAXNV], nulch, nulch1, ///< Variant Nr for fixed b,P,T,V; index in a megasystem
     PunE,         ///< Units of energy  { j;  J c C N reserved }
     PunV,         ///< Units of volume  { j;  c L a reserved }
@@ -533,8 +531,6 @@ enum IndexationSATX {
     XL_ST = 0, XL_EM = 1, XL_SI = 2, XL_SP = 3
 };
 
-//struct BASE_PARAM;
-//struct SPP_SETTING;
 class TProfil;
 class TNode;
 extern BASE_PARAM pa_p_;
@@ -542,54 +538,18 @@ extern BASE_PARAM pa_p_;
 // Data of MULTI
 class TMultiBase
 {
-///#ifdef IPMGEMPLUGIN 07/05/2020
-
     char PAalp_; ///< Flag for using (+) or ignoring (-) specific surface areas of phases
     char PSigm_; ///< Flag for using (+) or ignoring (-) specific surface free energies
 
-///#endif
+    /// Default logger for ipm chemical
+    static std::shared_ptr<spdlog::logger> ipm_logger;
 
 public:
 
     const TNode *node1;
 
     /// This allocation is used only in standalone GEMS3K
-    explicit TMultiBase( const TNode* na_ = nullptr )
-    {
-        pa_standalone.reset( new BASE_PARAM() );
-        *pa_standalone = pa_p_;
-
-        pmp = &pm;
-        node1 = na_; // parent
-
-        sizeN = 0;
-        AA1 = nullptr;
-        BB1 = nullptr;
-        arrL = nullptr;
-        arrAN = nullptr;
-
-        U_mean = nullptr;
-        U_M2 = nullptr;
-        U_CVo = nullptr;
-        U_CV = nullptr;
-        ICNud = nullptr;
-
-        sizeFIs = 0;
-        phSolMod = nullptr;
-        sizeFIa = 0;
-        phSorpMod = nullptr;
-        sizeFI = 0;
-        phKinMet = nullptr;
-
-///#ifdef IPMGEMPLUGIN 07/05/2020
-        pmp->Guns = nullptr;
-        pmp->Vuns = nullptr;
-        pmp->tpp_G = nullptr;
-        pmp->tpp_S = nullptr;
-        pmp->tpp_Vm = nullptr;
-///#endif
-        set_def();
-    }
+    explicit TMultiBase( const TNode* na_ = nullptr );
 
     virtual ~TMultiBase()
     {
@@ -598,16 +558,17 @@ public:
 
     virtual void multi_realloc( char PAalp, char PSigm );
     virtual void multi_kill();
-
-    MULTI* GetPM()
-    { return &pm; }
-
     virtual BASE_PARAM* pa_p_ptr() const
     {
         //return paTProfil1->p;
         return pa_standalone.get();
     }
 
+    MULTI* GetPM()
+    { return &pm; }
+
+    
+    virtual void set_def( int i=0);
     //void setPa( TProfil *prof);  ///?
     virtual long int testMulti( );
 
@@ -690,10 +651,7 @@ protected:
     MULTI *pmp;
     std::shared_ptr<BASE_PARAM> pa_standalone;
 
-    //SPP_SETTING *paTProfil1;
-
     // Internal arrays for the performance optimization  (since version 2.0.0)
-
     long int sizeN; /*, sizeL, sizeAN;*/
     double *AA1;
     double *BB1;
@@ -706,10 +664,9 @@ protected:
     void Free_compressed_xAN();
     void Free_internal();
 
-    // From here move to activities.h or node.h
+     // From here move to activities.h or node.h
     long int sizeFIs;     ///< current size of phSolMod
     TSolMod** phSolMod; ///< size current FIs - number of multicomponent phases
-
     void Alloc_TSolMod( long int newFIs );
     void Free_TSolMod();
 
@@ -742,12 +699,8 @@ protected:
     void Increment_uDD( long int r, bool trace = false );
     long int Check_uDD( long int mode, double DivTol, bool trace = false );
 
-    virtual void set_def( int i=0 );
-
     // empty functions for GUI level using
     virtual void loadData( bool ){}
-    virtual void GasParcP(){}
-    virtual void pm_GC_ods_link( long int /*k*/, long int /*jb*/, long int /*jpb*/, long int /*jdb*/, long int /*ipb*/ ){}
     virtual bool calculateActivityCoefficients_scripts( long int, long, long, long, long, long, double  )
     { return true; }
     virtual bool testTSyst( int ) const
@@ -897,12 +850,9 @@ protected:
     double GX( double LM  );
     void ConvertDCC();
     long int  getXvolume();
-    long int SpeciationCleanup( double AmountThreshold, double ChemPotDiffCutoff ); // added 25.03.10 DK
-    long int PhaseSelectionSpeciationCleanup( long int &k_miss, long int &k_unst, long int rLoop );
-    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
 
     // ipm_chemical2.cpp
-
+    virtual void GasParcP(){}
     void phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] );
     void phase_bfc( long int k, long int jj );
     double bfc_mass( void );
@@ -915,6 +865,7 @@ protected:
     long int SurfaceActivityCoeff( long int jb, long int je, long int jpb, long int jdb, long int k );
 
     // ipm_chemical3.cpp
+    virtual void pm_GC_ods_link( long int /*k*/, long int /*jb*/, long int /*jpb*/, long int /*jdb*/, long int /*ipb*/ ){}
     double SmoothingFactor( );
     void SetSmoothingFactor( long int mode ); // new smoothing function (3 variants)
     // Main call for calculation of activity coefficients on IPM iterations
@@ -960,6 +911,7 @@ protected:
     void GEM_IPM( long int rLoop );
     long int MassBalanceRefinement( long int WhereCalledFrom );
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
+    void AutoInitialApproximation( );
 
     // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
     void MassBalanceResiduals( long int N, long int L, double *A, double *Y,
@@ -975,10 +927,12 @@ protected:
     double StepSizeEstimate( bool initAppr );
     void Restore_Y_YF_Vectors();
     double RescaleToSize( bool standard_size ); // replaced calcSfactor() 30.08.2009 DK
+    long int SpeciationCleanup( double AmountThreshold, double ChemPotDiffCutoff ); // added 25.03.10 DK
+    long int PhaseSelectionSpeciationCleanup( long int &k_miss, long int &k_unst, long int rLoop );
+    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
     bool GEM_IPM_InitialApproximation();
 
     // IPM_SIMPLEX.CPP Simplex method modified with two-sided constraints (Karpov ea 1997)
-    void AutoInitialApproximation( );
     void SolveSimplex(long int M, long int N, long int T, double GZ, double EPS,
                       double *UND, double *UP, double *B, double *U,
                       double *AA, long int *STR, long int *NMB );
@@ -996,12 +950,13 @@ protected:
     void FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
              long int BASE[],double UND[],double UP[],double U[],
              double AA[],double *A,double Q[],long int *ITER);
-
     double SystemTotalMolesIC( );
     void ScaleSystemToInternal(  double ScFact );
     void RescaleSystemFromInternal(  double ScFact );
     void MultiConstInit(); // from MultiRemake
     void GEM_IPM_Init();
+
+    void load_all_thermodynamic_from_grid(TNode *aNa, double TK, double P);
 
 
 };
@@ -1061,5 +1016,41 @@ typedef enum {  // Field index into outField structure
 } MULTI_DYNAMIC_FIELDS;
 
 
+inline TMultiBase::TMultiBase(const TNode *na_)
+{
+    pa_standalone.reset( new BASE_PARAM() );
+    *pa_standalone = pa_p_;
+
+    pmp = &pm;
+    node1 = na_; // parent
+
+    sizeN = 0;
+    AA1 = nullptr;
+    BB1 = nullptr;
+    arrL = nullptr;
+    arrAN = nullptr;
+
+    U_mean = nullptr;
+    U_M2 = nullptr;
+    U_CVo = nullptr;
+    U_CV = nullptr;
+    ICNud = nullptr;
+
+    sizeFIs = 0;
+    phSolMod = nullptr;
+    sizeFIa = 0;
+    phSorpMod = nullptr;
+    sizeFI = 0;
+    phKinMet = nullptr;
+
+    ///#ifdef IPMGEMPLUGIN 07/05/2020
+    pmp->Guns = nullptr;
+    pmp->Vuns = nullptr;
+    pmp->tpp_G = nullptr;
+    pmp->tpp_S = nullptr;
+    pmp->tpp_Vm = nullptr;
+    ///#endif
+    set_def();
+}
 #endif   //_ms_multi_h
 

@@ -26,8 +26,7 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
-#include <iomanip>
+
 #include "node.h"
 
 // Generic access methods that use the new TActivity class

@@ -154,9 +154,7 @@ long int TMultiBase::testMulti()
   {
     if( pa_p_ptr()->PSM == 2 )
     {
-      std::fstream f_log(node1->ipmLogFile(), std::ios::out|std::ios::app );
-      f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << std::endl;
-      f_log << pm.errorBuf << std::endl;
+      node->ipmlog_file->warn(" {} : {}:{}", pm.stkey, pm.errorCode, pm.errorBuf);
     }
    return 1L;
   }
@@ -473,9 +471,9 @@ void TMultiBase::out_multi( GemDataStream& ff  )
       arr[8] = pa_p_ptr()->PE;
       arr[9] = pa_p_ptr()->IIM;
 
-    ff.writeArray( arr, 10 );
-    ff.writeArray( &pa_p_ptr()->DG, 28 );
-    to_file( ff );
+   ff.writeArray( arr, 10 );
+   ff.writeArray( &pa_p_ptr()->DG, 28 );
+   to_file( ff );
 }
 
 /// Reading structure MULTI (GEM IPM work structure) from binary file
@@ -813,7 +811,7 @@ void TMultiBase::from_file( GemDataStream& ff )
    //realloc memory
    multi_realloc( PAalp, PSigm );
 
-   //dynamic values
+      //dynamic values
     // Part 1
 
     /* need  always to alloc vectors */
@@ -1080,6 +1078,7 @@ ff.readArray((double*)pm.D, MST*MST);
      }
 
      // Part 4
+
     if( pm.Ls > 1 && pm.FIs > 0 )
     {
       ff.readArray(pm.Wb, pm.Ls);

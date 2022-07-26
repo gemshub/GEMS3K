@@ -25,8 +25,6 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <iomanip>
-#include <iostream>
 #include "v_service.h"
 #include "io_template.h"
 #include "io_nlohmann.h"
@@ -486,7 +484,7 @@ void TNode::databr_from_text_file( TIO& in_format )
 //==============================================================================
 
 template<typename TIO>
-void TNode::datach_to_text_file(  TIO& out_format, bool with_comments, bool brief_mode ) const
+void TNode::datach_to_text_file(  TIO& out_format, bool use_thermofun, bool with_comments, bool brief_mode ) const
 {
     bool _comment = with_comments;
 
@@ -616,7 +614,7 @@ void TNode::datach_to_text_file(  TIO& out_format, bool with_comments, bool brie
 
 // Reading dataCH structure from text file
 template<typename TIO>
-void TNode::datach_from_text_file(TIO& in_format)
+void TNode::datach_from_text_file(TIO& in_format, bool use_thermofun)
 {
   long int ii;
 
@@ -668,6 +666,7 @@ void TNode::datach_from_text_file(TIO& in_format)
   }
 
   datach_realloc();
+  databr_free_internal(CNode);
   databr_realloc();
 
   //dynamic data
@@ -875,6 +874,7 @@ void TNode::datach_from_file( GemDataStream& ff )
    ff.readArray( &CSD->Ttol, 4 );
 
   datach_realloc();
+  databr_free_internal(CNode);
   databr_realloc();
 
 //dynamic data
@@ -1149,16 +1149,16 @@ void TNode::databr_name_to_vtk( std::fstream& ff, long int nfild, long int ndx, 
   switch( DataBR_fields[nfild].indexation )
   {
     case 1: break;
-    case nICbi: str = std::string( CSD->ICNL[ IC_xDB_to_xCH( ndx ) ], 0,MaxICN );
+    case nICbi: str = char_array_to_string( CSD->ICNL[ IC_xDB_to_xCH( ndx ) ],MaxICN );
                 break;
-    case nDCbi: str = std::string( CSD->DCNL[ DC_xDB_to_xCH( ndx ) ], 0,MaxDCN );
+    case nDCbi: str = char_array_to_string( CSD->DCNL[ DC_xDB_to_xCH( ndx ) ],MaxDCN );
               break;
     case nPHbi:
-    case nPSbi: str = std::string(  CSD->PHNL[ Ph_xDB_to_xCH( ndx ) ], 0,MaxPHN );
+    case nPSbi: str = char_array_to_string(CSD->PHNL[ Ph_xDB_to_xCH( ndx ) ],MaxPHN );
             break;
     case nPSbnICbi:
-                str = std::string(  CSD->PHNL[ Ph_xDB_to_xCH( ndx/nx2 ) ], 0,MaxPHN );
-                str2 = std::string( CSD->ICNL[ IC_xDB_to_xCH( ndx%nx2 ) ], 0, MaxICN );
+                str = char_array_to_string(  CSD->PHNL[ Ph_xDB_to_xCH( ndx/nx2 ) ],MaxPHN );
+                str2 = char_array_to_string( CSD->ICNL[ IC_xDB_to_xCH( ndx%nx2 ) ], MaxICN );
           break;
     default: str = std::string( "UNDEFINED");
   }
@@ -1261,20 +1261,20 @@ void TNode::databr_to_vtk( std::fstream& ff, const char*name, double time, long 
 }
 
 #ifdef USE_NLOHMANNJSON
-template void  TNode::databr_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TNode::databr_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool, bool ) const;
 template void  TNode::databr_from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
-template void  TNode::datach_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
-template void  TNode::datach_from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
+template void  TNode::datach_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool, bool, bool) const;
+template void  TNode::datach_from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format, bool );
 #else
-template void  TNode::databr_to_text_file<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TNode::databr_to_text_file<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool, bool ) const;
 template void  TNode::databr_from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format );
-template void  TNode::datach_to_text_file<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
-template void  TNode::datach_from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format );
+template void  TNode::datach_to_text_file<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool, bool, bool) const;
+template void  TNode::datach_from_text_file<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& out_format, bool );
 #endif
 
-template void  TNode::databr_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TNode::databr_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool, bool) const;
 template void  TNode::databr_from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format );
-template void  TNode::datach_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode ) const;
-template void  TNode::datach_from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format );
+template void  TNode::datach_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool, bool, bool) const;
+template void  TNode::datach_from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format, bool);
 
 //-----------------------End of node_format.cpp--------------------------

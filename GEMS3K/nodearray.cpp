@@ -27,7 +27,6 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
 #include <algorithm>
 #include "v_service.h"
 
@@ -37,7 +36,8 @@
 #include "particlearray.h"
 #endif
 
-TNodeArray* TNodeArray::na;
+
+std::shared_ptr<TNodeArray> TNodeArray::na;
 
 // ------------------------------------------------------------------
 
@@ -103,10 +103,7 @@ long int TNodeArray::SmartMode( const TestModeGEMParam& modeParam, long int ii, 
 std::string TNodeArray::ErrorGEMsMessage( long int RetCode,  long int ii, long int step  )
 {
     std::string err_msg;
-    char buf[200];
-
-    sprintf( buf, " Node= %-8ld  Step= %-8ld\n", ii, step );
-    err_msg = buf;
+    err_msg = " Node= "+std::to_string(ii)+"  Step= "+std::to_string(step)+"\n";
 
     switch( RetCode )
     {
@@ -310,22 +307,6 @@ void TNodeArray::MoveWorkNodeToArray( TNode* wrkNode, long int ii, long int nNod
     copyValues( arr_BR[ii]->amrl, wrkNode->pCNode()->amrl, wrkNode->pCSD()->nPSb );
 }
 
-
-
-/** old Copying data for node iNode back from work DATABR structure into the node array
-void TNodeArray::MoveWorkNodeToArray( TNode& wrkNode, long int ii, long int nNodes, DATABRPTR* arr_BR )
-{
-  if( ii < 0 || ii>= nNodes )
-    return;
-  if( arr_BR[ii] )
-  {
-       arr_BR[ii] = wrkNode.databr_free( arr_BR[ii] );
-       // delete[] arr_BR[ii];
-  }
-  arr_BR[ii] = wrkNode.pCNode();
-// alloc new memory
-  wrkNode.allocNewDBR();
-}*/
 
 void TNodeArray::CopyNodeFromTo( long int ndx, long int nNod,
                                  DATABRPTR* arr_From, DATABRPTR* arr_To )
@@ -545,7 +526,7 @@ LOCATION TNodeArray::getGrid( long int iN, long int jN, long int kN ) const
 // get 3D sizes for node (  from cxyz[0] - to cxyz[1] )
 // only for rectangular -  must be changed
 // for any must be LOCATION cxyz[8]
-void TNodeArray::GetNodeSizes( long int ndx, LOCATION cxyz[2] )
+void TNodeArray::GetNodeSizes( long int ndx, LOCATION cxyz[2] ) const
 {
     LOCATION maxl;
     long int i, j, k;
@@ -710,10 +691,10 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
                     }
                 }
                 else
-                    if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source)
-                        std::cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << std::endl;
-                // 	  			  Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
-                //	   }
+                    if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source) {
+                        TNode::node_logger->warn("W002MTRW Warning: Particle jumped outside the domain");
+                        // 	  			  Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
+                    }
             }
         } // loop jc
     }
@@ -755,10 +736,10 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
                     NodT1[ndx_to]->bIC[ie] += mol;
             }
             else
-                if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source)
-                    std::cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << std::endl;
-            //        	 Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
-
+                if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source) {
+                    TNode::node_logger->warn("W002MTRW Warning: Particle jumped outside the domain");
+                    //        	 Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
+                }
         } // loop ie
     } // else
     // End of function
@@ -949,8 +930,7 @@ void TNodeArray::databr_to_vtk( std::fstream& ff, const char*name, double time, 
     {
         if( all )
             nf = kk;
-        else
-            nf= Flds[kk][0];
+        else nf= Flds[kk][0];
 
         calcNode->databr_size_to_vtk(  nf, nel, nel2 );
 
@@ -988,7 +968,6 @@ void TNodeArray::databr_to_vtk( std::fstream& ff, const char*name, double time, 
         }
     }
 }
-
 #endif
 //-----------------------End of nodearray.cpp--------------------------
 

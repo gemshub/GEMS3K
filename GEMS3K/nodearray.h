@@ -91,7 +91,7 @@ struct TestModeGEMParam
 class TParticleArray;
 
 // Definition of TNodeArray class
-class TNodeArray
+class TNodeArray : std::enable_shared_from_this<TNodeArray>
 {
 protected:
 
@@ -128,6 +128,11 @@ protected:
     /// Copies data from the work DATABR structure into the node ndx in
     /// the node arrays NodT0 and NodT1  (as specified in nodeTypes array)
     void  setNodeArray( long int ndx, long int* nodeTypes  );
+    /// Reads DATABR files saved by GEMS as a break point of the FMT calculation.
+    /// Copying data from work DATABR structure into the node array NodT0
+    /// and read DATABR structure into the node array NodT1 from file dbr_file
+    void  setNodeArray( std::string& dbr_file, long int ndx, GEMS3KGenerator::IOModes type_f );
+
 
     /// Test setup of the boundary condition for all nodes in the task
     void  checkNodeArray( long int i, long int* nodeTypes, const char*  datachbr_file );
@@ -188,10 +193,20 @@ protected:
     void  InitNodeArray( const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, GEMS3KGenerator::IOModes type_f  );
 
     //---------------------------------------------------------
+   
+    // Used in GEMIPM2 standalone module only
+    /// Constructors for 1D arrangement of nodes
+    TNodeArray( long int nNod );
+    /// Constructor that uses 3D node arrangement
+    TNodeArray( long int asizeN, long int asizeM, long int asizeK );
 
 public:
 
-    static TNodeArray* na;   ///< static pointer to this class
+    static std::shared_ptr<TNodeArray> na;   ///< static pointer to this class
+
+    std::shared_ptr<TNodeArray> getptr() {
+        return shared_from_this();
+    }
 
     const TNode* getCalcNode()
     { return calcNode;}
@@ -224,6 +239,38 @@ public:
     inline long int Ph_xDB_to_xCH( const long int xBR ) const
     { return calcNode->Ph_xDB_to_xCH( xBR ); }
 
+    // Used in GEMIPM2 standalone module only
+    /// Constructors for 1D arrangement of nodes
+    [[nodiscard]] static std::shared_ptr<TNodeArray> create(long int nNod) {
+            return (na = std::shared_ptr<TNodeArray>(new TNodeArray(nNod)));
+        }
+    /// Constructor that uses 3D node arrangement
+    [[nodiscard]] static std::shared_ptr<TNodeArray> create(long int asizeN, long int asizeM, long int asizeK) {
+            return ( na = std::shared_ptr<TNodeArray>(new TNodeArray(asizeN, asizeM, asizeK)));
+        }
+
+    /// Converts the Phase DBR index into the Phase DCH index
+    inline double Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 )
+    { return calcNode.Set_DC_G0( xCH, P,TK, new_G0 ); }
+
+
+    const TNode& LinkToNode( long int ndx, long int nNodes, DATABRPTR* anyNodeArray )
+    {
+        CopyWorkNodeFromArray( calcNode, ndx, nNodes, anyNodeArray );
+        return calcNode;
+    }
+
+    void SaveToNode( long int ndx, long int nNodes, DATABRPTR* anyNodeArray )
+    {
+        // Save databr
+        calcNode.packDataBr();
+        if( !NodT0[ndx] )
+            NodT0[ndx] = allocNewDBR( calcNode);
+        if( !NodT1[ndx] )
+            NodT1[ndx] = allocNewDBR( calcNode);
+        MoveWorkNodeToArray( calcNode, ndx, nNodes, anyNodeArray );
+    }
+
     /// Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
     /// or if putNodT1 == true  as a break point for the running FMT calculation
@@ -253,23 +300,46 @@ public:
     void  GEMS3k_write_dbr( const char* fname, GEMS3KGenerator::IOModes type_f,
                             bool with_comments = true, bool brief_mode = false);
 
+    ///  Writes the contents of the ndx node instance of the DATABR structure into a disk file with path name  fname.
+    ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
+    ///                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
+    ///                 will be used, extended with ".out".  Usually the dbr_file_name field contains the path to the last input DBR file.
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
+    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
+    ///                 If   false (0), comments will not be written;
+    ///                         (json format): interpret the flag with_comments=true as "pretty JSON" and
+    ///                                   with_comments=false as "condensed JSON"
+    ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+    void GEMS3k_write_dbr(long ndx, const char *fname, GEMS3KGenerator::IOModes type_f,
+                          bool with_comments = true, bool brief_mode = false);
+
+    /// Writes the contents of the ndx node instance (the DATABR structure) into provided string in JSON format.
+    ///   \param dbr_string  reference to a string where to write JSON string from the current DBR object.
+    long int GEMS3k_write_dbr(long ndx, std::string &dbr_json);
+
+
+
     ///  Reads the contents of the work instance of the DATABR structure from a disk file with path name  fname.
     ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
     ///
     ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
-    void  GEMS3k_read_dbr( long int ndx, std::string& dbr_file, GEMS3KGenerator::IOModes  type_f );
+    /// \return  0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred.
+    long int GEMS3k_read_dbr( long int ndx, std::string& dbr_file, GEMS3KGenerator::IOModes  type_f );
 
+    /// Reads another DBR object (with input system composition, T,P etc.) from JSON string \ .
+    /// It must be compatible with the currently loaded IPM and DCH files
+    ///  (see descriptions of GEM_init() methods).
+    /// \param dbr_json  String containing a JSON document for the input DBR object.
+    /// \param check_dch_compatibility  If true, forces checking the compatibility of DBR object with active DCH/IPM
+    /// \return  0  if successful; 1 if input JSON string is empty or corrupt;-1 if internal memory allocation error occurred;
+    ///          2 if checking the not compatibility of DBR object with active DCH/IPM.
+    long int GEMS3k_read_dbr(long ndx, std::string dbr_json, const bool check_dch_compatibility = true);
 
     /// Reads DATABR files saved by GEMS as a break point of the FMT calculation.
     /// Copying data from work DATABR structure into the node array NodT0
     /// and read DATABR structure into the node array NodT1 from file dbr_file
     virtual void  setNodeArray( std::string& dbr_file, long int ndx, GEMS3KGenerator::IOModes type_f );
-
-    // Used in GEMIPM2 standalone module only
-    /// Constructors for 1D arrangement of nodes
-    TNodeArray( long int nNod );
-    /// Constructor that uses 3D node arrangement
-    TNodeArray( long int asizeN, long int asizeM, long int asizeK );
 
     /// Makes one absolute node index from three spatial coordinate indexes
     inline long int iNode( long int indN, long int indM, long int indK ) const
@@ -321,9 +391,9 @@ public:
     
     char* ptcNode() const /// Get pointer to boundary condition codes for nodes
     { return tcNode; }
-    
+
     /// Calls GEM IPM calculation for a node with absolute index ndx
-    long int RunGEM( TNode* wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray );
+    long int RunGEM( TNode* wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray);
 
     /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1)
     /// in a loop with an optional openmp parallelization
@@ -334,6 +404,10 @@ public:
                       long int Mode, DATABRPTR* nodeArray  )
     { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode, nodeArray ); }
     // (both calls clean the work node DATABR structure)
+
+    /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1)
+    /// in a loop with an optional openmp parallelization
+    void RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes );
 
     /// New Stuff--------------------------------------------------------------
 
@@ -365,6 +439,15 @@ public:
     ///                      -1 if internal memory allocation error occurred.
     long int  GEM_init( const char* ipmfiles_lst_name,
                         const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1);
+
+    /// Initialize the object from JSON strings for dch, ipm and dbr exported from GEM-Selektor \ .
+    /// \param dch_json The json string containing the definition of the chemical system
+    /// \param ipm_json The json string containing the parameters and settings for GEMS3K IPM-3 algorithm
+    /// \param dbr_json The vector of json string containing the input node composition of the chemical system
+    /// \param nodeTypes The initial node contents from DATABR files will be distributed among
+    ///                   nodes in array according to the distribution index list nodeTypes
+    long int  GEM_init(std::string dch_json, std::string ipm_json,
+                                   std::vector<std::string> dbr_json, long int* nodeTypes);
 
     // end of new stuff -------------------------------------------------------
 
@@ -422,14 +505,14 @@ public:
     long int FindNodeFromLocation( LOCATION cxyz, long int old_node = -1 ) const;
 
     /// Get 3D sizes for node (  from cxyz[0] - to cxyz[1] )
-    void GetNodeSizes( long int ndx, LOCATION cxyz[2] );
+    void GetNodeSizes( long int ndx, LOCATION cxyz[2] ) const ;
 
     /// Get 3D location for node (  from cxyz[0] - to cxyz[1] )
-    LOCATION& GetNodeLocation( long int ndx )
+    const LOCATION& GetNodeLocation( long int ndx ) const
     { return grid[ndx]; }
 
     /// Get 3D size of the whole region
-    LOCATION& GetSize()
+    const LOCATION& GetSize() const
     { return size; }
 
     /// Get full mass particle type in the node ndx

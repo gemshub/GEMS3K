@@ -31,13 +31,23 @@
 #include "num_methods.h"
 #include "kinetics.h"
 #include "activities.h"
+#include "v_service.h"
 
 #include <cmath>
 #include <algorithm>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/rotating_file_sink.h>
 
 #ifdef _MSC_VER
 #include <io.h>
 #endif
+
+
+//TNode* TNode::na;
+  // Thread-safe logger to stdout with colors
+  std::shared_ptr<spdlog::logger> TNode::node_logger = spdlog::stdout_color_mt("tnode");
+  // Thread-safe logger to file
+  std::shared_ptr<spdlog::logger> TNode::ipmlog_file = spdlog::rotating_logger_mt("ipmlog", "ipmlog.txt", 1048576, 3);
 
 // Conversion factors
 const double bar_to_Pa = 1e5,
@@ -186,61 +196,54 @@ double TNode::Get_Psat(double Tk)
 // intervals of the DATACH lookup arrays (returns true) or not (returns false)
 bool  TNode::check_TP( double TK, double P ) const
 {
-   bool okT = true, okP = true;
-   double T_=TK, P_=P;
+    bool okT = true, okP = true;
+    double T_=TK, P_=P;
 
-   if( CSD->mLook == 1 )
-   {
-       for(long int  jj=0; jj<CSD->nPp; jj++)
-           if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) )
+    if( CSD->mLook == 1 )
+    {
+        for(long int  jj=0; jj<CSD->nPp; jj++)
+            if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) )
             {
-              return true;
+                return true;
             }
-       char buff[256];
-       sprintf( buff, " Temperature %g and pressure %g out of range\n",  TK, P );
-       Error( "check_TP: " , buff );
-       //return false;
-     }
-     else
-     {
-      if( TK <= CSD->TKval[0] - CSD->Ttol )
-      { 				// Lower boundary of T interpolation interval
-	 okT = false;
-       T_ = CSD->TKval[0] - CSD->Ttol;
-      }
-      if( TK >= CSD->TKval[CSD->nTp-1] + CSD->Ttol )
-      {
-	 okT = false;
-        T_ = CSD->TKval[CSD->nTp-1] + CSD->Ttol;
-      }
-      if( okT == false )
-      {
-        std::fstream f_log(ipmLogFile(), std::ios::out|std::ios::app );
-         f_log << "In node "<< CNode->NodeHandle << ",  Given TK= "<<  TK <<
-             "  is beyond the interpolation range for thermodynamic data near boundary T_= "
-     		<< T_ << std::endl;
-       }
+        Error( "check_TP: ", std::string("Temperature ")+std::to_string(TK)+
+                  " and pressure "+std::to_string(P)+" out of range");
+        //return false;
+    }
+    else
+    {
+        if( TK <= CSD->TKval[0] - CSD->Ttol )
+        { 				// Lower boundary of T interpolation interval
+            okT = false;
+            T_ = CSD->TKval[0] - CSD->Ttol;
+        }
+        if( TK >= CSD->TKval[CSD->nTp-1] + CSD->Ttol )
+        {
+            okT = false;
+            T_ = CSD->TKval[CSD->nTp-1] + CSD->Ttol;
+        }
+        if( okT == false ) {
+            ipmlog_file->info("In node {},  Given TK={} is beyond the interpolation "
+                              "range for thermodynamic data near boundary T_= {}", CNode->NodeHandle, TK, T_);
+        }
 
-      if( P <= CSD->Pval[0] - CSD->Ptol )
-      {
-	  okP = false;
-          P_ = CSD->Pval[0] - CSD->Ptol;
-      }
-      if( P >= CSD->Pval[CSD->nPp-1] + CSD->Ptol )
-      {
-	  okP = false;
-          P_ = CSD->Pval[CSD->nPp-1] + CSD->Ptol;
-      }
-      if( !okP )
-      {
-        std::fstream f_log(TNode::ipmLogFile(), std::ios::out|std::ios::app );
-          f_log << "In node "<< CNode->NodeHandle << ", Given P= "<<  P <<
-           "  is beyond the interpolation range for thermodynamic data near boundary P_= "
-           << P_ << std::endl;
-      }
-      return ( okT && okP );
-   }
-   return ( okT && okP );
+        if( P <= CSD->Pval[0] - CSD->Ptol )
+        {
+            okP = false;
+            P_ = CSD->Pval[0] - CSD->Ptol;
+        }
+        if( P >= CSD->Pval[CSD->nPp-1] + CSD->Ptol )
+        {
+            okP = false;
+            P_ = CSD->Pval[CSD->nPp-1] + CSD->Ptol;
+        }
+        if( !okP ) {
+            ipmlog_file->info("In node {},  Given P={} is beyond the interpolation "
+                              "range for thermodynamic data near boundary P_= {}", CNode->NodeHandle, P, P_);
+        }
+        return ( okT && okP );
+    }
+    return ( okT && okP );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------
@@ -264,8 +267,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 
     try
     {
-        // f_log << " GEM_run() begin Mode= " << p_NodeStatusCH endl;
-        //---------------------------------------------
+        ipmlog_file->debug(" GEM_run() begin Mode= {}", CNode->NodeStatusCH);
         // Checking T and P  for interpolation intervals
         check_TP( CNode->TK, CNode->P);
         // Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
@@ -286,7 +288,7 @@ long int TNode::GEM_run( bool uPrimalSol )
             return CNode->NodeStatusCH;
 
         // added 18.12.14 DK : setting chemical kinetics time counter and variables
-        // cout << "dTime: " << CNode->dt << " TimeStep: " << CNode->NodeStatusFMT << " Time: " << CNode->Tm << endl;
+        node_logger->debug("GEM_run dTime:{}, TimeStep: {} Time: {}", CNode->dt, CNode->NodeStatusFMT, CNode->Tm);
         if( CNode->dt <= 0. )
         {  // no kinetics to consider
             pmm->kTau = 0.;
@@ -306,11 +308,11 @@ long int TNode::GEM_run( bool uPrimalSol )
                 pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
         }
 
-   //multi->to_text_file("React_before.dump.txt");//profil1->outMultiTxt( "React_before.dump.txt"  );
-   // GEM IPM calculation of equilibrium state
-   //CalcTime = profil->ComputeEquilibriumState( /*PrecLoops,*/ NumIterFIA, NumIterIPM );
-    CalcTime = multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
-    //multi->to_text_file("React_after.dump.txt");//profil1->outMultiTxt( "React_after.dump.txt" );
+        //multi->to_text_file("React_before.dump.txt");//profil1->outMultiTxt( "React_before.dump.txt"  );
+        // GEM IPM calculation of equilibrium state
+        //CalcTime = profil->ComputeEquilibriumState( /*PrecLoops,*/ NumIterFIA, NumIterIPM );
+        CalcTime = multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
+        //multi->to_text_file("React_after.dump.txt");//profil1->outMultiTxt( "React_after.dump.txt" );
 
         // Extracting and packing GEM IPM results into work DATABR structure
         packDataBr();
@@ -362,11 +364,9 @@ long int TNode::GEM_run( bool uPrimalSol )
         ipmlog_error = "unknown exception";
         CNode->NodeStatusCH = T_ERROR_GEM;
     }
-
-    std::fstream f_log(ipmLogFile(), std::ios::out|std::ios::app );
-    f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt <<  std::endl;
-    if( multi->pa_p_ptr()->PSM >= 2   )
-        f_log  << "\n" << ipmlog_error << std::endl;
+    ipmlog_file->error("Error Node:{}  time:{}  dt:{}", CNode->NodeHandle, CNode->Tm, CNode->dt);
+    if( profil->pa.p.PSM >= 2  )
+        ipmlog_file->error("{}", ipmlog_error);
 
     return CNode->NodeStatusCH;
 }
@@ -594,9 +594,8 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
       for(long int  jj=0; jj<CSD->nPp; jj++)
           if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) )
             return jj;
-      char buff[256];
-      sprintf( buff, " Temperature %g and pressure %g out of grid\n",  TK, P );
-      Error( "check_grid_TP: " , buff );
+      Error( "check_grid_TP: " , std::string("Temperature ")+std::to_string(TK)+
+             " and pressure "+std::to_string(P)+" out of grid" );
       //return -1;
      }
     else
@@ -610,29 +609,30 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     return ndx;
   }
 
-// used in GEMSFIT only
+  // used in GEMSFIT only
   //Sets new molar Gibbs energy G0(P,TK) value for Dependent Component
   //in the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
   // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 )
-   {
-    long int xTP, jj;
+  double TNode::Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 )
+  {
+      long int xTP, jj;
 
-    if( check_TP( TK, P ) == false )
-        return 7777777.;
+      if( check_TP( TK, P ) == false )
+          return 7777777.;
 
-    xTP = check_grid_TP( TK, P );
-    jj =  xCH * gridTP();
+      xTP = check_grid_TP( TK, P );
+      jj =  xCH * gridTP();
 
-    if( xTP >= 0 )
-    {
-       CSD->G0[ jj + xTP ]=new_G0;
-       load_thermodynamic_data = false;
-    }
-    else
-        std::cout << "ERROR: given P and TK pair is not provided in DATACH";
-     return 0;
-   }
+      if( xTP >= 0 )
+      {
+          CSD->G0[ jj + xTP ]=new_G0;
+          load_thermodynamic_data = false;
+      }
+      else {
+          node_logger->error("ERROR: given P={} and TK={} pair is not provided in DATACH", P, TK);
+      }
+      return 0;
+  }
 
   //Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
   //from the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
@@ -1016,7 +1016,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
    // with nDCinPh being the number of DCs included into DBR for this phase
    xdcb = PhtoDC_DBR( xph, nDCinPh );
    xdce = xdcb + nDCinPh;
-//std::cout << "xph: " << xph << " xdcb: " << xdcb <<  " xdce: " << xdce << std::endl;
+   node_logger->debug("Ph_Enthalpy xph: {}  xdcb: {}  xdce: {}", xph, xdcb, xdce);
    for(xdc = xdcb; xdc < xdce; xdc++ )
    {
         xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC  
@@ -1025,7 +1025,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
         if( ent < 7777777.0 )
             enth += ent * CNode->xDC[xdc];
         // else out of P or T range of interpolation
-//        std::cout << "        xdc: " << xdc << " xch: " << xch << " ent: " << ent << " enth: " << enth << std::endl;
+        node_logger->debug("Ph_Enthalpy xdc: {}  xch: {}  ent: {} enth: {}", xdc, xch, ent, enth);
    }
    // Not yet accounting for the enthalpy of mixing!  TBD
    
@@ -1047,7 +1047,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
      // with nDCinPh being the number of DCs included into DBR for this phase
      xdcb = PhtoDC_DBR( xph, nDCinPh );
      xdce = xdcb + nDCinPh;
-  //std::cout << "xph: " << xph << " xdcb: " << xdcb <<  " xdce: " << xdce << std::endl;
+     node_logger->debug("Ph_Entropy xph: {}  xdcb: {}  xdce: {}", xph, xdcb, xdce);
      for(xdc = xdcb; xdc < xdce; xdc++ )
      {
           xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC
@@ -1056,7 +1056,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
           if( noZero(ent) )
               entr += ent * (CNode->xDC[xdc]);
           // else out of P or T range of interpolation
-  //        std::cout << "        xdc: " << xdc << " xch: " << xch << " ent: " << ent << " entr: " << entr << std::endl;
+          node_logger->debug("Ph_Entropy xdc: {}  xch: {}  ent: {} entr: {}", xdc, xch, ent, entr);
      }
      // Not yet accounting for the enthalpy of mixing!  TBD
      return entr;  // in J/K
@@ -1077,7 +1077,6 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
      // with nDCinPh being the number of DCs included into DBR for this phase
      xdcb = PhtoDC_DBR( xph, nDCinPh );
      xdce = xdcb + nDCinPh;
-  //std::cout << "xph: " << xph << " xdcb: " << xdcb <<  " xdce: " << xdce << std::endl;
      for(xdc = xdcb; xdc < xdce; xdc++ )
      {
           xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC
@@ -1086,7 +1085,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
           if( noZero(cap) )
               capp += cap * (CNode->xDC[xdc]);
           // else out of P or T range of interpolation
-  //        std::cout << "        xdc: " << xdc << " xch: " << xch << " cap: " << cap << " capp: " << capp << std::endl;
+          node_logger->debug("Ph_HeatCapacityCp xdc: {}  xch: {}  cap: {} capp: {}", xdc, xch, cap, capp);
      }
      // Not yet accounting for the enthalpy of mixing!  TBD
      return capp;  // in J/K
@@ -1102,7 +1101,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
  }
 
  //Obsolete: Retrieves the current phase amount in moles ( xph is DBR phase index) in the reactive sub-system.
- double  TNode::Ph_Mole( const long int xBR )
+ double  TNode::Ph_Mole( const long int xBR ) const
  {
    double mol;
    mol = CNode->xPH[xBR];
@@ -1417,10 +1416,8 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     NPcoef =  pmm->LsMod[ index_phase * 3 + 2 ];
     if( aIPc.size() != (unsigned int)(NPar*NPcoef) )
     {
-        std::cout  << std::endl
-                   << " TNode::Set_aIPc() error: vector aIPc does not match the dimensions specified in the GEMS3K IPM file (NPar*NPcoef) !!!! \n"
-                   <<" aIPc.size() = "<<aIPc.size()<<", NPar*NPcoef = "<<NPar*NPcoef<<std::endl
-                   <<" bailing out now ... \n" << std::endl;
+        node_logger->critical(" TNode::Set_aIPc() error: vector aIPc does not match the dimensions specified in the GEMS3K IPM file (NPar*NPcoef) !!!! \n"
+                              " aIPc.size() = {}, NPar*NPcoef = {} bailing out now ... \n", aIPc.size(), NPar*NPcoef);
 		exit(1);
     }
     for ( rc=0;rc<(NPar*NPcoef);rc++ )
@@ -1478,11 +1475,8 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     NP_DC = pmm->LsMdc[ index_phase ];
     if( aDCc.size() != (unsigned int)(NComp*NP_DC) )
     {
-        std::cout<<std::endl;
-        std::cout<<"TNode::Set_aDCc() error: vector aDCc does not match the dimensions specified in the GEMS3K IPM file (NComp*NP_DC) !!!! "<<std::endl;
-        std::cout<<" aDCc.size() = "<<aDCc.size()<<", NComp*NP_DC = "<<NComp*NP_DC<<std::endl;
-        std::cout<<" bailing out now ... "<<std::endl;
-        std::cout<<std::endl;
+        node_logger->critical("TNode::Set_aDCc() error: vector aDCc does not match the dimensions specified in the GEMS3K IPM file (NComp*NP_DC) !!!! "
+                              " aDCc.size() = {}, NComp*NP_DC = {} bailing out now ... \n", aDCc.size(), NComp*NP_DC);
 		exit(1);
     }
     for ( rc=0;rc<(NComp*NP_DC);rc++ )
@@ -1575,6 +1569,7 @@ case DC_SCM_SPECIES:
       case DC_SUR_CARRIER: DCcon =  pmm->Wx[xCH];
                            break;
       default:
+          node_logger->warn(" error in DC class code {}", pmm->DCC[xCH]);
           break; // error in DC class code
       }
    return DCcon;
@@ -2023,11 +2018,6 @@ void TNode::unpackDataBr( bool uPrimalSol )
 {
  long int ii;
 
-//#ifdef IPMGEMPLUGIN
-// char buf[300];
-// sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
-// strncpy( pmm->stkey, buf, EQ_RKLEN );
-//#endif
   CheckMtparam(); // T or P change detection - moved to here from InitalizeGEM_IPM_Data() 11.10.2012
   pmm->kTau = CNode->Tm;  // added 18.12.14 DK
   pmm->kdT = CNode->dt;   // added 18.12.14 DK
@@ -2036,7 +2026,6 @@ void TNode::unpackDataBr( bool uPrimalSol )
   pmm->Tc = CNode->TK;
   pmm->Pc  = CNode->P/bar_to_Pa;
   pmm->VXc = CNode->Vs/1.e-6; // from cm3 to m3
-
   // Obligatory arrays - always unpacked!
   for( ii=0; ii<CSD->nDCb; ii++ )
   {
@@ -2044,10 +2033,8 @@ void TNode::unpackDataBr( bool uPrimalSol )
     pmm->DLL[ CSD->xdc[ii] ] = CNode->dll[ii];
     if( pmm->DUL[ CSD->xdc[ii] ] < pmm->DLL[ CSD->xdc[ii] ] )
     {
-       char buf[300];
-       sprintf(buf, "Upper kinetic restriction less than the lower one for DC&RC %-6.6s",
-                         pmm->SM[CSD->xdc[ii]] );
-       Error("unpackDataBr", buf );
+       Error("unpackDataBr", std::string("Upper kinetic restriction less than the lower one for DC&RC")
+             +char_array_to_string( pmm->SM[CSD->xdc[ii]], MAXDCNAME));
     }
   }
   for( ii=0; ii<CSD->nICb; ii++ )
@@ -2055,12 +2042,10 @@ void TNode::unpackDataBr( bool uPrimalSol )
       pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii];
       if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < multi->pa_p_ptr()->DB )
       {
-         char buf[300];
-         sprintf(buf, "Bulk mole amount of IC %-6.6s is %lg - out of range",
-                           pmm->SB[CSD->xic[ii]], pmm->B[ CSD->xic[ii] ] );
-          Error("unpackDataBr", buf );
+         Error("unpackDataBr", std::string("Bulk mole amount of IC ")+
+               char_array_to_string(pmm->SB[CSD->xic[ii]], 6)+" is "+
+                 std::to_string(pmm->B[ CSD->xic[ii] ])+" - out of range" );
       }
-
   }
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
