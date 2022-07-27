@@ -1861,7 +1861,7 @@ else fRestore = true;
           // For IEEE-compatible type double, overflow is guaranteed if 709.8 < arg, and underflow is guaranteed if arg < -708.4
           if( ln_ax_dual < -708.4 || ln_ax_dual >  709.8 ) {
               Error( "E14IPM: StabilityIndexes():",
-                     std::string("For double overflow or underflow is guaranteed exp(")+to_string(ln_ax_dual)+").");
+                     std::string("For double overflow or underflow is guaranteed exp(")+std::to_string(ln_ax_dual)+").");
           }
           x_estimate = exp( ln_ax_dual )/ gamma_primal;   // estimate of DC concentration
           StabIndex += x_estimate;  // Increment to stability index

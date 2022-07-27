@@ -992,7 +992,7 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 {
     double TK, PPa;
 
-  const TNode* na = node1;
+  TNode* na = node1;
   if( aNa != nullptr )
     na = aNa;   // for reading GEMIPM files task
   ErrorIf( na == nullptr, "DCLoadThermodynamicData", "Could not be undefined node" );
@@ -1123,12 +1123,7 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
                 if( dCH->U0 ) u0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->U0+jj,
                                                   PPa, TK, dCH->nTp, dCH->nPp,5 );
             }
-#ifndef IPMGEMPLUGIN
-            if( TSyst::sm->GetSY()->Guns )  // This is used mainly in UnSpace calculations
-                Gg = TSyst::sm->GetSY()->Guns[pm.muj[j]];    // User-set increment to G0 from project system
-            // SDGEX     if( syp->GEX && syp->PGEX != S_OFF )   // User-set increment to G0 from project system
-            //            Ge = syp->GEX[pm.muj[j]];     //now Ge is integrated into pm.G0 (since 07.03.2008) DK
-#else
+
             if( pm.tpp_G )
                 pm.tpp_G[j] = Go;
             if( pm.Guns )
@@ -1137,40 +1132,24 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
                 Gg = 0.;
 
             Ge = 0.;
-#endif
             pm.G0[j] = ConvertGj_toUniformStandardState( Go+Gg+Ge, j, k ); // formerly Cj_init_calc()
             // Inside this function, pm.YOF[k] can be added!
 
-#ifndef IPMGEMPLUGIN
-            if( TMTparm::sm->GetTP()->PtvVm != S_ON )
-                pm.Vol[j] = 0.;
-            else
-#endif
                 switch( pm.PV )
                 { // put molar volumes of components into A matrix or into the vector of molar volumes
                 // to be checked!
                 case VOL_CONSTR:
-#ifndef IPMGEMPLUGIN
-                    if( TSyst::sm->GetSY()->Vuns )
-                        Vv += TSyst::sm->GetSY()->Vuns[j];
-#else
                     if( pm.Vuns )
                         Vv += pm.Vuns[j];
-#endif
                     if( xVol >= 0 )
                         pm.A[j*pm.N+xVol] = Vv;
                     // [[fallthrough]];
                 case VOL_CALC:
                 case VOL_UNDEF:
-#ifndef IPMGEMPLUGIN
-                    if( TSyst::sm->GetSY()->Vuns )
-                        Vv += TSyst::sm->GetSY()->Vuns[j];
-#else
                     if( pm.tpp_Vm )
                         pm.tpp_Vm[j] = Vv;
                     if( pm.Vuns )
                         Vv += pm.Vuns[j];
-#endif
                     pm.Vol[j] = Vv  * 10.;
                     break;
                 }

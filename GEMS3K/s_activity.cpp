@@ -29,6 +29,7 @@
 
 #include "ms_multi.h"
 #include "node.h"
+#include "v_service.h"
 
 
 // These methods largely duplicate same-named methods from the TNode class

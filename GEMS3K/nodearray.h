@@ -131,7 +131,7 @@ protected:
     /// Reads DATABR files saved by GEMS as a break point of the FMT calculation.
     /// Copying data from work DATABR structure into the node array NodT0
     /// and read DATABR structure into the node array NodT1 from file dbr_file
-    void  setNodeArray( std::string& dbr_file, long int ndx, GEMS3KGenerator::IOModes type_f );
+    virtual void  setNodeArray( std::string& dbr_file, long int ndx, GEMS3KGenerator::IOModes type_f );
 
 
     /// Test setup of the boundary condition for all nodes in the task
@@ -251,10 +251,10 @@ public:
 
     /// Converts the Phase DBR index into the Phase DCH index
     inline double Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 )
-    { return calcNode.Set_DC_G0( xCH, P,TK, new_G0 ); }
+    { return calcNode->Set_DC_G0( xCH, P,TK, new_G0 ); }
 
 
-    const TNode& LinkToNode( long int ndx, long int nNodes, DATABRPTR* anyNodeArray )
+    const TNode* LinkToNode( long int ndx, long int nNodes, DATABRPTR* anyNodeArray )
     {
         CopyWorkNodeFromArray( calcNode, ndx, nNodes, anyNodeArray );
         return calcNode;
@@ -263,7 +263,7 @@ public:
     void SaveToNode( long int ndx, long int nNodes, DATABRPTR* anyNodeArray )
     {
         // Save databr
-        calcNode.packDataBr();
+        calcNode->packDataBr();
         if( !NodT0[ndx] )
             NodT0[ndx] = allocNewDBR( calcNode);
         if( !NodT1[ndx] )
@@ -336,11 +336,6 @@ public:
     ///          2 if checking the not compatibility of DBR object with active DCH/IPM.
     long int GEMS3k_read_dbr(long ndx, std::string dbr_json, const bool check_dch_compatibility = true);
 
-    /// Reads DATABR files saved by GEMS as a break point of the FMT calculation.
-    /// Copying data from work DATABR structure into the node array NodT0
-    /// and read DATABR structure into the node array NodT1 from file dbr_file
-    virtual void  setNodeArray( std::string& dbr_file, long int ndx, GEMS3KGenerator::IOModes type_f );
-
     /// Makes one absolute node index from three spatial coordinate indexes
     inline long int iNode( long int indN, long int indM, long int indK ) const
     { return  (( indK * sizeM + indM  ) * sizeN + indN);  }
@@ -394,10 +389,6 @@ public:
 
     /// Calls GEM IPM calculation for a node with absolute index ndx
     long int RunGEM( TNode* wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray);
-
-    /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1)
-    /// in a loop with an optional openmp parallelization
-    void RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes );
 
     /// Calls GEM IPM for one node with three indexes (along x,y,z)
     long int  RunGEM( TNode* wrkNode, long int indN, long int indM, long int indK,

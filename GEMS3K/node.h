@@ -230,17 +230,6 @@ protected:
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
     void  write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode ) const;
 
-    /// The export to ThermoFun JSON format file should include all IComp, DComp and ReacDC records
-    /// from the project database, not just the records needed for a particular system
-    /// (where some elements, DComps or ReacDCs can be switched off) as done in preparation of DCH lookup arrays.
-    ///  \param stream     stream to output json file
-    void  write_ThermoFun_format_stream( std::iostream& stream )
-    {
-#ifndef IPMGEMPLUGIN
-      profil->generate_ThermoFun_input_file_stream( stream );
-#endif
-    }
-
     // Methods to perform output to vtk files
 
     /// Prints data of CNode data object element with handle nfild and index ndx into a VTK file

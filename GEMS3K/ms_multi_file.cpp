@@ -154,7 +154,7 @@ long int TMultiBase::testMulti()
   {
     if( pa_p_ptr()->PSM == 2 )
     {
-      node->ipmlog_file->warn(" {} : {}:{}", pm.stkey, pm.errorCode, pm.errorBuf);
+      node1->ipmlog_file->warn(" {} : {}:{}", pm.stkey, pm.errorCode, pm.errorBuf);
     }
    return 1L;
   }

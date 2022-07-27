@@ -546,10 +546,10 @@ class TMultiBase
 
 public:
 
-    const TNode *node1;
+    TNode *node1;
 
     /// This allocation is used only in standalone GEMS3K
-    explicit TMultiBase( const TNode* na_ = nullptr );
+    explicit TMultiBase( TNode* na_ = nullptr );
 
     virtual ~TMultiBase()
     {
@@ -1016,7 +1016,7 @@ typedef enum {  // Field index into outField structure
 } MULTI_DYNAMIC_FIELDS;
 
 
-inline TMultiBase::TMultiBase(const TNode *na_)
+inline TMultiBase::TMultiBase(TNode *na_)
 {
     pa_standalone.reset( new BASE_PARAM() );
     *pa_standalone = pa_p_;

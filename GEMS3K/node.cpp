@@ -60,7 +60,6 @@ TNode::TNode()
   CNode = NULL;
   allocMemory();
   dbr_file_name = "dbr_file_name";
-  ipmlog_file_name = "ipmlog.txt";
   load_thermodynamic_data = false;
 }
 
@@ -129,7 +128,7 @@ TNode::TNode( const TNode& otherNode )
   pmm->Fdev2[0] = 0.;
   pmm->Fdev2[1] = 1e-6;
 
-  std::cout << "copy constructor..." << std::endl;
+  node_logger->info("copy constructor...");
 }
 
 
@@ -365,7 +364,7 @@ long int TNode::GEM_run( bool uPrimalSol )
         CNode->NodeStatusCH = T_ERROR_GEM;
     }
     ipmlog_file->error("Error Node:{}  time:{}  dt:{}", CNode->NodeHandle, CNode->Tm, CNode->dt);
-    if( profil->pa.p.PSM >= 2  )
+    if( multi->pa_p_ptr()->PSM >= 2  )
         ipmlog_file->error("{}", ipmlog_error);
 
     return CNode->NodeStatusCH;
