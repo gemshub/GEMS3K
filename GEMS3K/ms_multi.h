@@ -534,6 +534,7 @@ class TMultiBase
 {
     char PAalp_; ///< Flag for using (+) or ignoring (-) specific surface areas of phases
     char PSigm_; ///< Flag for using (+) or ignoring (-) specific surface free energies
+    std::shared_ptr<BASE_PARAM> pa_standalone;
 
     /// Default logger for ipm chemical
     static std::shared_ptr<spdlog::logger> ipm_logger;
@@ -640,7 +641,6 @@ protected:
 
     MULTI pm;
     MULTI *pmp;
-    std::shared_ptr<BASE_PARAM> pa_standalone;
 
     // Internal arrays for the performance optimization  (since version 2.0.0)
     long int sizeN; /*, sizeL, sizeAN;*/

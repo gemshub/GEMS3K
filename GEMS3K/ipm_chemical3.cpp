@@ -30,7 +30,6 @@
 #include "ms_multi.h"
 #include "v_detail.h"
 
-
 /// Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
 // added 18.06.2008 DK
 double TMultiBase::SmoothingFactor( )

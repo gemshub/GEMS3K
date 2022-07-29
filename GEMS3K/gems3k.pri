@@ -60,6 +60,8 @@
                       $$GEMS3K_CPP/nodearray2.cpp \
                       $$GEMS3K_CPP/node_format.cpp \
 #                      $$GEMS3K_CPP/particlearray.cpp \
+                      $$GEMS3K_CPP/ms_multi_copy.cpp \
+                      $$GEMS3K_CPP/ms_multi_diff.cpp \
                       $$GEMS3K_CPP/ms_multi_file.cpp \
                       $$GEMS3K_CPP/ms_multi_format.cpp \
                       $$GEMS3K_CPP/io_template.cpp \
@@ -68,12 +70,11 @@
                       $$GEMS3K_CPP/io_simdjson.cpp \
                       $$GEMS3K_CPP/gems3k_impex.cpp \
                       $$GEMS3K_CPP/node_copy.cpp \
-                      $$GEMS3K_CPP/ms_multi_copy.cpp \
                       $$GEMS3K_CPP/node_activities.cpp \
                       $$GEMS3K_CPP/node_kinetics.cpp \
                       $$GEMS3K_CPP/s_activity.cpp \
                       $$GEMS3K_CPP/s_activity2.cpp \
                       $$GEMS3K_CPP/s_activity3.cpp  \
                       $$GEMS3K_CPP/v_detail.cpp \
-                      $$GEMS3K_CPP/v_service.cpp 
+                      $$GEMS3K_CPP/v_service.cpp
 

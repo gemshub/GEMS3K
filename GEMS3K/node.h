@@ -56,13 +56,14 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "ms_multi.h"
 // #include "allan_ipm.h"
 #include "datach.h"
 #include "databr.h"
 #include "activities.h"
 #include "gems3k_impex.h"
 #include "v_detail.h"
+
+#include "ms_multi.h"
 
 #ifdef USE_THERMOFUN
 #include "ThermoFun/ThermoFun.h"

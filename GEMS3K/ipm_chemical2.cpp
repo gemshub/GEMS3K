@@ -1350,5 +1350,4 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
    return status;
 }
 
-
 //--------------------- End of ipm_chemical2.cpp ---------------------------
