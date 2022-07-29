@@ -665,7 +665,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     case GEMS3KGenerator::f_binary:
     {
         GemDataStream  ff( generator.get_ipm_path(), std::ios::out|std::ios::binary );
-        calcNode->multi->out_multi( ff  );
+        calcNode->multi_ptr()->out_multi( ff  );
 
         GemDataStream  f_ch( generator.get_dch_path(), std::ios::out|std::ios::binary);
         calcNode->datach_to_file( f_ch);
@@ -675,7 +675,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     {
         std::fstream ff( generator.get_ipm_path(), std::ios::out );
         ErrorIf( !ff.good(), generator.get_ipm_path(), "Fileopen error");
-        calcNode->multi->write_ipm_format_stream( ff, generator.files_mode(), addMui, with_comments, brief_mode, calcNode->output_set_name() );
+        calcNode->multi_ptr()->write_ipm_format_stream( ff, generator.files_mode(), addMui, with_comments, brief_mode, calcNode->output_set_name() );
 
         std::fstream  f_ch( generator.get_dch_path(), std::ios::out);
         calcNode->write_dch_format_stream( f_ch, generator.files_mode(), with_comments, brief_mode );
@@ -683,7 +683,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         if(generator.files_mode()>=GEMS3KGenerator::f_thermofun )
         {
             std::fstream  f_fun( generator.get_thermofun_path(), std::ios::out);
-//// 07_22            calcNode->write_ThermoFun_format_stream(f_fun);
+            calcNode->write_ThermoFun_format_stream(f_fun);
         }
     }
         break;

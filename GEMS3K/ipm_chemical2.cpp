@@ -101,7 +101,6 @@ void TMultiBase::CalculateConcentrationsInPhase( double X[], double XF[], double
 {
     long int j, ii, i;
     double Muj, /* DsurT=0.0,*/ SPmol, lnFmol=4.016535;
-//    SPP_SETTING *pa = &TProfil::pm->pa;
 
     if( pm.PHC[0] == PH_AQUEL )
     {  // mole fraction to molality conversion
@@ -298,7 +297,7 @@ void TMultiBase::CalculateConcentrations( double X[], double XF[], double XFA[])
 {
     long int k, ii, i, j, ist, jj, jja;
     double Factor=0.0, Dsur=0.0, MMC=0.0;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
 //    if( pm.Ls < 2 || !pm.FIs )  Temporary disabled  09.03.2010 DK
 //        return;
@@ -487,7 +486,6 @@ void TMultiBase::IS_EtaCalc()
 {
     long int k, i, ist, isp, j=0, ja;
     double XetaS=0., XetaW=0.,  Ez, CD0, CDb;
-//    SPP_SETTING *pa = &TProfil::pm->pa;
 
     for( k=0; k<pm.FIs; k++ )
     { // loop over phases
@@ -955,7 +953,7 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
         long int i, ii, j, ja, ist=0, iss, dent, Cj, iSite[MST];
     double XS0,  xj0, XVk, XSk, XSkC, xj, Mm, rIEPS, ISAT, XSs,
            SATst, xjn, q1, q2, aF, cN, eF, lnGamjo, lnDiff, lnFactor;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
     if( pm.XF[k] <= pm.DSM ) // No sorbent retained by the IPM - phase killed
         return status;

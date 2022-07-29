@@ -1,5 +1,5 @@
 
-#  GEMS3K v.3.8.1 c.0aa600e 
+#  GEMS3K v.3.9.5 c.6dae7a9
 # Comments can be marked with # $ ; as the first character in the line
 # DCH text input file (should be read before IPM and DBR files)
 
@@ -134,7 +134,7 @@
 # denWg: Look-up array for the density of water vapour, kg/m3, and its derivatives [5*nPp*nTp]
 <denWg>
 0.767104546309221 
-0 
+-0 
 0 
 0 
 0 
@@ -264,50 +264,6 @@
 29.1347219290407 
 29.3221550499352 
 105.463993756591 
-
-# A0: reserved: Look-up array for DC Helmholtz energy function, J/mol [nDC*nPp*nTp]
-<A0>
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-
-# U0: reserved: Look-up array for DC internal energy function, J/mol [nDC*nPp*nTp]
-<U0>
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
-0 
 
 # End of file
 

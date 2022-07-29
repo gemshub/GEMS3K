@@ -100,7 +100,6 @@ void TActivity::CalculateConcentrationsInPhase( double X[], double XF[], double 
 {
     long int j;
     double Muj, /* DsurT=0.0,*/ SPmol, lnFmol=4.016535;
-//    SPP_SETTING *pa = &TProfil::pm->pa;
 
     if( act.PHC[0] == PH_AQUEL )
     {  // mole fraction to molality conversion
@@ -297,7 +296,6 @@ void TActivity::CalculateConcentrations( double X[], double XF[], double XFA[])
 {
     long int k, i, j, jj;
     double Factor=0.0, Dsur=0.0, MMC=0.0, VXc;//, YFk;
-//    SPP_SETTING *pa = paTProfil;
 
 //    if( act.Ls < 2 || !act.FIs )  Temporary disabled  09.03.2010 DK
 //        return;

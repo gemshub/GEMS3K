@@ -221,7 +221,6 @@ TKinetics::CalculateKinMet( long int LinkMode  )
    long int k, jb, je=0, kf, kfe=0, kp, kpe=0, ka, kae=0, ks, kse=0,
             kc, kd, kce=0, kde=0, ku, kue=0, ki, kie=0, jphl=0, jlphc=0;
 
-//   SPP_SETTING *pa = paTProfil;
    char *kMod;
 
    for( k=0; k< kin.FI; k++ )

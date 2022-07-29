@@ -817,9 +817,6 @@ long int TPRSVcalc::ResidualFunct( double *fugpure )
 }
 
 
-
-///#ifndef IPMGEMPLUGIN
-
 /// calculates properties of pure fluids when called from DCthermo
 long int TPRSVcalc::PRSVCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 {
@@ -846,9 +843,6 @@ long int TPRSVcalc::PRSVCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 		return -1;
 	}
 }
-
-///#endif
-
 
 
 //=======================================================================================================
@@ -2251,9 +2245,6 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
 
  }
 
-///#ifndef IPMGEMPLUGIN
-
-
 
 /// calculates properties of pure fluids when called from DCthermo
 long int TCGFcalc::CGcalcFugPure( double Tmin, float *Cemp, double *FugProps )
@@ -2295,10 +2286,6 @@ long int TCGFcalc::CGcalcFugPure( double Tmin, float *Cemp, double *FugProps )
 		return -1;
 	}
 }
-
-///#endif
-
-
 
 
 //=======================================================================================================
@@ -3200,9 +3187,6 @@ long int TSRKcalc::ResidualFunct( double *fugpure )
 }
 
 
-
-///#ifndef IPMGEMPLUGIN
-
 /// Calculates properties of pure fluids when called from DCthermo
 long int TSRKcalc::SRKCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 {
@@ -3229,11 +3213,6 @@ long int TSRKcalc::SRKCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 		return -1;
 	}
 }
-
-///#endif
-
-
-
 
 
 //=======================================================================================================
@@ -4008,9 +3987,6 @@ long int TPR78calc::ResidualFunct( double *fugpure )
 }
 
 
-
-///#ifndef IPMGEMPLUGIN
-
 /// Calculates properties of pure fluids when called from DCthermo
 long int TPR78calc::PR78CalcFugPure( double Tmin, float *Cpg, double *FugProps )
 {
@@ -4037,11 +4013,6 @@ long int TPR78calc::PR78CalcFugPure( double Tmin, float *Cpg, double *FugProps )
 		return -1;
 	}
 }
-
-///#endif
-
-
-
 
 
 //=======================================================================================================
@@ -4975,10 +4946,6 @@ long int TCORKcalc::ResidualFunct()
     return 0;
 }
 
-
-
-///#ifndef IPMGEMPLUGIN
-
 /// Calculates properties of pure fluids when called from DCthermo
 long int TCORKcalc::CORKCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 {
@@ -5005,10 +4972,6 @@ long int TCORKcalc::CORKCalcFugPure( double Tmin, float *Cpg, double *FugProps )
                 return -1;
         }
 }
-
-///#endif
-
-
 
 
 
@@ -6217,9 +6180,6 @@ long int TSTPcalc::PsatCO2( long int j )
 }
 
 
-
-///#ifndef IPMGEMPLUGIN
-
 /// Calculates pure species properties (called from DCthermo)
 long int TSTPcalc::STPCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 {
@@ -6248,10 +6208,6 @@ long int TSTPcalc::STPCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 
     return 0;
 }
-
-///#endif
-
-
 
 
 

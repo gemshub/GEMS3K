@@ -323,7 +323,6 @@ double TActivity::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
     //long int jc=-1;
     double F0=0.0;//, Fold, Mk=0.0;
     //double FactSur, FactSurT;
-//    SPP_SETTING *pa = paTProfil;
 
    // Fold = act.F0[j];    // No old sorption models in this implementation!
 //    if( act.FIat > 0 && j < act.Ls && j >= act.Ls - act.Lads )
@@ -748,9 +747,6 @@ double TActivity:: ConvertGj_toUniformStandardState( double g0, long int j, long
          [[fallthrough]];
     case DC_AQ_SOLVCOM:
     case DC_AQ_SOLVENT:
-//#ifndef IPMGEMPLUGIN
-//        if( TSyst::sm->GetSY()->PYOF != S_OFF )
-//#endif
           if( noZero( YOF ) )
         	G += YOF;  // In GEMS3K, YOF[k] is the only way to influence G directly
 
@@ -780,10 +776,7 @@ case DC_SCM_SPECIES:
     case DC_SUR_MINAL:
     case DC_SUR_CARRIER:
     case DC_PEL_CARRIER:
-//#ifndef IPMGEMPLUGIN
-//        if( TSyst::sm->GetSY()->PYOF != S_OFF )
-//#endif
-          if( noZero( YOF ) )
+         if( noZero( YOF ) )
         	 G += YOF;
         break;
         // Sorption phases

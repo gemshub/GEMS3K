@@ -24,9 +24,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-
 #include "v_detail.h"
-#include "v_service.h"
 #include "io_template.h"
 #include "io_nlohmann.h"
 #include "io_simdjson.h"
@@ -34,6 +32,36 @@
 #include "ms_multi.h"
 
 const char *_GEMIPM_version_stamp = " GEMS3K v.3.9.5 c.6dae7a9";
+
+const double R_CONSTANT = 8.31451,
+              NA_CONSTANT = 6.0221367e23,
+                F_CONSTANT = 96485.309,
+                  e_CONSTANT = 1.60217733e-19,
+                    k_CONSTANT = 1.380658e-23,
+// Conversion factors
+                      cal_to_J = 4.184,
+                        C_to_K = 273.15,
+                          lg_to_ln = 2.302585093,
+                            ln_to_lg = 0.434294481,
+                             H2O_mol_to_kg = 55.50837344,
+                               Min_phys_amount = 1.66e-24;
+
+const BASE_PARAM pa_p_ = {    // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
+         2,  /* PC */  2,     /* PD */   -5,   /* PRD */
+         1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
+         0, /* DT */     30000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
+         1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
+         1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
+         1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
+         1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
+         1e-6, /* DFYs, */  1e-17,  /* DB */   1.,   /* AG */
+         0.,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
+         1e-3, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
+         1e-13,  /* ScMin, */  1e-33, /* DcMin, */   1e-20, /* PhMin, */
+         1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
+         1e-10,  /* DKIN  */ 0,  /* tprn */
+}; // BASE_PARAM
+
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
@@ -164,7 +192,7 @@ template<typename TIO>
 void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
                                       bool with_comments, bool brief_mode )
 {
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
     bool _comment = with_comments;
     char PAalp;
     char PSigm;
@@ -594,7 +622,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 template<typename TIO>
 void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 {
-    BASE_PARAM *pa_p = pa_p_ptr();
+    BASE_PARAM *pa_p = base_param();
     long int ii, nfild;
     size_t len;
 
@@ -602,10 +630,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     char PAalp;
     char PSigm;
 
-    ///#ifdef IPMGEMPLUGIN 07/05/2020
-    ///   set_def();
-    ///#endif
-
+    set_def();
     //mem_set( &pm.N, 0, 39*sizeof(long int));
     //mem_set( &pm.TC, 0, 55*sizeof(double));
     // get sizes from DATACH
@@ -628,7 +653,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     }
 
     // setup default constants
-    pa_p_ptr()->PE = 1;
+    base_param()->PE = 1;
     pm.E = 1;
     pm.PV = 0;
     pm.PSOL = 0;
@@ -682,7 +707,6 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 
     PAalp_ = PAalp;
     PSigm_ = PSigm;
-    //realloc memory
     multi_realloc( PAalp, PSigm );
 
     // get dynamic data from DATACH file

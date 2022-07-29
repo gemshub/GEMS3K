@@ -287,7 +287,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
             datach_from_file(f_ch);
 
             GemDataStream f_m( generator.get_ipm_path(), std::ios::in|std::ios::binary );
-            multi->read_multi(f_m, CSD);
+             multi_ptr()->read_multi(f_m, CSD);
         }
             break;
         default:
@@ -310,7 +310,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 
             std::fstream ff( generator.get_ipm_path(), std::ios::in );
             ErrorIf( !ff.good() , generator.get_ipm_path(), "Fileopen error");
-            multi->read_ipm_format_stream( ff,generator.files_mode(), CSD, current_input_set_name);
+            multi_ptr()->read_ipm_format_stream( ff,generator.files_mode(), CSD, current_input_set_name);
 
         }
             break;
@@ -365,6 +365,12 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
     return 1;
 }
 
+void TNode::init_into_gems3k()
+{
+    //InitReadActivities( mult_in.c_str(),CSD ); // from DCH file in future?
+    multi->InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
+    this->InitCopyActivities( CSD, pmm, CNode );
+}
 
 //  Parameters:
 //  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
@@ -391,7 +397,7 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json, std::stri
         datach_from_string(dch_json);
 
         // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
-        multi->gemipm_from_string( ipm_json, CSD, current_input_set_name );
+        multi_ptr()->gemipm_from_string( ipm_json, CSD, current_input_set_name );
 
         // copy intervals for minimization
         pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
@@ -434,13 +440,6 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json, std::stri
         ipmlog_file->error("GEM_init error: {}",ipmlog_error);
     }
     return 1;
-}
-
-void TNode::init_into_gems3k()
-{
-    //InitReadActivities( mult_in.c_str(),CSD ); // from DCH file in future?
-    multi->InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
-    this->InitCopyActivities( CSD, pmm, CNode );
 }
 
 long int  TNode::GEM_write_dbr( std::string& dbr_json )
@@ -497,7 +496,7 @@ void  TNode::GEM_print_ipm( const char* fname )
     else
         str_file = fname;
 
-     multi->to_text_file(str_file.c_str());//profil1->outMultiTxt( str_file.c_str()  );
+     multi_ptr()->to_text_file(str_file.c_str());//profil1->outMultiTxt( str_file.c_str()  );
 }
 
 
@@ -576,7 +575,6 @@ long int  TNode::GEM_read_dbr( const char* fname, GEMS3KGenerator::IOModes type_
     ipmlog_file->error("{}", ipmlog_error);
     return 1;
 }
-
 
 // Copy CSD (DATACH structure) data from other structure.
 void TNode::datach_copy( DATACH* otherCSD )

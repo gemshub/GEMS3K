@@ -33,6 +33,8 @@
 #include <vector>
 #include "spdlog/spdlog.h"
 
+#include "m_const_base.h"
+
 // re-declaration of enums below required for GEMS3K
 // dc_class_codes for fluids will be replaced by tp_codes
 enum fluid_mix_rules {  /// Codes to identify specific mixing rules and temperature functions in EoS and activity models (see m_phase.h)
@@ -75,8 +77,6 @@ enum tp_codes {  /// codes for fluid subroutines in EoS models (see v_mod.h)
 };
 
 // ------------------------------------------------------------------
-
-#define MAXPHASENAME 16
 
 /// Base class for subclasses of built-in mixing models.
 /// (c) March 2007 DK/TW
@@ -142,7 +142,7 @@ class TSolMod
         char MixCode;	///< Code for specific EoS mixing rules or site-balance based electrostatic SCMs
                 char *DC_Codes; ///< Class codes of end members (species) ->NComp
 
-        char PhaseName[MAXPHASENAME+1];    ///< Phase name (for specific built-in models)
+        char PhaseName[MAXPHNAME+1];    ///< Phase name (for specific built-in models)
 
         long int NComp;   ///< Number of components in the solution phase
         long int NPar;     ///< Number of non-zero interaction parameters

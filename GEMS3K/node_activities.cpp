@@ -228,7 +228,6 @@ TNode::InitCopyActivities( DATACH* csd, MULTI* mp, DATABR* cnd )
 {
 
    atp.reset( new TActivity( csd, cnd, this ) );
-
    ACTIVITY* ap = atp->GetActivityDataPtr();
    AiP = ap;
 

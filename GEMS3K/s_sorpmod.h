@@ -27,9 +27,6 @@
 #ifndef S_SORPTION_H
 #define S_SORPTION_H
 
-//#include "s_fgl.h"
-
-// const int   MAXDCNAME = 16, MAXPHASENAME = 16, MST =   6;
 #include "m_const_base.h"
 
 const int MAXEILAYERS = 4;
@@ -113,7 +110,7 @@ struct SorptionData {
 
 char Mod_Code_;    // Code of the sorption phase model - see SORPPHASECODES
 char EIL_Code_;	  // Code for specific EIL model- see EILMODCODES  (before: SCMC)
-char  PhasNam_[MAXPHASENAME];      // Phase name (for specific built-in models)
+char  PhasNam_[MAXPHNAME];      // Phase name (for specific built-in models)
 
 long int NSpec_;  // Total number of species assigned to this surface tile or Donnan phase
 long int nlPh_;   // number of linked phases (cf. lPh), default 1 (the sorbent phase)
@@ -218,7 +215,7 @@ protected:
 
     char Mod_Code;    // Code of the sorption phase model - see SORPPHASECODES
     char EIL_Code;	  // Code for specific EIL model- see EILMODCODES  (before: SCMC)
-    char  PhasNam_[MAXPHASENAME];      // Phase name (for specific built-in models)
+    char  PhasNam_[MAXPHNAME];      // Phase name (for specific built-in models)
 
     long int NSpec;  // Total number of species assigned to this surface tile or Donnan phase
     long int nlPh;   // number of linked phases (cf. lPh), default 1 (the sorbent phase)

@@ -27,11 +27,15 @@
 //-------------------------------------------------------------------
 //
 
-#include "v_service.h"
 #include "ms_multi.h"
 #include "num_methods.h"
 #include "activities.h"
 #include "kinetics.h"
+#include "v_service.h"
+
+enum volume_code {  // Codes of volume parameter ???
+    VOL_UNDEF, VOL_CALC, VOL_CONSTR
+};
 
 /// Calculation of LPP-based automatic initial approximation of the primal vector x.
 /// Use the modified simplex method with two-side constraints on x
@@ -56,7 +60,7 @@ void TMultiBase::AutoInitialApproximation( )
         ErrorIf( !DN || !DU || !B1, "AutoInitialApproximation()", "Memory alloc error." );
         for( i=0; i<pm.N; i++)
              DU[i+Q] = 0.;
-        EPS = pa_p_ptr()->EPS; //  13.10.00  KC  DK
+        EPS = base_param()->EPS; //  13.10.00  KC  DK
         GZ = 1./EPS;    
 
         T=0; // Calcuation of all non-zero values in A and G arrays
@@ -508,10 +512,8 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA1, A, Q, &ITER);
 //
 double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM )
 {
- // const char *key;
   double ScFact=1.;
 
-//  long int KMretCode = 0;
   InitalizeGEM_IPM_Data();
 
   pm.t_start = clock();
@@ -544,7 +546,7 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
 //  to_text_file( "MultiDump1.txt" );   // Debugging
   }
 
-    if( pa_p_ptr()->DG > 1e-5 )
+    if( base_param()->DG > 1e-5 )
     {
         ScFact = SystemTotalMolesIC();
         ScaleSystemToInternal( ScFact );
@@ -589,7 +591,7 @@ try{
   catch( TError& xcpt )
   {
 
-      if( pa_p_ptr()->DG > 1e-5 )
+      if( base_param()->DG > 1e-5 )
          RescaleSystemFromInternal( ScFact );
 //      to_text_file( "MultiDump2.txt" );   // Debugging
 
@@ -601,7 +603,7 @@ try{
      Error( xcpt.title, xcpt.mess);
   }
 
-  if( pa_p_ptr()->DG > 1e-5 )
+  if( base_param()->DG > 1e-5 )
        RescaleSystemFromInternal(  ScFact );
 //  to_text_file( "MultiDump3.txt" );   // Debugging
 
@@ -625,7 +627,7 @@ double TMultiBase::SystemTotalMolesIC( )
 
   pm.TMols = mass_temp;
 
-  pm.SMols = pa_p_ptr()->DG;
+  pm.SMols = base_param()->DG;
   ScFact = pm.SMols/pm.TMols;
 
   return ScFact;
@@ -853,24 +855,16 @@ void TMultiBase::InitalizeGEM_IPM_Data() // Reset internal data formerly MultiIn
     }
 }
 
-void TMultiBase::multiConstInit_PN()
-{
-    pm.PZ = pa_p_ptr()->DW;  // in IPM
-    //  pm.FitVar[0] = 0.0640000030398369;
-}
-
 
 /// Setup/copy flags and thresholds for numeric modules to TMulti structure.
 /// Do it before calculations
 void TMultiBase::MultiConstInit() // from MultiRemake
 {
-   // const BASE_PARAM *pa_p = pa_p_ptr();
-
   pm.FI1 = 0;
   pm.FI1s = 0;
   pm.FI1a = 0;
   pm.ITF = 0; pm.ITG = 0;
-  pm.PD = pa_p_ptr()->PD;
+  pm.PD = base_param()->PD;
   pm.Ec = pm.K2 = pm.MK = 0;
   pm.W1 = 0;
   pm.is = 0;
@@ -880,7 +874,7 @@ void TMultiBase::MultiConstInit() // from MultiRemake
   pm.lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
   pm.logXw = -16.;
   pm.logYFk = -9.;
-  pm.DXM = pa_p_ptr()->DK;
+  pm.DXM = base_param()->DK;
 
   //  ???????
   pm.FX = 7777777.;
@@ -891,6 +885,13 @@ void TMultiBase::MultiConstInit() // from MultiRemake
   pm.FitVar[4] = 1.0;
 
     multiConstInit_PN();
+
+}
+
+void TMultiBase::multiConstInit_PN()
+{
+    pm.PZ = base_param()->DW;  // in IPM
+    //  pm.FitVar[0] = 0.0640000030398369;
 }
 
 /// Calculation by IPM (internal step initialization)
@@ -984,20 +985,18 @@ TSolMod * TMultiBase::pTSolMod (int xPH){
     return this->phSolMod[xPH];
 }
 
-
-
 /// Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
 //
 void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 {
     double TK, PPa;
 
-  TNode* na = node1;
-  if( aNa != nullptr )
-    na = aNa;   // for reading GEMIPM files task
-  ErrorIf( na == nullptr, "DCLoadThermodynamicData", "Could not be undefined node" );
-  TK =  na->cTK();
-  PPa = na->cP();
+    TNode* na = node;
+    if( aNa != nullptr )
+        na = aNa;   // for reading GEMIPM files task
+     ErrorIf( na == nullptr, "DCLoadThermodynamicData", "Could not be undefined node" );
+    TK =  na->cTK();
+    PPa = na->cP();
 
 
 #ifdef USE_THERMOFUN
@@ -1123,7 +1122,6 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
                 if( dCH->U0 ) u0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->U0+jj,
                                                   PPa, TK, dCH->nTp, dCH->nPp,5 );
             }
-
             if( pm.tpp_G )
                 pm.tpp_G[j] = Go;
             if( pm.Guns )
@@ -1186,6 +1184,16 @@ double TMultiBase::HelmholtzEnergy( double x )
     GibbsEnergyMinimization();
     return( pm.VXc - pm.VX_ ); // VXc current value, VX_ value from key
 }
+//
+// kg44: not properly implemented...removed it
+/*
+double A_P( double x, double )
+{
+#ifndef IPMGEMPLUGIN
+  return TProfil::pm->HelmholtzEnergy(x);
+#endif
+}
+*/
 
 /// Calls to minimization of other system potentials - InternalEnergy.
 /// Calc function for Method of golden section (only in GEMS ).
@@ -1198,6 +1206,15 @@ double TMultiBase::InternalEnergy( double TC, double P )
     return( (pm.VXc - pm.VX_)+(pm.SXc - pm.SX_) ); // VXc current value, VX_ value from key
 }
 
+// kg44: not properly implemented...removed it
+/*
+double U_TP( double TC, double P)
+{
+#ifndef IPMGEMPLUGIN
+  return TProfil::pm->InternalEnergy(  TC,  P );
+#endif
+}
+*/
 
 
 //--------------------- End of ipm_simplex.cpp ---------------------------

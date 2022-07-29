@@ -62,9 +62,9 @@ void TMultiBase::SetSmoothingFactor( long int mode )
 
     ir = pm.IT;
     irf = static_cast<double>(ir);
-    ag = pa_p_ptr()->AG; // pm.FitVar[4];
-    dg = pa_p_ptr()->DGC;
-    iim = pa_p_ptr()->IIM;
+    ag = base_param()->AG; // pm.FitVar[4];
+    dg = base_param()->DGC;
+    iim = base_param()->IIM;
 
     if( dg > -0.0001 && ag >= 0.0001 ) // Smoothing used in the IPM-2 algorithm
     {					// with some improvements
@@ -145,7 +145,6 @@ double
 TMultiBase::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
 {
     double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0.;//, MMC = 0.;
-    //    SPP_SETTING *pa = &TProfil::pm->pa;
 
     if( pm.sMod[k][SPHAS_TYP] != SM_AQPITZ)
     {
@@ -292,7 +291,7 @@ TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
     char *sMod;
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmpXFk;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
    ipm_logger->trace("CalculateActivityCoefficients {}", LinkMode);
     // calculating concentrations of species in multi-component phases
@@ -1194,7 +1193,6 @@ void TMultiBase::Free_TSorpMod()
   phSorpMod = nullptr;
   sizeFIa = 0;
 }
-
 
 //--------------------- End of ipm_chemical3.cpp ---------------------------
 

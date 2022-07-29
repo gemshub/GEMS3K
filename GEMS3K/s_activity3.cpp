@@ -42,7 +42,6 @@ double
 TActivity::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
 {
     double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0., MMC = 0.;
-//    SPP_SETTING *pa = &TProfil::pm->pa;
 
     if( act.sMod[k][SPHAS_TYP] != SM_AQPITZ)
     {
@@ -185,7 +184,6 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
     char *sMod;
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmpXFk;
-//    SPP_SETTING *pa = paTProfil;
 
     // calculating concentrations of species in multi-component phases
     switch( LinkMode )

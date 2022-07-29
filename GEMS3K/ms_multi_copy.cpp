@@ -24,38 +24,42 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <cmath>
-#include "v_service.h"
 #include "ms_multi.h"
+#include "v_service.h"
 
-const double R_CONSTANT = 8.31451,
-              NA_CONSTANT = 6.0221367e23,
-                F_CONSTANT = 96485.309,
-                  e_CONSTANT = 1.60217733e-19,
-                    k_CONSTANT = 1.380658e-23,
-// Conversion factors
-                      cal_to_J = 4.184,
-                        C_to_K = 273.15,
-                          lg_to_ln = 2.302585093,
-                            ln_to_lg = 0.434294481,
-                             H2O_mol_to_kg = 55.50837344,
-                               Min_phys_amount = 1.66e-24;
+TMultiBase::TMultiBase(TNode *na_)
+{
+    pa_standalone.reset( new BASE_PARAM() );
+    *pa_standalone = pa_p_;
 
-BASE_PARAM pa_p_ = {    // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
-         2,  /* PC */  2,     /* PD */   -5,   /* PRD */
-         1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
-         0, /* DT */     30000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
-         1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
-         1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
-         1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
-         1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
-         1e-6, /* DFYs, */  1e-17,  /* DB */   1.,   /* AG */
-         0.,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-         1e-3, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
-         1e-13,  /* ScMin, */  1e-33, /* DcMin, */   1e-20, /* PhMin, */
-         1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
-         1e-10,  /* DKIN  */ 0,  /* tprn */
-}; // BASE_PARAM
+    pmp = &pm;
+    node = na_; // parent
+    sizeN = 0;
+    AA = nullptr;
+    BB = nullptr;
+    arrL = nullptr;
+    arrAN = nullptr;
+
+    U_mean = nullptr;
+    U_M2 = nullptr;
+    U_CVo = nullptr;
+    U_CV = nullptr;
+    ICNud = nullptr;
+
+    sizeFIs = 0;
+    phSolMod = nullptr;
+    sizeFIa = 0;
+    phSorpMod = nullptr;
+    sizeFI = 0;
+    phKinMet = nullptr;
+
+    pmp->Guns = nullptr;
+    pmp->Vuns = nullptr;
+    pmp->tpp_G = nullptr;
+    pmp->tpp_S = nullptr;
+    pmp->tpp_Vm = nullptr;
+    set_def();
+}
 
 void TMultiBase::get_PAalp_PSigm( char& PAalp, char& PSigm)
 {
@@ -63,10 +67,149 @@ void TMultiBase::get_PAalp_PSigm( char& PAalp, char& PSigm)
    PSigm = PSigm_;
 }
 
+void TMultiBase::STEP_POINT( const char* str)
+{
+   ipm_logger->info( std::string("STEP_POINT ")+str);
+}
+
+void TMultiBase::alloc_IPx( long int LsIPxSum )
+{
+    if( pm.IPx ) delete[] pm.IPx;
+    pm.IPx = new long int[ LsIPxSum];
+}
+
+void TMultiBase::alloc_PMc( long int LsModSum )
+{
+    if( pm.PMc ) delete[] pm.PMc;
+    pm.PMc = new double[LsModSum];
+}
+
+void TMultiBase::alloc_DMc( long int LsMdcSum )
+{
+    if( pm.DMc ) delete[] pm.DMc;
+    pm.DMc = new double[LsMdcSum];
+}
+
+void TMultiBase::alloc_MoiSN( long int LsMsnSum )
+{
+    if(pm.MoiSN) delete[] pm.MoiSN;
+    pm.MoiSN = new double[LsMsnSum];
+}
+
+void TMultiBase::alloc_SitFr( long int LsSitSum )
+{
+    if(pm.SitFr) delete[] pm.SitFr;
+    pm.SitFr = new double[LsSitSum];
+}
+
+void TMultiBase::alloc_DQFc( long int DQFcSum )
+{
+    if(pm.DQFc) delete[] pm.DQFc;
+    pm.DQFc = new double[DQFcSum];
+}
+
+void TMultiBase::alloc_PhLin( long int PhLinSum )
+{
+    if(pm.PhLin) delete[] pm.PhLin;
+    pm.PhLin = new long int[PhLinSum][2];
+}
+
+void TMultiBase::alloc_lPhc( long int lPhcSum )
+{
+    if(pm.lPhc) delete[] pm.lPhc;
+    pm.lPhc = new double[lPhcSum];
+}
+
+void TMultiBase::alloc_xSMd( long int xSMdSum )
+{
+    if(pm.xSMd) delete[] pm.xSMd;
+    pm.xSMd = new long int[xSMdSum];
+}
+
+void TMultiBase::alloc_IsoPc( long int IsoPcSum )
+{
+    if(pm.IsoPc) delete[] pm.IsoPc;
+    pm.IsoPc = new double[IsoPcSum];
+}
+
+void TMultiBase::alloc_IsoSc( long int IsoScSum )
+{
+    if(pm.IsoSc) delete[] pm.IsoSc;
+    pm.IsoSc = new double[IsoScSum];
+}
+
+void TMultiBase::alloc_IsoCt( long int IsoCtSum )
+{
+    if(pm.IsoCt) delete[] pm.IsoCt;
+    pm.IsoCt = new char[IsoCtSum];
+}
+
+void TMultiBase::alloc_EImc( long int EImcSum )
+{
+    if(pm.EImc) delete[] pm.EImc;
+    pm.EImc = new double[EImcSum];
+}
+
+void TMultiBase::alloc_mCDc( long int mCDcSum )
+{
+    if(pm.mCDc) delete[] pm.mCDc;
+    pm.mCDc = new double[mCDcSum];
+}
+
+void TMultiBase::alloc_xSKrC( long int xSKrCSum )
+{
+    if(pm.xSKrC) delete[] pm.xSKrC;
+    pm.xSKrC = new long int[xSKrCSum];
+}
+
+void TMultiBase::alloc_ocPRkC( long int ocPRkC_feSArC_Sum )
+{
+    if(pm.ocPRkC) delete[] pm.ocPRkC;
+    pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
+}
+
+void TMultiBase::alloc_feSArC( long int ocPRkC_feSArC_Sum )
+{
+    if(pm.feSArC) delete[] pm.feSArC;
+    pm.feSArC = new double[ocPRkC_feSArC_Sum];
+}
+
+void TMultiBase::alloc_rpConC( long int rpConCSum )
+{
+    if(pm.rpConC) delete[] pm.rpConC;
+    pm.rpConC = new double[rpConCSum];
+}
+
+void TMultiBase::alloc_apConC( long int apConCSum )
+{
+    if(pm.apConC) delete[] pm.apConC;
+    pm.apConC = new double[apConCSum];
+}
+
+void TMultiBase::alloc_AscpC( long int AscpCSum )
+{
+    if(pm.AscpC) delete[] pm.AscpC;
+    pm.AscpC = new double[AscpCSum];
+}
+
+void TMultiBase::alloc_UMpcC( long int UMpcSum )
+{
+    if(pm.UMpcC) delete[] pm.UMpcC;
+    pm.UMpcC = new double[UMpcSum];
+}
+
+void TMultiBase::alloc_xICuC( long int xICuCSum )
+{
+    if(pm.xICuC) delete[] pm.xICuC;
+    pm.xICuC = new long int[xICuCSum];
+}
+
+//=================================================================================
+
 void TMultiBase::copyMULTI( const TMultiBase& otherMulti )
 {
     MULTI* otherPM = otherMulti.pmp;
-    pa_standalone = otherMulti.pa_standalone;  //???? copy or share?
+    pa_standalone = otherMulti.pa_standalone;  
     //static values
     copyValues(pm.stkey, otherPM->stkey, sizeof(char)*(EQ_RKLEN+5));
     copyValues( &pm.N, &otherPM->N, 39);
@@ -1031,8 +1174,6 @@ void TMultiBase::multi_realloc( char PAalp, char PSigm )
 /// Reallocation of dynamic memory
 void TMultiBase::multi_kill()
 {
-    if( node1 == nullptr ) // trmporaly for GUI
-       return;
     // Part 1
     // need  always to alloc vectors
     if( pm.L1) delete[] pm.L1;

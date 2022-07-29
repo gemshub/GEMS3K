@@ -96,7 +96,7 @@ class TNodeArray : std::enable_shared_from_this<TNodeArray>
 protected:
 
     std::shared_ptr<TNode> internal_Node;
-    TNode* calcNode;
+    TNode* calcNode=nullptr;
     DATABR** NodT0;  ///< array of nodes for previous time point
     DATABR** NodT1;  ///< array of nodes for current time point
 
@@ -176,8 +176,8 @@ protected:
 
     ///  Here we run command a GEM calculation in box iNode on to GEMS3_server
     virtual long int CalcNodeServer(TNode* wrkNode, long int  iNode, long int Mode);
-
     virtual void pVisor_Message( bool , long int =0, long int =0 ) {}
+
     // end of new stuff -------------------------------------------------------
 
     /// Initialization of TNodeArray data structures. Reads in the DBR text input files and

@@ -288,8 +288,8 @@ long int TSolMod::UpdatePT ( double T_k, double P_bar )
 /// gets phase name for specific built-in models (class TModOther)
 void TSolMod::GetPhaseName( const char *PhName )
 {
-	 strncpy( PhaseName, PhName, MAXPHASENAME );
-	 PhaseName[MAXPHASENAME] = 0;
+     strncpy( PhaseName, PhName, MAXPHNAME );
+     PhaseName[MAXPHNAME] = 0;
 }
 
 /// Calculation of configurational terms for the ideal mixing (c) DK, TW Nov. 2010

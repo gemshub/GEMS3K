@@ -79,7 +79,7 @@ void TMultiBase::XmaxSAT_IPM2()
     { // Loop over DCs
         if( pm.X[j] <= std::min( pm.lowPosNum, pm.DcMinM ) )
             continue;  // This surface DC has been killed by the IPM
-        rIEPS = pa_p_ptr()->IEPS;
+        rIEPS = base_param()->IEPS;
         ja = j - ( pm.Ls - pm.Lads );
 
         switch( pm.DCC[j] )  // code of species class
@@ -156,7 +156,7 @@ void TMultiBase::XmaxSAT_IPM2()
                  pm.DUL[j] = xj0 - rIEPS;
                 break;
             case SAT_SOLV:  // Neutral surface site (e.g. >O0.5H@ group)
-                rIEPS = pa_p_ptr()->IEPS;
+                rIEPS = base_param()->IEPS;
                 XS0 = (std::max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
                 XS0 = XS0 * XVk * Mm / 1e6 * pm.Nfsp[k][ist]; // in moles
 
@@ -378,159 +378,6 @@ NEXT_PHASE:
     }  // k
 }
 
-/*
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-///  This procedure sets kinetic constraints according to a given
-///  concentration units. Mode: 0 - initialization of AMRs; 1 - current iteration
-//  Needs much more work, elaboration, and performance optimization
-//
-void TMultiBase::Set_DC_limits( long int Mode )
-{
-    double XFL, XFU, XFS=0., XFM, MWXW, MXV, XL=0., XU=0.;
-    long int jb, je, j,k, MpL;
-    char tbuf[150];
-
-    if( !pm.PLIM )
-        return;  // no metastability limits to be set
-// ???????????????????????????????????????
-    CalculateConcentrations( pm.X, pm.XF, pm.XFA );
-
-    for(k=0; k<pm.FI; k++)
-        XFS+=pm.XF[k];  // calculate sum of moles in all phases
-
-    jb=0;
-    for( k=0; k<pm.FI; k++ )
-    { // cycle over phases
-        je=jb+pm.L1[k];
-//        XFM=0.;
-        MWXW =0.;
-        MXV = 0.;
-        XFL = 0.;
-        XFU = 1e6;
-        if( Mode && pm.XF[k] < pm.DSM )
-            goto NEXT_PHASE;
-        XFM = pm.FWGT[k]; // Mass of a phase
-        if( Mode )
-        {
-            MWXW = XFM/pm.XF[k];         // current molar mass of phase
-            MXV = pm.FVOL[k]/pm.XF[k]; // current molar volume of phase
-        }
-        // Check codes for phase DC
-        MpL=0;
-        for( j=jb; j<je; j++ )
-            if( pm.RLC[j] != NO_LIM )
-                MpL = 1;
-
-if( k < pm.FIs )
-{					// Temporary workaround - DK  13.12.2007
-        if( pm.RFLC[k] == NO_LIM && !MpL )
-        { // check type restrictions on phase
-            goto NEXT_PHASE;
-        }
-        switch( pm.RFSC[k] )
-        { // check scale restrictions on phase in all system
-        case QUAN_MOL:
-            XFL = Mode? pm.XF[k]: pm.PLL[k];
-            XFU = Mode? pm.XF[k]: pm.PUL[k];
-            break;
-        case CON_MOLAL:
-            XFL = Mode? pm.XF[k]: pm.PLL[k]*pm.GWAT/H2O_mol_to_kg;
-            XFU = Mode? pm.XF[k]: pm.PUL[k]*pm.GWAT/H2O_mol_to_kg;
-            break;
-        case CON_MOLFR:
-            XFL = Mode? pm.XF[k]: pm.PLL[k]*XFS;
-            XFU = Mode? pm.XF[k]: pm.PUL[k]*XFS;
-            break;
-        case CON_WTFR:   if(MWXW < 1e-15) break;  // Temp.fix
-            XFL = Mode? pm.XF[k]: pm.PLL[k]*pm.MBX/MWXW;
-            XFU = Mode? pm.XF[k]: pm.PUL[k]*pm.MBX/MWXW;
-            break;
-        case CON_VOLFR:   if(MXV < 1e-15) break; // Temp.fix
-            XFL = Mode? pm.XF[k]: pm.PLL[k]*pm.VXc/MXV;
-            XFU = Mode? pm.XF[k]: pm.PUL[k]*pm.VXc/MXV;
-            break;
-        default:
-            ; // do more?
-        }
-//        if( pm.RFLC[k] == NO_LIM )
-//        {                            Temporary!
-            XFL = 0.0;
-            XFU = 1e6;
-//        }
-}
-        for( j=jb; j<je; j++ )
-        { // loop over DCs
-            if( pm.RLC[j] == NO_LIM )
-                continue;
-
-            if( Mode )
-            {
-                XU = pm.DUL[j];
-                XL = pm.DLL[j];
-            }
-            else
-                switch( pm.RSC[j] ) // get initial limits
-                {
-                case QUAN_MOL:
-                    XU = pm.DUL[j];
-                    XL = pm.DLL[j];
-                    break;
-                case CON_MOLAL:
-                    XU = pm.DUL[j]*pm.GWAT/H2O_mol_to_kg;
-                    XL = pm.DLL[j]*pm.GWAT/H2O_mol_to_kg;
-                    break;
-                case CON_MOLFR:
-                    XU = pm.DUL[j]*XFU;
-                    XL = pm.DLL[j]*XFL;
-                    break;
-                case CON_WTFR:
-//Ask DK! 20/04/2002
-//#ifndef IPMGEMPLUGIN
-                    XU = pm.DUL[j]*XFU*MWXW /
-         TProfil::pm->MolWeight(pm.N, pm.Awt, pm.A+j*pm.N );
-                    XL = pm.DLL[j]*XFL*MWXW /
-         TProfil::pm->MolWeight(pm.N, pm.Awt, pm.A+j*pm.N );
-
-//#endif
-                    break;
-                case CON_VOLFR:
-                    XU = pm.DUL[j]*XFU*MXV/ pm.Vol[j];
-                    XL = pm.DLL[j]*XFL*MXV/ pm.Vol[j];
-                    break;
-                default:
-                    ; // do more
-                }
-            // check combine
-            if( XU < 0.0 ) XU = 0.0;
-            if( XU > 1e6 ) XU = 1e6;
-            if( XL < 0.0 ) XL = 0.0;
-            if( XL > 1e6 ) XL = 1e6;
-            if( XU > XFU )
-            {
- //               JJ = j;
-//                KK = k;
-                sprintf( tbuf, "Inconsistent upper DC metastability limits j=%ld k=%ld XU=%g XFU=%g",
-                         j, k, XU, XFU );
-                Error( "E11IPM: Set_DC_limits(): ",tbuf );
-//                XU = XFU; // - pm.lowPosNum;
-            }
-            if( XL < XFL )
-            {
-//                JJ = j;
-//                KK = k;
-                sprintf( tbuf, "Inconsistent lower DC metastability limits j=%ld k=%ld XL=%g XFL=%g",
-                         j, k, XL, XFL );
-                Error( "E12IPM: Set_DC_limits(): ",tbuf );
-//                XL = XFL; // - pm.lowPosNum;
-            }
-            pm.DUL[j]=XU;
-            pm.DLL[j]=XL;
-        }   // j
-NEXT_PHASE:
-        jb = je;
-    }  // k
-}
-*/
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculating total amounts of phases
 //
@@ -571,7 +418,7 @@ double TMultiBase::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
     long int ja=0, ist, isp, jc=-1;
     double F0=0.0, Fold, dF0, Mk=0.0, Ez, psiA, psiB, CD0, CDb, ObS;
     double FactSur, FactSurT;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
     Fold = pm.F0[j];
     if( pm.FIat > 0 && j < pm.Ls && j >= pm.Ls - pm.Lads )
@@ -1204,7 +1051,7 @@ void TMultiBase::KarpovsPhaseStabilityCriteria()
     bool KinConstr, fRestore;
     long int k, j, ii;
     double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj, sumWx, NonLogTerm = 0.;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
     EMU = pm.EMU;
     NMU = pm.NMU;
@@ -1319,7 +1166,7 @@ long int TMultiBase::SpeciationCleanup( double AmountCorrectionThreshold, double
     double MjuPrimal, MjuDual, MjuDiff, Yj, YjDiff=0., YjCleaned;
     double CutoffDistortionMBR = 0.1 * pm.DHBM;
     bool KinConstr, Degenerated = false;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
     PrimalChemicalPotentials( pm.F, pm.Y, pm.YF, pm.YFA );
     jb=0;
@@ -1452,10 +1299,10 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     long int L1k, L1kZeroDCs, k, j, jb = 0, status,
         DCinserted = 0, DCremoved = 0, PHinserted = 0, PHremoved = 0;
     double MjuDiffCutoff = 1e-3; // InsValue;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
     if( pa_p->GAS > 1e-6 )
          MjuDiffCutoff = pa_p->GAS;
-    AmThExp = (double)abs( pa_p->PRD );
+    AmThExp = abs( pa_p->PRD );
     if( noZero( AmThExp ) && AmThExp < 4.)
     {
         AmThExp = 4.;
@@ -1895,7 +1742,7 @@ long int TMultiBase::PhaseSelect( long int &kfr, long int &kur, long int RaiseSt
 {
     long int k, j, jb, kf, ku;
     double F1, F2, *F0; // , sfactor;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
     int rLoop = -1;
 //    sfactor = calcSfactor();
     if( !pm.K2 )

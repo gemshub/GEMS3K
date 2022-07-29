@@ -34,16 +34,11 @@
 #include "jama_cholesky.h"
 #include "kinetics.h"
 #include "v_service.h"
-
-using namespace TNT;
-using namespace JAMA;
-
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 // Thread-safe logger to stdout with colors
 std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = spdlog::stdout_color_mt("ipm");
 
-//#define GEMITERTRACE
 #define uDDtrace false
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -54,7 +49,7 @@ void TMultiBase::GibbsEnergyMinimization()
   bool IAstatus;
   Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
 
-  node1->ipmlog_file->debug(" GEMIPM TC={}", pm.TCc);
+  node->ipmlog_file->debug(" GEMIPM TC={}", pm.TCc);
 
 FORCED_AIA:
     GEM_IPM_Init();
@@ -116,7 +111,7 @@ void TMultiBase::GEM_IPM( long int /*rLoop*/ )
 {
     long int i, j, eRet, status=0; long int csRet=0;
 // bool CleanAfterIPM = true;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
 #ifdef GEMITERTRACE
   to_text_file( "MultiDumpB.txt" );   // Debugging
@@ -140,7 +135,6 @@ mEFD:  // Mass balance refinement (formerly EnterFeasibleDomain())
 to_text_file( "MultiDumpC.txt" );   // Debugging
 #endif
 
-
 // STEPWISE (2)  - stop point to examine output from EFD()
 STEP_POINT("After FIA");
 
@@ -155,8 +149,8 @@ STEP_POINT("After FIA");
      case 1: // degeneration in R matrix  for MassBalanceRefinement()
                  if( pm.pNP )
                  {   // bad SIA mode - trying the AIA mode
-                pm.MK = 2;   // Set to check in ComputeEquilibriumState() later on
-                node1->ipmlog_file->trace("ITF={} ITG={}  IT={}  ! PIA->AIA on E04IPM", pm.ITF, pm.ITG, pm.IT);
+                pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
+                node->ipmlog_file->trace("ITF={} ITG={}  IT={}  ! PIA->AIA on E04IPM", pm.ITF, pm.ITG, pm.IT);
                 goto FORCED_AIA;
    	         }
    	         else
@@ -171,7 +165,7 @@ STEP_POINT("After FIA");
 to_text_file( "MultiDumpD.txt" );   // Debugging
 #endif
 
- // STEPWISE (3)  - stop point to examine output from IPM()
+  // STEPWISE (3)  - stop point to examine output from IPM()
    STEP_POINT("After IPM");
 
 // Diagnostics of IPM results
@@ -184,26 +178,26 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
      case 1: // degeneration in R matrix  for InteriorPointsMethod()
          if( pm.pNP )
          {   // bad PIA mode - trying the AIA mode
-                pm.MK = 2;   // Set to check in ComputeEquilibriumState() later on
-                node1->ipmlog_file->trace("ITF={} ITG={}  IT={}   ! PIA->AIA on E06IPM", pm.ITF, pm.ITG, pm.IT);
+                pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
+                node->ipmlog_file->trace("ITF={} ITG={}  IT={}   ! PIA->AIA on E06IPM", pm.ITF, pm.ITG, pm.IT);
                 goto FORCED_AIA;
          }
 
-         node1->ipmlog_file->trace("ITF={} ITG={}  IT={}   AIA: DX->1e-4, DHBM->1e-6 on E06IPM", pm.ITF, pm.ITG, pm.IT);
+         node->ipmlog_file->trace("ITF={} ITG={}  IT={}   AIA: DX->1e-4, DHBM->1e-6 on E06IPM", pm.ITF, pm.ITG, pm.IT);
          Error( pm.errorCode, pm.errorBuf );
          break;
      case 3:  // bad CalculateActivityCoefficients() status in SIA mode
      case 4: // Mass balance broken after DualTh recover of DC amounts
          if( pm.pNP )
          {   // bad SIA mode - trying the AIA mode
-                pm.MK = 2;   // Set to check in ComputeEquilibriumState() later on
+                pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
 	        goto FORCED_AIA;
          }
          Error( pm.errorCode, pm.errorBuf );
          break;
      case 5: // Divergence in dual solution approximation
                 // no or only partial cleanup can be done
-         pm.MK = 2;   // Set to check in ComputeEquilibriumState() later on
+         pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
          if( pm.pNP )
          {   // bad SIA mode - trying the AIA mode 
               goto FORCED_AIA;
@@ -230,7 +224,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
                        pm.PZ = 0;
                        break;
              case 0:   // some phases were inserted and a new IPM loop is needed
-                      node1->ipmlog_file->trace("ITF={} ITG={} K2={} k_miss={}  k_unst={}  ! (new Selekt loop)",
+                      node->ipmlog_file->trace("ITF={} ITG={} K2={} k_miss={}  k_unst={}  ! (new Selekt loop)",
                                     pm.ITF, pm.ITG, pm.K2, k_miss, k_unst);
                       pm.PZ = 1;
                       goto mEFD;
@@ -250,8 +244,8 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
                  setErrorMessage( 8, "W08IPM: PSSC():", buf.c_str() );
                  if( pm.pNP )
                  {   // bad SIA mode - there are inconsistent phases after 5 attempts. Attempting AIA mode
-                         pm.MK = 2;   // Set to check in ComputeEquilibriumState() later on
-                         node1->ipmlog_file->trace("ITF={} ITG={}  IT={} k_miss={}  k_unst={} ! PIA->AIA on E08IPM (Selekt)",
+                         pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
+                         node->ipmlog_file->trace("ITF={} ITG={}  IT={} k_miss={}  k_unst={} ! PIA->AIA on E08IPM (Selekt)",
                                                   pm.ITF, pm.ITG, pm.IT, k_miss, k_unst);
                          goto FORCED_AIA;
                  }
@@ -295,8 +289,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
               CalculateConcentrations( pm.X, pm.XF, pm.XFA );  // also ln activities (DualTh)
 
  // STEPWISE (3)  - stop point to examine output from SpeciationCleanup()
-    STEP_POINT("After Cleanup");
-
+  STEP_POINT("After Cleanup");
            }
            if( csRet != 0 )  {   // Cleanup removed something
       //         for( j=0; j<pm.L; j++ )   // restoring the Y vector
@@ -314,7 +307,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
                         pm.PZ = 0;
                         break;
               case 0:   // some phases were inserted and a new IPM loop is needed
-                        node1->ipmlog_file->trace("ITF={} ITG={}  IT={}  K2={} k_miss={}  k_unst={}  ! (new Selekt loop)",
+                        node->ipmlog_file->trace("ITF={} ITG={}  IT={}  K2={} k_miss={}  k_unst={}  ! (new Selekt loop)",
                                      pm.ITF, pm.ITG, pm.IT, pm.K2, k_miss, k_unst);
                         pm.PZ = 1;
                         goto mEFD;
@@ -334,8 +327,8 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
                   setErrorMessage( 8, "W09IPM: Phase Selection:", buf.c_str() );
                   if( pm.pNP )
                   {   // bad SIA mode - there are inconsistent phases after 3 attempts. Attempting AIA mode
-                      pm.MK = 2;   // Set to check in ComputeEquilibriumState() later on
-                      node1->ipmlog_file->trace("ITF={} ITG={}  IT={} k_miss={}  k_unst={}  ! PIA->AIA on E08IPM (Selekt)",
+                      pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
+                      node->ipmlog_file->trace("ITF={} ITG={}  IT={} k_miss={}  k_unst={}  ! PIA->AIA on E08IPM (Selekt)",
                                                pm.ITF, pm.ITG, pm.IT, k_miss, k_unst);
                       goto FORCED_AIA;
                   }
@@ -407,8 +400,8 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
      case 1: // degeneration of R matrix in MassBalanceRefinement() after cleanup
              if( pm.pNP )
              {   // bad SIA mode - trying the AIA mode
-                pm.MK = 2;   // Set to check in ComputeEquilibriumState() later on
-                node1->ipmlog_file->trace("ITF={} ITG={}  IT={}  ! PIA->AIA on E04IPM", pm.ITF, pm.ITG, pm.IT);
+                pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
+                node->ipmlog_file->trace("ITF={} ITG={}  IT={}  ! PIA->AIA on E04IPM", pm.ITF, pm.ITG, pm.IT);
                 goto FORCED_AIA;
              }
              else
@@ -417,17 +410,14 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
    }
  }
 
-///#ifndef IPMGEMPLUGIN 07/05/2020
    pm.t_end = clock();
    pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
-///#endif
-  // STEPWISE (4) Stop point after PhaseSelect()
+// STEPWISE (4) Stop point after PhaseSelect()
    STEP_POINT("Before Refine()");
-
 //   if( pm.MK == 2 )
 //       goto FORCED_AIA;
 
-   node1->ipmlog_file->trace("ITF={} ITG={}  IT={} MBPRL={}  {}",
+   node->ipmlog_file->trace("ITF={} ITG={}  IT={} MBPRL={}  {}",
        pm.ITF, pm.ITG, pm.IT, pm.W1, ( pm.pNP ? " Ok after PIA": " Ok after AIA"));
 
 FORCED_AIA:   // Finish
@@ -465,7 +455,7 @@ bool TMultiBase::GEM_IPM_InitialApproximation(  )
 {
     long int i, j, k, NN, eCode=-1L;
     double minB;//, sfactor;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpA.txt" );   // Debugging
@@ -573,15 +563,12 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
         // Calculation of mass-balance residuals and DC concentrations in phases
         MassBalanceResiduals( pm.N, pm.L, pm.A, pm.X, pm.B, pm.C);
         CalculateConcentrations( pm.X, pm.XF, pm.XFA );  // also ln activities (DualTh)
-//#ifndef IPMGEMPLUGIN
 //20/03/2015        if( pa->p.PC == 1 )
 //20/03/2015            KarpovsPhaseStabilityCriteria( );  // calculation of Karpov phase stability criteria
 //20/03/2015         else if( pa->p.PC >= 2 )
 //20/03/2015             StabilityIndexes(); // calculation of new phase stability indexes
-//#endif
-        //  STEPWISE (0) - stop point for examining results from LPP-based IA
-        STEP_POINT( "End Simplex" );
-
+//  STEPWISE (0) - stop point for examining results from LPP-based IA
+STEP_POINT( "End Simplex" );
         if( AllPhasesPure )     // bugfix DK 09.03.2010   was if(!pm.FIs)
         {                       // no multi-component phases!
             pm.W1=0; pm.K2=0;               // set internal counters
@@ -590,10 +577,8 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 to_text_file( "MultiDumpLP.txt" );   // Debugging
 #endif
 
-///#ifndef IPMGEMPLUGIN 07/05/2020
    pm.t_end = clock();
    pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
-///#endif
            pm.FI1 = 0;
            pm.FI1s = 0;
            for( i=0; i<pm.FI; i++ )
@@ -683,7 +668,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     long int IT1;
     long int I, J, Z,  N, sRet, iRet=0, j, jK;
     double LM;//, pmp_PCI;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
     ErrorIf( !pm.MU || !pm.W, "MassBalanceRefinement()",
                               "Error of memory allocation for pm.MU or pm.W." );
@@ -730,7 +715,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
        }
        else { // combined balance accuracy - absolute for major and relative for trace ICs
            double AbsMbAccExp, AbsMbCutoff;
-           AbsMbAccExp = (double)abs( pa_p->DT );
+           AbsMbAccExp = abs( pa_p->DT );
            if( AbsMbAccExp < 2. )  // If DT is set to 1 or -1 then DHBM is used also as the absolute cutoff
                AbsMbCutoff = pm.DHBM;
            else
@@ -793,6 +778,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
 
 // STEPWISE (5) Stop point at end of iteration of FIA()
 STEP_POINT("FIA Iteration");
+
 }  /* End loop on IT1 */
 //----------------------------------------------------------------------------
     //  Prescribed mass balance precision cannot be reached
@@ -837,7 +823,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     bool StatusDivg;
     long int N, IT1,J,Z,iRet,i,  nDivIC;
     double LM=0., LM1=1., FX1,    DivTol;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
     status = 0;
     if( pm.FIs )
@@ -888,11 +874,11 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
           return 1;
         }
 
-   if( !nCNud && pa_p_ptr()->PLLG )   // disabled if PLLG = 0
+   if( !nCNud && base_param()->PLLG )   // disabled if PLLG = 0
    { // Experimental - added 06.05.2011 by DK
       Increment_uDD( pm.ITG, uDDtrace );
 //   DivTol = pow( 10., -fabs( (double)TProfil::pm->pa.p.PLLG ) );
-      DivTol = (double)pa_p_ptr()->PLLG;
+      DivTol = (double)base_param()->PLLG;
       if( fabs(DivTol) >= 30000. )
           DivTol = 1e6;  // this is to allow complete tracing in the case of divergence
 //      if( pm.ITG )
@@ -1117,8 +1103,6 @@ void TMultiBase::DC_ZeroOff( long int jStart, long int jEnd, long int k )
 void TMultiBase::DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k )
 {
 //  double sfactor = scalingFactor;
-//  SPP_SETTING *pa = &TProfil::pm->pa;
-
 //  if( fabs( sfactor ) > 1. )   // can reach 30 at total moles in system above 300000 (DK 11.03.2008)
 //	  sfactor = 1.;       // Workaround for very large systems (insertion breaks the EFD convergence)
   if( k >= 0 )
@@ -1181,7 +1165,7 @@ case DC_SCM_SPECIES:
 /// Adjustment of primal approximation according to kinetic constraints
 long int TMultiBase::MetastabilityLagrangeMultiplier()
 {
-    double E = pa_p_ptr()->DKIN; //1E-8;  Default min value of Lagrange multiplier p
+    double E = base_param()->DKIN; //1E-8;  Default min value of Lagrange multiplier p
 //    E = 1E-30;
 
     for(long int J=0;J<pm.L;J++)
@@ -1309,7 +1293,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
   // Making the  matrix of IPM linear equations
   for( kk = 0; kk < N; kk++)
    for( ii=0; ii < N; ii++ )
-      (*(AA1+(ii)+(kk)*N)) = 0.;
+      (*(AA+(ii)+(kk)*N)) = 0.;
 
   for( jj=0; jj < pm.L; jj++ )
   {
@@ -1321,30 +1305,30 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
           kk = arrAN[k];
           if( ii >= N || kk >= N )
            continue;
-          (*(AA1+(ii)+(kk)*N)) += a(jj,ii) * a(jj,kk) * pm.W[jj];
+          (*(AA+(ii)+(kk)*N)) += a(jj,ii) * a(jj,kk) * pm.W[jj];
         }
     }
   }
 
    if( initAppr )
      for( ii = 0; ii < N; ii++ )
-         BB1[ii] = pm.C[ii];
+         BB[ii] = pm.C[ii];
    else {
      for( ii = 0; ii < N; ii++ )
-         BB1[ii] = 0.;
+         BB[ii] = 0.;
      for( jj=0; jj < pm.L; jj++ )
         if( pm.Y[jj] > min( pm.lowPosNum, pm.DcMinM ) )
            for( i = arrL[jj]; i < arrL[jj+1]; i++ )
            {  ii = arrAN[i];
               if( ii >= N )
                 continue;
-              BB1[ii] += pm.F[jj] * a(jj,ii) * pm.W[jj];
+              BB[ii] += pm.F[jj] * a(jj,ii) * pm.W[jj];
            }
     }
 
 #ifndef PGf90
-  Array2D<double> A( N, N, AA1 );
-  Array1D<double> B( N, BB1 );
+  Array2D<double> A( N, N, AA );
+  Array1D<double> B( N, BB );
 #else
   Array2D<double> A( N, N);
   Array1D<double> B( N );
@@ -1358,7 +1342,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
 // From here on, the NIST TNT Jama/C++ linear algebra package is used
 //    (credit: http://math.nist.gov/tnt/download.html)
 // this routine constructs the Cholesky decomposition, A = L x LT .
-  Cholesky<double>  chol(A);
+  JAMA::Cholesky<double>  chol(A);
 
   if( chol.is_spd() )  // is positive definite A.
   {
@@ -1370,7 +1354,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
 // The LU decompostion with pivoting always exists, even if the matrix is
 // singular, so the constructor will never fail.
 
-   LU<double>  lu(A);
+   JAMA::LU<double>  lu(A);
 
 // The primary use of the LU decomposition is in the solution
 // of square systems of simultaneous linear equations.
@@ -1529,7 +1513,7 @@ void TMultiBase::Restore_Y_YF_Vectors()
     {
         if( pm.XF[Z] <= pm.DSM ||
                 ( pm.PHC[Z] == PH_SORPTION &&
-                  ( pm.XFA[Z] < pa_p_ptr()->ScMin) ) )
+                  ( pm.XFA[Z] < base_param()->ScMin) ) )
         {
             pm.YF[Z]= 0.;
             if( pm.FIs && Z<pm.FIs )
@@ -1558,7 +1542,7 @@ void TMultiBase::Restore_Y_YF_Vectors()
 double TMultiBase::RescaleToSize( bool /*standard_size*/ )
 {
     double SizeFactor=1.;
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
 
     pm.SizeFactor = 1.;
 //  re-scaling numeric settings
@@ -1590,20 +1574,20 @@ double TMultiBase::RescaleToSize( bool /*standard_size*/ )
 //
 void TMultiBase::Alloc_A_B( long int newN )
 {
-  if( AA1 && BB1 && (newN == sizeN) )
+  if( AA && BB && (newN == sizeN) )
     return;
   Free_A_B();
-  AA1 = new  double[newN*newN];
-  BB1 = new  double[newN];
+  AA = new  double[newN*newN];
+  BB = new  double[newN];
   sizeN = newN;
 }
 
 void TMultiBase::Free_A_B()
 {
-  if( AA1  )
-    { delete[] AA1; AA1 = 0; }
-  if( BB1 )
-    { delete[] BB1; BB1 = 0; }
+  if(AA)
+    { delete[] AA; AA = 0; }
+  if(BB)
+    { delete[] BB; BB = 0; }
   sizeN = 0;
 }
 
@@ -1738,9 +1722,9 @@ void TMultiBase::Reset_uDD( long int nr, bool trace )
         ipm_logger->info("UD3 trace: {}  SIA={}  Itr   C_D:  {}",
                           pm.stkey, pm.pNP, char_array_to_string(pm.SB1[0],MAXICNAME));
     }
-    if( pa_p_ptr()->PSM >= 3 )
+    if( base_param()->PSM >= 3 )
     {
-      node1->ipmlog_file->info(" UD3 trace: {}  SIA= {} Itr   C_D: {}",
+      node->ipmlog_file->info(" UD3 trace: {}  SIA= {} Itr   C_D: {}",
                               pm.stkey, pm.pNP, char_array_to_string(pm.SB1[0],MAXICNAME));
     }
 }
@@ -1753,9 +1737,9 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
     cnr = r; // r+1;
     if( cnr == 0 )
         return;
-    if( pa_p_ptr()->PSM >= 3 )
+    if( base_param()->PSM >= 3 )
     {
-       node1->ipmlog_file->info("ncrement_uDD {}  {}", r, pm.PCI);
+       node->ipmlog_file->info("ncrement_uDD {}  {}", r, pm.PCI);
     }
     if( trace )
     {
@@ -1791,9 +1775,9 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
       {
         ipm_logger->info("U={}  U_mean={} U_CV={}", pm.U[i],  U_mean[i], U_CV[i]);
       }
-      if( pa_p_ptr()->PSM >= 3 )
+      if( base_param()->PSM >= 3 )
       {
-         node1->ipmlog_file->info("U={}  U_mean={} U_CV={}", pm.U[i],  U_mean[i], U_CV[i]);
+         node->ipmlog_file->info("U={}  U_mean={} U_CV={}", pm.U[i],  U_mean[i], U_CV[i]);
 
       }
 //      delta = pm.U[i] - U_mean[i];
@@ -1875,9 +1859,9 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
             {
                 ipm_logger->info(" Tol = {} | uDD ITG = {}", tol_gen, pm.ITG);
             }
-            if( pa_p_ptr()->PSM >= 3 )
+            if( base_param()->PSM >= 3 )
             {
-                node1->ipmlog_file->info(" Tol = {} | uDD ITG = {}", tol_gen, pm.ITG);
+                node->ipmlog_file->info(" Tol = {} | uDD ITG = {}", tol_gen, pm.ITG);
             }
             FirstTime = false;
         }
@@ -1886,9 +1870,9 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
             ipm_logger->info("Divergent ICs: {} | ln_bi= {} | Tol= {} |",
                               char_array_to_string(pm.SB[i], MAXICNAME), log_bi, tolerance);
         }
-        if( pa_p_ptr()->PSM >= 3 )
+        if( base_param()->PSM >= 3 )
         {
-            node1->ipmlog_file->info("Divergent ICs: {} | ln_bi= {} | Tol= {} |",
+            node->ipmlog_file->info("Divergent ICs: {} | ln_bi= {} | Tol= {} |",
                                     char_array_to_string(pm.SB[i], MAXICNAME), log_bi, tolerance);
         }
     } // for i

@@ -24,8 +24,6 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <cmath>
-
 #include "v_service.h"
 #include "io_template.h"
 #include "io_keyvalue.h"
@@ -142,19 +140,15 @@ void TMultiBase::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
        xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
  }
 
-//void TMultiBase::setPa( TProfil *prof)
-//{
-//    paTProfil1 = &prof->pa;
-//}
 
 /// Output to "ipmlog.txt" file Warnings
 long int TMultiBase::testMulti()
 {
   if( pm.MK || pm.PZ )
   {
-    if( pa_p_ptr()->PSM == 2 )
+    if( base_param()->PSM == 2 )
     {
-      node1->ipmlog_file->warn(" {} : {}:{}", pm.stkey, pm.errorCode, pm.errorBuf);
+      node->ipmlog_file->warn(" {} : {}:{}", pm.stkey, pm.errorCode, pm.errorBuf);
     }
    return 1L;
   }
@@ -460,19 +454,19 @@ void TMultiBase::out_multi( GemDataStream& ff  )
 {
      short arr[10];
 
-      arr[0] = pa_p_ptr()->PC;
-      arr[1] = pa_p_ptr()->PD;
-      arr[2] = pa_p_ptr()->PRD;
-      arr[3] = pa_p_ptr()->PSM;
-      arr[4] = pa_p_ptr()->DP;
-      arr[5] = pa_p_ptr()->DW;
-      arr[6] = pa_p_ptr()->DT;
-      arr[7] = pa_p_ptr()->PLLG;
-      arr[8] = pa_p_ptr()->PE;
-      arr[9] = pa_p_ptr()->IIM;
+      arr[0] = base_param()->PC;
+      arr[1] = base_param()->PD;
+      arr[2] = base_param()->PRD;
+      arr[3] = base_param()->PSM;
+      arr[4] = base_param()->DP;
+      arr[5] = base_param()->DW;
+      arr[6] = base_param()->DT;
+      arr[7] = base_param()->PLLG;
+      arr[8] = base_param()->PE;
+      arr[9] = base_param()->IIM;
 
    ff.writeArray( arr, 10 );
-   ff.writeArray( &pa_p_ptr()->DG, 28 );
+   ff.writeArray( &base_param()->DG, 28 );
    to_file( ff );
 }
 
@@ -482,18 +476,18 @@ void TMultiBase::read_multi( GemDataStream& ff, DATACH  *dCH )
     short arr[10];
 
     ff.readArray( arr, 10 );
-    pa_p_ptr()->PC = arr[0];
-    pa_p_ptr()->PD = arr[1];
-    pa_p_ptr()->PRD = arr[2];
-    pa_p_ptr()->PSM = arr[3];
-    pa_p_ptr()->DP = arr[4];
-    pa_p_ptr()->DW = arr[5];
-    pa_p_ptr()->DT = arr[6];
-    pa_p_ptr()->PLLG = arr[7];
-    pa_p_ptr()->PE = arr[8];
-    pa_p_ptr()->IIM = arr[9];
+    base_param()->PC = arr[0];
+    base_param()->PD = arr[1];
+    base_param()->PRD = arr[2];
+    base_param()->PSM = arr[3];
+    base_param()->DP = arr[4];
+    base_param()->DW = arr[5];
+    base_param()->DT = arr[6];
+    base_param()->PLLG = arr[7];
+    base_param()->PE = arr[8];
+    base_param()->IIM = arr[9];
 
-    ff.readArray( &pa_p_ptr()->DG, 28 );
+    ff.readArray( &base_param()->DG, 28 );
     from_file( ff );
 
     // copy intervals for minimizatiom
@@ -808,7 +802,6 @@ void TMultiBase::from_file( GemDataStream& ff )
 
    PAalp_ = PAalp;
    PSigm_ = PSigm;
-   //realloc memory
    multi_realloc( PAalp, PSigm );
 
       //dynamic values
@@ -1119,8 +1112,8 @@ void TMultiBase::to_text_file( const char *path, bool append )
   prar.writeComment( true, std::string(pm.stkey)+"\n" );
   //  TProfil::pm->pa.p.write(ff);
 
-  prar.writeArray( "Short_PARAM",  &pa_p_ptr()->PC, 10L );
-  prar.writeArray( "Double_PARAM",  &pa_p_ptr()->DG, 28L );
+  prar.writeArray( "Short_PARAM",  &base_param()->PC, 10L );
+  prar.writeArray( "Double_PARAM",  &base_param()->DG, 28L );
   prar.writeArray( "Short_Const",  &pm.N, 39L );
   prar.writeArray(  "Double_Const",  &pm.TC, 53, 20 );
   prar.writeArray(  "Add_Double_Const",  &pm.XwMinM, 12, 20 );

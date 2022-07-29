@@ -23,7 +23,7 @@
 // GEMS3K is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU Lesser General Public TSolModLicense for more details.
 
 // You should have received a copy of the GNU General Public License
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
@@ -33,12 +33,10 @@
 
 #define Activity_H_
 
-//#include "node.h"
 #include "datach.h"
 #include "databr.h"
 #include "s_solmod.h"
 #include "s_sorpmod.h"
-#include "m_const_base.h"
 
 class TNode;
 
@@ -347,7 +345,6 @@ public:
         long int  getXvolume();
 
     // ipm_chemical2.cpp
-        void GasParcP();
         void phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] );
         void phase_bfc( long int k, long int jj );
         double bfc_mass( void );
@@ -396,8 +393,6 @@ public:
     void updateActivities(); // compute primal activities
     void updateChemicalData();
 };
-
-
 
 #endif
 // -----------------------------------------------------------------------------
