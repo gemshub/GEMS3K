@@ -98,7 +98,8 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
            DKIN; ///< Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }
     char *tprn;       ///< internal
 
-    //void write(std::fstream& oss);
+    void write(GemDataStream& oss);
+    void read(GemDataStream& iss);
 };
 
 
@@ -536,6 +537,7 @@ class TMultiBase
     char PSigm_; ///< Flag for using (+) or ignoring (-) specific surface free energies
     std::shared_ptr<BASE_PARAM> pa_standalone;
 
+protected:
     /// Default logger for ipm chemical
     static std::shared_ptr<spdlog::logger> ipm_logger;
 
@@ -906,6 +908,10 @@ typedef enum {  // Field index into outField structure
     f_LsESmo, f_LsISmo, f_SorMc, f_LsMdc2, f_LsPhl
 
 } MULTI_DYNAMIC_FIELDS;
+
+enum volume_code {  /* Codes of volume parameter ??? */
+    VOL_UNDEF, VOL_CALC, VOL_CONSTR
+};
 
 #endif   //_ms_multi_h
 

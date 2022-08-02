@@ -33,10 +33,6 @@
 #include "kinetics.h"
 #include "v_service.h"
 
-enum volume_code {  // Codes of volume parameter ???
-    VOL_UNDEF, VOL_CALC, VOL_CONSTR
-};
-
 /// Calculation of LPP-based automatic initial approximation of the primal vector x.
 /// Use the modified simplex method with two-side constraints on x
 //
@@ -726,9 +722,9 @@ void TMultiBase::RescaleSystemFromInternal(  double ScFact )
 
   for( j=0; j<pm.L; j++ )
   {
-    if(	pm.DUL[j] < 1e6  )
+    if(	pm.DUL[j] < 1e6  ) {
        pm.DUL[j] /= ScFact;
-
+    }
     // if( pm.DLL[j] > 0.0  )
        pm.DLL[j] /= ScFact;
 
@@ -1141,7 +1137,7 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
                         Vv += pm.Vuns[j];
                     if( xVol >= 0 )
                         pm.A[j*pm.N+xVol] = Vv;
-                    // [[fallthrough]];
+                    [[fallthrough]];
                 case VOL_CALC:
                 case VOL_UNDEF:
                     if( pm.tpp_Vm )

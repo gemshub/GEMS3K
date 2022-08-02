@@ -1169,6 +1169,10 @@ public:
     bool load_all_thermodynamic_from_thermo( double TK, double PPa );
 #endif
 
+    /// Deletes fields of DATABR structure indicated by data_BR_
+    /// and sets the pointer data_BR_ to NULL
+    DATABR* databr_free( DATABR* data_BR_ );
+
 protected:
 
     void allocMemory();
@@ -1186,10 +1190,6 @@ protected:
     void databr_realloc( DATABR * CNode_);
     void databr_free_internal(DATABR *CNode_);
     void databr_reset( DATABR *CNode, long int level=0 );
-
-    /// Deletes fields of DATABR structure indicated by data_BR_
-    /// and sets the pointer data_BR_ to NULL
-    DATABR* databr_free( DATABR* data_BR_ );
 
     // Binary i/o functions
     // including file i/o using GemDataStream class (with account for endianness)
