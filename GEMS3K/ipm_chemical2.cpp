@@ -190,7 +190,7 @@ void TMultiBase::CalculateConcentrationsInPhase( double X[], double XF[], double
              [[fallthrough]];
         case DC_AQ_SPECIES:
             pm.IC += 0.5* X[j]*Factor *(pm.EZ[j]*pm.EZ[j]); // increment to effective molal ionic strength
-             [[fallthrough]];
+            [[fallthrough]];
         case DC_AQ_SURCOMP:
             SPmol = X[j]*Factor;  // molality
  //           pm.IC += 0.5* SPmol *(pm.EZ[j]*pm.EZ[j]); // Bugfix DK 21.10.2011 'K' species don't count here!

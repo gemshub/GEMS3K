@@ -563,10 +563,6 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
         // Calculation of mass-balance residuals and DC concentrations in phases
         MassBalanceResiduals( pm.N, pm.L, pm.A, pm.X, pm.B, pm.C);
         CalculateConcentrations( pm.X, pm.XF, pm.XFA );  // also ln activities (DualTh)
-//20/03/2015        if( pa->p.PC == 1 )
-//20/03/2015            KarpovsPhaseStabilityCriteria( );  // calculation of Karpov phase stability criteria
-//20/03/2015         else if( pa->p.PC >= 2 )
-//20/03/2015             StabilityIndexes(); // calculation of new phase stability indexes
 //  STEPWISE (0) - stop point for examining results from LPP-based IA
 STEP_POINT( "End Simplex" );
         if( AllPhasesPure )     // bugfix DK 09.03.2010   was if(!pm.FIs)

@@ -133,15 +133,15 @@ protected:
     NumIterFIA,   ///< \protected Total Number of performed FIA entry iterations
     NumIterIPM;   ///< \protected Total Number of performed IPM main iterations
 
-public:
-
-    /// Default logger for ipmLogFile
-    static std::shared_ptr<spdlog::logger> ipmlog_file;
-
     TMultiBase* multi_ptr()
     {
         return multi;
     }
+
+public:
+
+    /// Default logger for ipmLogFile
+    static std::shared_ptr<spdlog::logger> ipmlog_file;
 
     /// Constructor of the class instance in memory for standalone GEMS3K or coupled program
     TNode();
@@ -238,7 +238,6 @@ public:
         return std::string(pmm->errorBuf, 1024);
     }
 
-    ///#ifdef IPMGEMPLUGIN
     //  Calls for direct coupling of a FMT code with GEMS3K
 
     /// (6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.
@@ -422,7 +421,6 @@ public:
         return pmm->ITau;
     }
 
-    ///#endif
 
     /// (5) Reads another DBR file (with input system composition, T,P etc.) \ . The DBR file must be compatible with
     /// the currently loaded IPM and DCH files (see description  of GEM_init() function call).
@@ -493,7 +491,6 @@ public:
     ///                extended with ".dump.out".  Usually the dbr_file_name field contains the path to the last input DBR file.
     void  GEM_print_ipm( const char* fname );
 
-    ///#ifdef IPMGEMPLUGIN
     /// (7)  Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure instance
     ///   into memory provided by the mass transport part. Dimensions and order of elements in the arrays must correspond
     ///   to those in currently existing DATACH memory structure.
@@ -542,7 +539,6 @@ public:
             double *p_asPH    ///< Specific surface areas of phases m2/kg  [nPHb]          -       -      +     -
             );
 
-    ///#endif
 
     // Access methods for direct or protected manipulation of CSD and DBR data
 
@@ -1007,7 +1003,6 @@ public:
     inline void Set_IC_b( const double b_val, const long int xCH)
     { pmm->B[xCH] = b_val; }
 
-    ///#ifdef IPMGEMPLUGIN
     // used in GEMSFIT
     /// Sets the mLook Mode of lookup-interpolation: 0 interpolation (on nTp*nPp grid).
     /// \param mLook is 0 or 1
@@ -1035,7 +1030,6 @@ public:
     /// \param xDMC is the index of the interaction parameter
     inline void Set_DMc( const double DMc_val, const long int xDMc)
     { pmm->DMc[xDMc] = DMc_val; load_thermodynamic_data = false; }
-    ///#endif
 
     /// Retrieves the current total amount of Independent Component.
     /// Also amount of ICs not included into DATABR list can be retrieved.

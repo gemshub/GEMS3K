@@ -53,7 +53,7 @@ extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
 
 struct BASE_PARAM /// Flags and thresholds for numeric modules
 {
-   long int
+   short
            PC,   ///< Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }
            PD,   ///< abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }.
                  ///< Modes: 0-invoke, 1-at MBR only, 2-every MBR it, every IPM it. 3-not MBR, every IPM it.
@@ -717,16 +717,13 @@ protected:
     virtual void alloc_UMpcC( long int UMpcSum );
     virtual void alloc_xICuC( long int xICuCSum );
 
-    // empty functions for GUI level using
     virtual void loadData( bool ){}
-    virtual bool calculateActivityCoefficients_scripts( long int, long, long, long, long, long, double  )
-    { return true; }
-    virtual bool testTSyst( int ) const
-    { return true; }
-    virtual void initalizeGEM_IPM_Data_GUI() {}
+    virtual bool testTSyst() const;
+    virtual bool calculateActivityCoefficients_scripts( long int, long, long, long, long, long, double );
+    virtual void initalizeGEM_IPM_Data_GUI();
     virtual void multiConstInit_PN();
-    virtual void GEM_IPM_Init_gui1() {}
-    virtual void GEM_IPM_Init_gui2() {}
+    virtual void GEM_IPM_Init_gui1();
+    virtual void GEM_IPM_Init_gui2();
    
     void setErrorMessage( long int num, const char *code, const char * msg);
     void addErrorMessage( const char * msg);
@@ -766,7 +763,6 @@ protected:
     long int SurfaceActivityCoeff( long int jb, long int je, long int jpb, long int jdb, long int k );
 
     // ipm_chemical3.cpp
-    virtual void pm_GC_ods_link( long int /*k*/, long int /*jb*/, long int /*jpb*/, long int /*jdb*/, long int /*ipb*/ ){}
     double SmoothingFactor( );
     void SetSmoothingFactor( long int mode ); // new smoothing function (3 variants)
     // Main call for calculation of activity coefficients on IPM iterations
@@ -857,7 +853,8 @@ protected:
     void MultiConstInit(); // from MultiRemake
     void GEM_IPM_Init();
 
-    void load_all_thermodynamic_from_grid(TNode *aNa, double TK, double P);
+    virtual void load_all_thermodynamic_from_grid(TNode *aNa, double TK, double P);
+
 };
 
 // ???? syp->PGmax

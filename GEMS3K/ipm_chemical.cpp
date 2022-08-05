@@ -847,7 +847,7 @@ double TMultiBase::ConvertGj_toUniformStandardState( double g0, long int j, long
          [[fallthrough]];
     case DC_AQ_SOLVCOM:
     case DC_AQ_SOLVENT:
-        if( testTSyst( 0 ) ) //TSyst::sm->GetSY()->PYOF != S_OFF )
+        if( testTSyst() ) //TSyst::sm->GetSY()->PYOF != S_OFF )
           if( noZero( YOF ) )
         	G += YOF;  // In GEMS3K, YOF[k] is the only way to influence G directly
         break;
@@ -876,7 +876,7 @@ case DC_SCM_SPECIES:
     case DC_SUR_MINAL:
     case DC_SUR_CARRIER:
     case DC_PEL_CARRIER:
-        if( testTSyst( 0 ) )//TSyst::sm->GetSY()->PYOF != S_OFF )
+        if( testTSyst() )//TSyst::sm->GetSY()->PYOF != S_OFF )
             if( noZero( YOF ) )
                 G += YOF;
         break;

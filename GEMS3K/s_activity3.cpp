@@ -163,7 +163,6 @@ NonLogTermS = 0.0;
 }
 
 //--------------------------------------------------------------------------------
-static double ICold=0.;
 /// Main call point for calculation of DC activity coefficients (lnGam vector)
 ///    formerly GammaCalc().
 /// Controls various built-in models, as well as generic Phase script calculation
@@ -355,7 +354,6 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
 					default:
 						break;
                 }
-                ICold = act.IC;
              }
              goto END_LOOP;
              break;

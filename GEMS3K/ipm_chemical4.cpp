@@ -28,7 +28,6 @@
 
 #include "ms_multi.h"
 
-//-  static double ICold=0.;
 /// \return status code (0 if o.k., non-zero values if there were problems
 ///     with kinetic/metastability models)
 long int

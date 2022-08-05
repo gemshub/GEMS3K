@@ -269,7 +269,6 @@ TMultiBase::PhaseSpecificGamma( long int j, long int jb, long int je, long int k
 }
 
 //--------------------------------------------------------------------------------
-///static double ICold=0.;
 /// Main call point for calculation of DC activity coefficients (lnGam vector)
 ///    formerly GammaCalc().
 /// Controls various built-in models, as well as generic Phase script calculation
@@ -465,7 +464,6 @@ TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
 					default:
 						break;
                 }
-                ///ICold = pm.IC;
              }
              goto END_LOOP;
              break;

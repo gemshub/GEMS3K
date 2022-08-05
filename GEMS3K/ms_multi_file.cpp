@@ -28,7 +28,6 @@
 #include "io_template.h"
 #include "io_keyvalue.h"
 #include "ms_multi.h"
-#include "node.h"
 #include "gdatastream.h"
 
 void TMultiBase::getLsModsum( long int& LsModSum, long int& LsIPxSum )
@@ -139,22 +138,6 @@ void TMultiBase::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
    for(long int i=0; i<pm.FIs; i++)
        xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
  }
-
-
-/// Output to "ipmlog.txt" file Warnings
-long int TMultiBase::testMulti()
-{
-  if( pm.MK || pm.PZ )
-  {
-    if( base_param()->PSM == 2 )
-    {
-      node->ipmlog_file->warn(" {} : {}:{}", pm.stkey, pm.errorCode, pm.errorBuf);
-    }
-   return 1L;
-  }
-  return 0L	;
-}
-
 
 //---------------------------------------------------------//
 /// Set default information
