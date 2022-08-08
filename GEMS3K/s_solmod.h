@@ -32,7 +32,6 @@
 #include <string>
 #include <vector>
 #include "spdlog/spdlog.h"
-
 #include "m_const_base.h"
 
 // re-declaration of enums below required for GEMS3K

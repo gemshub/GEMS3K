@@ -1217,7 +1217,7 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         pmm->epsWg[4] = water_gas_electro.epsilonPP.val;
 
 #ifdef  USE_THERMO_LOG
-        fstream f_log("thermodynamic-log.csv", ios::out/*|ios::app*/ );
+        std::fstream f_log("thermodynamic-log.csv", std::ios::out/*|std::ios::app*/ );
         f_log << "\nCalc ThermoEngine;T;" << TK << ";P;" << PPa << "\n";
         f_log << "denW";
         for( jj=0; jj<5; jj++)

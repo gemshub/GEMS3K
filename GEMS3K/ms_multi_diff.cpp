@@ -24,7 +24,9 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include "ms_multi.h"
+
+
+#include <fstream>
 #include "node.h"
 #include "num_methods.h"
 
@@ -355,7 +357,7 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
     }
 
 #ifdef  USE_THERMO_LOG
-    fstream f_log("thermodynamic-log-lookup.csv", ios::out/*|ios::app*/ );
+    std::fstream f_log("thermodynamic-log-lookup.csv", std::ios::out/*|std::ios::app*/ );
     f_log << "\nCalc ThermoEngine;T;" << TK << ";P;" << PPa << "\n";
     f_log << "denW";
     for( jj=0; jj<5; jj++)

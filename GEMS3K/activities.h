@@ -157,7 +157,7 @@ typedef struct  /// ACTIVITY - data structure for computing DC activities in pha
            (*CPh)[MIXPHPROPS],     ///< Heat capacity Cp properties for mixed phases [FIs]           -      -      +     +
            (*APh)[MIXPHPROPS],     ///< Helmholtz energy properties for mixed phases [FIs]           -      -      +     +
            (*UPh)[MIXPHPROPS];     ///< Internal energy properties for mixed phases [FIs]            -      -      +     +
-            // MIXPHPROPS: see m_const.h
+            // MIXPHPROPS: see m_const_base.h
 
 // Coding - takeover from MULTI
     char (*sMod)[8];   ///< new: Codes for built-in mixing models of multicomponent phases [FIs]

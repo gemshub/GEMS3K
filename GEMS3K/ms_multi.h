@@ -32,6 +32,7 @@
 #define MS_MULTI_BASE_H
 
 #include "m_const_base.h"
+#include "verror.h"
 #include "datach.h"
 // TSolMod header
 #include "s_solmod.h"
