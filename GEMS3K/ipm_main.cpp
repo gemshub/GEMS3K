@@ -49,7 +49,7 @@ void TMultiBase::GibbsEnergyMinimization()
   bool IAstatus;
   Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
 
-  node->ipmlog_file->debug(" GEMIPM TC={}", pm.TCc);
+  TNode::ipmlog_file->debug(" GEMIPM TC={}", pm.TCc);
 
 FORCED_AIA:
     GEM_IPM_Init();
@@ -150,7 +150,7 @@ STEP_POINT("After FIA");
                  if( pm.pNP )
                  {   // bad SIA mode - trying the AIA mode
                 pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
-                node->ipmlog_file->trace("ITF={} ITG={}  IT={}  ! PIA->AIA on E04IPM", pm.ITF, pm.ITG, pm.IT);
+                TNode::ipmlog_file->trace("ITF={} ITG={}  IT={}  ! PIA->AIA on E04IPM", pm.ITF, pm.ITG, pm.IT);
                 goto FORCED_AIA;
    	         }
    	         else
@@ -179,11 +179,11 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
          if( pm.pNP )
          {   // bad PIA mode - trying the AIA mode
                 pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
-                node->ipmlog_file->trace("ITF={} ITG={}  IT={}   ! PIA->AIA on E06IPM", pm.ITF, pm.ITG, pm.IT);
+                TNode::ipmlog_file->trace("ITF={} ITG={}  IT={}   ! PIA->AIA on E06IPM", pm.ITF, pm.ITG, pm.IT);
                 goto FORCED_AIA;
          }
 
-         node->ipmlog_file->trace("ITF={} ITG={}  IT={}   AIA: DX->1e-4, DHBM->1e-6 on E06IPM", pm.ITF, pm.ITG, pm.IT);
+         TNode::ipmlog_file->trace("ITF={} ITG={}  IT={}   AIA: DX->1e-4, DHBM->1e-6 on E06IPM", pm.ITF, pm.ITG, pm.IT);
          Error( pm.errorCode, pm.errorBuf );
          break;
      case 3:  // bad CalculateActivityCoefficients() status in SIA mode
@@ -224,7 +224,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
                        pm.PZ = 0;
                        break;
              case 0:   // some phases were inserted and a new IPM loop is needed
-                      node->ipmlog_file->trace("ITF={} ITG={} K2={} k_miss={}  k_unst={}  ! (new Selekt loop)",
+                      TNode::ipmlog_file->trace("ITF={} ITG={} K2={} k_miss={}  k_unst={}  ! (new Selekt loop)",
                                     pm.ITF, pm.ITG, pm.K2, k_miss, k_unst);
                       pm.PZ = 1;
                       goto mEFD;
@@ -245,7 +245,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
                  if( pm.pNP )
                  {   // bad SIA mode - there are inconsistent phases after 5 attempts. Attempting AIA mode
                          pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
-                         node->ipmlog_file->trace("ITF={} ITG={}  IT={} k_miss={}  k_unst={} ! PIA->AIA on E08IPM (Selekt)",
+                         TNode::ipmlog_file->trace("ITF={} ITG={}  IT={} k_miss={}  k_unst={} ! PIA->AIA on E08IPM (Selekt)",
                                                   pm.ITF, pm.ITG, pm.IT, k_miss, k_unst);
                          goto FORCED_AIA;
                  }
@@ -307,7 +307,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
                         pm.PZ = 0;
                         break;
               case 0:   // some phases were inserted and a new IPM loop is needed
-                        node->ipmlog_file->trace("ITF={} ITG={}  IT={}  K2={} k_miss={}  k_unst={}  ! (new Selekt loop)",
+                        TNode::ipmlog_file->trace("ITF={} ITG={}  IT={}  K2={} k_miss={}  k_unst={}  ! (new Selekt loop)",
                                      pm.ITF, pm.ITG, pm.IT, pm.K2, k_miss, k_unst);
                         pm.PZ = 1;
                         goto mEFD;
@@ -328,7 +328,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
                   if( pm.pNP )
                   {   // bad SIA mode - there are inconsistent phases after 3 attempts. Attempting AIA mode
                       pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
-                      node->ipmlog_file->trace("ITF={} ITG={}  IT={} k_miss={}  k_unst={}  ! PIA->AIA on E08IPM (Selekt)",
+                      TNode::ipmlog_file->trace("ITF={} ITG={}  IT={} k_miss={}  k_unst={}  ! PIA->AIA on E08IPM (Selekt)",
                                                pm.ITF, pm.ITG, pm.IT, k_miss, k_unst);
                       goto FORCED_AIA;
                   }
@@ -401,7 +401,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
              if( pm.pNP )
              {   // bad SIA mode - trying the AIA mode
                 pm.MK = 2;   // Set to check in CalculateEquilibriumState() later on
-                node->ipmlog_file->trace("ITF={} ITG={}  IT={}  ! PIA->AIA on E04IPM", pm.ITF, pm.ITG, pm.IT);
+                TNode::ipmlog_file->trace("ITF={} ITG={}  IT={}  ! PIA->AIA on E04IPM", pm.ITF, pm.ITG, pm.IT);
                 goto FORCED_AIA;
              }
              else
@@ -417,7 +417,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 //   if( pm.MK == 2 )
 //       goto FORCED_AIA;
 
-   node->ipmlog_file->trace("ITF={} ITG={}  IT={} MBPRL={}  {}",
+   TNode::ipmlog_file->trace("ITF={} ITG={}  IT={} MBPRL={}  {}",
        pm.ITF, pm.ITG, pm.IT, pm.W1, ( pm.pNP ? " Ok after PIA": " Ok after AIA"));
 
 FORCED_AIA:   // Finish
@@ -1720,7 +1720,7 @@ void TMultiBase::Reset_uDD( long int nr, bool trace )
     }
     if( base_param()->PSM >= 3 )
     {
-      node->ipmlog_file->info(" UD3 trace: {}  SIA= {} Itr   C_D: {}",
+      TNode::ipmlog_file->info(" UD3 trace: {}  SIA= {} Itr   C_D: {}",
                               pm.stkey, pm.pNP, char_array_to_string(pm.SB1[0],MAXICNAME));
     }
 }
@@ -1735,7 +1735,7 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
         return;
     if( base_param()->PSM >= 3 )
     {
-       node->ipmlog_file->info("ncrement_uDD {}  {}", r, pm.PCI);
+       TNode::ipmlog_file->info("ncrement_uDD {}  {}", r, pm.PCI);
     }
     if( trace )
     {
@@ -1773,7 +1773,7 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
       }
       if( base_param()->PSM >= 3 )
       {
-         node->ipmlog_file->info("U={}  U_mean={} U_CV={}", pm.U[i],  U_mean[i], U_CV[i]);
+         TNode::ipmlog_file->info("U={}  U_mean={} U_CV={}", pm.U[i],  U_mean[i], U_CV[i]);
 
       }
 //      delta = pm.U[i] - U_mean[i];
@@ -1857,7 +1857,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
             }
             if( base_param()->PSM >= 3 )
             {
-                node->ipmlog_file->info(" Tol = {} | uDD ITG = {}", tol_gen, pm.ITG);
+                TNode::ipmlog_file->info(" Tol = {} | uDD ITG = {}", tol_gen, pm.ITG);
             }
             FirstTime = false;
         }
@@ -1868,7 +1868,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
         }
         if( base_param()->PSM >= 3 )
         {
-            node->ipmlog_file->info("Divergent ICs: {} | ln_bi= {} | Tol= {} |",
+            TNode::ipmlog_file->info("Divergent ICs: {} | ln_bi= {} | Tol= {} |",
                                     char_array_to_string(pm.SB[i], MAXICNAME), log_bi, tolerance);
         }
     } // for i

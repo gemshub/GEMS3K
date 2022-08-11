@@ -543,7 +543,7 @@ protected:
     static std::shared_ptr<spdlog::logger> ipm_logger;
 
 public:
-    TNode *node;
+    TNode *node1;
 
     /// This allocation is used only in standalone GEMS3K
     explicit TMultiBase( TNode* na_ = nullptr );

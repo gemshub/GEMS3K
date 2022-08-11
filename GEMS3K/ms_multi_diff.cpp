@@ -54,7 +54,7 @@ TMultiBase::TMultiBase(TNode *na_)
     *pa_standalone = pa_p_;
 
     pmp = &pm;
-    node = na_; // parent
+    node1 = na_; // parent
     sizeN = 0;
     AA = nullptr;
     BB = nullptr;
@@ -239,7 +239,7 @@ long int TMultiBase::testMulti()
     {
         if( base_param()->PSM == 2 )
         {
-            node->ipmlog_file->warn(" {} : {}:{}", pm.stkey, pm.errorCode, pm.errorBuf);
+            TNode::ipmlog_file->warn(" {} : {}:{}", pm.stkey, pm.errorCode, pm.errorBuf);
         }
         return 1L;
     }
@@ -279,7 +279,7 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 {
     double TK, PPa;
 
-    TNode* na = node;
+    TNode* na = node1;
     if( aNa != nullptr )
         na = aNa;   // for reading GEMIPM files task
      ErrorIf( na == nullptr, "DCLoadThermodynamicData", "Could not be undefined node" );

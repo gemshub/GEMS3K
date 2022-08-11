@@ -202,7 +202,7 @@ protected:
 
 public:
 
-    static std::shared_ptr<TNodeArray> na;   ///< static pointer to this class
+    static TNodeArray* na;   ///< static pointer to this class
 
     std::shared_ptr<TNodeArray> getptr() {
         return shared_from_this();
@@ -242,11 +242,11 @@ public:
     // Used in GEMIPM2 standalone module only
     /// Constructors for 1D arrangement of nodes
     [[nodiscard]] static std::shared_ptr<TNodeArray> create(long int nNod) {
-            return (na = std::shared_ptr<TNodeArray>(new TNodeArray(nNod)));
+            return (std::shared_ptr<TNodeArray>(new TNodeArray(nNod)));
         }
     /// Constructor that uses 3D node arrangement
     [[nodiscard]] static std::shared_ptr<TNodeArray> create(long int asizeN, long int asizeM, long int asizeK) {
-            return ( na = std::shared_ptr<TNodeArray>(new TNodeArray(asizeN, asizeM, asizeK)));
+            return (std::shared_ptr<TNodeArray>(new TNodeArray(asizeN, asizeM, asizeK)));
         }
 
     /// Converts the Phase DBR index into the Phase DCH index

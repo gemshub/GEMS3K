@@ -34,10 +34,10 @@
 #include "gems3k_impex.h"
 #include "v_service.h"
 
-std::shared_ptr<TNodeArray> TNodeArray::na;
+TNodeArray* TNodeArray::na = nullptr;
 
 
-TNodeArray::TNodeArray( long int nNod  ):
+TNodeArray::TNodeArray(long int nNod):
     internal_Node(new TNode()), calcNode(internal_Node.get()),
     anNodes(nNod)
 {
@@ -48,6 +48,7 @@ TNodeArray::TNodeArray( long int nNod  ):
     grid  = 0;   // Array of grid point locations, size is anNodes+1
     tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
     iaNode = 0;
+    na = this;
     allocMemory();
 }
 
@@ -61,12 +62,14 @@ TNodeArray::TNodeArray( long int asizeN, long int asizeM, long int asizeK ):
     grid  = 0;   // Array of grid point locations, size is anNodes+1
     tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
     iaNode = 0;
+    na = this;
     allocMemory();
 }
 
 
 TNodeArray::~TNodeArray()
 {
+    na = nullptr;
     freeMemory();
 }
 
@@ -358,10 +361,10 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
     }
 
     if( ipmfiles_lst_name ) {
-        calcNode->ipmlog_file->error("GEMS3K input : file {}", ipmfiles_lst_name);
+        TNode::ipmlog_file->error("GEMS3K input : file {}", ipmfiles_lst_name);
     }
     if( !calcNode->ipmLogError().empty() ) {
-        calcNode->ipmlog_file->error("GEM_init error: {}", calcNode->ipmLogError());
+        TNode::ipmlog_file->error("GEM_init error: {}", calcNode->ipmLogError());
     }
     return 1;
 }
@@ -402,7 +405,7 @@ long TNodeArray::GEM_init(std::string dch_json, std::string ipm_json, std::vecto
     }
 
     if( !calcNode->ipmLogError().empty() ) {
-        calcNode->ipmlog_file->error("GEM_init error: {}", calcNode->ipmLogError());
+        TNode::ipmlog_file->error("GEM_init error: {}", calcNode->ipmLogError());
     }
     return 1;
 }
