@@ -549,11 +549,12 @@ public:
     explicit TMultiBase( TNode* na_ = nullptr );
     virtual ~TMultiBase()
     {
-        multi_kill();
+        if(node1) {
+           multi_kill();
+        }
     }
 
     virtual void multi_realloc( char PAalp, char PSigm );
-    virtual void multi_kill();
     
     virtual BASE_PARAM* base_param() const
     {
@@ -564,7 +565,7 @@ public:
     { return &pm; }
 
     virtual void set_def( int i=0);
-    virtual long int testMulti( );
+    virtual long int testMulti();
 
 
     //connection to mass transport
@@ -657,6 +658,7 @@ protected:
     void Build_compressed_xAN();
     void Free_compressed_xAN();
     void Free_internal();
+    void multi_kill();
 
      // From here move to activities.h or node.h
     long int sizeFIs;     ///< current size of phSolMod

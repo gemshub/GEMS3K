@@ -66,6 +66,8 @@ TMultiBase::TMultiBase(TNode *na_)
     U_CVo = nullptr;
     U_CV = nullptr;
     ICNud = nullptr;
+    pm.errorCode[0] ='\0';
+    pm.errorBuf[0] ='\0';
 
     sizeFIs = 0;
     phSolMod = nullptr;
@@ -282,7 +284,7 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
     TNode* na = node1;
     if( aNa != nullptr )
         na = aNa;   // for reading GEMIPM files task
-     ErrorIf( na == nullptr, "DCLoadThermodynamicData", "Could not be undefined node" );
+    ErrorIf( na == nullptr, "DCLoadThermodynamicData", "Could not be undefined node" );
     TK =  na->cTK();
     PPa = na->cP();
 

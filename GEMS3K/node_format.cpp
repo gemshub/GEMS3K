@@ -592,7 +592,7 @@ void TNode::datach_to_text_file(  TIO& out_format, bool use_thermofun, bool with
         prar.writeArray(  f_epsW, CSD->epsW,  5*(gridTP()), gridTP(), _comment, brief_mode );
         prar.writeArray(  f_epsWg, CSD->epsWg, 5*(gridTP()),  gridTP(), _comment, brief_mode );
     }
-    if( !isAllZero( CSD->V0,  CSD->nDC*gridTP() ))
+    //if( !isAllZero( CSD->V0,  CSD->nDC*gridTP() ))
         prar.writeArray(  f_V0, CSD->V0,  CSD->nDC*gridTP(), gridTP(), _comment, brief_mode );
     prar.writeArray(  f_G0, CSD->G0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode );
     if( !isAllZero( CSD->H0,  CSD->nDC*gridTP() ))
