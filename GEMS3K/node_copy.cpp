@@ -368,7 +368,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 void TNode::init_into_gems3k()
 {
     //InitReadActivities( mult_in.c_str(),CSD ); // from DCH file in future?
-    multi->InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
+    multi_ptr()->InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
     this->InitCopyActivities( CSD, pmm, CNode );
 }
 
@@ -376,14 +376,33 @@ void TNode::init_into_gems3k()
 //  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
 //  @param ipm_json -  Multi structure as a json/key-value string
 //  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
-long int  TNode::GEM_init( std::string dch_json, std::string ipm_json, std::string dbr_json )
+//  @param fun_json -  ThermoFun data structure as a json string
+long int  TNode::GEM_init( std::string dch_json, std::string ipm_json,
+                           std::string dbr_json, std::string fun_json)
 {
     load_thermodynamic_data = false; // need load thermo
     clearipmLogError();
 
+#ifdef USE_THERMOFUN
+    // clear previous
+    thermo_engine.reset();
+#endif
+
     try
     {
-        // This check of data consistency temporarily disabled for perfomance testing 
+       if(fun_json.empty()) {
+           GEMS3KGenerator::default_type_f  = GEMS3KGenerator::f_json;
+       }
+       else {
+           GEMS3KGenerator::default_type_f  = GEMS3KGenerator::f_thermofun;
+       }
+        node_logger->debug("GEMS3KGenerator::default_type_f {}", GEMS3KGenerator::default_type_f);
+        node_logger->debug("dch_json {}", dch_json);
+        node_logger->debug("dbr_json {}", dbr_json);
+        node_logger->debug("ipm_json {}", ipm_json);
+        node_logger->debug("fun_json {}", fun_json);
+
+        // This check of data consistency temporarily disabled for perfomance testing
         //if( GEMS3KGenerator::default_type_f  == GEMS3KGenerator::f_json )
         //{
              current_output_set_name = current_input_set_name = extract_string_json( "set", dch_json );
@@ -396,6 +415,15 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json, std::stri
         // Reading DCH_DAT data
         datach_from_string(dch_json);
 
+        if( !fun_json.empty() )
+        {
+#ifdef USE_THERMOFUN
+            node_logger->warn("Read ThermoEngine: {}", fun_json);
+            thermo_engine.reset( new ThermoFun::ThermoEngine(fun_json) );
+#else
+            node_logger->warn("ThermoFun JSON not use {}", dch_json);
+#endif
+        }
         // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
         multi_ptr()->gemipm_from_string( ipm_json, CSD, current_input_set_name );
 
@@ -1252,11 +1280,7 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
                 if( dCH->A0 ) pmm->A0[j] = propAl.helmholtz_energy.val;
                 if( dCH->U0 ) pmm->U0[j] = propAl.internal_energy.val;
 
-#ifdef IPMGEMPLUGIN
-                pmm->G0[j] = multi->ConvertGj_toUniformStandardState(G0, j, k);
-#else
-                pmm->G0[j] = TMulti::sm->ConvertGj_toUniformStandardState(G0, j, k);
-#endif
+                pmm->G0[j] = multi_ptr()->ConvertGj_toUniformStandardState(G0, j, k);
 #ifdef  USE_THERMO_LOG
                 f_log << "\n" << symbol << ";" << floating_point_to_string(G0)
                        << ";" << floating_point_to_string(pmm->G0[j])

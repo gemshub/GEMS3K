@@ -66,7 +66,7 @@ TNode::TNode( const TNode& otherNode )
     datach_copy( otherNode.CSD );
     databr_copy( otherNode.CNode );
 
-    multi->copyMULTI( *otherNode.multi );
+    multi_ptr()->copyMULTI( *otherNode.multi_base );
 
     // copy intervals for minimizatiom
     pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
@@ -104,9 +104,9 @@ void TNode::allocMemory()
 
     // allocation internal structures
     internal_multi.reset(new TMultiBase(this));
-    multi = internal_multi.get();
-    multi->set_def();
-    pmm = multi->GetPM();
+    multi_base = internal_multi.get();
+    multi_base->set_def();
+    pmm = multi_base->GetPM();
     atp.reset( new TActivity( CSD, CNode, this ) );
     //    atp->set_def();
     kip.reset( new TKinetics( CSD, CNode, this ) );
@@ -238,7 +238,7 @@ long int TNode::GEM_run( bool uPrimalSol )
         }
 
         // GEM IPM calculation of equilibrium state
-        CalcTime = multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
+        CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
 
         // Extracting and packing GEM IPM results into work DATABR structure
         packDataBr();

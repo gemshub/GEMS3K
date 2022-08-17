@@ -89,9 +89,6 @@ class TNode
 {
     friend class TNodeArray;
 
-    /// Default logger for TNode class
-    static std::shared_ptr<spdlog::logger> node_logger;
-
     /// Place for the *dbr. I/O file name
     std::string dbr_file_name;
     /// Last error message logged to the ipmlog file
@@ -116,7 +113,7 @@ protected:
 
 
     // These pointers are only used in standalone GEMS3K programs
-    TMultiBase* multi = nullptr;     // GEM IPM3 implementation class
+    TMultiBase* multi_base = nullptr;     // GEM IPM3 implementation class
     std::shared_ptr<TMultiBase> internal_multi;
     //    TAllan *ipm;       // Allan's GEM IPM implementation class
     // more speciation algorithms classes, when provided
@@ -133,13 +130,15 @@ protected:
     NumIterFIA,   ///< \protected Total Number of performed FIA entry iterations
     NumIterIPM;   ///< \protected Total Number of performed IPM main iterations
 
-    TMultiBase* multi_ptr()
+    TMultiBase* multi_ptr() const
     {
-        return multi;
+        return multi_base;
     }
 
 public:
 
+    /// Default logger for TNode class
+    static std::shared_ptr<spdlog::logger> node_logger;
     /// Default logger for ipmLogFile
     static std::shared_ptr<spdlog::logger> ipmlog_file;
 
@@ -188,11 +187,13 @@ public:
     ///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
     ///  @param ipm_json -  Parameters and settings for GEMS3K IPM-3 algorithm as a json/key-value string
     ///  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
+    ///  @param fun_json -  ThermoFun data structure as a json string
     ///  @returns:
     ///    0: OK;
     ///    1: GEM IPM read file or input file format error;
     ///   -1: System error (e.g. memory allocation).
-    long int  GEM_init( std::string dch_json, std::string ipm_json, std::string dbr_json );
+    long int  GEM_init( std::string dch_json, std::string ipm_json,
+                        std::string dbr_json, std::string fun_json = "" );
 
     // String i/o functions
     /// Writes CSD (DATACH structure) to a json/key-value string
@@ -490,6 +491,12 @@ public:
     ///                NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance will be used,
     ///                extended with ".dump.out".  Usually the dbr_file_name field contains the path to the last input DBR file.
     void  GEM_print_ipm( const char* fname );
+
+    /// The export to ThermoFun JSON format file should include all IComp, DComp and ReacDC records
+    /// from the project database, not just the records needed for a particular system
+    /// (where some elements, DComps or ReacDCs can be switched off) as done in preparation of DCH lookup arrays.
+    ///  \param stream     stream to output json file
+    virtual void  write_ThermoFun_format_stream(std::iostream&, bool) {}
 
     /// (7)  Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure instance
     ///   into memory provided by the mass transport part. Dimensions and order of elements in the arrays must correspond
@@ -1262,14 +1269,6 @@ protected:
     ///                                   with_comments=off as "condensed JSON"
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
     void  write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode ) const;
-
-    /// The export to ThermoFun JSON format file should include all IComp, DComp and ReacDC records
-    /// from the project database, not just the records needed for a particular system
-    /// (where some elements, DComps or ReacDCs can be switched off) as done in preparation of DCH lookup arrays.
-    ///  \param stream     stream to output json file
-    void  write_ThermoFun_format_stream( std::iostream& stream )
-    {
-    }
 
     // Methods to perform output to vtk files
 

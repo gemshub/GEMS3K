@@ -686,7 +686,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         if(generator.files_mode()>=GEMS3KGenerator::f_thermofun )
         {
             std::fstream  f_fun( generator.get_thermofun_path(), std::ios::out);
-            calcNode->write_ThermoFun_format_stream(f_fun);
+            calcNode->write_ThermoFun_format_stream(f_fun, false);
         }
     }
         break;

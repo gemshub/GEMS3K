@@ -230,6 +230,7 @@ void TMultiBase::alloc_xICuC( long int xICuCSum )
 {
     if(pm.xICuC) delete[] pm.xICuC;
     pm.xICuC = new long int[xICuCSum];
+
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

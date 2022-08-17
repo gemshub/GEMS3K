@@ -18,6 +18,8 @@ DEFINES += NODEARRAYLEVEL
 DEFINES += NOPARTICLEARRAY
 #DEFINES += USE_NLOHMANNJSON
 DEFINES += OVERFLOW_EXCEPT  #compile with nan inf exceptions
+DEFINES += USE_THERMOFUN
+DEFINES += USE_THERMO_LOG
 
 !win32 {
 
@@ -44,6 +46,17 @@ DEPENDPATH += $$GEMS3K_H
 
 INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
+
+contains(DEFINES, USE_THERMOFUN) {
+
+#ThermoFun_CPP   =  ../ThermoFun
+#ThermoFun_H     =   $$ThermoFun_CPP
+#DEPENDPATH += $$ThermoFun_H
+#INCLUDEPATH += $$ThermoFun_H
+#include($$ThermoFun_CPP/ThermoFun.pri)
+LIBS += -lThermoFun -lChemicalFun
+
+} ## end USE_THERMOFUN
 
 
 QMAKE_LFLAGS +=

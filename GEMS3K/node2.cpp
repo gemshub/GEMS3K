@@ -92,7 +92,7 @@ double TNode::Get_Psat(double Tk)
 
 void *TNode::get_ptrTSolMod(int xPH) const
 {
-    return multi->pTSolMod(xPH);
+    return multi_ptr()->pTSolMod(xPH);
 }
 
 //Returns DCH index of IC given the IC Name string (null-terminated)
