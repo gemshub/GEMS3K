@@ -1,13 +1,15 @@
 name: GEMS3K
 
 dependencies:
-  - gxx_linux-64=9.3.0  # [linux]
-  - cmake>=3.7
+  - gxx_linux-64=9.4.0  # [linux]
+  - cmake>=3.13
   - ninja # [unix]
   - make  # [win]
   - git
   - ccache  # [unix]
   - nlohmann_json
+  - fmt
+  - spdlog >=1.10.0
 
 environment:
 
