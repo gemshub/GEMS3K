@@ -3,40 +3,33 @@
 //
 // Implementation of TGEM2MT class, mass transport functions
 //
-// Copyright (C) 2005,2007  S.Dmytriyeva, D.Kulik
+// Copyright (C) 2005,2007, 2018, 2021  S.Dmytriyeva, D.Kulik, F.Enzmann, A.Yapparova
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization
 // Uses: GEM-Selektor GUI GUI DBMS library, gems/lib/gemvizor.lib
 //
 // This file may be distributed under the GPL v.3 license
-
+//
 //
 // See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
-#include <cstdio>
+#include <fstream>
 #ifdef useOMP
 #include <omp.h>
 #endif
 
-#ifndef IPMGEMPLUGIN
-
 #include "m_gem2mt.h"
+#include "GEMS3K/v_service.h"
+#ifndef IPMGEMPLUGIN
 #include "visor.h"
 #include "stepwise.h"
-
 #else
-
-#include <ctime>
-#include "m_gem2mt.h"
-#include "nodearray.h"
-
+#include "GEMS3K/nodearray.h"
 #endif
-#include "v_service.h"
 
 // ===========================================================
 
@@ -78,8 +71,8 @@ void  TGEM2MT::putHydP( DATABRPTR* C0 )
             C0[jj]->Km = mtp->HydP[jj][3];
             C0[jj]->al = mtp->HydP[jj][4];
             C0[jj]->Dif = mtp->HydP[jj][5];
-            C0[jj]->hDl = C0[jj]->al*C0[jj]->vp+C0[jj]->Dif;
             C0[jj]->nto = mtp->HydP[jj][6];
+            C0[jj]->hDl = C0[jj]->al*C0[jj]->vp+(C0[jj]->Dif*C0[jj]->eps/C0[jj]->nto); // C0[jj]->Dif;
         }
 #endif
     }
@@ -163,7 +156,7 @@ void  TGEM2MT::NewNodeArray()
         if(  C0[ii] == nullptr )
             Error( "NewNodeArray() error:" ," Undefined boundary condition!" );
 
-    // put HydP
+    // putting hydraulic parameters HydP into place
     putHydP( C0 );
 
     for (long int ii=0; ii<mtp->nC; ii++)    // node iteration
@@ -172,12 +165,13 @@ void  TGEM2MT::NewNodeArray()
     }  // ii    end of node iteration loop
 
     /* test output generated structure
-    ProcessProgressFunction messageF = [](const std::string& , long ){
-        //std::cout << "TProcess GEM3k output" <<  message.c_str() << point << std::endl;
+    ProcessProgressFunction messageF = [](const std::string& message, long point){
+        gui_logger->info("TProcess GEM3k output {} point {}", message, point);
         return false;
     };
 
-    auto dbr_list =  na->genGEMS3KInputFiles(  "Te_start/Test-dat.lst", messageF, mtp->nC, 0, false, false, false, false );
+    auto dbr_list =  na->genGEMS3KInputFiles("Te_start/Test-dat.lst", messageF, mtp->nC,
+                          GEMS3KGenerator::default_type_f, false, false, false, false );
     */
 }
 
@@ -327,12 +321,13 @@ bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* 
    na->CalcIPM_List( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), start_node, end_node, diffile );
 
    /* test output generated structure
-   ProcessProgressFunction messageF = [](const std::string& , long ){
-       //std::cout << "TProcess GEM3k output" <<  message.c_str() << point << std::endl;
-       return false;
-   };
+    ProcessProgressFunction messageF = [](const std::string& message, long point){
+        gui_logger->info("TProcess GEM3k output {} point {}", message, point);
+        return false;
+    };
 
-   auto dbr_list =  na->genGEMS3KInputFiles(  "Te_point/Test-dat.lst", messageF, mtp->nC, 0, false, false, true, false );
+   auto dbr_list =  na->genGEMS3KInputFiles("Te_point/Test-dat.lst", messageF, mtp->nC,
+                             GEMS3KGenerator::default_type_f, false, false, true, false );
    */
 
 #ifdef useOMP
@@ -635,8 +630,6 @@ void TGEM2MT::MassTransCraNicStep( bool CompMode )
 }
 
 
-
-
 /*
 // A very simple example of finite difference transport algorithm
 // Contributed on 22.08.2014 by Alina Yapparova, Chair of Reservoir Engineering,
@@ -654,7 +647,7 @@ double TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
     // calculate dt
     double dt = k*dx/v;
     // and print dt into the output file
-    // cout<<"\tdt = " << dt << "[s]" << endl;
+    // c out<<"\tdt = " << dt << "[s]" << endl;
 
     //Finite difference approximation for the equation dc/dt + v*dc/dx = 0
     // explicit time, left spatial derivative
@@ -712,11 +705,6 @@ double TMyTransport::OneTimeStepRun_CN( long int *ICndx, long int nICndx )
 }
 
 */
-
-
-
-
-
 
 // Main call for the mass transport iterations in 1D case
 //
@@ -816,9 +804,7 @@ if( mtp->PsVTK != S_OFF )
 
 #ifndef IPMGEMPLUGIN
 
-bool UseGraphMonitoring = false;
-char buf[300];
-
+   bool UseGraphMonitoring = false;
    if( mtp->PsSmode == S_OFF )
     if(  mtp->PvMSg != S_OFF && vfQuestion(window(),
              GetName(), "Use graphic monitoring?") )
@@ -832,15 +818,13 @@ char buf[300];
      do {   // time iteration step
 
 #ifndef IPMGEMPLUGIN
-
-       if( mtp->ct > 0)
-            CalcStartScript();
-
-       sprintf(buf, "   time %lg; step %ld ", mtp->cTau, mtp->ct );
+      // Calculating the control script at the beginning of a new time step
+      // if( mtp->ct > 0)
+      //      CalcControlScript();   // should run over all nodes i.e. nC times
+       gui_logger->debug("Recalculating 1D control script at ct= {}   cTau= {}", mtp->ct, mtp->cTau);
        Vmessage = "Simulating Reactive Transport: ";
-       Vmessage += buf;
+       Vmessage += "   time "+std::to_string(mtp->cTau)+"; step "+std::to_string(mtp->ct);
        Vmessage += ". Please, wait (may take time)...";
-
 
        if( mtp->PsSmode != S_OFF  )
        {
@@ -890,14 +874,21 @@ if( mtp->PsMO != S_OFF )
           pVisor->Update();
           CalcGraph();
 #endif
-          // copy node array for T0 into node array for T1
+          // copy node array T1 into node array T0
           copyNodeArrays();
-          // copy particle array ?
-          if( mtp->PsMode == RMT_MODE_W )
+
+          if( mtp->PsMode == RMT_MODE_W ) // copy particle array ?
             pa_mt->CopyfromT1toT0();
 
-          if( mtp->PsMode == RMT_MODE_F )
-             CalcMGPdata();
+#ifndef IPMGEMPLUGIN
+      // Calculating the control script at the end of a new time step
+       if( mtp->ct > 0)
+            CalcControlScript();   // should run over all nodes i.e. nC times
+       gui_logger->debug("Recalculating 1D control script at ct= {}   cTau= {}", mtp->ct, mtp->cTau);
+#endif
+
+          if( mtp->PsMode == RMT_MODE_F ) // in F mode
+             CalcMGPdata(); // Recalculation of MGP compositions and masses
 
 if( mtp->PsMO != S_OFF )
    otime += PrintPoint( 4, diffile, logfile, ph_file );
@@ -994,9 +985,9 @@ double TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE*
        strip(name);
        name += ".vtk";
 
-       name = pathVTK + prefixVTK + name;
+       name = pathVTK + nameVTK + "/" + prefixVTK + name;
 
-       std::fstream out_br(name.c_str(), std::ios::out );
+       std::fstream out_br(name, std::ios::out );
        ErrorIf( !out_br.good() , name, "VTK text make error");
        na->databr_to_vtk(out_br, nameVTK.c_str(), mtp->cTau, mtp->ct, mtp->nVTKfld, mtp->xVTKfld );
    }

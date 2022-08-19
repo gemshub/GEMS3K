@@ -6,7 +6,7 @@
 #include "v_detail.h"
 
 //#include "math.h"
-	/* needed for sqrt() below. */
+/* needed for sqrt() below. */
 
 
 namespace JAMA
@@ -36,7 +36,7 @@ using namespace TNT;
 		L = chol.getL();
 
   	else
-		cout << "factorization was not complete.\n";
+        c out << "factorization was not complete.\n";
 
 	</pre>
 

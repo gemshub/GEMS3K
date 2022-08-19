@@ -42,6 +42,8 @@
 #endif
 #endif
 
+#include <iostream>
+#include <fstream>
 #include <time.h>
 #include <math.h>
 #include <string>
@@ -65,6 +67,16 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, std::stri
 
 // -t -c -i process/Kaolinite-dat.lst -e process-kv/Kaolinite-dat.lst -l process/Kaolinite-dbr.lst
 
+// -j -c -i  ThermoTest-in/pHtitr-json.lst -e ThermoTest-json/pHtitr-dat.lst
+// -j  -c -i ThermoTest-in/pHtitr-fun.lst -e ThermoTest-fun/pHtitr-dat.lst
+
+
+// -j -c -i Thermo-time-json/series1-dat.lst -e Thermo-time-out-json/series1-dat.lst -l Thermo-time-json/series1-dbr.lst
+// -j -c -i Thermo-time-in/series1-dat.lst -e Thermo-time-out/series1-dat.lst -l Thermo-time-in/series1-dbr.lst
+
+// -j -c -i Neutral-fun/Neutral-dat.lst -e Neutral-fun-out/Neutral-dat.lst
+// -j -c -i Neutral-old/Neutral-dat.lst -e Neutral-old-out/Neutral-dat.lst
+
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
 {
@@ -81,6 +93,19 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
 #endif
 #endif
 
+    spdlog::set_pattern("[%n] [%^%l%$] %v");
+    auto ar_logger_gems3k = spdlog::get("gems3k");
+    ar_logger_gems3k->set_level(spdlog::level::trace);
+    auto ar_logger_ipm = spdlog::get("ipm");
+    ar_logger_ipm->set_level(spdlog::level::info);
+    auto ar_logger_tnode = spdlog::get("tnode");
+    ar_logger_tnode->set_level(spdlog::level::info);
+    auto ar_logger_kinmet = spdlog::get("kinmet");
+    ar_logger_kinmet->set_level(spdlog::level::info);
+    auto ar_logger_solmod = spdlog::get("solmod");
+    ar_logger_solmod->set_level(spdlog::level::info);
+
+
     try{
         std::string input_lst_path;
         std::string  dbr_lst_path;
@@ -90,7 +115,7 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
             return 1;
 
         // Creates TNodeArray structure instance accessible through the "node_arr" pointer
-        std::shared_ptr<TNodeArray> node_arr  = std::make_shared<TNodeArray>( export_data.nIV );
+        std::shared_ptr<TNodeArray> node_arr  = TNodeArray::create( export_data.nIV );
 
         // (1) Initialization of GEMS3K internal data by reading  files
         //     whose names are given in the input_system_file_list_name
@@ -112,6 +137,8 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
             std::cout << "error occured during inital calculation" << std::endl;
             return 1;
         }
+        for( int ii=0; ii<export_data.nIV; ii++)
+            node_arr->CopyNodeFromTo( ii, export_data.nIV, node_arr->pNodT1(), node_arr->pNodT0() );
 
         // (3) Writing results in defined output format
         ProcessProgressFunction messageF = [](const std::string& , long ){
@@ -216,6 +243,16 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path,
         {
             export_data.io_mode = GEMS3KGenerator::f_json;
         }
+//#ifdef USE_THERMOFUN
+        else if ((arg == "-f") || (arg == "--thermofun"))
+        {
+            export_data.io_mode = GEMS3KGenerator::f_thermofun;
+        }
+        else if ((arg == "-o") || (arg == "--kv_thermofun"))
+        {
+            export_data.io_mode = GEMS3KGenerator::f_kv_thermofun;
+        }
+//#endif
         else if ((arg == "-t") || (arg == "--key-value"))
         {
             export_data.io_mode = GEMS3KGenerator::f_key_value;

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include "gems3k_impex.h"
@@ -19,10 +18,19 @@ std::string GEMS3KGenerator::get_dbr_file_lst_path() const
 std::string GEMS3KGenerator::gen_dbr_name(const std::string the_name, int time_point, size_t index)
 {
     char buf[10];
-    snprintf( buf, 5, "%4.4ld", index );
+    snprintf( buf, 5, "%4.4zu", index );
     std::string dbr_name = the_name + "-dbr-";
     dbr_name += std::to_string(time_point) + "-" + buf;
     return dbr_name;
+}
+
+GEMS3KGenerator::GEMS3KGenerator(const std::string &filepath, long anIV, IOModes file_mode):
+    ipmfiles_lst_name(filepath), nIV(anIV), io_mode(file_mode)
+{
+#ifndef USE_THERMOFUN
+    ErrorIf( io_mode>=f_thermofun, ipmfiles_lst_name, " ThermoFun as an option is hidden");
+#endif
+    set_internal_data();
 }
 
 std::string GEMS3KGenerator::gen_dbr_file_name(int time_point, size_t index) const
@@ -38,6 +46,10 @@ std::string GEMS3KGenerator::gen_dat_lst_head()
     std::stringstream fout;
     fout << mode() << " \"" << gen_dch_file_name() + "\"";
     fout << " \"" << gen_ipm_file_name() << "\" ";
+    if( files_mode() >= f_thermofun )
+    {
+        fout << " \"" << gen_thermofun_file_name() << "\" ";
+    }
     return fout.str();
 }
 
@@ -74,6 +86,16 @@ void GEMS3KGenerator::load_dat_lst_file()
     f_getline( f_lst, ipm_file_name, ' ');
     trim(ipm_file_name, "\"");
 
+    if( files_mode() >= f_thermofun )
+    {
+#ifdef USE_THERMOFUN
+        f_getline( f_lst, thermofun_file_name, ' ');
+        trim(thermofun_file_name, "\"");
+#else
+       Error( ipmfiles_lst_name, " ThermoFun as an option is hidden");
+#endif
+    }
+
     while( f_lst.good() )
     {
         f_getline( f_lst, dbr_name, ' ');
@@ -92,6 +114,10 @@ void GEMS3KGenerator::get_mode( const std::string &str_mode )
         io_mode = f_binary;
     else  if( str_mode == "-j" )
         io_mode = f_json;
+    else  if( str_mode == "-f" || str_mode == "-fun" )
+        io_mode = f_thermofun;
+    else  if( str_mode == "-o" || str_mode == "-fun-kv" )
+        io_mode = f_kv_thermofun;
 }
 
 std::string GEMS3KGenerator::mode() const
@@ -102,6 +128,10 @@ std::string GEMS3KGenerator::mode() const
         return "-b";
     case f_json:
         return "-j";
+    case f_thermofun:
+        return "-f";
+    case f_kv_thermofun:
+        return "-o";
     default:
     case f_key_value:
         break;

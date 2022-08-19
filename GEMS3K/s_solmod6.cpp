@@ -24,18 +24,7 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
-#include <cstdio>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-using namespace std;
-#include "verror.h"
 #include "s_solmod.h"
-
-
-
-
 
 //=============================================================================================
 // Customized solid-solution and fluid models

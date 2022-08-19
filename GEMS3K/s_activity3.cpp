@@ -27,10 +27,8 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
-#include <algorithm>
+
 #include "node.h"
-#include "activities.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ///  Function for converting internal lnGam[j] value into an external (phase-scale-specific)
@@ -44,8 +42,9 @@ double
 TActivity::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
 {
     double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0., MMC = 0.;
-//    SPP_SETTING *pa = &TProfil::pm->pa;
 
+    if( act.sMod[k][SPHAS_TYP] != SM_AQPITZ)
+    {
     switch( act.PHC[k] )
     {
       case PH_AQUEL:
@@ -77,6 +76,7 @@ TActivity::PhaseSpecificGamma( long int j, long int jb, long int je, long int k,
            break;
        default:
           break; // Phase class code error should be generated here!
+    }
     }
 #ifdef NOMUPNONLOGTERM
 NonLogTerm = 0.0;
@@ -163,7 +163,6 @@ NonLogTermS = 0.0;
 }
 
 //--------------------------------------------------------------------------------
-static double ICold=0.;
 /// Main call point for calculation of DC activity coefficients (lnGam vector)
 ///    formerly GammaCalc().
 /// Controls various built-in models, as well as generic Phase script calculation
@@ -184,7 +183,6 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
     char *sMod;
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmpXFk;
-//    SPP_SETTING *pa = paTProfil;
 
     // calculating concentrations of species in multi-component phases
     switch( LinkMode )
@@ -356,7 +354,6 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
 					default:
 						break;
                 }
-                ICold = act.IC;
              }
              goto END_LOOP;
              break;
@@ -498,7 +495,7 @@ void TActivity::SolModCreate( long int jb, long int jmb, long int jsb, long int 
     if( phSolMod[k])
         if(  phSolMod[k]->testSizes( &sd ) )
     	{
-                phSolMod[k]->UpdatePT( act.Tc, act.Pc );
+                phSolMod[k]->UpdatePT( act.Tc, act.P );
                 return; // using old allocation and setup of the solution model
     	}
 
@@ -522,7 +519,7 @@ void TActivity::SolModCreate( long int jb, long int jmb, long int jsb, long int 
     sd.arPparc = act.Pparc+jb;
     sd.TP_Code = &act.dcMod[jb];
     sd.T_k = act.Tc;
-    sd.P_bar = act.Pc;
+    sd.P_bar = act.P;
 
     //new objects to Phase 06/06/12
 //    sd.arPhLin = act.PhLin+jphl;

@@ -24,16 +24,13 @@
 //-------------------------------------------------------------------
 //
 
-#include <cstdio>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <cstring>
-#include <algorithm>
-using namespace std;
-#include "verror.h"
 #include "s_kinmet.h"
 #include "v_detail.h"
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+// Thread-safe logger to stdout with colors
+std::shared_ptr<spdlog::logger> TKinMet::kinmet_logger = spdlog::stdout_color_mt("kinmet");
+
 
 //=============================================================================================
 // TKinMet base class constructor (simulation of phase metastability and MWR kinetics)
@@ -495,7 +492,7 @@ TKinMet::UpdateFSA(const double pAsk, const double pXFk, const double pFWGTk, co
     mPh = pFWGTk/1e3;  // from g to kg
     nPul = pPULk;
     nPll = pPLLk;
-// cout << " !!! mPh: " << mPh << endl;
+    kinmet_logger->trace(" !!! mPh: {}", mPh);
     vPh = pFVOLk/1e6;  // from cm3 to m3
     sFacti = p_sFact;
     LaPh = pLaPh;
@@ -655,15 +652,17 @@ TKinMet::PRrateCon( TKinReact &rk, const long int r )
    long int xj, j, atopc;//, facex;
    double atp, ajp, aj, bc, tt;  // ,kr
 
-//cout << "kTau: " << kTau << " k: " << rk.k << " K: " << rk.K << " Omg: " << OmPh <<
-//        " nPh: " << nPh << " mPh: " << mPh << " LaPh: " << LaPh << endl;
+   kinmet_logger->trace(" kTau: {} k: {}  K: {}  Omg: {}", kTau, rk.k, rk.K,  OmPh );
+   kinmet_logger->trace(" nPh: {} mPh: {}  LaPh: {}", nPh, mPh, LaPh );
+
    rk.rPR = 0.;
 //   rk.rPR = 0.;
    if(fabs(LaPh) < OmgTol )
        return 0.;  // equilibrium - zero rate
 
-if( rk.xPR != r )     // index of this parallel reaction
-        cout << rk.xPR << " <-> " << r << " mismatch" << endl;
+    if( rk.xPR != r ) {    // index of this parallel reaction
+        kinmet_logger->trace(" {} <-> {} mismatch ", rk.xPR, r);
+   }
    atopc = rk.ocPRk[0]; // operation code for this kinetic parallel reaction affinity term
    //facex = rk.ocPRk[1]; // particle face index (reserved)
 
@@ -920,8 +919,8 @@ TKinMet::RateInit( )
         vTot = 0.;
     }
 //   Here possibly additional corrections of dissolution/precipitation rates
-// cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
- // Check initial rates and limit them to realistic values
+    kinmet_logger->trace(" init 0  kTot: {} vTot: {}  rTot: {}  sSAcor: {} sAPh: {} nPhi: {}", kTot, vTot, rTot,  sSAcor, sAPh, nPhi);
+// Check initial rates and limit them to realistic values
 
     return false;
 }
@@ -970,7 +969,7 @@ TKinMet::RateMod( )
         vTot = 0.;
 //        sSAcr = 0.; problematic
     }
-    // cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
+    kinmet_logger->trace(" t: {} kTot: {}  vTot: {}  rTot: {} sSAcor: {} sAPh: {} nPh: {}", kTau, kTot, vTot, rTot, sSAcor, sAPh, nPh);
 //   Here possibly additional corrections of dissolution/precipitation rates
     return false;
 }
@@ -1002,7 +1001,7 @@ TKinMet::SetMetCon( )
     {                     // (needs more flexible check based on Fa stability criterion!)
        if( nPh >= 1e-10 )
        {   // dissolution
-         nPll = max( 0.1*nPh, nPh + dnPh );
+         nPll = std::max( 0.1*nPh, nPh + dnPh );
 //         nPul = max( nPh, nPll );
          //         if( nPul < nPll )
            nPul = nPll;
@@ -1029,7 +1028,7 @@ nPll = nPul;     // dolomite kinetics works, no warnings!
               {  // no phase but significant nucleation rate - onset of the phase at cutoff 1e-10 mol
                  // No growth yet, even if parallel reactions are given
                   nPul = dnNuc;       // nPll = nPul; // dangerous - needs a check for max. possible nPul!
-                  nPll = min( nPul, 1e-6 ); // PROVISIONAL - max content of phase in aqueous to be checked!
+                  nPll = std::min( nPul, 1e-6 ); // PROVISIONAL - max content of phase in aqueous to be checked!
                   nPhi = nPh;         // initial amount of this phase
                   mPhi = mPh;         // initial mass
                   vPhi = vPh;         // initial volume
@@ -1305,7 +1304,7 @@ TUptakeKin::UptakeInit()
      Rd_rest = (1.-arWx[j])/(molSum-arElm[i]);
      if( fabs(Rd_rest) >1e-20  )
             Dfj[j] = Rdj[j]/Rd_rest;
-     //cout << "Rd_rest(UptakeInit) = " << Rd_rest << "  Dfj[j] = " <<  Dfj[j]<< endl;
+     kinmet_logger->trace(" Rd_rest(UptakeInit) = {}  Dfj[j] = {}", Rd_rest, Dfj[j]);
     }
     return false;
 }
@@ -1380,7 +1379,7 @@ TUptakeKin::UptakeMod()
                 Rd_rest = (1-spcfu[j])/(molSum-arElm[i]);
                 if( fabs(Rd_rest) >1e-20 )
                     Dfj[j] = Rdj[j]/Rd_rest;
-                //cout << "Rd_rest(UptakeMod) = " << Rd_rest << "  Dfj[j] = " <<  Dfj[j]<< endl;
+                kinmet_logger->trace(" Rd_rest(UptakeMod) = {}  Dfj[j] = {}", Rd_rest, Dfj[j]);
                 // Other ways of Dfj calculation are possible!
             }
             break;

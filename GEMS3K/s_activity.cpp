@@ -26,12 +26,11 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#include <cmath>
-#include<iomanip>
 
 #include "ms_multi.h"
 #include "node.h"
-#include "activities.h"
+#include "v_service.h"
+
 
 // These methods largely duplicate same-named methods from the TNode class
 //   (see node_activities.cpp)
@@ -182,7 +181,6 @@ void TActivity::set_def( )
 {
     ;
 }
-// #define GEMITERTRACE
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Internal memory allocation for IPM performance optimization
@@ -325,7 +323,6 @@ double TActivity::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
     //long int jc=-1;
     double F0=0.0;//, Fold, Mk=0.0;
     //double FactSur, FactSurT;
-//    SPP_SETTING *pa = paTProfil;
 
    // Fold = act.F0[j];    // No old sorption models in this implementation!
 //    if( act.FIat > 0 && j < act.Ls && j >= act.Ls - act.Lads )
@@ -563,10 +560,9 @@ void TActivity::PrimalChemicalPotentials( double F[], double Y[], double YF[], d
             YFk = YFA[k];
         if( Yf >= 1e6 )
         {                 // error - will result in zerodivide!
-           std::string pbuf(act.SF[k],0,20);
-           char buf[200];
-           sprintf( buf, "Broken phase amount from primal approximation: Phase %s  Yf= %lg", pbuf.c_str(), Yf );
-           Error( "E13IPM: PrimalChemicalPotentials():", buf);
+           Error( "E13IPM: PrimalChemicalPotentials():",
+                  std::string("Broken phase amount from primal approximation: Phase "+
+                  char_array_to_string(act.SF[k],20)+"  Yf= "+std::to_string(Yf)));
 //           Yf = act.YFk;
         }
         if( ( act.PHC[k] == PH_AQUEL && YFk >= act.XwMinM )
@@ -574,7 +570,10 @@ void TActivity::PrimalChemicalPotentials( double F[], double Y[], double YF[], d
                         || ( act.PHC[k] == PH_POLYEL && YFk >= act.ScMinM ) )
         {
             logXw = log(YFk);
-            NonLogTerm = 1.- YFk / Yf;
+            if( act.sMod[k][SPHAS_TYP] != SM_AQPITZ)
+            {
+               NonLogTerm = 1.- YFk / Yf;
+            }
 #ifdef NOMUPNONLOGTERM
 NonLogTerm = 0.0;
 #endif
@@ -722,11 +721,9 @@ double TActivity::GX( double /*LM*/  )
 NEXT_PHASE:
         j = i;
     }  // k
-//    cout << "GX  " << setprecision(16) << scientific <<  FX << endl;
     return(FX);
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Conversion of g(T,P) value for DCs into the uniform cj scale.
 /// \param k - index of phase, \param j - index DC in phase
 /// \return if error code, returns 777777777.
@@ -750,9 +747,6 @@ double TActivity:: ConvertGj_toUniformStandardState( double g0, long int j, long
          [[fallthrough]];
     case DC_AQ_SOLVCOM:
     case DC_AQ_SOLVENT:
-//#ifndef IPMGEMPLUGIN
-//        if( TSyst::sm->GetSY()->PYOF != S_OFF )
-//#endif
           if( noZero( YOF ) )
         	G += YOF;  // In GEMS3K, YOF[k] is the only way to influence G directly
 
@@ -774,7 +768,7 @@ case DC_SCM_SPECIES:
 //        if( act.Pparc[j] != 1.0 && act.Pparc[j] > 1e-30 )
 //           G += log( act.Pparc[j] ); // log partial pressure/fugacity
 //        else
-               G += log( act.Pc ); // log general pressure (changed 04.12.2006)
+               G += log( act.P ); // log general pressure (changed 04.12.2006)
         }
         // non-electrolyte condensed mixtures
          [[fallthrough]];
@@ -782,10 +776,7 @@ case DC_SCM_SPECIES:
     case DC_SUR_MINAL:
     case DC_SUR_CARRIER:
     case DC_PEL_CARRIER:
-//#ifndef IPMGEMPLUGIN
-//        if( TSyst::sm->GetSY()->PYOF != S_OFF )
-//#endif
-          if( noZero( YOF ) )
+         if( noZero( YOF ) )
         	 G += YOF;
         break;
         // Sorption phases
@@ -922,8 +913,8 @@ void TActivity::StabilityIndexes( void )
     double lnPc = 0., Xw = 1., lnXw = 0., lnFugPur=0., YFk;
     bool fRestore; char sModPT = SM_UNDEF;
 
-    if( act.Pc > 1e-29 )
-       lnPc = log( act.Pc );
+    if( act.P > 1e-29 )
+       lnPc = log( act.P );
     if( act.PHC[0] == PH_AQUEL && act.YFA[0] >= act.XwMinM  ) // number of moles of solvent
     {
         Xw = act.YFA[0] / act.YF[0];

@@ -11,8 +11,6 @@
 //
 //-------------------------------------------------------------------
 
-#include <time.h>
-#include <math.h>
 #include "m_gem2mt.h"
 
 //---------------------------------------------------------------------------
@@ -24,13 +22,13 @@
 // of nodes
 
 int main( int argc, char* argv[] )
- {
+{
 
 #ifndef USE_NLOHMANNJSON
-     std::string gem2mt_in1 = "TestAD/CalColumnAD.dat";
-     std::string ipm_lst = "TestAD/CalcColumn-dat.lst";
-     std::string dbr_lst = "TestAD/CalcColumn-dbr.lst";
-     std::string vtk_fname = "TestAD/VTK";
+    std::string gem2mt_in1 = "TestAD/CalColumnAD.dat";
+    std::string ipm_lst = "TestAD/CalcColumn-dat.lst";
+    std::string dbr_lst = "TestAD/CalcColumn-dbr.lst";
+    std::string vtk_fname = "TestAD/VTK";
 #else
     std::string gem2mt_in1 = "TestAD1/CalcColumnAD.json";
     std::string ipm_lst = "TestAD1/CalcColumn-dat.lst";
@@ -39,45 +37,44 @@ int main( int argc, char* argv[] )
 #endif
 
 
-// from argv
-      if (argc >= 2 )
+    // from argv
+    if (argc >= 2 )
         gem2mt_in1 = argv[1];
-      if (argc >= 3 )
-       ipm_lst = argv[2];
-      if (argc >= 4 )
+    if (argc >= 3 )
+        ipm_lst = argv[2];
+    if (argc >= 4 )
         dbr_lst = argv[3];
-      if (argc >= 5 )
+    if (argc >= 5 )
         vtk_fname = argv[4];
 
-   try{
+    try{
 
-   if(gem2mt_in1.empty() || ipm_lst.empty() || dbr_lst.empty() )
-       Error( "Start task", "No inital files");
+        if(gem2mt_in1.empty() || ipm_lst.empty() || dbr_lst.empty() )
+            Error( "Start task", "No inital files");
 
-// The NodeArray must be allocated here
-    TGEM2MT::pm = new TGEM2MT( 0 );
+        // The NodeArray must be allocated here
+        TGEM2MT::pm = new TGEM2MT( 0 );
 
-// Here we read the GEM2MT structure, prepared from GEMS or by hand
-   if( TGEM2MT::pm->ReadTask( gem2mt_in1.c_str(), vtk_fname.c_str() ))
-     return 1;  // error reading files
+        // Here we read the GEM2MT structure, prepared from GEMS or by hand
+        if( TGEM2MT::pm->ReadTask( gem2mt_in1.c_str(), vtk_fname.c_str() ))
+            return 1;  // error reading files
 
-// Here we read the MULTI structure, DATACH and DATABR files prepared from GEMS
-    if( TGEM2MT::pm->MassTransInit( ipm_lst.c_str(), dbr_lst.c_str() ) )
-      return 1;  // error reading files
+        // Here we read the MULTI structure, DATACH and DATABR files prepared from GEMS
+        if( TGEM2MT::pm->MassTransInit( ipm_lst.c_str(), dbr_lst.c_str() ) )
+            return 1;  // error reading files
 
-//   TGEM2MT::pm-> WriteTask( "gem2mt_out.dat" );
+        //   TGEM2MT::pm-> WriteTask( "gem2mt_out.dat" );
 
-// here we call the mass-transport finite-difference coupled routine
-   TGEM2MT::pm->RecCalc();
-   }
-   catch(TError& err)
-       {
-        std::fstream f_log("gem2mtlog.txt", std::ios::out|std::ios::app );
-        f_log << err.title.c_str() << ": " << err.mess.c_str() << std::endl;
+        // here we call the mass-transport finite-difference coupled routine
+        TGEM2MT::pm->RecCalc();
+    }
+    catch(TError& err)
+    {
+        TNode::ipmlog_file->error("Error {} : {}", err.title, err.mess);
         return 1;
-       }
+    }
 
-   return 0;
+    return 0;
 }
 
 

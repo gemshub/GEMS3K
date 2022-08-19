@@ -26,7 +26,6 @@
 //-------------------------------------------------------------------
 
 #include <algorithm>
-#include <iostream>
 #include <stdint.h>
 using namespace std;
 
@@ -153,9 +152,9 @@ void GemDataStream::setByteOrder( int bo )
 	swap = (byteorder == LittleEndian);
 #warning "Compiling for BIG ENDIAN architecture!"
 #else
-	swap = (byteorder == BigEndian);
+    swap = (byteorder == BigEndian);
 #endif
-//    cerr << "GemDataStream::swap == " << swap << endl;
+    gems_logger->debug("byteorder is BigEndian {}", swap);
 }
 
 // NOTE: these functions better to write as a templates!!

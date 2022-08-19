@@ -28,9 +28,7 @@
 //
 
 
-#include <cmath>
 #include "node.h"
-#include "activities.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculating bulk stoichiometry of a multicomponent phase
@@ -102,7 +100,6 @@ void TActivity::CalculateConcentrationsInPhase( double X[], double XF[], double 
 {
     long int j;
     double Muj, /* DsurT=0.0,*/ SPmol, lnFmol=4.016535;
-//    SPP_SETTING *pa = &TProfil::pm->pa;
 
     if( act.PHC[0] == PH_AQUEL )
     {  // mole fraction to molality conversion
@@ -138,8 +135,8 @@ void TActivity::CalculateConcentrationsInPhase( double X[], double XF[], double 
                case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:   // gases
                case DC_GAS_H2: case DC_GAS_N2:
                     act.Y_la[j] = ln_to_lg * ( Muj - act.G0[j] );
-                    if( act.Pc > 1e-29 )
-                        act.Y_la[j] += log10( act.Pc );
+                    if( act.P > 1e-29 )
+                        act.Y_la[j] += log10( act.P );
                     break;
                case DC_SOL_IDEAL: case DC_SOL_MINOR: case DC_SOL_MAJOR: case DC_SOL_MINDEP: case DC_SOL_MAJDEP:
              case DC_SCM_SPECIES:
@@ -227,8 +224,8 @@ void TActivity::CalculateConcentrationsInPhase( double X[], double XF[], double 
         case DC_GAS_N2:
             act.FVOL[k] += act.Vol[j]*X[j];
             act.Y_la[j] = ln_to_lg * ( Muj - act.G0[j] );
-            if( act.Pc > 1e-9 )
-                act.Y_la[j] += log10( act.Pc );
+            if( act.P > 1e-9 )
+                act.Y_la[j] += log10( act.P );
             break;
         case DC_SOL_IDEAL:
         case DC_SOL_MINOR:   //solution end member
@@ -299,7 +296,6 @@ void TActivity::CalculateConcentrations( double X[], double XF[], double XFA[])
 {
     long int k, i, j, jj;
     double Factor=0.0, Dsur=0.0, MMC=0.0, VXc;//, YFk;
-//    SPP_SETTING *pa = paTProfil;
 
 //    if( act.Ls < 2 || !act.FIs )  Temporary disabled  09.03.2010 DK
 //        return;
@@ -378,7 +374,7 @@ void TActivity::CalculateConcentrations( double X[], double XF[], double XFA[])
                 if(act.PHC[k] == PH_AQUEL ) // || act.PHC[k] == PH_SORPTION ) corr. 06.10.10 DK
                    act.Y_la[jj] += 1.74438;
                 if(act.PHC[k] == PH_GASMIX || act.PHC[k] == PH_PLASMA )
-                   act.Y_la[jj] += log10( act.Pc );
+                   act.Y_la[jj] += log10( act.P );
 //                act.Fx[jj] *= act.RT;     // el-chem potential
                 act.lnGam[jj] = 0.0;
             }

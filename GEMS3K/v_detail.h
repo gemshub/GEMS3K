@@ -32,6 +32,12 @@
 #include <iomanip>
 #include "verror.h"
 
+template <typename T>
+bool is( T& x, const std::string& s)
+{
+  std::istringstream iss(s);
+  return iss >> x && !iss.ignore();
+}
 
 template<typename T>
 bool approximatelyEqual( const T& a, const T& b, const T& epsilon = std::numeric_limits<T>::epsilon() )
@@ -182,6 +188,8 @@ template <class T,
           typename std::enable_if<!std::is_floating_point<T>::value,T>::type* = nullptr>
 bool string2value( T& x, const std::string& s)
 {
+    if(s.empty())
+        return false;
     std::istringstream iss(s);
     return iss >> x && !iss.ignore();
 }
@@ -190,6 +198,8 @@ template <class T,
           typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
 bool string2value( T& x, const std::string& s)
 {
+    if(s.empty())
+        return false;
     x = string_to_floating_point<T>(s);
     return true;
 }
