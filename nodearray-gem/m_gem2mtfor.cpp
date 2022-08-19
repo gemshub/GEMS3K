@@ -7,19 +7,16 @@
 //
 // Direct access to the TNodeArray class for storing all data for nodes
 //
-// Copyright (C) 2005,2007 S.Dmytriyeva, F.Enzmann, D.Kulik
+// Copyright (C) 2005,2007, 2021 S.Dmytriyeva, F.Enzmann, D.Kulik
 //
 //-------------------------------------------------------------------
 
-#include <time.h>
-#include <math.h>
-#include <iomanip>
 #include "m_gem2mt.h"
 
-#include "io_template.h"
-#include "io_nlohmann.h"
-#include "io_simdjson.h"
-#include "io_keyvalue.h"
+#include "GEMS3K/io_template.h"
+#include "GEMS3K/io_nlohmann.h"
+#include "GEMS3K/io_simdjson.h"
+#include "GEMS3K/io_keyvalue.h"
 
 extern const char* _GEMIPM_version_stamp;
 
@@ -37,7 +34,7 @@ io_formats::outField GEM2MT_static_fields[57] =  {
    // Controls on operation
      { "PsMode", 1, 0, 0, "# PsMode: Code of GEM2MT mode of operation { S F A D T W V }" },
      { "PsSIA" , 0, 0, 0, "# PsSIA: Use smart initial approximation in GEM IPM (+); SIA internal (*); AIA (-)" },
-     { "PsSdat" , 0, 0, 0, "# PsSdat:Save DataCH and inital DataBR files as text files (+) or binary (-)" },
+     { "PsSdat" , 0, 0, 0, "# PsSdat:Save DataCH and inital DataBR files as text json files (j|f), as key value files (t|o) or binary (b)" },
      { "PsSdef" , 0, 0, 0, "# PsSdef:Do not write data items that contain only default values (+ -)" },
      { "PsScom" , 0, 0, 0, "# PsScom:Write files with comments for all data entries ( text mode ) or as pretty JSON (+ -)" },
      { "PsMO" , 0, 0, 0, "# PsMO: Use non stop debug output for nodes (+ -)" },
@@ -145,13 +142,23 @@ bool TGEM2MT::internalCalc()
      bool iRet = 0;
      calcFinished = false;
 
-     if( mtp->PsMode == RMT_MODE_B ) // Flux-box RMT scoping model
-       iRet = CalcBoxFluxModel( NEED_GEM_SIA );
-     else  if( mtp->PsMode == RMT_MODE_S )
-                iRet = CalcSeqReacModel( NEED_GEM_SIA );
-          else
-             iRet =  Trans1D( NEED_GEM_SIA );  // here A,W,D and also F modes
-
+     if( mtp->PsMode == RMT_MODE_B ) // || mtp->PsMode == RMT_MODE_F  ) // Flux-box integrated model
+     {
+         iRet = CalcBoxFluxModel( NEED_GEM_SIA );
+     }
+     else if( mtp->PsMode == RMT_MODE_S )
+     {
+         iRet = CalcSeqReacModel( NEED_GEM_SIA );
+     }
+     else if( mtp->PsMode == RMT_MODE_A || mtp->PsMode == RMT_MODE_C || mtp->PsMode == RMT_MODE_W
+           || mtp->PsMode == RMT_MODE_F )  // 1D RMT models or simple 1D flux-box pipe sequence w/o integration
+     {
+         iRet =  Trans1D( NEED_GEM_SIA );  // here A,W,D and also F modes
+     }
+     else
+     {
+         ;  // Wrong model code - error message to be issued
+     }
     calcFinished = true;
     return iRet;
 }
@@ -167,7 +174,7 @@ void TGEM2MT::set_def(int q)
 
 //    TProfil *aPa= TProfil::pm;
     memcpy( &mtp->PunE, "jjbC", 4 );
-    memcpy( &mtp->PvICi, "++------------S00--+--+-----", 28 );
+    memcpy( &mtp->PvICi, "++-----------+S00--+--+-----", 28 );
     strcpy( mtp->name,  "`" );
     strcpy( mtp->notes, "`" );
     strcpy( mtp->xNames, "X" );
@@ -260,10 +267,12 @@ void TGEM2MT::set_def(int q)
     mtp->nPmin = nullptr;
     mtp->nPmax = nullptr;
     mtp->ParTD = nullptr;
-    mtp->arr1 = nullptr;
-    mtp->arr2 = nullptr;
-
 // work
+    mtp->BM = nullptr;
+    mtp->BdM = nullptr;
+    mtp->FmgpJ = nullptr;
+    mtp->BmgpM = nullptr;
+//
     mtp->An = nullptr;
     mtp->Ae = nullptr;
     mtp->gfc = nullptr;
@@ -372,8 +381,10 @@ void TGEM2MT::set_def(int q)
     mtp->nPmin = 0;
     mtp->nPmax = 0;
     mtp->ParTD = 0;
-    mtp->arr1 = 0;
-    mtp->arr2 = 0;
+    mtp->BM = 0;
+    mtp->BdM = 0;
+    mtp->BmgpM = 0;
+    mtp->BmgpJ = 0;
 
 // work
     mtp->An = 0;

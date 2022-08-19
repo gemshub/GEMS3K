@@ -28,7 +28,6 @@
 // You should have received a copy of the GNU General Public License
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
-
 /// \mainpage GEMS3K Solver of GeoChemical Equilibria and its TNode class interface.
 ///
 /// GEMS3K (formerly GEMIPM2K) is a C/C++ code implementing the efficient numerical kernel

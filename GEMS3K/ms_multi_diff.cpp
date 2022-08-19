@@ -240,7 +240,7 @@ long int TMultiBase::testMulti()
 {
     if( pm.MK || pm.PZ )
     {
-        if( base_param()->PSM == 2 )
+        if( base_param()->PSM >= 2 )
         {
             TNode::ipmlog_file->warn(" {} : {}:{}", pm.stkey, pm.errorCode, pm.errorBuf);
         }
@@ -463,4 +463,4 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
 }
 
 
-//===============================================================================
+//--------------------- End of ms_multi_diff.cpp ---------------------------

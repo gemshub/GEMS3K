@@ -1,16 +1,16 @@
 //-------------------------------------------------------------------
 // $Id: m_gem2mt.h 1373 2009-07-22 12:25:22Z gems $
-// To be finalized in Version 3.0 (2006)
+// To be finalized in Version 3.10 (2021)
 // Declaration of GEM2MT class, config and calculation functions
 //
-// Copyright (C) 2005,2011 D.Kulik, S. Dmytriyeva
+// Copyright (C) 2005,2011,2021 D.Kulik, S. Dmytriyeva
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization
 // Uses: GEM-Selektor GUI GUI DBMS library, gems/lib/gemvizor.lib
 //
 // This file may be distributed under the GPL v.3 license
-
+//
 //
 // See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
@@ -29,12 +29,9 @@ class TRWArrays;
 }
 
 #ifndef IPMGEMPLUGIN
-
 #include "m_param.h"
-#include "nodearray_gui.h"
 #include "v_ipnc.h"
 #include "graph_window.h"
-
 #else
 // internal
 enum grr_constants { // std::string len for graph
@@ -85,21 +82,21 @@ typedef struct
 // Allocation and setup flags (14)
    PvICi,    // Use IC quantities for initial system compositions? { + * - }
    PvAUi,    // Use formula units for initial sub-system compositions? { + * - }
-   PvMSt,   // Use math script for start setup (+ -)?
+   PvMSt,    // Use math script for start setup (+ -)?
    PvMSg,    // Use math script for graphic presentation (+ -)?
    PvEF,     // Use empirical data for graphics  (+ -)?
    PvPGD,    // Use phase groups definitions (+ -)?
    PvFDL,    // Use flux definition list (+ -)
    PvSFL,    // Use source fluxes and elemental stoichiometries for them? (+ -)
    PvGrid,   // Use array of grid point locations? (+ -)
-   PvDDc,  //  Use diffusion coefficients for DC - DDc vector (+ -)
-   PvDIc,  //  Use diffusion coefficients for IC - DIc vector (+ -)
-   PvDCH,  //  Select ICs, DCs and phases to be exchanged via DATABR file (take all, if unchecked) (+ -)?
-   PvnVTK, //  Use selected fields to VTK format (+ -)?
-   Pvres1, //  reserved(+ -)?
+   PvDDc,    //  Use diffusion coefficients for DC - DDc vector (+ -)
+   PvDIc,    //  Use diffusion coefficients for IC - DIc vector (+ -)
+   PvDCH,    //  Select ICs, DCs and phases to be exchanged via DATABR file (take all, if unchecked) (+ -)?
+   PvnVTK,   //  Use selected fields to VTK format (+ -)?
+   PvMSc,    // Use math script for control on time steps (+ -)?
 
      // Controls on operation (14)
-   PsMode,  // Code of GEM2MT mode of operation { S F B A D W T }
+   PsMode,  // Code of GEM2MT mode of operation { S F B A W D C T }
 //  Status and control flags (+ -)
    gStat,  // GEM2MT generation status: 0 -indefinite; 1 on-going generation run;
         //  2 - done generation run; 3 - generation run error (+ 5: the same in stepwise mode)
@@ -107,7 +104,7 @@ typedef struct
         //  2 - analysis run; 3 - analysis done; ( + 5: the same using stepwise mode)
    PsSYd,  // Save generated SysEq records to data base (+ -)
    PsSIA,    // Use smart initial approximation in GEM IPM (+); SIA internal (*); AIA (-)
-   PsSdat, //  Save DataCH and inital DataBR files as text files (+) or binary (-)
+   PsSdat, //  Save DataCH and inital DataBR files as text json files (j|f), as key value files (t|+|o) or binary (b|-)
    PsSdef, //  Do not write data items that contain only default values (+ -)
    PsScom, //  Write files with comments for all data entries ( text mode ) or as "pretty JSON"  ( json mode ) (+ -)
    PsTPai,  //  Create T,P values in Tval, Pval using iterator(+) or enter(-)
@@ -214,7 +211,7 @@ nRes3,  //   reserved
 
   double (*PTVm)[5];// Pressure P, bar for initial systems (values within Pai range) [nV]
                     // Temperature T, C for initial systems (values within Pai range)
-                    // Volume of the system (L), usually zeros
+                    // Volume of the system (L), usually zeros changed to m3 on 20.11.2021 by DK
                     // Initial mass (kg) (to normalize composition of initial system in nodes)
                     // Actual mass of initial system (kg) - to set initial node masses
    double
@@ -246,8 +243,8 @@ double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flu
      *PGT,  // Quantities of phases in MGP [FIf][nPG]
      *BSF,   // [nSFD][Nf] table of bulk compositions of elemental fluxes
               //  More to be added here for seq reactors?
-     *MB,    // [nC][Nf] column of current IC masses in the boxes (in kg)
-     *dMB    // [nC][Nf]  Table of current derivatives dM/dTau for ICs in boxes
+     *MB,    // [nC][Nf]  Table of current IC masses in the boxes (in kg)
+     *dMB    // [nC][Nf]  Table of current derivatives dM/dTau for ICs in boxes (in kg/s)
      ;
 
  // graphics
@@ -266,11 +263,13 @@ double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flu
    *DIc,  //  [Nf] diffusion coefficients for IC
    *DEl   //  [nE] diffusion coefficients for electrolyte salts
     ;
-// reserved
+// reserved before, used since 17.Nov.2021 for GEM2MT B or F sim output
   double
-*arr1,  // [nC] reserved
-*arr2;  // [nC] reserved
-
+   *BM,  // arr1 [nC] Current masses of the nodes (boxes) (in kg)
+   *BdM, // [nC] Current time derivatives of mass of the nodes (boxes) (in kg/s)
+   *BmgpM, // [nC][nPG] Current masses of MGPs in nodes/boxes (in kg), only outgoing
+   *FmgpJ, // [nFD] Current MGP fluxes (in kg/s), only outgoing relative to boxes
+   *arr5;  // [nSFD] Current source fluxes (defined in the BSF table), kg/s
   char
    *tExpr,  // Math script text for calculation of mass transport
    *gExpr,  // Math script text for calculation of data sampling and plotting
@@ -307,7 +306,7 @@ double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flu
    ;
  double
    *gfc,  // [nC][nPG][Nf] Array of element partition coefficients between given MGP quantity and its source box
-   *yfb,  // [nC][nPG][Nf] Array of MGP  element bulk compositions in boxes at current time point (moles)
+   *yfb,  // [nC][nPG][Nf] Array of MGP element bulk compositions in boxes at current time point (moles)
    (*tt)[9];
  char sykey[EQ_RKLEN+10],   // Key of currently processed SysEq record
    *etext,              // internal
@@ -317,8 +316,8 @@ double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flu
  long int
    ctm,    // current CSD #
    cnv,    //  current restriction variant #
-   qc,     // current index of the compartment ( 1 to nC )
-   kv,     // current index of the initial system variant (1 to nIV )
+   qc,     // current index of the node/box/compartment ( 0 to nC-1 )
+   kv,     // current index of the initial system variant (0 to nIV-1 )
    jqc,    // script c-style index (= qc-1) for transport
    jqs,    // script c-style index (= qc-1) for graphics
    jt,     // current index of sampled point (for sampling scripts)
@@ -362,9 +361,10 @@ class TGEM2MT
     jsonui::GraphDialog *gd_gr = nullptr;
     TPlotLine* plot;
     std::string title;           // changed titler to title
+    std::string error_lst_path;
 #endif
 
-  TNodeArray* na = nullptr;       // pointer to nodearray class instance
+  std::shared_ptr<TNodeArray> na = nullptr;       // pointer to nodearray class instance
   TParticleArray* pa_mt = nullptr;       // pointer to TParticleArray class instance
 
     std::string pathVTK;
@@ -390,6 +390,7 @@ protected:
     void Bn_Calc();
     void gen_TPval();
     void CalcStartScript();
+    void CalcControlScript();
 
     void  copyNodeArrays();
     void  NewNodeArray();
@@ -415,7 +416,7 @@ protected:
     void  MassTransParticleStep( bool ComponentMode = true );
     bool Trans1D( char mode  );  // return true if canceled
 
-   // for box flux model with variable time step (TBD)
+   // for box flux ODE integration sims with variable time step (TBD)
     long int MaxIter,  // max number of iterations
          nfcn,      // number of functional estimates
          nstep,     // number of steps
@@ -433,14 +434,13 @@ protected:
     void ComposMGPinBox( long int q );
 //    void DisCoefMGPinBox( long int q );
     void  dMBZeroOff(  double *dm );
-    inline double MassICinMGP( long int q, long int f, long int i);
+    double MassICinHfe( long int fe, long int i );
+    double MassHfe(long int fe);
+    double MassICinMGP( long int q, long int f, long int i);
     double MassMGP(long int q, long int f  );
-    inline void dMBfluxDir( long int q, long int i, double *dm, double fRate, double sign=1.);
-    long int   LookUpXMGP( const char* MGPid );
-    void  dMBflux( long int kk, double *m, double *dm, double t );
-    // calculate 1-step from system of equation
-    void Solut( double *m, double *dm, double t );
-
+    double dMBfluxDir( long int q, long int i, double *dm, double fRate, double sign = 1.);
+    long int LookUpXMGP( const char* MGPid );
+    void  dMBflux( long int kk, double *dm );
     void  BoxComposUpdate( long int q );
     void  BoxesBCupdate();  // was CalcNodeFlux()
     void  CalcMGPdata();
@@ -449,18 +449,24 @@ protected:
     bool CalcSeqReacModel( char mode ); // Calculation of S-mode sequential reactors model
     bool CalcBoxFluxModel( char mode ); // integrate boxes with fluxes of Mobile Groups of Phases
 
+    // calculate 1-step for the system of ODEs
+    void Solut( double *m, double *dm, double t );
     // internal point j calculation
     void MIDEX( long int j, double t, double h );
-    void INTEG( double eps, double& step, double t_begin, double t_end );
+    // ODE integration from t_begin to t_end with time step step (step can be reduced inside)
+    // returns current (possibly reduced) step value or negative value in case of error
+   double INTEG( double eps, double step, double t_begin, double t_end );
 
     double PrintPoint( long int nPoint, FILE* diffile = nullptr, FILE* logfile = nullptr, FILE* ph_file = nullptr);
     
 public:
 
     static TGEM2MT* pm;
-
+    
     GEM2MT *mtp;
 
+    std::shared_ptr<TNodeArray> nodeArray()
+    { return na; }
     explicit TGEM2MT( uint nrt );
 
 #ifndef IPMGEMPLUGIN
@@ -511,16 +517,19 @@ public:
     void mem_kill(int q);
     void mem_new(int q);
 
-  double Reduce_Conc( char UNITP, double Xe, double DCmw, double Vm,
+    double Reduce_Conc( char UNITP, double Xe, double DCmw, double Vm,
         double R1, double Msys, double Mwat, double Vaq, double Maq, double Vsys );
 
 
     // write/read gem2mt structure
     int ReadTask( const char *gem2mt_in1, const char *vtk_dir );
+    int ReadTaskString( const std::string json_string );
     int WriteTask( const char *unsp_in1 );
 
     int MassTransInit( const char *lst_f_name, const char *dbr_lst_f_name );
-    void RecCalc( );
+    int MassTransStringInit(const std::string& dch_json, const std::string& ipm_json,
+                            const std::vector<std::string>& dbr_json);
+    void RecCalc();
 
 #endif
 
@@ -536,16 +545,17 @@ public:
     bool calcFinished;
     std::string Vmessage;
 
-  class UserCancelException {};
+   class UserCancelException {};
    bool internalCalc();
    void savePoint();
 
+   GEMS3KGenerator GEMS3k_generator();
 };
 
 enum gem2mt_inernal {
   RMT_MODE_T = 'T',   // T Preparation of initial DataCH and DataBR files for external coupled RMT modeling using GEMS3K
 
-  RMT_MODE_B = 'B',    // B Box-flux generic RMT simulation (MGP fluxes.)
+  RMT_MODE_B = 'B',    // B Box-flux generic RMT simulation (with MGP or BSF fluxes)
   RMT_MODE_S = 'S',    // S Sequential reactors RMT simulation ( for moving fluids or solids )
   RMT_MODE_F = 'F',    // F Flow-through reactors RMT simulation ( with MGP fluxes )
 
@@ -556,9 +566,9 @@ enum gem2mt_inernal {
 
   // Type of transport in box models ( Added 25.11.2011 DK )
    MGP_TT_UNDEF = '0',  // Undefined
-   MGP_TT_AQS = '1',    // Aqueous phase only (classic flush or flow)
-   MGP_TT_GASF = '2',   // Gaseous fluid phase only
-   MGP_TT_AQGF = '3',   // Aqueous and gaseous phases (all-fluids flush)
+   MGP_TT_AQS   = '1',  // Aqueous phase only (classic flush or flow)
+   MGP_TT_GASF  = '2',  // Gaseous fluid phase only
+   MGP_TT_AQGF  = '3',  // Aqueous and gaseous phases (all-fluids flush)
    MGP_TT_SOLID = '4'   // Total solid only (dialysis bags)
 
 };

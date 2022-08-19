@@ -11,15 +11,11 @@
 //
 //-------------------------------------------------------------------
 
-#include <time.h>
-#include <math.h>
-#include <iomanip>
 #include "m_gem2mt.h"
 #include "io_keyvalue.h"
 #include "io_simdjson.h"
 
 #include <dirent.h>
-#include <sys/stat.h>
 
 bool DirExists( const char* aPath )
 {
@@ -55,8 +51,6 @@ TGEM2MT::TGEM2MT( uint /*nrt*/ )
 TGEM2MT::~TGEM2MT()
 {
   mem_kill(0);
-  if( na )
-   delete na;
   if( pa_mt )
     delete pa_mt;
 }
@@ -68,39 +62,39 @@ void TGEM2MT::RecCalc()
 {
     try
     {
-       bool iRet;
+        bool iRet;
 
-      if( mtp->PsVTK != S_OFF )
-      {
-         if( !DirExists( pathVTK.c_str() ) )
+        if( mtp->PsVTK != S_OFF )
+        {
+            if( !DirExists( pathVTK.c_str() ) )
 #ifndef  __unix
-            mkdir( pathVTK.c_str() );
+                mkdir( pathVTK.c_str() );
 #else
-             mkdir( pathVTK.c_str(), 0755 );
+                mkdir( pathVTK.c_str(), 0755 );
 #endif
-       // vfMakeDirectory(window(), pathVTK.c_str() );
-      }
+            // vfMakeDirectory(window(), pathVTK.c_str() );
+        }
 
-      if( mtp->iStat != AS_RUN  )
-      {
-        mtp->gStat = GS_GOING;
-        mt_reset();
-        mtp->gStat = GS_DONE;
-      }
+        if( mtp->iStat != AS_RUN  )
+        {
+            mtp->gStat = GS_GOING;
+            mt_reset();
+            mtp->gStat = GS_DONE;
+        }
 
-      // internal calc
-      iRet = internalCalc();
-      if(!iRet)
+        // internal calc
+        iRet = internalCalc();
+        if(!iRet)
             mtp->iStat = AS_DONE;
-      //else we have a stop point
+        //else we have a stop point
 
-     }
-     catch( TError& xcpt )
-     {
+    }
+    catch( TError& xcpt )
+    {
         mtp->gStat = GS_ERR;
         mtp->iStat = AS_INDEF;
         Error(  xcpt.title.c_str(), xcpt.mess.c_str() );
-     }
+    }
 }
 
 
@@ -143,6 +137,27 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
   return 1;
 }
 
+int TGEM2MT::ReadTaskString( const std::string json_string )
+{
+    if( json_string.empty() )
+        return 1;
+
+    try
+    {
+        std::stringstream ss;
+        ss.str(json_string);
+        io_formats::SimdJsonRead in_format( ss, "", "gem2mt" );
+        from_text_file( in_format );
+        return 0;
+    }
+    catch(TError& err)
+    {
+        std::fstream f_log("gem2mtlog.txt", std::ios::out|std::ios::app );
+        f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
+    }
+    return 1;
+}
+
 // Write TGEM2MT structure to file
 int TGEM2MT::WriteTask( const char *gem2mt_out1 )
 {
@@ -179,71 +194,119 @@ int TGEM2MT::WriteTask( const char *gem2mt_out1 )
 // Set up NodeArray and ParticleArray classes
 int TGEM2MT::MassTransInit( const char *lst_f_name, const char *dbr_lst_f_name )
 {
-  int ii;
+    int ii;
+    // define name of vtk file
+    std::string lst_in = lst_f_name;
+    size_t pos = lst_in.rfind("\\");
+    size_t pos2 = lst_in.rfind("/");
+    if( pos == std::string::npos )
+        pos = pos2;
+    else
+        if( pos2 < std::string::npos)
+            pos = std::max(pos, pos2 );
+    if( pos < std::string::npos )
+    {
+        if( pathVTK.empty() )
+        {
+            pathVTK = lst_in.substr(0, pos+1);
+            pathVTK += "VTK/";
+        }
+        lst_in = lst_in.substr(pos+1);
+    }
+    pos = lst_in.find(".");
+    lst_in = lst_in.substr(0, pos);
+    pos = lst_in.find("-");
+    lst_in = lst_in.substr(0, pos);
+    nameVTK = lst_in;
+    prefixVTK = lst_in;
 
-  // define name of vtk file
-  std::string lst_in = lst_f_name;
-  size_t pos = lst_in.rfind("\\");
-  size_t pos2 = lst_in.rfind("/");
-  if( pos == std::string::npos )
-      pos = pos2;
-  else
-      if( pos2 < std::string::npos)
-         pos = std::max(pos, pos2 );
-  if( pos < std::string::npos )
-  {
-      if( pathVTK.empty() )
-      {
-          pathVTK = lst_in.substr(0, pos+1);
-          pathVTK += "VTK/";
-      }
-      lst_in = lst_in.substr(pos+1);
-  }
-  pos = lst_in.find(".");
-  lst_in = lst_in.substr(0, pos);
-  pos = lst_in.find("-");
-  lst_in = lst_in.substr(0, pos);
-  nameVTK = lst_in;
-  prefixVTK = lst_in;
+    // The NodeArray must be allocated here
+    na = TNodeArray::create(mtp->nC);
+    TNodeArray::na = na.get();
+    // Prepare the array for initial conditions allocation
+    std::vector<long int> nodeType;
+    for( ii =0; ii<mtp->nC; ii++ )
+        nodeType.push_back(mtp->DiCp[ii][0]);
 
-
-  // The NodeArray must be allocated here
-  TNodeArray::na = na = new TNodeArray( /* mtp->xC,mtp->yC,mtp->zC */ mtp->nC );
-
- // Prepare the array for initial conditions allocation
-  long int* nodeType = new long int[mtp->nC];
-  for( ii =0; ii<mtp->nC; ii++ )
-         nodeType[ii] = mtp->DiCp[ii][0];
-
-  // Here we read the MULTI structure, DATACH and DATABR files prepared from GEMS
-  // if mtp->iStat == AS_RUN we resume calculation
-  if( na->GEM_init( lst_f_name, dbr_lst_f_name, nodeType, mtp->iStat == AS_RUN ) )
+    // Here we read the MULTI structure, DATACH and DATABR files prepared from GEMS
+    // if mtp->iStat == AS_RUN we resume calculation
+    if( na->GEM_init( lst_f_name, dbr_lst_f_name, nodeType.data(), mtp->iStat == AS_RUN ) )
         return 1;  // error reading files
 
-  CalcIPM( NEED_GEM_AIA, 0, mtp->nC, 0 ); //recalc all nodes ?
+    CalcIPM( NEED_GEM_AIA, 0, mtp->nC, 0 ); //recalc all nodes ?
 
-  for( ii=0; ii< mtp->nTai; ii++)
-      mtp->Tval[ii] =  na->pCSD()->TKval[ii]-C_to_K;
-  for( ii=0; ii< mtp->nPai; ii++)
-      mtp->Pval[ii] =  na->pCSD()->Pval[ii]/bar_to_Pa;
+    for( ii=0; ii< mtp->nTai; ii++)
+        mtp->Tval[ii] =  na->pCSD()->TKval[ii]-C_to_K;
+    for( ii=0; ii< mtp->nPai; ii++)
+        mtp->Pval[ii] =  na->pCSD()->Pval[ii]/bar_to_Pa;
 
-  // use particles
-  if( mtp->PsMode == RMT_MODE_W  )
-  {
-   na->SetGrid( mtp->sizeLc, mtp->grid );   // set up grid structure
-   pa_mt = new TParticleArray( mtp->nPTypes, mtp->nProps,
-         mtp->NPmean, mtp->ParTD, mtp->nPmin, mtp->nPmax, na );
-   pa_mt->setUpCounters();
-  }
-     // put HydP
-  if( mtp->PsMode != RMT_MODE_S  && mtp->PsMode != RMT_MODE_F && mtp->PsMode != RMT_MODE_B )
-  {
-      putHydP( na->pNodT0() );
-      putHydP( na->pNodT1() );
+    // use particles
+    if( mtp->PsMode == RMT_MODE_W  )
+    {
+        na->SetGrid( mtp->sizeLc, mtp->grid );   // set up grid structure
+        pa_mt = new TParticleArray( mtp->nPTypes, mtp->nProps,
+                                    mtp->NPmean, mtp->ParTD, mtp->nPmin, mtp->nPmax, na.get() );
+        pa_mt->setUpCounters();
+    }
+    // put HydP
+    if( mtp->PsMode != RMT_MODE_S  && mtp->PsMode != RMT_MODE_F && mtp->PsMode != RMT_MODE_B )
+    {
+        putHydP( na->pNodT0() );
+        putHydP( na->pNodT1() );
+    }
+    return 0;
 }
 
-  delete[] nodeType;
-  return 0;
+// Here we read the MULTI structure, DATACH and DATABR files prepared from GEMS
+// Set up NodeArray and ParticleArray classes
+int TGEM2MT::MassTransStringInit(const std::string& dch_json, const std::string& ipm_json,
+                                 const std::vector<std::string>& dbr_json)
+{
+    int ii;
+    if( pathVTK.empty() )
+    {
+        pathVTK = "VTK/";
+    }
+    if( nameVTK.empty() )
+    {
+        nameVTK = "vtk";
+        prefixVTK = nameVTK;
+    }
+
+    // The NodeArray must be allocated here
+    na = TNodeArray::create(mtp->nC);
+    TNodeArray::na = na.get();
+    // Prepare the array for initial conditions allocation
+    std::vector<long int> nodeType;
+    for( ii =0; ii<mtp->nC; ii++ )
+        nodeType.push_back(mtp->DiCp[ii][0]);
+
+    // Here we read the MULTI structure, DATACH and DATABR files prepared from GEMS
+    if( na->GEM_init( dch_json, ipm_json, dbr_json, nodeType.data() ) )
+        return 1;  // error reading files
+
+    CalcIPM( NEED_GEM_AIA, 0, mtp->nC, 0 ); //recalc all nodes ?
+
+    for( ii=0; ii< mtp->nTai; ii++)
+        mtp->Tval[ii] =  na->pCSD()->TKval[ii]-C_to_K;
+    for( ii=0; ii< mtp->nPai; ii++)
+        mtp->Pval[ii] =  na->pCSD()->Pval[ii]/bar_to_Pa;
+
+    // use particles
+    if( mtp->PsMode == RMT_MODE_W  )
+    {
+        na->SetGrid( mtp->sizeLc, mtp->grid );   // set up grid structure
+        pa_mt = new TParticleArray( mtp->nPTypes, mtp->nProps,
+                                    mtp->NPmean, mtp->ParTD, mtp->nPmin, mtp->nPmax, na.get() );
+        pa_mt->setUpCounters();
+    }
+    // put HydP
+    if( mtp->PsMode != RMT_MODE_S  && mtp->PsMode != RMT_MODE_F && mtp->PsMode != RMT_MODE_B )
+    {
+        putHydP( na->pNodT0() );
+        putHydP( na->pNodT1() );
+    }
+    return 0;
 }
 
 
@@ -253,7 +316,7 @@ int TGEM2MT::MassTransInit( const char *lst_f_name, const char *dbr_lst_f_name )
 void TGEM2MT::mem_kill(int q)
 {
     ErrorIf( mtp!=&mt[q], GetName(),
-       "E05GTrem: Attempt to access corrupted dynamic memory.");
+             "E05GTrem: Attempt to access corrupted dynamic memory.");
 
     //- if( mtp->lNam) delete[] mtp->lNam;
     //- if( mtp->lNamE) delete[] mtp->lNamE;
@@ -292,32 +355,34 @@ void TGEM2MT::mem_kill(int q)
     if( mtp->UMGP) delete[] mtp->UMGP;
     //- if( mtp->SBM) delete[] mtp->SBM;
     if( mtp->BSF) delete[] mtp->BSF;
-   if( mtp->MB) delete[] mtp->MB;
-   if( mtp->dMB) delete[] mtp->dMB;
-   if( mtp->DDc) delete[] mtp->DDc;
-   if( mtp->DIc) delete[] mtp->DIc;
-   if( mtp->DEl) delete[] mtp->DEl;
-   if( mtp->for_e) delete[] mtp->for_e;
-   //- if( mtp->xIC) delete[] mtp->xIC;
-   //- if( mtp->xDC) delete[] mtp->xDC;
-   //- if( mtp->xPH) delete[] mtp->xPH;
-   if( mtp->grid) delete[] mtp->grid;
-   if( mtp->NPmean) delete[] mtp->NPmean;
-   if( mtp->nPmin) delete[] mtp->nPmin;
-   if( mtp->nPmax) delete[] mtp->nPmax;
-   if( mtp->ParTD) delete[] mtp->ParTD;
-if( mtp->arr1) delete[] mtp->arr1;
-if( mtp->arr2) delete[] mtp->arr2;
-// work
-   //- if( mtp->An) delete[] mtp->An;
-   //- if( mtp->Ae) delete[] mtp->Ae;
-   if( mtp->gfc) delete[] mtp->gfc;
-   if( mtp->yfb) delete[] mtp->yfb;
-   if( mtp->tt) delete[] mtp->tt;
-   //- if( mtp->etext) delete[] mtp->etext;
-   //- if( mtp->tprn) delete[] mtp->tprn;
-   //- FreeNa();
-   //- freeNodeWork();
+    if( mtp->MB) delete[] mtp->MB;
+    if( mtp->dMB) delete[] mtp->dMB;
+    if( mtp->DDc) delete[] mtp->DDc;
+    if( mtp->DIc) delete[] mtp->DIc;
+    if( mtp->DEl) delete[] mtp->DEl;
+    if( mtp->for_e) delete[] mtp->for_e;
+    //- if( mtp->xIC) delete[] mtp->xIC;
+    //- if( mtp->xDC) delete[] mtp->xDC;
+    //- if( mtp->xPH) delete[] mtp->xPH;
+    if( mtp->grid) delete[] mtp->grid;
+    if( mtp->NPmean) delete[] mtp->NPmean;
+    if( mtp->nPmin) delete[] mtp->nPmin;
+    if( mtp->nPmax) delete[] mtp->nPmax;
+    if( mtp->ParTD) delete[] mtp->ParTD;
+    if( mtp->BM) delete[] mtp->BM;
+    if( mtp->BdM) delete[] mtp->BdM;
+    if( mtp->FmgpJ) delete[] mtp->FmgpJ;
+    if( mtp->BmgpM) delete[] mtp->BmgpM;
+    // work
+    //- if( mtp->An) delete[] mtp->An;
+    //- if( mtp->Ae) delete[] mtp->Ae;
+    if( mtp->gfc) delete[] mtp->gfc;
+    if( mtp->yfb) delete[] mtp->yfb;
+    if( mtp->tt) delete[] mtp->tt;
+    //- if( mtp->etext) delete[] mtp->etext;
+    //- if( mtp->tprn) delete[] mtp->tprn;
+    //- FreeNa();
+    //- freeNodeWork();
 }
 
 // realloc dynamic memory
