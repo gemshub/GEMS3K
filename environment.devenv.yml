@@ -8,8 +8,7 @@ dependencies:
   - git
   - ccache  # [unix]
   - nlohmann_json
-  - fmt
-  - spdlog >=1.10.0
+  - spdlog=1.10.0
 
 environment:
 
