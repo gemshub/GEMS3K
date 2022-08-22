@@ -24,13 +24,12 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <cstdio>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-using namespace std;
 #include "s_solmod.h"
 #include "v_detail.h"
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+// Thread-safe logger to stdout with colors
+std::shared_ptr<spdlog::logger> TSolMod::solmod_logger = spdlog::stdout_color_mt("solmod");
 
 //=============================================================================================
 // TSolMod base class for multicomponent solid, liquid, fluid and aqueous mixtures
@@ -289,8 +288,8 @@ long int TSolMod::UpdatePT ( double T_k, double P_bar )
 /// gets phase name for specific built-in models (class TModOther)
 void TSolMod::GetPhaseName( const char *PhName )
 {
-	 strncpy( PhaseName, PhName, MAXPHASENAME );
-	 PhaseName[MAXPHASENAME] = 0;
+     strncpy( PhaseName, PhName, MAXPHNAME );
+     PhaseName[MAXPHNAME] = 0;
 }
 
 /// Calculation of configurational terms for the ideal mixing (c) DK, TW Nov. 2010

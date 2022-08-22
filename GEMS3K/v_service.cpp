@@ -2,12 +2,24 @@
 #include <regex>
 #include "v_service.h"
 
+
+std::string char_array_to_string(const char* data_ptr, size_t max_size)
+{
+    std::string data_str;
+    if(!data_ptr)
+        return data_str;
+    for(size_t pos=0; pos<max_size; ++pos)
+    {
+        if( data_ptr[pos] == '\0')
+            break;
+        data_str += data_ptr[pos];
+    }
+    return data_str;
+}
+
 void strip(std::string& str)
 {
-  std::string::size_type pos1 = str.find_first_not_of(' ');
-  std::string::size_type pos2 = str.find_last_not_of(' ');
-  str = str.substr(pos1 == std::string::npos ? 0 : pos1,
-    pos2 == std::string::npos ? str.length() - 1 : pos2 - pos1 + 1);
+    trim(str);
 }
 
 void replace( std::string& str, const char* old_part, const char* new_part)
@@ -176,7 +188,6 @@ int extract_int_json( const std::string& key, const std::string& jsondata )
     replace_all( data, "\'", '\"');
     std::string regstr =  std::string(".*\"")+key+"\"\\s*:\\s*([+-]?[1-9]\\d*|0).*";
     auto token = regexp_extract_string( regstr, data );
-    //cout << key << "  token " << token  << endl;
     if( token.empty() )
         return 0;
     return stoi(token);

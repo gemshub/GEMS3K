@@ -31,6 +31,7 @@
 #include <vector>
 #include <memory>
 #include "verror.h"
+#include "v_service.h"
 
 namespace  io_formats {
 
@@ -101,7 +102,7 @@ public:
         for( LT ii=0; ii<size; ii++, jj++ )
         {
             add_next( ii, jj, sz );
-            add_value( std::string( arr +(ii*arr_size), 0, arr_size ) );
+            add_value( char_array_to_string(arr +(ii*arr_size), arr_size ));
         }
 
         fout << ( dense ? "\n    ]" : "]" );

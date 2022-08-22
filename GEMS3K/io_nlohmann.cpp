@@ -31,7 +31,6 @@
 #include "v_detail.h"
 #include "v_service.h"
 
-
 namespace  io_formats {
 
 /// Write char value to file
@@ -75,9 +74,9 @@ NlohmannJsonRead::NlohmannJsonRead(std::iostream &ff, const std::string &test_se
     if( !test_set_name.empty() )
     {
         auto json_set = json_data["set"];
-        if( json_set.get<std::string>().find(test_set_name) == std::string::npos )
-            std::cout << "Read the document from another set: " <<  json_set
-                      << " , current set " << test_set_name  <<  std::endl;
+        if( json_set.get<std::string>().find(test_set_name) == std::string::npos ) {
+            gems_logger->warn(" Read the document from another set: {} , current set {}", json_set, test_set_name);
+        }
     }
     json_data =  json_data[field_name];
     json_it = json_data.begin();

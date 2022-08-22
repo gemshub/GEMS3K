@@ -27,6 +27,8 @@
 #define S_KINMET_H
 
 #include <vector>
+#include "spdlog/spdlog.h"
+
 
 const int MAXDCNAME_ = 16, MAXPHNAME_ = 16, MAXSYMB_ = 4;   // see also v_mod.h
 
@@ -224,6 +226,10 @@ struct TKinReact
 class TKinMet  // Base class for MWR kinetics and metastability models
 {
     protected:
+
+    /// Default logger for TKinMet class
+    static std::shared_ptr<spdlog::logger> kinmet_logger;
+
     char  KinProCode;   /// Code of the kinetic process (derived TKinMet class), see enum kinmet_controls
     char  KinModCode;   /// Type code of the kinetic/metastability model, see enum kinmet_controls
     char  KinSorpCode;   /// Type code of sorption kinetics model (solution/sorption phases only), see enum kinmet_controls

@@ -1,11 +1,11 @@
 
-#  GEMS3K v.3.8.1 c.0aa600e 
+#  GEMS3K v.3.9.5 c.6dae7a9
 # Comments can be marked with # $ ; as the first character in the line
 # IPM text input file for the internal GEM IPM-3 kernel data
 # (should be read after the DCH file and before DBR files)
 
 # ID key of the initial chemical system definition
-<ID_key>  "Node:0:time:0:dt:0"
+<ID_key>  ""
 
 ## (1) Flags that affect memory allocation
 # PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)

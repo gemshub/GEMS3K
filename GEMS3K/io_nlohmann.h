@@ -26,7 +26,6 @@
 #ifdef USE_NLOHMANNJSON
 
 #include <nlohmann/json.hpp>
-#include <iostream>
 #include <fstream>
 #include "verror.h"
 
@@ -128,7 +127,7 @@ public:
         json_data[ arr_key ] = nlohmann::json::array();
         for( int ii=0, jj=0; ii<size; ii++, jj++  )
         {
-            std::string str = std::string( arr +(ii*arr_size), 0, arr_size );
+            std::string str = char_array_to_string( arr +(ii*arr_size), arr_size );
             add_value( str, json_data[ arr_key ] );
         }
     }

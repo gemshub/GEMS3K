@@ -17,7 +17,6 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
 #include "particlearray.h"
 
 static long int idum_static = -10000l;

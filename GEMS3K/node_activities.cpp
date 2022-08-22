@@ -26,8 +26,6 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
-#include <iomanip>
 #include "node.h"
 
 // Generic access methods that use the new TActivity class
@@ -229,7 +227,6 @@ TNode::InitCopyActivities( DATACH* csd, MULTI* mp, DATABR* cnd )
 {
 
    atp.reset( new TActivity( csd, cnd, this ) );
-
    ACTIVITY* ap = atp->GetActivityDataPtr();
    AiP = ap;
 

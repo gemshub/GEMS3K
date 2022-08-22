@@ -31,10 +31,8 @@
 #ifndef MS_MULTI_BASE_H
 #define MS_MULTI_BASE_H
 
-#include <iostream>
-#include <memory>
-#include <ctime>
 #include "m_const_base.h"
+#include "verror.h"
 #include "datach.h"
 // TSolMod header
 #include "s_solmod.h"
@@ -44,6 +42,8 @@
 #include "gems3k_impex.h"
 
 class GemDataStream;
+class TProfil;
+class TNode;
 
 const int  QPSIZE = 180, // earlier 20, 40 SD oct 2005
            QDSIZE = 60;
@@ -52,66 +52,62 @@ const int  QPSIZE = 180, // earlier 20, 40 SD oct 2005
 extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
     e_CONSTANT,k_CONSTANT, cal_to_J, C_to_K, lg_to_ln, ln_to_lg, H2O_mol_to_kg, Min_phys_amount;
 
-enum volume_code {  /* Codes of volume parameter */
-    VOL_UNDEF, VOL_CALC, VOL_CONSTR
-};
+struct BASE_PARAM /// Flags and thresholds for numeric modules
+{
+   short
+           PC,   ///< Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }
+           PD,   ///< abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }.
+                 ///< Modes: 0-invoke, 1-at MBR only, 2-every MBR it, every IPM it. 3-not MBR, every IPM it.
+                 ///< if PD < 0 then use test qd_real accuracy mode
+           PRD,  ///< Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }
+           PSM,  ///< Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace { 1 }
+           DP,   ///< Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }
+           DW,   ///< Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }
+           DT,   ///< Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }
+           PLLG, ///< IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detection }
+           PE,   ///< Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }
+           IIM   ///< Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }
+           ;
+         double DG,   ///< Standart total moles { 1e5 }
+           DHB,  ///< Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }
+           DS,   ///< Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }
+           DK,   ///< IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 < DK < 1e-4) { 1e-5 }
+           DF,   ///< Threshold for the application of the Karpov phase stability criterion: (Fa > DF) for a lost stable phase { 0.01 }
+           DFM,  ///< Threshold for Karpov stability criterion f_a for insertion of a phase (Fa < -DFM) for a present unstable phase { 0.1 }
+           DFYw, ///< Insertion mole amount for water-solvent { 1e-6 }
+           DFYaq,///< Insertion mole amount for aqueous species { 1e-6 }
+           DFYid,///< Insertion mole amount for ideal solution components { 1e-6 }
+           DFYr, ///< Insertion mole amount for major solution components { 1e-6 }
+           DFYh, ///< Insertion mole amount for minor solution components { 1e-6 }
+           DFYc, ///< Insertion mole amount for single-component phase { 1e-6 }
+           DFYs, ///< Insertion mole amount used in PhaseSelect() for a condensed phase component  { 1e-7 }
+           DB,   ///< Minimum amount of Independent Component in the bulk system composition (except charge "Zz") (moles) (1e-17)
+           AG,   ///< Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { -1 }
+           DGC,  ///< Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0.99 }
+           GAR,  ///< Initial activity coefficient value for major (M) species in a solution phase before LPP approximation { 1 }
+           GAH,  ///< Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation { 1000 }
+           GAS,  ///< Since r1583/r409: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup() { 1e-3 }.
+                 ///< before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }
+           DNS,  ///< Standard surface density (nm-2) for calculating activity of surface species (12.05)
+           XwMin,///< Cutoff mole amount for elimination of water-solvent { 1e-9 }
+           ScMin,///< Cutoff mole amount for elimination of solid sorbent {1e-7}
+           DcMin,///< Cutoff mole amount for elimination of solution- or surface species { 1e-30 }
+           PhMin,///< Cutoff mole amount for elimination of  non-electrolyte solution phase with all its components { 1e-10 }
+           ICmin,///< Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }
+           EPS,  ///< Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }
+           IEPS, ///< Convergence parameter of SACT calculation in sorption/surface complexation models { 0.01 to 0.000001, default 0.001 }
+           DKIN; ///< Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }
+    char *tprn;       ///< internal
 
-struct BASE_PARAM
-{ // Flags and thresholds for numeric modules
-  short
-    PC,   // Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }
-    PD,   // abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }
-          // Mode of CalculateActivityCoefficients(): 0-invoke, 1-at EFD only, 2-every EFD it, every IPM it. 3-not EFD, every IPM it.
-          // if PD < 0 then use test qd_real accuracy mode
-    PRD,  // Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }
-    PSM,  // Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace { 1 }
-    DP,   // Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }
-    DW,   // Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }
-    DT,   // Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }
-    PLLG, // IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detection }
-    PE,   // Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }
-    IIM   // Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }
-    ;
-  double DG,   // Standart total moles { 1e5 }
-    DHB,  // Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }
-    DS,   // Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }
-    DK,   // IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 < DK < 1e-4) { 1e-5 }
-    DF,   // Threshold for the application of the Karpov phase stability criterion: (Fa > DF) for a lost stable phase { 0.01 }
-    DFM,  // Threshold for Karpov stability criterion f_a for insertion of a phase (Fa < -DFM) for a present unstable phase { 0.1 }
-    DFYw, // Insertion mole amount for water-solvent { 1e-6 }
-    DFYaq,// Insertion mole amount for aqueous species { 1e-6 }
-    DFYid,// Insertion mole amount for ideal solution components { 1e-6 }
-    DFYr, // Insertion mole amount for major solution components { 1e-6 }
-    DFYh, // Insertion mole amount for minor solution components { 1e-6 }
-    DFYc, // Insertion mole amount for single-component phase { 1e-6 }
-    DFYs, // Insertion mole amount used in PhaseSelect() for a condensed phase component  { 1e-7 }
-    DB,   // Minimum amount of Independent Component in the bulk system composition (except charge "Zz") (moles) (1e-17)
-    AG,   // Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { -1 }
-    DGC,  // Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0.99 }
-    GAR,  // Initial activity coefficient value for major (M) species in a solution phase before LPP approximation { 1 }
-    GAH,  // Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation { 1000 }
-    GAS,  // Since r1583: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup() { 1e-3 }
-          // before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }
-    DNS,  // Standard surface density (nm-2) for calculating activity of surface species (12.05)
-    XwMin,// Cutoff mole amount for elimination of water-solvent { 1e-9 }
-    ScMin,// Cutoff mole amount for elimination of solid sorbent {1e-7}
-    DcMin,// Cutoff mole amount for elimination of solution- or surface species { 1e-30 }
-    PhMin,// Cutoff mole amount for elimination of  non-electrolyte solution phase with all its components { 1e-10 }
-    ICmin,// Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }
-    EPS,  // Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }
-    IEPS, // Convergence parameter of SACT calculation in sorption/surface complexation models { 0.01 to 0.000001, default 0.001 }
-    DKIN; // Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }
-    char *tprn;       // internal
     void write(GemDataStream& oss);
-    void read(GemDataStream& oss);
-    void write(std::fstream& oss);
+    void read(GemDataStream& iss);
 };
 
 
 typedef struct
 {  // MULTI is base structure to Project (local values)
     char
-    stkey[EQ_RKLEN+1],   ///< Record key identifying IPM minimization problem
+    stkey[EQ_RKLEN+5],   ///< Record key identifying IPM minimization problem
     // NV_[MAXNV], nulch, nulch1, ///< Variant Nr for fixed b,P,T,V; index in a megasystem
     PunE,         ///< Units of energy  { j;  J c C N reserved }
     PunV,         ///< Units of volume  { j;  c L a reserved }
@@ -533,83 +529,44 @@ enum IndexationSATX {
     XL_ST = 0, XL_EM = 1, XL_SI = 2, XL_SP = 3
 };
 
-//struct BASE_PARAM;
-//struct SPP_SETTING;
-class TProfil;
-class TNode;
-extern BASE_PARAM pa_p_;
+extern const BASE_PARAM pa_p_;
 
 // Data of MULTI
 class TMultiBase
 {
-///#ifdef IPMGEMPLUGIN 07/05/2020
-
     char PAalp_; ///< Flag for using (+) or ignoring (-) specific surface areas of phases
     char PSigm_; ///< Flag for using (+) or ignoring (-) specific surface free energies
+    std::shared_ptr<BASE_PARAM> pa_standalone;
 
-///#endif
+protected:
+    /// Default logger for ipm chemical
+    static std::shared_ptr<spdlog::logger> ipm_logger;
 
 public:
-
-    const TNode *node1;
+    TNode *node1;
 
     /// This allocation is used only in standalone GEMS3K
-    explicit TMultiBase( const TNode* na_ = nullptr )
-    {
-        pa_standalone.reset( new BASE_PARAM() );
-        *pa_standalone = pa_p_;
-
-        pmp = &pm;
-        node1 = na_; // parent
-
-        sizeN = 0;
-        AA1 = nullptr;
-        BB1 = nullptr;
-        arrL = nullptr;
-        arrAN = nullptr;
-
-        U_mean = nullptr;
-        U_M2 = nullptr;
-        U_CVo = nullptr;
-        U_CV = nullptr;
-        ICNud = nullptr;
-
-        sizeFIs = 0;
-        phSolMod = nullptr;
-        sizeFIa = 0;
-        phSorpMod = nullptr;
-        sizeFI = 0;
-        phKinMet = nullptr;
-
-///#ifdef IPMGEMPLUGIN 07/05/2020
-        pmp->Guns = nullptr;
-        pmp->Vuns = nullptr;
-        pmp->tpp_G = nullptr;
-        pmp->tpp_S = nullptr;
-        pmp->tpp_Vm = nullptr;
-///#endif
-        set_def();
-    }
-
+    explicit TMultiBase( TNode* na_ = nullptr );
     virtual ~TMultiBase()
     {
-        multi_kill();
+        if(node1) {
+           multi_kill();
+        }
     }
 
     virtual void multi_realloc( char PAalp, char PSigm );
-    virtual void multi_kill();
+    
+    virtual BASE_PARAM* base_param() const
+    {
+       return pa_standalone.get();
+    }
 
     MULTI* GetPM()
     { return &pm; }
 
-    virtual BASE_PARAM* pa_p_ptr() const
-    {
-        //return paTProfil1->p;
-        return pa_standalone.get();
-    }
+    virtual void set_def( int i=0);
+    virtual long int testMulti();
 
-    //void setPa( TProfil *prof);  ///?
-    virtual long int testMulti( );
 
     //connection to mass transport
     void to_file( GemDataStream& ff );
@@ -688,15 +645,11 @@ protected:
 
     MULTI pm;
     MULTI *pmp;
-    std::shared_ptr<BASE_PARAM> pa_standalone;
-
-    //SPP_SETTING *paTProfil1;
 
     // Internal arrays for the performance optimization  (since version 2.0.0)
-
     long int sizeN; /*, sizeL, sizeAN;*/
-    double *AA1;
-    double *BB1;
+    double *AA;
+    double *BB;
     long int *arrL;
     long int *arrAN;
 
@@ -705,11 +658,11 @@ protected:
     void Build_compressed_xAN();
     void Free_compressed_xAN();
     void Free_internal();
+    void multi_kill();
 
-    // From here move to activities.h or node.h
+     // From here move to activities.h or node.h
     long int sizeFIs;     ///< current size of phSolMod
     TSolMod** phSolMod; ///< size current FIs - number of multicomponent phases
-
     void Alloc_TSolMod( long int newFIs );
     void Free_TSolMod();
 
@@ -742,138 +695,39 @@ protected:
     void Increment_uDD( long int r, bool trace = false );
     long int Check_uDD( long int mode, double DivTol, bool trace = false );
 
-    virtual void set_def( int i=0 );
-
-    // empty functions for GUI level using
-    virtual void loadData( bool ){}
-    virtual void GasParcP(){}
-    virtual void pm_GC_ods_link( long int /*k*/, long int /*jb*/, long int /*jpb*/, long int /*jdb*/, long int /*ipb*/ ){}
-    virtual bool calculateActivityCoefficients_scripts( long int, long, long, long, long, long, double  )
-    { return true; }
-    virtual bool testTSyst( int ) const
-    { return true; }
-    virtual void initalizeGEM_IPM_Data_GUI() {}
-    virtual void multiConstInit_PN();
-    virtual void GEM_IPM_Init_gui1() {}
-    virtual void GEM_IPM_Init_gui2() {}
     virtual void get_PAalp_PSigm(char &PAalp, char &PSigm);
+    virtual void STEP_POINT( const char* /*str*/);
+    virtual void alloc_IPx( long int LsIPxSum );
+    virtual void alloc_PMc( long int LsModSum );
+    virtual void alloc_DMc( long int LsMdcSum );
+    virtual void alloc_MoiSN( long int LsMsnSum );
+    virtual void alloc_SitFr( long int LsSitSum );
+    virtual void alloc_DQFc( long int DQFcSum );
+    virtual void alloc_PhLin( long int PhLinSum );
+    virtual void alloc_lPhc( long int lPhcSum );
+    virtual void alloc_xSMd( long int xSMdSum );
+    virtual void alloc_IsoPc( long int IsoPcSum );
+    virtual void alloc_IsoSc( long int IsoScSum );
+    virtual void alloc_IsoCt( long int IsoCtSum );
+    virtual void alloc_EImc( long int EImcSum );
+    virtual void alloc_mCDc( long int mCDcSum );
+    virtual void alloc_xSKrC( long int xSKrCSum );
+    virtual void alloc_ocPRkC( long int ocPRkC_feSArC_Sum );
+    virtual void alloc_feSArC( long int ocPRkC_feSArC_Sum );
+    virtual void alloc_rpConC( long int rpConCSum );
+    virtual void alloc_apConC( long int apConCSum );
+    virtual void alloc_AscpC( long int AscpCSum );
+    virtual void alloc_UMpcC( long int UMpcSum );
+    virtual void alloc_xICuC( long int xICuCSum );
 
-    virtual void alloc_IPx( long int LsIPxSum )
-    {
-        if( pm.IPx ) delete[] pm.IPx;
-        pm.IPx = new long int[ LsIPxSum];
-    }
-    virtual void alloc_PMc( long int LsModSum )
-    {
-        if( pm.PMc ) delete[] pm.PMc;
-        pm.PMc = new double[LsModSum];
-    }
-    virtual void alloc_DMc( long int LsMdcSum )
-    {
-        if( pm.DMc ) delete[] pm.DMc;
-        pm.DMc = new double[LsMdcSum];
-    }
-    virtual void alloc_MoiSN( long int LsMsnSum )
-    {
-        if(pm.MoiSN) delete[] pm.MoiSN;
-        pm.MoiSN = new double[LsMsnSum];
-    }
-    virtual void alloc_SitFr( long int LsSitSum )
-    {
-        if(pm.SitFr) delete[] pm.SitFr;
-        pm.SitFr = new double[LsSitSum];
-    }
-    virtual void alloc_DQFc( long int DQFcSum )
-    {
-        if(pm.DQFc) delete[] pm.DQFc;
-        pm.DQFc = new double[DQFcSum];
-    }
-    virtual void alloc_PhLin( long int PhLinSum )
-    {
-        if(pm.PhLin) delete[] pm.PhLin;
-        pm.PhLin = new long int[PhLinSum][2];
-    }
-    virtual void alloc_lPhc( long int lPhcSum )
-    {
-        if(pm.lPhc) delete[] pm.lPhc;
-        pm.lPhc = new double[lPhcSum];
-    }
-    virtual void alloc_xSMd( long int xSMdSum )
-    {
-        if(pm.xSMd) delete[] pm.xSMd;
-        pm.xSMd = new long int[xSMdSum];
-    }
-    virtual void alloc_IsoPc( long int IsoPcSum )
-    {
-        if(pm.IsoPc) delete[] pm.IsoPc;
-        pm.IsoPc = new double[IsoPcSum];
-    }
-    virtual void alloc_IsoSc( long int IsoScSum )
-    {
-        if(pm.IsoSc) delete[] pm.IsoSc;
-        pm.IsoSc = new double[IsoScSum];
-    }
-    virtual void alloc_IsoCt( long int IsoCtSum )
-    {
-        if(pm.IsoCt) delete[] pm.IsoCt;
-        pm.IsoCt = new char[IsoCtSum];
-    }
-    virtual void alloc_EImc( long int EImcSum )
-    {
-        if(pm.EImc) delete[] pm.EImc;
-        pm.EImc = new double[EImcSum];
-    }
-    virtual void alloc_mCDc( long int mCDcSum )
-    {
-        if(pm.mCDc) delete[] pm.mCDc;
-        pm.mCDc = new double[mCDcSum];
-    }
-
-    virtual void alloc_xSKrC( long int xSKrCSum )
-    {
-        if(pm.xSKrC) delete[] pm.xSKrC;
-        pm.xSKrC = new long int[xSKrCSum];
-    }
-    virtual void alloc_ocPRkC( long int ocPRkC_feSArC_Sum )
-    {
-        if(pm.ocPRkC) delete[] pm.ocPRkC;
-        pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
-    }
-    virtual void alloc_feSArC( long int ocPRkC_feSArC_Sum )
-    {
-        if(pm.feSArC) delete[] pm.feSArC;
-        pm.feSArC = new double[ocPRkC_feSArC_Sum];
-    }
-    virtual void alloc_rpConC( long int rpConCSum )
-    {
-        if(pm.rpConC) delete[] pm.rpConC;
-        pm.rpConC = new double[rpConCSum];
-    }
-    virtual void alloc_apConC( long int apConCSum )
-    {
-        if(pm.apConC) delete[] pm.apConC;
-        pm.apConC = new double[apConCSum];
-    }
-    virtual void alloc_AscpC( long int AscpCSum )
-    {
-        if(pm.AscpC) delete[] pm.AscpC;
-        pm.AscpC = new double[AscpCSum];
-    }
-    virtual void alloc_UMpcC( long int UMpcSum )
-    {
-        if(pm.UMpcC) delete[] pm.UMpcC;
-        pm.UMpcC = new double[UMpcSum];
-    }
-    virtual void alloc_xICuC( long int xICuCSum )
-    {
-        if(pm.xICuC) delete[] pm.xICuC;
-        pm.xICuC = new long int[xICuCSum];
-    }
-
-    virtual void STEP_POINT( const char* /*str*/)
-    {
-        // std::cout << str << std::endl;
-    }
+    virtual void loadData( bool ){}
+    virtual bool testTSyst() const;
+    virtual bool calculateActivityCoefficients_scripts( long int, long, long, long, long, long, double );
+    virtual void initalizeGEM_IPM_Data_GUI();
+    virtual void multiConstInit_PN();
+    virtual void GEM_IPM_Init_gui1();
+    virtual void GEM_IPM_Init_gui2();
+   
     void setErrorMessage( long int num, const char *code, const char * msg);
     void addErrorMessage( const char * msg);
 
@@ -897,12 +751,9 @@ protected:
     double GX( double LM  );
     void ConvertDCC();
     long int  getXvolume();
-    long int SpeciationCleanup( double AmountThreshold, double ChemPotDiffCutoff ); // added 25.03.10 DK
-    long int PhaseSelectionSpeciationCleanup( long int &k_miss, long int &k_unst, long int rLoop );
-    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
 
     // ipm_chemical2.cpp
-
+    virtual void GasParcP(){}
     void phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] );
     void phase_bfc( long int k, long int jj );
     double bfc_mass( void );
@@ -960,6 +811,7 @@ protected:
     void GEM_IPM( long int rLoop );
     long int MassBalanceRefinement( long int WhereCalledFrom );
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
+    void AutoInitialApproximation( );
 
     // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
     void MassBalanceResiduals( long int N, long int L, double *A, double *Y,
@@ -975,10 +827,12 @@ protected:
     double StepSizeEstimate( bool initAppr );
     void Restore_Y_YF_Vectors();
     double RescaleToSize( bool standard_size ); // replaced calcSfactor() 30.08.2009 DK
+    long int SpeciationCleanup( double AmountThreshold, double ChemPotDiffCutoff ); // added 25.03.10 DK
+    long int PhaseSelectionSpeciationCleanup( long int &k_miss, long int &k_unst, long int rLoop );
+    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
     bool GEM_IPM_InitialApproximation();
 
     // IPM_SIMPLEX.CPP Simplex method modified with two-sided constraints (Karpov ea 1997)
-    void AutoInitialApproximation( );
     void SolveSimplex(long int M, long int N, long int T, double GZ, double EPS,
                       double *UND, double *UP, double *B, double *U,
                       double *AA, long int *STR, long int *NMB );
@@ -996,13 +850,13 @@ protected:
     void FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
              long int BASE[],double UND[],double UP[],double U[],
              double AA[],double *A,double Q[],long int *ITER);
-
     double SystemTotalMolesIC( );
     void ScaleSystemToInternal(  double ScFact );
     void RescaleSystemFromInternal(  double ScFact );
     void MultiConstInit(); // from MultiRemake
     void GEM_IPM_Init();
 
+    virtual void load_all_thermodynamic_from_grid(TNode *aNa, double TK, double P);
 
 };
 
@@ -1026,11 +880,6 @@ typedef enum {  // Symbols of thermodynamic potential to minimize
     _S_UV_   =  5    // negative entropy at isochoric conditions and fixed internal energy -S(P,H)
 
 } NUM_POTENTIALS;
-
-// kg44: this is not correctly implemented!! 
-//double A_P( double x, double x2=0.);
-//double U_TP( double TC, double P);
-
 
 typedef enum {  // Field index into outField structure
     f_pa_PE = 0,  f_PV,  f_PSOL,  f_PAalp,  f_PSigm,
@@ -1060,6 +909,9 @@ typedef enum {  // Field index into outField structure
 
 } MULTI_DYNAMIC_FIELDS;
 
+enum volume_code {  /* Codes of volume parameter ??? */
+    VOL_UNDEF, VOL_CALC, VOL_CONSTR
+};
 
 #endif   //_ms_multi_h
 

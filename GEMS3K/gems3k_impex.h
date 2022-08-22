@@ -1,7 +1,8 @@
 
 #pragma once
-#include "vector"
-#include "string"
+
+#include <vector>
+#include <string>
 
 /// Descripton of data to generate MULTI, DATACH and DATABR files structure prepared from GEMS.
 class GEMS3KGenerator
@@ -13,7 +14,9 @@ public:
     enum IOModes {
         f_key_value,
         f_binary,
-        f_json
+        f_json,
+        f_thermofun,     // export thermodynamic data into ThermoFun JSON format file, other in json format
+        f_kv_thermofun   // export thermodynamic data into ThermoFun JSON format file, other in key_value format
     };
 
     /// Default output/exchange file types
@@ -32,8 +35,10 @@ public:
         case f_binary:
             return "bin";
         case f_json:
+        case f_thermofun:
             return "json";
         default:
+        case f_kv_thermofun:
         case f_key_value:
             break;
         }
@@ -50,6 +55,12 @@ public:
     static std::string gen_dch_name( const std::string the_name )
     {
         return the_name + "-dch";
+    }
+
+    /// Generate ThermoFun JSON format file name
+    static std::string gen_thermofun_name( const std::string the_name )
+    {
+        return the_name + ".FUN";
     }
 
     /// Generate dataBR name
@@ -75,16 +86,18 @@ public:
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments -Write files with comments for all data entries ( text mode ) or as "pretty JSON"  ( json mode )
     /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
-    explicit GEMS3KGenerator(  const std::string& filepath, long int anIV, IOModes file_mode ):
-        ipmfiles_lst_name(filepath), nIV(anIV), io_mode(file_mode)
-    {
-        set_internal_data();
-    }
+    explicit GEMS3KGenerator(  const std::string& filepath, long int anIV, IOModes file_mode );
 
     /// Get same GEMS3K I/O set name (currently GEM-Selektor asks for the "set" name from .lst file name)
-    std::string set_name() const
+    std::string get_name() const
     {
         return base_name;
+    }
+
+    /// Get current extension
+    std::string extension() const
+    {
+       return ext( io_mode );
     }
 
     /// Get selected file output mode
@@ -105,10 +118,16 @@ public:
         return  ( impex_dir.empty() ? ipm_file_name : impex_dir+"/"+ipm_file_name );
     }
 
-    /// Generate full path for ipm file
+    /// Generate full path for dch file
     std::string get_dch_path() const
     {
         return  ( impex_dir.empty() ? datach_file_name : impex_dir+"/"+datach_file_name );
+    }
+
+    /// Generate full path for dch file
+    std::string get_thermofun_path() const
+    {
+        return  ( impex_dir.empty() ? thermofun_file_name : impex_dir+"/"+thermofun_file_name );
     }
 
     /// Generate full path for dbr file
@@ -122,15 +141,22 @@ public:
     /// Generate MULTI file name
     std::string gen_ipm_file_name()
     {
-        ipm_file_name = base_name + "-ipm." + extension();
+        ipm_file_name = gen_ipm_name( base_name ) + "." + extension();
         return ipm_file_name;
     }
 
     /// Generate dataCH file name
     std::string gen_dch_file_name()
     {
-        datach_file_name = base_name + "-dch." + extension();
+        datach_file_name = gen_dch_name( base_name ) + "." + extension();
         return datach_file_name;
+    }
+
+    /// Generate ThermoFun JSON format file name
+    std::string gen_thermofun_file_name()
+    {
+        thermofun_file_name = gen_thermofun_name( base_name ) + ".json";
+        return thermofun_file_name;
     }
 
     /// Generate dataBR file name
@@ -170,12 +196,8 @@ protected:
 
     std::string ipm_file_name;
     std::string datach_file_name;
+    std::string thermofun_file_name;
     std::vector<std::string> databr_file_names;
-
-    std::string extension() const
-    {
-       return ext( io_mode );
-    }
 
     std::string mode() const;
     void get_mode( const std::string& str_mode );

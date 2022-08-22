@@ -35,8 +35,7 @@
                     $$GEMS3K_H/activities.h \
                     $$GEMS3K_H/kinetics.h \
                     $$GEMS3K_H/v_detail.h \
-                    $$GEMS3K_H/v_service.h \
-                    $$SJSON_H/simdjson/simdjson.h
+                    $$GEMS3K_H/v_service.h
 
 
         SOURCES	  +=  $$GEMS3K_CPP/gdatastream.cpp  \
@@ -56,10 +55,13 @@
                       $$GEMS3K_CPP/ipm_main.cpp \
                       $$GEMS3K_CPP/ipm_simplex.cpp \
                       $$GEMS3K_CPP/node.cpp \
+                      $$GEMS3K_CPP/node2.cpp \
                       $$GEMS3K_CPP/nodearray.cpp \
-                      $$GEMS3K_CPP/nodearray_new.cpp \
+                      $$GEMS3K_CPP/nodearray2.cpp \
                       $$GEMS3K_CPP/node_format.cpp \
 #                      $$GEMS3K_CPP/particlearray.cpp \
+                      $$GEMS3K_CPP/ms_multi_copy.cpp \
+                      $$GEMS3K_CPP/ms_multi_diff.cpp \
                       $$GEMS3K_CPP/ms_multi_file.cpp \
                       $$GEMS3K_CPP/ms_multi_format.cpp \
                       $$GEMS3K_CPP/io_template.cpp \
@@ -68,13 +70,11 @@
                       $$GEMS3K_CPP/io_simdjson.cpp \
                       $$GEMS3K_CPP/gems3k_impex.cpp \
                       $$GEMS3K_CPP/node_copy.cpp \
-                      $$GEMS3K_CPP/ms_multi_copy.cpp \
                       $$GEMS3K_CPP/node_activities.cpp \
                       $$GEMS3K_CPP/node_kinetics.cpp \
                       $$GEMS3K_CPP/s_activity.cpp \
                       $$GEMS3K_CPP/s_activity2.cpp \
                       $$GEMS3K_CPP/s_activity3.cpp  \
                       $$GEMS3K_CPP/v_detail.cpp \
-                      $$GEMS3K_CPP/v_service.cpp \
-                      #$$SJSON_CPP/simdjson.cpp
+                      $$GEMS3K_CPP/v_service.cpp
 

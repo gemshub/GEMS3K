@@ -24,11 +24,9 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <iomanip>
 #include "io_keyvalue.h"
 #include "v_detail.h"
 #include "v_service.h"
-
 
 namespace  io_formats {
 

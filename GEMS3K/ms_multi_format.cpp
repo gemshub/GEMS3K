@@ -4,7 +4,7 @@
 /// \file ms_multi_format.cpp
 /// Implementation of writing/reading IPM, DCH and DBR text I/O files
 //
-// Copyright (c) 2006-2018 S.Dmytriyeva,D.Kulik
+// Copyright (c) 2006-2022 S.Dmytriyeva,D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -24,18 +24,27 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <sstream>
-#include <iomanip>
-#include <algorithm>
 #include "v_detail.h"
-#include "v_service.h"
 #include "io_template.h"
 #include "io_nlohmann.h"
 #include "io_simdjson.h"
 #include "io_keyvalue.h"
 #include "ms_multi.h"
 
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.9.0 c.8c56c21 ";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.9.5 c.6dae7a9";
+
+const double R_CONSTANT = 8.31451,
+              NA_CONSTANT = 6.0221367e23,
+                F_CONSTANT = 96485.309,
+                  e_CONSTANT = 1.60217733e-19,
+                    k_CONSTANT = 1.380658e-23,
+// Conversion factors
+                      cal_to_J = 4.184,
+                        C_to_K = 273.15,
+                          lg_to_ln = 2.302585093,
+                            ln_to_lg = 0.434294481,
+                             H2O_mol_to_kg = 55.50837344,
+                               Min_phys_amount = 1.66e-24;
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
@@ -140,7 +149,7 @@ io_formats::outField MULTI_dynamic_fields[80] =  {
     { "muj" ,     0 , 0, 0,  "\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
     { "pa_PLLG" , 0 , 0, 0,  "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 32001 { 30000 }, 0 disables" },
     { "tMin" ,    0 , 0, 0,  "# tMin: Type of thermodynamic potential to minimize (reserved)" },
-    { "dcMod",    0 , 0, 0,  "# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" },
+    { "dcMod",    1 , 0, 0,  "# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" },
     //TKinMet
     { "kMod",    0 , 0, 0,  "# kMod: Codes for built-in kinetic models [Fi*6]" },
     { "LsKin",    0 , 0, 0,  "# LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;\n"
@@ -166,7 +175,7 @@ template<typename TIO>
 void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
                                       bool with_comments, bool brief_mode )
 {
-    const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = base_param();
     bool _comment = with_comments;
     char PAalp;
     char PSigm;
@@ -596,7 +605,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 template<typename TIO>
 void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 {
-    BASE_PARAM *pa_p = pa_p_ptr();
+    BASE_PARAM *pa_p = base_param();
     long int ii, nfild;
     size_t len;
 
@@ -604,10 +613,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     char PAalp;
     char PSigm;
 
-    ///#ifdef IPMGEMPLUGIN 07/05/2020
-    ///   set_def();
-    ///#endif
-
+    set_def();
     //mem_set( &pm.N, 0, 39*sizeof(long int));
     //mem_set( &pm.TC, 0, 55*sizeof(double));
     // get sizes from DATACH
@@ -630,7 +636,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     }
 
     // setup default constants
-    pa_p_ptr()->PE = 1;
+    base_param()->PE = 1;
     pm.E = 1;
     pm.PV = 0;
     pm.PSOL = 0;
@@ -684,7 +690,6 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 
     PAalp_ = PAalp;
     PSigm_ = PSigm;
-    //realloc memory
     multi_realloc( PAalp, PSigm );
 
     // get dynamic data from DATACH file
@@ -1202,6 +1207,7 @@ void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator
     case GEMS3KGenerator::f_binary:
         break;
     case GEMS3KGenerator::f_json:
+    case GEMS3KGenerator::f_thermofun:
 #ifdef USE_NLOHMANNJSON
     {
         io_formats::NlohmannJsonRead in_format( stream, test_set_name, "ipm" );
@@ -1215,6 +1221,7 @@ void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator
 #endif
         break;
     case GEMS3KGenerator::f_key_value:
+    case GEMS3KGenerator::f_kv_thermofun:
     {
         io_formats::KeyValueRead in_format( stream );
         from_text_file_gemipm( in_format, dCH );
@@ -1231,6 +1238,7 @@ void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerato
     case GEMS3KGenerator::f_binary:
         break;
     case GEMS3KGenerator::f_json:
+    case GEMS3KGenerator::f_thermofun:
 #ifdef USE_NLOHMANNJSON
     {
         io_formats::NlohmannJsonWrite out_format( stream, test_set_name );
@@ -1244,6 +1252,7 @@ void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerato
 #endif
         break;
     case GEMS3KGenerator::f_key_value:
+    case GEMS3KGenerator::f_kv_thermofun:
     {
         io_formats::KeyValueWrite out_format( stream );
         to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );

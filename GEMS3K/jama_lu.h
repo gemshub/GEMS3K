@@ -25,9 +25,6 @@ namespace JAMA
 template <class Real>
 class LU
 {
-
-
-
    /* Array for internal storage of decomposition.  */
    Array2D<Real>  LU_;
    int m, n, pivsign;
@@ -58,13 +55,11 @@ class LU
 
 		Array1D<Real> x(piv_length);
 
-
-         for (int i = 0; i < piv_length; i++)
+        for (int i = 0; i < piv_length; i++)
                x[i] = A[piv[i]];
 
 		return x;
 	}
-
 
 	public :
 

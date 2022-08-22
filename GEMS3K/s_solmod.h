@@ -28,9 +28,11 @@
 
 #ifndef _s_solmod_h_
 #define _s_solmod_h_
-#include <cstring>
+
+#include <string>
 #include <vector>
-#include <iostream>
+#include "spdlog/spdlog.h"
+#include "m_const_base.h"
 
 // re-declaration of enums below required for GEMS3K
 // dc_class_codes for fluids will be replaced by tp_codes
@@ -74,8 +76,6 @@ enum tp_codes {  /// codes for fluid subroutines in EoS models (see v_mod.h)
 };
 
 // ------------------------------------------------------------------
-
-#define MAXPHASENAME 16
 
 /// Base class for subclasses of built-in mixing models.
 /// (c) March 2007 DK/TW
@@ -133,11 +133,15 @@ struct SolutionData {
 class TSolMod
 {
 	protected:
+
+        /// Default logger for TSolMod class
+        static std::shared_ptr<spdlog::logger> solmod_logger;
+
         char ModCode;   ///< Code of the mixing model
         char MixCode;	///< Code for specific EoS mixing rules or site-balance based electrostatic SCMs
                 char *DC_Codes; ///< Class codes of end members (species) ->NComp
 
-        char PhaseName[MAXPHASENAME+1];    ///< Phase name (for specific built-in models)
+        char PhaseName[MAXPHNAME+1];    ///< Phase name (for specific built-in models)
 
         long int NComp;   ///< Number of components in the solution phase
         long int NPar;     ///< Number of non-zero interaction parameters
@@ -1421,9 +1425,9 @@ private:
 	double *zc;
 	double *za;
     double *aM;    ///< Vector of species molality (for aqueous models)
-	double *mc;
-	double *ma;
-	double *mn;
+    double *pmc;
+    double *pma;
+    double *pmn;
     double *RhoW;  ///< water density properties
     double *EpsW;  ///< water dielectrical properties
 
@@ -1467,7 +1471,7 @@ private:
 
 	enum eTableType
 	{
-		bet0_ = -10, bet1_ = -11, bet2_ = -12, Cphi_ = -20, Lam_ = -30, Lam1_ = -31,
+        bet0_ = -10, bet1_ = -11, bet2_ = -12, Cphi_ = -20, Lam_ = -30, Lam1_ = -31, Lam2_ = -32,
 		Theta_ = -40,  Theta1_ = -41, Psi_ = -50, Psi1_ = -51, Zeta_ = -60
 	};
 
@@ -1495,10 +1499,13 @@ private:
 	double get_g( double x_alp );
 	double get_gp( double x_alp );
 	double G_ex_par5( long int ii );
+    double G_ex_par6( long int ii );
 	double G_ex_par8( long int ii );
 	double S_ex_par5( long int ii );
+    double S_ex_par6( long int ii );
 	double S_ex_par8( long int ii );
 	double CP_ex_par5( long int ii );
+    double CP_ex_par6( long int ii );
 	double CP_ex_par8( long int ii );
 	double F_Factor( double DH_term );
 	double lnGammaN( long int N );

@@ -28,6 +28,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include "v_service.h"
 
 namespace  io_formats {
 
@@ -122,7 +123,7 @@ public:
                 if(isComment)
                     fout << "#  ";
             }
-            std::string str = std::string( arr +(ii*arr_size), 0, arr_size );
+            std::string str = char_array_to_string( arr +(ii*arr_size), arr_size );
             writeValue( str );
             fout << " ";
         }

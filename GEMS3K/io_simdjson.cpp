@@ -27,7 +27,6 @@
 #ifndef USE_NLOHMANNJSON
 
 #include <cmath>
-#include <iostream>
 #include <string_view>
 #include "simdjson/simdjson.h"
 #include "simdjson/simdjson.cpp"
@@ -59,16 +58,17 @@ public:
             if( !test_set_name.empty() )
             {
                 std::string_view json_set = json_data["set"];
-                if( json_set.compare( test_set_name.c_str() ))
-                    std::cout << "Read the document from another set: " <<  json_set << " , current set " << test_set_name  <<  std::endl;
+                if( json_set.compare( test_set_name.c_str() )) {
+                    gems_logger->warn(" Read the document from another set: {} , current set {}", json_set, test_set_name);
+                }
             }
             json_data =  json_data[field_name];
             json_it = json_data.begin();
-            //    std::cout <<  json_data << std::endl;
+            //gems_logger->trace("{}", json_data);
         }
         catch( simdjson::simdjson_error& err )
         {
-            std::cout << std::to_string(err.error()) <<  err.what() << std::endl;
+            gems_logger->error("SimdJson read error : {}.{}", std::to_string(err.error()), err.what());
             Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
         }
 
@@ -138,6 +138,7 @@ void SimdJsonImpl::read_strings_array(const std::string &field_name, char *arr, 
     }
     catch( simdjson::simdjson_error& err )
     {
+        gems_logger->error("SimdJson read error : {}.{}", std::to_string(err.error()), err.what());
         Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
     }
 }
@@ -161,6 +162,7 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<double>
     }
     catch( simdjson::simdjson_error& err )
     {
+        gems_logger->error("SimdJson read error : {}.{}", std::to_string(err.error()), err.what());
         Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
     }
 }
@@ -184,6 +186,7 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<int64_t
     }
     catch( simdjson::simdjson_error& err )
     {
+        gems_logger->error("SimdJson read error : {}.{}", std::to_string(err.error()), err.what());
         Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
     }
 }
