@@ -20,6 +20,8 @@ add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES}  )
 
 # Check if a shared library is to be built
 if(BUILD_SHARED_LIBS)
+    # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
     add_library(GEMS3K_SHARED SHARED $<TARGET_OBJECTS:GEMS3K_OBJECT>)
     set_target_properties(GEMS3K_SHARED PROPERTIES OUTPUT_NAME GEMS3K)
     target_link_libraries(GEMS3K_SHARED PRIVATE ThermoFun::ThermoFun)
