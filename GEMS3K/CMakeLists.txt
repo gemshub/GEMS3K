@@ -32,7 +32,7 @@ endif()
 if(BUILD_STATIC_LIBS)
    add_library(GEMS3K_STATIC STATIC $<TARGET_OBJECTS:GEMS3K_OBJECT>)
    set_target_properties(GEMS3K_STATIC PROPERTIES OUTPUT_NAME GEMS3K-static)
-   target_link_libraries(GEMS3K_SHARED PRIVATE ThermoFun::ThermoFun)
+   target_link_libraries(GEMS3K_STATIC PRIVATE ThermoFun::ThermoFun)
    install( TARGETS GEMS3K_STATIC
            EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
 endif()
