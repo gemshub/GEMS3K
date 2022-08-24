@@ -22,6 +22,7 @@ add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES}  )
 if(BUILD_SHARED_LIBS)
     add_library(GEMS3K_SHARED SHARED $<TARGET_OBJECTS:GEMS3K_OBJECT>)
     set_target_properties(GEMS3K_SHARED PROPERTIES OUTPUT_NAME GEMS3K)
+    target_link_libraries(GEMS3K_SHARED PRIVATE ThermoFun::ThermoFun)
     install( TARGETS GEMS3K_SHARED
              EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
 endif()
@@ -31,9 +32,11 @@ endif()
 if(BUILD_STATIC_LIBS)
    add_library(GEMS3K_STATIC STATIC $<TARGET_OBJECTS:GEMS3K_OBJECT>)
    set_target_properties(GEMS3K_STATIC PROPERTIES OUTPUT_NAME GEMS3K-static)
+   target_link_libraries(GEMS3K_SHARED PRIVATE ThermoFun::ThermoFun)
    install( TARGETS GEMS3K_STATIC
            EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
 endif()
+
 
 # Install debug symbols
 if(MSVC)
