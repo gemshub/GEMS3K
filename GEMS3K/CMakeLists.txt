@@ -11,6 +11,8 @@ file(GLOB SOURCE_FILES *.cpp)
 #add_definitions(-DIPMGEMPLUGIN)
 add_definitions(-DNOPARTICLEARRAY)
 add_definitions(-DNODEARRAYLEVEL)
+add_definitions(-DUSE_THERMOFUN)
+add_definitions(-DUSE_THERMO_LOG)
 #add_definitions(-DUSE_OLD_NLOHMANJSON)
 
 # Compile the C++ source code into object files

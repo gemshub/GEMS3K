@@ -20,11 +20,11 @@ source activate GEMS3K
 mkdir build
 cd build
 # Configure step
-cmake \
+cmake -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_LIBDIR=lib \
     ..
-make install
+ninja install
 if [ $? -eq 1 ]
 then
 echo "The install failed" >&2
