@@ -11,5 +11,7 @@ else()
     target_link_libraries(kva2json PUBLIC GEMS3K )
 endif()
 
+target_link_libraries(kva2json PUBLIC ThermoFun::ThermoFun)
+
 install(TARGETS kva2json DESTINATION bin)
 

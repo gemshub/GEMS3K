@@ -4,3 +4,16 @@
 #  message(FATAL_ERROR "zeromq library not found")
 #endif()
 
+find_package(ThermoFun REQUIRED)
+if(NOT ThermoFun_FOUND)
+  message(FATAL_ERROR "ThermoFun library not found")
+else()
+  message(STATUS "Found ThermoFun v${ThermoFun_VERSION}")
+endif()
+
+find_package(ChemicalFun REQUIRED)
+if(NOT ChemicalFun_FOUND)
+  message(FATAL_ERROR "ChemicalFun library not found")
+else()
+  message(STATUS "Found ChemicalFun v${ChemicalFun_VERSION}")
+endif()
