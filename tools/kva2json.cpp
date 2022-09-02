@@ -217,7 +217,10 @@ void show_usage( const std::string &name )
               << "\t-h,\t--help\t\tshow this help message\n\n"
                  // file type
               << "\t-j,\t--json        \twrite IPM, DCH and DBR files in json mode (default) \n"
-              << "\t-n,\t--nlohmanjson \twrite IPM, DCH and DBR files in json mode  \n"
+#ifdef USE_THERMOFUN
+              << "\t-f,\t--thermofun    \twrite IPM, DCH, ThermoFun and DBR files in json mode  \n"
+              << "\t-o,\t--kv_thermofun \twrite IPM, DCH, ThermoFun and DBR files in txt mode  \n"
+#endif
               << "\t-t,\t--key-value   \twrite IPM, DCH and DBR files in txt mode \n"
               << "\t-b,\t--binary      \twrite IPM, DCH and DBR files in binary mode \n\n"
                  // method

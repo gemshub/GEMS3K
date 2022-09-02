@@ -11,7 +11,7 @@ The code is written in C/C++. Using compiler directives, the GEMS3K code can be 
 
 Input: The standalone GEMS3K code needs to be initialized by reading a set of GEMS3K I/O files (since v.3.8.1, also a set of JSON documents) that can be exported from GEM-Selektor code for any chemical system (SysEq record) or from any GEM2MT task.
 
-* Version: currently 3.8.1.
+* Version: currently 3.9.1.
 
 ### License
 
