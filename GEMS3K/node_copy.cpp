@@ -266,11 +266,7 @@ void  TNode::write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IO
 long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 {
     clearipmLogError();
-
-#ifdef USE_THERMOFUN
-    // clear previous
-    thermo_engine.reset();
-#endif
+    clear_ThermoEngine();
 
     try
     {
@@ -298,14 +294,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 
             if( generator.files_mode()>=GEMS3KGenerator::f_thermofun )
             {
-#ifdef USE_THERMOFUN
-                thermo_engine.reset( new ThermoFun::ThermoEngine( generator.get_thermofun_path() ) );
-                node_logger->info("Read ThermoEngine: {}", generator.get_thermofun_path());
-#else
-                std::fstream f_fun( generator.get_thermofun_path(), std::ios::in );
-                ErrorIf( !f_fun.good() , generator.get_thermofun_path(), "ThermoFun JSON format file fileopen error");
-                //node_logger->debug("{}", f_fun.rdbuf());
-#endif
+                load_ThermoEngine(generator.get_thermofun_path());
             }
 
             std::fstream ff( generator.get_ipm_path(), std::ios::in );
@@ -382,11 +371,7 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json,
 {
     load_thermodynamic_data = false; // need load thermo
     clearipmLogError();
-
-#ifdef USE_THERMOFUN
-    // clear previous
-    thermo_engine.reset();
-#endif
+    clear_ThermoEngine();
 
     try
     {
@@ -417,12 +402,7 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json,
 
         if( !fun_json.empty() )
         {
-#ifdef USE_THERMOFUN
-            node_logger->warn("Read ThermoEngine: {}", fun_json);
-            thermo_engine.reset( new ThermoFun::ThermoEngine(fun_json) );
-#else
-            node_logger->warn("ThermoFun JSON not use {}", dch_json);
-#endif
+            load_ThermoEngine(fun_json);
         }
         // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
         multi_ptr()->gemipm_from_string( ipm_json, CSD, current_input_set_name );
@@ -1176,10 +1156,45 @@ void TNode::CheckMtparam()
     load_thermodynamic_data = true;
 }
 
+
+void TNode::clear_ThermoEngine()
+{
 #ifdef USE_THERMOFUN
+    // clear previous
+    thermo_engine.reset();
+    thermo_json_string="";
+#endif
+}
+
+bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
+{
+    if(thermo_file_or_string.find("\"elements\"")!=std::string::npos) {
+        // input string
+        thermo_json_string = thermo_file_or_string;
+    }
+    else {
+        // input file
+        std::ifstream f_fun(thermo_file_or_string);
+        ErrorIf(!f_fun.good(), thermo_file_or_string, "ThermoFun JSON format file fileopen error");
+        std::stringstream buffer;
+        buffer << f_fun.rdbuf();
+        thermo_json_string = buffer.str();
+    }
+
+#ifdef USE_THERMOFUN
+    thermo_engine.reset(new ThermoFun::ThermoEngine(thermo_file_or_string));
+    node_logger->info("Read ThermoEngine: {}", thermo_file_or_string);
+    return true;
+#else
+    node_logger->warn("Try read ThermoEngine not in USE_THERMOFUN mode {}", thermo_file_or_string);
+    return false;
+#endif
+}
+
 
 bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
 {
+#ifdef USE_THERMOFUN
     if( !thermo_engine.get() )
         return false;
     try{
@@ -1249,16 +1264,16 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         f_log << "\nCalc ThermoEngine;T;" << TK << ";P;" << PPa << "\n";
         f_log << "denW";
         for( jj=0; jj<5; jj++)
-           f_log << ";" << floating_point_to_string(pmm->denW[jj]);
+            f_log << ";" << floating_point_to_string(pmm->denW[jj]);
         f_log << "\nepsW";
         for( jj=0; jj<5; jj++)
-           f_log << ";" << floating_point_to_string(pmm->epsW[jj]);
+            f_log << ";" << floating_point_to_string(pmm->epsW[jj]);
         f_log << "\ndenWg";
         for( jj=0; jj<5; jj++)
-           f_log << ";" << floating_point_to_string(pmm->denWg[jj]);
+            f_log << ";" << floating_point_to_string(pmm->denWg[jj]);
         f_log << "\nepsWg";
         for( jj=0; jj<5; jj++)
-           f_log << ";" << floating_point_to_string(pmm->epsWg[jj]);
+            f_log << ";" << floating_point_to_string(pmm->epsWg[jj]);
 #endif
 
         for( k=0; k<pmm->FI; k++ )
@@ -1283,8 +1298,8 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
                 pmm->G0[j] = multi_ptr()->ConvertGj_toUniformStandardState(G0, j, k);
 #ifdef  USE_THERMO_LOG
                 f_log << "\n" << symbol << ";" << floating_point_to_string(G0)
-                       << ";" << floating_point_to_string(pmm->G0[j])
-                       << ";" << floating_point_to_string(pmm->Vol[j]);
+                      << ";" << floating_point_to_string(pmm->G0[j])
+                      << ";" << floating_point_to_string(pmm->Vol[j]);
                 if( dCH->S0 ) f_log << ";" << floating_point_to_string(pmm->S0[j]);
                 if( dCH->H0 ) f_log << ";" << floating_point_to_string(pmm->H0[j]);
                 if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pmm->Cp0[j]);
@@ -1300,6 +1315,9 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         Error( "ThermoEngine error:", exception.what());
     }
     return true;
+#else
+    return false;
+#endif
+
 }
 
-#endif

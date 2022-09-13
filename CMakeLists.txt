@@ -40,9 +40,9 @@ endif()
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
 option(USE_THERMOFUN "Use ThermoFun" ON)
-option(BUILD_GEM2MT "Install GEM2MT lib." OFF)
+option(BUILD_GEM2MT "Install GEM2MT lib." ON)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
-option(BUILD_TOOLS "Build tools" OFF)
+option(BUILD_TOOLS "Build tools" ON)
 
 # Set the list of compiler flags for GNU compiler
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
@@ -89,7 +89,6 @@ endif()
 include(GEMS3KFindDeps)
 
 # Set some necessary definitions
-add_definitions(-DIPMGEMPLUGIN)
 add_definitions(-DNODEARRAYLEVEL)
 
 if(USE_THERMOFUN MATCHES ON)
@@ -105,8 +104,6 @@ if(BUILD_GEM2MT MATCHES ON)
   set(GEM2MT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/nodearray-gem)
   set(GEM2MT_HEADER_DIR ${CMAKE_SOURCE_DIR}/nodearray-gem)
   include_directories(${GEM2MT_HEADER_DIR})
-else()
-  add_definitions(-DNOPARTICLEARRAY)
 endif()
 
 

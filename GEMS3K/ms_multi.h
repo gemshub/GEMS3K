@@ -476,13 +476,11 @@ typedef struct
     IRes1;
     clock_t t_start, t_end;
     double t_elap_sec;  ///< work variables for determining IPM calculation time
-///#ifdef IPMGEMPLUGIN 07/05/2020
     double *Guns;     ///<  mu.L work vector of uncertainty space increments to tp->G + sy->GEX
     double *Vuns;     ///<  mu.L work vector of uncertainty space increments to tp->Vm
     double *tpp_G;    ///< Partial molar(molal) Gibbs energy g(TP) (always), J/mole
     double *tpp_S;    ///< Partial molar(molal) entropy s(TP), J/mole/K
     double *tpp_Vm;   ///< Partial molar(molal) volume Vm(TP) (always), J/bar
-///#endif
 
     // additional arrays for internal calculation in ipm_main
     double *XU;      ///< dual-thermo calculation of DC amount X(j) from A matrix and u vector [L]

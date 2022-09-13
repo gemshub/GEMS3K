@@ -19,17 +19,11 @@
 
 #include <fstream>
 #include "m_gem2mt.h"
+#include "GEMS3K/nodearray.h"
 #include "GEMS3K/v_service.h"
 
 #ifdef useOMP
 #include <omp.h>
-#endif
-
-#ifndef IPMGEMPLUGIN
-#include "visor.h"
-#include "stepwise.h"
-#else
-#include "GEMS3K/nodearray.h"
 #endif
 
 // ===========================================================
@@ -78,105 +72,6 @@ void  TGEM2MT::putHydP( DATABRPTR* C0 )
 #endif
     }
 }
-
-#ifndef IPMGEMPLUGIN
-
-
-//-------------------------------------------------------------------
-// NewNodeArray()  makes work DATACH structure
-// Allocates a new RMT node array of DATABR structures and
-// reads in the data from MULTI (using nC, Bn and DiCp, DDc, HydP)
-//
-void  TGEM2MT::NewNodeArray()
-{
-    long int nit;
-
-    // generate Tval&Pval arrays
-    if( mtp->PsTPai != S_OFF )
-        gen_TPval();
-
-    na->InitCalcNodeStructures( mtp->nICb, mtp->nDCb,  mtp->nPHb,
-                                mtp->xIC, mtp->xDC, mtp->xPH, mtp->PsTPpath != S_OFF,
-                                mtp->Tval, mtp->Pval,
-                                mtp->nTai,  mtp->nPai, mtp->Tai[3], mtp->Pai[3]  );
-    DATACH* data_CH = na->pCSD();
-
-    // put DDc
-    if( data_CH->DD && mtp->DDc )
-        for( long int jj=0; jj<data_CH->nDCs; jj ++)
-            data_CH->DD[jj*data_CH->nPp*data_CH->nTp] = mtp->DDc[jj];
-
-    // Distribute data from initial systems into nodes as prescribed in DiCp[*][0]
-
-    for( mtp->kv = 0, nit=0; mtp->kv < mtp->nIV; mtp->kv++ )
-    {
-        // Make new SysEq record
-        gen_task( true );
-        // calculate EqStat (Thermodynamic&Equlibria)
-        //  TProfil::pm->pmp->pTPD = 0;
-        calc_eqstat( true );
-
-        for( long int q=0; q<mtp->nC; q++)
-        {
-            mtp->qc = q;
-
-            pVisor->Message( window(), GetName(),
-                             "Initial calculation of equilibria in nodes. "
-                             "Please, wait...", nit, mtp->nC);
-
-            if( mtp->DiCp[q][0] == mtp->kv  )
-            {
-                nit++;
-                gen_task( false );
-                // set T, P for multi and calculate current EqStat
-                calc_eqstat( false );
-
-                if( mtp->PsMode == RMT_MODE_S )
-                {
-                    // empty current node
-                    DATABR* data_BR = na->reallocDBR( q, mtp->nC,  na->pNodT0());
-                    data_BR->TK = TMulti::sm->GetPM()->TCc+C_to_K; //25
-                    data_BR->P = TMulti::sm->GetPM()->Pc*bar_to_Pa; //1
-                    for(long int i1=0; i1<mtp->nICb; i1++ )
-                        data_BR->bIC[i1] = TMulti::sm->GetPM()->B[ mtp->xIC[i1] ];
-                }
-                else // Save databr
-                {
-                    na->SaveToNode( q, mtp->nC,  na->pNodT0());
-                }
-                na->pNodT0()[q]->NodeHandle = q;
-            }
-        } // q
-        mt_next();      // Generate work values for the next EqStat rkey
-    } // mtp->kv
-
-    pVisor->CloseMessage();
-
-    DATABRPTR* C0 = na->pNodT0();  // nodes at current time point
-    for( long int ii=0; ii<mtp->nC; ii++)
-        if(  C0[ii] == nullptr )
-            Error( "NewNodeArray() error:" ," Undefined boundary condition!" );
-
-    // putting hydraulic parameters HydP into place
-    putHydP( C0 );
-
-    for (long int ii=0; ii<mtp->nC; ii++)    // node iteration
-    {
-        na->CopyNodeFromTo( ii, mtp->nC, C0, na->pNodT1() );
-    }  // ii    end of node iteration loop
-
-    /* test output generated structure
-    ProcessProgressFunction messageF = [](const std::string& message, long point){
-        gui_logger->info("TProcess GEM3k output {} point {}", message, point);
-        return false;
-    };
-
-    auto dbr_list =  na->genGEMS3KInputFiles("Te_start/Test-dat.lst", messageF, mtp->nC,
-                          GEMS3KGenerator::default_type_f, false, false, false, false );
-    */
-}
-
-#endif
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // This function (for 1D-case only) analyses the node array
@@ -725,10 +620,6 @@ FILE* logfile = nullptr;
 FILE* ph_file = nullptr;
 FILE* diffile = nullptr;
 
-#ifndef IPMGEMPLUGIN
-   showMss = 0L;
-#endif
-
 if( mtp->PvDDc == S_ON && mtp->PvDIc == S_OFF )  // Set of DC transport using record switches
 	CompMode = true; 
 if( mtp->PvDDc == S_OFF && mtp->PvDIc == S_ON )  // Set of IC transport using record switches
@@ -737,9 +628,7 @@ if( mtp->PvDDc == S_OFF && mtp->PvDIc == S_ON )  // Set of IC transport using re
 if( mtp->PsMO != S_OFF )
 {
     std::string fname;
-#ifndef IPMGEMPLUGIN
-    fname = pVisor->userGEMDir();
-#endif
+
     // Preparations: opening output files for monitoring 1D profiles
 logfile = fopen( ( fname + "ICaq-log.dat").c_str(), "w+" );    // Total dissolved element molarities
 if( !logfile)
@@ -802,40 +691,9 @@ if( mtp->PsMO != S_OFF )
 if( mtp->PsVTK != S_OFF )
    otime += PrintPoint( 0 );
 
-
-#ifndef IPMGEMPLUGIN
-
-   bool UseGraphMonitoring = false;
-   if( mtp->PsSmode == S_OFF )
-    if(  mtp->PvMSg != S_OFF && vfQuestion(window(),
-             GetName(), "Use graphic monitoring?") )
-        {
-            RecordPlot( nullptr );
-            UseGraphMonitoring = true;
-        }
-#endif
-
 //  This loop contains the mass transport iteration time step
      do {   // time iteration step
 
-#ifndef IPMGEMPLUGIN
-      // Calculating the control script at the beginning of a new time step
-      // if( mtp->ct > 0)
-      //      CalcControlScript();   // should run over all nodes i.e. nC times
-       gui_logger->debug("Recalculating 1D control script at ct= {}   cTau= {}", mtp->ct, mtp->cTau);
-       Vmessage = "Simulating Reactive Transport: ";
-       Vmessage += "   time "+std::to_string(mtp->cTau)+"; step "+std::to_string(mtp->ct);
-       Vmessage += ". Please, wait (may take time)...";
-
-       if( mtp->PsSmode != S_OFF  )
-       {
-         STEP_POINT2();
-       }
-       else
-           iRet = pVisor->Message( window(), GetName(),Vmessage.c_str(),
-                           mtp->ct, mtp->ntM, UseGraphMonitoring );
-
-#endif
       if( iRet )
            break;
 
@@ -869,24 +727,11 @@ if( mtp->PsMO != S_OFF )
           // and pH/pe in all nodes and decide if the time step was Ok or it
           // should be decreased. If so then the nodes from C0 should be
           // copied to C1 (to be implemented)
-
-#ifndef IPMGEMPLUGIN
-          // time step accepted - Copying nodes from C1 to C0 row
-          pVisor->Update();
-          CalcGraph();
-#endif
           // copy node array T1 into node array T0
           copyNodeArrays();
 
           if( mtp->PsMode == RMT_MODE_W ) // copy particle array ?
             pa_mt->CopyfromT1toT0();
-
-#ifndef IPMGEMPLUGIN
-      // Calculating the control script at the end of a new time step
-       if( mtp->ct > 0)
-            CalcControlScript();   // should run over all nodes i.e. nC times
-       gui_logger->debug("Recalculating 1D control script at ct= {}   cTau= {}", mtp->ct, mtp->cTau);
-#endif
 
           if( mtp->PsMode == RMT_MODE_F ) // in F mode
              CalcMGPdata(); // Recalculation of MGP compositions and masses
@@ -919,14 +764,6 @@ fclose( logfile );
 fclose( ph_file );
 fclose( diffile );
 }
-
-#ifndef IPMGEMPLUGIN
-
-   pVisor->CloseMessage();
-
-
-#endif
-
   return iRet;
 }
 
@@ -961,7 +798,8 @@ double TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE*
    {
      na->logDiffsIC( diffile, mtp->ct, mtp->cTau, mtp->nC, 1 );
      na->logProfileAqIC( logfile, mtp->ct, mtp->cTau, mtp->nC, 1 );
-     na->logProfilePhMol( ph_file, pa_mt, mtp->ct, mtp->cTau, mtp->nC, 1 );
+     na->logProfilePhMol( ph_file, std::bind(&TGEM2MT::logProfilePhMol, this,std::placeholders::_1, std::placeholders::_2),
+                          mtp->ct, mtp->cTau, mtp->nC, 1 );
    }
 
    if( nPoint == 3 )
@@ -972,7 +810,8 @@ double TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE*
    if( nPoint == 4 )
    {
        na->logProfileAqIC( logfile, mtp->ct, mtp->cTau, mtp->nC, evrt );
-       na->logProfilePhMol( ph_file, pa_mt, mtp->ct, mtp->cTau, mtp->nC, evrt );
+       na->logProfilePhMol( ph_file, std::bind(&TGEM2MT::logProfilePhMol, this,std::placeholders::_1, std::placeholders::_2),
+                            mtp->ct, mtp->cTau, mtp->nC, evrt );
    }
 
    // write to VTK

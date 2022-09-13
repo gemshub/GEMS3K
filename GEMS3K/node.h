@@ -109,7 +109,7 @@ protected:
 #ifdef USE_THERMOFUN
     std::shared_ptr<ThermoFun::ThermoEngine> thermo_engine;
 #endif
-
+    std::string thermo_json_string;
 
     // These pointers are only used in standalone GEMS3K programs
     TMultiBase* multi_base = nullptr;     // GEM IPM3 implementation class
@@ -495,7 +495,7 @@ public:
     /// from the project database, not just the records needed for a particular system
     /// (where some elements, DComps or ReacDCs can be switched off) as done in preparation of DCH lookup arrays.
     ///  \param stream     stream to output json file
-    virtual void  write_ThermoFun_format_stream(std::iostream&, bool) {}
+    virtual void  write_ThermoFun_format_stream(std::iostream&, bool);
 
     /// (7)  Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure instance
     ///   into memory provided by the mass transport part. Dimensions and order of elements in the arrays must correspond
@@ -1164,10 +1164,15 @@ public:
         ipmlog_error.clear();
     }
 
-#ifdef USE_THERMOFUN
     /// Generate thermodynamic data from ThermoEngine
     bool load_all_thermodynamic_from_thermo( double TK, double PPa );
-#endif
+
+    /// Clear thermodynamic data from ThermoEngine
+    void clear_ThermoEngine();
+
+    /// Read ThermoEngine
+    bool load_ThermoEngine(const std::string& thermo_file_or_string);
+
 
     /// Deletes fields of DATABR structure indicated by data_BR_
     /// and sets the pointer data_BR_ to NULL

@@ -73,6 +73,7 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, std::stri
 
 // -j -c -i Thermo-time-json/series1-dat.lst -e Thermo-time-out-json/series1-dat.lst -l Thermo-time-json/series1-dbr.lst
 // -j -c -i Thermo-time-in/series1-dat.lst -e Thermo-time-out/series1-dat.lst -l Thermo-time-in/series1-dbr.lst
+// -f -c -i Thermo-time-in/series1-dat.lst -e Thermo-time-out/series1-dat.lst -l Thermo-time-in/series1-dbr.lst
 
 // -j -c -i Neutral-fun/Neutral-dat.lst -e Neutral-fun-out/Neutral-dat.lst
 // -j -c -i Neutral-old/Neutral-dat.lst -e Neutral-old-out/Neutral-dat.lst

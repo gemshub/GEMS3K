@@ -289,11 +289,8 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
     TK =  na->cTK();
     PPa = na->cP();
 
-
-#ifdef USE_THERMOFUN
     // try generate thermodynamic data from ThermoEngine
     if( !na->load_all_thermodynamic_from_thermo( TK, PPa ))
-#endif
     {
         load_all_thermodynamic_from_grid(na, TK, PPa );
     }
