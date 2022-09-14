@@ -24,8 +24,6 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-
-
 #include <fstream>
 #include "node.h"
 #include "num_methods.h"
@@ -260,7 +258,6 @@ bool TMultiBase::calculateActivityCoefficients_scripts( long int , long int , lo
 void TMultiBase::initalizeGEM_IPM_Data_GUI()
 {
 }
-
 
 void TMultiBase::multiConstInit_PN()
 {

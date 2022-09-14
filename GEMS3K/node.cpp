@@ -44,7 +44,7 @@ const double bar_to_Pa = 1e5,
 m3_to_cm3 = 1e6,
 kg_to_g = 1e3;
 
-void TNode::write_ThermoFun_format_stream(std::iostream &stream, bool) {
+void TNode::write_ThermoFun_format_stream(std::iostream &stream, bool compact) {
     stream << thermo_json_string;
 }
 

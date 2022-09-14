@@ -495,7 +495,7 @@ public:
     /// from the project database, not just the records needed for a particular system
     /// (where some elements, DComps or ReacDCs can be switched off) as done in preparation of DCH lookup arrays.
     ///  \param stream     stream to output json file
-    virtual void  write_ThermoFun_format_stream(std::iostream&, bool);
+    virtual void  write_ThermoFun_format_stream(std::iostream&  stream, bool compact);
 
     /// (7)  Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure instance
     ///   into memory provided by the mass transport part. Dimensions and order of elements in the arrays must correspond

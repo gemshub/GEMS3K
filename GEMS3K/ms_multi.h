@@ -553,6 +553,7 @@ public:
     }
 
     virtual void multi_realloc( char PAalp, char PSigm );
+    void multi_kill();
     
     virtual BASE_PARAM* base_param() const
     {
@@ -656,7 +657,6 @@ protected:
     void Build_compressed_xAN();
     void Free_compressed_xAN();
     void Free_internal();
-    void multi_kill();
 
      // From here move to activities.h or node.h
     long int sizeFIs;     ///< current size of phSolMod
