@@ -94,18 +94,9 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
 #endif
 #endif
 
-    spdlog::set_pattern("[%n] [%^%l%$] %v");
-    auto ar_logger_gems3k = spdlog::get("gems3k");
-    ar_logger_gems3k->set_level(spdlog::level::trace);
-    auto ar_logger_ipm = spdlog::get("ipm");
-    ar_logger_ipm->set_level(spdlog::level::info);
-    auto ar_logger_tnode = spdlog::get("tnode");
-    ar_logger_tnode->set_level(spdlog::level::info);
-    auto ar_logger_kinmet = spdlog::get("kinmet");
-    ar_logger_kinmet->set_level(spdlog::level::info);
-    auto ar_logger_solmod = spdlog::get("solmod");
-    ar_logger_solmod->set_level(spdlog::level::info);
-
+    gems3k_update_loggers( true, "gems3k_logger.log", spdlog::level::debug);
+    auto ar_logger_gems3k = spdlog::get("ipm");
+    ar_logger_gems3k->set_level(spdlog::level::info);
 
     try{
         std::string input_lst_path;
