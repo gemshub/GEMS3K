@@ -92,7 +92,7 @@ void GEMS3KGenerator::load_dat_lst_file()
         f_getline( f_lst, thermofun_file_name, ' ');
         trim(thermofun_file_name, "\"");
 #else
-       Error( ipmfiles_lst_name, " ThermoFun as an option is hidden");
+        Error( ipmfiles_lst_name, " ThermoFun as an option is hidden");
 #endif
     }
 

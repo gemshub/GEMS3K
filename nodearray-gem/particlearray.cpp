@@ -470,7 +470,6 @@ void TParticleArray::logProfilePhMol( FILE* logfile, int inode )
             npa = getNPnum( inode, jp);   // number of particles in the node
             fprintf( logfile, "%-8ld ", npa );
        }
-  fprintf( logfile, "\n" );
 }
 
 //=========================================================================

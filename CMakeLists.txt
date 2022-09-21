@@ -39,6 +39,8 @@ endif()
 # Define which types of libraries to build
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
+option(USE_THERMOFUN "Use ThermoFun" ON)
+option(BUILD_GEM2MT "Install GEM2MT lib." ON)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
 option(BUILD_TOOLS "Build tools" ON)
 
@@ -86,10 +88,33 @@ endif()
 # Find all GEMS3K dependencies
 include(GEMS3KFindDeps)
 
+# Set some necessary definitions
+add_definitions(-DNODEARRAYLEVEL)
+
+if(USE_THERMOFUN MATCHES ON)
+  add_definitions(-DUSE_THERMOFUN)
+  add_definitions(-DUSE_THERMO_LOG)
+endif()
+
+if(BUILD_NLOHMANNJSON MATCHES ON)
+  add_definitions(-DUSE_NLOHMANNJSON)
+endif()
+
+if(BUILD_GEM2MT MATCHES ON)
+  set(GEM2MT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/nodearray-gem)
+  set(GEM2MT_HEADER_DIR ${CMAKE_SOURCE_DIR}/nodearray-gem)
+  include_directories(${GEM2MT_HEADER_DIR})
+endif()
+
+
 # Compile GEMS3K
 add_subdirectory(GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/lib)
+
+if(BUILD_GEM2MT MATCHES ON)
+    add_subdirectory(nodearray-gem)
+endif()
 
 if(BUILD_TOOLS)
    add_subdirectory(tools)

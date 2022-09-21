@@ -5,8 +5,9 @@
 threads=1
 BRANCH_GEMS3K=master
 BuildType=Release
-InstallPrefix=/home/sveta/devGEMS/gemshub/local
-#InstallPrefix=/usr/local
+#BuildType=Debug
+InstallPrefix=/usr/local
+#InstallPrefix=/home/sveta/devGEMS/gemshub/local
 workfolder=${PWD}
 
 

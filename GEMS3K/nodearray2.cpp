@@ -32,13 +32,7 @@
 #include "nodearray.h"
 #include "v_service.h"
 
-#ifndef NOPARTICLEARRAY
-#include "particlearray.h"
-#endif
-
-
 //---------------------------------------------------------//
-
 
 // Copying data for node ii from node array into work DATABR structure
 //
@@ -737,7 +731,7 @@ void TNodeArray::logProfileTotIC( FILE* logfile, long int t, double at, long int
 }
 
 // Prints amounts of reactive phases in all cells for time point t / at
-void TNodeArray::logProfilePhMol( FILE* logfile, TParticleArray* pa, long int t, double at, long int nx, long int every_t )
+void TNodeArray::logProfilePhMol( FILE* logfile, PhaseDataLogFunction phLog, long int t, double at, long int nx, long int every_t )
 {
     double pm;
     long int i, ip;
@@ -756,10 +750,7 @@ void TNodeArray::logProfilePhMol( FILE* logfile, TParticleArray* pa, long int t,
             pm = node1_xPH( i, ip );
             fprintf( logfile, "%-12.4g ", pm );
         }
-#ifndef NOPARTICLEARRAY
-        if( pa )
-            pa->logProfilePhMol( logfile, i );
-#endif
+        phLog( logfile, i );
     }
     fprintf( logfile, "\n" );
 }

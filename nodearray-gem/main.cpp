@@ -47,6 +47,10 @@ int main( int argc, char* argv[] )
     if (argc >= 5 )
         vtk_fname = argv[4];
 
+    gems3k_update_loggers( true, "gems3k_logger.log", spdlog::level::info);
+    auto ar_logger_gems3k = spdlog::get("ipm");
+    ar_logger_gems3k->set_level(spdlog::level::warn);
+
     try{
 
         if(gem2mt_in1.empty() || ipm_lst.empty() || dbr_lst.empty() )

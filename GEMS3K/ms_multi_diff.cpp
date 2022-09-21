@@ -24,8 +24,6 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-
-
 #include <fstream>
 #include "node.h"
 #include "num_methods.h"
@@ -261,7 +259,6 @@ void TMultiBase::initalizeGEM_IPM_Data_GUI()
 {
 }
 
-
 void TMultiBase::multiConstInit_PN()
 {
     pm.PZ = base_param()->DW;  // in IPM
@@ -289,11 +286,8 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
     TK =  na->cTK();
     PPa = na->cP();
 
-
-#ifdef USE_THERMOFUN
     // try generate thermodynamic data from ThermoEngine
     if( !na->load_all_thermodynamic_from_thermo( TK, PPa ))
-#endif
     {
         load_all_thermodynamic_from_grid(na, TK, PPa );
     }

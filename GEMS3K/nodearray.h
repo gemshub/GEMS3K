@@ -38,6 +38,7 @@
 
 /// The function is executed when ProcessProgress
 using  ProcessProgressFunction = std::function<bool( const std::string& message, long point )>;
+using  PhaseDataLogFunction = std::function<void( FILE* logfile, int inode )>;
 
 // These structures are needed for implementation of Random Walk and
 // similar particle-based transport algorithms
@@ -87,8 +88,6 @@ struct TestModeGEMParam
         mode(amode), useSIA(auseSIA), step(astep), cdv(acdv), cez(acez) {}
 };
 
-
-class TParticleArray;
 
 // Definition of TNodeArray class
 class TNodeArray : std::enable_shared_from_this<TNodeArray>
@@ -475,7 +474,7 @@ public:
     void logProfileTotIC( FILE* logfile, long int t, double at, long int nx, long int every_t );
 
     /// Prints amounts of phases in all cells for time point t / at
-    void logProfilePhMol( FILE* logfile, TParticleArray* pa, long int t, double at, long int nx, long int every_t );
+    void logProfilePhMol( FILE* logfile, PhaseDataLogFunction pa, long int t, double at, long int nx, long int every_t );
     
     /// Prints volumes of phases in all cells for time point t / at
     void logProfilePhVol( FILE* logfile, long int t, double at, long int nx, long int every_t );

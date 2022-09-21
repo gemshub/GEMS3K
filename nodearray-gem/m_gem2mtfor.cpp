@@ -12,7 +12,6 @@
 //-------------------------------------------------------------------
 
 #include "m_gem2mt.h"
-
 #include "GEMS3K/io_template.h"
 #include "GEMS3K/io_nlohmann.h"
 #include "GEMS3K/io_simdjson.h"
@@ -129,10 +128,6 @@ void TGEM2MT::mt_reset()
   mtp->qc = 0;
   mtp->kv = 0;
   mtp->jt = 0;
-#ifndef IPMGEMPLUGIN
-  mtp->cT = mtp->PTVm[START_][1];
-  mtp->cP = mtp->PTVm[START_][0];
-#endif
   mtp->ct = 0;
 }
 
@@ -249,9 +244,6 @@ void TGEM2MT::set_def(int q)
     mtp->MGPid = nullptr;
     mtp->UMGP = nullptr;
     mtp->SBM = nullptr;
-#ifndef IPMGEMPLUGIN
-    plot = nullptr;
-#endif
     mtp->BSF = nullptr;
     mtp->MB = nullptr;
     mtp->dMB = nullptr;
@@ -787,11 +779,7 @@ void TGEM2MT::from_text_file(TIO& in_format)
     }
 
     // realloc memory
-#ifndef IPMGEMPLUGIN
-    dyn_new(0);
-#else
     mem_new(0);
-#endif
 
     nfild = rddar.findNext();
     while( nfild >=0 )

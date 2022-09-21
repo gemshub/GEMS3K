@@ -12,14 +12,11 @@ CONFIG += debug
 CONFIG += console
 CONFIG += c++17
 
-
-#DEFINES += IPMGEMPLUGIN
 DEFINES += NODEARRAYLEVEL
-DEFINES += NOPARTICLEARRAY
 #DEFINES += USE_NLOHMANNJSON
-DEFINES += OVERFLOW_EXCEPT  #compile with nan inf exceptions
 DEFINES += USE_THERMOFUN
 DEFINES += USE_THERMO_LOG
+DEFINES += OVERFLOW_EXCEPT  #compile with nan inf exceptions
 
 !win32 {
 
@@ -30,11 +27,6 @@ QMAKE_CXXFLAGS += -fPIC -Wall -Wextra -Wformat-nonliteral -Wcast-align -Wpointer
  -Wmissing-declarations -Winline \ # -Wundef \ #-Weffc++ \
  -Wcast-qual -Wshadow -Wwrite-strings -Wno-unused-parameter \
  -Wfloat-equal -pedantic -ansi
-
-
-#QMAKE_CXXFLAGS += -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong \
-#-fno-plt -O2 -ffunction-sections -pipe -isystem -O3 -DNDEBUG -fPIC -Wall -Wno-misleading-indentation -Wno-ignored-attributes -Wno-pedantic \
-#-Wno-variadic-macros -Wno-deprecated -std=gnu++1z -MD -MT
 
 }
 

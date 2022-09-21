@@ -44,6 +44,9 @@ const double bar_to_Pa = 1e5,
 m3_to_cm3 = 1e6,
 kg_to_g = 1e3;
 
+void TNode::write_ThermoFun_format_stream(std::iostream &stream, bool compact) {
+    stream << thermo_json_string;
+}
 
 // Constructor of the class instance in memory for standalone GEMS3K or coupled program
 TNode::TNode()
@@ -324,8 +327,6 @@ long int TNode::GEM_Iterations( long int& PrecLoops_, long int& NumIterFIA_, lon
     NumIterIPM_ = NumIterIPM;
     return NumIterFIA+NumIterIPM;
 }
-
-
 
 // Extracting and packing GEM IPM results into work DATABR structure
 void TNode::packDataBr()
