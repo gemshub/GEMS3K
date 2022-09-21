@@ -38,6 +38,7 @@ void gems3k_update_loggers( bool use_cout, const std::string& logfile_name, size
         }
         if(!logfile_name.empty()) {
             auto file_output = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfile_name, 1048576, 3);
+            file_output->set_pattern(gems3k_logger_pattern);
             logger->sinks().push_back(file_output);
         }
         logger->set_level(log_lev);

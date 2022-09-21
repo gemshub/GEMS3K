@@ -1507,6 +1507,12 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                MjuDiff = MjuPrimal - MjuDual;
                if( fabs( MjuDiff ) > MjuDiffCutoff )
                {
+                   if( MjuDiff < -708.4) {
+                       MjuDiff = -608.;
+                   }
+                   else if(MjuDiff >  709.8 ) {
+                       MjuDiff = 609.;
+                   }
                   YjCleaned = Yj / exp( MjuDiff ); // also applies to a DC in a solution phase
                   if( L1k == 1 )
                   {  // Pure phase
@@ -1705,11 +1711,17 @@ else fRestore = true;
                   break; // error in DC class code
           }
 
-          // For IEEE-compatible type double, overflow is guaranteed if 709.8 < arg, and underflow is guaranteed if arg < -708.4
+          if( ln_ax_dual < -708.4) {
+              ln_ax_dual = -608.;
+          }
+          else if(ln_ax_dual >  709.8 ) {
+              ln_ax_dual = 609.;
+          }
+          /* For IEEE-compatible type double, overflow is guaranteed if 709.8 < arg, and underflow is guaranteed if arg < -708.4
           if( ln_ax_dual < -708.4 || ln_ax_dual >  709.8 ) {
               Error( "E14IPM: StabilityIndexes():",
                      std::string("For double overflow or underflow is guaranteed exp(")+std::to_string(ln_ax_dual)+").");
-          }
+          }*/
           x_estimate = exp( ln_ax_dual )/ gamma_primal;   // estimate of DC concentration
           StabIndex += x_estimate;  // Increment to stability index
           pm.NMU[j] = log( x_estimate );  // may be used for something more constructive

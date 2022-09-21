@@ -19,7 +19,7 @@
 #ifndef _particlearray_h_
 #define _particlearray_h_
 
-#include "nodearray.h"
+#include "GEMS3K/nodearray.h"
 
 // Random numbers ==========================================================
 double randuni(double& x); // uniform
