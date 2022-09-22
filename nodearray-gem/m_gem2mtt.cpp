@@ -825,7 +825,7 @@ double TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE*
        strip(name);
        name += ".vtk";
 
-       name = pathVTK + nameVTK + "/" + prefixVTK + name;
+       name = pathVTK + "/" + prefixVTK + name;
 
        std::fstream out_br(name, std::ios::out );
        ErrorIf( !out_br.good() , name, "VTK text make error");

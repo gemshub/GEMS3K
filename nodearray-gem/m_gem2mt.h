@@ -452,7 +452,7 @@ public:
 
     std::shared_ptr<TNodeArray> nodeArray()
     { return na; }
-    explicit TGEM2MT( uint nrt );
+    explicit TGEM2MT( size_t nrt );
 
     ~TGEM2MT();
 

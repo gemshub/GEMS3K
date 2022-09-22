@@ -21,6 +21,8 @@
 // Experiments with smoothing terms on assigning differences to bulk composition
 // of nodes
 
+// "TestVTK/GEM2MT-task.json" "TestVTK/CaWBoundC-dat.lst" "TestVTK/CaWBoundC-dbr.lst" "TestVTK/VTK"
+
 int main( int argc, char* argv[] )
 {
 
