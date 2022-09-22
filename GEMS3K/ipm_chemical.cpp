@@ -1507,10 +1507,10 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                MjuDiff = MjuPrimal - MjuDual;
                if( fabs( MjuDiff ) > MjuDiffCutoff )
                {
-                   if( MjuDiff < -708.4) {
+                   if(MjuDiff < -608.) {
                        MjuDiff = -608.;
                    }
-                   else if(MjuDiff >  709.8 ) {
+                   else if(MjuDiff > 609.) {
                        MjuDiff = 609.;
                    }
                   YjCleaned = Yj / exp( MjuDiff ); // also applies to a DC in a solution phase
@@ -1711,10 +1711,10 @@ else fRestore = true;
                   break; // error in DC class code
           }
 
-          if( ln_ax_dual < -708.4) {
+          if( ln_ax_dual < -608.) {
               ln_ax_dual = -608.;
           }
-          else if(ln_ax_dual >  709.8 ) {
+          else if(ln_ax_dual > 609.) {
               ln_ax_dual = 609.;
           }
           /* For IEEE-compatible type double, overflow is guaranteed if 709.8 < arg, and underflow is guaranteed if arg < -708.4
