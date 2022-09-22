@@ -165,14 +165,6 @@ if( k < kin.FIs )
                     XL = kin.DLL[j]*XFL;
                     break;
                 case CON_WTFR:
-//Ask DK! 20/04/2002
-#ifndef IPMGEMPLUGIN
-                    XU = kin.DUL[j]*XFU*MWXW /
-         TProfil::pm->MolWeight(kin.N, kin.Awt, kin.A+j*kin.N );
-                    XL = kin.DLL[j]*XFL*MWXW /
-         TProfil::pm->MolWeight(kin.N, kin.Awt, kin.A+j*kin.N );
-
-#endif
                     break;
                 case CON_VOLFR:
                     XU = kin.DUL[j]*XFU*MXV/ kin.Vol[j];

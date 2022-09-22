@@ -19,7 +19,7 @@
 #ifndef _particlearray_h_
 #define _particlearray_h_
 
-#include "nodearray.h"
+#include "GEMS3K/nodearray.h"
 
 // Random numbers ==========================================================
 double randuni(double& x); // uniform
@@ -92,8 +92,8 @@ class TParticleArray
     long int cpx;          // current particle index            ??
     long int cptx;         // int current particle type index   ??
 
-    long int* (*NPlist);   // list of particle indexes coming into each node (at T1) size: nNodes * nPmax
-    double* (*NPstat); // array of particle statistic properties in nodes (nNodes * anProps)
+    long int **NPlist;   // list of particle indexes coming into each node (at T1) size: nNodes * nPmax
+    double **NPstat; // array of particle statistic properties in nodes (nNodes * anProps)
                       // for monitoring transport
 
 //  Time variables

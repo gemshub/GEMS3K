@@ -31,7 +31,8 @@
 
 #include "main.h"
 #include "GEMS3K/v_detail.h"
-#include <time.h>
+#include <ctime>
+#include <memory>
 time_t start,stop;
 
 //The case of data exchange in computer memory

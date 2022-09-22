@@ -73,6 +73,7 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, std::stri
 
 // -j -c -i Thermo-time-json/series1-dat.lst -e Thermo-time-out-json/series1-dat.lst -l Thermo-time-json/series1-dbr.lst
 // -j -c -i Thermo-time-in/series1-dat.lst -e Thermo-time-out/series1-dat.lst -l Thermo-time-in/series1-dbr.lst
+// -f -c -i Thermo-time-in/series1-dat.lst -e Thermo-time-out/series1-dat.lst -l Thermo-time-in/series1-dbr.lst
 
 // -j -c -i Neutral-fun/Neutral-dat.lst -e Neutral-fun-out/Neutral-dat.lst
 // -j -c -i Neutral-old/Neutral-dat.lst -e Neutral-old-out/Neutral-dat.lst
@@ -93,18 +94,9 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
 #endif
 #endif
 
-    spdlog::set_pattern("[%n] [%^%l%$] %v");
-    auto ar_logger_gems3k = spdlog::get("gems3k");
-    ar_logger_gems3k->set_level(spdlog::level::trace);
-    auto ar_logger_ipm = spdlog::get("ipm");
-    ar_logger_ipm->set_level(spdlog::level::info);
-    auto ar_logger_tnode = spdlog::get("tnode");
-    ar_logger_tnode->set_level(spdlog::level::info);
-    auto ar_logger_kinmet = spdlog::get("kinmet");
-    ar_logger_kinmet->set_level(spdlog::level::info);
-    auto ar_logger_solmod = spdlog::get("solmod");
-    ar_logger_solmod->set_level(spdlog::level::info);
-
+    gems3k_update_loggers( true, "gems3k_logger.log", spdlog::level::debug);
+    auto ar_logger_gems3k = spdlog::get("ipm");
+    ar_logger_gems3k->set_level(spdlog::level::info);
 
     try{
         std::string input_lst_path;
@@ -217,7 +209,10 @@ void show_usage( const std::string &name )
               << "\t-h,\t--help\t\tshow this help message\n\n"
                  // file type
               << "\t-j,\t--json        \twrite IPM, DCH and DBR files in json mode (default) \n"
-              << "\t-n,\t--nlohmanjson \twrite IPM, DCH and DBR files in json mode  \n"
+#ifdef USE_THERMOFUN
+              << "\t-f,\t--thermofun    \twrite IPM, DCH, ThermoFun and DBR files in json mode  \n"
+              << "\t-o,\t--kv_thermofun \twrite IPM, DCH, ThermoFun and DBR files in txt mode  \n"
+#endif
               << "\t-t,\t--key-value   \twrite IPM, DCH and DBR files in txt mode \n"
               << "\t-b,\t--binary      \twrite IPM, DCH and DBR files in binary mode \n\n"
                  // method

@@ -15,30 +15,9 @@
 #include "io_keyvalue.h"
 #include "io_simdjson.h"
 
-#include <dirent.h>
-
-bool DirExists( const char* aPath )
-{
-    if ( aPath == NULL) return false;
-
-    DIR *pDir;
-    bool bExists = false;
-
-    pDir = opendir (aPath);
-
-    if (pDir != NULL)
-    {
-        bExists = true;
-        (void) closedir(pDir);
-    }
-
-    return bExists;
-}
-
-
 TGEM2MT* TGEM2MT::pm;
 
-TGEM2MT::TGEM2MT( uint /*nrt*/ )
+TGEM2MT::TGEM2MT( size_t /*nrt*/ )
 {
   mtp=&mt[0];
   set_def( 0 );
@@ -66,7 +45,6 @@ void TGEM2MT::RecCalc()
 
         if( mtp->PsVTK != S_OFF )
         {
-            if( !DirExists( pathVTK.c_str() ) )
 #ifndef  __unix
                 mkdir( pathVTK.c_str() );
 #else
@@ -123,9 +101,7 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
    pathVTK = vtk_dir;
    if( !pathVTK.empty() )
    {
-       if(  DirExists( pathVTK.c_str() ) )
-          pathVTK += "/";
-       else pathVTK =""; // this directory do not exist
+       pathVTK += "/";
    }
    return 0;
   }

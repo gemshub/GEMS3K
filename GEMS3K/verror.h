@@ -31,6 +31,10 @@
 /// Default logger for gems3k library
 extern std::shared_ptr<spdlog::logger> gems_logger;
 
+void gems3k_update_loggers(bool use_cout, const std::string& logfile_name, size_t log_level);
+void gems3k_clear_loggers(const std::string& logfile_name);
+
+
 struct TError
 {
     std::string mess;

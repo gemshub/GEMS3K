@@ -15,6 +15,9 @@ tools-build/Makefile
 tools-build/obj
 tools-build/.qmake.*
 tools-build/kva2json
+tools-build/**
+test-tfun/**
+ipmlog.txt
 tools/*.pro.user
 tools/*.pro.user.*
 gemcalc-build/Makefile.*

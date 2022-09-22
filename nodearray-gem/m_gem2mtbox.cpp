@@ -19,16 +19,9 @@
 //-------------------------------------------------------------------
 //
 
-#ifndef IPMGEMPLUGIN
-#include "m_gem2mt.h"
-#include "m_compos.h"
-#include "visor.h"
-#include "stepwise.h"
-#else
 #include "m_gem2mt.h"
 #include "GEMS3K/nodearray.h"
 #include "v_service.h"
-#endif
 
 #define dMB( q, i) ( dm[ (q)*mtp->Nf + (i)] )
 #define MB( q, i)  ( m[ (q)*mtp->Nf + (i)] )
@@ -439,25 +432,8 @@ void TGEM2MT::ComposMGPinBox( long int q  )
           }
 
           // Converting quantity Xe into amount (moles)
-#ifndef IPMGEMPLUGIN
-          Xincr = TCompos::pm->Reduce_Conc( UNITP, Xe, PHmw, Vm, R1, Msys,
-                  Mwat, Vaq, Maq, Vsys );
-          // Conversion of value Xe in concentration units UNITP to amount in moles
-          // Parameters:
-          //  UNITP   Unit code (see v_mod.h, typedef SPPA_UNITS) starting on QUAN_ or CONC_
-          //  Xe      Input value (in UNITP units) for the object
-          //  DCmw    molar mass (g/mol) of the object
-          //  Vm      molar volume (cm3/mol) of the object
-          //  R1      total amount (number of moles) of the system or phase, for mole fractions
-          //  Msys    mass of the system or phase (kg), for mass fractions
-          //  Mwat    Mass of water-solvent (kg), for molalities
-          //  Vaq     Volume of aqueous phase (L), for molarities
-          //  Maq     Mass of aqueous phase (kg), for salinities (g/kgw or mol/kgw)
-          //  Vsys    Volume of the system or phase (L), for volume fractions
-#else
           Xincr = Reduce_Conc( UNITP, Xe, PHmw, Vm, R1, Msys,
                   Mwat, Vaq, Maq, Vsys );
-#endif
 
           PhFract = 0.; // Initial fraction of real phase amount
 
@@ -677,32 +653,6 @@ bool TGEM2MT::BoxEqStatesUpdate(  long int Ni, long int /*pr*/, double tcur, dou
     mtp->cTau = tcur*mtp->tf;
     mtp->oTau = mtp->cTau;
 
-#ifndef IPMGEMPLUGIN
-  if( Ni >= 0)
-  {
-     Vmessage = "Simulating Reactive Transport in a Box-Flux chain: ";
-     Vmessage += " step "+std::to_string(mtp->ct)+"; time "+std::to_string(mtp->cTau)+"; dtime "+std::to_string(mtp->dTau);
-     Vmessage += ". Please, wait (may take time)...";
-
-     // Calculating control script for the accepted time step
-     CalcControlScript();     // Runs nC times for all nodes
-     // Added on Dec 21, 2021 by DK
-     gui_logger->debug("Recalculated B mode control script at ct= {}  cTau= {}   dTau= {}", mtp->ct, mtp->cTau, mtp->dTau);
-
-    if( mtp->PsSmode != S_OFF  )
-    {
-      STEP_POINT2();
-    }
-    else
-      iRet = pVisor->Message( window(), GetName(),Vmessage.c_str(),
-                           nstep, mtp->ntM );
-
-
-   if( iRet )
-         Error("GEM2MT Box-Flux model", "Cancelled by the user");
-  }
-#endif
-  
  if( Ni >= 0)
  { // Update bulk compositions in boxes at current time point
    BoxesBCupdate();
@@ -725,11 +675,6 @@ bool TGEM2MT::BoxEqStatesUpdate(  long int Ni, long int /*pr*/, double tcur, dou
       PrintPoint( 1 );
  }
 
-#ifndef IPMGEMPLUGIN
-   // time step accepted - Copying nodes from C1 to C0 row
-      pVisor->Update();
-      CalcGraph();
-#endif
    
   // copy node array for T0 into node array for T1
   mtp->oTau = mtp->cTau;
@@ -756,43 +701,6 @@ void TGEM2MT::BoxFluxTransportStart()
     mtp->ct = 0;
     mtp->qf = 0;
 
-#ifndef IPMGEMPLUGIN
-    if( mtp->gfc != nullptr)
-       mtp->gfc = (double *)aObj[ o_mtgfc]->Free();
-//    else
-        mtp->gfc = (double *)aObj[ o_mtgfc]->Alloc(  mtp->nC*mtp->nPG, mtp->Nf, D_);
-
-    if( mtp->yfb != nullptr)
-       mtp->yfb = (double *)aObj[ o_mtyfb]->Free();
-//    else
-        mtp->yfb = (double *)aObj[ o_mtyfb]->Alloc(  mtp->nC*mtp->nPG, mtp->Nf, D_);
-
-    if( mtp->tt != nullptr)
-       mtp->tt = (double (*)[9])aObj[ o_mttt]->Free();
-//    else
-        mtp->tt  = (double (*)[9])aObj[ o_mttt]->Alloc(  mtp->nC*mtp->Nf, 9, D_);
-
-    if( mtp->BM != nullptr)
-       mtp->BM = (double *)aObj[ o_mtres1]->Free();
-//    else
-    mtp->BM = (double *)aObj[o_mtres1]->Alloc( mtp->nC, 1, D_);
-
-    if( mtp->BdM != nullptr)
-       mtp->BdM = (double *)aObj[ o_mtres2]->Free();
-//    else
-    mtp->BdM = (double *)aObj[o_mtres2]->Alloc( mtp->nC, 1, D_);
-
-    if( mtp->BmgpM != nullptr)
-       mtp->BmgpM = (double *)aObj[ o_mtref3]->Free();
-//    else
-//    mtp->BmgpM = (double *)aObj[o_mtref3]->Alloc( mtp->nC*mtp->nPG, 1, D_);
-    mtp->BmgpM = (double *)aObj[o_mtref3]->Alloc( mtp->nC, mtp->nPG, D_);
-
-    if( mtp->FmgpJ != nullptr)
-       mtp->FmgpJ = (double *)aObj[ o_mtref4]->Free();
-//    else
-    mtp->FmgpJ = (double *)aObj[o_mtref4]->Alloc( mtp->nFD, 1, D_);
-#else
     if( mtp->gfc )
         delete[] mtp->gfc;
 //    else
@@ -827,7 +735,6 @@ void TGEM2MT::BoxFluxTransportStart()
        delete[] mtp->FmgpJ;
 //    else
     mtp->FmgpJ = new double[mtp->nFD];
-#endif
 
     long int q, f, i;
     // Cleaning work arrays
@@ -919,16 +826,6 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 
     BoxFluxTransportStart();
 
-#ifndef IPMGEMPLUGIN
-    bool UseGraphMonitoring = false;
-    if( mtp->PsSmode == S_OFF )
-      if(  mtp->PvMSg != S_OFF && vfQuestion(window(),
-             GetName(), "Use graphic monitoring?") )
-        {
-            RecordPlot( nullptr );
-            UseGraphMonitoring = true;
-        }
-#endif
 
 // na->CopyWorkNodeFromArray( 0, mtp->nC,  na->pNodT1() );
 // na->GEM_write_dbr( "node0000.dat",  0, false );
@@ -991,30 +888,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
   //  This loop contains the overall transport time step (wave)
   do {
 
-#ifndef IPMGEMPLUGIN
-
-//      if( mtp->ct > 0)
-//          CalcControlScript();  // runs nC times over all reactors/boxes
-      gui_logger->debug("Recalculating S control script at ct= {}   cTau= {}", mtp->ct, mtp->cTau);
-      Vmessage = "Simulating Transport through Sequential Reactors chain: ";
-      Vmessage += " step "+std::to_string(mtp->ct)+"; time "+std::to_string(mtp->cTau)+"; dtime "+std::to_string(mtp->dTau);
-      Vmessage += ". Please, wait (may take time)...";
-
-      if( mtp->PsSmode != S_OFF  )
-      {
-          STEP_POINT2();
-      }
-      else
-      {
-          iRet = pVisor->Message( window(), GetName(),Vmessage.c_str(),
-                                  mtp->ct, mtp->ntM, UseGraphMonitoring );
-      }
-
-      if( iRet )
-             return iRet;// Error("GEM2MT SeqReac model", "Cancel by the user");
-#endif
-
-      // Set up new boxes states at cTau
+     // Set up new boxes states at cTau
      for( p = 1/*0*/; p < mtp->nC; p++ )
      {
          //if( p == mtp->nC-1 )
@@ -1064,19 +938,9 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
          ComposMGPinBox( p );
        } // p
 
-#ifndef IPMGEMPLUGIN
-    // time step accepted - Copying nodes from C1 to C0 row
-    pVisor->Update();
-    CalcGraph();
-#endif
        // copy node array T1 into node array T0
        copyNodeArrays();
 
-#ifndef IPMGEMPLUGIN
-       if( mtp->ct > 0)
-           CalcControlScript();  // runs nC times over all reactors/boxes Added on Dec 21, 2021 by DK
-       gui_logger->debug("Recalculating S control script at ct= {}  cTau= {}   dTau= {}", mtp->ct, mtp->cTau, mtp->dTau);
-#endif
         mtp->ct += 1;
         mtp->oTau = mtp->cTau;
         mtp->cTau += mtp->dTau;
@@ -1086,18 +950,10 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 
    } while ( mtp->cTau < mtp->Tau[STOP_] && mtp->ct < mtp->ntM );
 
-#ifndef IPMGEMPLUGIN
-    pVisor->CloseMessage();
-#endif
-
   }
   catch( TError& xcpt )
   {
-#ifndef IPMGEMPLUGIN
-       vfMessage(window(), xcpt.title, xcpt.mess);
-#else
       gems_logger->error(" {}  {}", xcpt.title, xcpt.mess);
-#endif
        return 1;
   }
 
@@ -1117,19 +973,6 @@ bool TGEM2MT::CalcBoxFluxModel( char /*mode*/ )
   {	 
     BoxFluxTransportStart();
 
-#ifndef IPMGEMPLUGIN
-    bool iRet = false;
-    bool UseGraphMonitoring = false;
-
-     if( mtp->PsSmode == S_OFF )
-          if(  mtp->PvMSg != S_OFF && vfQuestion(window(),
-             GetName(), "Use graphic monitoring?") )
-        {
-            RecordPlot( nullptr );
-            UseGraphMonitoring = true;
-        }
-#endif
-
   // Initial calculation of chemical equilibria in all nodes with AIA initial approximation
   BoxEqStatesUpdate( -1,  0, mtp->cTau/mtp->tf, mtp->dTau/mtp->tf );
 
@@ -1139,31 +982,16 @@ bool TGEM2MT::CalcBoxFluxModel( char /*mode*/ )
    MaxIter = mtp->ntM*cfactor;   // Need to check the multiplicator for maximum number of iterations
    double new_dTau = 0.0;
    
-#ifndef IPMGEMPLUGIN
-       iRet = pVisor->Message( window(), GetName(),
-           "Simulating Reactive Transport in a Box-Flux setup. "
-           "Please, wait (may take time)...", nstep, MaxIter, UseGraphMonitoring );
-     //      "Please, wait (may take time)...", nstep, mtp->ntM, UseGraphMonitoring );
-       if( iRet )
-        Error("GEM2MT generic box-flux model", "Cancelled by the user");
-#endif
   // Getting into a time integration loop
   new_dTau = INTEG( 1e-3, /*mtp->cdv,*/ mtp->dTau/mtp->tf, mtp->Tau[START_]/mtp->tf, mtp->Tau[STOP_]/mtp->tf );
   new_dTau *= mtp->tf;
 
-#ifndef IPMGEMPLUGIN
-    gui_logger->debug("GEM2MT B mode: new dTau = {} ;  old dTau = {}", new_dTau, mtp->dTau);
-    pVisor->CloseMessage();
-#endif
+  gems_logger->debug("GEM2MT B mode: new dTau = {} ;  old dTau = {}", new_dTau, mtp->dTau);
     
   }
   catch( TError& xcpt )
   {
-#ifndef IPMGEMPLUGIN
-       vfMessage(window(), xcpt.title, xcpt.mess);
-#else
-        gems_logger->error(" {}  {}", xcpt.title, xcpt.mess);
-#endif
+       gems_logger->error(" {}  {}", xcpt.title, xcpt.mess);
        return 1;
   }
 

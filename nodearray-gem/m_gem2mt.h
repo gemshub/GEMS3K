@@ -19,20 +19,12 @@
 #ifndef _m_gem2mt_h_
 #define _m_gem2mt_h_
 
-
-#ifndef NOPARTICLEARRAY
 #include "particlearray.h"
-#endif
 
 namespace  io_formats {
 class TRWArrays;
 }
 
-#ifndef IPMGEMPLUGIN
-#include "m_param.h"
-#include "v_ipnc.h"
-#include "graph_window.h"
-#else
 // internal
 enum grr_constants { // std::string len for graph
     MAXAXISNAME = 9,
@@ -64,8 +56,6 @@ typedef enum {
 
 
 } GS_AS_CLASSES;
-
-#endif
 
 const long int MT_RKLEN = 80,
                SIZE_HYDP = 7;
@@ -350,19 +340,8 @@ GEM2MT;
 
 // Current GEM2MT
 class TGEM2MT
-#ifndef IPMGEMPLUGIN
-        : public TCModule
-#endif
 {
-    GEM2MT mt[1];
-
-#ifndef IPMGEMPLUGIN
-    IPNCalc rpn[2];      // IPN
-    jsonui::GraphDialog *gd_gr = nullptr;
-    TPlotLine* plot;
-    std::string title;           // changed titler to title
-    std::string error_lst_path;
-#endif
+  GEM2MT mt[1];
 
   std::shared_ptr<TNodeArray> na = nullptr;       // pointer to nodearray class instance
   TParticleArray* pa_mt = nullptr;       // pointer to TParticleArray class instance
@@ -370,6 +349,12 @@ class TGEM2MT
     std::string pathVTK;
     std::string nameVTK;
     std::string prefixVTK;
+
+    void logProfilePhMol( FILE* logfile, int inode )
+    {
+        if( pa_mt )
+            pa_mt->logProfilePhMol( logfile, inode );
+    }
 
 protected:
 
@@ -467,51 +452,15 @@ public:
 
     std::shared_ptr<TNodeArray> nodeArray()
     { return na; }
-    explicit TGEM2MT( uint nrt );
+    explicit TGEM2MT( size_t nrt );
 
-#ifndef IPMGEMPLUGIN
-    ~TGEM2MT()
-    {
-        delete gd_gr;
-    }
-#endif
+    ~TGEM2MT();
 
     const char* GetName() const
     {
         return "GEM2MT";
     }
 
-#ifndef IPMGEMPLUGIN
-
-    void ods_link( int i=0);
-    void dyn_set( int i=0);
-    void dyn_kill( int i=0);
-    void dyn_new( int i=0);
-    void set_def( int i=0);
-    bool check_input( const char *key, int level=1 );
-    std::string   GetKeyofRecord( const char *oldKey, const char *strTitle,
-                              int keyType );
-
-    void RecInput( const char *key );
-    void MakeQuery();
-    int RecBuild( const char *key, int mode = VF_UNDEF );
-    void RecCalc( const char *key );
-    void RecordPrint( const char *key=nullptr ); //sddata key
-    void RecordPlot( const char *key );
-
-    bool SaveChartData( jsonui::ChartData* grdata );
-    void ClearGraphDialog()
-    {  gd_gr = nullptr; }
-
-    //void CmHelp();
-    const char* GetHtml();
-
-   void InsertChanges( std::vector<CompItem>& aIComp,
-          std::vector<CompItem>& aPhase,  std::vector<CompItem>&aDComp );
-   void FreeNa();
-
-#else
-    ~TGEM2MT();
 
     void set_def(int q);
     void mem_kill(int q);
@@ -519,7 +468,6 @@ public:
 
     double Reduce_Conc( char UNITP, double Xe, double DCmw, double Vm,
         double R1, double Msys, double Mwat, double Vaq, double Maq, double Vsys );
-
 
     // write/read gem2mt structure
     int ReadTask( const char *gem2mt_in1, const char *vtk_dir );
@@ -530,8 +478,6 @@ public:
     int MassTransStringInit(const std::string& dch_json, const std::string& ipm_json,
                             const std::vector<std::string>& dbr_json);
     void RecCalc();
-
-#endif
 
     // for separate
     void checkAlws(io_formats::TRWArrays&  prar1, io_formats::TRWArrays&  prar) const;

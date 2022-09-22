@@ -917,15 +917,6 @@ void TMultiBase::GEM_IPM_Init()
 //     if( pm.pULR && pm.PLIM )
 //          Set_DC_limits(  DC_LIM_INIT );
 
-//#ifndef IPMGEMPLUGIN
-// New: TKinMet stuff
-//  if( pmp->pKMM <= 0 )
-//  {
-//     KinMetModLoad();  // Call point to loading parameters for kinetic models
-//     pmp->pKMM = 1;
-//  }
-//#endif
-
     if( pm.FIs && AllPhasesPure == false )   /// line must be tested !pm.FIs
     {
         GEM_IPM_Init_gui1();

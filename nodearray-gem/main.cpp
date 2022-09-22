@@ -21,6 +21,8 @@
 // Experiments with smoothing terms on assigning differences to bulk composition
 // of nodes
 
+// "TestVTK/GEM2MT-task.json" "TestVTK/CaWBoundC-dat.lst" "TestVTK/CaWBoundC-dbr.lst" "TestVTK/VTK"
+
 int main( int argc, char* argv[] )
 {
 
@@ -46,6 +48,10 @@ int main( int argc, char* argv[] )
         dbr_lst = argv[3];
     if (argc >= 5 )
         vtk_fname = argv[4];
+
+    gems3k_update_loggers( true, "gems3k_logger.log", spdlog::level::info);
+    auto ar_logger_gems3k = spdlog::get("ipm");
+    ar_logger_gems3k->set_level(spdlog::level::warn);
 
     try{
 
