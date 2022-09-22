@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.9)
 
 # Set the name of the project
-project(GEMS3K VERSION 4.2.3 LANGUAGES CXX C)
+project(GEMS3K VERSION 4.3.1 LANGUAGES CXX C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -40,7 +40,7 @@ endif()
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
 option(USE_THERMOFUN "Use ThermoFun" ON)
-option(BUILD_GEM2MT "Install GEM2MT lib." ON)
+option(BUILD_GEM2MT "Install GEM2MT lib." OFF)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
 option(BUILD_TOOLS "Build tools" OFF)
 
