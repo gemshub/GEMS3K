@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.9)
 
 # Set the name of the project
-project(GEMS3K VERSION 4.2.2 LANGUAGES CXX C)
+project(GEMS3K VERSION 4.2.3 LANGUAGES CXX C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -42,7 +42,7 @@ option(BUILD_STATIC_LIBS "Build static libraries." ON)
 option(USE_THERMOFUN "Use ThermoFun" ON)
 option(BUILD_GEM2MT "Install GEM2MT lib." ON)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
-option(BUILD_TOOLS "Build tools" ON)
+option(BUILD_TOOLS "Build tools" OFF)
 
 # Set the list of compiler flags for GNU compiler
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
