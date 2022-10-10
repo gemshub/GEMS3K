@@ -95,7 +95,7 @@ void TMultiBase::get_PAalp_PSigm( char& PAalp, char& PSigm)
 
 void TMultiBase::STEP_POINT( const char* str)
 {
-    ipm_logger->info( std::string("STEP_POINT ")+str);
+    ipm_logger->debug( std::string("STEP_POINT ")+str);
 }
 
 void TMultiBase::alloc_IPx( long int LsIPxSum )
