@@ -37,7 +37,7 @@ if(BUILD_STATIC_LIBS)
    set_target_properties(GEM2MT_STATIC PROPERTIES OUTPUT_NAME GEM2MT-static)
    target_link_libraries(GEM2MT_STATIC PUBLIC GEMS3K-static)
    if(USE_THERMOFUN MATCHES ON)
-        target_link_libraries(GEM2MT_STATIC PUBLIC ThermoFun::ThermoFun)
+     target_link_libraries(GEM2MT_STATIC PUBLIC ThermoFun::ThermoFun)
    endif()
    install( TARGETS GEM2MT_STATIC
            EXPORT GEM2MTTargets DESTINATION "lib" COMPONENT libraries)
