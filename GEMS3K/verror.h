@@ -26,7 +26,7 @@
 #define VERROR_H
 
 #include <string>
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 /// Default logger for gems3k library
 extern std::shared_ptr<spdlog::logger> gems_logger;

@@ -215,6 +215,9 @@ public:
         return  multi_ptr()->gemipm_to_string( addMui, current_output_set_name, with_comments, brief_mode );
     }
 
+    /// Return current system name
+    std::string system_id() const;
+
     /// Return current set name
     const std::string& input_set_name() const
     {

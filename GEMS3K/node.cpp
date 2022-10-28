@@ -124,6 +124,11 @@ void TNode::freeMemory()
     CNode = databr_free( CNode );
 }
 
+std::string TNode::system_id() const
+{
+    return char_array_to_string(multi_ptr()->GetPM()->stkey, EQ_RKLEN);
+}
+
 // Checks if given temperature TK and pressure P fit within the interpolation
 // intervals of the DATACH lookup arrays (returns true) or not (returns false)
 bool  TNode::check_TP( double TK, double P ) const
