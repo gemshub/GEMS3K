@@ -4,6 +4,13 @@
 #  message(FATAL_ERROR "zeromq library not found")
 #endif()
 
+find_package(spdlog REQUIRED)
+if(NOT spdlog_FOUND)
+  message(FATAL_ERROR "spdlog not found")
+else()
+  message(STATUS "Found spdlog v${spdlog_VERSION}")
+endif()
+
 find_package(ThermoFun REQUIRED)
 if(NOT ThermoFun_FOUND)
   message(FATAL_ERROR "ThermoFun library not found")
