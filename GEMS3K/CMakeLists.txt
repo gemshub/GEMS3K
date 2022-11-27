@@ -10,6 +10,8 @@ file(GLOB SOURCE_FILES *.cpp)
 # Compile the C++ source code into object files
 add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES}  )
 
+target_compile_definitions(GEMS3K_OBJECT PUBLIC -DSPDLOG_FMT_EXTERNAL=yes) 
+
 # Check if a shared library is to be built
 if(BUILD_SHARED_LIBS)
     # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
