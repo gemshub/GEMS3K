@@ -570,7 +570,7 @@ void TActivity::PrimalChemicalPotentials( double F[], double Y[], double YF[], d
                         || ( act.PHC[k] == PH_POLYEL && YFk >= act.ScMinM ) )
         {
             logXw = log(YFk);
-            if( act.sMod[k][SPHAS_TYP] != SM_AQPITZ)
+            if(k>=act.FIs ||  act.sMod[k][SPHAS_TYP] != SM_AQPITZ)
             {
                NonLogTerm = 1.- YFk / Yf;
             }

@@ -12,6 +12,7 @@ CONFIG += debug
 CONFIG += thread
 CONFIG += console
 CONFIG += c++17
+CONFIG += sanitaze sanitaze_thread
 
 DEFINES += NODEARRAYLEVEL
 #DEFINES += useOMP
@@ -28,7 +29,7 @@ DEPENDPATH +=
 DEPENDPATH += .
 DEPENDPATH += $$GEMS3K_H
 
-INCLUDEPATH +=
+INCLUDEPATH += /usr/lib/gcc/x86_64-linux-gnu/9/include
 INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 

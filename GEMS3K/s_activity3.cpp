@@ -43,7 +43,7 @@ TActivity::PhaseSpecificGamma( long int j, long int jb, long int je, long int k,
 {
     double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0., MMC = 0.;
 
-    if( act.sMod[k][SPHAS_TYP] != SM_AQPITZ)
+    if( k>=act.FIs || act.sMod[k][SPHAS_TYP] != SM_AQPITZ)
     {
     switch( act.PHC[k] )
     {

@@ -329,7 +329,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 
         // Creating and initializing the TActivity class instance for this TNode instance
         init_into_gems3k();
-        node_logger->info("Initialization of system {}", std::string(pmm->stkey, 0, EQ_RKLEN));
+        //node_logger->info("Initialization of system {}", std::string(pmm->stkey, 0, EQ_RKLEN));
         return 0;
     }
     catch(TError& err)

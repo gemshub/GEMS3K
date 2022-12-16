@@ -668,7 +668,7 @@ TMultiBase::PrimalChemicalPotentials( double F[], double Y[], double YF[], doubl
         {
             pm.logXw = log(pm.YFk);
 
-            if( pm.sMod[k][SPHAS_TYP] != SM_AQPITZ)
+            if( k>=pm.FIs || pm.sMod[k][SPHAS_TYP] != SM_AQPITZ)
             {
                NonLogTerm = 1.- pm.YFk / Yf;
             }
@@ -1074,7 +1074,7 @@ void TMultiBase::KarpovsPhaseStabilityCriteria()
          if( pm.YFk > 1e-33 )   // amount of phase or carrier cannot be less than 1e-33 mol!
             {
                pm.logXw = log(pm.YFk);
-               if( pm.sMod[k][SPHAS_TYP] != SM_AQPITZ)
+               if( k>=pm.FIs || pm.sMod[k][SPHAS_TYP] != SM_AQPITZ)
                {
                    NonLogTerm = 1.- pm.YFk / YF;
                }

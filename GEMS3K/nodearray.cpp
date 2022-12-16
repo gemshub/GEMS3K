@@ -157,18 +157,18 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
     DATABRPTR* C1 = pNodT1();
     bool* iaN = piaNode();     // indicators for IA in the nodes
 
-    start_node = max( start_node, 0L );
-    end_node = min( end_node, anNodes-1 );
+    start_node = std::max( start_node, 0L );
+    end_node = std::min( end_node, anNodes-1 );
 
 
 #pragma omp parallel shared( C0, C1, iaN, diffile, iRet ) private( wrkNode, n )
     {
-        TNode wrkNode( calcNode ); // must be copy TNode internal
+        TNode wrkNode( *calcNode ); // must be copy TNode internal
         n = omp_get_thread_num();
 #pragma omp for
         for( ii = start_node; ii<= end_node; ii++) // node iteration
         {
-            if( !CalcIPM_Node(  modeParam, wrkNode, ii, C0, C1, iaN, diffile ) )
+            if( !CalcIPM_Node(  modeParam, &wrkNode, ii, C0, C1, iaN, diffile ) )
             {
 #pragma omp atomic write
                 iRet = false;
