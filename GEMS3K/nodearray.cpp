@@ -110,12 +110,14 @@ void TNodeArray::freeMemory()
     long int ii;
 
     if( anNodes )
-    { if( NodT0 )
+    {
+        if( NodT0 )
             for(  ii=0; ii<anNodes; ii++ )
                 if( NodT0[ii] )
                     NodT0[ii] = calcNode->databr_free(NodT0[ii]);
         delete[]  NodT0;
         NodT0 = nullptr;
+
         if( NodT1 )
             for(  ii=0; ii<anNodes; ii++ )
                 if( NodT1[ii] )
@@ -152,7 +154,7 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
     int n;
     long int ii;
     bool iRet = true;
-    TNode wrkNode;//( calcNode ); // must be copy TNode internal
+    TNode wrkNode( *calcNode ); // must be copy TNode internal
     DATABRPTR* C0 = pNodT0();
     DATABRPTR* C1 = pNodT1();
     bool* iaN = piaNode();     // indicators for IA in the nodes
@@ -174,10 +176,10 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
                 iRet = false;
             }
 
-            //#pragma omp critical
-            //{
-            //  TNode::node_logger->error(" {} -thread did index: {} , n, ii");
-            //}
+//#pragma omp critical
+//            {
+//              TNode::node_logger->error(" {} -thread did index: {} ", n, ii);
+//            }
         }
 
     }

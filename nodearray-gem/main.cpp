@@ -59,7 +59,8 @@ int main( int argc, char* argv[] )
             Error( "Start task", "No inital files");
 
         // The NodeArray must be allocated here
-        TGEM2MT::pm = new TGEM2MT( 0 );
+        std::shared_ptr<TGEM2MT> mt_task( new TGEM2MT( 0 ));
+        TGEM2MT::pm = mt_task.get();
 
         // Here we read the GEM2MT structure, prepared from GEMS or by hand
         if( TGEM2MT::pm->ReadTask( gem2mt_in1.c_str(), vtk_fname.c_str() ))
