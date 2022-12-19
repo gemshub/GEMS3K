@@ -23,11 +23,14 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#pragma once
+
 #ifdef USE_NLOHMANNJSON
 
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include "verror.h"
+#include "v_service.h"
 
 namespace  io_formats {
 

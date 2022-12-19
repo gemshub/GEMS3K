@@ -222,7 +222,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeComment( _comment, "# ID key of the initial chemical system definition");
     }
 
-    prar.addField( "ID_key", std::string(pm.stkey));
+    prar.addField( "ID_key", char_array_to_string(pm.stkey, EQ_RKLEN));
 
     if( _comment )
         prar.writeComment( _comment, "\n## (1) Flags that affect memory allocation");

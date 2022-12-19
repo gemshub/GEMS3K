@@ -12,8 +12,10 @@
 //-------------------------------------------------------------------
 
 #include "m_gem2mt.h"
-#include "io_keyvalue.h"
-#include "io_simdjson.h"
+#include "GEMS3K/io_keyvalue.h"
+#include "GEMS3K/io_simdjson.h"
+#include "GEMS3K/io_nlohmann.h"
+#include "GEMS3K/nodearray.h"
 
 TGEM2MT* TGEM2MT::pm;
 
@@ -88,10 +90,17 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
    ErrorIf( !ff.good() , gem2mt_in, "Fileopen error");
 
    if( gem2mt_in.rfind(".json") != std::string::npos )
+#ifdef USE_NLOHMANNJSON
+    {
+        io_formats::NlohmannJsonRead in_format( ff, "", "gem2mt" );
+        from_text_file( in_format );
+    }
+#else
    {
        io_formats::SimdJsonRead in_format( ff, "", "gem2mt" );
        from_text_file( in_format );
    }
+#endif
    else
    {
        io_formats::KeyValueRead in_format( ff );
@@ -122,8 +131,13 @@ int TGEM2MT::ReadTaskString( const std::string json_string )
     {
         std::stringstream ss;
         ss.str(json_string);
+#ifdef USE_NLOHMANNJSON
+        io_formats::NlohmannJsonRead in_format( ss, "", "gem2mt" );
+        from_text_file( in_format );
+#else
         io_formats::SimdJsonRead in_format( ss, "", "gem2mt" );
         from_text_file( in_format );
+#endif
         return 0;
     }
     catch(TError& err)
@@ -145,10 +159,17 @@ int TGEM2MT::WriteTask( const char *gem2mt_out1 )
    ErrorIf( !ff.good() , gem2mt_out, "Fileopen error");
 
    if( gem2mt_out.rfind(".json") != std::string::npos )
+#ifdef USE_NLOHMANNJSON
+    {
+        io_formats::NlohmannJsonWrite out_format( ff, "");
+        to_text_file( out_format, true, false );
+    }
+#else
    {
        io_formats::SimdJsonWrite out_format( ff, "", true );
        to_text_file( out_format, true, false );
    }
+#endif
    else
    {
        io_formats::KeyValueWrite out_format( ff );

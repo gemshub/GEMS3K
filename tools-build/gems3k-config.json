@@ -1,0 +1,30 @@
+{
+    "log": {
+        "level": "trace",
+        "modules": [
+            "gems3k",
+            "ipm",
+            "tnode",
+            "kinmet",
+            "solmod",
+            "thermofun",
+            "chemicalfun"
+        ],
+        "module_level": {
+            "chemicalfun": "trace",
+            "gems3k": "debug",
+            "ipm": "info",
+            "thermofun": "trace"
+        },
+        "file": {
+            "count": 10,
+            "modules": [
+                "ipm",
+                "thermofun",
+                "chemicalfun"
+            ],
+            "path": "gems3k-log.txt",
+            "size": 10000000
+        }
+     }
+}

@@ -193,3 +193,29 @@ int extract_int_json( const std::string& key, const std::string& jsondata )
         return 0;
     return stoi(token);
 }
+
+std::vector<std::string> split(const std::string &str, const std::string &delimiters)
+{
+    std::vector<std::string> v;
+    std::string vv;
+
+    if( str.empty() )
+        return v;
+
+    std::string::size_type start = 0;
+    auto pos = str.find_first_of(delimiters.c_str(), start);
+    while(pos != std::string::npos)
+    {
+        vv = std::string(str, start, pos - start);
+        strip( vv );
+        v.push_back( vv );
+        start = pos + 1;
+        pos = str.find_first_of(delimiters.c_str(), start);
+    }
+
+    vv = std::string (str, start, str.length() - start);
+    strip( vv );
+    if( !vv.empty() )
+        v.push_back( vv );
+    return v;
+}

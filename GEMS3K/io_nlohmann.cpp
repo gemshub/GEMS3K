@@ -73,8 +73,8 @@ NlohmannJsonRead::NlohmannJsonRead(std::iostream &ff, const std::string &test_se
     json_data = json_arr[0];
     if( !test_set_name.empty() )
     {
-        auto json_set = json_data["set"];
-        if( json_set.get<std::string>().find(test_set_name) == std::string::npos ) {
+        auto  json_set = json_data["set"].get<std::string>();
+        if( json_set.find(test_set_name) == std::string::npos ) {
             gems_logger->warn(" Read the document from another set: {} , current set {}", json_set, test_set_name);
         }
     }

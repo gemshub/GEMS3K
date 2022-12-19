@@ -36,6 +36,7 @@
 #include <cmath>
 #include <string>
 #include <memory>
+#include <iostream>
 #include <iomanip>
 #include "node.h"
 #include "v_detail.h"
@@ -82,13 +83,13 @@ int main( int argc, char* argv[] )
         long int xbaq = node->Ph_xCH_to_xDB(xaq);
         long int xbCalcite = node->Ph_xCH_to_xDB(xCalcite);
 
-        cout << "          CH  BR" << endl;
-        cout << " Ca       " << xCa << "   " << xbCa << endl;
-        cout << " Ca+2     " << xCa_ion << "   " << xbCa_ion << endl;
-        cout << " Cal     " << xCal << "  " << xbCal << endl;
-        cout << " aq_gen   " << xaq << "   " << xbaq << endl;
-        cout << " Calcite  " << xCalcite << "   " << xbCalcite << endl;
-        cout << setprecision(7) << setw(10) << endl;
+        std::cout << "          CH  BR" << std::endl;
+        std::cout << " Ca       " << xCa << "   " << xbCa << std::endl;
+        std::cout << " Ca+2     " << xCa_ion << "   " << xbCa_ion << std::endl;
+        std::cout << " Cal     " << xCal << "  " << xbCal << std::endl;
+        std::cout << " aq_gen   " << xaq << "   " << xbaq << std::endl;
+        std::cout << " Calcite  " << xCalcite << "   " << xbCalcite << std::endl;
+        std::cout << std::setprecision(7) << std::setw(10) << std::endl;
 
         // Asking GEM to run with automatic initial approximation
         dBR->NodeStatusCH = NEED_GEM_AIA;
@@ -114,33 +115,33 @@ int main( int argc, char* argv[] )
             node->GEM_print_ipm( nullptr );   // possible debugging printout
             return 5; // GEM IPM did not converge properly - error message needed
         }
-        cout << "SatIndx aq" << node->Ph_SatInd(0) << " gas " << node->Ph_SatInd(1) << " s1 " << node->Ph_SatInd(2)
-             << " s2 " << node->Ph_SatInd(3) << " s3 " << node->Ph_SatInd(4) << " s4 " << node->Ph_SatInd(5) << endl;
+        std::cout << "SatIndx aq" << node->Ph_SatInd(0) << " gas " << node->Ph_SatInd(1) << " s1 " << node->Ph_SatInd(2)
+             << " s2 " << node->Ph_SatInd(3) << " s3 " << node->Ph_SatInd(4) << " s4 " << node->Ph_SatInd(5) << std::endl;
    
         // test internal functions
-        cout << "Ph_Volume   Aq: " << node->Ph_Volume(xbaq) <<  " Calcite: " << node->Ph_Volume(xbCalcite) << endl;
-        cout << "Ph_Mass     Aq: " << node->Ph_Mass(xbaq) <<  " Calcite: " << node->Ph_Mass(xbCalcite) << endl;
-        cout << "Ph_SatInd   Aq: " << node->Ph_SatInd(xbaq) <<  " Calcite: " << node->Ph_SatInd(xbCalcite) << endl;
+        std::cout << "Ph_Volume   Aq: " << node->Ph_Volume(xbaq) <<  " Calcite: " << node->Ph_Volume(xbCalcite) << std::endl;
+        std::cout << "Ph_Mass     Aq: " << node->Ph_Mass(xbaq) <<  " Calcite: " << node->Ph_Mass(xbCalcite) << std::endl;
+        std::cout << "Ph_SatInd   Aq: " << node->Ph_SatInd(xbaq) <<  " Calcite: " << node->Ph_SatInd(xbCalcite) << std::endl;
 
-        cout << endl;
-        cout << "Ca+2    Get_nDC  " << node->Get_nDC(xbCa_ion) <<  " DC_n  " << node->DC_n(xCa_ion) << endl;
-        cout << "Cal     Get_nDC  " << node->Get_nDC(xbCal) <<  " DC_n  " << node->DC_n(xCal) << endl;
-        cout << "Ca+2    Get_muDC " << node->Get_muDC(xbCa_ion) <<  " DC_mu " << node->DC_mu(xCa_ion) << endl;
-        cout << "Cal     Get_muDC " << node->Get_muDC(xbCal) <<  " DC_mu " << node->DC_mu(xCal) << endl;
-        cout << "Ca+2    Get_aDC  " << node->Get_aDC(xbCa_ion) <<  " DC_a  " << node->DC_a(xCa_ion) << endl;
-        cout << "Cal     Get_aDC  " << node->Get_aDC(xbCal) <<  " DC_a  " << node->DC_a(xCal) << endl;
-        cout << "Ca+2    Get_cDC  " << node->Get_cDC(xbCa_ion) <<  " DC_c  " << node->DC_c(xCa_ion) << endl;
-        cout << "Cal     Get_cDC  " << node->Get_cDC(xbCal) <<  " DC_c  " << node->DC_c(xCal) << endl;
-        cout << "Ca+2    Get_gDC  " << node->Get_gDC(xbCa_ion) <<  " DC_g  " << node->DC_g(xCa_ion) << endl;
-        cout << "Cal     Get_gDC  " << node->Get_gDC(xbCal) <<  " DC_g  " << node->DC_g(xCal) << endl;
-        cout << endl;
-        cout << "G0   Ca+2: " << node->DC_G0( xCa_ion, node->cP(), node->cTK(), false ) <<  " Cal: " << node->DC_G0( xCal, node->cP(), node->cTK(), false ) << endl;
-        cout << "V0   Ca+2: " << node->DC_V0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_V0( xCal, node->cP(), node->cTK() ) << endl;
-        cout << "H0   Ca+2: " << node->DC_H0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_H0( xCal, node->cP(), node->cTK() ) << endl;
-        cout << "S0   Ca+2: " << node->DC_S0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_S0( xCal, node->cP(), node->cTK() ) << endl;
-        cout << "Cp0  Ca+2: " << node->DC_Cp0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_Cp0( xCal, node->cP(), node->cTK() ) << endl;
-        cout << "A0   Ca+2: " << node->DC_A0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_A0( xCal, node->cP(), node->cTK() ) << endl;
-        cout << "U0   Ca+2: " << node->DC_U0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_U0( xCal, node->cP(), node->cTK() ) << endl;
+        std::cout << std::endl;
+        std::cout << "Ca+2    Get_nDC  " << node->Get_nDC(xbCa_ion) <<  " DC_n  " << node->DC_n(xCa_ion) << std::endl;
+        std::cout << "Cal     Get_nDC  " << node->Get_nDC(xbCal) <<  " DC_n  " << node->DC_n(xCal) << std::endl;
+        std::cout << "Ca+2    Get_muDC " << node->Get_muDC(xbCa_ion) <<  " DC_mu " << node->DC_mu(xCa_ion) << std::endl;
+        std::cout << "Cal     Get_muDC " << node->Get_muDC(xbCal) <<  " DC_mu " << node->DC_mu(xCal) << std::endl;
+        std::cout << "Ca+2    Get_aDC  " << node->Get_aDC(xbCa_ion) <<  " DC_a  " << node->DC_a(xCa_ion) << std::endl;
+        std::cout << "Cal     Get_aDC  " << node->Get_aDC(xbCal) <<  " DC_a  " << node->DC_a(xCal) << std::endl;
+        std::cout << "Ca+2    Get_cDC  " << node->Get_cDC(xbCa_ion) <<  " DC_c  " << node->DC_c(xCa_ion) << std::endl;
+        std::cout << "Cal     Get_cDC  " << node->Get_cDC(xbCal) <<  " DC_c  " << node->DC_c(xCal) << std::endl;
+        std::cout << "Ca+2    Get_gDC  " << node->Get_gDC(xbCa_ion) <<  " DC_g  " << node->DC_g(xCa_ion) << std::endl;
+        std::cout << "Cal     Get_gDC  " << node->Get_gDC(xbCal) <<  " DC_g  " << node->DC_g(xCal) << std::endl;
+        std::cout << std::endl;
+        std::cout << "G0   Ca+2: " << node->DC_G0( xCa_ion, node->cP(), node->cTK(), false ) <<  " Cal: " << node->DC_G0( xCal, node->cP(), node->cTK(), false ) << std::endl;
+        std::cout << "V0   Ca+2: " << node->DC_V0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_V0( xCal, node->cP(), node->cTK() ) << std::endl;
+        std::cout << "H0   Ca+2: " << node->DC_H0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_H0( xCal, node->cP(), node->cTK() ) << std::endl;
+        std::cout << "S0   Ca+2: " << node->DC_S0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_S0( xCal, node->cP(), node->cTK() ) << std::endl;
+        std::cout << "Cp0  Ca+2: " << node->DC_Cp0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_Cp0( xCal, node->cP(), node->cTK() ) << std::endl;
+        std::cout << "A0   Ca+2: " << node->DC_A0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_A0( xCal, node->cP(), node->cTK() ) << std::endl;
+        std::cout << "U0   Ca+2: " << node->DC_U0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_U0( xCal, node->cP(), node->cTK() ) << std::endl;
 
         // Here a possible loop on more input recipes begins
         if( argc >= 3 )

@@ -27,9 +27,11 @@
 #include <fstream>
 #include "node.h"
 #include "num_methods.h"
+#include "v_service.h"
 
 
-const BASE_PARAM pa_p_ = {    // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
+const BASE_PARAM pa_p_ = 
+        {    // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
          2,  /* PC */  2,     /* PD */   -5,   /* PRD */
          1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
          0, /* DT */     30000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
@@ -240,7 +242,7 @@ long int TMultiBase::testMulti()
     {
         if( base_param()->PSM >= 2 )
         {
-            TNode::ipmlog_file->warn(" {} : {}:{}", pm.stkey, pm.errorCode, pm.errorBuf);
+            TNode::ipmlog_file->warn(" {} : {}:{}", char_array_to_string(pm.stkey, EQ_RKLEN), pm.errorCode, pm.errorBuf);
         }
         return 1L;
     }
@@ -424,7 +426,7 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
                 case VOL_CONSTR:
                     if( pm.Vuns )
                         Vv += pm.Vuns[j];
-                    if( xVol >= 0 )
+                    if( xVol >= 0. )
                         pm.A[j*pm.N+xVol] = Vv;
                     [[fallthrough]];
                 case VOL_CALC:

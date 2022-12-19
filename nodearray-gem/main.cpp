@@ -12,6 +12,7 @@
 //-------------------------------------------------------------------
 
 #include "m_gem2mt.h"
+#include "GEMS3K/jsonconfig.h"
 
 //---------------------------------------------------------------------------
 // Test of 1D advection (finite difference method provided by Dr. F.Enzmann,
@@ -49,9 +50,8 @@ int main( int argc, char* argv[] )
     if (argc >= 5 )
         vtk_fname = argv[4];
 
-    gems3k_update_loggers( true, "gems3k_logger.log", spdlog::level::info);
-    //auto ar_logger_gems3k = spdlog::get("ipm");
-    //ar_logger_gems3k->set_level(spdlog::level::warn);
+    GemsSettings().gems3k_update_loggers( true, "gems3k_logger.log", spdlog::level::info);
+
 
     try{
 
