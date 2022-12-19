@@ -3,7 +3,7 @@
   "_key" : "series1-ipm",
   "set" : "series1",
   "ipm" : {
-    "ID_key": "Node:0:time:0:dt:0",
+    "ID_key": "Solvus    G  series1     0001 0       500     400     0",
     "pa_PE": 1,
     "PV": 0,
     "PSOL": 0,

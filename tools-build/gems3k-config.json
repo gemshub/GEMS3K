@@ -1,6 +1,6 @@
 {
     "log": {
-        "level": "trace",
+        "level": "info",
         "modules": [
             "gems3k",
             "ipm",
