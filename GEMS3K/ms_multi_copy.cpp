@@ -833,7 +833,7 @@ void TMultiBase::multi_realloc( char PAalp, char PSigm )
         pm.sMod = new char[pm.FIs][8];
         for( ii=0; ii<pm.FIs; ii++)
         {
-            fillValue( pm.sMod[ii], '\0', 8);
+            fillValue( pm.sMod[ii], ' ', 8);
         }
         pm.LsMod = new long int[pm.FIs*3];
         pm.LsMdc = new long int[pm.FIs*3];

@@ -110,12 +110,14 @@ void TNodeArray::freeMemory()
     long int ii;
 
     if( anNodes )
-    { if( NodT0 )
+    {
+        if( NodT0 )
             for(  ii=0; ii<anNodes; ii++ )
                 if( NodT0[ii] )
                     NodT0[ii] = calcNode->databr_free(NodT0[ii]);
         delete[]  NodT0;
         NodT0 = nullptr;
+
         if( NodT1 )
             for(  ii=0; ii<anNodes; ii++ )
                 if( NodT1[ii] )
@@ -152,32 +154,32 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
     int n;
     long int ii;
     bool iRet = true;
-    TNode wrkNode;//( calcNode ); // must be copy TNode internal
+    TNode wrkNode( *calcNode ); // must be copy TNode internal
     DATABRPTR* C0 = pNodT0();
     DATABRPTR* C1 = pNodT1();
     bool* iaN = piaNode();     // indicators for IA in the nodes
 
-    start_node = max( start_node, 0L );
-    end_node = min( end_node, anNodes-1 );
+    start_node = std::max( start_node, 0L );
+    end_node = std::min( end_node, anNodes-1 );
 
 
 #pragma omp parallel shared( C0, C1, iaN, diffile, iRet ) private( wrkNode, n )
     {
-        TNode wrkNode( calcNode ); // must be copy TNode internal
+        TNode wrkNode( *calcNode ); // must be copy TNode internal
         n = omp_get_thread_num();
 #pragma omp for
         for( ii = start_node; ii<= end_node; ii++) // node iteration
         {
-            if( !CalcIPM_Node(  modeParam, wrkNode, ii, C0, C1, iaN, diffile ) )
+            if( !CalcIPM_Node(  modeParam, &wrkNode, ii, C0, C1, iaN, diffile ) )
             {
 #pragma omp atomic write
                 iRet = false;
             }
 
-            //#pragma omp critical
-            //{
-            //  TNode::node_logger->error(" {} -thread did index: {} , n, ii");
-            //}
+//#pragma omp critical
+//            {
+//              TNode::node_logger->error(" {} -thread did index: {} ", n, ii);
+//            }
         }
 
     }

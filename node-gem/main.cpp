@@ -33,6 +33,7 @@
 #include "GEMS3K/v_detail.h"
 #include <ctime>
 #include <memory>
+#include <iostream>
 time_t start,stop;
 
 //The case of data exchange in computer memory
@@ -55,7 +56,7 @@ int main( int argc, char* argv[] )
     //     whose names are given in the ipm_input_system_file_list_name
     if( node->GEM_init( input_system_file_list_name ) )
     {
-          cout << "Error occured during reading the files" << std::endl;
+          std::cout << "Error occured during reading the files" << std::endl;
           return 1;
     }
 
@@ -83,7 +84,7 @@ int main( int argc, char* argv[] )
         mt.aNodeStatusCH[in] = node->GEM_run( false);
         if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )
         {
-              cout << "Error occured during re-calculating equilibrium" ;
+              std::cout << "Error occured during re-calculating equilibrium" ;
               return 5;
         }
 
@@ -128,7 +129,7 @@ int main( int argc, char* argv[] )
           mt.aNodeStatusCH[in] = node->GEM_run( false );
           if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )
           {
-              cout << "Error occured during re-calculating chemical equilibrium" ;
+              std::cout << "Error occured during re-calculating chemical equilibrium" ;
               return 6;
           }
 
@@ -161,9 +162,9 @@ int main( int argc, char* argv[] )
     ICndx[3] = node->IC_name_to_xDB("Mg");
     ICndx[4] = node->IC_name_to_xDB("Cl");
     // Checking indexes
-    cout << "xCa= " << ICndx[0] << " xC=" << ICndx[1] << " xO=" << ICndx[2] << " xMg="
-         << ICndx[3] << " xCl=" << ICndx[4] << endl << " xCalcite=" << xCalcite
-         << " xDolomite=" << xDolomite << " xAq_gen=" << xAq_gen << endl << endl;
+    std::cout << "xCa= " << ICndx[0] << " xC=" << ICndx[1] << " xO=" << ICndx[2] << " xMg="
+         << ICndx[3] << " xCl=" << ICndx[4] << std::endl << " xCalcite=" << xCalcite
+         << " xDolomite=" << xDolomite << " xAq_gen=" << xAq_gen << std::endl << std::endl;
 
     time (&start);
 
@@ -174,9 +175,9 @@ int main( int argc, char* argv[] )
        mt.dt = mt.OneTimeStepRun_CN( dCH->xic, dCH->nICb );   // dCH->nICb-1 no transport of charge
 
        if( it == 0 || (it+1)%100 == 0 ){
-          cout << "Time step: " << it+1 << "  Time, s: " << mt.tm+mt.dt;
-          cout<<"\tdt = " << mt.dt << "[s]" << endl;
-          cout << "Node\tpH\tmCa\tmMg\tmCl\tnCal\tnDol\tAsDol\tSIDol" << endl;
+          std::cout << "Time step: " << it+1 << "  Time, s: " << mt.tm+mt.dt;
+          std::cout<<"\tdt = " << mt.dt << "[s]" << std::endl;
+          std::cout << "Node\tpH\tmCa\tmMg\tmCl\tnCal\tnDol\tAsDol\tSIDol" << std::endl;
        }
        // Chemical equilibration loop over nodes
        for( in=0; in< mt.nNodes; in++ )
@@ -199,15 +200,15 @@ int main( int argc, char* argv[] )
           if( ( mt.aNodeStatusCH[in] == ERR_GEM_AIA || mt.aNodeStatusCH[in] == ERR_GEM_SIA ||
                         mt.aNodeStatusCH[in] ==  T_ERROR_GEM ) )
           {
-              cout << "Error: GEM calculation results are not retrieved: time step "
-                 << it << " node " << in << endl;
+              std::cout << "Error: GEM calculation results are not retrieved: time step "
+                 << it << " node " << in << std::endl;
           }
           else
           {
             if( ( mt.aNodeStatusCH[in] == BAD_GEM_AIA || mt.aNodeStatusCH[in] == BAD_GEM_SIA  ) )
             {
-               cout << "Bad quality of GEM solution, but GEM results retrieved: time step "
-               << it << " node " << in << endl;
+               std::cout << "Bad quality of GEM solution, but GEM results retrieved: time step "
+               << it << " node " << in << std::endl;
             }              
             else { // (7) Extracting GEMIPM output data to FMT part
                node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],
@@ -224,7 +225,7 @@ int main( int argc, char* argv[] )
           //  to monitor the coupled simulation or collect results. Here, output every 10-th time step.
           if( it == 0 || (it+1)%100 == 0 )
           {
-            cout << in << fixed << setprecision(7) <<
+            std::cout << in << fixed << setprecision(7) <<
                   "\t" << mt.apH[in] <<
                   "\t" << mt.abPS[in][ICndx[0]] <<
                   "\t" << mt.abPS[in][ICndx[3]] <<
@@ -232,7 +233,7 @@ int main( int argc, char* argv[] )
                   "\t" << mt.axPH[in][xCalcite] <<
                   "\t" << mt.axPH[in][xDolomite] <<
                   "\t" << mt.aaPH[in][xDolomite] <<  // aaPH
-            "\t" << node->Ph_SatInd( xDolomite ) << endl;
+            "\t" << node->Ph_SatInd( xDolomite ) << std::endl;
           }
       }
       mt.tm += mt.dt;
@@ -400,7 +401,7 @@ double TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
     // calculate dt
     double dt = k*dx/v;
     // and print dt into the output file
-    // cout<<"\tdt = " << dt << "[s]" << endl;
+    // std::cout<<"\tdt = " << dt << "[s]" << std::endl;
 
     //Finite difference approximation for the equation dc/dt + v*dc/dx = 0
     // explicit time, left spatial derivative
