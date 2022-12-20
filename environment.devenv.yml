@@ -1,13 +1,16 @@
 name: GEMS3K
 
+channels:
+  - conda-forge
+
 dependencies:
-  - gxx_linux-64=9.4.0  # [linux]
+  - gxx_linux-64  # [linux]
   - cmake>=3.13
   - ninja
   - git
   - ccache  # [unix]
   - nlohmann_json
-  - thermofun=0.4.0
+  - thermofun=0.4.1
 
 environment:
 
