@@ -152,6 +152,9 @@ std::vector<JsonConfigSection> JsonConfigSection::to_vector()
         Error( "to_vector", "Must be array type variable.");
     }
     std::vector<JsonConfigSection> json_as_vector;
+    for (const auto&  element : impl->json_element) {
+        json_as_vector.push_back(JsonConfigSection(JsonConfigSectionImpl(impl->parser,element)));
+    }
     /*std::transform(
                 impl->json_element.begin(),
                 impl->json_element.end(),
