@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <optional>
 #include "v_detail.h"
 
 #ifdef USE_NLOHMANNJSON
