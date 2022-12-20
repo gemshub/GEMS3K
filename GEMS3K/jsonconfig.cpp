@@ -152,12 +152,12 @@ std::vector<JsonConfigSection> JsonConfigSection::to_vector()
         Error( "to_vector", "Must be array type variable.");
     }
     std::vector<JsonConfigSection> json_as_vector;
-    std::transform(
+    /*std::transform(
                 impl->json_element.begin(),
                 impl->json_element.end(),
                 std::back_inserter(json_as_vector),
                 [&](const simdjson::dom::element& item)
-    { return JsonConfigSection(JsonConfigSectionImpl(impl->parser,item)); });
+    { return JsonConfigSection(JsonConfigSectionImpl(impl->parser,item)); });*/
     return json_as_vector;
 }
 
