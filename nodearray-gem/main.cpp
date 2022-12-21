@@ -12,6 +12,7 @@
 //-------------------------------------------------------------------
 
 #include "m_gem2mt.h"
+#include "GEMS3K/jsonconfig.h"
 
 //---------------------------------------------------------------------------
 // Test of 1D advection (finite difference method provided by Dr. F.Enzmann,
@@ -49,9 +50,8 @@ int main( int argc, char* argv[] )
     if (argc >= 5 )
         vtk_fname = argv[4];
 
-    gems3k_update_loggers( true, "gems3k_logger.log", spdlog::level::info);
-    auto ar_logger_gems3k = spdlog::get("ipm");
-    ar_logger_gems3k->set_level(spdlog::level::warn);
+    GemsSettings().gems3k_update_loggers( true, "gems3k_logger.log", spdlog::level::info);
+
 
     try{
 
@@ -59,7 +59,8 @@ int main( int argc, char* argv[] )
             Error( "Start task", "No inital files");
 
         // The NodeArray must be allocated here
-        TGEM2MT::pm = new TGEM2MT( 0 );
+        std::shared_ptr<TGEM2MT> mt_task( new TGEM2MT( 0 ));
+        TGEM2MT::pm = mt_task.get();
 
         // Here we read the GEM2MT structure, prepared from GEMS or by hand
         if( TGEM2MT::pm->ReadTask( gem2mt_in1.c_str(), vtk_fname.c_str() ))

@@ -50,7 +50,7 @@
 #include <iomanip>
 #include <memory>
 #include "nodearray.h"
-#include "v_detail.h"
+#include "jsonconfig.h"
 #include "v_service.h"
 #include "args_tool.h"
 
@@ -94,9 +94,8 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
 #endif
 #endif
 
-    gems3k_update_loggers( true, "gems3k_logger.log", spdlog::level::debug);
-    auto ar_logger_gems3k = spdlog::get("ipm");
-    ar_logger_gems3k->set_level(spdlog::level::info);
+    // Read config file
+    gemsSettings();
 
     try{
         std::string input_lst_path;

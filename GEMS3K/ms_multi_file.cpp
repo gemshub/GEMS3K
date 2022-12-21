@@ -1092,7 +1092,7 @@ void TMultiBase::to_text_file( const char *path, bool append )
 
   if( append )
    prar.writeComment( true,"\nNext record" );
-  prar.writeComment( true, std::string(pm.stkey)+"\n" );
+  prar.writeComment( true, char_array_to_string(pm.stkey, EQ_RKLEN)+"\n" );
   //  TProfil::pm->pa.p.write(ff);
 
   prar.writeArray( "Short_PARAM",  &base_param()->PC, 10L );

@@ -27,13 +27,15 @@
 #define V_SERVICE_H
 
 #include <string>
+#include <vector>
 #include <algorithm>
 
-std::string char_array_to_string(const char* data_ptr, size_t max_size) ;
-void strip( std::string& str);
-void replace( std::string& str, const char* old_part, const char* new_part );
-void replaceall( std::string& str, const std::string& old_part, const std::string& new_part );
+std::string char_array_to_string(const char* data_ptr, size_t max_size);
+void strip(std::string& str);
+void replace(std::string& str, const char* old_part, const char* new_part);
+void replaceall(std::string& str, const std::string& old_part, const std::string& new_part);
 void replaceall(std::string& str, char ch1, char ch2);
+std::vector<std::string> split(const std::string& str, const std::string& delimiters);
 
 //// Extract the string value from data.
 std::string regexp_extract_string( std::string regstr, std::string data );

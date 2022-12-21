@@ -11,8 +11,13 @@ CONFIG += warn_on
 CONFIG += debug
 #CONFIG += windows
 CONFIG += console
+CONFIG += c++17
 
 #DEFINES += NODEARRAYLEVEL
+#DEFINES += USE_NLOHMANNJSON
+DEFINES += USE_THERMOFUN
+DEFINES += USE_THERMO_LOG
+DEFINES += OVERFLOW_EXCEPT  #compile with nan inf exceptions
 
 !win32:DEFINES += __unix
 
@@ -31,6 +36,14 @@ INCLUDEPATH += $$NODE_GEM_H
 INCLUDEPATH += $$GEMS3K_H
 
 OBJECTS_DIR = obj
+
+contains(DEFINES, USE_THERMOFUN) {
+
+LIBS += -lThermoFun -lChemicalFun
+
+} ## end USE_THERMOFUN
+
+
 
 include($$NODE_GEM_CPP/node-gem.pri)
 include($$GEMS3K_CPP/gems3k.pri) 

@@ -1716,12 +1716,12 @@ void TMultiBase::Reset_uDD( long int nr, bool trace )
     if ( trace )
     {
         ipm_logger->info("UD3 trace: {}  SIA={}  Itr   C_D:  {}",
-                          pm.stkey, pm.pNP, char_array_to_string(pm.SB1[0],MAXICNAME));
+                          char_array_to_string(pm.stkey, EQ_RKLEN), pm.pNP, char_array_to_string(pm.SB1[0],MAXICNAME));
     }
     if( base_param()->PSM >= 3 )
     {
       TNode::ipmlog_file->info(" UD3 trace: {}  SIA= {} Itr   C_D: {}",
-                              pm.stkey, pm.pNP, char_array_to_string(pm.SB1[0],MAXICNAME));
+                           char_array_to_string(pm.stkey, EQ_RKLEN), pm.pNP, char_array_to_string(pm.SB1[0],MAXICNAME));
     }
 }
 
