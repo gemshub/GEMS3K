@@ -1,39 +1,62 @@
 #!/bin/bash
 # Installing dependencies needed to build thermofun on (k)ubuntu linux 20.04
 
+
+# Check USE_THERMOFUN mode install dependecy
+
+
 if [ "$(uname)" == "Darwin" ]; then
 
     # Do under Mac OS X platform
     #Needs Xcode and ArangoDB server locally installed
     brew upgrade
     brew install cmake
-    brew install spdlog
-
     EXTN=dylib
 
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
 
     #Needs gcc v.5 or higher and ArangoDB server locally installed
     sudo apt-get update
-    sudo apt-get install libspdlog-dev
-    #sudo apt-get install libeigen3-dev
-    #sudo ln -s /usr/include/eigen3/Eigen /usr/include/Eigen
-    #sudo apt-get install pybind11-dev
-    #sudo apt-get install libspdlog-dev
-
     EXTN=so
 fi
 
-# Uncomment what is necessary to reinstall by force 
-#sudo rm -f /usr/local/include/nlohmann/json.hpp
-#sudo rm -rf /usr/local/include/eigen3/Eigen
-#sudo rm -rf /usr/local/include/pybind11
-#sudo rm -f /usr/local/lib/libChemicalFun.$EXTN
-#sudo rm -f /usr/local/lib/libThermoFun.$EXTN
 
 threads=3
-BRANCH_TFUN=master
 git status
+USING_THERMOFUN_MODE=$1
+BRANCH_TFUN=spdlog-221
+
+
+# Temporarily uncomment rows for packages that need to be re-installed
+#sudo rm -rf /usr/local/include/nlohmann
+#sudo rm -rf /usr/local/include/eigen3/Eigen/Eigen
+#sudo rm -rf /usr/local/include/pybind11
+#sudo rm -rf /usr/local/include/spdlog
+sudo rm -f  /usr/local/lib/libChemicalFun.$EXTN
+sudo rm -f  /usr/local/lib/libThermoFun.$EXTN
+
+# spdlog
+# if no spdlog installed in /usr/local/include/spdlog (copy only headers)
+test -d /usr/local/include/spdlog || {
+
+        # Building spdlog library
+        mkdir -p ~/code && \
+                cd ~/code && \
+                git clone https://github.com/gabime/spdlog -b v1.11.0  && \
+                cd spdlog/include && \
+                sudo cp -r spdlog /usr/local/include
+
+        # Removing generated build files
+        cd ~ && \
+                 rm -rf ~/code
+}
+
+
+if [ "$USING_THERMOFUN_MODE" == "NO_THERMOFUN" ];
+  then
+    echo "Using without ThermoFun calculations"
+
+  else
 
 # nlohmann/json
 test -f /usr/local/include/nlohmann/json.hpp || {
@@ -45,7 +68,7 @@ test -f /usr/local/include/nlohmann/json.hpp || {
         cd json && \
         mkdir -p build && \
         cd build && \
-        cmake .. -DJSON_BuildTests=OFF && \
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DJSON_BuildTests=OFF -DJSON_MultipleHeaders=ON && \
         make && \
         sudo make install
 
@@ -54,24 +77,24 @@ test -f /usr/local/include/nlohmann/json.hpp || {
         rm -rf ~/code
 }
 
-
 # Eigen3 math library (added for building and installing xGEMS)
 # if not installed in /usr/local/include/eigen3)
 test -d /usr/local/include/eigen3/Eigen || {
 
-       # Downloading and unpacking eigen3 source code into ~/code/eigen
-       mkdir -p ~/code && \
-       cd ~/code && \
-       git clone https://gitlab.com/libeigen/eigen.git -b before-git-migration && \
-       cd eigen && \
-       mkdir -p build && \
-       cd build && \
-       cmake .. && \
-       sudo make install
+        # Building eigen library
+        mkdir -p ~/code && \
+                cd ~/code && \
+                git clone https://gitlab.com/libeigen/eigen.git -b 3.4.0 && \
+                cd eigen && \
+                mkdir -p build && \
+                cd build && \
+                cmake .. \
+                make && \
+                sudo make install
 
-       # Removing generated build files
-       cd ~ && \
-       rm -rf ~/code
+        # Removing generated build files
+        cd ~ && \
+                 rm -rf ~/code
 }
 
 #Pybind11
@@ -104,7 +127,7 @@ test -f /usr/local/lib/libChemicalFun.$EXTN || {
         cd chemicalfun && \
         mkdir -p build && \
         cd build && \
-        cmake .. -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DTFUN_BUILD_PYTHON=OFF && \
+        cmake .. -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_BUILD_TYPE=$BUILD_TYPE  && \
         make -j $threads && \
         sudo make install
 
@@ -133,6 +156,9 @@ test -f /usr/local/lib/libThermoFun.$EXTN || {
 	cd ~ && \
         rm -rf ~/code
 }
+
+fi
+
 
 if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
    sudo ldconfig

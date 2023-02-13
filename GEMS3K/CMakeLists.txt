@@ -8,9 +8,7 @@ file(GLOB SOURCE_FILES *.cpp)
 #file(GLOB SIMDJSON_FILES ${CMAKE_SOURCE_DIR}/simdjson/simdjson.cpp)
 
 # Compile the C++ source code into object files
-add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES}  )
-
-target_compile_definitions(GEMS3K_OBJECT PUBLIC -DSPDLOG_FMT_EXTERNAL=yes)
+add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES})
 
 # Check if a shared library is to be built
 if(BUILD_SHARED_LIBS)
@@ -20,6 +18,11 @@ if(BUILD_SHARED_LIBS)
     set_target_properties(GEMS3K_SHARED PROPERTIES OUTPUT_NAME GEMS3K)
     if(USE_THERMOFUN MATCHES ON)
       target_link_libraries(GEMS3K_SHARED PUBLIC ThermoFun::ThermoFun)
+    else()
+      if(USE_SPDLOG_PRECOMPILED)
+         target_compile_definitions(GEMS3K_SHARED PUBLIC USE_SPDLOG_PRECOMPILED)
+         target_link_libraries(GEMS3K_SHARED PUBLIC spdlog::spdlog)
+      endif()
     endif()
     install( TARGETS GEMS3K_SHARED
              EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
@@ -32,6 +35,11 @@ if(BUILD_STATIC_LIBS)
    set_target_properties(GEMS3K_STATIC PROPERTIES OUTPUT_NAME GEMS3K-static)
    if(USE_THERMOFUN MATCHES ON)
      target_link_libraries(GEMS3K_STATIC PUBLIC ThermoFun::ThermoFun)
+   else()
+      if(USE_SPDLOG_PRECOMPILED)
+         target_compile_definitions(GEMS3K_STATIC PUBLIC USE_SPDLOG_PRECOMPILED)
+         target_link_libraries(GEMS3K_STATIC PUBLIC spdlog::spdlog)
+      endif()
    endif()
    install( TARGETS GEMS3K_STATIC
            EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
