@@ -20,26 +20,20 @@ add_library(GEM2MT_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES})
 if(BUILD_SHARED_LIBS)
     # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-    add_library(GEM2MT_SHARED SHARED $<TARGET_OBJECTS:GEM2MT_OBJECT>)
-    set_target_properties(GEM2MT_SHARED PROPERTIES OUTPUT_NAME GEM2MT)
-    target_link_libraries(GEM2MT_SHARED PUBLIC GEMS3K)
-    #if(USE_THERMOFUN MATCHES ON)
-    #  target_link_libraries(GEM2MT_SHARED PUBLIC ThermoFun::ThermoFun)
-    #endif()
-    install( TARGETS GEM2MT_SHARED
+    add_library(GEM2MT SHARED $<TARGET_OBJECTS:GEM2MT_OBJECT>)
+    add_library(GEMS3K::GEM2MT ALIAS GEM2MT)
+    target_link_libraries(GEM2MT PUBLIC GEMS3K)
+    install( TARGETS GEM2MT
              EXPORT GEM2MTTargets DESTINATION "lib" COMPONENT libraries)
 endif()
 
 
 # Check if a static library is to be built
 if(BUILD_STATIC_LIBS)
-   add_library(GEM2MT_STATIC STATIC $<TARGET_OBJECTS:GEM2MT_OBJECT>)
-   set_target_properties(GEM2MT_STATIC PROPERTIES OUTPUT_NAME GEM2MT-static)
-   target_link_libraries(GEM2MT_STATIC PUBLIC GEMS3K-static)
-   #if(USE_THERMOFUN MATCHES ON)
-   #  target_link_libraries(GEM2MT_STATIC PUBLIC ThermoFun::ThermoFun)
-   #endif()
-   install( TARGETS GEM2MT_STATIC
+   add_library(GEM2MT-static STATIC $<TARGET_OBJECTS:GEM2MT_OBJECT>)
+   add_library(GEMS3K::GEM2MT-static ALIAS GEM2MT-static)
+   target_link_libraries(GEM2MT-static PUBLIC GEMS3K-static)
+   install( TARGETS GEM2MT-static
            EXPORT GEM2MTTargets DESTINATION "lib" COMPONENT libraries)
 endif()
 
@@ -47,7 +41,7 @@ endif()
 # Install debug symbols
 if(MSVC)
     install(
-        FILES $<TARGET_PDB_FILE:GEM2MT_SHARED>
+        FILES $<TARGET_PDB_FILE:GEM2MT>
         DESTINATION ${CMAKE_INSTALL_BINDIR}
         COMPONENT libraries
         OPTIONAL
