@@ -42,7 +42,7 @@ option(BUILD_STATIC_LIBS "Build static libraries." ON)
 option(USE_THERMOFUN "Use ThermoFun" ON)
 option(BUILD_GEM2MT "Install GEM2MT lib." ON)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
-option(BUILD_TOOLS "Build tools" ON)
+option(BUILD_TOOLS "Build tools" OFF)
 
 # Used into conda only
 if(DEFINED ENV{CONDA_PREFIX})
