@@ -40,7 +40,7 @@ endif()
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
 option(USE_THERMOFUN "Use ThermoFun" ON)
-option(BUILD_GEM2MT "Install GEM2MT lib." OFF)
+option(BUILD_GEM2MT "Install GEM2MT lib." ON)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
 option(BUILD_TOOLS "Build tools" ON)
 
@@ -121,6 +121,7 @@ link_directories(${CMAKE_BINARY_DIR}/lib)
 
 if(BUILD_GEM2MT MATCHES ON)
     add_subdirectory(nodearray-gem)
+    link_directories(${CMAKE_BINARY_DIR}/nodearray-gem)
 endif()
 
 if(BUILD_TOOLS)
