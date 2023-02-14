@@ -25,6 +25,14 @@ if(BUILD_SHARED_LIBS)
     target_link_libraries(GEM2MT PUBLIC GEMS3K::GEMS3K)
     install( TARGETS GEM2MT
              EXPORT GEM2MTTargets DESTINATION "lib" COMPONENT libraries)
+    # Install debug symbols
+    if(MSVC)
+       install(
+          FILES $<TARGET_PDB_FILE:GEM2MT>
+          DESTINATION ${CMAKE_INSTALL_BINDIR}
+          COMPONENT libraries
+          OPTIONAL )
+    endif()
 endif()
 
 
@@ -35,17 +43,6 @@ if(BUILD_STATIC_LIBS)
    target_link_libraries(GEM2MT-static PUBLIC GEMS3K::GEMS3K-static)
    install( TARGETS GEM2MT-static
            EXPORT GEM2MTTargets DESTINATION "lib" COMPONENT libraries)
-endif()
-
-
-# Install debug symbols
-if(MSVC)
-    install(
-        FILES $<TARGET_PDB_FILE:GEM2MT>
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
-        COMPONENT libraries
-        OPTIONAL
-    )
 endif()
 
 # Create an install target for the header files

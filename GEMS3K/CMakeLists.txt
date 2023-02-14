@@ -32,6 +32,15 @@ if(BUILD_SHARED_LIBS)
     endif()
     install( TARGETS GEMS3K
              EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
+
+    # Install debug symbols
+    if(MSVC)
+    install(
+        FILES $<TARGET_PDB_FILE:GEMS3K>
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        COMPONENT libraries
+        OPTIONAL)
+    endif()
 endif()
 
 # Check if a static library is to be built
@@ -50,15 +59,7 @@ if(BUILD_STATIC_LIBS)
            EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
 endif()
 
-# Install debug symbols
-if(MSVC)
-    install(
-        FILES $<TARGET_PDB_FILE:GEMS3K>
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
-        COMPONENT libraries
-        OPTIONAL
-    )
-endif()
+
 
 # Install GEMS3K header files
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/GEMS3K
