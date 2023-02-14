@@ -103,9 +103,9 @@ public:
     /// Reads strings array from a text file.
     void read_strings_array( const std::string& field_name, char* arr, long int size, long int el_size );
     /// Reads double vector from a text file.
-    void read_array( const std::string& name, std::vector<double>& arr );
+    void read_double_array( const std::string& name, std::vector<double>& arr );
     /// Reads int vector from a text file.
-    void read_array(const std::string &field_name, std::vector<int64_t>& arr);
+    void read_int_array(const std::string &field_name, std::vector<int64_t>& arr);
 
 protected:
 
@@ -143,7 +143,7 @@ void SimdJsonImpl::read_strings_array(const std::string &field_name, char *arr, 
     }
 }
 
-void SimdJsonImpl::read_array(const std::string &field_name, std::vector<double>& arr)
+void SimdJsonImpl::read_double_array(const std::string &field_name, std::vector<double>& arr)
 {
     try {
         arr.clear();
@@ -167,7 +167,7 @@ void SimdJsonImpl::read_array(const std::string &field_name, std::vector<double>
     }
 }
 
-void SimdJsonImpl::read_array(const std::string &field_name, std::vector<int64_t>& arr)
+void SimdJsonImpl::read_int_array(const std::string &field_name, std::vector<int64_t>& arr)
 {
     try {
         arr.clear();
@@ -224,14 +224,14 @@ void SimdJsonRead::read_strings_array(const std::string &field_name, char *arr, 
     impl->read_strings_array(field_name, arr, size, el_size );
 }
 
-void SimdJsonRead::read_array(const std::string &field_name, std::vector<double>& arr)
+void SimdJsonRead::read_double_array(const std::string &field_name, std::vector<double>& arr)
 {
-    impl->read_array( field_name, arr);
+    impl->read_double_array( field_name, arr);
 }
 
-void SimdJsonRead::read_array(const std::string &field_name, std::vector<int64_t>& arr)
+void SimdJsonRead::read_int_array(const std::string &field_name, std::vector<int64_t>& arr)
 {
-    impl->read_array( field_name, arr);
+    impl->read_int_array( field_name, arr);
 }
 
 template <> float SimdJsonRead::internal_cast( double value )

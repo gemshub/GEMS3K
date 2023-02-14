@@ -186,7 +186,7 @@ protected:
     std::string ipmfiles_lst_name;
 
     /// Number of allocated nodes
-    long int nIV = 1;
+    size_t nIV = 1;
 
     /// Write IPM, DCH and DBR files in binary, txt or json mode)
     IOModes io_mode = f_json;

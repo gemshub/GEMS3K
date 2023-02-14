@@ -178,7 +178,7 @@ T string_to_floating_point( const std::string& value_str )
     else if( value_str == "nan" )
         value = Nan<T>();
     else
-        value = std::stod( value_str.c_str() );
+        value = static_cast<T>(std::stod(value_str.c_str()));
 
     return value;
 }
