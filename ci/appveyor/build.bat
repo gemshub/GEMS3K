@@ -7,7 +7,7 @@ if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" (
 )
 
 echo "Configuring..."
-cmake -G"Visual Studio 15 2017" -A x64 -S . -B build
+cmake -G"Visual Studio 15 2017" -A x64 -S .  -DBUILD_SHARED_LIBS=OFF -B build
 echo "Building..."
 cmake --build build --config %CONFIGURATION% --target install
 if errorlevel 1 exit 1
