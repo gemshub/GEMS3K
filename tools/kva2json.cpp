@@ -12,7 +12,7 @@
 // can be used for tuning up numerical controls of GEM IPM-3 algorithm
 // and for setting up the parameters of non-ideal mixing models.
 //
-// Copyright (C) 2007-2012 D.Kulik, S.Dmytriyeva
+// Copyright (C) 2007-2023 D.Kulik, S.Dmytriyeva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -231,7 +231,7 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path,
         std::string arg = argv[i];
         if ((arg == "-h") || (arg == "--help"))
         {
-            show_usage( "kva2json" );;
+            show_usage( "kva2json" );
             return 1;
         }
         else if ((arg == "-j") || (arg == "--json"))
@@ -292,7 +292,9 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path,
             }
         }
     }
-    if( input_lst_path.empty() || export_data.ipmfiles_lst_name.empty() )
+    if( input_lst_path.empty() || export_data.ipmfiles_lst_name.empty() ) {
+        std::cerr << "undefined LST_IMPORT file path" << std::endl;
         return 1;
+    }
     return 0;
 }
