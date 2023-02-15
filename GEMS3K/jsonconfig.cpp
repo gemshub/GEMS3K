@@ -18,7 +18,7 @@ JsonConfigSection::JsonConfigSection(const std::string &filename)
     }
     else {
        input_str = "{}";
-       gems_logger->debug("Configuration file {} does not exist.", filename);
+       gems_logger->debug( "Configuration file {} does not exist.", filename);
     }
     obj_json = nlohmann::json::parse(input_str);
 }
