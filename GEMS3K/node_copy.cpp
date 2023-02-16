@@ -1186,7 +1186,7 @@ bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
 
 #ifdef USE_THERMOFUN
     thermo_engine.reset(new ThermoFun::ThermoEngine(thermo_file_or_string));
-    node_logger->trace("Read ThermoEngine: {}", thermo_file_or_string);
+    node_logger->debug("Read ThermoEngine: {}", thermo_file_or_string);
     return true;
 #else
     node_logger->warn("Try read ThermoEngine not in USE_THERMOFUN mode {}", thermo_file_or_string);

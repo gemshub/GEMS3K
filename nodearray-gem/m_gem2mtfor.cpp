@@ -21,7 +21,7 @@ extern const char* _GEMIPM_version_stamp;
 
 //=============================================================
 
-io_formats::outField GEM2MT_static_fields[57] =  {
+std::vector<io_formats::outField> GEM2MT_static_fields =  {  //57
     // Allocation and setup flags
      { "PvPGD" , 1, 0, 0, "# PvPGD: Use mobile phase groups definitions (+ -)" },
      { "PvFDL" , 1, 0, 0, "# PvFDL: Use MGP flux definition list (+ -)" },
@@ -85,7 +85,7 @@ io_formats::outField GEM2MT_static_fields[57] =  {
     { "mtWrkF" , 0 , 0, 0, "# mtWrkF: internal" }
 };
 
-io_formats::outField GEM2MT_dynamic_fields[26] =
+std::vector<io_formats::outField> GEM2MT_dynamic_fields = //26
 {  // write/read dynamic (array) data to/from the text-format IPM file
    {  "SDref",  0, 0, 0, "# SDref: List of SDref keys to data sources " },
    {  "SDval",  0, 0, 0, "# SDval: List of short comments to SDref  record keys in the GSDref list " },

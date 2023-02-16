@@ -79,21 +79,21 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 endif()
 
 # test thread safe
-#set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
-#set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=thread")
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
+set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=thread")
 
 # Set the source directory path
 set(GEMS3K_SOURCE_DIR ${CMAKE_SOURCE_DIR}/GEMS3K)
 set(GEMS3K_HEADER_DIR ${CMAKE_SOURCE_DIR}/GEMS3K)
 
-# Set the include directories
-include_directories(${GEMS3K_HEADER_DIR})
-include_directories(${CMAKE_SOURCE_DIR})
-
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     include_directories("/usr/local/include")
     link_directories("/usr/local/lib")
 endif()
+
+# Set the include directories
+include_directories(${GEMS3K_HEADER_DIR})
+include_directories(${CMAKE_SOURCE_DIR})
 
 # Find all GEMS3K dependencies
 include(GEMS3KFindDeps)

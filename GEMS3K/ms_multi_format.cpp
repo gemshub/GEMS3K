@@ -56,7 +56,7 @@ const double R_CONSTANT = 8.31451,
 // the text of the comment for this data object, optionally written into the
 // text-format output IPM file.
 //
-io_formats::outField MULTI_static_fields[8] =  {
+std::vector<io_formats::outField> MULTI_static_fields =  {  //8
     { "pa_PE" , 0 , 0, 0, "# PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)" },
     { "PV" ,    0 , 0, 0, "# PV: Flag for the volume balance constraint (on Vol IC) for indifferent equilibria at P_Sat (0 or 1)" },
     { "PSOL" ,  0 , 0, 0, "# PSOL: Total number of DCs in liquid hydrocarbon phases (0; reserved)" },
@@ -67,7 +67,7 @@ io_formats::outField MULTI_static_fields[8] =  {
     { "FIat" ,  0 , 0, 0, "# FIat: Maximum number of surface types per adsorption phase (if FIa > 0, set FIat = 6)" }
 };
 
-io_formats::outField MULTI_dynamic_fields[80] =  {
+std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     // write/read dynamic (array) data to/from the text-format IPM file
     {  "sMod",  1 , 0, 0, "# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*8]" },
     {  "LsMod", 1 , 0, 0, "\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"

@@ -95,7 +95,7 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
 #endif
 
     // Read config file
-    gemsSettings();
+    gemsSettings().gems3k_update_loggers(true, "", 1);
 
     try{
         std::string input_lst_path;
@@ -184,6 +184,7 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
             }
         }
 
+        fclose (diffile);
         return 0;
     }
     catch(TError& err)

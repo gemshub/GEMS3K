@@ -59,7 +59,8 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
 #endif
 
     //Read config file
-    gemsSettings();
+    //gemsSettings();
+    gemsSettings().gems3k_update_loggers(true, "test.log", 3);
 
     try{
         size_t lst_count = 0;
