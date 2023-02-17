@@ -1,4 +1,4 @@
-
+#include <iostream>
 #include <fstream>
 #include "jsonconfig.h"
 #include "v_service.h"
@@ -331,9 +331,9 @@ bool GemsSettings::update_logger()
     return true;
 }
 
-
 void GemsSettings::gems3k_update_loggers( bool use_stdout, const std::string& logfile_name, size_t log_level)
 {
+
     spdlog::level::level_enum log_lev = spdlog::level::info;
     if( log_level<7 ) {
         log_lev = static_cast<spdlog::level::level_enum>(log_level);
@@ -348,7 +348,12 @@ void GemsSettings::gems3k_update_loggers( bool use_stdout, const std::string& lo
     }
 
     for(const auto& logger_name: gems3k_loggers) {
+
         auto logger = spdlog::get(logger_name);
+        if(!logger) {
+           std::cout <<  logger_name << " logger not connected" << std::endl;
+           continue;
+        }
         logger->sinks().clear();
         if(use_stdout) {
             logger->sinks().push_back(stdout_sink);

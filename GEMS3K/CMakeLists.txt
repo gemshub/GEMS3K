@@ -16,6 +16,7 @@ if(USE_SPDLOG_PRECOMPILED)
    endif()
 endif()
 
+
 # Check if a shared library is to be built
 if(BUILD_SHARED_LIBS)
     # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
@@ -23,6 +24,7 @@ if(BUILD_SHARED_LIBS)
     add_library(GEMS3K SHARED $<TARGET_OBJECTS:GEMS3K_OBJECT>)
     add_library(GEMS3K::GEMS3K ALIAS GEMS3K)
     if(USE_THERMOFUN MATCHES ON)
+      target_compile_definitions(GEMS3K PUBLIC USE_SPDLOG_PRECOMPILED)
       target_link_libraries(GEMS3K PUBLIC ThermoFun::ThermoFun)
     else()
       if(USE_SPDLOG_PRECOMPILED)
