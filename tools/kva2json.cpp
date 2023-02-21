@@ -78,6 +78,8 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, std::stri
 // -j -c -i Neutral-fun/Neutral-dat.lst -e Neutral-fun-out/Neutral-dat.lst
 // -j -c -i Neutral-old/Neutral-dat.lst -e Neutral-old-out/Neutral-dat.lst
 
+// -j -c -i CemGEMS-formatted/CemHyds-dat.lst -e CemGEMS-out/CemHyds-dat.lst
+
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
 {

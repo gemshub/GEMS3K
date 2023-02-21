@@ -32,8 +32,8 @@ BRANCH_TFUN=spdlog-221
 #sudo rm -rf /usr/local/include/eigen3/Eigen/Eigen
 #sudo rm -rf /usr/local/include/pybind11
 #sudo rm -rf /usr/local/include/spdlog
-sudo rm -f  /usr/local/lib/libChemicalFun.$EXTN
-sudo rm -f  /usr/local/lib/libThermoFun.$EXTN
+#sudo rm -f  /usr/local/lib/libChemicalFun.$EXTN
+#sudo rm -f  /usr/local/lib/libThermoFun.$EXTN
 
 # spdlog
 # if no spdlog installed in /usr/local/include/spdlog (copy only headers)
