@@ -15,6 +15,7 @@ JsonConfigSection::JsonConfigSection(const std::string &filename)
     std::stringstream buffer;
     buffer << f_json.rdbuf();
     input_str = buffer.str();
+    gems_logger->info( "The configuration file {} has been read.", filename);
     }
     else {
        input_str = "{}";
