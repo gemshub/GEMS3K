@@ -429,7 +429,7 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json,
 
         // Creating and initializing the TActivity class instance for this TNode instance
         init_into_gems3k();
-        node_logger->info("Initialization of system {}", std::string(pmm->stkey, 0, EQ_RKLEN));
+        node_logger->info("Initialization of system {}", char_array_to_string(pmm->stkey,EQ_RKLEN));
 
         return 0;
     }
@@ -1186,7 +1186,7 @@ bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
 
 #ifdef USE_THERMOFUN
     thermo_engine.reset(new ThermoFun::ThermoEngine(thermo_file_or_string));
-    node_logger->debug("Read ThermoEngine: {}", thermo_file_or_string);
+    node_logger->trace("Read ThermoEngine: {}", thermo_file_or_string);
     return true;
 #else
     node_logger->warn("Try read ThermoEngine not in USE_THERMOFUN mode {}", thermo_file_or_string);

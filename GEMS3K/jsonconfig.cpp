@@ -109,6 +109,7 @@ JsonConfigSection::JsonConfigSection(const std::string &filename)
     std::stringstream buffer;
     buffer << f_json.rdbuf();
     input_str = buffer.str();
+    gems_logger->info( "The configuration file {} has been read.", filename);
     }
     else {
        input_str = "{}";
@@ -349,7 +350,6 @@ void GemsSettings::gems3k_update_loggers( bool use_stdout, const std::string& lo
     }
 
     for(const auto& logger_name: gems3k_loggers) {
-
         auto logger = spdlog::get(logger_name);
         if(!logger) {
            std::cout <<  logger_name << " logger not connected" << std::endl;

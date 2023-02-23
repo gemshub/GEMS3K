@@ -31,7 +31,7 @@
 #include "io_keyvalue.h"
 #include "ms_multi.h"
 
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.9.5 c.6dae7a9";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.9.6 c.7550f90";  // interim version, need merge for release v.4.0.0
 
 const double R_CONSTANT = 8.31451,
               NA_CONSTANT = 6.0221367e23,
