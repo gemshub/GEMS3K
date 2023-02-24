@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <optional>
+#include <algorithm>
 #include "v_detail.h"
 
 #ifdef USE_NLOHMANNJSON

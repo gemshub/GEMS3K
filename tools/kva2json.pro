@@ -7,10 +7,10 @@ TARGET = kva2json
 VERSION = 3.4.6
 
 CONFIG -= qt
-CONFIG -= warn_on
-CONFIG += debug
-CONFIG += console
+CONFIG += warn_on
+CONFIG += thread console
 CONFIG += c++17
+CONFIG += sanitaze sanitaze_thread
 
 DEFINES += NODEARRAYLEVEL
 #DEFINES += USE_NLOHMANNJSON
@@ -60,3 +60,4 @@ include($$GEMS3K_CPP/gems3k.pri)
 HEADERS   +=   args_tool.h
 SOURCES   +=   kva2json.cpp
 
+#SOURCES   +=   thread_test.cpp

@@ -206,7 +206,7 @@ public:
     {
         std::string msg;
         std::vector<int64_t> js_arr;
-        read_array( field_name, js_arr );
+        read_int_array( field_name, js_arr );
 
         ErrorIf( static_cast<size_t>(size) > js_arr.size(), std::string("SimdJson read error :"),
                  "illegal array size "+ field_name );
@@ -224,7 +224,7 @@ public:
     {
         std::string msg;
         std::vector<double> js_arr;
-        read_array( field_name, js_arr );
+        read_double_array( field_name, js_arr );
 
         ErrorIf( static_cast<size_t>(size) > js_arr.size(), std::string("SimdJson read error :"),
                  "illegal array size "+ field_name );
@@ -238,9 +238,9 @@ public:
     /// Reads strings array from a text file.
     void read_strings_array( const std::string& field_name, char* arr, long int size, long int el_size );
     /// Reads double vector from a text file.
-    void read_array( const std::string& name, std::vector<double>& arr );
+    void read_double_array( const std::string& name, std::vector<double>& arr );
     /// Reads int vector from a text file.
-    void read_array(const std::string &field_name, std::vector<int64_t>& arr);
+    void read_int_array(const std::string &field_name, std::vector<int64_t>& arr);
 
     /// Empty function
     bool skip_line() { return false; }

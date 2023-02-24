@@ -761,7 +761,6 @@ TMultiBase::GouyChapman(  long int, long int, long int k )
 
         // SD: workaround because of problems with log argument
         f3 =  sqrt( 1.+Sig*Sig/(4.*A*A) ) - Sig/(2.*A);
-        ipm_logger->trace(" f1={} f2={}", f1, f3);
         if( f3 < 1 )
         {
             f1 = exp( -3. * F2RT );
@@ -772,6 +771,7 @@ TMultiBase::GouyChapman(  long int, long int, long int k )
             f1 = exp( 3. * F2RT );
             if( f3>f1 ) f3 = f1;
         }
+        ipm_logger->trace(" f1={} f2={}", f1, f3);
         PSIo = log(f3)/F2RT;
 //          PSIo = log( sqrt( 1.+Sig*Sig/(4.*A*A) ) - Sig/(2.*A) ) / F2RT;
 //          Cap0 = fabs(Sig/PSIo);

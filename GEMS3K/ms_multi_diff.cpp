@@ -305,7 +305,7 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
     double P = PPa/bar_to_Pa;
     DATACH  *dCH = aNa->pCSD();
 
-    ipm_logger->info("Calc Lookup T: {}  P: {}", TK, PPa);
+//    ipm_logger->info("Calc Lookup T: {}  P: {}", TK, PPa);                 Temporarily disabled 23.Jan.2022
     if( dCH->nTp <1 || dCH->nPp <1 || aNa->check_TP( TK, PPa ) == false )
     {
         Error("load_all_thermodynamic_from_grid: ",

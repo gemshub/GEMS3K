@@ -144,6 +144,7 @@ void TMultiBase::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
 void TMultiBase::set_def( int )
 {
     //mem_cpy( &pm.PunE, "jjbC", 4 );
+    fillValue( pm.stkey, '\0', EQ_RKLEN);
     pm.PunE = 'j';         // Units of energy  { j;  J c C N reserved }
     pm.PunV = 'j';         // Units of volume  { j;  c L a reserved }
     pm.PunP = 'b';        // Units of pressure  { b;  B p P A reserved }
@@ -1088,7 +1089,7 @@ void TMultiBase::to_text_file( const char *path, bool append )
 
   io_formats::KeyValueWrite out_format( ff );
   out_format.put_head( "", "ipm");
-  io_formats::TPrintArrays<io_formats::KeyValueWrite>  prar( 0, nullptr, out_format );
+  io_formats::TPrintArrays<io_formats::KeyValueWrite>  prar( 0, {}, out_format );
 
   if( append )
    prar.writeComment( true,"\nNext record" );

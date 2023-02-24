@@ -1,4 +1,4 @@
-
+#include <iostream>
 #include <fstream>
 #include "jsonconfig.h"
 #include "v_service.h"
@@ -15,10 +15,11 @@ JsonConfigSection::JsonConfigSection(const std::string &filename)
     std::stringstream buffer;
     buffer << f_json.rdbuf();
     input_str = buffer.str();
+    gems_logger->info( "The configuration file {} has been read.", filename);
     }
     else {
        input_str = "{}";
-       gems_logger->warn("Configuration file {} does not exist.", filename);
+       gems_logger->debug( "Configuration file {} does not exist.", filename);
     }
     obj_json = nlohmann::json::parse(input_str);
 }
@@ -108,10 +109,11 @@ JsonConfigSection::JsonConfigSection(const std::string &filename)
     std::stringstream buffer;
     buffer << f_json.rdbuf();
     input_str = buffer.str();
+    gems_logger->info( "The configuration file {} has been read.", filename);
     }
     else {
        input_str = "{}";
-       gems_logger->warn("Configuration file {} does not exist.", filename);
+       gems_logger->debug("Configuration file {} does not exist.", filename);
     }
     impl = std::make_shared<JsonConfigSectionImpl>(input_str);
 }
@@ -331,9 +333,9 @@ bool GemsSettings::update_logger()
     return true;
 }
 
-
 void GemsSettings::gems3k_update_loggers( bool use_stdout, const std::string& logfile_name, size_t log_level)
 {
+
     spdlog::level::level_enum log_lev = spdlog::level::info;
     if( log_level<7 ) {
         log_lev = static_cast<spdlog::level::level_enum>(log_level);
@@ -349,6 +351,10 @@ void GemsSettings::gems3k_update_loggers( bool use_stdout, const std::string& lo
 
     for(const auto& logger_name: gems3k_loggers) {
         auto logger = spdlog::get(logger_name);
+        if(!logger) {
+           std::cout <<  logger_name << " logger not connected" << std::endl;
+           continue;
+        }
         logger->sinks().clear();
         if(use_stdout) {
             logger->sinks().push_back(stdout_sink);
