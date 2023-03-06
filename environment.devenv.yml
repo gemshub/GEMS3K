@@ -10,7 +10,7 @@ dependencies:
   - git
   - ccache  # [unix]
   - nlohmann_json
-  - thermofun>=0.4.1
+  - thermofun>=0.4.3
 
 environment:
 
