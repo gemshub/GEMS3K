@@ -103,7 +103,7 @@ add_definitions(-DNODEARRAYLEVEL)
 
 if(USE_THERMOFUN MATCHES ON)
   add_definitions(-DUSE_THERMOFUN)
-  add_definitions(-DUSE_THERMO_LOG)
+  #add_definitions(-DUSE_THERMO_LOG)
 endif()
 
 if(BUILD_NLOHMANNJSON MATCHES ON)

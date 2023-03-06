@@ -333,7 +333,7 @@ bool GemsSettings::update_logger()
     return true;
 }
 
-void GemsSettings::gems3k_update_loggers( bool use_stdout, const std::string& logfile_name, size_t log_level)
+void GemsSettings::gems3k_update_loggers(bool use_stdout, const std::string& logfile_name, size_t log_level)
 {
 
     spdlog::level::level_enum log_lev = spdlog::level::info;
@@ -363,6 +363,10 @@ void GemsSettings::gems3k_update_loggers( bool use_stdout, const std::string& lo
             logger->sinks().push_back(file_sink);
         }
         logger->set_level(log_lev);
+    }
+    auto logger = spdlog::get("ipmlog");
+    if(logger){ // changed level for file output
+       logger->set_level(log_lev);
     }
 }
 

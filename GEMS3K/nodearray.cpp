@@ -69,7 +69,7 @@ TNodeArray::TNodeArray( long int asizeN, long int asizeM, long int asizeK ):
 
 TNodeArray::~TNodeArray()
 {
-    na = nullptr;
+    //na = nullptr;
     freeMemory();
 }
 

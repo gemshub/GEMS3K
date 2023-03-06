@@ -8,15 +8,16 @@ VERSION = 3.4.6
 
 CONFIG -= qt
 CONFIG += warn_on
-CONFIG += debug
-CONFIG += thread
-CONFIG += console
+CONFIG += thread console
 CONFIG += c++17
 CONFIG += sanitaze sanitaze_thread
 
 DEFINES += NODEARRAYLEVEL
-#DEFINES += useOMP
 #DEFINES += USE_NLOHMANNJSON
+#DEFINES += useOMP
+DEFINES += USE_THERMOFUN
+DEFINES += USE_THERMO_LOG
+DEFINES += OVERFLOW_EXCEPT  #compile with nan inf exceptions
 
 !win32 {
   DEFINES += __unix
@@ -34,12 +35,16 @@ INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 
 #QMAKE_CXXFLAGS += -fopenmp -pg
-QMAKE_CXXFLAGS += -fopenmp
-QMAKE_LFLAGS +=  -fopenmp
-LIBS += -lgomp -lpthread
+#QMAKE_CXXFLAGS += -fopenmp
+#QMAKE_LFLAGS +=  -fopenmp
+#LIBS += -lgomp -lpthread
 
 #QMAKE_LFLAGS += -pg
 OBJECTS_DIR = obj
+
+contains(DEFINES, USE_THERMOFUN) {
+LIBS += -lThermoFun -lChemicalFun
+} ## end USE_THERMOFUN
 
 include($$GEMS3K_CPP/gems3k.pri)
 

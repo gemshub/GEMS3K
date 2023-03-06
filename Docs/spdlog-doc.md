@@ -9,30 +9,27 @@ documentation https://spdlog.docsforge.com/master/
 
 ### Install spdlog
 
+Header only version (default) 
+
+```sh
+        git clone https://github.com/gabime/spdlog -b v1.11.0  && \
+        cd spdlog/include && \
+        sudo cp -r spdlog /usr/local/include
+
+```
+
+Compiled version ( must build with ```cmake .. -DUSE_SPDLOG_PRECOMPILED=ON```)
+
 * Ubuntu: apt-get install libspdlog-dev
 
 * Homebrew: brew install spdlog
 
 * Building spdlog library
 
-```sh
-
-        mkdir -p ~/code && \
-                cd ~/code && \
-                git clone https://github.com/gabime/spdlog -b v1.10.0
-        cd spdlog && mkdir -p build && \
-                cd build && \
-                cmake .. -DCMAKE_CXX_FLAGS=-fPIC && \
-                make
-        sudo make install
-
-```
-
 
 ### Brief
 
 spdlog levels :  trace = 0, debug = 1, info = 2, warn = 3, err = 4, critical = 5, off = 6
-
 
 
 ```c++
@@ -54,12 +51,19 @@ inline spdlog::level::level_enum from_str(const std::string &name)
 
 ```
 
+All loggin levels can be changed directly by name. See API spdlog
+
+```c++
+   auto logger = spdlog::get("chemicalfun");
+   logger->set_level(spdlog::level::info);
+```
+
+
 ### Used loggers into code
 
  Thread-safe logger to stdout with colors and/or to file loggers
  
  Currently, such loggers are implemented for gems3k and additional for gems3gui, thermofun, and chemicalfun. It is possible to find loggers by name and change the level or remove logging. 
-
 
 
 ```c++
@@ -80,14 +84,10 @@ std::shared_ptr<spdlog::logger> thfun_logger = spdlog::stdout_color_mt("thermofu
 std::shared_ptr<spdlog::logger> chfun_logger = spdlog::stdout_color_mt("chemicalfun");
 ```
 
-
-
-
- Only file logger ( old ipmlog.txt file)
-
+Only file logger ( old ipmlog.txt file)
 
 ```c++
-std::shared_ptr<spdlog::logger> TNode::ipmlog_file = spdlog::rotating_logger_mt("ipmlog", "ipmlog.txt", 1048576, 3);
+std::shared_ptr<spdlog::logger> TNode::ipmlog_file = spdlog::rotating_logger_mt("ipmlog", "ipmlog.txt", 1048576, 2);
 ```
 
 
@@ -99,8 +99,11 @@ std::shared_ptr<spdlog::logger> TNode::ipmlog_file = spdlog::rotating_logger_mt(
 /// Remove logging to stdout, logging data only to text file logfile_name
     void gems3k_clear_loggers(const std::string &logfile_name);
 
-/// Show/hide logging to stdout (use_cout), to file (hide if logfile_name empty), and set up logging level for all loggers.
-    void gems3k_update_loggers(bool use_stdout, const std::string &logfile_name, size_t log_level);
+/// Update chemicalfun logger settings
+/// @param use_cout:      show/hide logging to stdout
+///        logfile_name:  add logging to rotating file name (hide if empty)
+///        log_level:     set login level for all loggers
+void gems3k_update_loggers(bool use_stdout, const std::string &logfile_name, size_t log_level);
 
 ```
 
@@ -129,7 +132,6 @@ To read config data add access to ```gemsSettings()``` object.
 
 * **log.stdout.modules** - list of loggers to stdout with colors (by default all)
 * **log.stdout.pattern** - pattern for loggers to stdout with colors (by default *"[%n] [%^%l%$] %v"*)
-
 
 
 ```json
