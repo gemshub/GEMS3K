@@ -78,7 +78,7 @@ sudo ./install-dependencies.sh
 
 ```sh
 conda devenv
-conda activate gems3k
+conda activate GEMS3K
 ```
 
 * Build GEMS3K library and examples

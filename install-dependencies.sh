@@ -1,10 +1,7 @@
 #!/bin/bash
 # Installing dependencies needed to build thermofun on (k)ubuntu linux 20.04
 
-
 # Check USE_THERMOFUN mode install dependecy
-
-
 if [ "$(uname)" == "Darwin" ]; then
 
     # Do under Mac OS X platform
@@ -24,7 +21,7 @@ fi
 threads=3
 git status
 USING_THERMOFUN_MODE=$1
-BRANCH_TFUN=spdlog-221
+BRANCH_TFUN=master
 
 
 # Temporarily uncomment rows for packages that need to be re-installed
