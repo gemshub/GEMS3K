@@ -3,7 +3,10 @@
 Numerical kernel solver of the GEM-Selektor v.3 package for geochemical modelling. 
 Just extended with an alternative Activity C++ API as the basis for a new Python API (based on Pybind11) on top of it, see xGEMS repository.
 
-### Briefly about GEMS3K
+Main version use [ThermoFun](https://bitbucket.org/gems4/thermofun/src/master/) - a code for calculating the standard state thermodynamic properties of substances and reactions at a given temperature and pressure. 
+
+
+## Briefly about GEMS3K
 
 The code Implements the improved GEM IPM-3 algorithm with excellent mass balance precision and fast convergence to Gibbs energy minimum even in very complex non-ideal chemical systems with two-sided metastability constraints (learn more on GEMS3K web page).
 
@@ -11,7 +14,7 @@ The code is written in C/C++. Using compiler directives, the GEMS3K code can be 
 
 Input: The standalone GEMS3K code needs to be initialized by reading a set of GEMS3K I/O files (since v.3.8.1, also a set of JSON documents) that can be exported from GEM-Selektor code for any chemical system (SysEq record) or from any GEM2MT task.
 
-* Version: currently 4.3.1.
+* Version: currently 4.3.5.
 
 ### License
 
@@ -21,6 +24,25 @@ GEMS3K is distributed in the hope that it will be useful, but WITHOUT ANY WARRAN
 
 You should have received a copy of the GNU Lesser General Public License along with GEMS3K code. If not, see http://www.gnu.org/licenses/. 
 
+
+### Installation using Conda
+
+GEMS3K can be easily installed using [Conda](https://conda.io/docs/) package manager. If you have Conda installed, first add the conda-forge channel by executing 
+
+```sh
+#!bash
+conda config --add channels conda-forge
+```
+
+install GEMS3K by executing the following command:
+
+```sh
+#!bash
+conda install gems3k
+```
+
+Conda can be installed from [Miniconda](https://conda.io/miniconda.html).
+
 ### How to clone (download) GEMS3K source code
 
 In your home directory, make a folder named e.g. ~/gitGEMS3 with a subfolder gitGEMS3/standalone.
@@ -28,52 +50,65 @@ In your home directory, make a folder named e.g. ~/gitGEMS3 with a subfolder git
 Change into ~/gitGEMS3/standalone and clone this repository from https://bitbucket.org/gems4/gems3k.git using git, a preinstalled free git client SourceTree or SmartGit (the best way on Windows). 
 
 Alternatively on Mac OS X or linux or Windows10, open a terminal and type in the command line (do not forget a period) to download the actual "trunk" branch:
-~~~
+```sh
 git clone https://bitbucket.org/gems4/gems3k.git . 
-~~~
+```
 
 To switch to another branch (e.g. devEJDB), use a git client or open a terminal, cd to ~/gitGEMS3/standalone, and type in the command line
-~~~
+```sh
 git checkout -b branches/devEJDB --track origin/branches/devEJDB
 git pull origin branches/devEJDB
-~~~
+```
 
 To switch back to trunk, type
-~~~
+```sh
 git checkout trunk
-~~~
+```
 
-### How to build GEMS3K library and examples ###
+### Compiling the C++ library
 
-The most common way to build GEMS3K on Linux or MacOS is using cmake ([https://cmake.org/](https://cmake.org/)). Please, make sure that you have cmake installed in your system. 
+* Install Dependencies by executing in ```~/standalone$``` (if not using Conda environment)
 
-To build GEMS3K and install it in your home directory or in the system directory (as in the example below), a typical sequence of commands can be executed in the terminal:
-~~~
+```sh
+#!bash
+sudo ./install-dependencies.sh
+```
+
+* If using conda environment (recommended) create and activate the gems3k environnement by executing in ```~/standalone$```:
+
+```sh
+conda devenv
+conda activate GEMS3K
+```
+
+* Build GEMS3K library and examples
+  The most common way to build GEMS3K on Linux or MacOS is using cmake ([https://cmake.org/](https://cmake.org/)). Please, make sure that you have cmake installed in your system. 
+
+  To build GEMS3K and install it in your home directory or in the system directory (as in the example below), a typical sequence of commands can be executed in the terminal:
+```sh
 cd ~/gitGEMS3/standalone
 mkdir build
 cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
 make
 sudo make install
-~~~
+```
 
-The same will be done by executing the install.sh script instead (check that this file has executable status, if not, run a command "chmod +x ./install.sh"): 
-~~~
+  The same will be done by executing the install.sh script instead (check that this file has executable status, if not, run a command "chmod +x ./install.sh"): 
+```sh
 cd ~/gitGEMS3/standalone
 sudo ./install.sh
-~~~
-(will ask for typing sudo password). Edit this script if you need to install GEMS3K libraries to different place than /usr/local/lib, or you would like to use different options.
+```
 
-For debugging purposes and for building examples, call cmake as follows: 
-~~~
-cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local
-~~~
+* Building and installing without ThermoFun library
 
-Building demos and examples using cmake
+```sh
+cd ~/gitGEMS3/standalone
+sudo ./install-dependencies.sh NO_THERMOFUN
+sudo ./install_no_thermofun.sh
+```
 
-* TBD (in progress), use QtCreator so far.
-
-* For using qmake or QtCreator for building the GEMS3K chemical solver library and examples, please consult this web page: http://gems.web.psi.ch/GEMS3K/techinfo.html
+* For using qmake or QtCreator for building the GEMS3K chemical solver library and examples, please consult this web page: http://gems.web.psi.ch/GEMS3K/techinfo.htm
 
 #### Attention: 
 

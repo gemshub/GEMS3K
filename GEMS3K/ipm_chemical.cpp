@@ -819,7 +819,7 @@ double TMultiBase::GX( double LM  )
 NEXT_PHASE:
         j = i;
     }  // k
-    ipm_logger->debug("GX  {}", FX);
+    ipm_logger->trace("GX  {}", FX);
     return(FX);
 }
 

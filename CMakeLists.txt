@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.9)
 
 # Set the name of the project
-project(GEMS3K VERSION 4.3.3 LANGUAGES CXX C)
+project(GEMS3K VERSION 4.3.5 LANGUAGES CXX C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -40,9 +40,16 @@ endif()
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
 option(USE_THERMOFUN "Use ThermoFun" ON)
-option(BUILD_GEM2MT "Install GEM2MT lib." OFF)
+option(BUILD_GEM2MT "Install GEM2MT lib." ON)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
-option(BUILD_TOOLS "Build tools" OFF)
+option(BUILD_TOOLS "Build tools" ON)
+
+# Used into conda only
+if(DEFINED ENV{CONDA_PREFIX})
+   option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" ON)
+else()
+   option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" OFF)
+endif()
 
 # Set the list of compiler flags for GNU compiler
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
@@ -71,19 +78,22 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     )
 endif()
 
+# test thread safe
+#set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
+#set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=thread")
 
 # Set the source directory path
 set(GEMS3K_SOURCE_DIR ${CMAKE_SOURCE_DIR}/GEMS3K)
 set(GEMS3K_HEADER_DIR ${CMAKE_SOURCE_DIR}/GEMS3K)
 
-# Set the include directories
-include_directories(${GEMS3K_HEADER_DIR})
-include_directories(${CMAKE_SOURCE_DIR})
-
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     include_directories("/usr/local/include")
     link_directories("/usr/local/lib")
 endif()
+
+# Set the include directories
+include_directories(${GEMS3K_HEADER_DIR})
+include_directories(${CMAKE_SOURCE_DIR})
 
 # Find all GEMS3K dependencies
 include(GEMS3KFindDeps)
@@ -93,7 +103,7 @@ add_definitions(-DNODEARRAYLEVEL)
 
 if(USE_THERMOFUN MATCHES ON)
   add_definitions(-DUSE_THERMOFUN)
-  add_definitions(-DUSE_THERMO_LOG)
+  #add_definitions(-DUSE_THERMO_LOG)
 endif()
 
 if(BUILD_NLOHMANNJSON MATCHES ON)
@@ -114,6 +124,7 @@ link_directories(${CMAKE_BINARY_DIR}/lib)
 
 if(BUILD_GEM2MT MATCHES ON)
     add_subdirectory(nodearray-gem)
+    link_directories(${CMAKE_BINARY_DIR}/nodearray-gem)
 endif()
 
 if(BUILD_TOOLS)
@@ -121,4 +132,4 @@ if(BUILD_TOOLS)
 endif()
 
 # Install the cmake config files that permit users to use find_package(gems3k)
-#include(GEMS3KInstallCMakeConfigFiles)
+include(GEMS3KInstallCMakeConfigFiles)

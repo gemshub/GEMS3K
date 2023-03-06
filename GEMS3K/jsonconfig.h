@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <optional>
+#include <algorithm>
 #include "v_detail.h"
 
 #ifdef USE_NLOHMANNJSON
@@ -203,7 +204,10 @@ public:
 
     /// Remove logging to stdout, logging data only to text file logfile_name
     void gems3k_clear_loggers(const std::string &logfile_name);
-    /// Show/hide logging to stdout (use_cout), to file (hide if logfile_name empty), and set up logging level for all loggers.
+    /// Update chemicalfun logger settings
+    /// @param use_cout:      show/hide logging to stdout
+    ///        logfile_name:  add logging to rotating file name (hide if empty)
+    ///        log_level:     set login level for all loggers
     void gems3k_update_loggers(bool use_stdout, const std::string &logfile_name, size_t log_level);
 
 private:

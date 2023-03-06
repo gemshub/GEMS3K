@@ -107,7 +107,7 @@ protected:
     DATABR* CNode;  ///< Pointer to a work node data bridge structure (node)
 
 #ifdef USE_THERMOFUN
-    std::shared_ptr<ThermoFun::ThermoEngine> thermo_engine;
+    std::unique_ptr<ThermoFun::ThermoEngine> thermo_engine;
 #endif
     std::string thermo_json_string;
 

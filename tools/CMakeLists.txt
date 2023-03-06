@@ -3,25 +3,31 @@ message(STATUS "Building json <-> key-value converter ")
 
 include_directories(${CMAKE_SOURCE_DIR})
 
-add_executable(kva2json kva2json.cpp)
+find_package(Threads REQUIRED)
 
-if(BUILD_GEM2MT MATCHES ON)
-  if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    target_link_libraries(kva2json PUBLIC GEMS3K-static GEM2MT-static)
-  else()
-    target_link_libraries(kva2json PUBLIC GEMS3K GEM2MT)
-  endif()
-else()
-  if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    target_link_libraries( kva2json PUBLIC GEMS3K-static )
-  else()
-    target_link_libraries(kva2json PUBLIC GEMS3K )
-  endif()
-endif()
+set(Tools
+       kva2json
+       thread_test )
 
-if(USE_THERMOFUN MATCHES ON)
-   target_link_libraries(kva2json PUBLIC ThermoFun::ThermoFun)
-endif()
+foreach (toolName ${Tools})
 
-install(TARGETS kva2json DESTINATION bin)
+    add_executable(${toolName} ${toolName}.cpp)
+
+    if(BUILD_GEM2MT MATCHES ON)
+      if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+          target_link_libraries(${toolName} PUBLIC GEMS3K::GEMS3K-static GEMS3K::GEM2MT-static Threads::Threads)
+      else()
+          target_link_libraries(${toolName} PUBLIC GEMS3K::GEMS3K GEMS3K::GEM2MT Threads::Threads)
+      endif()
+    else()
+      if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+          target_link_libraries(${toolName} PUBLIC GEMS3K::GEMS3K-static Threads::Threads)
+      else()
+          target_link_libraries(${toolName} PUBLIC GEMS3K::GEMS3K Threads::Threads)
+      endif()
+    endif()
+
+    install(TARGETS ${toolName} DESTINATION bin)
+
+endforeach()
 

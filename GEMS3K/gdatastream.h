@@ -71,7 +71,7 @@ public:
     bool good() { return ff.good(); }
     void clear() { ff.clear(); }
     void flush() { ff.flush(); }
-    long tellg() { return ff.tellg(); }
+    long long tellg() { return ff.tellg(); }
     void open(const char* filename, std::ios::openmode mode) { ff.open(filename, mode); }
     std::ostream& seekp(long pos, std::ios_base::seekdir dir) { return ff.seekp(pos, dir); }
     std::istream& seekg(long pos, std::ios_base::seekdir dir) { return ff.seekg(pos, dir); }

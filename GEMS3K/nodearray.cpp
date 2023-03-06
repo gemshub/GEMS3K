@@ -69,7 +69,7 @@ TNodeArray::TNodeArray( long int asizeN, long int asizeM, long int asizeK ):
 
 TNodeArray::~TNodeArray()
 {
-    na = nullptr;
+    //na = nullptr;
     freeMemory();
 }
 
@@ -292,6 +292,23 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode* wrkNode
 
 #endif
 
+void TNodeArray::RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes )
+{
+#ifdef useOMP
+#pragma omp parallel
+#endif
+    {
+        TNode workNode(*na->getCalcNode());
+#ifdef useOMP
+#pragma omp for
+#endif
+        for (long int node=0;node<nNodes;node++)
+        {
+            if (nodeFlags[node])
+                retCodes[node] = na->RunGEM(&workNode, node, Mode, nodeArray);
+        }
+    }
+}
 
 // New init ================================================================
 
@@ -535,25 +552,6 @@ long TNodeArray::CalcNodeServer(TNode* wrkNode, long ,  long int Mode)
     if( Mode < 0 || std::abs(Mode) == NEED_GEM_SIA )
         uPrimalSol = true;
     return  wrkNode->GEM_run( uPrimalSol );
-}
-
-
-void TNodeArray::RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes )
-{
-#ifdef useOMP
-#pragma omp parallel
-#endif
-    {
-        TNode workNode(*na->getCalcNode());
-#ifdef useOMP
-#pragma omp for
-#endif
-        for (long int node=0;node<nNodes;node++)
-        {
-            if (nodeFlags[node])
-                retCodes[node] = na->RunGEM(&workNode, node, Mode, nodeArray);
-        }
-    }
 }
 
 //-------------------------------------------------------------------

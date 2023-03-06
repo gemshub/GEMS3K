@@ -52,7 +52,7 @@ class TRWArrays
 public:
 
     /// Constructor
-    TRWArrays( short aNumFlds, outField* aFlds ):
+    TRWArrays( short aNumFlds,const std::vector<outField>& aFlds ):
         num_flds(aNumFlds), flds(aFlds)
     {}
 
@@ -123,7 +123,7 @@ protected:
     /// Size of array flds
     long int num_flds;
     /// Array of permissible fields
-    outField* flds;
+    std::vector<outField> flds;
 
 };
 
@@ -136,7 +136,7 @@ class TPrintArrays: public  TRWArrays
 public:
 
     /// Constructor
-    TPrintArrays( int  aNumFlds, outField* aFlds, TIO& fout ):
+    TPrintArrays( int  aNumFlds, const std::vector<outField>& aFlds, TIO& fout ):
         TRWArrays( aNumFlds, aFlds), out_format( fout )
     {}
 
@@ -252,7 +252,7 @@ class TReadArrays : public  TRWArrays
 public:
 
     /// Constructor
-    TReadArrays( int aNumFlds, outField* aFlds, TIO& fin ):
+    TReadArrays( int aNumFlds,const std::vector<outField>& aFlds, TIO& fin ):
         TRWArrays( aNumFlds, aFlds), in_format( fin ), current_readed("")
     {
        in_format.reset();

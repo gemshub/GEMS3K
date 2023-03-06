@@ -47,7 +47,7 @@ void TGEM2MT::RecCalc()
 
         if( mtp->PsVTK != S_OFF )
         {
-#ifndef  __unix
+#ifdef  _WIN32
                 mkdir( pathVTK.c_str() );
 #else
                 mkdir( pathVTK.c_str(), 0755 );

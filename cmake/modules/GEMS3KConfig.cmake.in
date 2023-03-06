@@ -6,7 +6,7 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{CONDA_PREFIX})
 
 # Include the cmake targets of the project if they have not been yet.
 if(NOT TARGET GEMS3K::GEMS3K)
-    include("@PACKAGE_GEMS3K_INSTALL_CONFIGDIR@/GEMS3K.cmake")
+    include("@PACKAGE_GEMS3K_INSTALL_CONFIGDIR@/GEMS3KTargets.cmake")
 endif()
 
 # Recommended check at the end of a cmake config file.

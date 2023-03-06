@@ -382,7 +382,7 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json,
        else {
            GEMS3KGenerator::default_type_f  = GEMS3KGenerator::f_thermofun;
        }
-        node_logger->debug("GEMS3KGenerator::default_type_f {}", GEMS3KGenerator::default_type_f);
+        node_logger->debug("GEMS3KGenerator::default_type_f {}", static_cast<int>(GEMS3KGenerator::default_type_f));
         node_logger->debug("dch_json {}", dch_json);
         node_logger->debug("dbr_json {}", dbr_json);
         node_logger->debug("ipm_json {}", ipm_json);
@@ -429,7 +429,7 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json,
 
         // Creating and initializing the TActivity class instance for this TNode instance
         init_into_gems3k();
-        node_logger->info("Initialization of system {}", std::string(pmm->stkey, 0, EQ_RKLEN));
+        node_logger->info("Initialization of system {}", char_array_to_string(pmm->stkey,EQ_RKLEN));
 
         return 0;
     }

@@ -8,5 +8,5 @@ dependencies:
 - gxx_linux-64
 - ninja
 - nlohmann_json
-- thermofun =0.4.1
+- thermofun>=0.4.3
 name: GEMS3K

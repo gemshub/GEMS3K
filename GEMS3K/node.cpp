@@ -92,6 +92,7 @@ TNode::TNode( const TNode& otherNode )
 
 TNode::~TNode()
 {
+    clear_ThermoEngine();
     freeMemory();
 }
 

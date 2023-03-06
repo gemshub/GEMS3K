@@ -48,7 +48,7 @@ extern const char* _GEMIPM_version_stamp;
 // the text of the comment for this data object, optionally written into the
 // text-format output DBR or DCH file.
 //
-io_formats::outField DataBR_fields[f_lga+1/*60*/] =  {
+std::vector<io_formats::outField> DataBR_fields =  {  // [f_lga+1/*60*/]
   { "NodeHandle",  0, 0, 1, "# NodeHandle: Node identification handle"},
   { "NodeTypeHY",  0, 0, 1, "# NodeTypeHY:  Node type code (hydraulic), not used on TNode level; see typedef NODETYPE" },
   { "NodeTypeMT",  0, 0, 1, "# NodeTypeMT:  Node type (mass transport), not used on TNode level; see typedef NODETYPE" },
@@ -118,7 +118,7 @@ io_formats::outField DataBR_fields[f_lga+1/*60*/] =  {
     { "lga",  0, 0, nDCbi, "# lga: DC activities in equilibrium, in log10 scale [nDCb]" }
 };
 
-io_formats::outField DataCH_static_fields[14] =  {
+std::vector<io_formats::outField> DataCH_static_fields =  {  // [14]
   { "nIC",   1, 0, 0, "# nIC: Number of Independent Components (usually chemical elements and charge)" },
   { "nDC",   1, 0, 0, "# nDC: Number of Dependent Components (chemical species made of Independent Components)" },
   { "nPH",   1, 0, 0, "# nPH: Number of phases (into which Dependent Components are grouped)" },
@@ -135,7 +135,7 @@ io_formats::outField DataCH_static_fields[14] =  {
   { "mLook", 1, 0, 0, "# mLook: Lookup mode: 0 interpolation over nTp*nPp grid; 1 data for T,P pairs, no interpolation"}
 };
 
-io_formats::outField DataCH_dynamic_fields[30] =  { //+4
+std::vector<io_formats::outField> DataCH_dynamic_fields =  { //  [30] +4
    { "xic",   1, 0, 0, "# xIC: DATACH access index list for ICs kept in the DATABR structure and in DBR files [nICb]" },
    { "xdc",   1, 0, 0, "# xDC: DATACH access index list of DCs kept in the DATABR  structure and in DBR files [nDCb]" },
    { "xph",   1, 0, 0, "# xPH: DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]" },
