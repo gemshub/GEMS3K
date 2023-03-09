@@ -309,7 +309,7 @@ bool GemsSettings::update_logger()
         file_module_names = file_section->value_or_default<std::set<std::string>>("modules", {});
         auto logfile_path = file_section->value_or_default<std::string>("path", "gems_log.txt");
         auto logfile_size =file_section->value_or_default<size_t>("size", 1048576);
-        auto logfile_count = file_section->value_or_default<size_t>("count", 3);
+        auto logfile_count = file_section->value_or_default<size_t>("count", 2);
         file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
                     logfile_path, logfile_size, logfile_count);
         auto logfile_pattern = file_section->value_or_default<std::string>("pattern", gems3k_logger_pattern);
@@ -345,7 +345,7 @@ void GemsSettings::gems3k_update_loggers(bool use_stdout, const std::string& log
     stdout_sink->set_pattern(gems3k_logger_pattern);
     std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
     if(!logfile_name.empty()) {
-        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfile_name, 1048576, 3);
+        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfile_name, 1048576, 1);
         file_sink->set_pattern(gems3k_logger_pattern);
     }
 
@@ -374,7 +374,7 @@ void GemsSettings::gems3k_clear_loggers(const std::string& logfile_name)
 {
     std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
     if(!logfile_name.empty()) {
-        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfile_name, 1048576, 3);
+        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfile_name, 1048576, 1);
     }
     for(const auto& lname: gems3k_loggers) {
         auto logger = spdlog::get(lname);
