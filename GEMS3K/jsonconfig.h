@@ -204,7 +204,7 @@ public:
 
     /// Remove logging to stdout, logging data only to text file logfile_name
     void gems3k_clear_loggers(const std::string &logfile_name);
-    /// Update chemicalfun logger settings
+    /// Update loggers settings
     /// @param use_cout:      show/hide logging to stdout
     ///        logfile_name:  add logging to rotating file name (hide if empty)
     ///        log_level:     set login level for all loggers
