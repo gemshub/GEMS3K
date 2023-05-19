@@ -30,6 +30,7 @@
 #include "num_methods.h"
 #include "kinetics.h"
 #include "v_service.h"
+#include "jsonconfig.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 
@@ -37,7 +38,7 @@
 // Thread-safe logger to stdout with colors
 std::shared_ptr<spdlog::logger> TNode::node_logger = spdlog::stdout_color_mt("tnode");
 // Thread-safe logger to file
-std::shared_ptr<spdlog::logger> TNode::ipmlog_file = spdlog::rotating_logger_mt("ipmlog", "ipmlog.txt", 1048576, 3);
+std::shared_ptr<spdlog::logger> TNode::ipmlog_file;
 
 // Conversion factors
 const double bar_to_Pa = 1e5,
@@ -51,6 +52,11 @@ void TNode::write_ThermoFun_format_stream(std::iostream &stream, bool compact) {
 // Constructor of the class instance in memory for standalone GEMS3K or coupled program
 TNode::TNode()
 {
+    if(!ipmlog_file) {
+        ipmlog_file = spdlog::rotating_logger_mt("ipmlog", GemsSettings::with_directory("ipmlog.txt"),
+                                                 GemsSettings::log_file_size,
+                                                 GemsSettings::log_file_count);
+    }
     CSD = NULL;
     CNode = NULL;
     allocMemory();

@@ -21,7 +21,7 @@ extern const char* _GEMIPM_version_stamp;
 
 //=============================================================
 
-std::vector<io_formats::outField> GEM2MT_static_fields =  { //57
+std::vector<io_formats::outField> GEM2MT_static_fields =  {  //57
     // Allocation and setup flags
      { "PvPGD" , 1, 0, 0, "# PvPGD: Use mobile phase groups definitions (+ -)" },
      { "PvFDL" , 1, 0, 0, "# PvFDL: Use MGP flux definition list (+ -)" },

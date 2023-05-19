@@ -60,7 +60,7 @@ public:
     /// Generate ThermoFun JSON format file name
     static std::string gen_thermofun_name( const std::string the_name )
     {
-        return the_name + ".FUN";
+        return the_name + "-fun";
     }
 
     /// Generate dataBR name
