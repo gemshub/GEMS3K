@@ -65,6 +65,7 @@ All loggin levels can be changed directly by name. See API spdlog
  
  Currently, such loggers are implemented for gems3k and additional for gems3gui, thermofun, and chemicalfun. It is possible to find loggers by name and change the level or remove logging. 
 
+ All file loggers write to the working directory, but this can be fixed by changing GemsSettings::data_logger_directory. For example for GEMSGUI  GemsSettings::data_logger_directory = ~/Library/Gems3/logs.
 
 ```c++
 std::shared_ptr<spdlog::logger> gems_logger = spdlog::stdout_color_mt("gems3k");
@@ -132,6 +133,9 @@ To read config data add access to ```gemsSettings()``` object.
 
 * **log.stdout.modules** - list of loggers to stdout with colors (by default all)
 * **log.stdout.pattern** - pattern for loggers to stdout with colors (by default *"[%n] [%^%l%$] %v"*)
+
+* **log.logs-directory** - all file loggers write to the directory
+* **log.thermodynamic-log** - enable/disable generating thermodynamic-log-lookup.csv (posible only if defined USE_THERMO_LOG)
 
 
 ```json

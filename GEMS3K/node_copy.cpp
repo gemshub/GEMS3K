@@ -33,6 +33,7 @@
 #include "io_nlohmann.h"
 #include "io_simdjson.h"
 #include "v_service.h"
+#include "jsonconfig.h"
 
 // Writes CSD (DATACH structure) to a json string or key-value string
 // \param brief_mode - Do not write data items that contain only default values
@@ -1263,20 +1264,23 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         pmm->epsWg[4] = water_gas_electro.epsilonPP.val;
 
 #ifdef  USE_THERMO_LOG
-        std::fstream f_log("thermodynamic-log.csv", std::ios::out/*|std::ios::app*/ );
-        f_log << "\nCalc ThermoEngine;T;" << TK << ";P;" << PPa << "\n";
-        f_log << "denW";
-        for( jj=0; jj<5; jj++)
-            f_log << ";" << floating_point_to_string(pmm->denW[jj]);
-        f_log << "\nepsW";
-        for( jj=0; jj<5; jj++)
-            f_log << ";" << floating_point_to_string(pmm->epsW[jj]);
-        f_log << "\ndenWg";
-        for( jj=0; jj<5; jj++)
-            f_log << ";" << floating_point_to_string(pmm->denWg[jj]);
-        f_log << "\nepsWg";
-        for( jj=0; jj<5; jj++)
-            f_log << ";" << floating_point_to_string(pmm->epsWg[jj]);
+        std::fstream f_log;
+        if(GemsSettings::log_thermodynamic) {
+            f_log.open(GemsSettings::with_directory("thermodynamic-log.csv"), std::ios::out/*|std::ios::app*/ );
+            f_log << "\nCalc ThermoEngine;T;" << TK << ";P;" << PPa << "\n";
+            f_log << "denW";
+            for( jj=0; jj<5; jj++)
+                f_log << ";" << floating_point_to_string(pmm->denW[jj]);
+            f_log << "\nepsW";
+            for( jj=0; jj<5; jj++)
+                f_log << ";" << floating_point_to_string(pmm->epsW[jj]);
+            f_log << "\ndenWg";
+            for( jj=0; jj<5; jj++)
+                f_log << ";" << floating_point_to_string(pmm->denWg[jj]);
+            f_log << "\nepsWg";
+            for( jj=0; jj<5; jj++)
+                f_log << ";" << floating_point_to_string(pmm->epsWg[jj]);
+        }
 #endif
 
         for( k=0; k<pmm->FI; k++ )
@@ -1300,14 +1304,16 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
 
                 pmm->G0[j] = multi_ptr()->ConvertGj_toUniformStandardState(G0, j, k);
 #ifdef  USE_THERMO_LOG
-                f_log << "\n" << symbol << ";" << floating_point_to_string(G0)
-                      << ";" << floating_point_to_string(pmm->G0[j])
-                      << ";" << floating_point_to_string(pmm->Vol[j]);
-                if( dCH->S0 ) f_log << ";" << floating_point_to_string(pmm->S0[j]);
-                if( dCH->H0 ) f_log << ";" << floating_point_to_string(pmm->H0[j]);
-                if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pmm->Cp0[j]);
-                if( dCH->A0 ) f_log << ";" << floating_point_to_string(pmm->A0[j]);
-                if( dCH->U0 ) f_log << ";" << floating_point_to_string(pmm->U0[j]);
+                if(GemsSettings::log_thermodynamic) {
+                    f_log << "\n" << symbol << ";" << floating_point_to_string(G0)
+                          << ";" << floating_point_to_string(pmm->G0[j])
+                          << ";" << floating_point_to_string(pmm->Vol[j]);
+                    if( dCH->S0 ) f_log << ";" << floating_point_to_string(pmm->S0[j]);
+                    if( dCH->H0 ) f_log << ";" << floating_point_to_string(pmm->H0[j]);
+                    if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pmm->Cp0[j]);
+                    if( dCH->A0 ) f_log << ";" << floating_point_to_string(pmm->A0[j]);
+                    if( dCH->U0 ) f_log << ";" << floating_point_to_string(pmm->U0[j]);
+                }
 #endif
             }  // j
         } // k

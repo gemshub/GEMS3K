@@ -28,6 +28,7 @@
 #include "node.h"
 #include "num_methods.h"
 #include "v_service.h"
+#include "jsonconfig.h"
 
 
 const BASE_PARAM pa_p_ = 
@@ -305,12 +306,12 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
     double P = PPa/bar_to_Pa;
     DATACH  *dCH = aNa->pCSD();
 
-//    ipm_logger->info("Calc Lookup T: {}  P: {}", TK, PPa);                 Temporarily disabled 23.Jan.2022
+    //    ipm_logger->info("Calc Lookup T: {}  P: {}", TK, PPa);                 Temporarily disabled 23.Jan.2022
     if( dCH->nTp <1 || dCH->nPp <1 || aNa->check_TP( TK, PPa ) == false )
     {
         Error("load_all_thermodynamic_from_grid: ",
-               std::string(" Temperature ")+std::to_string(TK)+" or pressure "+
-               std::to_string(PPa)+" out of range, or no T/D data are provided" );
+              std::string(" Temperature ")+std::to_string(TK)+" or pressure "+
+              std::to_string(PPa)+" out of range, or no T/D data are provided" );
         return;
     }
 
@@ -356,20 +357,23 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
     }
 
 #ifdef  USE_THERMO_LOG
-    std::fstream f_log("thermodynamic-log-lookup.csv", std::ios::out/*|std::ios::app*/ );
-    f_log << "\nCalc ThermoEngine;T;" << TK << ";P;" << PPa << "\n";
-    f_log << "denW";
-    for( jj=0; jj<5; jj++)
-       f_log << ";" << floating_point_to_string(pm.denW[jj]);
-    f_log << "\nepsW";
-    for( jj=0; jj<5; jj++)
-       f_log << ";" << floating_point_to_string(pm.epsW[jj]);
-    f_log << "\ndenWg";
-    for( jj=0; jj<5; jj++)
-       f_log << ";" << floating_point_to_string(pm.denWg[jj]);
-    f_log << "\nepsWg";
-    for( jj=0; jj<5; jj++)
-       f_log << ";" << floating_point_to_string(pm.epsWg[jj]);
+    std::fstream f_log;
+    if(GemsSettings::log_thermodynamic) {
+        f_log.open(GemsSettings::with_directory("thermodynamic-log-lookup.csv"), std::ios::out/*|std::ios::app*/ );
+        f_log << "\nCalc ThermoEngine;T;" << TK << ";P;" << PPa << "\n";
+        f_log << "denW";
+        for( jj=0; jj<5; jj++)
+            f_log << ";" << floating_point_to_string(pm.denW[jj]);
+        f_log << "\nepsW";
+        for( jj=0; jj<5; jj++)
+            f_log << ";" << floating_point_to_string(pm.epsW[jj]);
+        f_log << "\ndenWg";
+        for( jj=0; jj<5; jj++)
+            f_log << ";" << floating_point_to_string(pm.denWg[jj]);
+        f_log << "\nepsWg";
+        for( jj=0; jj<5; jj++)
+            f_log << ";" << floating_point_to_string(pm.epsWg[jj]);
+    }
 #endif
     long int xVol =  getXvolume();
 
@@ -445,14 +449,16 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
             if( pm.U0 ) pm.U0[j] = u0;
 
 #ifdef  USE_THERMO_LOG
-            f_log << "\n" << std::string(dCH->DCNL[j], 0, MaxDCN) << ";" << floating_point_to_string(Go)
-                   << ";" << floating_point_to_string(pm.G0[j])
-                   << ";" << floating_point_to_string(pm.Vol[j]);
-            if( dCH->S0 ) f_log << ";" << floating_point_to_string(pm.S0[j]);
-            if( dCH->H0 ) f_log << ";" << floating_point_to_string(pm.H0[j]);
-            if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pm.Cp0[j]);
-            if( dCH->A0 ) f_log << ";" << floating_point_to_string(pm.A0[j]);
-            if( dCH->U0 ) f_log << ";" << floating_point_to_string(pm.U0[j]);
+            if(GemsSettings::log_thermodynamic) {
+                f_log << "\n" << std::string(dCH->DCNL[j], 0, MaxDCN) << ";" << floating_point_to_string(Go)
+                      << ";" << floating_point_to_string(pm.G0[j])
+                      << ";" << floating_point_to_string(pm.Vol[j]);
+                if( dCH->S0 ) f_log << ";" << floating_point_to_string(pm.S0[j]);
+                if( dCH->H0 ) f_log << ";" << floating_point_to_string(pm.H0[j]);
+                if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pm.Cp0[j]);
+                if( dCH->A0 ) f_log << ";" << floating_point_to_string(pm.A0[j]);
+                if( dCH->U0 ) f_log << ";" << floating_point_to_string(pm.U0[j]);
+            }
 #endif
         }  // j
     } // k
