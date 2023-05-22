@@ -1,9 +1,56 @@
 #include <iostream>
 #include <fstream>
+#ifdef _MSC_VER
+#include  <io.h>
+#else
+#include <pwd.h>
+#include <unistd.h>
+#endif
 #include "jsonconfig.h"
 #include "v_service.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
+
+// Get home directory in Linux, C++
+std::string  home_dir()
+{
+#ifdef _WIN32
+    char homedir[1000];
+    snprintf(homedir, 1000, "%s%s", getenv("HOMEDRIVE"), getenv("HOMEPATH"));
+    gems_logger->info("HOMEDRIVE: {}", homedir);
+    return  std::string(homedir);
+#else
+    const char *homeDir;
+    homeDir = getenv("HOME");
+    if( !homeDir ) {
+        struct passwd* pwd = getpwuid(getuid());
+        if (pwd)
+            homeDir = pwd->pw_dir;
+    }
+    ErrorIf( !homeDir, "filesystem", "HOME environment variable not set.");
+    gems_logger->info("Home directory is {}", homeDir);
+    return std::string(homeDir);
+#endif
+}
+
+//  "~" generally refers to the user's home directory, this is solely an artifact of tilde expansion in Unix shells.
+std::string GemsSettings::expand_home_dir( const std::string& in_path )
+{
+    static std::string  aHomeDir(home_dir());
+    if( in_path.size () > 0 && in_path[0] == '~')
+        return  aHomeDir + in_path.substr(1);
+    else
+        return in_path;
+}
+
+std::string GemsSettings::with_directory(const std::string &logfile_name)
+{
+    auto file_path = logfile_name;
+    if(file_path.find_first_of("/\\") == std::string::npos) {
+        file_path =  data_logger_directory + file_path;
+    }
+    return expand_home_dir(file_path);
+}
 
 #ifdef USE_NLOHMANNJSON
 
@@ -234,6 +281,7 @@ std::set<std::string> JsonConfigSection::get_as<std::set<std::string>>() const
 
 #endif
 
+std::string GemsSettings::data_logger_directory = "";
 std::string GemsSettings::settings_file_name = "gems3k-config.json";
 std::string GemsSettings::logger_section_name = "log";
 
@@ -245,13 +293,16 @@ std::set<std::string> GemsSettings::default_gems3k_loggers = {
 };
 
 std::string GemsSettings::gems3k_logger_pattern("[%n] [%^%l%$] %v");
+size_t GemsSettings::log_file_size = 1048576;
+size_t GemsSettings::log_file_count = 1;
+bool GemsSettings::log_thermodynamic = false;
+
 
 GemsSettings& gemsSettings()
 {
     static  GemsSettings data(GemsSettings::settings_file_name);
     return  data;
 }
-
 
 GemsSettings::GemsSettings(const std::string &config_file_path):
     TJsonConfig(config_file_path)
@@ -281,6 +332,8 @@ bool GemsSettings::update_logger()
         return false;
     }
 
+    log_thermodynamic = log_section->value_or_default("thermodynamic-log", log_thermodynamic);
+    data_logger_directory = log_section->value_or_default<std::string>("logs-directory", data_logger_directory);
     gems3k_loggers = log_section->value_or_default<std::set<std::string>>("modules", {});
     gems3k_loggers.insert(default_gems3k_loggers.begin(), default_gems3k_loggers.end());
     gems3k_logger_level = log_section->value_or_default<std::string>("level", "info");
@@ -308,10 +361,10 @@ bool GemsSettings::update_logger()
     {
         file_module_names = file_section->value_or_default<std::set<std::string>>("modules", {});
         auto logfile_path = file_section->value_or_default<std::string>("path", "gems_log.txt");
-        auto logfile_size =file_section->value_or_default<size_t>("size", 1048576);
-        auto logfile_count = file_section->value_or_default<size_t>("count", 2);
+        auto logfile_size =file_section->value_or_default<size_t>("size", GemsSettings::log_file_size);
+        auto logfile_count = file_section->value_or_default<size_t>("count", GemsSettings::log_file_count);
         file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-                    logfile_path, logfile_size, logfile_count);
+                    with_directory(logfile_path), logfile_size, logfile_count);
         auto logfile_pattern = file_section->value_or_default<std::string>("pattern", gems3k_logger_pattern);
         file_sink->set_pattern(logfile_pattern);
     }
@@ -335,7 +388,6 @@ bool GemsSettings::update_logger()
 
 void GemsSettings::gems3k_update_loggers(bool use_stdout, const std::string& logfile_name, size_t log_level)
 {
-
     spdlog::level::level_enum log_lev = spdlog::level::info;
     if( log_level<7 ) {
         log_lev = static_cast<spdlog::level::level_enum>(log_level);
@@ -345,7 +397,9 @@ void GemsSettings::gems3k_update_loggers(bool use_stdout, const std::string& log
     stdout_sink->set_pattern(gems3k_logger_pattern);
     std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
     if(!logfile_name.empty()) {
-        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfile_name, 1048576, 1);
+        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(with_directory(logfile_name),
+                                                                           GemsSettings::log_file_size,
+                                                                           GemsSettings::log_file_count);
         file_sink->set_pattern(gems3k_logger_pattern);
     }
 
@@ -374,7 +428,9 @@ void GemsSettings::gems3k_clear_loggers(const std::string& logfile_name)
 {
     std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
     if(!logfile_name.empty()) {
-        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfile_name, 1048576, 1);
+        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(with_directory(logfile_name),
+                                                                           GemsSettings::log_file_size,
+                                                                           GemsSettings::log_file_count);
     }
     for(const auto& lname: gems3k_loggers) {
         auto logger = spdlog::get(lname);

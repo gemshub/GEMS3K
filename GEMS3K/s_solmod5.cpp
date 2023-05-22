@@ -31,6 +31,7 @@ using namespace std;
 #include "verror.h"
 #include "s_solmod.h"
 #include "v_detail.h"
+#include "jsonconfig.h"
 
 //=============================================================================================
 // SIT model (NEA version) reimplementation for aqueous electrolyte solutions
@@ -697,7 +698,7 @@ void TPitzer::Pitzer_test_out( const char *path, double Y )
 
 //	long int ii, c, a, n;
 
-    ofstream ff(path, ios::app );
+    ofstream ff(GemsSettings::with_directory(path), ios::app );
     ErrorIf( !ff.good() , path, "Fileopen error");
     int number_after_decimalpoint = 4;
     ff.setf(ios::fixed);
@@ -2582,7 +2583,7 @@ void TEUNIQUAC::Euniquac_test_out( const char *path )
     long int ii;//, c, a, n;
 
     // const ios::open_mode OFSMODE = ios::out  ios::app;
-    ofstream ff(path, ios::app );
+    ofstream ff(GemsSettings::with_directory(path), ios::app );
     ErrorIf( !ff.good() , path, "Fileopen error");
 
     ff << endl << "Vector of interaction parameters corrected to T,P of interest" << endl;

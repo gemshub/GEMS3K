@@ -1,7 +1,10 @@
 #!/bin/bash
 # Installing dependencies needed to build thermofun on (k)ubuntu linux 20.04
 
+
 # Check USE_THERMOFUN mode install dependecy
+
+
 if [ "$(uname)" == "Darwin" ]; then
 
     # Do under Mac OS X platform

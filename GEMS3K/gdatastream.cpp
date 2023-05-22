@@ -133,10 +133,10 @@ GemDataStream::GemDataStream( const std::string& aPath, ios::openmode aMod  ):
      //   mod( aMod ),
         Path( aPath ),
     //    byteorder( LittleEndian ),
-        ff(aPath.c_str(), aMod)
+        ff(aPath, aMod)
 {
     setByteOrder(LittleEndian);
-    ErrorIf( !ff.good(), Path.c_str(), "Fileopen error");
+    ErrorIf( !ff.good(), Path, "Fileopen error");
 }
 
 GemDataStream::~GemDataStream()

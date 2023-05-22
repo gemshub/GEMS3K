@@ -29,6 +29,7 @@
 #include "io_keyvalue.h"
 #include "ms_multi.h"
 #include "gdatastream.h"
+#include "jsonconfig.h"
 
 void TMultiBase::getLsModsum( long int& LsModSum, long int& LsIPxSum )
 {  LsModSum = 0;
@@ -1084,7 +1085,7 @@ void TMultiBase::to_text_file( const char *path, bool append )
    std::ios::openmode mod = std::ios::out;
     if( append )
      mod = std::ios::out|std::ios::app;
-  std::fstream ff(path, mod );
+  std::fstream ff(GemsSettings::with_directory(path), mod );
   ErrorIf( !ff.good() , path, "Fileopen error");
 
   io_formats::KeyValueWrite out_format( ff );
