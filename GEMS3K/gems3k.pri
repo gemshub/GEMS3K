@@ -36,7 +36,8 @@
                     $$GEMS3K_H/kinetics.h \
                     $$GEMS3K_H/v_detail.h \
                     $$GEMS3K_H/v_service.h \
-                    $$GEMS3K_H/jsonconfig.h
+                    $$GEMS3K_H/jsonconfig.h \
+    $$PWD/datach_api.h
 
 
         SOURCES	  +=  $$GEMS3K_CPP/gdatastream.cpp  \
@@ -78,5 +79,7 @@
                       $$GEMS3K_CPP/s_activity3.cpp  \
                       $$GEMS3K_CPP/v_detail.cpp \
                       $$GEMS3K_CPP/v_service.cpp \
-                      $$GEMS3K_CPP/jsonconfig.cpp
+                      $$GEMS3K_CPP/jsonconfig.cpp \
+    $$PWD/datach_api.cpp \
+    $$PWD/datach_formats.cpp
 

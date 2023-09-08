@@ -165,11 +165,11 @@ protected:
                         long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* iaN, FILE* diffile  );
 
     // alloc new memory
-    DATABR * allocNewDBR( TNode* wrkNode)
+    DATABR * allocNewDBR(TNode* wrkNode)
     {
         DATABR *node = new DATABR;
-        wrkNode->databr_reset( node, 1 );
-        wrkNode->databr_realloc(node);
+        dbr_dch_api::databr_reset(node, 1);
+        dbr_dch_api::databr_realloc(wrkNode->CSD, node);
         return node;
     }
 

@@ -671,7 +671,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         calcNode->multi_ptr()->out_multi( ff  );
 
         GemDataStream  f_ch( generator.get_dch_path(), std::ios::out|std::ios::binary);
-        calcNode->datach_to_file( f_ch);
+        dbr_dch_api::datach_to_file(calcNode->CSD, f_ch);
     }
         break;
     default:
@@ -681,7 +681,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         calcNode->multi_ptr()->write_ipm_format_stream( ff, generator.files_mode(), addMui, with_comments, brief_mode, calcNode->output_set_name() );
 
         std::fstream  f_ch( generator.get_dch_path(), std::ios::out);
-        calcNode->write_dch_format_stream( f_ch, generator.files_mode(), with_comments, brief_mode );
+        dbr_dch_api::write_dch_format_stream(calcNode->current_output_set_name, calcNode->CSD, f_ch, generator.files_mode(), with_comments, brief_mode );
 
         if(generator.files_mode()>=GEMS3KGenerator::f_thermofun )
         {

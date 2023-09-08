@@ -108,9 +108,9 @@ void TNode::allocMemory()
     CSD = new DATACH;
     CNode = new DATABR;
     // mem_set( CSD, 0, sizeof(DATACH) );
-    datach_reset();
+    dbr_dch_api::datach_reset(CSD);
     // mem_set( CNode, 0, sizeof(DATABR) );
-    databr_reset( CNode, 2 );
+    dbr_dch_api::databr_reset(CNode, 2);
 
     // allocation internal structures
     internal_multi.reset(new TMultiBase(this));
@@ -125,10 +125,10 @@ void TNode::allocMemory()
 
 void TNode::freeMemory()
 {
-    datach_free();
+    dbr_dch_api::datach_free(CSD);
     // CSD = 0;
     delete CSD;
-    CNode = databr_free( CNode );
+    CNode = databr_free(CNode);
 }
 
 std::string TNode::system_id() const
