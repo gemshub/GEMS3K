@@ -439,6 +439,16 @@ public:
     long int  GEM_init(std::string dch_json, std::string ipm_json,
                                    std::vector<std::string> dbr_json, long int* nodeTypes);
 
+    /// (4) Produces a formatted text file with detailed contents (scalars and arrays) of the GEM IPM work structure.
+    /// This call is useful when GEM_run() returns with a NodeStatusCH value indicating a GEM calculation error
+    /// (see  above).  Another use is for a detailed comparison of a test system calculation after the version upgrade of GEMS3K.
+    /// \param fname   null-terminated (C) string containing a full path to the disk file to be written.
+    ///                NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance will be used,
+    ///                extended with ".dump.out".  Usually the dbr_file_name field contains the path to the last input DBR file.
+    void  GEM_print_ipm( const char* fname )
+    {
+        internal_Node->GEM_print_ipm(fname);
+    }
     // end of new stuff -------------------------------------------------------
 
     // Methods for working with node arrays (access to data from DBR)

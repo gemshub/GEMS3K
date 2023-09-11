@@ -35,7 +35,7 @@
 
 namespace  dbr_dch_api {
 
-/* temporally extern
+// temporally extern
 DATACH* ppCSD;  ///< Pointer to chemical system data structure CSD (DATACH)
 DATABR* ppCNode;  ///< Pointer to a work node data bridge structure (node)
 static bool load_thermodynamic_data = false;
@@ -47,6 +47,31 @@ static void clearipmLogError() {
     ipmlog_error.clear();
 }
 
+/*
+ *
+
+ Need copy from multi and TNode
+
+void TNode::clear_ThermoEngine()
+bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
+bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa ) - might be template for different pmm structure
+
+void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double PPa )
+void TMultiBase::DC_LoadThermodynamicData(TNode* aNa )
+
+short copy of
+ms_multi_file
+ms_multi_copy   (allocation and free)
+ms_multi_format
+
+/// Reading structure MULTI (GEM IPM work structure)
+template<typename TIO>
+void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
+/// Reads Multi structure from a json/key-value string
+bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH, const std::string& test_set_name )
+void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes  type_f, DATACH  *dCH, const std::string& test_set_name )
+ */
+
 //  Parameters:
 //  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
 //  @param ipm_json -  Multi structure as a json/key-value string
@@ -57,7 +82,7 @@ long int  GEM_init( std::string dch_json, std::string ipm_json,
 {
     load_thermodynamic_data = false; // need load thermo
     clearipmLogError();
-    /// clear_ThermoEngine();
+    ////clear_ThermoEngine();
 
     try
     {
@@ -79,11 +104,11 @@ long int  GEM_init( std::string dch_json, std::string ipm_json,
         //}
 
         // Reading DCH_DAT data
-        datach_from_string(ppCSD, dch_json);
+        datach_from_string(current_input_set_name, ppCSD, dch_json);
 
         if( !fun_json.empty() )
         {
-            /// load_ThermoEngine(fun_json);
+            ////load_ThermoEngine(fun_json);
         }
         /** Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
         multi_ptr()->gemipm_from_string( ipm_json, CSD, current_input_set_name );
@@ -104,12 +129,12 @@ long int  GEM_init( std::string dch_json, std::string ipm_json,
         pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
         pmm->Fdev2[0] = 0.;
         pmm->Fdev2[1] = 1e-6;
-        *
+        */
         // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
-        databr_from_string(ppCSD, ppCNode, dbr_json);
+        databr_from_string(current_input_set_name, ppCSD, ppCNode, dbr_json);
 
         // Creating and initializing the TActivity class instance for this TNode instance
-        /// init_into_gems3k();
+        //// init_into_gems3k();
         //gems_logger->info("Initialization of system {}", char_array_to_string(pmm->stkey,EQ_RKLEN));
 
         return 0;
@@ -131,7 +156,7 @@ long int  GEM_init( std::string dch_json, std::string ipm_json,
     return 1;
 }
 
-*/
+
 
 //-------------------------------------------------------------------------
 

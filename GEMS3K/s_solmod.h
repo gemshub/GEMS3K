@@ -134,9 +134,6 @@ class TSolMod
 {
 	protected:
 
-        /// Default logger for TSolMod class
-        static std::shared_ptr<spdlog::logger> solmod_logger;
-
         char ModCode;   ///< Code of the mixing model
         char MixCode;	///< Code for specific EoS mixing rules or site-balance based electrostatic SCMs
                 char *DC_Codes; ///< Class codes of end members (species) ->NComp
@@ -214,6 +211,9 @@ class TSolMod
 
 
         public:
+
+        /// Default logger for TSolMod class
+        static std::shared_ptr<spdlog::logger> solmod_logger;
 
         /// Generic constructor
         TSolMod( SolutionData *sd );
