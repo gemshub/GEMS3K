@@ -35,7 +35,7 @@
 
 namespace  dbr_dch_api {
 
-// temporally extern
+/* temporally extern
 DATACH* ppCSD;  ///< Pointer to chemical system data structure CSD (DATACH)
 DATABR* ppCNode;  ///< Pointer to a work node data bridge structure (node)
 static bool load_thermodynamic_data = false;
@@ -47,8 +47,6 @@ static void clearipmLogError() {
     ipmlog_error.clear();
 }
 
-/*
- *
 
  Need copy from multi and TNode
 
@@ -70,7 +68,6 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 /// Reads Multi structure from a json/key-value string
 bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH, const std::string& test_set_name )
 void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes  type_f, DATACH  *dCH, const std::string& test_set_name )
- */
 
 //  Parameters:
 //  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
@@ -129,7 +126,7 @@ long int  GEM_init( std::string dch_json, std::string ipm_json,
         pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
         pmm->Fdev2[0] = 0.;
         pmm->Fdev2[1] = 1e-6;
-        */
+        *
         // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
         databr_from_string(current_input_set_name, ppCSD, ppCNode, dbr_json);
 
@@ -156,10 +153,116 @@ long int  GEM_init( std::string dch_json, std::string ipm_json,
     return 1;
 }
 
+*/
 
+//===============================================================
+
+long int gridTP(const DATACH* pCSD)
+{
+    if( pCSD->mLook == 1L )
+        return pCSD->nTp;
+    else
+        return (pCSD->nPp * pCSD->nTp);
+}
+
+std::string check_TP(const DATACH* CSD, double TK, double P)
+{
+    std::string error_msg;
+    bool okT = true, okP = true;
+    double T_=TK, P_=P;
+
+    if( CSD->mLook == 1 )
+    {
+        for(long int  jj=0; jj<CSD->nPp; jj++)
+            if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) )
+            {
+                return error_msg;
+            }
+        Error( "check_TP: ", std::string("Temperature ")+std::to_string(TK)+
+               " and pressure "+std::to_string(P)+" out of range");
+        //return false;
+    }
+    else
+    {
+        if( TK <= CSD->TKval[0] - CSD->Ttol )
+        { 				// Lower boundary of T interpolation interval
+            okT = false;
+            T_ = CSD->TKval[0] - CSD->Ttol;
+        }
+        if( TK >= CSD->TKval[CSD->nTp-1] + CSD->Ttol )
+        {
+            okT = false;
+            T_ = CSD->TKval[CSD->nTp-1] + CSD->Ttol;
+        }
+        if( okT == false ) {
+            error_msg += "Given TK=" + std::to_string(TK);
+            error_msg += " is beyond the interpolation range for thermodynamic data near boundary T_= ";
+            error_msg += std::to_string(T_);
+        }
+
+        if( P <= CSD->Pval[0] - CSD->Ptol )
+        {
+            okP = false;
+            P_ = CSD->Pval[0] - CSD->Ptol;
+        }
+        if( P >= CSD->Pval[CSD->nPp-1] + CSD->Ptol )
+        {
+            okP = false;
+            P_ = CSD->Pval[CSD->nPp-1] + CSD->Ptol;
+        }
+        if( !okP ) {
+            error_msg += "Given P=" + std::to_string(P);
+            error_msg += " is beyond the interpolation range for thermodynamic data near boundary P_= ";
+            error_msg += std::to_string(P_);
+        }
+        return error_msg;
+    }
+    return error_msg;
+}
+
+long int check_grid_T(const DATACH* CSD, double TK)
+{
+    long int jj;
+    for( jj=0; jj<CSD->nTp; jj++)
+        if( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol )
+            return jj;
+    return -1;
+}
+
+long int check_grid_P(const DATACH* CSD, double P)
+{
+    long int jj;
+    for( jj=0; jj<CSD->nPp; jj++)
+        if( fabs( P - CSD->Pval[jj] ) < CSD->Ptol )
+            return jj;
+    return -1;
+}
+
+long int check_grid_TP(const DATACH* CSD, double TK, double P)
+{
+    long int xT, xP, ndx=-1;
+
+    if( CSD->mLook == 1 )
+    {
+        for(long int  jj=0; jj<CSD->nPp; jj++)
+            if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) )
+                return jj;
+        Error( "check_grid_TP: " , std::string("Temperature ")+std::to_string(TK)+
+               " and pressure "+std::to_string(P)+" out of grid" );
+        //return -1;
+    }
+    else
+    {
+        xT = check_grid_T(CSD, TK);
+        xP = check_grid_P(CSD, P);
+        if( xT >=0 && xP>= 0 )
+            ndx =  xP * CSD->nTp + xT;
+        return ndx;
+    }
+    return ndx;
+}
 
 //-------------------------------------------------------------------------
-
 
 // Writes CSD (DATACH structure) to a json string or key-value string
 // \param brief_mode - Do not write data items that contain only default values

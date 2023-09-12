@@ -699,16 +699,25 @@ public:
 
     /// Tests TK as a grid point for the interpolation of thermodynamic data.
     /// \return index in the lookup grid array or -1  if it is not a grid point
-    long int  check_grid_T( double TK ) const;
+    long int  check_grid_T( double TK ) const
+    {
+        return dbr_dch_api::check_grid_T(CSD, TK);
+    }
 
     /// Tests P as a grid point for the interpolation of thermodynamic data.
     /// \return index in the lookup grid array or -1 if it is not a grid point
-    long int  check_grid_P( double P ) const;
+    long int  check_grid_P( double P ) const
+    {
+        return dbr_dch_api::check_grid_P(CSD, P);
+    }
 
     /// Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using DATACH
     /// lookup arrays. \return -1L if interpolation is needed, or 1D index of the lookup array element
     /// if TK and P fit within the respective tolerances.
-    long int  check_grid_TP(  double T, double P ) const;
+    long int  check_grid_TP(double T, double P) const
+    {
+        return dbr_dch_api::check_grid_TP(CSD, T, P);
+    }
 
     /// Returns number of temperature and  pressure grid points for one dependent component
     inline long int gridTP() const

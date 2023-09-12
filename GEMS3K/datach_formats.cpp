@@ -170,17 +170,6 @@ std::vector<io_formats::outField> DataCH_dynamic_fields2 =  { //  [30] +4
 
 //===============================================================
 
-
-long int gridTP(const DATACH* pCSD)
-{
-    if( pCSD->mLook == 1L )
-        return pCSD->nTp;
-    else
-        return (pCSD->nPp * pCSD->nTp);
-}
-
-//===============================================================
-
 template<typename TIO>
 void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format, bool with_comments, bool brief_mode)
 {

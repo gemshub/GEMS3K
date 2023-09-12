@@ -524,7 +524,7 @@ class TSolModMulti
     std::shared_ptr<BASE_PARAM> pa_standalone;
 
 
-    // Staff from TNode
+    // Stuff from TNode
     DATACH* CSD;  ///< Pointer to chemical system data structure CSD (DATACH)
     DATABR* CNode;  ///< Pointer to a work node data bridge structure (node)
     bool load_thermodynamic_data = false;
@@ -557,21 +557,13 @@ public:
     explicit TSolModMulti();
     virtual ~TSolModMulti();
 
-    virtual void multi_realloc( char PAalp, char PSigm );
-    void multi_kill();
-    
-    virtual BASE_PARAM* base_param() const
-    {
-       return pa_standalone.get();
-    }
+    // acces for node class
+    TSolMod * pTSolMod (int xPH);
 
-    TSOLMOD_MULTI* GetPM()
-    { return &pm; }
+    long GEM_init(const char *ipmfiles_lst_name);
+    void LoadThermodynamicData(double TK, double PPa);
 
-    virtual void set_def( int i=0);
-    ///virtual long int testMulti();
 
-    //connection to mass transport
     void to_text_file( const char *path, bool append=false  );
     template<typename TIO>
     void to_text_file_gemipm( TIO& out_format, bool addMui,
@@ -604,40 +596,22 @@ public:
     void  write_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
                                    bool addMui, bool with_comments, bool brief_mode, const std::string& test_set_name );
 
-    // New functions for TSolMod, TKinMet and TSorpMod parameter arrays
-    void getLsModsum( long int& LsModSum, long int& LsIPxSum );
-    void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
-    /// Get dimensions from LsPhl array
-    void getLsPhlsum( long int& PhLinSum,long int& lPhcSum );
-    /// Get dimensions from LsMdc2 array
-    void getLsMdc2sum( long int& DQFcSum,long int& rcpcSum );
-    /// Get dimensions from LsISmo array
-    void getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum );
-    /// Get dimensions from LsESmo array
-    void getLsESmosum( long int& EImcSum,long int& mCDcSum );
-    /// Get dimensions from LsKin array
-    void getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
-                      long int& rpConCSum,long int& apConCSum, long int& AscpCSum );
-    /// Get dimensions from LsUpot array
-    void getLsUptsum(long int& UMpcSum, long int& xICuCSum);
-
-    // EXTERNAL FUNCTIONS
-    // MultiCalc
-    void Alloc_internal();
-    ///double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
-    ///void InitalizeGEM_IPM_Data();
-    ///virtual void DC_LoadThermodynamicData( TNode* aNa = nullptr );
-
-    // acces for node class
-    TSolMod * pTSolMod (int xPH);
-
-    ///long int CheckMassBalanceResiduals(double *Y );
-    ///double ConvertGj_toUniformStandardState( double g0, long int j, long int k );
-    ///double PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag = 0L ); // Added 26.06.08
-
-
-    long GEM_init(const char *ipmfiles_lst_name);
 protected:
+
+    virtual void multi_realloc( char PAalp, char PSigm );
+    void multi_kill();
+
+    virtual BASE_PARAM* base_param() const
+    {
+       return pa_standalone.get();
+    }
+
+    TSOLMOD_MULTI* GetPM()
+    { return &pm; }
+
+    virtual void set_def( int i=0);
+    ///virtual long int testMulti();
+
 
     TSOLMOD_MULTI pm;
     TSOLMOD_MULTI *pmp;
@@ -649,6 +623,7 @@ protected:
     long int *arrL;
     long int *arrAN;
 
+    void Alloc_internal();
     void Alloc_A_B( long int newN );
     void Free_A_B();
     void Build_compressed_xAN();
@@ -676,6 +651,24 @@ protected:
     ///void Reset_uDD(long int cr, bool trace = false );
     ///void Increment_uDD( long int r, bool trace = false );
     ///long int Check_uDD( long int mode, double DivTol, bool trace = false );
+
+
+    // New functions for TSolMod, TKinMet and TSorpMod parameter arrays
+    void getLsModsum( long int& LsModSum, long int& LsIPxSum );
+    void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
+    /// Get dimensions from LsPhl array
+    void getLsPhlsum( long int& PhLinSum,long int& lPhcSum );
+    /// Get dimensions from LsMdc2 array
+    void getLsMdc2sum( long int& DQFcSum,long int& rcpcSum );
+    /// Get dimensions from LsISmo array
+    void getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum );
+    /// Get dimensions from LsESmo array
+    void getLsESmosum( long int& EImcSum,long int& mCDcSum );
+    /// Get dimensions from LsKin array
+    void getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
+                      long int& rpConCSum,long int& apConCSum, long int& AscpCSum );
+    /// Get dimensions from LsUpot array
+    void getLsUptsum(long int& UMpcSum, long int& xICuCSum);
 
     virtual void get_PAalp_PSigm(char &PAalp, char &PSigm);
     ///virtual void STEP_POINT( const char* /*str*/);
@@ -730,9 +723,17 @@ protected:
     ///double DC_GibbsEnergyContribution(   double G,  double x,  double logXF,
     ///                                     double logXw,  char DCCW );
     ///double GX( double LM  );
-    void ConvertDCC();
     ///long int  getXvolume();
 
+    void init_into_gems3k();
+    void InitalizeGEM_IPM_Data();
+    void MultiConstInit();
+    void load_all_thermodynamic_from_grid(double TK, double PPa);
+    bool load_all_thermodynamic_from_thermo(double TK, double PPa);
+
+    void ConvertDCC();
+    double ConvertGj_toUniformStandardState(double g0, long j, long k);
+    long getXvolume();
 };
 
 // ???? syp->PGmax
