@@ -26,6 +26,10 @@
 
 #include "s_solmod.h"
 #include "v_detail.h"
+#include "io_template.h"
+#include "io_simdjson.h"
+#include "io_keyvalue.h"
+#include "jsonconfig.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 // Thread-safe logger to stdout with colors
@@ -379,5 +383,82 @@ double TSolMod::ideal_conf_entropy()
     Sicnf = (-1.)*R_CONST*sic;
     return Sicnf;
 }
+
+void TSolMod::to_json_file(const std::string& path)
+{
+    std::fstream ff(GemsSettings::with_directory(path), std::ios::out);
+    ErrorIf(!ff.good(), path, "Fileopen error");
+
+    io_formats::SimdJsonWrite out_format( ff, "set_name", true );
+    out_format.put_head( PhaseName, "tsolmod");
+    io_formats::TPrintArrays<io_formats::SimdJsonWrite>  prar( 0, {}, out_format );
+
+    prar.addField("PhaseName", std::string(PhaseName));
+    prar.addField("Tk", Tk);
+    prar.addField("Pbar", Pbar);
+
+    prar.addField("ModCode", ModCode);
+    prar.addField("MixCode", MixCode);
+    prar.writeArray( "DC_Codes",  DC_Codes, NComp, 1L );
+    prar.addField("NComp", NComp);
+    prar.addField("NPar", NPar);
+    prar.addField("NPcoef", NPcoef);
+    prar.addField("MaxOrd", MaxOrd);
+    prar.addField("NP_DC", NP_DC);
+    prar.addField("NSub", NSub);
+    prar.addField("NMoi", NMoi);
+    prar.addField("NDQFpc", NDQFpc);
+
+    prar.writeArray( "aIPx",  aIPx, NPar*MaxOrd );
+    prar.writeArray( "aIPc",  aIPc, NPar*NPcoef );
+    prar.writeArray( "aDCc",  aDCc, NComp*NP_DC );
+    prar.writeArray( "aGEX",  aGEX, NComp );
+    prar.writeArray( "aPparc",  aPparc, NComp );
+    prar.writeArray( "x",  x, NComp );
+    prar.writeArray( "aVol",  aVol, NComp );
+    prar.writeArray( "phVOL",  phVOL, 1L );
+    prar.writeArray( "DQFcf",  DQFcf, NComp*NDQFpc );
+    prar.writeArray( "aMoiSN",  aMoiSN, NComp*NSub*NMoi );
+    prar.writeArray( "aSitFR",  aSitFR, NSub*NMoi );
+    prar.writeArray( "lnGamma",  lnGamma, NComp );
+    out_format.dump( true );
+}
+
+
+void TSolMod::to_text_file(const std::string& path, bool append)
+{
+    std::ios::openmode mod = std::ios::out;
+    if( append )
+        mod = std::ios::out|std::ios::app;
+    std::fstream ff(GemsSettings::with_directory(path), mod );
+    ErrorIf( !ff.good() , path, "Fileopen error");
+
+    io_formats::KeyValueWrite out_format( ff );
+    out_format.put_head( PhaseName, "tsolmod");
+    io_formats::TPrintArrays<io_formats::KeyValueWrite>  prar( 0, {}, out_format );
+
+    prar.addField("PhaseName", std::string(PhaseName));
+    prar.addField("Tk", Tk);
+    prar.addField("Pbar", Pbar);
+    if(NPar)
+        prar.writeArray( "aIP",  aIP, NPar );
+    prar.writeArray( "aGEX",  aGEX, NComp );
+    prar.writeArray( "aPparc",  aPparc, NComp );
+    prar.writeArray( "x",  x, NComp );
+    prar.writeArray( "aVol",  aVol, NComp );
+    prar.writeArray( "lnGamma",  lnGamma, NComp );
+    prar.writeArray( "lnGamConf", lnGamConf, NComp );
+    prar.writeArray( "lnGamRecip",  lnGamRecip, NComp );
+    prar.writeArray( "lnGamEx",  lnGamEx, NComp );
+    prar.writeArray( "lnGamDQF",  lnGamDQF, NComp );
+    // not use prar.writeArray( "CTerm",  CTerm, NComp );
+    // not use prar.writeArray( "lnGamCorr",  lnGamCorr, NComp );
+    prar.writeArray( "Gex",  &Gex, 7L );
+    prar.writeArray( "Gid",  &Gid, 7L );
+    prar.writeArray( "Gdq",  &Gdq, 7L );
+    prar.writeArray( "Grs",  &Grs, 7L );
+    prar.writeComment( true, "-----------------------------------\n");
+}
+
 
 //--------------------- End of s_solmod.cpp ----------------------------------------

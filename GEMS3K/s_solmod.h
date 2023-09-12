@@ -5,7 +5,7 @@
 /// Declarations of TSolMod and derived classes implementing built-in models
 /// of mixing in fluid, liquid, aqueous and solid-solution phases
 
-// Copyright (C) 2003-2014  T.Wagner, D.Kulik, S.Dmitrieva, F.Hingerl, S.Churakov
+// Copyright (C) 2003-2023  T.Wagner, D.Kulik, S.Dmitrieva, F.Hingerl, S.Churakov
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -270,9 +270,12 @@ class TSolMod
 				lngamma[i] = lnGamma[i]; 
 		}
 
+        /// Trace writing arrays TSolMod to keyvalue format file
+        void to_text_file(const std::string& path, bool append);
 
+        /// Writing input structure TSolMod to json format file
+        void to_json_file(const std::string& path);
 };
-
 
 
 /// Subclass for the ideal model (both simple and multi-site)
