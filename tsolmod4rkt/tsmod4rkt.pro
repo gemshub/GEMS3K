@@ -80,6 +80,7 @@ HEADERS	 +=         $$GEMS3K_H/verror.h  \
                     $$GEMS3K_H/v_service.h \
                     $$GEMS3K_H/jsonconfig.h \
                     $$GEMS3K_H/datach_api.h \
+                    solmodcalc.h \
                     tsolmod_multi.h
 
 SOURCES	  +=          $$GEMS3K_CPP/gdatastream.cpp  \
@@ -101,6 +102,7 @@ SOURCES	  +=          $$GEMS3K_CPP/gdatastream.cpp  \
                       $$GEMS3K_CPP/jsonconfig.cpp \
                       $$GEMS3K_CPP/datach_api.cpp \
                       $$GEMS3K_CPP/datach_formats.cpp \
+                      solmodcalc.cpp \
                       tsmod4rkt.cpp \
                       tsolmod_multi_add.cpp \
                       tsolmod_multi_alloc.cpp \
