@@ -526,7 +526,6 @@ void TActivity::SolModCreate( long int jb, long int jmb, long int jsb, long int 
 //    sd.lPhc = act.lPhc+ jlphc;
     sd.DQFc = act.DQFc+ jdqfc;
 //    sd.rcpc = act.rcpc+ jrcpc;
-    //sd.arSitFj =
 
     // specific properties
     aM = act.Y_m+jb;
@@ -542,7 +541,6 @@ void TActivity::SolModCreate( long int jb, long int jmb, long int jsb, long int 
         case SM_OTHER:  // Hard-coded solid solution models (selected by phase name)
         {
                 TModOther* myPT = new TModOther( &sd, act.denW, act.epsW );
-                myPT->GetPhaseName( act.SF[k] );
                 mySM = (TSolMod*)myPT;
                 break;
         }
@@ -731,7 +729,6 @@ void TActivity::SolModCreate( long int jb, long int jmb, long int jsb, long int 
         case SM_IDEAL:
         {
                 TIdeal* myPT = new TIdeal( &sd );
-                myPT->GetPhaseName( act.SF[k] );
                 mySM = (TSolMod*)myPT;
                 break;
         }

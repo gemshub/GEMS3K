@@ -361,9 +361,6 @@ double q_Cst;    // Standard sorption capacity, mol/kg(sorbent) or eq/kg(sorbent
     bool testSizes( long int NSpecies, long int NSurSpecies, long int NSorbentEMs,
                     long int NSurfTypes, char Mod_Code, char EIL_Code );
 
-    // getting phase name
-    void GetPhaseName( const char *PhName );
-
 };
 
 

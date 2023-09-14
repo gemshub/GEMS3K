@@ -43,10 +43,11 @@ std::shared_ptr<spdlog::logger> TSolMod::solmod_logger = spdlog::stdout_color_mt
 
 /// generic constructor (new)
 TSolMod::TSolMod( SolutionData *sd ):
-        ModCode(sd->Mod_Code), MixCode(sd->Mix_Code), NComp(sd->NSpecies),  NPar(sd->NParams),
+        ModCode(sd->Mod_Code), MixCode(sd->Mix_Code), PhaseName(sd->phaseName), NComp(sd->NSpecies), NPar(sd->NParams),
         NPcoef(sd->NPcoefs), MaxOrd(sd->MaxOrder),  NP_DC(sd->NPperDC), /*NPTP_DC(NPTPperDC),*/
         NSub(sd->NSublat), NMoi(sd->NMoiet), R_CONST(8.31451), Tk(sd->T_k), Pbar(sd->P_bar)
 {
+    DC_Names = sd->arSM;
 //   NlPh = sd->NlPhs;
 //    NlPc = sd->NlPhC;
     NDQFpc = sd->NDQFpDC;
@@ -62,7 +63,6 @@ TSolMod::TSolMod( SolutionData *sd ):
 //        PhLin[i][0] = sd->arPhLin[2*i];
 //        PhLin[i][1] = sd->arPhLin[2*i+1];
 //    }
-    //aSitFj = sd->arSitFj;
     // pointer assignments
     aIPx = sd->arIPx;   // Direct access to index list and parameter coeff arrays!
     aIPc = sd->arIPc;
@@ -105,7 +105,7 @@ TSolMod::TSolMod( SolutionData *sd ):
 
 /// generic constructor (new) for calling from DComp/DCthermo calculations
 TSolMod::TSolMod( long int NSpecies, char Mod_Code,  double T_k, double P_bar ):
-        ModCode(Mod_Code), MixCode(0), NComp(NSpecies),  NPar(0),
+        ModCode(Mod_Code), MixCode(0), PhaseName("undef"), NComp(NSpecies),  NPar(0),
         NPcoef(0), MaxOrd(0),  NP_DC(0), /*NPTP_DC(NPTPperDC),*/
         NSub(0), NMoi(0), R_CONST(8.31451), Tk(T_k), Pbar(P_bar)
 {
@@ -288,14 +288,6 @@ long int TSolMod::UpdatePT ( double T_k, double P_bar )
 	  return 0;
 }
 
-
-/// gets phase name for specific built-in models (class TModOther)
-void TSolMod::GetPhaseName( const char *PhName )
-{
-     strncpy( PhaseName, PhName, MAXPHNAME );
-     PhaseName[MAXPHNAME] = 0;
-}
-
 /// Calculation of configurational terms for the ideal mixing (c) DK, TW Nov. 2010
 /// Based upon the formalism of Price (1985)
 /// Returns 0 if calculated o.k., or 1 if this is not a multi-site model
@@ -393,13 +385,12 @@ void TSolMod::to_json_file(const std::string& path)
     out_format.put_head( PhaseName, "tsolmod");
     io_formats::TPrintArrays<io_formats::SimdJsonWrite>  prar( 0, {}, out_format );
 
-    prar.addField("PhaseName", std::string(PhaseName));
+    prar.addField("PhaseName", PhaseName);
     prar.addField("Tk", Tk);
     prar.addField("Pbar", Pbar);
 
     prar.addField("ModCode", ModCode);
     prar.addField("MixCode", MixCode);
-    prar.writeArray( "DC_Codes",  DC_Codes, NComp, 1L );
     prar.addField("NComp", NComp);
     prar.addField("NPar", NPar);
     prar.addField("NPcoef", NPcoef);
@@ -408,22 +399,23 @@ void TSolMod::to_json_file(const std::string& path)
     prar.addField("NSub", NSub);
     prar.addField("NMoi", NMoi);
     prar.addField("NDQFpc", NDQFpc);
+    prar.writeArray( "phVOL",  phVOL, 1L );
 
     prar.writeArray( "aIPx",  aIPx, NPar*MaxOrd );
     prar.writeArray( "aIPc",  aIPc, NPar*NPcoef );
     prar.writeArray( "aDCc",  aDCc, NComp*NP_DC );
+    prar.writeArray( "DCNL", DC_Names[0], NComp, MAXDCNAME );
+    prar.writeArray( "DC_Codes",  DC_Codes, NComp, 1L );
     prar.writeArray( "aGEX",  aGEX, NComp );
     prar.writeArray( "aPparc",  aPparc, NComp );
-    prar.writeArray( "x",  x, NComp );
     prar.writeArray( "aVol",  aVol, NComp );
-    prar.writeArray( "phVOL",  phVOL, 1L );
-    prar.writeArray( "DQFcf",  DQFcf, NComp*NDQFpc );
-    prar.writeArray( "aMoiSN",  aMoiSN, NComp*NSub*NMoi );
-    prar.writeArray( "aSitFR",  aSitFR, NSub*NMoi );
+    prar.writeArray( "x",  x, NComp );
     prar.writeArray( "lnGamma",  lnGamma, NComp );
+    prar.writeArray( "DQFcf",  DQFcf, NComp*NDQFpc );
+    prar.writeArray( "aSitFR",  aSitFR, NSub*NMoi );
+    prar.writeArray( "aMoiSN",  aMoiSN, NComp*NSub*NMoi );
     out_format.dump( true );
 }
-
 
 void TSolMod::to_text_file(const std::string& path, bool append)
 {
@@ -437,7 +429,7 @@ void TSolMod::to_text_file(const std::string& path, bool append)
     out_format.put_head( PhaseName, "tsolmod");
     io_formats::TPrintArrays<io_formats::KeyValueWrite>  prar( 0, {}, out_format );
 
-    prar.addField("PhaseName", std::string(PhaseName));
+    prar.addField("PhaseName", PhaseName);
     prar.addField("Tk", Tk);
     prar.addField("Pbar", Pbar);
     if(NPar)
