@@ -24,16 +24,11 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include "v_detail.h"
-#include "io_template.h"
-#include "io_nlohmann.h"
-#include "io_simdjson.h"
-#include "io_keyvalue.h"
 #include "tsolmod_multi.h"
-#include "datach_api.h"
-#include "s_solmod.h"
-#include "num_methods.h"
 #include "jsonconfig.h"
+#include "datach_api.h"
+#include "num_methods.h"
+#include "v_service.h"
 
 // Conversion factors
 const double bar_to_Pa = 1e5,
@@ -42,20 +37,20 @@ kg_to_g = 1e3;
 
 
 const BASE_PARAM pa_p_ =
-        {    // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
-         2,  /* PC */  2,     /* PD */   -5,   /* PRD */
-         1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
-         0, /* DT */     30000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
-         1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
-         1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
-         1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
-         1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
-         1e-6, /* DFYs, */  1e-17,  /* DB */   1.,   /* AG */
-         0.,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-         1e-3, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
-         1e-13,  /* ScMin, */  1e-33, /* DcMin, */   1e-20, /* PhMin, */
-         1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
-         1e-10,  /* DKIN  */ 0,  /* tprn */
+{    // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
+     2,  /* PC */  2,     /* PD */   -5,   /* PRD */
+     1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
+     0, /* DT */     30000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
+     1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
+     1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
+     1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
+     1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
+     1e-6, /* DFYs, */  1e-17,  /* DB */   1.,   /* AG */
+     0.,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
+     1e-3, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
+     1e-13,  /* ScMin, */  1e-33, /* DcMin, */   1e-20, /* PhMin, */
+     1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
+     1e-10,  /* DKIN  */ 0,  /* tprn */
 }; // BASE_PARAM
 
 // New --------------------------------------------------------------------
@@ -67,23 +62,8 @@ TSolModMulti::TSolModMulti()
     *pa_standalone = pa_p_;
 
     pmp = &pm;
-    sizeN = 0;
-    AA = nullptr;
-    BB = nullptr;
-    arrL = nullptr;
-    arrAN = nullptr;
-
-    U_mean = nullptr;
-    U_M2 = nullptr;
-    U_CVo = nullptr;
-    U_CV = nullptr;
-    ICNud = nullptr;
     pm.errorCode[0] ='\0';
     pm.errorBuf[0] ='\0';
-
-    sizeFIs = 0;
-    phSolMod = nullptr;
-
     pmp->Guns = nullptr;
     pmp->Vuns = nullptr;
     pmp->tpp_G = nullptr;
@@ -109,9 +89,7 @@ void TSolModMulti::allocMemory()
     // memory allocation for data bridge structures
     CSD = new DATACH;
     CNode = new DATABR;
-    // mem_set( CSD, 0, sizeof(DATACH) );
     dbr_dch_api::datach_reset(CSD);
-    // mem_set( CNode, 0, sizeof(DATABR) );
     dbr_dch_api::databr_reset(CNode, 2);
 }
 
@@ -125,28 +103,7 @@ void TSolModMulti::freeMemory()
     CSD = nullptr;
 }
 
-// (1) Initialization of GEM IPM2 data structures in coupled RMT-GEM programs
-//  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files
-//  in key-value, json or binary format. Parameters:
-//  ipmfiles_lst_name - name of a text file that contains:
-//    " -f | -j | -t |-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name>
-//  dbfiles_lst_name - name of a text file that contains:
-//    <dataBR  file name1>, ... , <dataBR file nameN> "
-//    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
-//    exist in the same directory where the ipmfiles_lst_name file is located.
-//    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
-//    and must contain valid initial chemical systems (of the same structure
-//    as described in the DCH_DAT file) to set up the initial state of the FMT
-//    node array.
-//  If -t flag or no flag is specified then all data files must be in key-value text
-//    (ASCII) format (and file names must have .dat extension);
-//  If -j and -f flag is specified then all data files must be in JSON format (and file names
-//    must have .json extension);
-//  if -b flag is specified then all data files are assumed to be binary (little-endian)
-//    files.
 //-------------------------------------------------------------------
-
-
 long int  TSolModMulti::GEM_init( const char* ipmfiles_lst_name )
 {
     clearipmLogError();
@@ -180,7 +137,6 @@ long int  TSolModMulti::GEM_init( const char* ipmfiles_lst_name )
             std::fstream ff( generator.get_ipm_path(), std::ios::in );
             ErrorIf( !ff.good() , generator.get_ipm_path(), "Fileopen error");
             read_ipm_format_stream( ff,generator.files_mode(), CSD, current_input_set_name);
-
         }
             break;
         }
@@ -188,16 +144,16 @@ long int  TSolModMulti::GEM_init( const char* ipmfiles_lst_name )
         // copy intervals for minimization
         pmp->Pai[0] = CSD->Pval[0]/bar_to_Pa;
         pmp->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
-        pmp->Pai[2] = getStep( pmp->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+        pmp->Pai[2] = getStep( pmp->Pai, CSD->nPp )/bar_to_Pa;
         pmp->Pai[3] = CSD->Ptol/bar_to_Pa;
 
         pmp->Tai[0] = CSD->TKval[0]-C_to_K;
         pmp->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
-        pmp->Tai[2] = getStep( pmp->Tai, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+        pmp->Tai[2] = getStep( pmp->Tai, CSD->nTp );
         pmp->Tai[3] = CSD->Ttol;
 
         pmp->Fdev1[0] = 0.;
-        pmp->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
+        pmp->Fdev1[1] = 1e-6;
         pmp->Fdev2[0] = 0.;
         pmp->Fdev2[1] = 1e-6;
 
@@ -209,8 +165,10 @@ long int  TSolModMulti::GEM_init( const char* ipmfiles_lst_name )
         ErrorIf( !in_br.good() , dbr_file, "DBR_DAT fileopen error");
         dbr_dch_api::read_dbr_format_stream(current_input_set_name, CSD, CNode, in_br, generator.files_mode());
 
-        // Creating and initializing the TActivity class instance for this TNode instance
-        init_into_gems3k();
+        // Loading thermodynamic, set default values and other (????)
+        InitalizeGEM_IPM_Data();
+        // Creating and initializing the TSolMod array
+        InitalizeTSolMod();
         TSolMod::solmod_logger->info("Initialization of system {}", char_array_to_string(pmp->stkey,EQ_RKLEN));
         return 0;
     }
@@ -235,6 +193,241 @@ long int  TSolModMulti::GEM_init( const char* ipmfiles_lst_name )
         TSolMod::solmod_logger->error("GEM_init error: {}", ipmlog_error);
     }
     return 1;
+}
+
+long int  TSolModMulti::GEM_init( std::string dch_json, std::string ipm_json,
+                                  std::string dbr_json, std::string fun_json)
+{
+    load_thermodynamic_data = false; // need load thermo
+    clearipmLogError();
+    clear_ThermoEngine();
+
+    try
+    {
+        if(fun_json.empty()) {
+            GEMS3KGenerator::default_type_f  = GEMS3KGenerator::f_json;
+        }
+        else {
+            GEMS3KGenerator::default_type_f  = GEMS3KGenerator::f_thermofun;
+        }
+
+        // This check of data consistency temporarily disabled for perfomance testing
+        //if( GEMS3KGenerator::default_type_f  == GEMS3KGenerator::f_json )
+        //{
+        current_output_set_name = current_input_set_name = extract_string_json( "set", dch_json );
+        //     auto ipm_set =  extract_string_json( "set", ipm_json );
+        //     auto dbr_set =  extract_string_json( "set", dbr_json );
+        //     ErrorIf(  ipm_set!=current_input_set_name,  "GEM_init error", "Multi structure as a json has different set name:  "+ipm_set );
+        //     ErrorIf(  dbr_set!=current_input_set_name,  "GEM_init error", "The data bridge structure as a json has different set name:  "+dbr_set );
+        //}
+
+        // Reading DCH_DAT data
+        dbr_dch_api::datach_from_string(current_input_set_name, CSD, dch_json);
+
+        if( !fun_json.empty() )
+        {
+            load_ThermoEngine(fun_json);
+        }
+        // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
+        gemipm_from_string( ipm_json, CSD, current_input_set_name );
+
+        // copy intervals for minimization
+        pmp->Pai[0] = CSD->Pval[0]/bar_to_Pa;
+        pmp->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
+        pmp->Pai[2] = getStep( pmp->Pai, CSD->nPp )/bar_to_Pa;
+
+        pmp->Tai[0] = CSD->TKval[0]-C_to_K;
+        pmp->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
+        pmp->Tai[2] = getStep( pmp->Tai, CSD->nTp );
+
+        pmp->Fdev1[0] = 0.;
+        pmp->Fdev1[1] = 1e-6;
+        pmp->Fdev2[1] = 1e-6;
+
+        // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
+        dbr_dch_api::databr_from_string(current_input_set_name, CSD, CNode, dbr_json);
+
+        // Loading thermodynamic, set default values and other (????)
+        InitalizeGEM_IPM_Data();
+        // Creating and initializing the TSolMod array
+        InitalizeTSolMod();
+        TSolMod::solmod_logger->info("Initialization of system {}", char_array_to_string(pmp->stkey,EQ_RKLEN));
+        return 0;
+    }
+    catch(TError& err)
+    {
+        ipmlog_error = err.title + std::string(": ") + err.mess;
+    }
+    catch(std::exception& e)
+    {
+        ipmlog_error = std::string("std::exception: ") + e.what();
+    }
+    catch(...)
+    {
+        ipmlog_error = "unknown exception";
+        return -1;
+    }
+    if( !ipmlog_error.empty() ) {
+        TSolMod::solmod_logger->error("GEM_init error: {}", ipmlog_error);
+    }
+    return 1;
+}
+
+
+void TSolModMulti::UpdateThermodynamic(double TK, double PPa)
+{
+    LoadThermodynamicData(TK, PPa);
+    for(auto& phase_model: phase_models) {
+        phase_model.UpdatePT(TK, PPa);
+    }
+}
+
+SolModCalc &TSolModMulti::get_phase(std::size_t idx)
+{
+    ErrorIf( idx>=phase_models.size(), "TSolModMulti", "array index " + std::to_string(idx) + " is out of range" );
+    return phase_models[idx];
+}
+
+SolModCalc &TSolModMulti::get_phase(const std::string &name)
+{
+    for(size_t kk=0; kk<phase_names.size(); ++kk ) {
+        if(phase_names[kk] == name) {
+            return  get_phase(kk);
+        }
+    }
+    Error( "TSolModMulti", "Phase '" + name + "' not found" );
+}
+
+// Calculation by IPM (preparing for calculation, unpacking data) In IPM
+void TSolModMulti::InitalizeGEM_IPM_Data() // Reset internal data formerly MultiInit()
+{
+    MultiConstInit();
+    LoadThermodynamicData(CNode->TK, CNode->P); // Loading thermodynamic data into MULTI structure
+}
+
+void TSolModMulti::InitalizeTSolMod()
+{
+    phase_models.clear();
+    phase_names.clear();
+
+    long int k, j, jb, je=0, jpb, jdb;
+    long int ipb, jpe=0, jde=0, ipe=0;
+    long int  jdqfc=0;
+    long int  jmb, jme=0, jsb, jse=0;
+    char *sMod;
+
+    for( k=0; k<pm.FIs; k++ )
+    {
+        // loop on solution phases
+        auto phase_name = char_array_to_string(pm.SF[k]+MAXSYMB, MAXPHNAME);
+        strip(phase_name);
+        phase_names.push_back(phase_name);
+
+        jb = je;
+        je += pm.L1[k];
+        if( pm.L1[k] == 1 && !( pm.PHC[k] == PH_GASMIX ||
+                                pm.PHC[k] == PH_PLASMA ||
+                                pm.PHC[k] == PH_FLUID ))
+        {
+            // empty model
+            phase_models.push_back(SolModCalc(k, jb, phase_name));
+            continue;
+        }
+        // Indexes for extracting data from IPx, PMc and DMc arrays
+        ipb = ipe;
+        ipe += pm.LsMod[k*3]*pm.LsMod[k*3+1];
+        jpb = jpe;
+        jpe += pm.LsMod[k*3]*pm.LsMod[k*3+2];
+        jdb = jde;
+        jde += pm.LsMdc[k*3]*pm.L1[k];
+        sMod = pm.sMod[k];
+
+        jmb = jme;
+        jme += pm.LsMdc[k*3+1]*pm.LsMdc[k*3+2]*pm.L1[k];
+        jsb = jse;
+        jse += pm.LsMdc[k*3+1]*pm.LsMdc[k*3+2];
+
+        double nxk = 1./pm.L1[k];
+        for( j= jb; j<je; j++ )   {
+            // top if(pm.XF[k] < std::min( pm.DSM, pm.PhMinM ) ) // pm.lowPosNum )
+            if(pm.Wx[j] < 1e-10 ) // ???
+                pm.Wx[j] = nxk;  // need this eventually to avoid problems with zero mole fractions
+            pm.fDQF[j] =0.0;  // cleaning fDQF in TP mode!
+            pm.lnGmo[j] = pm.lnGam[j]; // saving activity coefficients in TP mode
+        }
+
+        // the following section probably needs to be re-written to allow more flexible
+        // combinations of fluid models for pure gases with gE mixing models,
+        // scheme should probably be the same as in LINK_UX_MODE, 03.06.2008 (TW)
+        switch( pm.PHC[k] )
+        {
+        case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
+        case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID: case PH_ADSORPT:
+        case PH_IONEX:
+        {
+            SolutionData sd;
+            AddSolutionData addsd;
+
+            sd.phaseName = phase_name;
+            sd.Mod_Code = sMod[SPHAS_TYP];
+            sd.Mix_Code = sMod[MIX_TYP];
+            sd.NSpecies = pm.L1[k];          // Number of components (end members) in the phase
+            sd.NParams = pm.LsMod[k*3];      // Number of interaction parameters
+            sd.NPcoefs = pm.LsMod[k*3+2];    // and number of coefs per parameter in PMc table
+            sd.MaxOrder =  pm.LsMod[k*3+1];  // max. parameter order (cols in IPx)
+            sd.NPperDC = pm.LsMdc[k*3];      // Number of non-ideality coeffs per one DC in multicomponent phase
+            sd.NSublat = pm.LsMdc[k*3+1];    // Number of site types (sublattices) for multi-site SS model
+            sd.NMoiet = pm.LsMdc[k*3+2];     // Number of moieties for multi-site SS model
+            sd.NDQFpDC = pm.LsMdc2[k*3];
+
+            // properties generic to all models
+            sd.arIPx = pm.IPx+ipb;   // Pointer to list of indexes for non-ideal solutions -> NPar x MaxOrd
+            sd.arIPc = pm.PMc+jpb;   // Interaction parameter coefficients f(TP) -> NPar x NPcoef
+            sd.arDCc = pm.DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
+            sd.arWx = pm.Wx+jb;       // End member mole fractions
+            sd.arlnGam = pm.lnGam+jb; // End member ln activity coeffs
+
+            sd.arlnDQFt = pm.lnDQFt+jb; // End member ln activity coeffs
+            sd.arlnRcpt = pm.lnRcpt+jb; // End member ln activity coeffs
+            sd.arlnExet = pm.lnExet+jb; // End member ln activity coeffs
+            sd.arlnCnft = pm.lnCnft+jb; // End member ln activity coeffs
+            sd.arCTermt = pm.CTerms+jb; // End member coulombic terms
+
+            sd.aphVOL = pm.FVOL+k;
+            sd.DC_Codes = pm.DCC+jb;  // pointer to Dcomp class codes (added 02.05.2010 TW)
+            sd.arMoiSN = pm.MoiSN+jmb;  // Pointer to sublattice-moiety multiplicity array
+            sd.arSitFr = pm.SitFr+jsb;  // Pointer to sublattice-moiety multiplicity array
+            sd.arGEX = pm.fDQF+jb;      // DQF parameters or pure-gas fugacities
+            sd.arPparc = pm.Pparc+jb;
+            sd.TP_Code = &pm.dcMod[jb];
+            sd.T_k = pm.Tc;
+            sd.P_bar = pm.P;
+            sd.DQFc = pm.DQFc+ jdqfc;
+            sd.arVol = pm.Vol+jb;
+            sd.arSM = pm.SM+jb;
+
+            addsd.arZ = pm.EZ+jb;
+            addsd.arM = pm.Y_m+jb;
+            addsd.ardenW = pm.denW;
+            addsd.arepsW = pm.epsW;
+            addsd.arG0 = pm.G0+jb;
+            addsd.arFWGT = pm.FWGT+k;
+            addsd.arX = pm.X+jb;
+
+            phase_models.push_back(SolModCalc(k, jb, sd, addsd));
+            // new solution models (TW, DK 2007)
+            phase_models.back().SolModParPT();
+            break;
+        }
+        default:
+            // empty model
+            phase_models.push_back(SolModCalc(k, jb, phase_name));
+            break;
+        }
+        // move pointers
+        jdqfc += (pm.LsMdc2[k*3]*pm.L1[k]);
+
+    } // k
 }
 
 
@@ -273,7 +466,6 @@ bool TSolModMulti::load_ThermoEngine(const std::string &thermo_file_or_string)
     return false;
 #endif
 }
-
 
 bool TSolModMulti::load_all_thermodynamic_from_thermo(double TK, double PPa)
 {
@@ -407,77 +599,6 @@ bool TSolModMulti::load_all_thermodynamic_from_thermo(double TK, double PPa)
     return false;
 #endif
 
-}
-
-void TSolModMulti::init_into_gems3k()
-{
-    //InitReadActivities( mult_in.c_str(),CSD ); // from DCH file in future?
-    InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
-    //this->InitCopyActivities( CSD, pmm, CNode );
-}
-
-// Before Calculations
-/// Calculation by IPM (preparing for calculation, unpacking data) In IPM
-void TSolModMulti::InitalizeGEM_IPM_Data() // Reset internal data formerly MultiInit()
-{
-
-    MultiConstInit();
-    // initalizeGEM_IPM_Data_GUI(); empty
-
-    if( pm.pTPD < 2 )
-    {
-        //  pm.pTPD == 0 => changed T or P;   pm.pTPD == 1 => changed system;
-        LoadThermodynamicData(CNode->TK, CNode->P); // Loading thermodynamic data into MULTI structure
-    }
-    Alloc_internal();
-    Alloc_uDD( pm.N );      // Added 06.05.2011 DK
-
-    // calculate mass of the system
-    pm.MBX = 0.0;
-    for(int i=0; i<pm.N; i++ )
-        pm.MBX += pm.B[i] * pm.Awt[i];
-    pm.MBX /= 1000.;
-    /**
-    RescaleToSize( true );  // Added to set default cutoffs/inserts 30.08.2009 DK
-
-    if(  pm.pNP )
-    {  //  Smart Initial Approximation mode
-        long int j,k;
-
-        loadData( false );  // unpack SysEq record into MULTI
-
-        bool AllPhasesPure = true;   // Added by DK on 09.03.2010
-        // checking if all phases are pure
-        for( k=0; k < pm.FI; k++ )
-            if( pm.L1[k] > 1 )
-                AllPhasesPure = false;
-
-        for( j=0; j< pm.L; j++ )
-            pm.X[j] = pm.Y[j];
-        //       pm.IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
-        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-        CalculateConcentrations( pm.X, pm.XF, pm.XFA);  // 13.03.2008  DK
-        // test multicomponent phases and load data for mixing models
-        if( pm.FIs && AllPhasesPure == false )
-        {
-            // Load activity coeffs for phases-solutions
-            int jb, je=0;
-            for( int kk=0; kk<pm.FIs; kk++ )
-            { // loop on solution phases
-                jb = je;
-                je += pm.L1[kk];
-                // Load activity coeffs for phases-solutions
-                for( j=jb; j< je; j++ )
-                {
-                    pm.lnGmo[j] = pm.lnGam[j];
-                    if( fabs( pm.lnGam[j] ) <= 84. )
-                        //                pm.Gamma[j] = exp( pm.lnGam[j] );
-                        pm.Gamma[j] = PhaseSpecificGamma( j, jb, je, kk, 0 );
-                    else pm.Gamma[j] = 1.0;
-                } // j
-            }  // kk
-        }
-    }*/
 }
 
 /// Setup/copy flags and thresholds for numeric modules to TMulti structure.
@@ -652,24 +773,24 @@ void TSolModMulti::load_all_thermodynamic_from_grid(double TK, double PPa )
             pm.G0[j] = ConvertGj_toUniformStandardState( Go+Gg+Ge, j, k ); // formerly Cj_init_calc()
             // Inside this function, pm.YOF[k] can be added!
 
-                switch( pm.PV )
-                { // put molar volumes of components into A matrix or into the vector of molar volumes
-                // to be checked!
-                case VOL_CONSTR:
-                    if( pm.Vuns )
-                        Vv += pm.Vuns[j];
-                    if( xVol >= 0. )
-                        pm.A[j*pm.N+xVol] = Vv;
-                    [[fallthrough]];
-                case VOL_CALC:
-                case VOL_UNDEF:
-                    if( pm.tpp_Vm )
-                        pm.tpp_Vm[j] = Vv;
-                    if( pm.Vuns )
-                        Vv += pm.Vuns[j];
-                    pm.Vol[j] = Vv  * 10.;
-                    break;
-                }
+            switch( pm.PV )
+            { // put molar volumes of components into A matrix or into the vector of molar volumes
+            // to be checked!
+            case VOL_CONSTR:
+                if( pm.Vuns )
+                    Vv += pm.Vuns[j];
+                if( xVol >= 0. )
+                    pm.A[j*pm.N+xVol] = Vv;
+                [[fallthrough]];
+            case VOL_CALC:
+            case VOL_UNDEF:
+                if( pm.tpp_Vm )
+                    pm.tpp_Vm[j] = Vv;
+                if( pm.Vuns )
+                    Vv += pm.Vuns[j];
+                pm.Vol[j] = Vv  * 10.;
+                break;
+            }
             if( pm.S0 ) pm.S0[j] = S0;
             if( pm.H0 ) pm.H0[j] = h0;
             if( pm.Cp0 ) pm.Cp0[j] = Cp0;
@@ -756,7 +877,7 @@ void TSolModMulti::ConvertDCC()
             case DC_SUR_MINAL:
             case DC_SUR_CARRIER:
             case DC_PEL_CARRIER:
-                 DCCW = DC_ASYM_CARRIER;
+                DCCW = DC_ASYM_CARRIER;
                 break;
             default:
                 if( isdigit( pm.DCC[j] ))
@@ -798,11 +919,11 @@ double TSolModMulti::ConvertGj_toUniformStandardState(double g0, long int j, lon
     case DC_AQ_SURCOMP:
         G += pm.ln5551;
         // calculate molar mass of solvent
-         [[fallthrough]];
+        [[fallthrough]];
     case DC_AQ_SOLVCOM:
     case DC_AQ_SOLVENT:
         //if( testTSyst() ) // empty function in standalone
-          if( noZero( YOF ) )
+        if( noZero( YOF ) )
             G += YOF;  // In GEMS3K, YOF[k] is the only way to influence G directly
         break;
     case DC_GAS_COMP: // gases except H2O and CO2
@@ -815,24 +936,24 @@ double TSolModMulti::ConvertGj_toUniformStandardState(double g0, long int j, lon
     case DC_SOL_MAJOR: // changed by DK on 4.12.2006
     case DC_SOL_MINDEP:
     case DC_SOL_MAJDEP:
-case DC_SCM_SPECIES:
+    case DC_SCM_SPECIES:
         if( pm.PHC[k] == PH_GASMIX || pm.PHC[k] == PH_FLUID
-            || pm.PHC[k] == PH_PLASMA )
+                || pm.PHC[k] == PH_PLASMA )
         {
-//        if( pm.Pparc[j] != 1.0 && pm.Pparc[j] > 1e-30 )
-//           G += log( pm.Pparc[j] ); // log partial pressure/fugacity
-//        else
-               G += log( pm.P ); // log general pressure (changed 04.12.2006)
+            //        if( pm.Pparc[j] != 1.0 && pm.Pparc[j] > 1e-30 )
+            //           G += log( pm.Pparc[j] ); // log partial pressure/fugacity
+            //        else
+            G += log( pm.P ); // log general pressure (changed 04.12.2006)
         }
         // non-electrolyte condensed mixtures
-         [[fallthrough]];
+        [[fallthrough]];
     case DC_SCP_CONDEN: // single-component phase
     case DC_SUR_MINAL:
     case DC_SUR_CARRIER:
     case DC_PEL_CARRIER:
         // if( testTSyst() )  // empty function in standalone
-            if( noZero( YOF ) )
-                G += YOF;
+        if( noZero( YOF ) )
+            G += YOF;
         break;
         // Sorption phases
     case DC_SSC_A0:
@@ -870,4 +991,5 @@ long int TSolModMulti::getXvolume()
     return ret;
 }
 
-// tsolmod_multi_add.cpp
+//--------------------- end of tsolmod_multi_add.cpp ---------------------------
+

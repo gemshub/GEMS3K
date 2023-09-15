@@ -24,27 +24,27 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include "tsolmod_multi.h"
 #include "v_detail.h"
 #include "io_template.h"
 #include "io_nlohmann.h"
 #include "io_simdjson.h"
 #include "io_keyvalue.h"
-#include "tsolmod_multi.h"
 
 const char *_GEMIPM_version_stamp = " GEMS3K v.3.9.6 c.9a8c970";  // interim version, need merge for release v.4.0.0
 
 const double R_CONSTANT = 8.31451,
-              NA_CONSTANT = 6.0221367e23,
-                F_CONSTANT = 96485.309,
-                  e_CONSTANT = 1.60217733e-19,
-                    k_CONSTANT = 1.380658e-23,
+NA_CONSTANT = 6.0221367e23,
+F_CONSTANT = 96485.309,
+e_CONSTANT = 1.60217733e-19,
+k_CONSTANT = 1.380658e-23,
 // Conversion factors
-                      cal_to_J = 4.184,
-                        C_to_K = 273.15,
-                          lg_to_ln = 2.302585093,
-                            ln_to_lg = 0.434294481,
-                             H2O_mol_to_kg = 55.50837344,
-                               Min_phys_amount = 1.66e-24;
+cal_to_J = 4.184,
+C_to_K = 273.15,
+lg_to_ln = 2.302585093,
+ln_to_lg = 0.434294481,
+H2O_mol_to_kg = 55.50837344,
+Min_phys_amount = 1.66e-24;
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
@@ -57,123 +57,121 @@ const double R_CONSTANT = 8.31451,
 // text-format output IPM file.
 //
 std::vector<io_formats::outField> MULTI_static_fields =  {  //8
-    { "pa_PE" , 0 , 0, 0, "# PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)" },
-    { "PV" ,    0 , 0, 0, "# PV: Flag for the volume balance constraint (on Vol IC) for indifferent equilibria at P_Sat (0 or 1)" },
-    { "PSOL" ,  0 , 0, 0, "# PSOL: Total number of DCs in liquid hydrocarbon phases (0; reserved)" },
-    { "PAalp" , 0 , 0, 0, "# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases " },
-    { "PSigm" , 0 , 0, 0, "# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " },
-    { "Lads" ,  0 , 0, 0, "# Lads: Total number of Dependent Components in sorption phases included into this system" },
-    { "FIa" ,   0 , 0, 0, "# FIa: Number of sorption phases included in this system (0 if no sorption phases )" },
-    { "FIat" ,  0 , 0, 0, "# FIat: Maximum number of surface types per adsorption phase (if FIa > 0, set FIat = 6)" }
+   { "pa_PE" , 0 , 0, 0, "# PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)" },
+   { "PV" ,    0 , 0, 0, "# PV: Flag for the volume balance constraint (on Vol IC) for indifferent equilibria at P_Sat (0 or 1)" },
+   { "PSOL" ,  0 , 0, 0, "# PSOL: Total number of DCs in liquid hydrocarbon phases (0; reserved)" },
+   { "PAalp" , 0 , 0, 0, "# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases " },
+   { "PSigm" , 0 , 0, 0, "# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " },
+   { "Lads" ,  0 , 0, 0, "# Lads: Total number of Dependent Components in sorption phases included into this system" },
+   { "FIa" ,   0 , 0, 0, "# FIa: Number of sorption phases included in this system (0 if no sorption phases )" },
+   { "FIat" ,  0 , 0, 0, "# FIat: Maximum number of surface types per adsorption phase (if FIa > 0, set FIat = 6)" }
 };
 
 std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
-    // write/read dynamic (array) data to/from the text-format IPM file
-    {  "sMod",  1 , 0, 0, "# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*8]" },
-    {  "LsMod", 1 , 0, 0, "\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"
-       "\n# [0] number of interaction parameters (rows in <IPx>); [1] max. parameter order (columns in <IPx>);"
-       "\n# [2] number of coefficients per interaction parameter in <PMc> array" },
-    {  "LsMdc", 1 , 0, 0, "\n# LsMdc: Dimensions of TSolMod <DMc> and <MoiSN> arrays [nPS*3]: In each row (for phase):"
-       "\n# [0] number of parameters per component; [1] 0; [2] 0. For multi-site (sublattice) models: "
-       "\n#   [1] number of sublattices nS; [2] total number of moieties nM acting in sublattice sites" },
-    {  "B",     1 , 0, 0, "# B: Full total bulk composition (vector b), moles [nIC] (will be partially re-written from DBR files)" },
-    {  "DCCW",  0 , 0, 0, "# DCCW: internal DC class codes [nDC], will be reset automatically from DCH file content" },
-    // DCCW is placeholder - something else can be used here, if needed
-    {  "Pparc", 0 , 0, 0, "# Pparc: Partial pressures or fugacities of pure Dependent Components [nDC] (reserved)" },
-    {  "fDQF",  0 , 0, 0, "\n# fDQF: DQF parameters of end members or pure gas fugacities, (J/mol/(RT) [nDC]" },
-    {  "lnGmf", 0 , 0, 0, "\n# lnGmf: Natural logarithms of DC activity coefficients used at Simplex LP approximation only [nDC]" },
-    {  "RLC",   0 , 0, 0, "# RLC: Code of metastability constraints for DCs {L U B (default)} [nDC]" },
-    {  "RSC",   0 , 0, 0, "\n# RSC: Units of metastability/kinetic constraints for DCs {M} moles [nDC]" },
-    {  "DLL",   0 , 0, 0, "\n# DLL: Lower metastability constraints on DC amounts <xDC>, moles [nDC] (default: 0)" },
-    {  "DUL",   0 , 0, 0, "\n# DUL: Upper metastability constraints on DC amounts <xDC>, moles [nDC] (default: 1e6)" },
-    {  "Aalp",  0 , 0, 0, "# Aalp: Specific surface areas of phases, m2/g [nPH]" },
-    {  "Sigw",  0 , 0, 0, "\n# Sigw: Specific surface free energy for phase-water interface, J/m2 [nPH] (reserved)" },
-    {  "Sigg",  0 , 0, 0, "\n# Sigg: Specific surface free energy for phase-gas interface, J/m2 (not yet used) [nPH]" },
-    {  "YOF",   0 , 0, 0, "\n# YOF: Surface free energy parameter for phases in J/g (to accomodate for variable phase composition)  [nPH]" },
-    {  "Nfsp",  0 , 0, 0, "\n# Nfsp: Fractions of the sorbent specific surface area allocated to surface types [nPS*6]" },
-    {  "MASDT", 0 , 0, 0, "\n# MASDT: Total maximum site  density per surface type, mkmol/g [nPS*6]" },
-    {  "C1",    0 , 0, 0, "\n# C1: Inner capacitance density parameter C1, F/m2 [nPS*6]" },
-    {  "C2",    0 , 0, 0, "\n# C2: Outer capacitance density parameter C2, F/m2 [nPS*6]" },
-    {  "C3",    0 , 0, 0, "\n# C3: Third capacitance density parameter C3, F/m2 [nPS*6]" },
-    {  "pCh",   0 , 0, 0, "\n# pCh: Density of permanent surface type charge (mkeq/m2) for each surface type on sorption phases [nPS*6]" },
-    {  "SATX",  0 , 0, 0, "\n# SATX: Setup of surface sites and species (will be applied separately within each sorption phase) [Lads*4]"
-       "\n# [0] surface type; [1] sorbent emd member; [2] surface site in surf. type; [3] surface EDL plane" },
-    {  "MASDJ", 0, 0, 0, "\n# MASDJ: Parameters of surface species in surface complexation models [Lads*6]"
-       "\n# [0] max site density mmol/g; [1] species charge allocated to 0 plane;"
-       "\n# [2] species charge allocated to beta -or third plane; [3] Frumkin isotherm interaction parameter;"
-       "\n# [4] denticity or coordination number CN; [5] reserved isoterm parameter" },
-    {  "SCM",   0, 0, 0, "\n# SCM: Classifier of built-in electrostatic models applied to surface types in sorption phases [nPS*6]" },
-    {  "SACT",  0, 0, 0, "\n# SACT: Classifier of applied SACT equations (isotherm corrections) [Lads]" },
-    {  "DCads", 0, 0, 0, "\n# DCads: Classifier of DCs involved in sorption phases [Lads]" },
-    // static: GEM IPM v3 numerical tolerances
-    { "pa_DB" , 0 , 0, 0,  "# DB: Minimum amount of IC in the bulk composition, moles (except charge Zz) { 1e-17 }"},
-    { "pa_DHB", 0 , 0, 0,  "\n# DHB: Maximum allowed relative mass balance residual for ICs { 1e-13 } " },
-    { "pa_EPS", 0 , 0, 0,  "\n# EPS: Tolerance of the SolveSimplex() balance residual for ICs { 1e-10 } " },
-    { "pa_DK",  0 , 0, 0,  "\n# DK: Tolerance for the Dikin's criterion of IPM convergence { 1e-6 } " },
-    { "pa_DF" , 0 , 0, 0,  "\n# DF: Tolerance DF of the stability criterion for a lost phase to be inserted to mass balance { 0.01 } " },
-    { "pa_DP",  0 , 0, 0,  "\n# DP: Maximal number of iterations in MassBalanceRefinement MBR() procedure { 130 }"  },
-    { "pa_IIM", 0 , 0, 0,  "\n# IIM: Maximum allowed number of iterations in one main GEM IPM descent run { 7000 }" },
-    { "pa_PD" , 0 , 0, 0,  "\n# PD: Mode of calculation of DC activity coefficients { 2 } " },
-    { "pa_PRD" , 0 , 0, 0, "\n# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) SpeciationCleanup() { -5 }" },
-    { "pa_AG" ,  0 , 0, 0, "\n# AG: Smoothing parameter 1 for non-ideal primal chemical potential increments (-1 to +1) { 1.0 }" },
-    { "pa_DGC" , 0 , 0, 0, "\n# DGC: Smoothing parameter 2- exponent in smoothing function (-1 to +1) { 0 or 0.001 for adsorption }" },
-    { "pa_PSM" , 0 , 0, 0, "\n# PSM: Level of diagnostic messages { 0- disabled (no ipmlog file); 1- default; 2-including warnings }" },
-    { "pa_GAR" , 0 , 0, 0, "# GAR: Activity coefficient for major (M) species in solution phases at Simplex LP AIA { 1 }"  },
-    { "pa_GAH" , 0 , 0, 0, "# GAH: Activity coefficient for minor (J) species in solution phases at Simplex LP AIA { 1000 }" },
-    { "pa_DS",   0 , 0, 0, "\n# DS: Cutoff minimum amount of stable phase in GEM IPM primal solution, moles { 1e-20 }" },
-    { "pa_XwMin" , 0 , 0, 0, "# XwMin: Cutoff mole amount of water-solvent for aqueous phase elimination { 1e-13 }" },
-    { "pa_ScMin" , 0 , 0, 0, "# ScMin: Cutoff mole amount of solid sorbent for sorption phase elimination { 1e-13 }" },
-    { "pa_DcMin" , 0 , 0, 0, "# DcMin: Cutoff mole amount for elimination of DC (species) in multi-component phase { 1e-33 }" },
-    { "pa_PhMin" , 0 , 0, 0, "# PhMin: Cutoff mole amount for elimination of solution phases other than aqueous { 1e-20 }" },
-    { "pa_ICmin" , 0 , 0, 0, "# ICmin: Cutoff effective molal ionic strength for calculation of aqueous activity coefficients { 1e-5 }" },
-    { "pa_PC" ,   0 , 0, 0,  "\n# PC: Mode of Phase Selection: 1 old (Select-2), 2 new (PSSC), default { 2 }" },
-    { "pa_DFM" ,  0 , 0, 0,  "# DFM: Tolerance for stability criterion for a phase to be eliminated from mass balance { 0.01 } " },
-    { "pa_DFYw" , 0 , 0, 0,  "# DFYw: Insertion mole amount for water-solvent at Simplex()->MBR() bridge { 1e-5 }"},
-    { "pa_DFYaq", 0 , 0, 0,  "# DFYaq: Insertion mole amount for aqueous species at Simplex()->MBR() bridge { 1e-5 }"  },
-    { "pa_DFYid", 0 , 0, 0,  "\n# DFYid: Insertion mole amount for DCs of ideal solution phases at Simplex()->MBR() bridge { 1e-5 }" },
-    { "pa_DFYr" , 0 , 0, 0,  "# DFYr: Insertion mole amount for major DCs in solution phases at Simplex()->MBR()bridge { 1e-5 }" },
-    { "pa_DFYh" , 0 , 0, 0,  "# DFYh: Insertion mole amount for junior DCs in solution phases Simplex()->MBR() bridge{ 1e-5 }" },
-    { "pa_DFYc" , 0 , 0, 0,  "# DFYc: Insertion mole amount for single-component phase at Simplex()->MBR() bridge { 1e-5 }" },
-    { "pa_DFYs",  0 , 0, 0,  "# DFYs: Insertion mole amount for single-component phase in PSSC() algorithm { 1e-6 }" },
-    { "pa_DW",    0 , 0, 0,  "# DW: Activate (1) or disable (0) error condition on maximum number of MBR() iterations DP { 1 }" },
-    { "pa_DT",    0 , 0, 0,  "# DT: use DHB as relative maximum mass balance cutoff for all ICs (0, default); or for major ICs:"
-      "\n# decimal exponent (<-6) applied to DHB cutoff; (1) use DHB also as an absolute cutoff { 1 }" },
-    { "pa_GAS",   0 , 0, 0,  "\n# GAS: Threshold for primal-dual chemical potential difference used in SpeciationCleanup() { 0.001 }" },
-    { "pa_DG",    0 , 0, 0,  "# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1000 }" },
-    { "pa_DNS" ,  0 , 0, 0,  "# DNS: Standard surface number density, nm-2 for calculating activity of surface species { 12.05 }" },
-    { "pa_IEPS" , 0 , 0, 0,  "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 0.001 }" },
-    { "pKin" ,    0 , 0, 0,  "\n# pKin: Flag for using metastability constraints on DC amounts in primal GEM solution { 1 } " },
-    { "pa_DKIN" , 0 , 0, 0,  "# DKIN: Tolerance for non-trivial metastability constraints on DC amounts, moles { 1e-10 } " },
-    { "mui" ,     0 , 0, 0,  "\n# mui: IC indices in parent RMULTS IC list (not used in standalone GEMS3K)" },
-    { "muk" ,     0 , 0, 0,  "\n# muk: Phase indices in parent RMULTS Phase list (not used in standalone GEMS3K)" },
-    { "muj" ,     0 , 0, 0,  "\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
-    { "pa_PLLG" , 0 , 0, 0,  "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 32001 { 30000 }, 0 disables" },
-    { "tMin" ,    0 , 0, 0,  "# tMin: Type of thermodynamic potential to minimize (reserved)" },
-    { "dcMod",    0 , 0, 0,  "# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" },
-    //TKinMet
-    { "kMod",    0 , 0, 0,  "# kMod: Codes for built-in kinetic models [Fi*6]" },
-    { "LsKin",    0 , 0, 0,  "# LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;\n"
-      "# of parameters per species; parameter coefficients in As correction; of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]" },
-    { "LsUpt",    0 , 0, 0,  "# LsUpt: number of uptake kinetics model parameters (coefficients) numpC[k]; (reserved)" },
-    { "xICuC",    0 , 0, 0,  "# xICuC: Collected array of IC species indexes used in partition (fractionation) coefficients  ->L1[k]" },
-    { "PfFact",    0 , 0, 0,  "# PfFact: form factors for phases (taken from TKinMet or set from TNode) [FI] (reserved)" },
-    // TSorpMod stuff
-    { "LsESmo",    0 , 0, 0,  "# LsESmo: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]" },
-    { "LsISmo",    0 , 0, 0,  "# LsISmo: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]" },
-    // TSorpMod & TKinMet stuff
-    { "SorMc",    0 , 0, 0,  "# SorMc: Phase-related kinetics and sorption model parameters: [Fis][16]" },
-    // TSolMod stuff
-    { "LsMdc2",    0 , 0, 0,  "# LsMdc2: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member" },
-    { "LsPhl",    0 , 0, 0,  "# LsPhl: Number of phase links; number of link parameters; [Fi][2]" }
-};
+   // write/read dynamic (array) data to/from the text-format IPM file
+   {  "sMod",  1 , 0, 0, "# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*8]" },
+   {  "LsMod", 1 , 0, 0, "\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"
+      "\n# [0] number of interaction parameters (rows in <IPx>); [1] max. parameter order (columns in <IPx>);"
+      "\n# [2] number of coefficients per interaction parameter in <PMc> array" },
+   {  "LsMdc", 1 , 0, 0, "\n# LsMdc: Dimensions of TSolMod <DMc> and <MoiSN> arrays [nPS*3]: In each row (for phase):"
+      "\n# [0] number of parameters per component; [1] 0; [2] 0. For multi-site (sublattice) models: "
+      "\n#   [1] number of sublattices nS; [2] total number of moieties nM acting in sublattice sites" },
+   {  "B",     1 , 0, 0, "# B: Full total bulk composition (vector b), moles [nIC] (will be partially re-written from DBR files)" },
+   {  "DCCW",  0 , 0, 0, "# DCCW: internal DC class codes [nDC], will be reset automatically from DCH file content" },
+   // DCCW is placeholder - something else can be used here, if needed
+   {  "Pparc", 0 , 0, 0, "# Pparc: Partial pressures or fugacities of pure Dependent Components [nDC] (reserved)" },
+   {  "fDQF",  0 , 0, 0, "\n# fDQF: DQF parameters of end members or pure gas fugacities, (J/mol/(RT) [nDC]" },
+   {  "lnGmf", 0 , 0, 0, "\n# lnGmf: Natural logarithms of DC activity coefficients used at Simplex LP approximation only [nDC]" },
+   {  "RLC",   0 , 0, 0, "# RLC: Code of metastability constraints for DCs {L U B (default)} [nDC]" },
+   {  "RSC",   0 , 0, 0, "\n# RSC: Units of metastability/kinetic constraints for DCs {M} moles [nDC]" },
+   {  "DLL",   0 , 0, 0, "\n# DLL: Lower metastability constraints on DC amounts <xDC>, moles [nDC] (default: 0)" },
+   {  "DUL",   0 , 0, 0, "\n# DUL: Upper metastability constraints on DC amounts <xDC>, moles [nDC] (default: 1e6)" },
+   {  "Aalp",  0 , 0, 0, "# Aalp: Specific surface areas of phases, m2/g [nPH]" },
+   {  "Sigw",  0 , 0, 0, "\n# Sigw: Specific surface free energy for phase-water interface, J/m2 [nPH] (reserved)" },
+   {  "Sigg",  0 , 0, 0, "\n# Sigg: Specific surface free energy for phase-gas interface, J/m2 (not yet used) [nPH]" },
+   {  "YOF",   0 , 0, 0, "\n# YOF: Surface free energy parameter for phases in J/g (to accomodate for variable phase composition)  [nPH]" },
+   {  "Nfsp",  0 , 0, 0, "\n# Nfsp: Fractions of the sorbent specific surface area allocated to surface types [nPS*6]" },
+   {  "MASDT", 0 , 0, 0, "\n# MASDT: Total maximum site  density per surface type, mkmol/g [nPS*6]" },
+   {  "C1",    0 , 0, 0, "\n# C1: Inner capacitance density parameter C1, F/m2 [nPS*6]" },
+   {  "C2",    0 , 0, 0, "\n# C2: Outer capacitance density parameter C2, F/m2 [nPS*6]" },
+   {  "C3",    0 , 0, 0, "\n# C3: Third capacitance density parameter C3, F/m2 [nPS*6]" },
+   {  "pCh",   0 , 0, 0, "\n# pCh: Density of permanent surface type charge (mkeq/m2) for each surface type on sorption phases [nPS*6]" },
+   {  "SATX",  0 , 0, 0, "\n# SATX: Setup of surface sites and species (will be applied separately within each sorption phase) [Lads*4]"
+      "\n# [0] surface type; [1] sorbent emd member; [2] surface site in surf. type; [3] surface EDL plane" },
+   {  "MASDJ", 0, 0, 0, "\n# MASDJ: Parameters of surface species in surface complexation models [Lads*6]"
+      "\n# [0] max site density mmol/g; [1] species charge allocated to 0 plane;"
+      "\n# [2] species charge allocated to beta -or third plane; [3] Frumkin isotherm interaction parameter;"
+      "\n# [4] denticity or coordination number CN; [5] reserved isoterm parameter" },
+   {  "SCM",   0, 0, 0, "\n# SCM: Classifier of built-in electrostatic models applied to surface types in sorption phases [nPS*6]" },
+   {  "SACT",  0, 0, 0, "\n# SACT: Classifier of applied SACT equations (isotherm corrections) [Lads]" },
+   {  "DCads", 0, 0, 0, "\n# DCads: Classifier of DCs involved in sorption phases [Lads]" },
+   // static: GEM IPM v3 numerical tolerances
+   { "pa_DB" , 0 , 0, 0,  "# DB: Minimum amount of IC in the bulk composition, moles (except charge Zz) { 1e-17 }"},
+   { "pa_DHB", 0 , 0, 0,  "\n# DHB: Maximum allowed relative mass balance residual for ICs { 1e-13 } " },
+   { "pa_EPS", 0 , 0, 0,  "\n# EPS: Tolerance of the SolveSimplex() balance residual for ICs { 1e-10 } " },
+   { "pa_DK",  0 , 0, 0,  "\n# DK: Tolerance for the Dikin's criterion of IPM convergence { 1e-6 } " },
+   { "pa_DF" , 0 , 0, 0,  "\n# DF: Tolerance DF of the stability criterion for a lost phase to be inserted to mass balance { 0.01 } " },
+   { "pa_DP",  0 , 0, 0,  "\n# DP: Maximal number of iterations in MassBalanceRefinement MBR() procedure { 130 }"  },
+   { "pa_IIM", 0 , 0, 0,  "\n# IIM: Maximum allowed number of iterations in one main GEM IPM descent run { 7000 }" },
+   { "pa_PD" , 0 , 0, 0,  "\n# PD: Mode of calculation of DC activity coefficients { 2 } " },
+   { "pa_PRD" , 0 , 0, 0, "\n# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) SpeciationCleanup() { -5 }" },
+   { "pa_AG" ,  0 , 0, 0, "\n# AG: Smoothing parameter 1 for non-ideal primal chemical potential increments (-1 to +1) { 1.0 }" },
+   { "pa_DGC" , 0 , 0, 0, "\n# DGC: Smoothing parameter 2- exponent in smoothing function (-1 to +1) { 0 or 0.001 for adsorption }" },
+   { "pa_PSM" , 0 , 0, 0, "\n# PSM: Level of diagnostic messages { 0- disabled (no ipmlog file); 1- default; 2-including warnings }" },
+   { "pa_GAR" , 0 , 0, 0, "# GAR: Activity coefficient for major (M) species in solution phases at Simplex LP AIA { 1 }"  },
+   { "pa_GAH" , 0 , 0, 0, "# GAH: Activity coefficient for minor (J) species in solution phases at Simplex LP AIA { 1000 }" },
+   { "pa_DS",   0 , 0, 0, "\n# DS: Cutoff minimum amount of stable phase in GEM IPM primal solution, moles { 1e-20 }" },
+   { "pa_XwMin" , 0 , 0, 0, "# XwMin: Cutoff mole amount of water-solvent for aqueous phase elimination { 1e-13 }" },
+   { "pa_ScMin" , 0 , 0, 0, "# ScMin: Cutoff mole amount of solid sorbent for sorption phase elimination { 1e-13 }" },
+   { "pa_DcMin" , 0 , 0, 0, "# DcMin: Cutoff mole amount for elimination of DC (species) in multi-component phase { 1e-33 }" },
+   { "pa_PhMin" , 0 , 0, 0, "# PhMin: Cutoff mole amount for elimination of solution phases other than aqueous { 1e-20 }" },
+   { "pa_ICmin" , 0 , 0, 0, "# ICmin: Cutoff effective molal ionic strength for calculation of aqueous activity coefficients { 1e-5 }" },
+   { "pa_PC" ,   0 , 0, 0,  "\n# PC: Mode of Phase Selection: 1 old (Select-2), 2 new (PSSC), default { 2 }" },
+   { "pa_DFM" ,  0 , 0, 0,  "# DFM: Tolerance for stability criterion for a phase to be eliminated from mass balance { 0.01 } " },
+   { "pa_DFYw" , 0 , 0, 0,  "# DFYw: Insertion mole amount for water-solvent at Simplex()->MBR() bridge { 1e-5 }"},
+   { "pa_DFYaq", 0 , 0, 0,  "# DFYaq: Insertion mole amount for aqueous species at Simplex()->MBR() bridge { 1e-5 }"  },
+   { "pa_DFYid", 0 , 0, 0,  "\n# DFYid: Insertion mole amount for DCs of ideal solution phases at Simplex()->MBR() bridge { 1e-5 }" },
+   { "pa_DFYr" , 0 , 0, 0,  "# DFYr: Insertion mole amount for major DCs in solution phases at Simplex()->MBR()bridge { 1e-5 }" },
+   { "pa_DFYh" , 0 , 0, 0,  "# DFYh: Insertion mole amount for junior DCs in solution phases Simplex()->MBR() bridge{ 1e-5 }" },
+   { "pa_DFYc" , 0 , 0, 0,  "# DFYc: Insertion mole amount for single-component phase at Simplex()->MBR() bridge { 1e-5 }" },
+   { "pa_DFYs",  0 , 0, 0,  "# DFYs: Insertion mole amount for single-component phase in PSSC() algorithm { 1e-6 }" },
+   { "pa_DW",    0 , 0, 0,  "# DW: Activate (1) or disable (0) error condition on maximum number of MBR() iterations DP { 1 }" },
+   { "pa_DT",    0 , 0, 0,  "# DT: use DHB as relative maximum mass balance cutoff for all ICs (0, default); or for major ICs:"
+     "\n# decimal exponent (<-6) applied to DHB cutoff; (1) use DHB also as an absolute cutoff { 1 }" },
+   { "pa_GAS",   0 , 0, 0,  "\n# GAS: Threshold for primal-dual chemical potential difference used in SpeciationCleanup() { 0.001 }" },
+   { "pa_DG",    0 , 0, 0,  "# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1000 }" },
+   { "pa_DNS" ,  0 , 0, 0,  "# DNS: Standard surface number density, nm-2 for calculating activity of surface species { 12.05 }" },
+   { "pa_IEPS" , 0 , 0, 0,  "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 0.001 }" },
+   { "pKin" ,    0 , 0, 0,  "\n# pKin: Flag for using metastability constraints on DC amounts in primal GEM solution { 1 } " },
+   { "pa_DKIN" , 0 , 0, 0,  "# DKIN: Tolerance for non-trivial metastability constraints on DC amounts, moles { 1e-10 } " },
+   { "mui" ,     0 , 0, 0,  "\n# mui: IC indices in parent RMULTS IC list (not used in standalone GEMS3K)" },
+   { "muk" ,     0 , 0, 0,  "\n# muk: Phase indices in parent RMULTS Phase list (not used in standalone GEMS3K)" },
+   { "muj" ,     0 , 0, 0,  "\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
+   { "pa_PLLG" , 0 , 0, 0,  "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 32001 { 30000 }, 0 disables" },
+   { "tMin" ,    0 , 0, 0,  "# tMin: Type of thermodynamic potential to minimize (reserved)" },
+   { "dcMod",    0 , 0, 0,  "# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" },
+   //TKinMet
+   { "kMod",    0 , 0, 0,  "# kMod: Codes for built-in kinetic models [Fi*6]" },
+   { "LsKin",    0 , 0, 0,  "# LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;\n"
+     "# of parameters per species; parameter coefficients in As correction; of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]" },
+   { "LsUpt",    0 , 0, 0,  "# LsUpt: number of uptake kinetics model parameters (coefficients) numpC[k]; (reserved)" },
+   { "xICuC",    0 , 0, 0,  "# xICuC: Collected array of IC species indexes used in partition (fractionation) coefficients  ->L1[k]" },
+   { "PfFact",    0 , 0, 0,  "# PfFact: form factors for phases (taken from TKinMet or set from TNode) [FI] (reserved)" },
+   // TSorpMod stuff
+   { "LsESmo",    0 , 0, 0,  "# LsESmo: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]" },
+   { "LsISmo",    0 , 0, 0,  "# LsISmo: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]" },
+   // TSorpMod & TKinMet stuff
+   { "SorMc",    0 , 0, 0,  "# SorMc: Phase-related kinetics and sorption model parameters: [Fis][16]" },
+   // TSolMod stuff
+   { "LsMdc2",    0 , 0, 0,  "# LsMdc2: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member" },
+   { "LsPhl",    0 , 0, 0,  "# LsPhl: Number of phase links; number of link parameters; [Fi][2]" }
+ };
 
-
-//===================================================================
 
 /// Writing structure MULTI (GEM IPM work structure)
 template<typename TIO>
 void TSolModMulti::to_text_file_gemipm( TIO& out_format, bool addMui,
-                                      bool with_comments, bool brief_mode )
+                                        bool with_comments, bool brief_mode )
 {
     const BASE_PARAM *pa_p = base_param();
     bool _comment = with_comments;
@@ -651,8 +649,8 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     io_formats::TReadArrays<TIO> rdar( 8, MULTI_static_fields, in_format);
     if( !in_format.skip_line() ) // Skip line without <ID_key> in old format
     {
-      rdar.readNext( "ID_key");
-      rdar.readArray( "ID_key", pm.stkey,  1, EQ_RKLEN);
+        rdar.readNext( "ID_key");
+        rdar.readArray( "ID_key", pm.stkey,  1, EQ_RKLEN);
     }
 
     nfild = rdar.findNext();
@@ -1231,7 +1229,7 @@ void  TSolModMulti::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerat
 }
 
 void  TSolModMulti::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
-                                           bool addMui, bool with_comments, bool brief_mode, const std::string& test_set_name )
+                                             bool addMui, bool with_comments, bool brief_mode, const std::string& test_set_name )
 {
     switch( type_f )
     {
@@ -1261,7 +1259,6 @@ void  TSolModMulti::write_ipm_format_stream( std::iostream& stream, GEMS3KGenera
     }
 }
 
-
 #ifdef USE_NLOHMANNJSON
 template void TSolModMulti::from_text_file_gemipm<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& in_format,  DATACH  *dCH );
 template void TSolModMulti::to_text_file_gemipm<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
@@ -1272,6 +1269,6 @@ template void TSolModMulti::to_text_file_gemipm<io_formats::SimdJsonWrite>( io_f
 template void TSolModMulti::from_text_file_gemipm<io_formats::KeyValueRead>( io_formats::KeyValueRead& in_format,  DATACH  *dCH );
 template void TSolModMulti::to_text_file_gemipm<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 
-//=============================================================================
-// tsolmod_multi_format.cpp
+//--------------------- end of tsolmod_multi_format.cpp ---------------------------
+
 

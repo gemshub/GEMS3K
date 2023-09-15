@@ -8,31 +8,45 @@ SolModCalc::SolModCalc(long k, long jb, SolutionData &sd, const AddSolutionData 
     phase_ndx(k), dc_ndx(jb), dc_num(sd.NSpecies)
 {
     arWx = sd.arWx;
+    arlnGam = sd.arlnGam;
     for(long int ii=0; ii<dc_num; ++ii) {
-        dc_names.push_back(char_array_to_string(sd.arSM[0]+ii, MAXDCNAME));
+        dc_names.push_back(char_array_to_string(sd.arSM[ii], MAXDCNAME));
     }
     SolMod_create(sd, addsd);
-    if(solmod_task) {
-        solmod_task->to_json_file(std::string("solmod_")+std::to_string(phase_ndx)+".json");
-    }
+    to_json_file(std::string("solmod_")+std::to_string(phase_ndx)+".json");
 }
 
-void SolModCalc::SolModParPT(char ModCode)
+SolModCalc::SolModCalc(long k, long jb, const std::string &aphase):
+    mod_code(' '), phase_name(aphase),
+    phase_ndx(k), dc_ndx(jb), dc_num(1)
 {
-    if(check_mode(ModCode) && solmod_task) {
+   arWx = nullptr;
+   arlnGam = nullptr;
+   dc_names.push_back(phase_name);
+   solmod_task.reset();
+   model_name = "undefined";
+}
+
+void SolModCalc::SolModParPT()
+{
+    if(check_mode(mod_code) && solmod_task) {
         solmod_task->PTparam();
     }
 }
 
-void SolModCalc::SolModActCoeff(char ModCode)
+void SolModCalc::SolModActCoeff()
 {
-    if(check_mode(ModCode) && solmod_task) {
+    /// ???? If no clean illegal result
+    if(arlnGam) {
+        map2property({}, arlnGam, 0.);
+    }
+    if(check_mode(mod_code) && solmod_task) {
         solmod_task->MixMod();
-        solmod_task->to_text_file(std::string("solmod_act_coef_")+std::to_string(phase_ndx)+".txt", true);
+        //solmod_task->to_text_file(std::string("solmod_act_coef_")+std::to_string(phase_ndx)+".txt", true);
     }
 }
 
-std::map<std::string, double> SolModCalc::SolModExcessProp(char ModCode)
+std::map<std::string, double> SolModCalc::SolModExcessProp()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -41,7 +55,7 @@ std::map<std::string, double> SolModCalc::SolModExcessProp(char ModCode)
     for(long int j=0; j<7; j++) {
         zex[j] = 0.0;
     }
-    if(ModCode != SM_IDEAL && check_mode(ModCode) && solmod_task) {
+    if(mod_code != SM_IDEAL && check_mode(mod_code) && solmod_task) {
         solmod_task->ExcessProp(zex);
         ex_map["Gex"] = zex[0];
         ex_map["Hex"] = zex[1];
@@ -56,7 +70,7 @@ std::map<std::string, double> SolModCalc::SolModExcessProp(char ModCode)
     return ex_map;
 }
 
-std::map<std::string, double> SolModCalc::SolModIdealProp(char ModCode)
+std::map<std::string, double> SolModCalc::SolModIdealProp()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -65,7 +79,7 @@ std::map<std::string, double> SolModCalc::SolModIdealProp(char ModCode)
     for(long int j=0; j<7; j++) {
         zex[j] = 0.0;
     }
-    if(check_mode(ModCode) && solmod_task) {
+    if(check_mode(mod_code) && solmod_task) {
         // check what solution phase (ideal gas?)
         solmod_task->IdealProp(zex);
         ex_map["Gid"] = zex[0];
@@ -81,7 +95,7 @@ std::map<std::string, double> SolModCalc::SolModIdealProp(char ModCode)
     return ex_map;
 }
 
-std::map<std::string, double> SolModCalc::SolModDarkenProp(char ModCode)
+std::map<std::string, double> SolModCalc::SolModDarkenProp()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -90,7 +104,7 @@ std::map<std::string, double> SolModCalc::SolModDarkenProp(char ModCode)
     for(long int j=0; j<7; j++) {
         zex[j] = 0.0;
     }
-    if(check_mode(ModCode) && solmod_task) {
+    if(check_mode(mod_code) && solmod_task) {
         //solmod_task->(zex);
         ex_map["Gdq"] = zex[0];
         ex_map["Hdq"] = zex[1];
@@ -103,7 +117,7 @@ std::map<std::string, double> SolModCalc::SolModDarkenProp(char ModCode)
     return ex_map;
 }
 
-std::map<std::string, double> SolModCalc::SolModStandProp(char ModCode)
+std::map<std::string, double> SolModCalc::SolModStandProp()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -112,7 +126,7 @@ std::map<std::string, double> SolModCalc::SolModStandProp(char ModCode)
     for(long int j=0; j<7; j++) {
         zex[j] = 0.0;
     }
-    if(check_mode(ModCode) && solmod_task) {
+    if(check_mode(mod_code) && solmod_task) {
         // check what solution phase (ideal gas?)
         solmod_task->StandardProp(zex);
         ex_map["Gst"] = zex[0];
@@ -137,9 +151,7 @@ void SolModCalc::Get_lnGamma(double *lngamma)
 
 std::map<std::string, double> SolModCalc::GetlnGamma()
 {
-    std::vector<double> lngam(dc_num, 0.);
-    Get_lnGamma(lngam.data());
-    return property2map(lngam.data());
+    return property2map(arlnGam);
 }
 
 void SolModCalc::Set_MoleFractionsWx(double *aWx)
@@ -168,7 +180,7 @@ void SolModCalc::SolMod_create(SolutionData& sd, const AddSolutionData& addsd)
     TSolMod* mySM = nullptr;
 
     // creating instances of subclasses of TSolMod base class
-    switch(sd.Mix_Code) {
+    switch(sd.Mod_Code) {
     case SM_OTHER:  // Hard-coded solid solution models (selected by phase name)
     {
         model_name = "TModOther";
@@ -419,6 +431,9 @@ bool SolModCalc::check_mode(char ModCode)
 std::map<std::string, double> SolModCalc::property2map(double *dcs_size_array)
 {
     std::map<std::string, double> dsc_name_map;
+    if(!dcs_size_array) { // nullptr
+       return dsc_name_map;
+    }
     for(int jj=0; jj<dc_num; ++jj) {
         dsc_name_map[dc_names[jj]] = dcs_size_array[jj];
     }
@@ -427,6 +442,9 @@ std::map<std::string, double> SolModCalc::property2map(double *dcs_size_array)
 
 void SolModCalc::map2property(const std::map<std::string, double> &dsc_name_map, double *dcs_size_array, double def_value)
 {
+    if(!dcs_size_array) { // nullptr
+       return;
+    }
     for(int jj=0; jj<dc_num; ++jj) {
         auto it =dsc_name_map.find(dc_names[jj]);
         if(it!=dsc_name_map.end()) {

@@ -1,12 +1,7 @@
 //-------------------------------------------------------------------
-// $Id$
-//
-/// \file ms_multi.h
-/// Declaration of TMulti class, configuration, and related functions
+/// \file tsolmod_multi.h
+/// Declaration of subset of TMulti class, configuration, and related functions
 /// based on the IPM work data structure MULTI
-//
-/// \struct MULTI ms_multi.h
-/// Contains chemical thermodynamic work data for GEM IPM-3 algorithm
 //
 // Copyright (c) 2023 S.Dmytriyeva, D.Kulik, T.Wagner
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
@@ -32,21 +27,17 @@
 #define MS_MULTI_BASE_H
 
 #include "m_const_base.h"
-#include "verror.h"
+#include "gems3k_impex.h"
+#include "solmodcalc.h"
+#include "gems3k_impex.h"
 #include "datach.h"
 #include "databr.h"
-#include "gems3k_impex.h"
-// TSolMod header
-#include "s_solmod.h"
 
 #ifdef USE_THERMOFUN
 #include "ThermoFun/ThermoFun.h"
 #endif
 
-
 class GemDataStream;
-class TProfil;
-class TNode;
 
 const int  QPSIZE = 180, // earlier 20, 40 SD oct 2005
            QDSIZE = 60;
@@ -101,9 +92,6 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
            IEPS, ///< Convergence parameter of SACT calculation in sorption/surface complexation models { 0.01 to 0.000001, default 0.001 }
            DKIN; ///< Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }
     char *tprn;       ///< internal
-
-    void write(GemDataStream& oss);
-    void read(GemDataStream& iss);
 };
 
 
@@ -503,26 +491,16 @@ typedef struct
 }
 TSOLMOD_MULTI;
 
-/// Indexation in a row of the pmp->SATX[][] array.
-/// [0] - max site density in mkmol/(g sorbent);
-/// [1] - species charge allocated to 0 plane;
-/// [2] - surface species charge allocated to beta -or third plane;
-/// [3] - Frumkin interaction parameter;
-/// [4] species denticity or coordination number;
-/// [5]  - reserved parameter (e.g. species charge on 3rd EIL plane)
-enum IndexationSATX {
-    XL_ST = 0, XL_EM = 1, XL_SI = 2, XL_SP = 3
-};
-
 extern const BASE_PARAM pa_p_;
 
 // Data of MULTI
 class TSolModMulti
 {
-    char PAalp_; ///< Flag for using (+) or ignoring (-) specific surface areas of phases
-    char PSigm_; ///< Flag for using (+) or ignoring (-) specific surface free energies
-    std::shared_ptr<BASE_PARAM> pa_standalone;
-
+    /// Internal TSolMod decorator
+    std::vector<SolModCalc> phase_models;
+    /// Names of multi-component phases
+    std::vector<std::string> phase_names;
+    void InitalizeTSolMod();
 
     // Stuff from TNode
     DATACH* CSD;  ///< Pointer to chemical system data structure CSD (DATACH)
@@ -532,10 +510,6 @@ class TSolModMulti
     std::string current_input_set_name;
     std::string ipmlog_error;
 
-    void clearipmLogError() {
-        ipmlog_error.clear();
-    }
-
 #ifdef USE_THERMOFUN
     std::unique_ptr<ThermoFun::ThermoEngine> thermo_engine;
 #endif
@@ -543,28 +517,87 @@ class TSolModMulti
 
     /// Clear thermodynamic data from ThermoEngine
     void clear_ThermoEngine();
-
     /// Read ThermoEngine
     bool load_ThermoEngine(const std::string& thermo_file_or_string);
-
     void allocMemory();
     void freeMemory();
-
+    void clearipmLogError() {
+        ipmlog_error.clear();
+    }
 
 public:
 
-    /// This allocation is used only in standalone GEMS3K
     explicit TSolModMulti();
     virtual ~TSolModMulti();
 
-    // acces for node class
-    TSolMod * pTSolMod (int xPH);
+    /// Initialization of GEM IPM2 data structures in coupled RMT-GEM programs
+    ///  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files
+    ///  in key-value, json or binary format. Parameters:
+    ///  ipmfiles_lst_name - name of a text file that contains:
+    ///    " -j | -t |-b <DCH_DAT file name> <IPM_DAT file name> [<>] <dataBR file name>
+    ///    or " -f <DCH_DAT file name> <IPM_DAT file name> <ThermoFun JSON format file> <dataBR file name>
+    ///  dbfiles_lst_name - name of a text file that contains:
+    ///    <dataBR  file name1>, ... , <dataBR file nameN> "
+    ///    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
+    ///    exist in the same directory where the ipmfiles_lst_name file is located.
+    ///    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
+    ///    and must contain valid initial chemical systems (of the same structure
+    ///    as described in the DCH_DAT file) to set up the initial state of the FMT
+    ///    node array.
+    ///  If -t flag or no flag is specified then all data files must be in key-value text
+    ///    (ASCII) format (and file names must have .dat extension);
+    ///  If -j and -f flag is specified then all data files must be in JSON format (and file names
+    ///    must have .json extension);
+    ///  If -f flag is specified then the use of ThermoFun along with GEMS3K in place of the interpolation
+    ///  of lookup arrays for standard thermodynamic data for substances;
+    ///  if -b flag is specified then all data files are assumed to be binary (little-endian)
+    ///    files.
+    ///  @returns:
+    ///    0: OK;
+    ///    1: GEM IPM read file or input file format error;
+    ///   -1: System error (e.g. memory allocation).
+    long int GEM_init(const char *ipmfiles_lst_name);
 
-    long GEM_init(const char *ipmfiles_lst_name);
-    void LoadThermodynamicData(double TK, double PPa);
+    /// Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module.
+    /// Also reads the input data from the IPM, DCH and one DBR JSON input strings
+    /// (e.g. exported from GEM-Selektor or retrieved from JSON database).
+    /// Parameters:
+    ///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
+    ///  @param ipm_json -  Parameters and settings for GEMS3K IPM-3 algorithm as a json/key-value string
+    ///  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
+    ///  @param fun_json -  ThermoFun data structure as a json string
+    ///  @returns:
+    ///    0: OK;
+    ///    1: GEM IPM read file or input file format error;
+    ///   -1: System error (e.g. memory allocation).
+    long GEM_init(std::string dch_json, std::string ipm_json, std::string dbr_json, std::string fun_json);
 
+    /// Update thermodynamic data according new TK and P
+    void UpdateThermodynamic(double TK, double PPa);
 
-    void to_text_file( const char *path, bool append=false  );
+    /// Access to idxs phase model
+    SolModCalc &get_phase(std::size_t idx);
+    /// Access to phase model by phase name
+    SolModCalc &get_phase(const std::string& name);
+
+    /// Trace output full internal structure
+    void to_text_file(const char *path, bool append=false);
+
+protected:
+
+    // Internal MULTI subset (could be remove unused in future)
+    char PAalp_; ///< Flag for using (+) or ignoring (-) specific surface areas of phases
+    char PSigm_; ///< Flag for using (+) or ignoring (-) specific surface free energies
+    std::shared_ptr<BASE_PARAM> pa_standalone;
+    TSOLMOD_MULTI pm;
+    TSOLMOD_MULTI *pmp;
+
+    BASE_PARAM* base_param() const
+    {
+        return pa_standalone.get();
+    }
+
+    // reading multi structure
     template<typename TIO>
     void to_text_file_gemipm( TIO& out_format, bool addMui,
                               bool with_comments = true, bool brief_mode = false );
@@ -577,7 +610,6 @@ public:
     std::string gemipm_to_string( bool addMui, const std::string& test_set_name, bool with_comments = true, bool brief_mode = false );
     /// Reads Multi structure from a json/key-value string
     bool gemipm_from_string( const std::string& data,  DATACH  *dCH, const std::string& test_set_name );
-
 
     ///  Reads the contents of the work instance of the DATABR structure from a stream.
     ///   \param stream    string or file stream.
@@ -596,64 +628,11 @@ public:
     void  write_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
                                    bool addMui, bool with_comments, bool brief_mode, const std::string& test_set_name );
 
-protected:
-
-    virtual void multi_realloc( char PAalp, char PSigm );
+    void multi_realloc(char PAalp, char PSigm);
     void multi_kill();
+    void set_def(int i=0);
 
-    virtual BASE_PARAM* base_param() const
-    {
-       return pa_standalone.get();
-    }
-
-    TSOLMOD_MULTI* GetPM()
-    { return &pm; }
-
-    virtual void set_def( int i=0);
-    ///virtual long int testMulti();
-
-
-    TSOLMOD_MULTI pm;
-    TSOLMOD_MULTI *pmp;
-
-    // Internal arrays for the performance optimization  (since version 2.0.0)
-    long int sizeN; /*, sizeL, sizeAN;*/
-    double *AA;
-    double *BB;
-    long int *arrL;
-    long int *arrAN;
-
-    void Alloc_internal();
-    void Alloc_A_B( long int newN );
-    void Free_A_B();
-    void Build_compressed_xAN();
-    void Free_compressed_xAN();
-    void Free_internal();
-
-     // From here move to activities.h or node.h
-    long int sizeFIs;     ///< current size of phSolMod
-    TSolMod** phSolMod; ///< size current FIs - number of multicomponent phases
-    void Alloc_TSolMod( long int newFIs );
-    void Free_TSolMod();
-
-
-    // Added for implementation of divergence detection in dual solution 06.05.2011 DK
-    long int nNu;  ///< number of ICs in the system
-    long int cnr;  ///< current IPM iteration
-    long int nCNud; ///< number of IC names for divergent dual chemical potentials
-    double *U_mean; ///< Cumulative mean dual solution approximation [nNu]
-    double *U_M2;   ///< Cumulative sum of squares [nNu]
-    double *U_CVo;  ///< Cumulative Coefficient of Variation for dual solution approximation r-1 [nNu]
-    double *U_CV;   ///< Cumulative Coefficient of Variation for r-th dual solution approximation [nNu]
-    long int *ICNud; ///< List of IC indexes for divergent dual chemical potentials [nNu]
-    void Alloc_uDD( long int newN );
-    void Free_uDD();
-    ///void Reset_uDD(long int cr, bool trace = false );
-    ///void Increment_uDD( long int r, bool trace = false );
-    ///long int Check_uDD( long int mode, double DivTol, bool trace = false );
-
-
-    // New functions for TSolMod, TKinMet and TSorpMod parameter arrays
+    // New functions for TSolMod parameter arrays
     void getLsModsum( long int& LsModSum, long int& LsIPxSum );
     void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
     /// Get dimensions from LsPhl array
@@ -670,73 +649,42 @@ protected:
     /// Get dimensions from LsUpot array
     void getLsUptsum(long int& UMpcSum, long int& xICuCSum);
 
-    virtual void get_PAalp_PSigm(char &PAalp, char &PSigm);
-    ///virtual void STEP_POINT( const char* /*str*/);
-    virtual void alloc_IPx( long int LsIPxSum );
-    virtual void alloc_PMc( long int LsModSum );
-    virtual void alloc_DMc( long int LsMdcSum );
-    virtual void alloc_MoiSN( long int LsMsnSum );
-    virtual void alloc_SitFr( long int LsSitSum );
-    virtual void alloc_DQFc( long int DQFcSum );
-    virtual void alloc_PhLin( long int PhLinSum );
-    virtual void alloc_lPhc( long int lPhcSum );
-    virtual void alloc_xSMd( long int xSMdSum );
-    virtual void alloc_IsoPc( long int IsoPcSum );
-    virtual void alloc_IsoSc( long int IsoScSum );
-    virtual void alloc_IsoCt( long int IsoCtSum );
-    virtual void alloc_EImc( long int EImcSum );
-    virtual void alloc_mCDc( long int mCDcSum );
-    virtual void alloc_xSKrC( long int xSKrCSum );
-    virtual void alloc_ocPRkC( long int ocPRkC_feSArC_Sum );
-    virtual void alloc_feSArC( long int ocPRkC_feSArC_Sum );
-    virtual void alloc_rpConC( long int rpConCSum );
-    virtual void alloc_apConC( long int apConCSum );
-    virtual void alloc_AscpC( long int AscpCSum );
-    virtual void alloc_UMpcC( long int UMpcSum );
-    virtual void alloc_xICuC( long int xICuCSum );
+    void get_PAalp_PSigm(char &PAalp, char &PSigm);
+    void alloc_IPx( long int LsIPxSum );
+    void alloc_PMc( long int LsModSum );
+    void alloc_DMc( long int LsMdcSum );
+    void alloc_MoiSN( long int LsMsnSum );
+    void alloc_SitFr( long int LsSitSum );
+    void alloc_DQFc( long int DQFcSum );
+    void alloc_PhLin( long int PhLinSum );
+    void alloc_lPhc( long int lPhcSum );
+    void alloc_xSMd( long int xSMdSum );
+    void alloc_IsoPc( long int IsoPcSum );
+    void alloc_IsoSc( long int IsoScSum );
+    void alloc_IsoCt( long int IsoCtSum );
+    void alloc_EImc( long int EImcSum );
+    void alloc_mCDc( long int mCDcSum );
+    void alloc_xSKrC( long int xSKrCSum );
+    void alloc_ocPRkC( long int ocPRkC_feSArC_Sum );
+    void alloc_feSArC( long int ocPRkC_feSArC_Sum );
+    void alloc_rpConC( long int rpConCSum );
+    void alloc_apConC( long int apConCSum );
+    void alloc_AscpC( long int AscpCSum );
+    void alloc_UMpcC( long int UMpcSum );
+    void alloc_xICuC( long int xICuCSum );
 
-    ///virtual void loadData( bool ){}
-    ///virtual bool testTSyst() const;
-    ///virtual bool calculateActivityCoefficients_scripts( long int, long, long, long, long, long, double );
-    ///virtual void initalizeGEM_IPM_Data_GUI();
-    ///virtual void multiConstInit_PN();
-    ///virtual void GEM_IPM_Init_gui1();
-    ///virtual void GEM_IPM_Init_gui2();
-   
-    ///void setErrorMessage( long int num, const char *code, const char * msg);
-    ///void addErrorMessage( const char * msg);
-
-    // ipm_chemical.cpp
-    ///void XmaxSAT_IPM2();
-    ///double DC_DualChemicalPotential( double U[], double AL[], long int N, long int j );
-    ///void Set_DC_limits( bool InitState );
-    ///void TotalPhasesAmounts( double X[], double XF[], double XFA[] );
-    ///double DC_PrimalChemicalPotentialUpdate( long int j, long int k );
-    ///double  DC_PrimalChemicalPotential( double G,  double logY,  double logYF,
-    ///                                    double asTail,  double logYw,  char DCCW );
-    ///void PrimalChemicalPotentials( double F[], double Y[],
-    ///                               double YF[], double YFA[] );
-    ///double KarpovCriterionDC( double *dNuG, double logYF, double asTail,
-    ///                          double logYw, double Wx,  char DCCW );
-    ///void KarpovsPhaseStabilityCriteria();
-    ///void  StabilityIndexes( );
-    ///double DC_GibbsEnergyContribution(   double G,  double x,  double logXF,
-    ///                                     double logXw,  char DCCW );
-    ///double GX( double LM  );
-    ///long int  getXvolume();
-
-    void init_into_gems3k();
+    // Fill multi arrays
     void InitalizeGEM_IPM_Data();
     void MultiConstInit();
+    long getXvolume();
     void load_all_thermodynamic_from_grid(double TK, double PPa);
     bool load_all_thermodynamic_from_thermo(double TK, double PPa);
-
+    void LoadThermodynamicData(double TK, double PPa);
     void ConvertDCC();
     double ConvertGj_toUniformStandardState(double g0, long j, long k);
-    long getXvolume();
 };
 
-// ???? syp->PGmax
+// syp->PGmax
 typedef enum {  // Symbols of thermodynamic potential to minimize
     G_TP    =  'G',   // Gibbs energy minimization G(T,P)
     A_TV    =  'A',   // Helmholts energy minimization A(T,V)
@@ -785,9 +733,10 @@ typedef enum {  // Field index into outField structure
 
 } MULTI_DYNAMIC_FIELDS;
 
+
 enum volume_code {  /* Codes of volume parameter ??? */
     VOL_UNDEF, VOL_CALC, VOL_CONSTR
 };
 
-#endif   //_ms_multi_h
+#endif   //tsolmod_multi_h
 

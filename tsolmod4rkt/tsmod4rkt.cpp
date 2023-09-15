@@ -1,9 +1,7 @@
 //--------------------------------------------------------------------
 // $Id: main.cpp 686 2012-06-01 14:10:22Z kulik $
 //
-// Demo test of usage of the TNode class for implementing a simple
-// batch-like calculation of equilibria using text file input and
-// GEM-IPM-3 numerical kernel.
+// Demo test of usage of the standalone TSolMod.
 
 // TNode class implements a simple C/C++ interface of GEMS3K code.
 // It works with DATACH and work DATABR structures and respective
@@ -59,6 +57,8 @@
 // Thermo-time-json/series1-dat.lst
 // Neutral-fun/Neutral-dat.lst
 
+
+// Thermo-time-in/series1-dat.lst
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
 {
@@ -81,26 +81,56 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
     try{
         // Analyzing command line arguments
         // Default arguments
-        char input_system_file_list_name[256] = "system-dat.lst";
+        char input_system_file_list_name[256] = "Thermo-time-in/series1-dat.lst";
 
         // list of DCH, IPM and DBR input files for initializing GEMS3K
         if (argc >= 2 )
             strncpy( input_system_file_list_name, argv[1], 256);
 
-        // Creates TNode structure instance accessible through the "node" pointer
-        std::shared_ptr<TSolModMulti> node( new TSolModMulti() );
+        // Creates TSolModMulti structure instance accessible through the "multi" pointer
+        std::shared_ptr<TSolModMulti> multi(new TSolModMulti());
 
         // (1) Initialization of GEMS3K internal data by reading  files
         //     whose names are given in the input_system_file_list_name
-        if( node->GEM_init( input_system_file_list_name ) )
+        if( multi->GEM_init(input_system_file_list_name) )
         {
-            // error occured during reading the files
             std::cout << "error occured during reading the files" << std::endl;
             return 1;
         }
 
-        //std::cout << "Loaded System ID: " << node_arr->getCalcNode()->system_id() <<  std::endl;
-        node->to_text_file( "AfterRead.txt" );
+        // Trace data after input
+        multi->to_text_file( "AfterRead.txt" );
+
+        // Example using model calculations for task (Thermo-time-in/series1-dat.lst)
+        // In future could be test input from dbr file
+        std::vector<double> x = { 0.673936901807716, 6.97280484339258e-08, 0.326063028464235 };
+        std::vector<double> lngam(3, 0.);
+
+        auto phase = multi->get_phase("Alkali feldspar");
+        phase.Set_MoleFractionsWx(x.data());
+
+        phase.SolModActCoeff();
+        phase.to_text_file("solmod_act_coef.txt", true);
+        phase.Get_lnGamma(lngam.data());
+        std::cout  << lngam[0] << " "<< lngam[1] << " " << lngam[2] << " " << std::endl;
+
+        auto map_ideal = phase.SolModIdealProp();
+        phase.to_text_file("solmod_act_coef.txt", true);
+        for(const auto& item: map_ideal ) {
+           std::cout  << item.first << " "<< item.second  << std::endl;
+        }
+
+        auto map_excess = phase.SolModExcessProp();
+        phase.to_text_file("solmod_act_coef.txt", true);
+        for(const auto& item: map_excess ) {
+           std::cout  << item.first << " "<< item.second  << std::endl;
+        }
+
+        phase.SolModActCoeff();
+        phase.to_text_file("solmod_act_coef.txt", true);
+        phase.Get_lnGamma(lngam.data());
+        std::cout  << lngam[0] << " "<< lngam[1] << " " << lngam[2] << " " << std::endl;
+
         return 0;
     }
     catch(TError& err)

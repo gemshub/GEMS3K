@@ -7,7 +7,6 @@
 /// Addition parameters for specific models,
 /// could be add to main SolutionData
 struct AddSolutionData {
-
     double *arZ;
     double *arM;
     double *ardenW;
@@ -24,6 +23,8 @@ public:
 
     /// The constructor
     SolModCalc(long int k, long int jb, SolutionData& sd, const AddSolutionData& addsd);
+    /// The empty constructor
+    explicit SolModCalc(long int k=0, long int jb=0, const std::string& phase_name="undefined");
 
     /// Code of the mixing model
     char modCode() const {
@@ -31,17 +32,17 @@ public:
     }
 
     /// Call for calculation of temperature and pressure correction
-    void SolModParPT(char ModCode);
+    void SolModParPT();
     /// Call for calculation of activity coefficients
-    void SolModActCoeff(char ModCode);
+    void SolModActCoeff();
     /// Call for calculation of bulk phase excess properties
-    std::map<std::string, double> SolModExcessProp(char ModCode);
+    std::map<std::string, double> SolModExcessProp();
     /// Call for calculation of bulk phase ideal mixing properties
-    std::map<std::string, double> SolModIdealProp(char ModCode);
+    std::map<std::string, double> SolModIdealProp();
     /// Call for retrieving bulk phase Darken quadratic terms  (!!! not implemented)
-    std::map<std::string, double> SolModDarkenProp(char ModCode);
+    std::map<std::string, double> SolModDarkenProp();
     /// Call for retrieving bulk phase standard state terms
-    std::map<std::string, double> SolModStandProp(char ModCode);
+    std::map<std::string, double> SolModStandProp();
 
     // not used in gems
     //virtual long int PureSpecies();
@@ -67,7 +68,7 @@ public:
     /// Writing input structure TSolMod to json format file
     void to_json_file(const std::string& path)
     {
-        if(solmod_task) {
+        if(solmod_task.get()) {
             solmod_task->to_json_file(path);
         }
     }
@@ -97,7 +98,9 @@ protected:
     /// Names of DCs included into phase
     std::vector<std::string> dc_names;
     /// Mole fractions Wx of DC in multi-component phases -> dc_num
-    double *arWx;
+    double *arWx = nullptr;
+    /// Output: activity coefficients of species (end members)
+    double *arlnGam = nullptr;
 
     /// TSolMod description
     std::shared_ptr<TSolMod> solmod_task;

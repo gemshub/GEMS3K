@@ -1,10 +1,8 @@
 //-------------------------------------------------------------------
-// $Id$
+/// \file ms_multi_alloc.cpp
+/// Allocation of coping IPM internal structure
 //
-/// \file ms_multi_copy.cpp
-/// Implementation of coping IPM internal structure
-//
-// Copyright (c) 2017-2020 S.Dmytriyeva, D.Kulik
+// Copyright (c) 2023 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -26,6 +24,7 @@
 
 #include "tsolmod_multi.h"
 #include "v_service.h"
+#include "verror.h"
 
 /// Realloc dynamic memory
 void TSolModMulti::multi_realloc( char PAalp, char PSigm )
@@ -205,7 +204,6 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
     }
 
     // Part 2  not always required arrays
-
     if( pm.FIs > 0 && pm.Ls > 0 )
     {
         pm.BF = new double[pm.FIs*pm.N];
@@ -233,7 +231,6 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
             pm.RFLC[ii] = 0;
             pm.RFSC[ii] = 0;
         }
-
     }
     else
     {
@@ -677,11 +674,6 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
         pm.emDf   = 0;
         pm.xICuC = 0;
     }
-
-    Alloc_TSolMod( pm.FIs );
-    //Alloc_TSorpMod( pm.FIs );
-    //Alloc_TKinMet( pm.FI );
-
 }
 
 /// Free of dynamic memory
@@ -898,155 +890,299 @@ void TSolModMulti::multi_kill()
     if(pm.emRd) delete[] pm.emRd;
     if(pm.emDf) delete[] pm.emDf;
     if(pm.xICuC) delete[] pm.xICuC;
-
-    // optimization 08/02/2007
-    Free_TSolMod();
-    //Free_TSorpMod();
-    //Free_TKinMet();
-    Free_internal();
-    Free_uDD();
 }
 
-/// Internal memory allocation for TSolMod performance optimization
-/// (since version 2.3.0)
-void TSolModMulti::Alloc_TSolMod( long int newFIs )
+/// Set default information
+void TSolModMulti::set_def( int )
 {
-  if(  phSolMod && ( newFIs == sizeFIs) )
-    return;
+    //mem_cpy( &pm.PunE, "jjbC", 4 );
+    fillValue( pm.stkey, '\0', EQ_RKLEN);
+    pm.PunE = 'j';         // Units of energy  { j;  J c C N reserved }
+    pm.PunV = 'j';         // Units of volume  { j;  c L a reserved }
+    pm.PunP = 'b';        // Units of pressure  { b;  B p P A reserved }
+    pm.PunT = 'C';         // Units of temperature  { C; K F reserved }
 
-  Free_TSolMod();
-  // alloc memory for all multicomponents phases
-  phSolMod = new  TSolMod *[newFIs];
-  sizeFIs = newFIs;
- for( long int ii=0; ii<newFIs; ii++ )
-          phSolMod[ii] = nullptr;
+    // mem_set( &pm.N, 0, 36*sizeof(long int));
+    pm.N = 0;        	// N - number of IC in IPM problem
+    pm.NR = 0;       	// NR - dimensions of R matrix
+    pm.L = 0;        	// L -   number of DC in IPM problem
+    pm.Ls = 0;       	// Ls -   total number of DC in multi-component phases
+    pm.LO = 0;       	// LO -   index of water-solvent in IPM DC list
+    pm.PG = 0;       	// PG -   number of DC in gas phase
+    pm.PSOL = 0;     	// PSOL - number of DC in liquid hydrocarbon phase
+    pm.Lads = 0;     	// Lads - number of DC in sorption phases
+    pm.FI = 0;       	// FI -   number of phases in IPM problem
+    pm.FIs = 0;      	// FIs -   number of multicomponent phases
+    pm.FIa = 0;      	// FIa -   number of sorption phases
+    pm.FI1 = 0;     // FI1 -   number of phases present in eqstate
+    pm.FI1s = 0;    // FI1s -   number of multicomponent phases present in eqstate
+    pm.FI1a = 0;    // FI1a -   number of sorption phases present in eqstate
+    pm.IT = 0;      // It - number of completed IPM iterations
+    pm.E = 0;       // PE - flag of electroneutrality constraint { 0 1 }
+    pm.PD = 0;      // PD - mode of calling CalculateActivityCoefficients() { 0 1 2 3 4 }
+    pm.PV = 0;      // PV - flag of system volume constraint { 0 1 }
+    pm.PLIM = 0;    // PU - flag of activation of DC/phase restrictions { 0 1 }
+    pm.Ec = 0;    // CalculateActivityCoefficients() return code: 0 (OK) or 1 (error)
+    pm.K2 = 0;    // Number of Selekt2() loops
+    pm.PZ = 0;    // Indicator of IPM-2 precision algorithm activation    funT = 0; sysT = 0;
+    pm.pNP = 0; //Mode of FIA selection: 0- automatic-LPP = 0; 1- old eqstate = 0; -1-user's choice
+    pm.pESU = 0;  // Unpack old eqstate from EQSTAT record?  0-no 1-yes
+    pm.pIPN = 0;  // State of IPN-arrays:  0-create; 1-available; -1 remake
+    pm.pBAL = 0;  // State of reloading CSD:  1- BAL only; 0-whole CSD
+    pm.tMin = G_TP;  // Type of thermodynamic potential to minimize
+    pm.pTPD = 0;  // State of reloading thermod data: 0- all  1 - G0 only  2 - no
+    pm.pULR = 0;  // Start recalc kinetic constraints (0-do not = 0; 1-do )internal
+    pm.pKMM = 0;
+    pm.ITaia = 0;  // Number of IPM iterations completed in AIA mode (renamed from pRR1)
+    pm.FIat = 0;   // max. number of surface site types
+    pm.MK = 0;     // PM return code: 0 - continue;  1 - converged
+    pm.W1 = 0;     // internal IPM-2 indicator
+    pm.is = 0;     // is - index of IC for IPN equations ( CalculateActivityCoefficients() )
+    pm.js = 0;     // js - index of DC for IPN equations ( CalculateActivityCoefficients() )
+    pm.next = 0;
+    pm.sitNcat = 0;    // SIT: number of cations
+    pm.sitNan = 0;     // SIT: number of anions
+    pm.ITau = -1;  // current time, s (kinetics)
+    pm.kTau = 0.;  // current time, s (kinetics)
+    pm.kdT = 0.;   // current time step, s (kinetics)
+
+    // mem_set( &pm.TC, 0, 54*sizeof(double));
+    pm.TC = pm.TCc = 0.; 	// Temperature T = 0.; min.-max. (0 = 0.;2000 C)
+    pm.T = pm.Tc = 0.;   	// T = 0.; min.-max. K
+    pm.P = pm.Pc = 0.;   	// Pressure P = 0.; min.-max.(0 = 0.;10000 bar)
+    pm.VX_ = pm.VXc = 0.;    // V(X) - volume of the system = 0.; min.-max. = 0.; cm3
+    pm.GX_ = pm.GXc = 0.;    // Gibbs potential of the system G(X) = 0.; min.-max. (J)
+    pm.AX_ = pm.AXc = 0.;    // Helmholtz potential of the system F(X) = 0.; reserved
+    pm.UX_ = pm.UXc = 0.;  	// Internal energy of the system U(X) = 0.; reserved
+    pm.HX_ = pm.HXc = 0.; 	// Total enthalpy of the system H(X) = 0.; reserved
+    pm.SX_ = pm.SXc = 0.; 	// Total entropy of the system S(X) = 0.; reserved
+    pm.CpX_ = pm.CpXc = 0.;  // reserved
+    pm.CvX_ = pm.CvXc = 0.;  // reserved
+    pm.TMols = 0.;         // input total moles in b vector before rescaling
+    pm.SMols = 0.;         // Standart total moles (upscaled) {10000}
+    pm.MBX = 0.;        // Total mass of the system = 0.; kg
+    pm.FX = 0.;    	// Current Gibbs potential of the system in IPM = 0.; moles
+    pm.IC = 0.;         // Effective molal ionic strength of aqueous electrolyte
+    pm.pH = 0.;         // pH of aqueous solution
+    pm.pe = 0.;         // pe of aqueous solution
+    pm.Eh = 0.;         // Eh of aqueous solution = 0.; V
+    pm.DHBM = 0.;       // Adjusted balance precision criterion (IPM-2 )
+    pm.DSM = 0.;        // min value phase DS (IPM-2)
+    pm.GWAT = 55.50837344;       // used in ipm_gamma()
+    pm.YMET = 0.;       // reserved
+    fillValue( pm.denW, 0., 5 );
+    fillValue( pm.denWg, 0., 5 );
+    fillValue( pm.epsW, 0., 5 );
+    fillValue( pm.epsWg, 0., 5 );
+    pm.PCI = 0.;        // Current value of Dikin criterion of IPM convergence DK>=DX
+    pm.DXM = 0.;         // IPM convergence criterion threshold DX (1e-5)
+    pm.lnP = 0.;        // log Ptotal
+    pm.RT = 0.;         // RT: 8.31451*T (J/mole/K)
+    pm.FRT = 0.;        // F/RT = 0.; F - Faraday constant = 96485.309 C/mol
+    pm.Yw = 0.;         // Current number of moles of solvent in aqueous phase
+    pm.ln5551 = 0.;     // ln(55.508373) = 4.0165339
+    pm.aqsTail = 0.;    // v_j asymmetry correction factor for aqueous species
+    pm.lowPosNum = 0.;  // Minimum physical DC amount (1.66e-24 mol)
+    pm.logXw = 0.;      // work variable
+    pm.logYFk = 0.;     // work variable
+    pm.YFk = 0.;        // Current number of moles in a multicomponent phase
+    pm.FitVar[0] =pm.FitVar[1] = pm.FitVar[2]= pm.FitVar[3]= pm.FitVar[4] = 0.;
+    fillValue( pm.Tai, 0., 4 );
+    fillValue( pm.Pai, 0., 4 );
+    pm.SizeFactor = 1.; // using in TNode class
+
+    // pointers
+    pm.sitNcat = 0;
+    pm.sitNan = 0;
+    pm.L1    = nullptr;
+    pm.LsMod = nullptr;
+    pm.LsMdc = nullptr;
+    pm.mui   = nullptr;
+    pm.muk   = nullptr;
+    pm.muj   = nullptr;
+    pm.SATX = nullptr;
+    pm.DUL   = nullptr;
+    pm.DLL   = nullptr;
+    pm.fDQF   = nullptr;
+    pm.PUL   = nullptr;
+    pm.PLL   = nullptr;
+    pm.YOF   = nullptr;
+    pm.PMc   = nullptr;
+    pm.DMc   = nullptr;
+    pm.MoiSN  = nullptr;
+    pm.SitFr  = nullptr;
+    pm.Vol   = nullptr;
+    pm.VL    = nullptr;
+    pm.MM    = nullptr;
+    pm.H0    = nullptr;
+    pm.A0    = nullptr;
+    pm.U0    = nullptr;
+    pm.S0    = nullptr;
+    pm.Cp0   = nullptr;
+    pm.Pparc = nullptr;
+    pm.Y_m   = nullptr;
+    pm.Y_la  = nullptr;
+    pm.Y_w   = nullptr;
+    pm.Gamma = nullptr;
+    pm.lnGmf = nullptr;
+    pm.lnGmM = nullptr;
+    pm.EZ    = nullptr;
+    pm.Wb    = nullptr;
+    pm.Wabs  = nullptr;
+    pm.Rion  = nullptr;
+    pm.Aalp  = nullptr;
+    pm.Sigw  = nullptr;
+    pm.Sigg  = nullptr;
+    pm.Nfsp  = nullptr;
+    pm.MASDT = nullptr;
+    pm.FVOL  = nullptr;
+    pm.FWGT  = nullptr;
+    pm.XcapA = nullptr;
+    pm.XcapB = nullptr;
+    pm.XcapD = nullptr;
+    pm.XdlA  = nullptr;
+    pm.XdlB  = nullptr;
+    pm.XdlD  = nullptr;
+    pm.XpsiA = nullptr;
+    pm.XpsiB = nullptr;
+    pm.XpsiD = nullptr;
+    pm.Xr0h0 = nullptr;
+    pm.XlamA = nullptr;
+    pm.Xetaf = nullptr;
+    pm.Xcond = nullptr;
+    pm.Xeps  = nullptr;
+    pm.Awt   = nullptr;
+    pm.A     = nullptr;
+    pm.XFs   = nullptr;
+    pm.Falps = nullptr;
+    pm.GamFs = nullptr;
+    pm.Fug   = nullptr;
+    pm.Fug_l = nullptr;
+    pm.Ppg_l = nullptr;
+    pm.XFTS  = nullptr;
+    pm.MASDJ = nullptr;
+    pm.G     = nullptr;
+    pm.G0    = nullptr;
+    pm.lnGam = nullptr;
+    pm.lnGmo = nullptr;
+    //        pm.lnSAT = nullptr;
+    pm.lnSAC = nullptr;
+    pm.B     = nullptr;
+    pm.U     = nullptr;
+    pm.Uc     = nullptr;
+    pm.Uefd     = nullptr;
+    pm.U_r   = nullptr;
+    pm.C     = nullptr;
+    pm.IC_m  = nullptr;
+    pm.IC_lm = nullptr;
+    pm.IC_wm = nullptr;
+    pm.BF    = nullptr;
+    pm.BFC    = nullptr;
+    pm.XF    = nullptr;
+    pm.YF    = nullptr;
+    pm.XFA   = nullptr;
+    pm.YFA   = nullptr;
+    pm.Falp  = nullptr;
+    pm.XetaA = nullptr;
+    pm.XetaB = nullptr;
+    pm.XetaD = nullptr;
+    pm.X     = nullptr;
+    pm.Y     = nullptr;
+    pm.XY    = nullptr;
+    pm.XU    = nullptr;
+    pm.Qp    = nullptr;
+    pm.Qd    = nullptr;
+    pm.MU    = nullptr;
+    pm.EMU   = nullptr;
+    pm.NMU   = nullptr;
+    pm.W     = nullptr;
+    pm.Fx    = nullptr;
+    pm.Wx    = nullptr;
+    pm.F     = nullptr;
+    pm.F0    = nullptr;
+    pm.D     = nullptr;
+    //   pm.R     = nullptr;
+    //   pm.R1    = nullptr;
+    pm.sMod  = nullptr;
+    pm.dcMod  = nullptr;
+    pm.SB    = nullptr;
+    pm.SB1    = nullptr;
+    pm.SM    = nullptr;
+    pm.SF    = nullptr;
+    pm.SFs   = nullptr;
+    pm.pbuf  = nullptr;
+    pm.RLC   = nullptr;
+    pm.RSC   = nullptr;
+    pm.RFLC  = nullptr;
+    pm.RFSC  = nullptr;
+    pm.ICC   = nullptr;
+    pm.DCC   = nullptr;
+    pm.PHC   = nullptr;
+    pm.SCM   = nullptr;
+    pm.SATT  = nullptr;
+    pm.DCCW  = nullptr;
+    pm.XcapF = nullptr;
+    pm.SM2    = nullptr;
+    pm.SM3    = nullptr;
+    pm.SF2    = nullptr;
+    pm.DCC3   = nullptr;
+    pm.IPx = nullptr;
+    pm.ITF =  pm.ITG = 0;
+    pm.VPh = nullptr;
+    pm.GPh = nullptr;
+    pm.HPh = nullptr;
+    pm.SPh = nullptr;
+    pm.CPh = nullptr;
+    pm.APh = nullptr;
+    pm.UPh = nullptr;
+
+
+    // New phase stuff 06/06/12
+    pm.LsMdc2  = 0;
+    pm.LsPhl   = 0;
+    pm.PhLin   = 0;
+    // TSolMod stuff
+    pm.lPhc   = 0;
+    pm.DQFc   = 0;
+    //        pm.rcpc   = 0;
+    pm.lnDQFt   = 0;
+    pm.lnRcpt   = 0;
+    pm.lnExet   = 0;
+    pm.lnCnft   = 0;
+    //TSorpMod & TKinMet stuff
+    pm.SorMc   = 0;
+    // TSorpMod stuff
+    pm.LsESmo   = 0;
+    pm.LsISmo   = 0;
+    pm.xSMd   = 0;
+    pm.EImc   = 0;
+    pm.mCDc   = 0;
+    pm.IsoPc   = 0;
+    pm.IsoSc   = 0;
+    pm.lnScalT   = 0;
+    pm.lnSACT   = 0;
+    pm.lnGammF   = 0;
+    pm.CTerms   = 0;
+    pm.IsoCt   = 0;
+    // TKinMet stuff
+    pm.LsKin   = 0;
+    pm.LsUpt   = 0;
+    pm.xSKrC   = 0;
+    pm.ocPRkC   = 0;
+    pm.feSArC   = 0;
+    pm.rpConC   = 0;
+    pm.apConC   = 0;
+    pm.AscpC   = 0;
+    pm.UMpcC   = 0;
+    pm.kMod   = 0;
+    // new
+    pm.PfFact  = 0;
+    pm.PrT   = 0;
+    pm.PkT   = 0;
+    pm.PvT   = 0;
+    pm.emRd   = 0;
+    pm.emDf   = 0;
+    pm.xICuC = 0;
 }
 
-void TSolModMulti::Free_TSolMod()
-{
-  long int kk;
-
-  if( phSolMod )
-  {
-      for(  kk=0; kk<sizeFIs; kk++ )
-        if( phSolMod[kk] )
-           delete phSolMod[kk];
-      delete[]  phSolMod;
-  }
-  phSolMod = nullptr;
-  sizeFIs = 0;
-}
-
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/// Internal memory allocation for IPM performance optimization
-/// (since version 2.2.0)
-//
-void TSolModMulti::Alloc_A_B( long int newN )
-{
-  if( AA && BB && (newN == sizeN) )
-    return;
-  Free_A_B();
-  AA = new  double[newN*newN];
-  BB = new  double[newN];
-  sizeN = newN;
-}
-
-void TSolModMulti::Free_A_B()
-{
-  if(AA)
-    { delete[] AA; AA = 0; }
-  if(BB)
-    { delete[] BB; BB = 0; }
-  sizeN = 0;
-}
-
-#define  a(j,i) ((*(pm.A+(i)+(j)*pm.N)))
-/// Building an index list of non-zero elements of the matrix pm.A
-void TSolModMulti::Build_compressed_xAN()
-{
- long int ii, jj, k;
-
- // Calculate number of non-zero elements in A matrix
- k = 0;
- for( jj=0; jj<pm.L; jj++ )
-   for( ii=0; ii<pm.N; ii++ )
-     if( fabs( a(jj,ii) ) > 1e-12 )
-       k++;
-
-   // Free old memory allocation
-    Free_compressed_xAN();
-
-   // Allocate memory
-   arrL = new long int[pm.L+1];
-   arrAN = new long int[k];
-
-   // Set indexes in the index arrays
-   k = 0;
-   for( jj=0; jj<pm.L; jj++ )
-   { arrL[jj] = k;
-     for( ii=0; ii<pm.N; ii++ )
-       if( fabs( a(jj,ii) ) > 1e-12 )
-       {
-        arrAN[k] = ii;
-        k++;
-       }
-   }
-   arrL[jj] = k;
-}
-#undef a
-
-void TSolModMulti::Free_compressed_xAN()
-{
-  if( arrL  )
-    { delete[] arrL; arrL = 0;  }
-  if( arrAN )
-    { delete[] arrAN; arrAN = 0;  }
-}
-
-void TSolModMulti::Free_internal()
-{
-  Free_compressed_xAN();
-  Free_A_B();
- }
-
-/// Internal memory allocation for IPM performance optimization
-void TSolModMulti::Alloc_internal()
-{
-// optimization 08/02/2007
- Alloc_A_B( pm.N );
- Build_compressed_xAN();
-}
-
-
-/// Added for implementation of divergence detection in dual solution 06.05.2011 DK
-void TSolModMulti::Alloc_uDD( long int newN )
-{
-    if( U_mean && U_M2 && U_CVo && U_CV && ICNud && (newN == nNu) )
-      return;
-    Free_uDD();
-    U_mean = new  double[newN]; // w3 u mean values for r
-    U_M2 = new  double[newN];   // w3 u mean values for r-1
-    U_CVo = new  double[newN];  // w3 u mean difference for r-1
-    U_CV = new  double[newN];   // w3 u mean difference for r
-    ICNud = new long int[newN];
-    nNu = newN;
-}
-
-void TSolModMulti::Free_uDD()
-{
-    if( U_mean  )
-      { delete[] U_mean; U_mean = 0; }
-    if( U_M2  )
-      { delete[] U_M2; U_M2 = 0; }
-    if( U_CVo  )
-      { delete[] U_CVo; U_CVo = 0; }
-    if( U_CV  )
-      { delete[] U_CV; U_CV = 0; }
-    if( ICNud )
-      { delete[] ICNud; ICNud = 0; }
-    nNu = 0;
-}
-
-
-//--------------------- End of tsolmod_multi_copy.cpp ---------------------------
+//--------------------- end of tsolmod_multi_alloc.cpp ---------------------------
