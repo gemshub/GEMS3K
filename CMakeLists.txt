@@ -42,7 +42,8 @@ option(BUILD_STATIC_LIBS "Build static libraries." ON)
 option(USE_THERMOFUN "Use ThermoFun" ON)
 option(BUILD_GEM2MT "Install GEM2MT lib." ON)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
-option(BUILD_TOOLS "Build tools" ON)
+option(BUILD_TOOLS "Build tools" OFF)
+option(BUILD_SOLMOD "Build isolate TSolMod " ON)
 
 # Used into conda only
 if(DEFINED ENV{CONDA_PREFIX})
@@ -129,6 +130,10 @@ endif()
 
 if(BUILD_TOOLS)
    add_subdirectory(tools)
+endif()
+
+if(BUILD_SOLMOD)
+   add_subdirectory(tsolmod4rkt)
 endif()
 
 # Install the cmake config files that permit users to use find_package(gems3k)

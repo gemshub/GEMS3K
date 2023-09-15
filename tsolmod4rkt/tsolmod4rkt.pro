@@ -10,7 +10,7 @@ CONFIG -= qt
 CONFIG += warn_on
 CONFIG += thread console
 CONFIG += c++17
-#CONFIG += sanitaze sanitaze_thread
+CONFIG += sanitaze sanitaze_thread
 
 DEFINES += NODEARRAYLEVEL
 #DEFINES += USE_NLOHMANNJSON
@@ -41,7 +41,6 @@ INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 
 contains(DEFINES, USE_THERMOFUN) {
-
 #ThermoFun_CPP   =  ../ThermoFun
 #ThermoFun_H     =   $$ThermoFun_CPP
 #DEPENDPATH += $$ThermoFun_H
@@ -52,8 +51,6 @@ LIBS += -lThermoFun -lChemicalFun
 } ## end USE_THERMOFUN
 
 
-QMAKE_LFLAGS +=
-#QMAKE_CXXFLAGS += -Wall -Wno-unused
 OBJECTS_DIR = obj
 
 !contains(DEFINES, USE_NLOHMANNJSON) {
@@ -103,7 +100,7 @@ SOURCES	  +=          $$GEMS3K_CPP/gdatastream.cpp  \
                       $$GEMS3K_CPP/datach_api.cpp \
                       $$GEMS3K_CPP/datach_formats.cpp \
                       solmodcalc.cpp \
-                      tsmod4rkt.cpp \
+                      tsolmod4rkt.cpp \
                       tsolmod_multi_add.cpp \
                       tsolmod_multi_alloc.cpp \
                       tsolmod_multi_file.cpp \
