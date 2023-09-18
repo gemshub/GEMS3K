@@ -66,12 +66,20 @@ public:
     void SetMoleFractionsWx(const std::map<std::string, double>& awx_map, double defwx=0.);
 
     /// Writing input structure TSolMod to json format file
-    void to_json_file(const std::string& path)
+    void to_json_file(const std::string& path) const
     {
         if(solmod_task.get()) {
             solmod_task->to_json_file(path);
         }
     }
+    /// Writing input structure TSolMod to json format
+    void to_json(std::iostream& ff) const
+    {
+        if(solmod_task.get()) {
+            solmod_task->to_json_stream(ff);
+        }
+    }
+
     /// Trace writing arrays TSolMod to keyvalue format file
     void to_text_file(const std::string& path, bool append=false)
     {

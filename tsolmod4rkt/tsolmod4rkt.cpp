@@ -131,6 +131,19 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
         phase.Get_lnGamma(lngam.data());
         std::cout  << lngam[0] << " "<< lngam[1] << " " << lngam[2] << " " << std::endl;
 
+        auto& phase2 = multi->get_phase("Plagioclase");
+        std::map<std::string, double> wx = {
+            {"Albite", 0.186993363098213},
+            {"Anorthite", 3.45294711467247e-09},
+            {"Sanidine", 0.81300663344884}};
+
+        phase.SetMoleFractionsWx(wx);
+        phase.SolModActCoeff();
+        auto ln_gamma = phase.GetlnGamma();
+        for(const auto& item: ln_gamma ) {
+           std::cout  << item.first << " "<< item.second  << std::endl;
+        }
+
         return 0;
     }
     catch(TError& err)
@@ -147,3 +160,4 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
     }
     return -1;
 }
+

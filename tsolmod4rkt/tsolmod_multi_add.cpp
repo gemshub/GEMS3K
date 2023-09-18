@@ -104,7 +104,7 @@ void TSolModMulti::freeMemory()
 }
 
 //-------------------------------------------------------------------
-long int  TSolModMulti::GEM_init( const char* ipmfiles_lst_name )
+long int  TSolModMulti::GEM_init( const std::string& ipmfiles_lst_name )
 {
     clearipmLogError();
     clear_ThermoEngine();
@@ -186,7 +186,7 @@ long int  TSolModMulti::GEM_init( const char* ipmfiles_lst_name )
         return -1;
     }
 
-    if( ipmfiles_lst_name ) {
+    if( !ipmfiles_lst_name.empty() ) {
         TSolMod::solmod_logger->error("GEMS3K input : file {}", ipmfiles_lst_name);
     }
     if( !ipmlog_error.empty() ) {
@@ -195,8 +195,8 @@ long int  TSolModMulti::GEM_init( const char* ipmfiles_lst_name )
     return 1;
 }
 
-long int  TSolModMulti::GEM_init( std::string dch_json, std::string ipm_json,
-                                  std::string dbr_json, std::string fun_json)
+long int  TSolModMulti::GEM_init( const std::string& dch_json, const std::string& ipm_json,
+                                  const std::string& dbr_json, const std::string& fun_json)
 {
     load_thermodynamic_data = false; // need load thermo
     clearipmLogError();

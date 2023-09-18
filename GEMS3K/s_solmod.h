@@ -270,10 +270,13 @@ class TSolMod
 		}
 
         /// Trace writing arrays TSolMod to keyvalue format file
-        void to_text_file(const std::string& path, bool append);
+        void to_text_file(const std::string& path, bool append) const;
 
         /// Writing input structure TSolMod to json format file
-        void to_json_file(const std::string& path);
+        void to_json_file(const std::string& path) const;
+
+        /// Writing input structure TSolMod as json format
+        void to_json_stream(std::iostream& ff) const;
 };
 
 

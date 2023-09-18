@@ -123,4 +123,18 @@ endif()
 
 #install(TARGETS tsolmod4rkt-app DESTINATION bin)
 
+# Find the Python interpreter
+#if(THERMOMATCH_BUILD_PYTHON)
+    find_package(pybind11 REQUIRED)
+    message(STATUS "Found pybind11 v${pybind11_VERSION}: ${pybind11_INCLUDE_DIRS}")
+    if(NOT pybind11_FOUND)
+        set(CHEMICALFUN_BUILD_PYTHON OFF)
+        message(WARNING "pybind11 has not been found. "
+            "Cannot build python bindings for thermomatch")
+    endif()
+
+    add_subdirectory(python)
+#endif()
+
+
 

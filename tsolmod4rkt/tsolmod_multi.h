@@ -556,7 +556,7 @@ public:
     ///    0: OK;
     ///    1: GEM IPM read file or input file format error;
     ///   -1: System error (e.g. memory allocation).
-    long int GEM_init(const char *ipmfiles_lst_name);
+    long int GEM_init(const std::string& ipmfiles_lst_name);
 
     /// Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module.
     /// Also reads the input data from the IPM, DCH and one DBR JSON input strings
@@ -570,7 +570,8 @@ public:
     ///    0: OK;
     ///    1: GEM IPM read file or input file format error;
     ///   -1: System error (e.g. memory allocation).
-    long GEM_init(std::string dch_json, std::string ipm_json, std::string dbr_json, std::string fun_json);
+    long GEM_init(const std::string& dch_json, const std::string& ipm_json,
+                  const std::string& dbr_json, const std::string& fun_json);
 
     /// Update thermodynamic data according new TK and P
     void UpdateThermodynamic(double TK, double PPa);

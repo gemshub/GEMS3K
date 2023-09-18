@@ -3,7 +3,7 @@
  
 TEMPLATE = app
 LANGUAGE = C++
-TARGET = kva2json
+TARGET = solmod4rkt
 VERSION = 3.4.6
 
 CONFIG -= qt

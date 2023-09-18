@@ -376,11 +376,15 @@ double TSolMod::ideal_conf_entropy()
     return Sicnf;
 }
 
-void TSolMod::to_json_file(const std::string& path)
+void TSolMod::to_json_file(const std::string& path) const
 {
     std::fstream ff(GemsSettings::with_directory(path), std::ios::out);
     ErrorIf(!ff.good(), path, "Fileopen error");
+    to_json_stream(ff);
+}
 
+void TSolMod::to_json_stream(std::iostream& ff) const
+{
     io_formats::SimdJsonWrite out_format( ff, "set_name", true );
     out_format.put_head( PhaseName, "tsolmod");
     io_formats::TPrintArrays<io_formats::SimdJsonWrite>  prar( 0, {}, out_format );
@@ -417,7 +421,7 @@ void TSolMod::to_json_file(const std::string& path)
     out_format.dump( true );
 }
 
-void TSolMod::to_text_file(const std::string& path, bool append)
+void TSolMod::to_text_file(const std::string& path, bool append) const
 {
     std::ios::openmode mod = std::ios::out;
     if( append )
