@@ -37,7 +37,7 @@
                     $$GEMS3K_H/v_detail.h \
                     $$GEMS3K_H/v_service.h \
                     $$GEMS3K_H/jsonconfig.h \
-    $$PWD/datach_api.h
+                    $$GEMS3K_H/datach_api.h
 
 
         SOURCES	  +=  $$GEMS3K_CPP/gdatastream.cpp  \
@@ -80,6 +80,6 @@
                       $$GEMS3K_CPP/v_detail.cpp \
                       $$GEMS3K_CPP/v_service.cpp \
                       $$GEMS3K_CPP/jsonconfig.cpp \
-    $$PWD/datach_api.cpp \
-    $$PWD/datach_formats.cpp
+                      $$GEMS3K_CPP/datach_api.cpp \
+                      $$GEMS3K_CPP/datach_formats.cpp
 

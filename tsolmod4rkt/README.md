@@ -1,51 +1,95 @@
-## kva2json
+## tsolmod4rkt
 
-*kva2json* the CLI utility kva2json  to convert GEMS3K text I/O files from the old/present key-value arrays KVA format into the new JSON format (to be used e.g. in GEMS-Reaktoro) and back from JSON to key-value format.
+ The **tsolmod4rkt** library is the isolation of TSolMod (with all its subclasses and constructors) into a separate library.  Where TSolMod instances are initialized after reading the ipm_dat (and minor parts of dch_dat, dbr_dat) JSON documents sent from GEMSGUI into a truncated variant of  MULTI data structure, that only contain arrays used in TSolMod.
 
+### Installing the library
 
-
-## Application
+The library is installed with GEMS3K when option BUILD_SOLMOD was set.
+To build GEMS3K and install it in your home directory or in the system directory (as in the example below), a typical sequence of commands can be executed in the terminal:
 
 ```sh
-Usage: kva2json [ option(s) ] -i|--import-from LST_IMPORT -e|--export-to LST_EXPORT [ -l|--dbr-list DBR_LIST ]
-Recalculate task and export to other mode
-Options:
-	-h,	--help		show this help message
+cd ~/GEMS3K
+mkdir build
+cd build
+cmake .. -DBUILD_SOLMOD=ON
+make
+sudo make install
+```
 
-	-j,	--json        	write IPM, DCH and DBR files in json mode (default) 
-	-t,	--key-value   	write IPM, DCH and DBR files in txt mode 
-	-b,	--binary      	write IPM, DCH and DBR files in binary mode 
+## C++ API
 
-	-d,	--brife       	do not write data items that contain only default values (default false) 
-	-c,	--comments    	write files with comments for all data entries ( in text mode ) (default false) 
+```cpp
 
+        std::shared_ptr<TSolModMulti> multi(new TSolModMulti());
+        if( multi->GEM_init(input_system_file_list_name) )  {
+            std::cout << "error occured during reading the files" << std::endl;
+            return 1;
+        }
+
+        auto& phase = multi->get_phase("Plagioclase");
+        std::map<std::string, double> wx = {
+            {"Albite", 0.186993363098213},
+            {"Anorthite", 3.45294711467247e-09},
+            {"Sanidine", 0.81300663344884}};
+
+        phase.SetMoleFractionsWx(wx);
+        phase.SolModActCoeff();
+        auto ln_gamma = phase.GetlnGamma();
 ```
 
 
-#### Some run examples
+#### Python API
 
-* convert from key-value to json
+Added  Python API for using tsolmod4rkt (TSolMod) activity models from Reaktoro (via wrappers on these API methods) or other chemical solver codes, or simply in Python files or Jupyter notebooks.
 
-```sh
-> kva2json -j -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-json/pHtitr-dat.lst
+```python
+
+from solmod4rkt import *
+
+task = TSolModMulti()
+task.GEM_init("Thermo-time-in/series1-dat.lst")
+
+phase = task.get_phase("Plagioclase");
+wx = {'Albite': 0.186993363098213, 'Anorthite': 3.45294711467247e-09, 'Sanidine': 0.81300663344884}
+phase.SetMoleFractionsWx(wx, 0.)
+phase.SolModActCoeff()
+ln_gamma = phase.GetlnGamma()
+print("\nln_gamma: ", ln_gamma)
+
+map_ideal = phase.SolModIdealProp()
+print("\nIdealProp: ", map_ideal)
+
+map_excess = phase.SolModExcessProp()
+print("\nExcessPropp: ", map_excess)
 
 ```
 
-* convert from json to key-value
+### Changes into main GEMS3K
 
-```sh
-> kva2json -t -c -i solvus-in/series1-dat.lst -e solvus-kv/series1-dat.lst
+1. Implemented DataCH and DataBR API (datach_api.h, datach_api.cpp and datach_formats.cpp). Functions for allocation and reading/writing DATACH and DATABR structures are separated from the TNode class.
+
+2. Added phase and components names to initals structure of TSolMod class, and implemented printing of TSolMod structure to JSON and key-value formats for comparing results.
+
+3. Added subdirectory *tsolmod4rkt* with the TSolModMulti class to initialize and manage Phase models and the SolModCalc class as c++ API for phase models.
+
+
+### To Do
+
+1. Research addition parameters for specific models (AddSolutionData struct), which could be added to the main SolutionData and printing function
+2. Add to SolModCalc class functions for using data as input or result if needed. For example some models use not only thermodynamic and mole fractions as input.
 
 ```
+addsd.arZ = pm.EZ+jb;
+addsd.arM = pm.Y_m+jb;
+addsd.ardenW = pm.denW;
+addsd.arepsW = pm.epsW;
+addsd.arG0 = pm.G0+jb;
+addsd.arFWGT = pm.FWGT+k;
+addsd.arX = pm.X+jb;
+```
 
-> Note: into very old *-ipm.dat* files need change
->  ```
->  # ID key of the initial chemical system definition
->  "Kaolinite G  pHtitr      0    0       1       25      0   "
->  ```
-> to 
->  ```
->  # ID key of the initial chemical system definition
->  <ID_key> "Kaolinite G  pHtitr      0    0       1       25      0   "
-> ```
+3.After the first testing and discussion, it would be need to increase the number of `sets` and `gets` functions.
+
+4. Change TSOLMOD_MULTI(TSolModMulti) to a truncated MULTI data structure variant. Now full. It is more easily delete than add. 
+
 

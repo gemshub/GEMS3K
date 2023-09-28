@@ -29,7 +29,7 @@
 #include "node.h"
 
 namespace  dbr_dch_api {
-extern std::vector<io_formats::outField> DataBR_fields2;
+extern std::vector<io_formats::outField> DataBR_fields;
 }
 
 void TNode::databr_element_to_vtk( std::fstream& ff, DATABR *CNode_, long int nfild, long int ndx )
@@ -173,9 +173,9 @@ void TNode::databr_name_to_vtk( std::fstream& ff, long int nfild, long int ndx, 
 {
   std::string str="", str2="";
   // full name of data fiels (add index name)
-  ff << "SCALARS " << dbr_dch_api:: DataBR_fields2[nfild].name.c_str();
+  ff << "SCALARS " << dbr_dch_api:: DataBR_fields[nfild].name.c_str();
 
-  switch( dbr_dch_api::DataBR_fields2[nfild].indexation )
+  switch( dbr_dch_api::DataBR_fields[nfild].indexation )
   {
     case 1: break;
     case nICbi: str = char_array_to_string( CSD->ICNL[ IC_xDB_to_xCH( ndx ) ],MaxICN );
@@ -216,7 +216,7 @@ void TNode::databr_size_to_vtk(  long int nfild, long int& nel, long int& nel2 )
 
     nel = 1;
     nel2 = 1;
-    switch( dbr_dch_api::DataBR_fields2[nfild].indexation )
+    switch( dbr_dch_api::DataBR_fields[nfild].indexation )
     {
       case 1: break;
       case nICbi: nel = CSD->nICb;

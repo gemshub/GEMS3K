@@ -25,7 +25,7 @@ endif()
 add_custom_target(solmod4rkt ALL
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:PySolmod4rkt>
         ${CMAKE_CURRENT_BINARY_DIR}/$<TARGET_FILE_NAME:PySolmod4rkt>
-    COMMAND ${PYTHON_EXECUTABLE}  -m pip install --prefix ${CMAKE_BINARY_DIR} --ignore-installed .
+        COMMAND ${PYTHON_EXECUTABLE}  -m pip install --prefix ${CMAKE_BINARY_DIR} --ignore-installed .
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Set dependencies of PySolmod4rkt target
@@ -33,7 +33,8 @@ add_dependencies(solmod4rkt PySolmod4rkt)
 
 # Set the path where the python package is installed to CMAKE_INSTALL_PREFIX if not given
 if(NOT DEFINED SOLMOD4RKT_PYTHON_INSTALL_PREFIX)
-    set(SOLMOD4RKT_PYTHON_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+  set(SOLMOD4RKT_PYTHON_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+#  set(SOLMOD4RKT_PYTHON_INSTALL_PREFIX "/usr")
 endif()
 # If the path is already in Windows format (with backslashes), it can't be added directly
 # to the string below, otherwise CMake will later complain about "Invalid escape sequence".
@@ -53,7 +54,9 @@ install(CODE
     endif()
 
     execute_process(
-        COMMAND ${PYTHON_EXECUTABLE} -m pip install --prefix \${SOLMOD4RKT_PYTHON_INSTALL_PREFIX_NATIVE} ${CMAKE_CURRENT_BINARY_DIR}
+        COMMAND ${PYTHON_EXECUTABLE} -m pip install ${CMAKE_CURRENT_BINARY_DIR}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 "
 )
+
+#        COMMAND ${PYTHON_EXECUTABLE} -m pip install --prefix \${SOLMOD4RKT_PYTHON_INSTALL_PREFIX_NATIVE} ${CMAKE_CURRENT_BINARY_DIR}

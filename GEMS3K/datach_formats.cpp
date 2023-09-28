@@ -47,7 +47,7 @@ namespace  dbr_dch_api {
 // the text of the comment for this data object, optionally written into the
 // text-format output DBR or DCH file.
 //
-std::vector<io_formats::outField> DataBR_fields2 =  {  // [f_lga+1/*60*/]
+std::vector<io_formats::outField> DataBR_fields =  {  // [f_lga+1/*60*/]
   { "NodeHandle",  0, 0, 1, "# NodeHandle: Node identification handle"},
   { "NodeTypeHY",  0, 0, 1, "# NodeTypeHY:  Node type code (hydraulic), not used on TNode level; see typedef NODETYPE" },
   { "NodeTypeMT",  0, 0, 1, "# NodeTypeMT:  Node type (mass transport), not used on TNode level; see typedef NODETYPE" },
@@ -117,7 +117,7 @@ std::vector<io_formats::outField> DataBR_fields2 =  {  // [f_lga+1/*60*/]
     { "lga",  0, 0, nDCbi, "# lga: DC activities in equilibrium, in log10 scale [nDCb]" }
 };
 
-std::vector<io_formats::outField> DataCH_static_fields2 =  {  // [14]
+std::vector<io_formats::outField> DataCH_static_fields =  {  // [14]
   { "nIC",   1, 0, 0, "# nIC: Number of Independent Components (usually chemical elements and charge)" },
   { "nDC",   1, 0, 0, "# nDC: Number of Dependent Components (chemical species made of Independent Components)" },
   { "nPH",   1, 0, 0, "# nPH: Number of phases (into which Dependent Components are grouped)" },
@@ -134,7 +134,7 @@ std::vector<io_formats::outField> DataCH_static_fields2 =  {  // [14]
   { "mLook", 1, 0, 0, "# mLook: Lookup mode: 0 interpolation over nTp*nPp grid; 1 data for T,P pairs, no interpolation"}
 };
 
-std::vector<io_formats::outField> DataCH_dynamic_fields2 =  { //  [30] +4
+std::vector<io_formats::outField> DataCH_dynamic_fields =  { //  [30] +4
    { "xic",   1, 0, 0, "# xIC: DATACH access index list for ICs kept in the DATABR structure and in DBR files [nICb]" },
    { "xdc",   1, 0, 0, "# xDC: DATACH access index list of DCs kept in the DATABR  structure and in DBR files [nDCb]" },
    { "xph",   1, 0, 0, "# xPH: DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]" },
@@ -176,7 +176,7 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
     bool _comment = with_comments;
 
     out_format.put_head( GEMS3KGenerator::gen_dbr_name(out_format.set_name(), 0, CNode->NodeHandle), "dbr");
-    io_formats::TPrintArrays<TIO>  prar( f_omph+1/*55*/, DataBR_fields2, out_format );
+    io_formats::TPrintArrays<TIO>  prar( f_omph+1/*55*/, DataBR_fields, out_format );
 
     if( _comment )
     {
@@ -294,7 +294,7 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
     {
         if( _comment )
         {
-            prar.writeComment( _comment,  DataBR_fields2[f_bPS].comment.c_str() );
+            prar.writeComment( _comment,  DataBR_fields[f_bPS].comment.c_str() );
             prar.writeArray(  "", CSD->ICNL[0], CSD->nIC, MaxICN );
         }
         prar.writeArray(  f_bPS,  CNode->bPS, CSD->nPSb*CSD->nICb, CSD->nICb,false, brief_mode );
@@ -316,7 +316,7 @@ void databr_from_text_file(const DATACH* CSD, DATABR* CNode, TIO& in_format )
     // mem_set( &CNode->Tm, 0, 19*sizeof(double));
     databr_reset(CNode, 0);
 
-    io_formats::TReadArrays<TIO>  rdar(f_omph+1/*55*/, DataBR_fields2, in_format);
+    io_formats::TReadArrays<TIO>  rdar(f_omph+1/*55*/, DataBR_fields, in_format);
 
     long int nfild = rdar.findNext();
     while( nfild >=0 )
@@ -490,8 +490,8 @@ void datach_to_text_file(const DATACH* CSD, TIO& out_format, bool use_thermofun,
     bool _comment = with_comments;
 
     out_format.put_head( GEMS3KGenerator::gen_dch_name( out_format.set_name() ), "dch");
-    io_formats::TPrintArrays<TIO>  prar1(14, DataCH_static_fields2, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 30, DataCH_dynamic_fields2, out_format );
+    io_formats::TPrintArrays<TIO>  prar1(14, DataCH_static_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 30, DataCH_dynamic_fields, out_format );
 
     if( CSD->nIC == CSD->nICb )
         prar.setNoAlws( f_xic);
@@ -620,7 +620,7 @@ void datach_from_text_file(DATACH* CSD, TIO& in_format, bool use_thermofun)
     long int ii;
 
     // static arrays
-    io_formats::TReadArrays<TIO> rdar( 14, DataCH_static_fields2, in_format);
+    io_formats::TReadArrays<TIO> rdar( 14, DataCH_static_fields, in_format);
 
     long int nfild = rdar.findNext();
     while( nfild >=0 )
@@ -671,7 +671,7 @@ void datach_from_text_file(DATACH* CSD, TIO& in_format, bool use_thermofun)
     //databr_realloc();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 30, DataCH_dynamic_fields2, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 30, DataCH_dynamic_fields, in_format);
 
     if( CSD->iGrd  )
         rddar.setAlws( f_DD /*28 "DD"*/);

@@ -141,7 +141,7 @@ std::string TNode::system_id() const
 bool  TNode::check_TP( double TK, double P ) const
 {
     auto error_mesg = dbr_dch_api::check_TP(CSD, TK, P);
-    if( error_mesg.empty() ) {
+    if( !error_mesg.empty() ) {
         ipmlog_file->info("In node {}: {}", CNode->NodeHandle, error_mesg);
         return false;
     }

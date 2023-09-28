@@ -137,9 +137,9 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
             {"Anorthite", 3.45294711467247e-09},
             {"Sanidine", 0.81300663344884}};
 
-        phase.SetMoleFractionsWx(wx);
-        phase.SolModActCoeff();
-        auto ln_gamma = phase.GetlnGamma();
+        phase2.SetMoleFractionsWx(wx);
+        phase2.SolModActCoeff();
+        auto ln_gamma = phase2.GetlnGamma();
         for(const auto& item: ln_gamma ) {
            std::cout  << item.first << " "<< item.second  << std::endl;
         }
