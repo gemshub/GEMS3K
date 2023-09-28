@@ -45,11 +45,11 @@ install(CODE
 "
     file(TO_NATIVE_PATH \"${SOLMOD4RKT_PYTHON_INSTALL_PREFIX}\" SOLMOD4RKT_PYTHON_INSTALL_PREFIX_NATIVE)
 
-    if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/../../lib/PySolmod4rkt.pdb)
+    if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/../../../lib/PySolmod4rkt.pdb)
         string(REPLACE .pyd .pdb SOLMOD4RKT_PDB_FILENAME \"${SOLMOD4RKT_PYTHON_MODULE_FILENAME}\")
 
         execute_process(
-            COMMAND \${CMAKE_COMMAND} -E copy ../../lib/PySolmod4rkt.pdb \${SOLMOD4RKT_PDB_FILENAME}
+            COMMAND \${CMAKE_COMMAND} -E copy ../../../lib/PySolmod4rkt.pdb \${SOLMOD4RKT_PDB_FILENAME}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     endif()
 
