@@ -119,6 +119,7 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
             std::cout << "error occured during reading the files" << std::endl;
             return 1;
         }
+        node_arr->GEM_print_ipm( "AfterRead.txt" );   // possible debugging printout
         //std::cout << "Loaded System ID: " << node_arr->getCalcNode()->system_id() <<  std::endl;
 
         TestModeGEMParam calc_param;  // use default data

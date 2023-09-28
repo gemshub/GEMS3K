@@ -245,57 +245,6 @@ long int  TNode::PhtoDC_DBR( const long int Phx, long int& nDCinPh ) const
     return DCx;
 }
 
-// Test TK as lying in the vicinity of a grid point for the interpolation of thermodynamic data
-// Return index of the node in lookup array or -1
-long int  TNode::check_grid_T( double TK ) const
-{
-    long int jj;
-    for( jj=0; jj<CSD->nTp; jj++)
-        if( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol )
-            return jj;
-    return -1;
-}
-
-// Test P as lying in the vicinity of a grid point for the interpolation of thermodynamic data
-// Return index of the node in lookup array or -1
-long int  TNode::check_grid_P( double P ) const
-{
-    long int jj;
-    for( jj=0; jj<CSD->nPp; jj++)
-        if( fabs( P - CSD->Pval[jj] ) < CSD->Ptol )
-            return jj;
-    return -1;
-}
-
-// Tests TK and P as a grid point for the interpolation of thermodynamic data using DATACH
-// lookup arrays. Returns -1L if interpolation is needed, or 1D index of the lookup array element
-// if TK and P fit within the respective tolerances.
-// For producing lookup arrays (in GEMS), we recommend using step for temperature less or equal to 10 degrees
-// in order to assure good accuracy of interpolation especially for S0 and Cp0 of aqueous species.
-long int  TNode::check_grid_TP(  double TK, double P ) const
-{
-    long int xT, xP, ndx=-1;
-
-    if( CSD->mLook == 1 )
-    {
-        for(long int  jj=0; jj<CSD->nPp; jj++)
-            if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) )
-                return jj;
-        Error( "check_grid_TP: " , std::string("Temperature ")+std::to_string(TK)+
-               " and pressure "+std::to_string(P)+" out of grid" );
-        //return -1;
-    }
-    else
-    {
-        xT = check_grid_T( TK );
-        xP = check_grid_P( P );
-        if( xT >=0 && xP>= 0 )
-            ndx =  xP * CSD->nTp + xT;
-        return ndx;
-    }
-    return ndx;
-}
-
 // used in GEMSFIT only
 //Sets new molar Gibbs energy G0(P,TK) value for Dependent Component
 //in the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)

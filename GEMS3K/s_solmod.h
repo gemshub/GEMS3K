@@ -5,7 +5,7 @@
 /// Declarations of TSolMod and derived classes implementing built-in models
 /// of mixing in fluid, liquid, aqueous and solid-solution phases
 
-// Copyright (C) 2003-2014  T.Wagner, D.Kulik, S.Dmitrieva, F.Hingerl, S.Churakov
+// Copyright (C) 2003-2023  T.Wagner, D.Kulik, S.Dmitrieva, F.Hingerl, S.Churakov
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -80,6 +80,7 @@ enum tp_codes {  /// codes for fluid subroutines in EoS models (see v_mod.h)
 /// Base class for subclasses of built-in mixing models.
 /// (c) March 2007 DK/TW
 struct SolutionData {
+    std::string phaseName;
     long int NSpecies;  ///< Number of species (end members) in the phase
     long int NParams;   ///< Total number of non-zero interaction parameters
     long int NPcoefs;   ///< Number of coefficients per interaction parameter
@@ -98,6 +99,7 @@ struct SolutionData {
     char *DC_Codes;     ///< DC class codes for species -> NSpecies
     char (*TP_Code)[6]; ///< Codes for TP correction methods for species ->NSpecies
     long int *arIPx;    ///< Pointer to list of indexes of non-zero interaction parameters
+    char  (*arSM)[MAXDCNAME];  ///< List of DC names in the phase
 
 //    long int *arPhLin;  ///< new: indexes of linked phase and link type codes [NlPhs*2] read-only
 
@@ -121,7 +123,7 @@ struct SolutionData {
     double *arlnRcpt; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
     double *arlnExet; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
     double *arlnCnft; ///< new: configurational terms adding to overall activity [Ls_]
- double *arCTermt; ///< new: Coulombic terms adding to overall activity coefficients [Ls_]
+    double *arCTermt; ///< new: Coulombic terms adding to overall activity coefficients [Ls_]
 
     double *arVol;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
     double *aphVOL;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
@@ -134,14 +136,12 @@ class TSolMod
 {
 	protected:
 
-        /// Default logger for TSolMod class
-        static std::shared_ptr<spdlog::logger> solmod_logger;
-
         char ModCode;   ///< Code of the mixing model
         char MixCode;	///< Code for specific EoS mixing rules or site-balance based electrostatic SCMs
-                char *DC_Codes; ///< Class codes of end members (species) ->NComp
+        char *DC_Codes; ///< Class codes of end members (species) ->NComp
 
-        char PhaseName[MAXPHNAME+1];    ///< Phase name (for specific built-in models)
+        std::string PhaseName;    ///< Phase name
+        char  (*DC_Names)[MAXDCNAME];  ///< List of DC names in the system [L]
 
         long int NComp;   ///< Number of components in the solution phase
         long int NPar;     ///< Number of non-zero interaction parameters
@@ -169,14 +169,14 @@ class TSolMod
         double *aDCc;   ///< End-member properties coefficients
         double *aGEX;   ///< Reciprocal energies, DQF terms, pure fugacities of DC (corrected to TP)
         double *aPparc;  ///< Output partial pressures (activities, fugacities) -> NComp
-        double **aDC;   ///< Table of corrected end member properties at T,P of interest  !!!!!! Move to GC EOS subclass!
+        //double **aDC;   ///< Table of corrected end member properties at T,P of interest  !!!!!! Move to GC EOS subclass!
         double *aMoiSN; ///< End member moiety- site multiplicity number tables -> NComp x NSub x NMoi
         double *aSitFR; ///< Table of sublattice site fractions for moieties -> NSub x NMoi
 
 //    double *lPhcf;  ///< new: array of phase link parameters -> NlPh x NlPc (read-only)
-    double *DQFcf;  ///< new: array of DQF parameters for DCs in phases ->  NComp x NDQFpc; (read-only)
-                    ///< x_DQF[j]: mole fraction at transition; a, b, c - coefficients of T,P correction
-                    ///< according to the equation aGEX[j] = A + B*T + C*P (so far only binary Margules)
+       double *DQFcf;  ///< new: array of DQF parameters for DCs in phases ->  NComp x NDQFpc; (read-only)
+                      ///< x_DQF[j]: mole fraction at transition; a, b, c - coefficients of T,P correction
+                      ///< according to the equation aGEX[j] = A + B*T + C*P (so far only binary Margules)
 //    double *rcpcf;  ///< new: array of reciprocal parameters for DCs in phases -> NComp x NrcPpc; (read-only)
 
         double *x;      ///< Pointer to mole fractions of end members (provided)
@@ -215,8 +215,11 @@ class TSolMod
 
         public:
 
+        /// Default logger for TSolMod class
+        static std::shared_ptr<spdlog::logger> solmod_logger;
+
         /// Generic constructor
-        TSolMod( SolutionData *sd );
+        TSolMod(SolutionData *sd);
 
          /// Generic constructor for DComp/DCthermo
         TSolMod( long int NSpecies,  char Mod_Code,  double T_k, double P_bar );
@@ -259,10 +262,6 @@ class TSolMod
 
         bool testSizes( SolutionData *sd );
 
-        /// Getting phase name
-		void GetPhaseName( const char *PhName );
-
-		
         // copy activity coefficients into provided array lngamma
 		inline void Get_lnGamma( double* lngamma )		
 		{ 
@@ -270,9 +269,15 @@ class TSolMod
 				lngamma[i] = lnGamma[i]; 
 		}
 
+        /// Trace writing arrays TSolMod to keyvalue format file
+        void to_text_file(const std::string& path, bool append) const;
 
+        /// Writing input structure TSolMod to json format file
+        void to_json_file(const std::string& path) const;
+
+        /// Writing input structure TSolMod as json format
+        void to_json_stream(std::iostream& ff) const;
 };
-
 
 
 /// Subclass for the ideal model (both simple and multi-site)

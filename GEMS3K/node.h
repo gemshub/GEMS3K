@@ -56,10 +56,8 @@
 #define NODE_H
 
 // #include "allan_ipm.h"
-#include "datach.h"
-#include "databr.h"
+#include "datach_api.h"
 #include "activities.h"
-#include "gems3k_impex.h"
 #include "v_detail.h"
 
 #include "ms_multi.h"
@@ -194,19 +192,31 @@ public:
     long int  GEM_init( std::string dch_json, std::string ipm_json,
                         std::string dbr_json, std::string fun_json = "" );
 
-    // String i/o functions
+    /// String i/o functions
     /// Writes CSD (DATACH structure) to a json/key-value string
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
-    std::string datach_to_string( bool with_comments = true, bool brief_mode = false ) const;
+    std::string datach_to_string( bool with_comments = true, bool brief_mode = false ) const
+    {
+        return dbr_dch_api::datach_to_string(current_output_set_name, CSD, with_comments, brief_mode);
+    }
     /// Reads CSD (DATACH structure) from a json/key-value string
-    bool datach_from_string( std::string data );
+    bool datach_from_string( std::string data )
+    {
+        return dbr_dch_api::datach_from_string(current_input_set_name, CSD, data);
+    }
     /// Writes work node (DATABR structure) to a json/key-value string
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
-    std::string databr_to_string( bool with_comments = true, bool brief_mode = false ) const;
+    std::string databr_to_string( bool with_comments = true, bool brief_mode = false ) const
+    {
+        return dbr_dch_api::databr_to_string(current_output_set_name, CSD, CNode, with_comments, brief_mode);
+    }
     /// Reads work node (DATABR structure) from a json/key-value string
-    bool databr_from_string( std::string data );
+    bool databr_from_string( std::string data )
+    {
+        return dbr_dch_api::databr_from_string(current_input_set_name, CSD, CNode, data);
+    }
     /// Writes Multi to a json/key-value string
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
@@ -689,24 +699,30 @@ public:
 
     /// Tests TK as a grid point for the interpolation of thermodynamic data.
     /// \return index in the lookup grid array or -1  if it is not a grid point
-    long int  check_grid_T( double TK ) const;
+    long int  check_grid_T( double TK ) const
+    {
+        return dbr_dch_api::check_grid_T(CSD, TK);
+    }
 
     /// Tests P as a grid point for the interpolation of thermodynamic data.
     /// \return index in the lookup grid array or -1 if it is not a grid point
-    long int  check_grid_P( double P ) const;
+    long int  check_grid_P( double P ) const
+    {
+        return dbr_dch_api::check_grid_P(CSD, P);
+    }
 
     /// Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using DATACH
     /// lookup arrays. \return -1L if interpolation is needed, or 1D index of the lookup array element
     /// if TK and P fit within the respective tolerances.
-    long int  check_grid_TP(  double T, double P ) const;
+    long int  check_grid_TP(double T, double P) const
+    {
+        return dbr_dch_api::check_grid_TP(CSD, T, P);
+    }
 
     /// Returns number of temperature and  pressure grid points for one dependent component
     inline long int gridTP() const
     {
-        if( CSD->mLook == 1L )
-            return CSD->nTp;
-        else
-            return (CSD->nPp * CSD->nTp);
+        return dbr_dch_api::gridTP(CSD);
     }
 
     /// Returns 1 if a Psat value corresponding to the temperature of interest was found in the GEMS3K input file
@@ -1179,54 +1195,17 @@ public:
 
     /// Deletes fields of DATABR structure indicated by data_BR_
     /// and sets the pointer data_BR_ to NULL
-    DATABR* databr_free( DATABR* data_BR_ );
+    DATABR* databr_free(DATABR* data_BR_);
 
 protected:
 
     void allocMemory();
     void freeMemory();
 
-    // Functions that maintain DATACH and DATABR memory allocation
-    void datach_realloc();
-    void datach_free();
-    void datach_reset();
     void databr_realloc()
     {
-        databr_realloc( CNode);
+        dbr_dch_api::databr_realloc(CSD, CNode);
     }
-
-    void databr_realloc( DATABR * CNode_);
-    void databr_free_internal(DATABR *CNode_);
-    void databr_reset( DATABR *CNode, long int level=0 );
-
-    // Binary i/o functions
-    // including file i/o using GemDataStream class (with account for endianness)
-    /// Writes CSD (DATACH structure) to a binary DCH file.
-    void datach_to_file( GemDataStream& ff );
-    /// Reads CSD (DATACH structure) from a binary DCH file.
-    void datach_from_file( GemDataStream& ff );
-    /// Writes node (work DATABR structure) to a binary DBR file.
-    void databr_to_file( GemDataStream& ff );
-    /// Reads node (work DATABR structure) from a binary DBR file.
-    void databr_from_file( GemDataStream& ff );
-
-    // Text i/o functions
-    /// Writes CSD (DATACH structure) to a text DCH file
-    /// \param brief_mode - Do not write data items that contain only default values
-    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
-    template<typename TIO>
-    void datach_to_text_file( TIO& out_format, bool use_thermofun, bool with_comments = true, bool brief_mode = false ) const;
-    /// Reads CSD (DATACH structure) from a text DCH file
-    template<typename TIO>
-    void datach_from_text_file( TIO& in_format, bool use_thermofun );
-    /// Writes work node (DATABR structure) to a text DBR file
-    /// \param brief_mode - Do not write data items that contain only default values
-    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
-    template<typename TIO>
-    void databr_to_text_file( TIO& out_format, bool with_comments = true, bool brief_mode = false ) const;
-    /// Reads work node (DATABR structure) from a text DBR file
-    template<typename TIO>
-    void databr_from_text_file( TIO& in_format );
 
     ///  Reads the contents of the work instance of the DATABR structure from a disk file with path name dbr_file.
     ///   \param dbr_file  string containing a full path to the DBR disk file to be read.
@@ -1244,38 +1223,6 @@ protected:
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
     void  write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode );
 
-
-    ///  Reads the contents of the work instance of the DATABR structure from a stream.
-    ///   \param stream    string or file stream.
-    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
-    void  read_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f );
-
-    /// Writes the contents of the work instance of the DATABR structure into a stream.
-    ///   \param stream    string or file stream.
-    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
-    ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
-    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
-    ///                 If   false (0), comments will not be written;
-    ///                         (json format): interpret the flag with_comments=on as "pretty JSON" and
-    ///                                   with_comments=off as "condensed JSON"
-    ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
-    void  write_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode ) const;
-
-    ///  Reads the contents of the work instance of the DATACH structure from a stream.
-    ///   \param stream    string or file stream.
-    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
-    void  read_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f );
-
-    /// Writes the contents of the work instance of the DATACH structure into a stream.
-    ///   \param stream    string or file stream.
-    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
-    ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
-    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
-    ///                 If   false (0), comments will not be written;
-    ///                         (json format): interpret the flag with_comments=on as "pretty JSON" and
-    ///                                   with_comments=off as "condensed JSON"
-    ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
-    void  write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode ) const;
 
     // Methods to perform output to vtk files
 

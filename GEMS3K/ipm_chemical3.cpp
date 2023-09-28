@@ -29,6 +29,7 @@
 
 #include "ms_multi.h"
 #include "v_detail.h"
+#include "v_service.h"
 
 /// Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
 // added 18.06.2008 DK
@@ -646,12 +647,15 @@ void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int
 //    sd.lPhc = pm.lPhc+ jlphc;
     sd.DQFc = pm.DQFc+ jdqfc;
 //    sd.rcpc = pm.rcpc+ jrcpc;
-    //sd.arSitFj =
 
     // specific properties
     aM = pm.Y_m+jb;
     aZ = pm.EZ+jb;
     sd.arVol = pm.Vol+jb;
+    sd.arSM = pm.SM+jb;
+    auto phase_name = char_array_to_string(pm.SF[k]+MAXSYMB, MAXPHNAME);
+    strip(phase_name);
+    sd.phaseName = phase_name;
 
     TSolMod* mySM = nullptr;
 
@@ -662,7 +666,6 @@ void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int
         case SM_OTHER:  // Hard-coded solid solution models (selected by phase name)
         {
                 TModOther* myPT = new TModOther( &sd, pm.denW, pm.epsW );
-                myPT->GetPhaseName( pm.SF[k] );
                 mySM = myPT;
                 break;
         }
@@ -859,7 +862,6 @@ void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int
         case SM_IDEAL:
         {
                 TIdeal* myPT = new TIdeal( &sd );
-                myPT->GetPhaseName( pm.SF[k] );
                 mySM = myPT;
                 break;
         }
@@ -867,7 +869,6 @@ void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int
         case SM_SURCOM:
         {
             TSCM_NEM* myPT = new TSCM_NEM( &sd );
-            myPT->GetPhaseName( pm.SF[k] );
             mySM = myPT;
             break;
         }
@@ -876,7 +877,9 @@ void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int
     }
   	if(phSolMod[k])
             delete phSolMod[k];
-        phSolMod[k] = mySM; // set up new pointer for the solution model
+
+     phSolMod[k] = mySM; // set up new pointer for the solution model
+     phSolMod[k]->to_json_file(std::string("solmod_")+std::to_string(k)+".json");
 }
 
 /// Wrapper call for calculation of temperature and pressure correction
@@ -929,6 +932,7 @@ void TMultiBase::SolModActCoeff( long int k, char ModCode )
              ErrorIf( !phSolMod[k], "SolModActCoeff: ","Invalid index of phase");
              TSolMod* mySM = phSolMod[k];
              mySM->MixMod();
+             phSolMod[k]->to_text_file(std::string("solmod_act_coef_")+std::to_string(k)+".txt", true);
              break;
         }
         default:
