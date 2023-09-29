@@ -70,7 +70,7 @@ print("\nExcessPropp: ", map_excess)
 
 2. Added phase and components names to initals structure of TSolMod class, and implemented printing of TSolMod structure to JSON and key-value formats for comparing results.
 
-3. Added subdirectory *tsolmod4rkt* with the TSolModMulti class to initialize and manage Phase models and the SolModCalc class as c++ API for phase models.
+3. Added subdirectory *tsolmod4rkt* with the TSolModMulti class to initialize and manage Phase models and the SolModCalc class as C++ API for phase models.
 
 
 ### To Do
@@ -88,8 +88,8 @@ addsd.arFWGT = pm.FWGT+k;
 addsd.arX = pm.X+jb;
 ```
 
-3.After the first testing and discussion, it would be need to increase the number of `sets` and `gets` functions.
+3. After the first testing and discussion, it would be need to increase the number of `sets` and `gets` functions.
 
-4. Change TSOLMOD_MULTI(TSolModMulti) to a truncated MULTI data structure variant. Now full. It is more easily delete than add. 
+4. Change TSOLMOD_MULTI (TSolModMulti) to a truncated MULTI data structure variant. Now full. It is more easily delete than add. 
 
 
