@@ -34,7 +34,6 @@ add_dependencies(solmod4rkt PySolmod4rkt)
 # Set the path where the python package is installed to CMAKE_INSTALL_PREFIX if not given
 if(NOT DEFINED SOLMOD4RKT_PYTHON_INSTALL_PREFIX)
   set(SOLMOD4RKT_PYTHON_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-#  set(SOLMOD4RKT_PYTHON_INSTALL_PREFIX "/usr")
 endif()
 # If the path is already in Windows format (with backslashes), it can't be added directly
 # to the string below, otherwise CMake will later complain about "Invalid escape sequence".
