@@ -368,37 +368,12 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
         pm.lnRcpt   = new double[pm.Ls];
         pm.lnExet   = new double[pm.Ls];
         pm.lnCnft   = new double[pm.Ls];
+        pm.CTerms   = new double[pm.Ls];
         for( ii=0; ii<pm.Ls; ii++ )
         {    pm.lnDQFt[ii] =0.;
             pm.lnRcpt[ii] =0.;
             pm.lnExet[ii] =0.;
             pm.lnCnft[ii] =0.;
-        }
-        //TSorpMod & TKinMet stuff
-        pm.SorMc   = new double[pm.FIs*16];
-        for( ii=0; ii<pm.FIs*16; ii++ )
-            pm.SorMc[ii] =0.;
-        // TSorpMod stuff
-        pm.LsESmo   = new long int[pm.FIs*4];
-        pm.LsISmo   = new long int[pm.FIs*4];
-        for( ii=0; ii<pm.FIs*4; ii++ )
-        {    pm.LsESmo[ii] =0;
-            pm.LsISmo[ii] =0;
-        }
-        pm.xSMd   = 0;
-        pm.EImc   = 0;
-        pm.mCDc   = 0;
-        pm.IsoPc   = 0;
-        pm.IsoSc   = 0;
-        pm.lnScalT   = new double[pm.Ls];
-        pm.lnSACT   = new double[pm.Ls];
-        pm.lnGammF   = new double[pm.Ls];
-        pm.CTerms   = new double[pm.Ls];
-        pm.IsoCt   = 0;
-        for( ii=0; ii<pm.Ls; ii++ )
-        {    pm.lnScalT[ii] =0.;
-            pm.lnSACT[ii] =0.;
-            pm.lnGammF[ii] =0.;
             pm.CTerms[ii] =0.;
         }
         // TKinMet stuff
@@ -459,21 +434,7 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
         pm.lnRcpt   = 0;
         pm.lnExet   = 0;
         pm.lnCnft   = 0;
-        //TSorpMod & TKinMet stuff
-        pm.SorMc   = 0;
-        // TSorpMod stuff
-        pm.LsESmo   = 0;
-        pm.LsISmo   = 0;
-        pm.xSMd   = 0;
-        pm.EImc   = 0;
-        pm.mCDc   = 0;
-        pm.IsoPc   = 0;
-        pm.IsoSc   = 0;
-        pm.lnScalT   = 0;
-        pm.lnSACT   = 0;
-        pm.lnGammF   = 0;
         pm.CTerms   = 0;
-        pm.IsoCt   = 0;
         // TKinMet stuff
         pm.LsKin   = 0;
         pm.LsUpt   = 0;
@@ -556,7 +517,6 @@ void TSolModMulti::multi_kill()
     if( pm.Gamma ) delete[] pm.Gamma;
     if( pm.lnGmf ) delete[] pm.lnGmf;
     if( pm.GamFs ) delete[] pm.GamFs;
-    //   if( pm.D ) delete[] pm.D;
 
     // Part 2  not requited arrays
 
@@ -622,21 +582,7 @@ void TSolModMulti::multi_kill()
     if(pm.lnRcpt) delete[] pm.lnRcpt;
     if(pm.lnExet) delete[] pm.lnExet;
     if(pm.lnCnft) delete[] pm.lnCnft;
-    //TSorpMod & TKinMet stuff
-    if(pm.SorMc) delete[] pm.SorMc;
-    // TSorpMod stuff
-    if(pm.LsESmo) delete[] pm.LsESmo;
-    if(pm.LsISmo) delete[] pm.LsISmo;
-    if(pm.xSMd) delete[] pm.xSMd;
-    if(pm.EImc) delete[] pm.EImc;
-    if(pm.mCDc) delete[] pm.mCDc;
-    if(pm.IsoPc) delete[] pm.IsoPc;
-    if(pm.IsoSc) delete[] pm.IsoSc;
-    if(pm.lnScalT) delete[] pm.lnScalT;
-    if(pm.lnSACT) delete[] pm.lnSACT;
-    if(pm.lnGammF) delete[] pm.lnGammF;
     if(pm.CTerms) delete[] pm.CTerms;
-    if(pm.IsoCt) delete[] pm.IsoCt;
     // TKinMet stuff
     if(pm.LsKin) delete[] pm.LsKin;
     if(pm.LsUpt) delete[] pm.LsUpt;
@@ -862,26 +808,11 @@ void TSolModMulti::set_def( int )
     // TSolMod stuff
     pm.lPhc   = 0;
     pm.DQFc   = 0;
-    //        pm.rcpc   = 0;
     pm.lnDQFt   = 0;
     pm.lnRcpt   = 0;
     pm.lnExet   = 0;
     pm.lnCnft   = 0;
-    //TSorpMod & TKinMet stuff
-    pm.SorMc   = 0;
-    // TSorpMod stuff
-    pm.LsESmo   = 0;
-    pm.LsISmo   = 0;
-    pm.xSMd   = 0;
-    pm.EImc   = 0;
-    pm.mCDc   = 0;
-    pm.IsoPc   = 0;
-    pm.IsoSc   = 0;
-    pm.lnScalT   = 0;
-    pm.lnSACT   = 0;
-    pm.lnGammF   = 0;
     pm.CTerms   = 0;
-    pm.IsoCt   = 0;
     // TKinMet stuff
     pm.LsKin   = 0;
     pm.LsUpt   = 0;

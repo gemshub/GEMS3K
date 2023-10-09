@@ -79,34 +79,6 @@ void TSolModMulti::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
     }
 }
 
-// dimensions from LsISmo array
-void TSolModMulti::getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum )
-{  IsoCtSum = 0;
-    IsoScSum = 0;
-    IsoPcSum = 0;
-    xSMdSum = 0;
-
-    for(long int i=0; i<pm.FIs; i++)
-    {
-        IsoCtSum += (pm.LsISmo[i*4]*2);
-        IsoScSum += (pm.LsISmo[i*4]*pm.LsISmo[i*4+1]);
-        IsoPcSum += (pm.LsISmo[i*4+2]*pm.L1[i]);
-        xSMdSum += (pm.LsISmo[i*4+3]*pm.L1[i]);
-    }
-}
-
-// dimensions from LsESmo array
-void TSolModMulti::getLsESmosum( long int& EImcSum,long int& mCDcSum )
-{  EImcSum = 0;
-    mCDcSum = 0;
-
-    for(long int i=0; i<pm.FIs; i++)
-    {
-        mCDcSum += (pm.LsESmo[i*4+2]*pm.L1[i]);
-        EImcSum += (pm.LsESmo[i*4]*pm.LsESmo[i*4+1]);
-    }
-}
-
 // dimensions from LsKin array
 void TSolModMulti::getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
                                 long int& rpConCSum,long int& apConCSum, long int& AscpCSum )
@@ -303,28 +275,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
         prar.writeArray(  "lnExet", pm.lnExet, pm.Ls);
         prar.writeArray(  "lnCnft", pm.lnCnft, pm.Ls);
 
-        prar.writeArray(  "SorMc", pm.SorMc, pm.FIs*16, 16L);
-
-        // TSorpMod stuff
-        long int IsoCtSum, IsoScSum;
-        long int IsoPcSum, xSMdSum;
-        getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
-        prar.writeArray(  "LsISmo", pm.LsISmo, pm.FIs*4);
-        prar.writeArray(  "xSMd", pm.xSMd, xSMdSum);
-        prar.writeArray(  "IsoPc", pm.IsoPc,  IsoPcSum);
-        prar.writeArray(  "IsoSc", pm.IsoSc, IsoScSum);
-        prar.writeArray(  "IsoCt", pm.IsoCt,  IsoCtSum, 1L);
-        long int EImcSum, mCDcSum;
-        getLsESmosum( EImcSum, mCDcSum );
-        prar.writeArray(  "LsESmo", pm.LsESmo, pm.FIs*4);
-        prar.writeArray(  "EImc", pm.EImc, EImcSum);
-        prar.writeArray(  "mCDc", pm.mCDc,  mCDcSum);
-
-        prar.writeArray(  "lnScalT", pm.lnScalT, pm.Ls);
-        prar.writeArray(  "lnSACT", pm.lnSACT, pm.Ls);
-        prar.writeArray(  "lnGammF", pm.lnGammF, pm.Ls);
-        prar.writeArray(  "CTerms", pm.CTerms, pm.Ls);
-
         // TKinMet stuff
         prar.writeArray(  "kMod", &pm.kMod[0][0], pm.FI, 6L);
         long int xSKrCSum, ocPRkC_feSArC_Sum;
@@ -364,7 +314,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
 
         prar.writeArray(  "Qp", pm.Qp,  pm.FIs*QPSIZE);
         prar.writeArray(  "Qd", pm.Qd,  pm.FIs*QDSIZE);
-
     }
 
     if(pm.H0)
@@ -440,42 +389,6 @@ void TSolModMulti::alloc_lPhc( long int lPhcSum )
 {
     if(pm.lPhc) delete[] pm.lPhc;
     pm.lPhc = new double[lPhcSum];
-}
-
-void TSolModMulti::alloc_xSMd( long int xSMdSum )
-{
-    if(pm.xSMd) delete[] pm.xSMd;
-    pm.xSMd = new long int[xSMdSum];
-}
-
-void TSolModMulti::alloc_IsoPc( long int IsoPcSum )
-{
-    if(pm.IsoPc) delete[] pm.IsoPc;
-    pm.IsoPc = new double[IsoPcSum];
-}
-
-void TSolModMulti::alloc_IsoSc( long int IsoScSum )
-{
-    if(pm.IsoSc) delete[] pm.IsoSc;
-    pm.IsoSc = new double[IsoScSum];
-}
-
-void TSolModMulti::alloc_IsoCt( long int IsoCtSum )
-{
-    if(pm.IsoCt) delete[] pm.IsoCt;
-    pm.IsoCt = new char[IsoCtSum];
-}
-
-void TSolModMulti::alloc_EImc( long int EImcSum )
-{
-    if(pm.EImc) delete[] pm.EImc;
-    pm.EImc = new double[EImcSum];
-}
-
-void TSolModMulti::alloc_mCDc( long int mCDcSum )
-{
-    if(pm.mCDc) delete[] pm.mCDc;
-    pm.mCDc = new double[mCDcSum];
 }
 
 void TSolModMulti::alloc_xSKrC( long int xSKrCSum )

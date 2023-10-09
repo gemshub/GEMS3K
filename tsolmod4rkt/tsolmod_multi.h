@@ -222,10 +222,10 @@ typedef struct
     (*PhLin)[2];  ///< new: indexes of linked phases and link type codes (sum 2*LsPhl[k][0] over Fi)
 
     // TSorpMod stuff
-    long int
-    *LsESmo, ///< new: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]
-    *LsISmo, ///< new: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]
-    *xSMd;   ///< new: denticity of surface species per surface site (site allocation) (-> L1[k]*LsISmo[k][3]] )
+    //?? long int
+    //?? *LsESmo, ///< new: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]
+    //?? *LsISmo, ///< new: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]
+    //?? *xSMd;   ///< new: denticity of surface species per surface site (site allocation) (-> L1[k]*LsISmo[k][3]] )
     /// link indexes to surface type [XL_ST]; sorbent em [XL_EM]; surf.site [XL-SI] and EDL plane [XL_SP]
     // TKinMet stuff
     long int
@@ -267,14 +267,6 @@ typedef struct
     *DQFc,  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc2[k][0]
     //  *rcpc,  ///< new: Collected array of reciprocal parameters for DCs in phases -> L1[k] x LsMdc2[k][1]
 
-    // TSorpMod & TKinMet stuff
-    *SorMc, ///< new: Phase-related kinetics and sorption model parameters: [Fis][16]
-    ///< in the same order as from Asur until fRes2 in TPhase
-    // TSorpMod stuff
-    *EImc,  ///< new: Collected EIL model coefficients k -> += LsESmo[k][0]*LsESmo[k][1]
-    *mCDc,  ///< new: Collected CD EIL model coefficients per DC k -> += L1[k]*LsESmo[k][2]
-    *IsoPc, ///< new: Collected isotherm coefficients per DC k -> += L1[k]*LsISmo[k][2];
-    *IsoSc, ///< new: Collected isotherm coeffs per site k -> += LsISmo[k][0]*LsISmo[k][1];
     // TKinMet stuff
     *feSArC, ///< new: Collected array of fractions of surface area related to parallel reactions k-> += LsKin[k][0]
     *rpConC,  ///< new: Collected array of kinetic rate constants k-> += LsKin[k][0]*LsKin[k][2];
@@ -328,10 +320,6 @@ typedef struct
     double *lnRcpt; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
     double *lnExet; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
     double *lnCnft; ///< new: configurational terms adding to overall activity [Ls_]
-    // TSorpMod stuff
-    double *lnScalT;  ///< new: Surface/volume scaling activity correction terms [Ls_]
-    double *lnSACT;   ///< new: ln isotherm-specific SACT for surface species [Ls_]
-    double *lnGammF;  ///< new: Frumkin or BET non-electrostatic activity coefficients [Ls_]
     double *CTerms;   ///< new: Coulombic terms (electrostatic activity coefficients) [Ls_]
 
     double  *B,  ///< Input bulk chem. compos. of the system - b vector, moles of IC[N]
@@ -386,10 +374,6 @@ typedef struct
     *DCC,   ///< Classifier of DC { TESKWL GVCHNI JMFD QPR <0-9>  AB  XYZ O } [L]
     *PHC;   ///< Classifier of phases { a g f p m l x d h } [FI]
     char *DCCW;  ///< internal DC class codes [L]
-    // TSorpMod stuff
-    char *IsoCt; ///< new: Collected isotherm and SATC codes for surface site types k -> += 2*LsISmo[k][0]
-
-    //  SolutionData *asd; ///< Array of data structures to pass info to TSolMod [FIs]
 
     long int ITF,       ///< Number of completed IA EFD iterations
     ITG,         ///< Number of completed GEM IPM iterations
@@ -586,10 +570,6 @@ protected:
     void getLsPhlsum( long int& PhLinSum,long int& lPhcSum );
     /// Get dimensions from LsMdc2 array
     void getLsMdc2sum( long int& DQFcSum,long int& rcpcSum );
-    /// Get dimensions from LsISmo array
-    void getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum );
-    /// Get dimensions from LsESmo array
-    void getLsESmosum( long int& EImcSum,long int& mCDcSum );
     /// Get dimensions from LsKin array
     void getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
                       long int& rpConCSum,long int& apConCSum, long int& AscpCSum );
@@ -605,12 +585,6 @@ protected:
     void alloc_DQFc( long int DQFcSum );
     void alloc_PhLin( long int PhLinSum );
     void alloc_lPhc( long int lPhcSum );
-    void alloc_xSMd( long int xSMdSum );
-    void alloc_IsoPc( long int IsoPcSum );
-    void alloc_IsoSc( long int IsoScSum );
-    void alloc_IsoCt( long int IsoCtSum );
-    void alloc_EImc( long int EImcSum );
-    void alloc_mCDc( long int mCDcSum );
     void alloc_xSKrC( long int xSKrCSum );
     void alloc_ocPRkC( long int ocPRkC_feSArC_Sum );
     void alloc_feSArC( long int ocPRkC_feSArC_Sum );

@@ -423,52 +423,6 @@ void TSolModMulti::to_text_file_gemipm( TIO& out_format, bool addMui,
                 prar.writeComment( _comment, "\n# lPhc:  Collected array of phase link parameters ");
             prar.writeArray(  "lPhc", pm.lPhc,  lPhcSum);
         }
-        prar.writeArray(  f_SorMc, pm.SorMc, pm.FIs*16, 16L, _comment, brief_mode);
-
-        // TSorpMod stuff
-        long int IsoCtSum, IsoScSum;
-        long int IsoPcSum, xSMdSum;
-        getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
-        prar.writeArray(  f_LsISmo, pm.LsISmo, pm.FIs*4, 4L, _comment, brief_mode);
-        if(xSMdSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# xSMd:  denticity of surface species per surface site (site allocation) ");
-            prar.writeArray(  "xSMd", pm.xSMd, xSMdSum);
-        }
-        if(IsoPcSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# IsoPc:  Collected isotherm coefficients per DC ");
-            prar.writeArray(  "IsoPc", pm.IsoPc,  IsoPcSum);
-        }
-        if(IsoScSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# IsoSc:  Collected isotherm coeffs per site");
-            prar.writeArray(  "IsoSc", pm.IsoSc, IsoScSum);
-        }
-        if(IsoCtSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# IsoCt:  Collected isotherm and SATC codes for surface site types");
-            prar.writeArray(  "IsoCt", pm.IsoCt,  IsoCtSum, 1L);
-        }
-        long int EImcSum, mCDcSum;
-        getLsESmosum( EImcSum, mCDcSum );
-        prar.writeArray(  f_LsESmo, pm.LsESmo, pm.FIs*4, 4L, _comment, brief_mode);
-        if(EImcSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# EImc:  Collected EIL model coefficients");
-            prar.writeArray(  "EImc", pm.EImc, EImcSum);
-        }
-        if(mCDcSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# mCDc:  Collected CD EIL model coefficients per DC ");
-            prar.writeArray(  "mCDc", pm.mCDc,  mCDcSum);
-        }
         // TKinMet stuff
         prar.writeArrayF(  f_kMod, pm.kMod[0], pm.FI, 6L, _comment, brief_mode);
         long int xSKrCSum, ocPRkC_feSArC_Sum;
@@ -550,12 +504,6 @@ void TSolModMulti::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     if( _comment )
         prar.writeComment( _comment, "\n# (7) Initial data for Phases\n");
-    //?? prar.writeArray(  f_Aalp, pm.Aalp,  pm.FI, -1L, _comment, brief_mode);
-    if( PSigm != S_OFF )
-    {
-        //?? prar.writeArray(  f_Sigw, pm.Sigw,  pm.FI, -1L, _comment, brief_mode);
-       //??  prar.writeArray(  f_Sigg, pm.Sigg,  pm.FI, -1L, _comment, brief_mode);
-    }
     prar.writeArray(  f_YOF, pm.YOF,  pm.FI, -1L, _comment, brief_mode);
 
       //if(!brief_mode || prar.getAlws("dcMod" ))
@@ -834,67 +782,6 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             }
             break;
         }
-        case f_SorMc:
-            rddar.readArray(  "SorMc", pm.SorMc, pm.FIs*16);
-            break;
-            // TSorpMod stuff
-        case f_LsISmo:
-        { if( !pm.LsISmo )
-                Error( "Error", "Array LsISmo not used in this problem");
-            rddar.readArray(  "LsISmo",  pm.LsISmo, pm.FIs*4);
-
-            long int IsoCtSum, IsoScSum;
-            long int IsoPcSum, xSMdSum;
-            getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
-
-            if(xSMdSum )
-            {
-                rddar.readNext( "xSMd");
-                alloc_xSMd(xSMdSum);
-                rddar.readArray(  "xSMd", pm.xSMd, xSMdSum);
-            }
-            if(IsoPcSum )
-            {
-                rddar.readNext( "IsoPc");
-                alloc_IsoPc(IsoPcSum);
-                rddar.readArray(  "IsoPc", pm.IsoPc,  IsoPcSum);
-            }
-            if(IsoScSum )
-            {
-                rddar.readNext( "IsoSc");
-                alloc_IsoSc(IsoScSum);
-                rddar.readArray(  "IsoSc", pm.IsoSc, IsoScSum);
-            }
-            if(IsoCtSum )
-            {
-                rddar.readNext( "IsoCt");
-                alloc_IsoCt(IsoCtSum);
-                rddar.readArray(  "IsoCt", pm.IsoCt,  IsoCtSum, 1L);
-            }
-            break;
-        }
-        case f_LsESmo:
-        {
-            if( !pm.LsESmo )
-                Error( "Error", "Array LsESmo not used in this problem");
-            rddar.readArray(  "LsESmo",  pm.LsESmo, pm.FIs*4);
-            long int EImcSum, mCDcSum;
-            getLsESmosum( EImcSum, mCDcSum );
-
-            if(EImcSum )
-            {
-                rddar.readNext( "EImc");
-                alloc_EImc(EImcSum);
-                rddar.readArray(  "EImc", pm.EImc, EImcSum);
-            }
-            if(mCDcSum )
-            {
-                rddar.readNext( "mCDc");
-                alloc_mCDc( mCDcSum );
-                rddar.readArray(  "mCDc", pm.mCDc,  mCDcSum);
-            }
-            break;
-        }
             // TKinMet stuff
         case f_kMod:
             rddar.readArray(  "kMod", pm.kMod[0], pm.FI, 6L);
@@ -987,16 +874,6 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_DUL: rddar.readArray( "DUL", pm.DUL,  pm.L);
             break;
-        //?? case f_Aalp: rddar.readArray( "Aalp", pm.Aalp,  pm.FI);
-        //??     break;
-        //?? case f_Sigw: if( !pm.Sigw )
-        //??         Error( "Error", "Array Sigw not used in this problem");
-        //??     rddar.readArray( "Sigw", pm.Sigw,  pm.FI);
-        //??     break;
-        //?? case f_Sigg: if( !pm.Sigg )
-        //??         Error( "Error", "Array Sigg not used in this problem");
-        //??     rddar.readArray( "Sigg", pm.Sigg,  pm.FI);
-        //??     break;
         case f_YOF: rddar.readArray( "YOF", pm.YOF,  pm.FI);
             break;
         case f_pa_DB: rddar.readArray( "pa_DB" , &pa_p->DB, 1);
@@ -1073,14 +950,6 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_pa_DKIN: rddar.readArray("pa_DKIN" , &pa_p->DKIN, 1);
             break;
-        /*
-        case f_mui: rddar.readArray("mui" , pm.mui, pm.N);
-            break;
-        case f_muk: rddar.readArray("muk" , pm.muk, pm.FI);
-            break;
-        case f_muj: rddar.readArray("muj" , pm.muj, pm.L);
-            break;
-        */
         case f_pa_PLLG: rddar.readArray("pa_PLLG" , &pa_p->PLLG, 1);
             break;
         case f_tMin: rddar.readArray("tMin" , &pm.tMin, 1);
