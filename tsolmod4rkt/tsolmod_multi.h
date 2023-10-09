@@ -221,24 +221,6 @@ typedef struct
     *LsPhl,  ///< new: Number of phase links; number of link parameters; [Fi][2]
     (*PhLin)[2];  ///< new: indexes of linked phases and link type codes (sum 2*LsPhl[k][0] over Fi)
 
-    // TSorpMod stuff
-    //?? long int
-    //?? *LsESmo, ///< new: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]
-    //?? *LsISmo, ///< new: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]
-    //?? *xSMd;   ///< new: denticity of surface species per surface site (site allocation) (-> L1[k]*LsISmo[k][3]] )
-    /// link indexes to surface type [XL_ST]; sorbent em [XL_EM]; surf.site [XL-SI] and EDL plane [XL_SP]
-    // TKinMet stuff
-    long int
-    *LsKin,  ///< new: number of parallel reactions nPRk[k]; number of species in activity products nSkr[k];
-    /// number of parameter coeffs in parallel reaction term nrpC[k]; number of parameters
-    /// per species in activity products naptC[k]; nAscC number of parameter coefficients in As correction;
-    /// nFaces[k] number of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]
-    *LsUpt,  ///< new: number of uptake kinetics model parameters (coefficients) numpC[k];
-    /// number of IC element indexes for end members = L1[k]    [Fis][2]
-    *xSKrC,  ///< new: Collected array of aq/gas/sorption species indexes used in activity products (-> += LsKin[k][1])
-    (*ocPRkC)[2], ///< new: Collected array of operation codes for kinetic parallel reaction terms (-> += LsKin[k][0])
-    /// and indexes of faces (surface patches)
-    *xICuC;  ///< new: Collected array of IC species indexes used in partition (fractionation) coefficients  ->L1[k]   TBD
     double
     // TSolMod stuff
     *PMc,    ///< Collected interaction parameter coefficients for the (built-in) non-ideal mixing models -> LsMod[k,0] x LsMod[k,2]
@@ -264,16 +246,7 @@ typedef struct
     *VL,      ///< ln mole fraction of end members in phases-solutions
     // TSolMod stuff
     *lPhc,  ///< new: Collected array of phase link parameters (sum(LsPhl[k][1] over Fi)
-    *DQFc,  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc2[k][0]
-    //  *rcpc,  ///< new: Collected array of reciprocal parameters for DCs in phases -> L1[k] x LsMdc2[k][1]
-
-    // TKinMet stuff
-    *feSArC, ///< new: Collected array of fractions of surface area related to parallel reactions k-> += LsKin[k][0]
-    *rpConC,  ///< new: Collected array of kinetic rate constants k-> += LsKin[k][0]*LsKin[k][2];
-    *apConC,  ///< new:!! Collected array of parameters per species involved in activity product terms
-    ///  k-> += LsKin[k][0]*LsKin[k][1]*LsKin[k][3];
-    *AscpC,   /// new: parameter coefficients of equation for correction of specific surface area k-> += LsKin[k][4]
-    *UMpcC  ///< new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
+    *DQFc  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc2[k][0]
     ;
     // until here move to --> datach.h
 
@@ -285,17 +258,6 @@ typedef struct
     *DUL,     ///< VG Vector of upper kinetic restrictions to x_j, moles [L]
     *DLL,     ///< NG Vector of lower kinetic restrictions to x_j, moles [L]
     *fDQF,    ///< Increments to molar G0 values of DCs from pure gas fugacities or DQF terms, normalized [L]
-    // TKinMet stuff (old DODs, new contents )
-    *PUL,  ///< Vector of upper restrictions to multicomponent phases amounts [FIs]
-    *PLL,  ///< Vector of lower restrictions to multicomponent phases amounts [FIs]
-    *PfFact, /// new: phase surface area - volume shape factor (taken from TKinMet or set from TNode) [FI]
-    *PrT,    /// new: Total MWR rate (mol/s) for phases - TKinMet output [FI]
-    *PkT,    /// new: Total specific MWR rate (mol/m2/s) for phases - TKinMet output [FI]
-    *PvT,    /// new: Total one-dimensional MWR surface propagation velocity (m/s) - TKinMet output [FI]
-    //  potentially can be extended to all solution phases?
-    *emRd,   /// new: output Rd values (partition coefficients) for end members (in uptake kinetics model) [Ls]
-    *emDf,   /// new: output Df values (fractionation coeffs.) for end members (in uptake kinetics model) [Ls]
-    //
     *YOF,     ///< Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition) [FI]
     *Vol,     ///< DC molar volumes, cm3/mol [L]
     *MM,      ///< DC molar masses, g/mol [L]
@@ -321,6 +283,7 @@ typedef struct
     double *lnExet; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
     double *lnCnft; ///< new: configurational terms adding to overall activity [Ls_]
     double *CTerms;   ///< new: Coulombic terms (electrostatic activity coefficients) [Ls_]
+
 
     double  *B,  ///< Input bulk chem. compos. of the system - b vector, moles of IC[N]
     *U,  ///< IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
@@ -360,7 +323,6 @@ typedef struct
     *F0;  ///< Excess Gibbs energies for (metastable) DC, mole/mole [L]
     // Name lists
     char (*sMod)[8];   ///< new: Codes for built-in mixing models of multicomponent phases [FIs]
-    char (*kMod)[6];  ///< new: Codes for built-in kinetic models [Fi]
     char  (*dcMod)[6];   ///< Codes for PT corrections for dependent component data [L]
     char  (*SB)[MAXICNAME+MAXSYMB]; ///< List of IC names in the system [N]
     char  (*SM)[MAXDCNAME];  ///< List of DC names in the system [L]
@@ -570,11 +532,6 @@ protected:
     void getLsPhlsum( long int& PhLinSum,long int& lPhcSum );
     /// Get dimensions from LsMdc2 array
     void getLsMdc2sum( long int& DQFcSum,long int& rcpcSum );
-    /// Get dimensions from LsKin array
-    void getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
-                      long int& rpConCSum,long int& apConCSum, long int& AscpCSum );
-    /// Get dimensions from LsUpot array
-    void getLsUptsum(long int& UMpcSum, long int& xICuCSum);
 
     void get_PAalp_PSigm(char &PAalp, char &PSigm);
     void alloc_IPx( long int LsIPxSum );
@@ -585,14 +542,6 @@ protected:
     void alloc_DQFc( long int DQFcSum );
     void alloc_PhLin( long int PhLinSum );
     void alloc_lPhc( long int lPhcSum );
-    void alloc_xSKrC( long int xSKrCSum );
-    void alloc_ocPRkC( long int ocPRkC_feSArC_Sum );
-    void alloc_feSArC( long int ocPRkC_feSArC_Sum );
-    void alloc_rpConC( long int rpConCSum );
-    void alloc_apConC( long int apConCSum );
-    void alloc_AscpC( long int AscpCSum );
-    void alloc_UMpcC( long int UMpcSum );
-    void alloc_xICuC( long int xICuCSum );
 
     // Fill multi arrays
     void InitalizeGEM_IPM_Data();

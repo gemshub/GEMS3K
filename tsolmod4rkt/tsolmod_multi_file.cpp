@@ -79,38 +79,6 @@ void TSolModMulti::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
     }
 }
 
-// dimensions from LsKin array
-void TSolModMulti::getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
-                                long int& rpConCSum,long int& apConCSum, long int& AscpCSum )
-{  xSKrCSum = 0;
-    ocPRkC_feSArC_Sum = 0;
-    rpConCSum = 0;
-    apConCSum = 0;
-    AscpCSum = 0;
-
-    for(long int i=0; i<pm.FI; i++)
-    {
-        xSKrCSum += (pm.LsKin[i*6+1]);
-        ocPRkC_feSArC_Sum += (pm.LsKin[i*6]);
-        rpConCSum += (pm.LsKin[i*6]*pm.LsKin[i*6+2]);
-        apConCSum += (pm.LsKin[i*6]*pm.LsKin[i*6+1]*pm.LsKin[i*6+3]);
-        AscpCSum += (pm.LsKin[i*6+4]);
-    }
-}
-
-// dimensions from LsUpt array
-void TSolModMulti::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
-{
-    UMpcSum = 0;
-    for(long int i=0; i<pm.FIs; i++)
-    {
-        UMpcSum += (pm.LsUpt[i*2]*pm.L1[i]);
-    }
-    xICuCSum = 0;
-    for(long int i=0; i<pm.FIs; i++)
-        xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
-}
-
 //---------------------------------------------------------//
 /// Writing structure MULTI ( free format file  )
 void TSolModMulti::to_text_file( const char *path, bool append )
@@ -200,7 +168,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
         prar.writeArray(  "VL", pm.VL, pm.L);
         prar.writeArray(  "Gamma", pm.Gamma,  pm.L);
         prar.writeArray(  "lnGmf", pm.lnGmf,  pm.L);
-        //     prar.writeArray(  "D", pm.D,  pm.L);
     }
 
     // Part 2  not always required arrays
@@ -210,8 +177,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
         prar.writeArray(  "BFC", pm.BFC, pm.N);
         prar.writeArray(  "XFA", pm.XFA,  pm.FIs);
         prar.writeArray(  "YFA", pm.YFA,  pm.FIs);
-        prar.writeArray(  "PUL", pm.PUL,  pm.FIs);
-        prar.writeArray(  "PLL", pm.PLL,  pm.FIs);
     }
 
     if( pm.LO > 1 )
@@ -222,23 +187,9 @@ void TSolModMulti::to_text_file( const char *path, bool append )
         prar.writeArray(  "IC_wm", pm.IC_wm,  pm.N);
     }
 
-    // dispersed and sorption phases
-    if( PAalp != S_OFF )
-    {
-        //?? prar.writeArray(  "Aalp", pm.Aalp, pm.FI);
-    }
-
-    if( PSigm != S_OFF )
-        //?? prar.writeArray(  "Sigw", pm.Sigw,  pm.FI);
-
-    if( PSigm != S_OFF )
-        //?? prar.writeArray(  "Sigg", pm.Sigg,  pm.FI);
-
     if( pm.E )
     {
         prar.writeArray(  "EZ", pm.EZ,  pm.L);
-        //?? prar.writeArray(  "Xcond", pm.Xcond,  pm.FI);
-        //?? prar.writeArray(  "Xeps", pm.Xeps,  pm.FI);
     }
 
     // Part 3  new Phase definition
@@ -274,34 +225,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
         prar.writeArray(  "lnRcpt", pm.lnRcpt, pm.Ls);
         prar.writeArray(  "lnExet", pm.lnExet, pm.Ls);
         prar.writeArray(  "lnCnft", pm.lnCnft, pm.Ls);
-
-        // TKinMet stuff
-        prar.writeArray(  "kMod", &pm.kMod[0][0], pm.FI, 6L);
-        long int xSKrCSum, ocPRkC_feSArC_Sum;
-        long int rpConCSum, apConCSum, AscpCSum;
-        getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
-        prar.writeArray(  "LsKin", pm.LsKin, pm.FI*6);
-        prar.writeArray(  "xSKrC", pm.xSKrC, xSKrCSum);
-        prar.writeArray(  "ocPRkC", &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
-        prar.writeArray(  "feSArC", pm.feSArC, ocPRkC_feSArC_Sum);
-        prar.writeArray(  "rpConC", pm.rpConC,  rpConCSum);
-        prar.writeArray(  "apConC", pm.apConC, apConCSum);
-        prar.writeArray(  "AscpC", pm.AscpC,  AscpCSum);
-        long int UMpcSum, xICuCSum;
-        getLsUptsum( UMpcSum, xICuCSum );
-        prar.writeArray(  "LsUpt", pm.LsUpt, pm.FIs*2);
-        prar.writeArray(  "UMpcC", pm.UMpcC, UMpcSum);
-
-        prar.writeArray(  "PfFact", pm.PfFact, pm.FI);
-        prar.writeArray(  "PrT", pm.PrT, pm.FI);
-        prar.writeArray(  "PkT", pm.PkT, pm.FI);
-        prar.writeArray(  "PvT", pm.PvT, pm.FI);
-        prar.writeArray(  "emRd", pm.emRd, pm.Ls);
-        prar.writeArray(  "emDf", pm.emDf, pm.Ls);
-        if( pm.xICuC )
-        {
-            prar.writeArray(  "xICuC", pm.xICuC, xICuCSum);
-        }
     }
 
     // Part 4
@@ -389,55 +312,6 @@ void TSolModMulti::alloc_lPhc( long int lPhcSum )
 {
     if(pm.lPhc) delete[] pm.lPhc;
     pm.lPhc = new double[lPhcSum];
-}
-
-void TSolModMulti::alloc_xSKrC( long int xSKrCSum )
-{
-    if(pm.xSKrC) delete[] pm.xSKrC;
-    pm.xSKrC = new long int[xSKrCSum];
-}
-
-void TSolModMulti::alloc_ocPRkC( long int ocPRkC_feSArC_Sum )
-{
-    if(pm.ocPRkC) delete[] pm.ocPRkC;
-    pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
-}
-
-void TSolModMulti::alloc_feSArC( long int ocPRkC_feSArC_Sum )
-{
-    if(pm.feSArC) delete[] pm.feSArC;
-    pm.feSArC = new double[ocPRkC_feSArC_Sum];
-}
-
-void TSolModMulti::alloc_rpConC( long int rpConCSum )
-{
-    if(pm.rpConC) delete[] pm.rpConC;
-    pm.rpConC = new double[rpConCSum];
-}
-
-void TSolModMulti::alloc_apConC( long int apConCSum )
-{
-    if(pm.apConC) delete[] pm.apConC;
-    pm.apConC = new double[apConCSum];
-}
-
-void TSolModMulti::alloc_AscpC( long int AscpCSum )
-{
-    if(pm.AscpC) delete[] pm.AscpC;
-    pm.AscpC = new double[AscpCSum];
-}
-
-void TSolModMulti::alloc_UMpcC( long int UMpcSum )
-{
-    if(pm.UMpcC) delete[] pm.UMpcC;
-    pm.UMpcC = new double[UMpcSum];
-}
-
-void TSolModMulti::alloc_xICuC( long int xICuCSum )
-{
-    if(pm.xICuC) delete[] pm.xICuC;
-    pm.xICuC = new long int[xICuCSum];
-
 }
 
 //--------------------- end of tsolmod_multi_file.cpp ---------------------------
