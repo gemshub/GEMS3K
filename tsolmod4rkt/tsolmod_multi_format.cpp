@@ -550,26 +550,18 @@ void TSolModMulti::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     if( _comment )
         prar.writeComment( _comment, "\n# (7) Initial data for Phases\n");
-    prar.writeArray(  f_Aalp, pm.Aalp,  pm.FI, -1L, _comment, brief_mode);
+    //?? prar.writeArray(  f_Aalp, pm.Aalp,  pm.FI, -1L, _comment, brief_mode);
     if( PSigm != S_OFF )
     {
-        prar.writeArray(  f_Sigw, pm.Sigw,  pm.FI, -1L, _comment, brief_mode);
-        prar.writeArray(  f_Sigg, pm.Sigg,  pm.FI, -1L, _comment, brief_mode);
+        //?? prar.writeArray(  f_Sigw, pm.Sigw,  pm.FI, -1L, _comment, brief_mode);
+       //??  prar.writeArray(  f_Sigg, pm.Sigg,  pm.FI, -1L, _comment, brief_mode);
     }
     prar.writeArray(  f_YOF, pm.YOF,  pm.FI, -1L, _comment, brief_mode);
 
       //if(!brief_mode || prar.getAlws("dcMod" ))
     prar.writeArrayF(  f_dcMod, pm.dcMod[0], pm.L, 6L, _comment, brief_mode );
 
-    if( addMui && !brief_mode )
-    {
-        prar.writeArray(  f_mui, pm.mui,  pm.N, -1L, _comment, brief_mode);
-        prar.writeArray(  f_muk, pm.muk,  pm.FI, -1L, _comment, brief_mode);
-        prar.writeArray(  f_muj, pm.muj,  pm.L, -1L, _comment, brief_mode);
-    }
-
     out_format.dump(  _comment );
-
 }
 
 /// Reading structure MULTI (GEM IPM work structure)
@@ -995,16 +987,16 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_DUL: rddar.readArray( "DUL", pm.DUL,  pm.L);
             break;
-        case f_Aalp: rddar.readArray( "Aalp", pm.Aalp,  pm.FI);
-            break;
-        case f_Sigw: if( !pm.Sigw )
-                Error( "Error", "Array Sigw not used in this problem");
-            rddar.readArray( "Sigw", pm.Sigw,  pm.FI);
-            break;
-        case f_Sigg: if( !pm.Sigg )
-                Error( "Error", "Array Sigg not used in this problem");
-            rddar.readArray( "Sigg", pm.Sigg,  pm.FI);
-            break;
+        //?? case f_Aalp: rddar.readArray( "Aalp", pm.Aalp,  pm.FI);
+        //??     break;
+        //?? case f_Sigw: if( !pm.Sigw )
+        //??         Error( "Error", "Array Sigw not used in this problem");
+        //??     rddar.readArray( "Sigw", pm.Sigw,  pm.FI);
+        //??     break;
+        //?? case f_Sigg: if( !pm.Sigg )
+        //??         Error( "Error", "Array Sigg not used in this problem");
+        //??     rddar.readArray( "Sigg", pm.Sigg,  pm.FI);
+        //??     break;
         case f_YOF: rddar.readArray( "YOF", pm.YOF,  pm.FI);
             break;
         case f_pa_DB: rddar.readArray( "pa_DB" , &pa_p->DB, 1);
@@ -1081,12 +1073,14 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_pa_DKIN: rddar.readArray("pa_DKIN" , &pa_p->DKIN, 1);
             break;
+        /*
         case f_mui: rddar.readArray("mui" , pm.mui, pm.N);
             break;
         case f_muk: rddar.readArray("muk" , pm.muk, pm.FI);
             break;
         case f_muj: rddar.readArray("muj" , pm.muj, pm.L);
             break;
+        */
         case f_pa_PLLG: rddar.readArray("pa_PLLG" , &pa_p->PLLG, 1);
             break;
         case f_tMin: rddar.readArray("tMin" , &pm.tMin, 1);

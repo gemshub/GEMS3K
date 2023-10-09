@@ -218,10 +218,6 @@ typedef struct
     /// reserved
     *IPx,   ///< Collected indexation table for interaction parameters of non-ideal solutions
     ///< ->LsMod[k,0] x LsMod[k,1]   over FIs
-    *mui,   ///< IC indices in RMULTS IC list [N]
-    *muk,   ///< Phase indices in RMULTS phase list [FI]
-    *muj,   ///< DC indices in RMULTS DC list [L]
-
     *LsPhl,  ///< new: Number of phase links; number of link parameters; [Fi][2]
     (*PhLin)[2];  ///< new: indexes of linked phases and link type codes (sum 2*LsPhl[k][0] over Fi)
 
@@ -230,7 +226,6 @@ typedef struct
     *LsESmo, ///< new: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]
     *LsISmo, ///< new: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]
     *xSMd;   ///< new: denticity of surface species per surface site (site allocation) (-> L1[k]*LsISmo[k][3]] )
-    //?? long int  (*SATX)[4]; ///< Setup of surface sites and species (will be applied separately within each sorption phase) [Lads]
     /// link indexes to surface type [XL_ST]; sorbent em [XL_EM]; surf.site [XL-SI] and EDL plane [XL_SP]
     // TKinMet stuff
     long int
@@ -259,24 +254,14 @@ typedef struct
     *Wb,     ///< Relative Born factors (HKF, reserved) [0:Ls-1]
     *Wabs,   ///< Absolute Born factors (HKF, reserved) [0:Ls-1]
     *Rion,   ///< Ionic or solvation radii, A (reserved) [0:Ls-1]
-    *HYM__,    ///< reserved
-    *ENT__,    ///< reserved no object
 
     *H0,     ///< DC pmolar enthalpies, reserved [L]
     *A0,     ///< DC molar Helmholtz energies, reserved [L]
     *U0,     ///< DC molar internal energies, reserved [L]
     *S0,     ///< DC molar entropies, reserved [L]
     *Cp0,    ///< DC molar heat capacity, reserved [L]
-    *Cv0__,    ///< DC molar Cv, reserved [L]
 
     *VL,      ///< ln mole fraction of end members in phases-solutions
-    // Old sorption stuff
-    *Xcond,   ///< conductivity of phase carrier, sm/m2   [0:FI-1], reserved
-    *Xeps,    ///< diel.permeability of phase carrier (solvent) [0:FI-1], reserved
-    *Aalp,    ///< Full vector of specific surface areas of phases (m2/g) [0:FI-1]
-    *Sigw,    ///< Specific surface free energy for phase-water interface (J/m2)   [0:FI-1]
-    *Sigg,  	///< Specific surface free energy for phase-gas interface (J/m2) (not yet used)  [0:FI-1], reserved
-    // from here move to --> datach.h
     // TSolMod stuff
     *lPhc,  ///< new: Collected array of phase link parameters (sum(LsPhl[k][1] over Fi)
     *DQFc,  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc2[k][0]
@@ -305,10 +290,6 @@ typedef struct
     double
     *XFs,    ///< Current quantities of phases X_a at IPM iterations [0:FI-1]
     *Falps,  ///< Current Karpov criteria of phase stability  F_a [0:FI-1]
-    *Fug,    ///< Demo partial fugacities of gases [0:PG-1]
-    *Fug_l,  ///< Demo log partial fugacities of gases [0:PG-1]
-    *Ppg_l,  ///< Demo log partial pressures of gases [0:PG-1]
-
     *DUL,     ///< VG Vector of upper kinetic restrictions to x_j, moles [L]
     *DLL,     ///< NG Vector of lower kinetic restrictions to x_j, moles [L]
     *fDQF,    ///< Increments to molar G0 values of DCs from pure gas fugacities or DQF terms, normalized [L]
@@ -389,21 +370,15 @@ typedef struct
     *Wx,  ///< Mole fractions Wx of DC in multi-component phases [L]
     *F,   /// <Primal DC chemical potentials defined via g0_j, Wx_j and lnGam_j[L]
     *F0;  ///< Excess Gibbs energies for (metastable) DC, mole/mole [L]
-    // Old sorption models
     // Name lists
     char (*sMod)[8];   ///< new: Codes for built-in mixing models of multicomponent phases [FIs]
     char (*kMod)[6];  ///< new: Codes for built-in kinetic models [Fi]
     char  (*dcMod)[6];   ///< Codes for PT corrections for dependent component data [L]
     char  (*SB)[MAXICNAME+MAXSYMB]; ///< List of IC names in the system [N]
-    char  (*SB1)[MAXICNAME]; ///< List of IC names in the system [N]
     char  (*SM)[MAXDCNAME];  ///< List of DC names in the system [L]
     char  (*SF)[MAXPHNAME+MAXSYMB];  ///< List of phase names in the system [FI]
-    char  (*SM2)[MAXDCNAME];  ///< List of multicomp. phase DC names in the system [Ls]
-    char  (*SF2)[MAXPHNAME+MAXSYMB]; ///< List of multicomp. phase names in the syst [FIs]
-    char  (*SFs)[MAXPHNAME+MAXSYMB]; ///< List of phases currently present in non-zero quantities [FI]
-    char  *pbuf, 	///< Text buffer for table printouts
     // Class codes
-    *RLC,   ///< Code of metastability constraints for DCs [L] enum DC_LIMITS
+    char *RLC,   ///< Code of metastability constraints for DCs [L] enum DC_LIMITS
     *RSC,   ///< Units of metastability/kinetic constraints for DCs  [L]
     *RFLC,  ///< Classifier of restriction types for XF_a [FIs]
     *RFSC,  ///< Classifier of restriction scales for XF_a [FIs]

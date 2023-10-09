@@ -180,9 +180,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
     // Part 1
     /* need  always to alloc vectors */
     prar.writeArray(  "L1", pm.L1,  pm.FI);
-    prar.writeArray(  "muk", pm.muk, pm.FI);
-    prar.writeArray(  "mui", pm.mui, pm.N);
-    prar.writeArray(  "muj", pm.muj,  pm.L);
     prar.writeArray(  "DUL", pm.DUL,  pm.L);
     prar.writeArray(  "DLL", pm.DLL,  pm.L);
     prar.writeArray(  "Vol", pm.Vol,  pm.L);
@@ -256,28 +253,20 @@ void TSolModMulti::to_text_file( const char *path, bool append )
     // dispersed and sorption phases
     if( PAalp != S_OFF )
     {
-        prar.writeArray(  "Aalp", pm.Aalp, pm.FI);
-        //?? prar.writeArray(  "Xr0h0", &pm.Xr0h0[0][0],  pm.FI*2);
+        //?? prar.writeArray(  "Aalp", pm.Aalp, pm.FI);
     }
 
     if( PSigm != S_OFF )
-        prar.writeArray(  "Sigw", pm.Sigw,  pm.FI);
+        //?? prar.writeArray(  "Sigw", pm.Sigw,  pm.FI);
 
     if( PSigm != S_OFF )
-        prar.writeArray(  "Sigg", pm.Sigg,  pm.FI);
+        //?? prar.writeArray(  "Sigg", pm.Sigg,  pm.FI);
 
     if( pm.E )
     {
         prar.writeArray(  "EZ", pm.EZ,  pm.L);
-        prar.writeArray(  "Xcond", pm.Xcond,  pm.FI);
-        prar.writeArray(  "Xeps", pm.Xeps,  pm.FI);
-    }
-
-    if( pm.PG > 0 )
-    {
-        prar.writeArray(  "Fug", pm.Fug, pm.PG);
-        prar.writeArray(  "Fug_l", pm.Fug_l, pm.PG);
-        prar.writeArray(  "Ppg_l", pm.Ppg_l, pm.PG);
+        //?? prar.writeArray(  "Xcond", pm.Xcond,  pm.FI);
+        //?? prar.writeArray(  "Xeps", pm.Xeps,  pm.FI);
     }
 
     // Part 3  new Phase definition
