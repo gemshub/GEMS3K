@@ -558,35 +558,8 @@ void TSolModMulti::to_text_file_gemipm( TIO& out_format, bool addMui,
     }
     prar.writeArray(  f_YOF, pm.YOF,  pm.FI, -1L, _comment, brief_mode);
 
-    if( pm.FIat > 0 &&  pm.FIs > 0 )
-    { // ADSORPTION AND ION EXCHANGE
-        if( _comment )
-            prar.writeComment( _comment, "\n# (8) Initial data for sorption phases");
-
-        prar.writeArray(  f_Nfsp, &pm.Nfsp[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
-        prar.writeArray(  f_MASDT, &pm.MASDT[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
-        prar.writeArray(  f_C1, &pm.XcapA[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
-        prar.writeArray(  f_C2, &pm.XcapB[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
-        prar.writeArray(  f_C3, &pm.XcapF[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
-        prar.writeArray(  f_pCh, &pm.Xetaf[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
-        prar.writeArray(  f_SATX, &pm.SATX[0][0], pm.Lads*4, 4L, _comment, brief_mode);
-        prar.writeArray(  f_MASDJ, &pm.MASDJ[0][0], pm.Lads*DFCN, (long int)DFCN, _comment, brief_mode);
-        prar.writeArrayF(  f_SCM, pm.SCM[0], pm.FIs, pm.FIat, _comment, brief_mode );
-        prar.writeArrayF(  f_SACT, pm.SATT, pm.Lads, 1L, _comment, brief_mode );
-        prar.writeArrayF(  f_DCads, pm.DCC3, pm.Lads, 1L, _comment, brief_mode );
-    }
-
-    //if(!brief_mode || prar.getAlws("dcMod" ))
+      //if(!brief_mode || prar.getAlws("dcMod" ))
     prar.writeArrayF(  f_dcMod, pm.dcMod[0], pm.L, 6L, _comment, brief_mode );
-
-    /*
-   outArray( ff, "Vol", pm.Vol,  pm.L);
-   outArray( ff, "G0", pm.G0,  pm.L);
-   outArray( ff, "PUL", pm.PUL,  pm.L);
-   outArray( ff, "PLL", pm.PLL,  pm.L);
-   outArray( ff, "lnGam", pm.lnGam,  pm.L);
-   outArray( ff, "F0", pm.F0,  pm.L);
-*/
 
     if( addMui && !brief_mode )
     {
@@ -1033,50 +1006,6 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             rddar.readArray( "Sigg", pm.Sigg,  pm.FI);
             break;
         case f_YOF: rddar.readArray( "YOF", pm.YOF,  pm.FI);
-            break;
-        case f_Nfsp: if( !pm.Nfsp )
-                Error( "Error", "Array Nfsp not used in this problem");
-            rddar.readArray( "Nfsp", &pm.Nfsp[0][0], pm.FIs*pm.FIat);
-            break;
-        case f_MASDT: if( !pm.MASDT )
-                Error( "Error", "Array MASDT not used in this problem");
-            rddar.readArray( "MASDT", &pm.MASDT[0][0], pm.FIs*pm.FIat);
-            break;
-        case f_C1: if( !pm.XcapA )
-                Error( "Error", "Array XcapA not used in this problem");
-            rddar.readArray( "C1", &pm.XcapA[0][0], pm.FIs*pm.FIat);
-            break;
-        case f_C2: if( !pm.XcapB )
-                Error( "Error", "Array XcapB not used in this problem");
-            rddar.readArray( "C2", &pm.XcapB[0][0], pm.FIs*pm.FIat);
-            break;
-        case f_C3: if( !pm.XcapF )
-                Error( "Error", "Array XcapF not used in this problem");
-            rddar.readArray( "C3", &pm.XcapF[0][0], pm.FIs*pm.FIat);
-            break;
-        case f_pCh: if( !pm.Xetaf )
-                Error( "Error", "Array Xetaf not used in this problem");
-            rddar.readArray( "pCh", &pm.Xetaf[0][0], pm.FIs*pm.FIat);
-            break;
-        case f_SATX: if( !pm.SATX )
-                Error( "Error", "Array SATX not used in this problem");
-            rddar.readArray( "SATX", &pm.SATX[0][0], pm.Lads*4);
-            break;
-        case f_MASDJ: if( !pm.MASDJ )
-                Error( "Error", "Array MASDJ not used in this problem");
-            rddar.readArray( "MASDJ", &pm.MASDJ[0][0], pm.Lads*DFCN);
-            break;
-        case f_SCM: if( !pm.SCM )
-                Error( "Error", "Array SCM not used in this problem");
-            rddar.readArray( "SCM", pm.SCM[0], pm.FIs, pm.FIat );
-            break;
-        case f_SACT: if( !pm.SATT )
-                Error( "Error", "Array SATT not used in this problem");
-            rddar.readArray( "SACT", pm.SATT, pm.Lads, 1 );
-            break;
-        case f_DCads: if( !pm.DCC3 )
-                Error( "Error", "Array DCC3 not used in this problem");
-            rddar.readArray( "DCads", pm.DCC3, pm.Lads, 1 );
             break;
         case f_pa_DB: rddar.readArray( "pa_DB" , &pa_p->DB, 1);
             break;

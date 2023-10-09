@@ -257,7 +257,7 @@ void TSolModMulti::to_text_file( const char *path, bool append )
     if( PAalp != S_OFF )
     {
         prar.writeArray(  "Aalp", pm.Aalp, pm.FI);
-        prar.writeArray(  "Xr0h0", &pm.Xr0h0[0][0],  pm.FI*2);
+        //?? prar.writeArray(  "Xr0h0", &pm.Xr0h0[0][0],  pm.FI*2);
     }
 
     if( PSigm != S_OFF )
@@ -271,33 +271,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
         prar.writeArray(  "EZ", pm.EZ,  pm.L);
         prar.writeArray(  "Xcond", pm.Xcond,  pm.FI);
         prar.writeArray(  "Xeps", pm.Xeps,  pm.FI);
-    }
-
-    if( pm.FIat > 0 && /*pm.Lads > 0 &&Sveta 12/09/99*/ pm.FIs > 0 )
-    { /* ADSORPTION AND ION EXCHANGE */
-        prar.writeArray(  "Nfsp", &pm.Nfsp[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "MASDT", &pm.MASDT[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "XcapA", &pm.XcapA[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "XcapB", &pm.XcapB[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "XcapD", &pm.XcapD[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "XcapF", &pm.XcapF[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "XdlA", &pm.XdlA[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "XdlB", &pm.XdlB[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "XdlD", &pm.XdlD[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "XpsiA", &pm.XpsiA[0][0],  pm.FIs*pm.FIat);
-        prar.writeArray(  "XpsiB", &pm.XpsiB[0][0],  pm.FIs*pm.FIat);
-        prar.writeArray(  "XpsiD", &pm.XpsiD[0][0],  pm.FIs*pm.FIat);
-        prar.writeArray(  "XlamA", &pm.XlamA[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "Xetaf", &pm.Xetaf[0][0], pm.FIs*pm.FIat);
-        prar.writeArray(  "XetaA", &pm.XetaA[0][0],  pm.FIs*pm.FIat);
-        prar.writeArray(  "XetaB", &pm.XetaB[0][0],  pm.FIs*pm.FIat);
-        prar.writeArray(  "XetaD", &pm.XetaD[0][0],  pm.FIs*pm.FIat);
-        prar.writeArray(  "XFTS", &pm.XFTS[0][0],  pm.FIs*pm.FIat);
-        prar.writeArray(  "SATX", &pm.SATX[0][0], pm.Lads*4);
-        //     prar.writeArray(  "MASDJ", pm.MASDJ, pm.Ls);
-        prar.writeArray(  "MASDJ", &pm.MASDJ[0][0], pm.Lads*DFCN);
-        prar.writeArray(  "lnSAC", &pm.lnSAC[0][0],  pm.Lads*4);
-        prar.writeArray(  "D", &pm.D[0][0], MST*MST);
     }
 
     if( pm.PG > 0 )

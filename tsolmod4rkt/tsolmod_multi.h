@@ -230,7 +230,7 @@ typedef struct
     *LsESmo, ///< new: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]
     *LsISmo, ///< new: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]
     *xSMd;   ///< new: denticity of surface species per surface site (site allocation) (-> L1[k]*LsISmo[k][3]] )
-    long int  (*SATX)[4]; ///< Setup of surface sites and species (will be applied separately within each sorption phase) [Lads]
+    //?? long int  (*SATX)[4]; ///< Setup of surface sites and species (will be applied separately within each sorption phase) [Lads]
     /// link indexes to surface type [XL_ST]; sorbent em [XL_EM]; surf.site [XL-SI] and EDL plane [XL_SP]
     // TKinMet stuff
     long int
@@ -300,20 +300,6 @@ typedef struct
     ;
     // until here move to --> datach.h
 
-    //  Data for old surface comlexation and sorption models (new variant [Kulik,2006])
-    double  (*Xr0h0)[2];   ///< mean r & h of particles (- pores), nm  [0:FI-1][2], reserved
-    double  (*Nfsp)[MST];  ///< Fractions of the sorbent specific surface area allocated to surface types  [FIs][FIat]
-    double  (*MASDT)[MST]; ///< Total maximum site  density per surface type (mkmol/g)  [FIs][FIat]
-    double  (*XcapF)[MST]; ///< Capacitance density of Ba EDL layer F/m2 [FIs][FIat]
-    double  (*XcapA)[MST]; ///< Capacitance density of 0 EDL layer, F/m2 [FIs][FIat]
-    double  (*XcapB)[MST]; ///< Capacitance density of B EDL layer, F/m2 [FIs][FIat]
-    double  (*XcapD)[MST]; ///< Eff. cap. density of diffuse layer, F/m2 [FIs][FIat]
-    double  (*XdlA)[MST];  ///< Effective thickness of A EDL layer, nm [FIs][FIat], reserved
-    double  (*XdlB)[MST];  ///< Effective thickness of B EDL layer, nm [FIs][FIat], reserved
-    double  (*XdlD)[MST];  ///< Effective thickness of diffuse layer, nm [FIs][FIat], reserved
-    double  (*XlamA)[MST]; ///< Factor of EDL discretness  A < 1 [FIs][FIat], reserved
-    double  (*Xetaf)[MST]; ///< Density of permanent surface type charge (mkeq/m2) for each surface type on sorption phases [FIs][FIat]
-    double  (*MASDJ)[DFCN];  ///< Parameters of surface species in surface complexation models [Lads][DFCN]
     // Contents defined in the enum below this structure
     // Other data
     double
@@ -355,7 +341,6 @@ typedef struct
     *G0,      ///< Input normalized g0_j(T,P) for DC at unified standard scale[L]   --> activities.h
     *lnGam,   ///< ln of DC activity coefficients in unified (mole-fraction) scale [0:L-1] --> activities.h
     *lnGmo;   ///< Copy of lnGam from previous IPM iteration (reserved)
-    double  (*lnSAC)[4]; ///< former lnSAT ln surface activity coeff and Coulomb's term  [Lads][4]
 
     // TSolMod stuff (detailed output on partial energies of mixing)   --> activities.h
     double *lnDQFt; ///< new: DQF terms adding to overall activity coefficients [Ls_]
@@ -391,15 +376,6 @@ typedef struct
     (*APh)[MIXPHPROPS],     ///< Helmholtz energy properties for mixed phases [FIs]
     (*UPh)[MIXPHPROPS];     ///< Internal energy properties for mixed phases [FIs]
 
-    // old sorption models - EDL models (data for electrostatic activity coefficients)
-    double (*XetaA)[MST]; ///< Total EDL charge on A (0) EDL plane, moles [FIs][FIat]
-    double (*XetaB)[MST]; ///< Total charge of surface species on B (1) EDL plane, moles[FIs][FIat]
-    double (*XetaD)[MST]; ///< Total charge of surface species on D (2) EDL plane, moles[FIs][FIat]
-    double (*XpsiA)[MST]; ///< Relative potential at A (0) EDL plane,V [FIs][FIat]
-    double (*XpsiB)[MST]; ///< Relative potential at B (1) EDL plane,V [FIs][FIat]
-    double (*XpsiD)[MST]; ///< Relative potential at D (2) plane,V [FIs][FIat]
-    double (*XFTS)[MST];  ///< Total number of moles of surface DC at surface type [FIs][FIat]
-    //
     double *X,  ///< DC quantities at eqstate x_j, moles - primal IPM solution [L]
     *Y,   ///< Copy of x_j from previous IPM iteration [0:L-1]
     *XY,  ///< Copy of x_j from previous loop of Selekt2() [0:L-1]
@@ -414,7 +390,6 @@ typedef struct
     *F,   /// <Primal DC chemical potentials defined via g0_j, Wx_j and lnGam_j[L]
     *F0;  ///< Excess Gibbs energies for (metastable) DC, mole/mole [L]
     // Old sorption models
-    double (*D)[MST];  ///< Reserved; new work array for calc. surface act.coeff.
     // Name lists
     char (*sMod)[8];   ///< new: Codes for built-in mixing models of multicomponent phases [FIs]
     char (*kMod)[6];  ///< new: Codes for built-in kinetic models [Fi]
@@ -424,8 +399,6 @@ typedef struct
     char  (*SM)[MAXDCNAME];  ///< List of DC names in the system [L]
     char  (*SF)[MAXPHNAME+MAXSYMB];  ///< List of phase names in the system [FI]
     char  (*SM2)[MAXDCNAME];  ///< List of multicomp. phase DC names in the system [Ls]
-    char  (*SM3)[MAXDCNAME];  ///< List of adsorption DC names in the system [Lads]
-    char  *DCC3;   ///< Classifier of DCs involved in sorption phases [Lads]
     char  (*SF2)[MAXPHNAME+MAXSYMB]; ///< List of multicomp. phase names in the syst [FIs]
     char  (*SFs)[MAXPHNAME+MAXSYMB]; ///< List of phases currently present in non-zero quantities [FI]
     char  *pbuf, 	///< Text buffer for table printouts
@@ -437,9 +410,7 @@ typedef struct
     *ICC,   ///< Classifier of IC { e o h a z v i <int> } [N]
     *DCC,   ///< Classifier of DC { TESKWL GVCHNI JMFD QPR <0-9>  AB  XYZ O } [L]
     *PHC;   ///< Classifier of phases { a g f p m l x d h } [FI]
-    char  (*SCM)[MST]; ///< Classifier of built-in electrostatic models applied to surface types in sorption phases [FIs][FIat]
-    char  *SATT,  ///< Classifier of applied SACT equations (isotherm corrections) [Lads]
-    *DCCW;  ///< internal DC class codes [L]
+    char *DCCW;  ///< internal DC class codes [L]
     // TSorpMod stuff
     char *IsoCt; ///< new: Collected isotherm and SATC codes for surface site types k -> += 2*LsISmo[k][0]
 

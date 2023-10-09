@@ -273,14 +273,10 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
         pm.Aalp = new double[pm.FI];
         for( ii=0; ii<pm.FI; ii++ )
             pm.Aalp[ii] = 0.0;
-        pm.Xr0h0 = new double[pm.FI][2];
-        for( ii=0; ii<pm.FI; ii++ )
-            pm.Xr0h0[ii][0] =  pm.Xr0h0[ii][1] = 0.0;
     }
     else
     {
         pm.Aalp = 0;
-        pm.Xr0h0 = 0;
     }
 
     if( PSigm != S_OFF )
@@ -315,107 +311,6 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
         pm.EZ = 0;
         pm.Xcond = 0;
         pm.Xeps = 0;
-    }
-
-    if( pm.FIat > 0 /*&& pm.Lads > 0*/ && pm.FIs > 0 )
-    { // ADSORBTION AND ION IXCHANDG
-        pm.SATX = new long int[pm.Lads][4];
-        pm.MASDJ = new double[pm.Lads][DFCN];
-        pm.lnSAC = new double[pm.Lads][4];
-        for( ii=0; ii<pm.Lads; ii++ )
-        {
-            pm.SATX[ii][0] = pm.SATX[ii][1] = pm.SATX[ii][2] = pm.SATX[ii][3] = 0;
-            pm.lnSAC[ii][0] = pm.lnSAC[ii][1] = pm.lnSAC[ii][2] = pm.lnSAC[ii][3] = 0.0;
-            for( jj=0; jj<MST; jj++ )
-                pm.MASDJ[ii][jj] = 0.0;
-        }
-
-        pm.SCM  = new char[pm.FIs][MST];
-        pm.Nfsp = new double[pm.FIs][MST];
-        pm.MASDT = new double[pm.FIs][MST];
-        pm.XcapA = new double[pm.FIs][MST];
-        pm.XcapB = new double[pm.FIs][MST];
-        pm.XcapD = new double[pm.FIs][MST];
-        pm.XcapF = new double[pm.FIs][MST];
-        pm.XdlA = new double[pm.FIs][MST];
-        pm.XdlB = new double[pm.FIs][MST];
-        pm.XdlD = new double[pm.FIs][MST];
-        pm.XpsiA = new double[pm.FIs][MST];
-        pm.XpsiB = new double[pm.FIs][MST];
-        pm.XpsiD = new double[pm.FIs][MST];
-        pm.XlamA = new double[pm.FIs][MST];
-        pm.Xetaf = new double[pm.FIs][MST];
-        pm.XetaA = new double[pm.FIs][MST];
-        pm.XetaB = new double[pm.FIs][MST];
-        pm.XetaD = new double[pm.FIs][MST];
-        pm.XFTS = new double[pm.FIs][MST];  //19
-        for( ii=0; ii<pm.FIs; ii++ )
-            for( jj=0; jj<MST; jj++ )
-            {
-                pm.SCM[ii][jj]  = 0;
-                pm.Nfsp[ii][jj] = 0.0;
-                pm.MASDT[ii][jj] = 0.0;
-                pm.XcapA[ii][jj] = 0.0;
-                pm.XcapB[ii][jj] = 0.0;
-                pm.XcapD[ii][jj] = 0.0;
-                pm.XcapF[ii][jj] = 0.0;
-                pm.XdlA[ii][jj] = 0.0;
-                pm.XdlB[ii][jj] = 0.0;
-                pm.XdlD[ii][jj] = 0.0;
-                pm.XpsiA[ii][jj] = 0.0;
-                pm.XpsiB[ii][jj] = 0.0;
-                pm.XpsiD[ii][jj] = 0.0;
-                pm.XlamA[ii][jj] = 0.0;
-                pm.Xetaf[ii][jj] = 0.0;
-                pm.XetaA[ii][jj] = 0.0;
-                pm.XetaB[ii][jj] = 0.0;
-                pm.XetaD[ii][jj] = 0.0;
-                pm.XFTS[ii][jj] = 0.0;
-            }
-
-        pm.SATT = new char[pm.Lads];
-        pm.SM3 = new char[pm.Lads][MAXDCNAME];
-        pm.DCC3 = new char[pm.Lads];
-        for( ii=0; ii<pm.Lads; ii++)
-        {
-            fillValue( pm.SM3[ii], '\0', MAXDCNAME);
-            pm.SATT[ii] = 0;
-            pm.DCC3[ii] = 0;
-        }
-
-        pm.D = new double[MST][MST];
-        for( ii=0; ii<MST; ii++ )
-            for( jj=0; jj<MST; jj++ )
-                pm.D[ii][jj] = 0.0;
-
-    }
-    else
-    { // ADSORPTION AND ION EXCHANGE
-        pm.SCM  = 0;
-        pm.Nfsp = 0;
-        pm.MASDT = 0;
-        pm.XcapA = 0;
-        pm.XcapB = 0;
-        pm.XcapD = 0;
-        pm.XcapF = 0;
-        pm.XdlA = 0;
-        pm.XdlB = 0;
-        pm.XdlD = 0;
-        pm.XpsiA = 0;
-        pm.XpsiB = 0;
-        pm.XpsiD = 0;
-        pm.XlamA = 0;
-        pm.Xetaf = 0;
-        pm.XetaA = 0;
-        pm.XetaB = 0;
-        pm.XetaD = 0;
-        pm.MASDJ = 0;
-        pm.XFTS = 0;
-        pm.lnSAC = 0;
-        pm.SATT = 0;
-        pm.SM3 = 0;
-        pm.DCC3 = 0;
-        pm.D = 0;
     }
 
     if( pm.PG > 0 )
@@ -763,7 +658,6 @@ void TSolModMulti::multi_kill()
     if( pm.IC_wm ) delete[] pm.IC_wm;
 
     if( pm.Aalp ) delete[] pm.Aalp;
-    if( pm.Xr0h0 ) delete[] pm.Xr0h0;
 
     if( pm.Sigw ) delete[] pm.Sigw;
     if( pm.Sigg ) delete[] pm.Sigg;
@@ -771,35 +665,6 @@ void TSolModMulti::multi_kill()
     if( pm.EZ ) delete[] pm.EZ;
     if( pm.Xcond ) delete[] pm.Xcond;
     if( pm.Xeps ) delete[] pm.Xeps;
-
-
-    if( pm.SATX ) delete[] pm.SATX;
-    if( pm.SCM ) delete[] pm.SCM;
-    if( pm.Nfsp ) delete[] pm.Nfsp;
-    if( pm.MASDT ) delete[] pm.MASDT;
-    if( pm.XcapA ) delete[] pm.XcapA;
-    if( pm.XcapB ) delete[] pm.XcapB;
-    if( pm.XcapD ) delete[] pm.XcapD;
-    if( pm.XcapF ) delete[] pm.XcapF;
-    if( pm.XdlA ) delete[] pm.XdlA;
-    if( pm.XdlB ) delete[] pm.XdlB;
-    if( pm.XdlD ) delete[] pm.XdlD;
-    if( pm.XpsiA ) delete[] pm.XpsiA;
-    if( pm.XpsiB ) delete[] pm.XpsiB;
-    if( pm.XpsiD ) delete[] pm.XpsiD;
-    if( pm.XlamA ) delete[] pm.XlamA;
-    if( pm.Xetaf ) delete[] pm.Xetaf;
-    if( pm.XetaA ) delete[] pm.XetaA;
-    if( pm.XetaB ) delete[] pm.XetaB;
-    if( pm.XetaD ) delete[] pm.XetaD;
-    if( pm.MASDJ ) delete[] pm.MASDJ;
-    if( pm.XFTS ) delete[] pm.XFTS;
-    if( pm.lnSAC ) delete[] pm.lnSAC;
-    if( pm.SATT ) delete[] pm.SATT;
-    if( pm.SM3 ) delete[] pm.SM3;
-    if( pm.DCC3 ) delete[] pm.DCC3;
-    if( pm.D ) delete[] pm.D;
-
 
     if( pm.Fug ) delete[] pm.Fug;
     if( pm.Fug_l ) delete[] pm.Fug_l;
@@ -830,11 +695,6 @@ void TSolModMulti::multi_kill()
     if(pm.CPh)  	delete[] pm.CPh;
     if(pm.APh)  	delete[] pm.APh;
     if(pm.UPh)  	delete[] pm.UPh;
-
-    //  Added 16.11.2004 by Sveta
-    //    if( pm.sitE )     delete[] pm.sitE;
-    //    if( pm.sitXcat )  delete[] pm.sitXcat;
-    //    if( pm.sitXan )    delete[] pm.sitXan;
 
     if( pm.LsMod ) delete[] pm.LsMod;
     if( pm.LsMdc ) delete[] pm.LsMdc;
@@ -1000,7 +860,6 @@ void TSolModMulti::set_def( int )
     pm.mui   = nullptr;
     pm.muk   = nullptr;
     pm.muj   = nullptr;
-    pm.SATX = nullptr;
     pm.DUL   = nullptr;
     pm.DLL   = nullptr;
     pm.fDQF   = nullptr;
@@ -1033,22 +892,8 @@ void TSolModMulti::set_def( int )
     pm.Aalp  = nullptr;
     pm.Sigw  = nullptr;
     pm.Sigg  = nullptr;
-    pm.Nfsp  = nullptr;
-    pm.MASDT = nullptr;
     pm.FVOL  = nullptr;
     pm.FWGT  = nullptr;
-    pm.XcapA = nullptr;
-    pm.XcapB = nullptr;
-    pm.XcapD = nullptr;
-    pm.XdlA  = nullptr;
-    pm.XdlB  = nullptr;
-    pm.XdlD  = nullptr;
-    pm.XpsiA = nullptr;
-    pm.XpsiB = nullptr;
-    pm.XpsiD = nullptr;
-    pm.Xr0h0 = nullptr;
-    pm.XlamA = nullptr;
-    pm.Xetaf = nullptr;
     pm.Xcond = nullptr;
     pm.Xeps  = nullptr;
     pm.Awt   = nullptr;
@@ -1059,14 +904,10 @@ void TSolModMulti::set_def( int )
     pm.Fug   = nullptr;
     pm.Fug_l = nullptr;
     pm.Ppg_l = nullptr;
-    pm.XFTS  = nullptr;
-    pm.MASDJ = nullptr;
     pm.G     = nullptr;
     pm.G0    = nullptr;
     pm.lnGam = nullptr;
     pm.lnGmo = nullptr;
-    //        pm.lnSAT = nullptr;
-    pm.lnSAC = nullptr;
     pm.B     = nullptr;
     pm.U     = nullptr;
     pm.Uc     = nullptr;
@@ -1083,9 +924,6 @@ void TSolModMulti::set_def( int )
     pm.XFA   = nullptr;
     pm.YFA   = nullptr;
     pm.Falp  = nullptr;
-    pm.XetaA = nullptr;
-    pm.XetaB = nullptr;
-    pm.XetaD = nullptr;
     pm.X     = nullptr;
     pm.Y     = nullptr;
     pm.XY    = nullptr;
@@ -1100,7 +938,6 @@ void TSolModMulti::set_def( int )
     pm.Wx    = nullptr;
     pm.F     = nullptr;
     pm.F0    = nullptr;
-    pm.D     = nullptr;
     //   pm.R     = nullptr;
     //   pm.R1    = nullptr;
     pm.sMod  = nullptr;
@@ -1118,14 +955,9 @@ void TSolModMulti::set_def( int )
     pm.ICC   = nullptr;
     pm.DCC   = nullptr;
     pm.PHC   = nullptr;
-    pm.SCM   = nullptr;
-    pm.SATT  = nullptr;
     pm.DCCW  = nullptr;
-    pm.XcapF = nullptr;
     pm.SM2    = nullptr;
-    pm.SM3    = nullptr;
     pm.SF2    = nullptr;
-    pm.DCC3   = nullptr;
     pm.IPx = nullptr;
     pm.ITF =  pm.ITG = 0;
     pm.VPh = nullptr;
