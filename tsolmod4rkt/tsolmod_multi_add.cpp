@@ -402,7 +402,7 @@ void TSolModMulti::InitalizeTSolMod()
             sd.TP_Code = &pm.dcMod[jb];
             sd.T_k = pm.Tc;
             sd.P_bar = pm.P;
-            sd.DQFc = pm.DQFc+ jdqfc;
+            sd.arDQFc = pm.DQFc+ jdqfc;
             sd.arVol = pm.Vol+jb;
             sd.arSM = pm.SM+jb;
 

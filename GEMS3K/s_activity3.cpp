@@ -524,7 +524,7 @@ void TActivity::SolModCreate( long int jb, long int jmb, long int jsb, long int 
     //new objects to Phase 06/06/12
 //    sd.arPhLin = act.PhLin+jphl;
 //    sd.lPhc = act.lPhc+ jlphc;
-    sd.DQFc = act.DQFc+ jdqfc;
+    sd.arDQFc = act.DQFc+ jdqfc;
 //    sd.rcpc = act.rcpc+ jrcpc;
 
     // specific properties

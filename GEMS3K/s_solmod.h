@@ -111,7 +111,7 @@ struct SolutionData {
     double *arGEX;      ///< Pure-species fugacities, G0 increment terms  -> NSpecies
 
 //    double *lPhc;  ///< new: array of phase link parameters -> NlPhs x NlPhC (read-only)
-    double *DQFc;  ///< new: array of DQF parameters for DCs in phases ->  NSpecies x NDQFpDC; (read-only)
+    double *arDQFc;  ///< new: array of DQF parameters for DCs in phases ->  NSpecies x NDQFpDC; (read-only)
 //    double *rcpc;  ///< new: array of reciprocal parameters for DCs in phases -> NSpecies x NrcPpDC; (read-only)
 
     double *arPparc;    ///< Partial pressures -> NSpecies
@@ -193,7 +193,7 @@ class TSolMod
         double Grs, Hrs, Srs, CPrs, Vrs, Ars, Urs;   ///< molar residual functions (fluids)
         double *lnGamConf, *lnGamRecip, *lnGamEx, *lnGamDQF, *CTerm; ///< Work pointers for lnGamma components
         double *lnGamma;   ///< Pointer to ln activity coefficients of end members (check that it is collected from three above arrays)
-        double *lnGamCorr;   ///< Pointer to ln activity coefficients of correction term for Modified Bragg-Williams model, [Vinograd et al. 2018]
+        //double *lnGamCorr;   ///< Pointer to ln activity coefficients of correction term for Modified Bragg-Williams model, [Vinograd et al. 2018]
 
         double **y;       ///< table of moiety site fractions [NSub][NMoi]
         double ***mn;     ///< array of end member moiety-site multiplicity numbers [NComp][NSub][NMoi]

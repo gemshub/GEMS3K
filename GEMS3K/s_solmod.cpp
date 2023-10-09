@@ -53,7 +53,7 @@ TSolMod::TSolMod( SolutionData *sd ):
     NDQFpc = sd->NDQFpDC;
 //    NrcPpc = sd->NrcPpDC;
 //   lPhcf = sd->lPhc;
-    DQFcf = sd->DQFc;  // read-only
+    DQFcf = sd->arDQFc;  // read-only
 //    rcpcf = sd->rcpc;  // read-only
 //    if(rcpcf == NULL) NrcPpc = 0;
     //PhLin = sd->arPhLin;
@@ -78,9 +78,9 @@ TSolMod::TSolMod( SolutionData *sd ):
     aVol = sd->arVol;
     lnGamma = sd->arlnGam;
     lnGamConf = sd->arlnCnft;  // new double[NComp];
+    //lnGamCorr = sd->arlnCnft;  // new double[NComp];
     lnGamRecip = sd->arlnRcpt; // new double[NComp];
     lnGamEx = sd->arlnExet;    // new double[NComp];
-    lnGamCorr = sd->arlnCnft;  // new double[NComp];
     lnGamDQF = sd->arlnDQFt;   // new double[NComp];
     CTerm = sd->arCTermt;     // Coulombic terms (new)
    // Arrays for lnGamma components - should we zero off?
@@ -89,7 +89,7 @@ TSolMod::TSolMod( SolutionData *sd ):
        lnGamConf[i] = 0.0;
        lnGamRecip[i] = 0.0;
        lnGamEx[i] = 0.0;
-       lnGamCorr[i] = 0.0;
+       //lnGamCorr[i] = 0.0;
        lnGamDQF[i] = 0.0;
        CTerm[i] = 0.0;
     }
@@ -448,7 +448,6 @@ void TSolMod::to_text_file(const std::string& path, bool append) const
     prar.writeArray( "lnGamEx",  lnGamEx, NComp );
     prar.writeArray( "lnGamDQF",  lnGamDQF, NComp );
     // not use prar.writeArray( "CTerm",  CTerm, NComp );
-    // not use prar.writeArray( "lnGamCorr",  lnGamCorr, NComp );
     prar.writeArray( "Gex",  &Gex, 7L );
     prar.writeArray( "Gid",  &Gid, 7L );
     prar.writeArray( "Gdq",  &Gdq, 7L );

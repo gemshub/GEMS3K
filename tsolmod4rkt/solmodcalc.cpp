@@ -8,7 +8,20 @@ SolModCalc::SolModCalc(long k, long jb, SolutionData &sd, const AddSolutionData 
     phase_ndx(k), dc_ndx(jb), dc_num(sd.NSpecies)
 {
     arWx = sd.arWx;
+    arM = addsd.arM;
+    arFWGT = addsd.arFWGT;
+    arX = addsd.arX;
+
     arlnGam = sd.arlnGam;
+    arlnDQFt = sd.arlnDQFt;
+    arlnRcpt = sd.arlnRcpt;
+    arlnExet = sd.arlnExet;
+    arlnCnft = sd.arlnCnft;
+    arGEX = sd.arGEX;
+    arVol = sd.arVol;
+    aphVOL = sd.aphVOL;
+    arPparc = sd.arPparc;
+
     for(long int ii=0; ii<dc_num; ++ii) {
         dc_names.push_back(char_array_to_string(sd.arSM[ii], MAXDCNAME));
     }
@@ -20,11 +33,24 @@ SolModCalc::SolModCalc(long k, long jb, const std::string &aphase):
     mod_code(' '), phase_name(aphase),
     phase_ndx(k), dc_ndx(jb), dc_num(1)
 {
-   arWx = nullptr;
-   arlnGam = nullptr;
-   dc_names.push_back(phase_name);
-   solmod_task.reset();
-   model_name = "undefined";
+    arWx = nullptr;
+    arM = nullptr;
+    arFWGT = nullptr;
+    arX = nullptr;
+
+    arlnGam = nullptr;
+    arlnDQFt = nullptr;
+    arlnRcpt = nullptr;
+    arlnExet = nullptr;
+    arlnCnft = nullptr;
+    arGEX = nullptr;
+    arVol = nullptr;
+    aphVOL = nullptr;
+    arPparc = nullptr;
+
+    dc_names.push_back(phase_name);
+    solmod_task.reset();
+    model_name = "undefined";
 }
 
 void SolModCalc::SolModParPT()
@@ -154,6 +180,114 @@ std::map<std::string, double> SolModCalc::GetlnGamma()
     return property2map(arlnGam);
 }
 
+void SolModCalc::Get_lnGamConf(double *lnGamConf)
+{
+    if(arlnCnft) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            lnGamConf[jj] = arlnCnft[jj];
+        }
+    }
+}
+
+std::map<std::string, double> SolModCalc::GetlnGamConf()
+{
+    return property2map(arlnCnft);
+}
+
+void SolModCalc::Get_lnGamRecip(double *lnGamRecip)
+{
+    if(arlnRcpt) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            lnGamRecip[jj] = arlnRcpt[jj];
+        }
+    }
+}
+
+std::map<std::string, double> SolModCalc::GetlnGamRecip()
+{
+    return property2map(arlnRcpt);
+}
+
+void SolModCalc::Get_lnGamEx(double *lnGamEx)
+{
+    if(arlnExet) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            lnGamEx[jj] = arlnExet[jj];
+        }
+    }
+}
+
+std::map<std::string, double> SolModCalc::GetlnGamEx()
+{
+    return property2map(arlnExet);
+}
+
+void SolModCalc::Get_lnGamDQF(double *lnGamDQF)
+{
+    if(arlnDQFt) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            lnGamDQF[jj] = arlnDQFt[jj];
+        }
+    }
+}
+
+std::map<std::string, double> SolModCalc::GetlnGamDQF()
+{
+    return property2map(arlnDQFt);
+}
+
+void SolModCalc::Get_IncrementstoG0(double *aGEX)
+{
+    if(arGEX) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            aGEX[jj] = arGEX[jj];
+        }
+    }
+}
+
+std::map<std::string, double> SolModCalc::GetIncrementstoG0()
+{
+    return property2map(arGEX);
+}
+
+void SolModCalc::Get_MolarVolumes(double *aVol)
+{
+    if(arVol) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            aVol[jj] = arVol[jj];
+        }
+    }
+}
+
+std::map<std::string, double> SolModCalc::GetMolarVolumes()
+{
+    return property2map(arVol);
+}
+
+double SolModCalc::GetPhaseVolume()
+{
+    if(aphVOL) {
+        return *aphVOL;
+    }
+    else {
+        return 0.;
+    }
+}
+
+void SolModCalc::Get_PartialPressures(double *aPparc)
+{
+    if(arPparc) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            aPparc[jj] = arPparc[jj];
+        }
+    }
+}
+
+std::map<std::string, double> SolModCalc::GetPartialPressures()
+{
+    return property2map(arPparc);
+}
+
 void SolModCalc::Set_MoleFractionsWx(double *aWx)
 {
     if(arWx) {
@@ -167,6 +301,45 @@ void SolModCalc::SetMoleFractionsWx(const std::map<std::string, double> &awx_map
 {
     if(arWx) {
         map2property(awx_map, arWx, defwx);
+    }
+}
+
+void SolModCalc::Set_SpeciesMolality(double *aM)
+{
+    if(arM) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            arM[jj] = aM[jj];
+        }
+    }
+}
+
+void SolModCalc::SetSpeciesMolality(const std::map<std::string, double> &val_map, double def_val)
+{
+    if(arM) {
+        map2property(val_map, arM, def_val);
+    }
+}
+
+void SolModCalc::Set_DCquantities(double *aX)
+{
+    if(arX) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            arX[jj] = aX[jj];
+        }
+    }
+}
+
+void SolModCalc::SetDCquantities(const std::map<std::string, double> &val_map, double def_val)
+{
+    if(arX) {
+        map2property(val_map, arX, def_val);
+    }
+}
+
+void SolModCalc::SetPhaseMasses(double aFWGT)
+{
+    if(arFWGT) {
+        *arFWGT = aFWGT;
     }
 }
 
@@ -432,7 +605,7 @@ std::map<std::string, double> SolModCalc::property2map(double *dcs_size_array)
 {
     std::map<std::string, double> dsc_name_map;
     if(!dcs_size_array) { // nullptr
-       return dsc_name_map;
+        return dsc_name_map;
     }
     for(int jj=0; jj<dc_num; ++jj) {
         dsc_name_map[dc_names[jj]] = dcs_size_array[jj];
@@ -443,7 +616,7 @@ std::map<std::string, double> SolModCalc::property2map(double *dcs_size_array)
 void SolModCalc::map2property(const std::map<std::string, double> &dsc_name_map, double *dcs_size_array, double def_value)
 {
     if(!dcs_size_array) { // nullptr
-       return;
+        return;
     }
     for(int jj=0; jj<dc_num; ++jj) {
         auto it =dsc_name_map.find(dc_names[jj]);

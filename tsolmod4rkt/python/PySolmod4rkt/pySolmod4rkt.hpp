@@ -22,12 +22,24 @@ void exportSolMod(py::module& m)
             .def("SolModIdealProp", &SolModCalc::SolModIdealProp )
             .def("SolModDarkenProp", &SolModCalc::SolModDarkenProp )
             .def("SolModStandProp", &SolModCalc::SolModStandProp )
-
+            // Get functions
             .def("GetlnGamma", &SolModCalc::GetlnGamma )
-            .def("SetMoleFractionsWx", &SolModCalc::SetMoleFractionsWx, py::arg("awx_map"), py::arg("defwx")  = 0. )
-
+            .def("GetlnGamConf", &SolModCalc::GetlnGamConf )
+            .def("GetlnGamRecip", &SolModCalc::GetlnGamRecip )
+            .def("GetlnGamEx", &SolModCalc::GetlnGamEx )
+            .def("GetlnGamDQF", &SolModCalc::GetlnGamDQF )
+            .def("GetIncrementstoG0", &SolModCalc::GetIncrementstoG0 )
+            .def("GetMolarVolumes", &SolModCalc::GetMolarVolumes )
+            .def("GetPhaseVolume", &SolModCalc::GetPhaseVolume )
+            .def("GetPartialPressures", &SolModCalc::GetPartialPressures )
+            // Set functions
+            .def("SetMoleFractionsWx", &SolModCalc::SetMoleFractionsWx, py::arg("val_map"), py::arg("def_val")=0. )
+            .def("SetSpeciesMolality", &SolModCalc::SetSpeciesMolality, py::arg("val_map"), py::arg("def_val")=0. )
+            .def("SetDCquantities", &SolModCalc::SetDCquantities, py::arg("val_map"), py::arg("def_val")=0. )
+            .def("SetPhaseMasses", &SolModCalc::SetPhaseMasses )
+            // Print to file
             .def("to_json_file", &SolModCalc::to_json_file )
-            .def("to_text_file", &SolModCalc::to_text_file,  py::arg("path"), py::arg("append")  = false )
+            .def("to_text_file", &SolModCalc::to_text_file,  py::arg("path"), py::arg("append")=false )
             .def("__repr__", [](const SolModCalc& self) { std::stringstream ss; self.to_json(ss); return ss.str(); })
             ;
 

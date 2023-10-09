@@ -645,7 +645,7 @@ void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int
     //new objects to Phase 06/06/12
 //    sd.arPhLin = pm.PhLin+jphl;
 //    sd.lPhc = pm.lPhc+ jlphc;
-    sd.DQFc = pm.DQFc+ jdqfc;
+    sd.arDQFc = pm.DQFc+ jdqfc;
 //    sd.rcpc = pm.rcpc+ jrcpc;
 
     // specific properties
