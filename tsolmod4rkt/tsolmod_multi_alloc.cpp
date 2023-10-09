@@ -39,8 +39,6 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
     for( ii=0; ii<pm.FI; ii++)
     {   pm.L1[ii] = 0;
     }
-    pm.DUL = new double[pm.L];
-    pm.DLL = new double[pm.L];
     pm.Vol = new double[pm.L];
     pm.Pparc = new double[pm.L];
     pm.MM = new double[pm.L];
@@ -49,24 +47,12 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
     pm.lnGam = new double[pm.L];
     pm.lnGmo = new double[pm.L];
     pm.X = new double[pm.L];
-    pm.Y = new double[pm.L];
-    pm.XY = new double[pm.L];
-    pm.MU = new double[pm.L];
-    pm.EMU = new double[pm.L];
-    pm.NMU = new double[pm.L];
-    pm.W = new double[pm.L];
-    pm.F = new double[pm.L];
-    pm.F0 = new double[pm.L];
-    pm.RLC = new char[pm.L];
-    pm.RSC = new char[pm.L];
     pm.DCC = new char[pm.L];
     pm.DCCW = new char[pm.L];
     pm.lnGmM = new double[pm.L];
     pm.fDQF = new double[pm.L]; //24
     for( ii=0; ii<pm.L; ii++ )
     {
-        pm.DUL[ii] = 1e6;
-        pm.DLL[ii] = 0.0;
         pm.Vol[ii] = 0.0;
         pm.Pparc[ii] = 1.;
         pm.MM[ii] = 0.0;
@@ -75,16 +61,6 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
         pm.lnGam[ii] = 0.0;
         pm.lnGmo[ii] = 0.0;
         pm.X[ii] = 0.0;
-        pm.Y[ii] = 0.0;
-        pm.XY[ii] = 0.0;
-        pm.MU[ii] = 0.0;
-        pm.EMU[ii] = 0.0;
-        pm.NMU[ii] = 0.0;
-        pm.W[ii] = 0.0;
-        pm.F[ii] = 0.0;
-        pm.F0[ii] = 0.0;
-        pm.RLC[ii] = 'B';
-        pm.RSC[ii] = 'M';
         pm.DCC[ii] = 0;
         pm.DCCW[ii] = 0;
         pm.lnGmM[ii] = 0.0;
@@ -97,36 +73,20 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
 
     pm.Awt = new double[pm.N];
     pm.B = new double[pm.N];
-    pm.U = new double[pm.N];
-    pm.U_r = new double[pm.N];
-    pm.C = new double[pm.N];
     pm.ICC = new char[pm.N];  //6
     for( ii=0; ii<pm.N; ii++ )
     {
         pm.Awt[ii] = 0.0;
         pm.B[ii] = 0.0;
-        pm.U[ii] = 0.0;
-        pm.U_r[ii] = 0.0;
-        pm.C[ii] = 0.0;
         pm.ICC[ii] = 0;
     }
 
-    pm.XFs = new double[pm.FI];
-    pm.Falps = new double[pm.FI];
-    pm.XF = new double[pm.FI];
-    pm.YF = new double[pm.FI];
-    pm.Falp = new double[pm.FI];
     pm.YOF = new double[pm.FI];
     pm.PHC = new char[pm.FI];
     pm.FVOL = new double[pm.FI];
     pm.FWGT = new double[pm.FI]; //9
     for( ii=0; ii<pm.FI; ii++ )
     {
-        pm.XFs[ii] = 0.0;
-        pm.Falps[ii] = 0.0;
-        pm.XF[ii] = 0.0;
-        pm.YF[ii] = 0.0;
-        pm.Falp[ii] = 0.0;
         pm.YOF[ii] = 0.0;
         pm.PHC[ii] = 0;
         pm.FVOL[ii] = 0.0;
@@ -150,94 +110,33 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
 
     if( pm.L > 0 )
     {
-        pm.Y_la = new double[pm.L];
-        pm.Y_w = new double[pm.L];
-        pm.Fx = new double[pm.L];
         pm.Wx = new double[pm.L];
-        pm.VL = new double[pm.L];
         pm.Gamma = new double[pm.L];
         pm.lnGmf = new double[pm.L]; //7
-        pm.GamFs = new double[pm.L];
         for( ii=0; ii<pm.L; ii++ )
         {
-            pm.Y_la[ii] = 0.0;
-            pm.Y_w[ii] = 0.0;
-            pm.Fx[ii] = 0.0;
             pm.Wx[ii] = 0.0;
-            pm.VL[ii] = 0.0;
             pm.Gamma[ii] = 0.0;
             pm.lnGmf[ii] = 0.0;
-            pm.GamFs[ii] = 0.0;
         }
     }
     else
     {
-        pm.Y_la = 0;
-        pm.Y_w = 0;
-        pm.Fx = 0;
         pm.Wx = 0;
-        pm.VL = 0;
         pm.Gamma = 0;
         pm.lnGmf = 0;
-        pm.GamFs = 0;
     }
 
     // Part 2  not always required arrays
-    if( pm.FIs > 0 && pm.Ls > 0 )
-    {
-        pm.BF = new double[pm.FIs*pm.N];
-        for( ii=0; ii<pm.FIs*pm.N; ii++ )
-            pm.BF[ii] = 0.0;
-        pm.BFC = new double[pm.N];
-        for( ii=0; ii<pm.N; ii++ )
-            pm.BFC[ii] = 0.0;
-
-        pm.XFA = new double[pm.FIs];
-        pm.YFA = new double[pm.FIs];
-        for( ii=0; ii<pm.FIs; ii++ )
-        {
-            pm.XFA[ii] = 0.0;
-            pm.YFA[ii] = 0.0;
-        }
-        pm.RFLC = new char[pm.FIs];
-        pm.RFSC = new char[pm.FIs];
-        for( ii=0; ii<pm.FIs; ii++)
-        {
-            pm.RFLC[ii] = 0;
-            pm.RFSC[ii] = 0;
-        }
-    }
-    else
-    {
-        pm.BF = 0;
-        pm.BFC = 0;
-        pm.XFA = 0;
-        pm.YFA = 0;
-        pm.RFLC = 0;
-        pm.RFSC = 0;
-    }
-
     if( pm.LO > 1 )
     {
         pm.Y_m = new double[pm.L];
         for( ii=0; ii<pm.L; ii++ )
             pm.Y_m[ii] = 0.0;
-        pm.IC_m = new double[pm.N];
-        pm.IC_lm = new double[pm.N];
-        pm.IC_wm = new double[pm.N];
-        for( ii=0; ii<pm.N; ii++ )
-        {
-            pm.IC_m[ii] = 0.0;
-            pm.IC_lm[ii] = 0.0;
-            pm.IC_wm[ii] = 0.0;
-        }
     }
     else
     {
         pm.Y_m = 0;
-        pm.IC_m = 0;
-        pm.IC_lm = 0;
-        pm.IC_wm = 0;
     }
 
     if( pm.E )
@@ -249,48 +148,6 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
     else
     {
         pm.EZ = 0;
-    }
-
-    // Part 3
-    if( pm.Ls > 1 && pm.FIs > 0 )
-    {
-        pm.Wb = new double[pm.Ls];
-        pm.Wabs = new double[pm.Ls];
-        pm.Rion = new double[pm.Ls];
-        for( ii=0; ii<pm.Ls; ii++ )
-        {
-            pm.Wb[ii] = 0.;
-            pm.Wabs[ii] = 0.;
-            pm.Rion[ii] = 0.;
-        }
-        pm.Qp = new double[pm.FIs*QPSIZE];
-        pm.Qd = new double[pm.FIs*QDSIZE];
-        for( ii=0; ii<pm.FIs*QPSIZE; ii++ )
-            pm.Qp[ii] = 0.;
-        for( ii=0; ii<pm.FIs*QDSIZE; ii++ )
-            pm.Qd[ii] = 0.;
-    }
-    else
-    {
-        pm.Wb = 0;
-        pm.Wabs = 0;
-        pm.Rion = 0;
-        pm.Qp = 0;
-        pm.Qd = 0;
-
-    }
-
-    // added SD 03/02/2009
-    pm.XU = new double[pm.L];
-    for( ii=0; ii<pm.L; ii++ )
-        pm.XU[ii] = 0.;
-    pm.Uc = new double[pm.N][2];
-    pm.Uefd = new double[pm.N];
-    for( ii=0; ii<pm.N; ii++ )
-    {
-        pm.Uc[ii][0] = 0.;
-        pm.Uc[ii][1] = 0.;
-        pm.Uefd[ii] = 0.;
     }
 
     pm.Cp0   = new double[pm.L];
@@ -327,7 +184,6 @@ void TSolModMulti::multi_realloc( char PAalp, char PSigm )
         }
 
     // NEW phase definition
-
     if( pm.FIs > 0 && pm.Ls > 0 )
     {
         pm.IPx = 0;
@@ -402,43 +258,23 @@ void TSolModMulti::multi_kill()
     // Part 1
     // need  always to alloc vectors
     if( pm.L1) delete[] pm.L1;
-    if( pm.DUL ) delete[] pm.DUL;
-    if( pm.DLL ) delete[] pm.DLL;
     if( pm.Vol ) delete[] pm.Vol;
     if( pm.Pparc ) delete[] pm.Pparc;
     if( pm.MM ) delete[] pm.MM;
     if( pm.Awt ) delete[] pm.Awt;
     if( pm.A ) delete[] pm.A;
-    if( pm.XFs ) delete[] pm.XFs;
-    if( pm.Falps ) delete[] pm.Falps;
     if( pm.G ) delete[] pm.G;
     if( pm.G0 ) delete[] pm.G0 ;
     if( pm.lnGam ) delete[] pm.lnGam;
     if( pm.lnGmo ) delete[] pm.lnGmo;
     if( pm.B ) delete[] pm.B;
-    if( pm.U ) delete[] pm.U;
-    if( pm.U_r ) delete[] pm.U_r;
-    if( pm.C ) delete[] pm.C;
-    if( pm.XF ) delete[] pm.XF;
-    if( pm.YF ) delete[] pm.YF;
-    if( pm.Falp ) delete[] pm.Falp;
     if( pm.X ) delete[] pm.X;
-    if( pm.Y ) delete[] pm.Y;
-    if( pm.XY ) delete[] pm.XY;
-    if( pm.MU ) delete[] pm.MU;
-    if( pm.EMU ) delete[] pm.EMU;
-    if( pm.NMU ) delete[] pm.NMU;
-    if( pm.W ) delete[] pm.W;
-    if( pm.F ) delete[] pm.F;
-    if( pm.F0 ) delete[] pm.F0;
     if( pm.YOF ) delete[] pm.YOF;
 
     if(   pm.SB ) delete[] pm.SB;
     if(   pm.SM ) delete[] pm.SM;
     if(   pm.SF ) delete[] pm.SF;
     if(   pm.dcMod ) delete[] pm.dcMod;
-    if(   pm.RLC ) delete[] pm.RLC;
-    if(   pm.RSC ) delete[] pm.RSC;
     if(   pm.ICC ) delete[] pm.ICC;
     if(   pm.DCC ) delete[] pm.DCC;
     if(   pm.PHC ) delete[] pm.PHC;
@@ -448,40 +284,12 @@ void TSolModMulti::multi_kill()
     if( pm.FVOL ) delete[] pm.FVOL;
     if( pm.FWGT ) delete[] pm.FWGT;
 
-    if( pm.Y_la ) delete[] pm.Y_la;
-    if( pm.Y_w ) delete[] pm.Y_w;
-    if( pm.Fx ) delete[] pm.Fx;
     if( pm.Wx ) delete[] pm.Wx;
-    if( pm.VL ) delete[] pm.VL;
     if( pm.Gamma ) delete[] pm.Gamma;
     if( pm.lnGmf ) delete[] pm.lnGmf;
-    if( pm.GamFs ) delete[] pm.GamFs;
-
-    // Part 2  not requited arrays
-    if( pm.BF ) delete[] pm.BF;
-    if( pm.BFC ) delete[] pm.BFC;
-    if( pm.XFA ) delete[] pm.XFA;
-    if( pm.YFA ) delete[] pm.YFA;
-    if( pm.RFLC ) delete[] pm.RFLC;
-    if( pm.RFSC ) delete[] pm.RFSC;
 
     if( pm.Y_m ) delete[] pm.Y_m;
-    if( pm.IC_m ) delete[] pm.IC_m;
-    if( pm.IC_lm ) delete[] pm.IC_lm;
-    if( pm.IC_wm ) delete[] pm.IC_wm;
     if( pm.EZ ) delete[] pm.EZ;
-
-    // Part 3
-    if( pm.Wb ) delete[] pm.Wb;
-    if( pm.Wabs ) delete[] pm.Wabs;
-    if( pm.Rion ) delete[] pm.Rion;
-    if( pm.Qp ) delete[] pm.Qp;
-    if( pm.Qd ) delete[] pm.Qd;
-
-    // added SD 03/02/2009
-    if( pm.XU ) delete[] pm.XU;
-    if( pm.Uc ) delete[] pm.Uc;
-    if( pm.Uefd ) delete[] pm.Uefd;
 
     if(pm.H0)  	delete[] pm.H0;
     if(pm.A0)  	delete[] pm.A0;
@@ -618,7 +426,7 @@ void TSolModMulti::set_def( int )
     pm.FitVar[0] =pm.FitVar[1] = pm.FitVar[2]= pm.FitVar[3]= pm.FitVar[4] = 0.;
     fillValue( pm.Tai, 0., 4 );
     fillValue( pm.Pai, 0., 4 );
-    pm.SizeFactor = 1.; // using in TNode class
+    //?? pm.SizeFactor = 1.; // using in TNode class
 
     // pointers
     pm.sitNcat = 0;
@@ -626,8 +434,6 @@ void TSolModMulti::set_def( int )
     pm.L1    = nullptr;
     pm.LsMod = nullptr;
     pm.LsMdc = nullptr;
-    pm.DUL   = nullptr;
-    pm.DLL   = nullptr;
     pm.fDQF   = nullptr;
     pm.YOF   = nullptr;
     pm.PMc   = nullptr;
@@ -635,7 +441,6 @@ void TSolModMulti::set_def( int )
     pm.MoiSN  = nullptr;
     pm.SitFr  = nullptr;
     pm.Vol   = nullptr;
-    pm.VL    = nullptr;
     pm.MM    = nullptr;
     pm.H0    = nullptr;
     pm.A0    = nullptr;
@@ -644,65 +449,26 @@ void TSolModMulti::set_def( int )
     pm.Cp0   = nullptr;
     pm.Pparc = nullptr;
     pm.Y_m   = nullptr;
-    pm.Y_la  = nullptr;
-    pm.Y_w   = nullptr;
     pm.Gamma = nullptr;
     pm.lnGmf = nullptr;
     pm.lnGmM = nullptr;
     pm.EZ    = nullptr;
-    pm.Wb    = nullptr;
-    pm.Wabs  = nullptr;
-    pm.Rion  = nullptr;
     pm.FVOL  = nullptr;
     pm.FWGT  = nullptr;
     pm.Awt   = nullptr;
     pm.A     = nullptr;
-    pm.XFs   = nullptr;
-    pm.Falps = nullptr;
-    pm.GamFs = nullptr;
     pm.G     = nullptr;
     pm.G0    = nullptr;
     pm.lnGam = nullptr;
     pm.lnGmo = nullptr;
     pm.B     = nullptr;
-    pm.U     = nullptr;
-    pm.Uc     = nullptr;
-    pm.Uefd     = nullptr;
-    pm.U_r   = nullptr;
-    pm.C     = nullptr;
-    pm.IC_m  = nullptr;
-    pm.IC_lm = nullptr;
-    pm.IC_wm = nullptr;
-    pm.BF    = nullptr;
-    pm.BFC    = nullptr;
-    pm.XF    = nullptr;
-    pm.YF    = nullptr;
-    pm.XFA   = nullptr;
-    pm.YFA   = nullptr;
-    pm.Falp  = nullptr;
     pm.X     = nullptr;
-    pm.Y     = nullptr;
-    pm.XY    = nullptr;
-    pm.XU    = nullptr;
-    pm.Qp    = nullptr;
-    pm.Qd    = nullptr;
-    pm.MU    = nullptr;
-    pm.EMU   = nullptr;
-    pm.NMU   = nullptr;
-    pm.W     = nullptr;
-    pm.Fx    = nullptr;
     pm.Wx    = nullptr;
-    pm.F     = nullptr;
-    pm.F0    = nullptr;
     pm.sMod  = nullptr;
     pm.dcMod  = nullptr;
     pm.SB    = nullptr;
     pm.SM    = nullptr;
     pm.SF    = nullptr;
-    pm.RLC   = nullptr;
-    pm.RSC   = nullptr;
-    pm.RFLC  = nullptr;
-    pm.RFSC  = nullptr;
     pm.ICC   = nullptr;
     pm.DCC   = nullptr;
     pm.PHC   = nullptr;

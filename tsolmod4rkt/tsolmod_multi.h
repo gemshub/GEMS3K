@@ -232,18 +232,12 @@ typedef struct
     *A,   ///< DC stoichiometry matrix A composed of a_ji [0:N-1][0:L-1]
     *Awt,    ///< IC atomic (molar) mass, g/mole [0:N-1]
 
-    // Reconsider usage
-    *Wb,     ///< Relative Born factors (HKF, reserved) [0:Ls-1]
-    *Wabs,   ///< Absolute Born factors (HKF, reserved) [0:Ls-1]
-    *Rion,   ///< Ionic or solvation radii, A (reserved) [0:Ls-1]
-
     *H0,     ///< DC pmolar enthalpies, reserved [L]
     *A0,     ///< DC molar Helmholtz energies, reserved [L]
     *U0,     ///< DC molar internal energies, reserved [L]
     *S0,     ///< DC molar entropies, reserved [L]
     *Cp0,    ///< DC molar heat capacity, reserved [L]
 
-    *VL,      ///< ln mole fraction of end members in phases-solutions
     // TSolMod stuff
     *lPhc,  ///< new: Collected array of phase link parameters (sum(LsPhl[k][1] over Fi)
     *DQFc  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc2[k][0]
@@ -253,18 +247,12 @@ typedef struct
     // Contents defined in the enum below this structure
     // Other data
     double
-    *XFs,    ///< Current quantities of phases X_a at IPM iterations [0:FI-1]
-    *Falps,  ///< Current Karpov criteria of phase stability  F_a [0:FI-1]
-    *DUL,     ///< VG Vector of upper kinetic restrictions to x_j, moles [L]
-    *DLL,     ///< NG Vector of lower kinetic restrictions to x_j, moles [L]
     *fDQF,    ///< Increments to molar G0 values of DCs from pure gas fugacities or DQF terms, normalized [L]
     *YOF,     ///< Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition) [FI]
     *Vol,     ///< DC molar volumes, cm3/mol [L]
     *MM,      ///< DC molar masses, g/mol [L]
     *Pparc,   ///< Partial pressures or fugacities of pure DC, bar (Pc by default) [0:L-1]
     *Y_m,     ///< Molalities of aqueous species and sorbates [0:Ls-1]
-    *Y_la,    ///< log activity of DC in multi-component phases (mju-mji0) [0:L-1]
-    *Y_w,     ///< Mass concentrations of DC in multi-component phases,%(ppm)[Ls]
     *Gamma,   ///< DC activity coefficients in molal or other phase-specific scale [0:L-1]
     *lnGmf,   ///< ln of initial DC activity coefficients for correcting G0 [0:L-1]
     *lnGmM,   ///< ln of DC pure gas fugacity (or metastability) coeffs or DDF correction [0:L-1]
@@ -284,22 +272,7 @@ typedef struct
     double *lnCnft; ///< new: configurational terms adding to overall activity [Ls_]
     double *CTerms;   ///< new: Coulombic terms (electrostatic activity coefficients) [Ls_]
 
-
-    double  *B,  ///< Input bulk chem. compos. of the system - b vector, moles of IC[N]
-    *U,  ///< IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
-    *U_r,  ///< IC chemical potentials u_i (J/mole) [0:N-1]
-    *C,    ///< Calculated IC mass-balance deviations (moles) [0:N-1]
-    *IC_m, ///< Total IC molalities in aqueous phase (excl.solvent) [0:N-1]
-    *IC_lm,	///< log total IC molalities in aqueous phase [0:N-1]
-    *IC_wm,	///< Total dissolved IC concentrations in g/kg_soln [0:N-1]
-    *BF,    ///< Output bulk compositions of multicomponent phases bf_ai[FIs][N]
-    *BFC,   ///< Total output bulk composition of all solid phases [1][N]
-    *XF,    ///< Output total number of moles of phases Xa[0:FI-1]
-    *YF,    ///< Approximation of X_a in the next IPM iteration [0:FI-1]
-    *XFA,   ///< Quantity of carrier in asymmetric phases Xwa, moles [FIs]
-    *YFA,   ///< Approximation of XFA in the next IPM iteration [0:FIs-1]
-    *Falp;  ///< Karpov phase stability criteria F_a [0:FI-1] or phase stability index (PC==2)
-
+    double  *B;  ///< Input bulk chem. compos. of the system - b vector, moles of IC[N]
     double (*VPh)[MIXPHPROPS],     ///< Volume properties for mixed phases [FIs]
     (*GPh)[MIXPHPROPS],     ///< Gibbs energy properties for mixed phases [FIs]
     (*HPh)[MIXPHPROPS],     ///< Enthalpy properties for mixed phases [FIs]
@@ -309,18 +282,7 @@ typedef struct
     (*UPh)[MIXPHPROPS];     ///< Internal energy properties for mixed phases [FIs]
 
     double *X,  ///< DC quantities at eqstate x_j, moles - primal IPM solution [L]
-    *Y,   ///< Copy of x_j from previous IPM iteration [0:L-1]
-    *XY,  ///< Copy of x_j from previous loop of Selekt2() [0:L-1]
-    *Qp,  ///< Work variables related to non-ideal phases FIs*(QPSIZE=180)
-    *Qd,  ///< Work variables related to DC in non-ideal phases FIs*(QDSIZE=60)
-    *MU,  ///< mu_j values of differences between dual and primal DC chem.potentials [L]
-    *EMU, ///< Exponents of DC increment to F_a criterion for phase [L]
-    *NMU, ///< DC increments to F_a criterion for phase [L]
-    *W,   ///< Weight multipliers for DC (incl restrictions) in IPM [L]
-    *Fx,  ///< Dual DC chemical potentials defined via u_i and a_ji [L]
-    *Wx,  ///< Mole fractions Wx of DC in multi-component phases [L]
-    *F,   /// <Primal DC chemical potentials defined via g0_j, Wx_j and lnGam_j[L]
-    *F0;  ///< Excess Gibbs energies for (metastable) DC, mole/mole [L]
+    *Wx;  ///< Mole fractions Wx of DC in multi-component phases [L]
     // Name lists
     char (*sMod)[8];   ///< new: Codes for built-in mixing models of multicomponent phases [FIs]
     char  (*dcMod)[6];   ///< Codes for PT corrections for dependent component data [L]
@@ -328,11 +290,7 @@ typedef struct
     char  (*SM)[MAXDCNAME];  ///< List of DC names in the system [L]
     char  (*SF)[MAXPHNAME+MAXSYMB];  ///< List of phase names in the system [FI]
     // Class codes
-    char *RLC,   ///< Code of metastability constraints for DCs [L] enum DC_LIMITS
-    *RSC,   ///< Units of metastability/kinetic constraints for DCs  [L]
-    *RFLC,  ///< Classifier of restriction types for XF_a [FIs]
-    *RFSC,  ///< Classifier of restriction scales for XF_a [FIs]
-    *ICC,   ///< Classifier of IC { e o h a z v i <int> } [N]
+    char *ICC,   ///< Classifier of IC { e o h a z v i <int> } [N]
     *DCC,   ///< Classifier of DC { TESKWL GVCHNI JMFD QPR <0-9>  AB  XYZ O } [L]
     *PHC;   ///< Classifier of phases { a g f p m l x d h } [FI]
     char *DCCW;  ///< internal DC class codes [L]
@@ -350,13 +308,9 @@ typedef struct
     double *tpp_Vm;   ///< Partial molar(molal) volume Vm(TP) (always), J/bar
 
     // additional arrays for internal calculation in ipm_main
-    double *XU;      ///< dual-thermo calculation of DC amount X(j) from A matrix and u vector [L]
-    double (*Uc)[2]; ///< Internal copy of IC chemical potentials u_i (mole/mole) at r-1 and r-2 [N][2]
-    double *Uefd;    ///< Internal copy of IC chemical potentials u_i (mole/mole) - EFD function [N]
     char errorCode[100]; ///<  code of error in IPM      (Ec number of error)
     char errorBuf[1024]; ///< description of error in IPM
     double logCDvalues[5]; ///< Collection of lg Dikin crit. values for the new smoothing equation
-    double *GamFs;   ///< Copy of activity coefficients Gamma before the first enter in PhaseSelection() [L] new
 
     double // Iterators for MTP interpolation (do not load/unload for IPM)
     Pai[4],    ///< Pressure P, bar: start, end, increment for MTP array in DataCH , Ptol
@@ -364,24 +318,7 @@ typedef struct
     Fdev1[2],  ///< Function1 and target deviations for  minimization of thermodynamic potentials
     Fdev2[2];  ///< Function2 and target deviations for  minimization of thermodynamic potentials
 
-    // Experimental: modified cutoff and insertion values (DK 28.04.2010)
-    double
-    // cutoffs (rescaled to system size)
-    XwMinM, ///< Cutoff mole amount for elimination of water-solvent { 1e-13 }
-    ScMinM, ///< Cutoff mole amount for elimination of solid sorbent { 1e-13 }
-    DcMinM, ///< Cutoff mole amount for elimination of solution- or surface species { 1e-30 }
-    PhMinM, ///< Cutoff mole amount for elimination of non-electrolyte condensed phase { 1e-23 }
-    ///< insertion values (re-scaled to system size)
-    DFYwM,  ///< Insertion mole amount for water-solvent { 1e-6 }
-    DFYaqM, ///< Insertion mole amount for aqueous and surface species { 1e-6 }
-    DFYidM, ///< Insertion mole amount for ideal solution components { 1e-6 }
-    DFYrM,  ///< Insertion mole amount for major solution components (incl. sorbent) { 1e-6 }
-    DFYhM,  ///< Insertion mole amount for minor solution components { 1e-6 }
-    DFYcM,  ///< Insertion mole amount for single-component phase { 1e-6 }
-    DFYsM,  ///< Insertion mole amount used in PhaseSelect() for a condensed phase component  { 1e-7 }
-    SizeFactor; ///< factor for re-scaling the cutoffs/insertions to the system size
-}
-TSOLMOD_MULTI;
+} TSOLMOD_MULTI;
 
 extern const BASE_PARAM pa_p_;
 

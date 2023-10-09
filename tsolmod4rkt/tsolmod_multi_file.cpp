@@ -107,7 +107,7 @@ void TSolModMulti::to_text_file( const char *path, bool append )
     prar.writeArray( "Double_PARAM",  &base_param()->DG, 28L );
     prar.writeArray( "Short_Const",  &pm.N, 39L );
     prar.writeArray(  "Double_Const",  &pm.TC, 53, 20 );
-    prar.writeArray(  "Add_Double_Const",  &pm.XwMinM, 12, 20 );
+    // prar.writeArray(  "Add_Double_Const",  &pm.XwMinM, 12, 20 );
     prar.writeArray(  "EpsW", pm.epsW, 5);
     prar.writeArray(  "EpsWg", pm.epsWg, 5);
     prar.writeArray(  "DenW", pm.denW, 5);
@@ -120,38 +120,17 @@ void TSolModMulti::to_text_file( const char *path, bool append )
     // Part 1
     /* need  always to alloc vectors */
     prar.writeArray(  "L1", pm.L1,  pm.FI);
-    prar.writeArray(  "DUL", pm.DUL,  pm.L);
-    prar.writeArray(  "DLL", pm.DLL,  pm.L);
     prar.writeArray(  "Vol", pm.Vol,  pm.L);
     prar.writeArray(  "Pparc", pm.Pparc,  pm.L);
     prar.writeArray(  "MM", pm.MM,  pm.L);
     prar.writeArray(  "Awt", pm.Awt, pm.N);
     prar.writeArray(  "A", pm.A,  pm.N*pm.L);
-    prar.writeArray(  "XFs", pm.XFs, pm.FI);
-    prar.writeArray(  "Falps", pm.Falps,  pm.FI);
     prar.writeArray(  "G", pm.G,  pm.L);
     prar.writeArray(  "G0", pm.G0,  pm.L);
     prar.writeArray(  "lnGam", pm.lnGam,  pm.L);
     prar.writeArray(  "lnGmo", pm.lnGmo,  pm.L);
     prar.writeArray(  "B", pm.B,  pm.N);
-    prar.writeArray(  "U", pm.U,  pm.N);
-    prar.writeArray(  "Uc", &pm.Uc[0][0],  pm.N*2);
-    prar.writeArray(  "Uefd", pm.Uefd,  pm.N);
-    prar.writeArray(  "U_r", pm.U_r,  pm.N);
-    prar.writeArray(  "C", pm.C,  pm.N);
-    prar.writeArray(  "XF", pm.XF,  pm.FI);
-    prar.writeArray(  "YF", pm.YF,  pm.FI);
-    prar.writeArray(  "Falp", pm.Falp,  pm.FI);
     prar.writeArray(  "X", pm.X,  pm.L);
-    prar.writeArray(  "Y", pm.Y,  pm.L);
-    prar.writeArray(  "XY", pm.XY,  pm.L);
-    prar.writeArray(  "XU", pm.XU,  pm.L);
-    prar.writeArray(  "MU", pm.MU,  pm.L);
-    prar.writeArray(  "EMU", pm.EMU,  pm.L);
-    prar.writeArray(  "NMU", pm.NMU,  pm.L);
-    prar.writeArray(  "W", pm.W,  pm.L);
-    prar.writeArray(  "F", pm.F,  pm.L);
-    prar.writeArray(  "F0", pm.F0,  pm.L);
     prar.writeArray(  "YOF", pm.YOF,  pm.FI);
 
     prar.writeArray(  "lnGmM", pm.lnGmM,  pm.L);
@@ -161,32 +140,16 @@ void TSolModMulti::to_text_file( const char *path, bool append )
 
     if( pm.L > 0 )
     {
-        prar.writeArray(  "Y_la", pm.Y_la,  pm.L);
-        prar.writeArray(  "Y_w", pm.Y_w,  pm.L);
-        prar.writeArray(  "Fx", pm.Fx,  pm.L);
         prar.writeArray(  "Wx", pm.Wx,  pm.L);
-        prar.writeArray(  "VL", pm.VL, pm.L);
         prar.writeArray(  "Gamma", pm.Gamma,  pm.L);
         prar.writeArray(  "lnGmf", pm.lnGmf,  pm.L);
     }
 
     // Part 2  not always required arrays
-    if( pm.FIs > 0 && pm.Ls > 0 )
-    {
-        prar.writeArray(  "BF", pm.BF,  pm.FIs*pm.N);
-        prar.writeArray(  "BFC", pm.BFC, pm.N);
-        prar.writeArray(  "XFA", pm.XFA,  pm.FIs);
-        prar.writeArray(  "YFA", pm.YFA,  pm.FIs);
-    }
-
     if( pm.LO > 1 )
     {
         prar.writeArray(  "Y_m", pm.Y_m,  pm.L);
-        prar.writeArray(  "IC_m", pm.IC_m,  pm.N);
-        prar.writeArray(  "IC_lm", pm.IC_lm,  pm.N);
-        prar.writeArray(  "IC_wm", pm.IC_wm,  pm.N);
     }
-
     if( pm.E )
     {
         prar.writeArray(  "EZ", pm.EZ,  pm.L);
@@ -225,18 +188,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
         prar.writeArray(  "lnRcpt", pm.lnRcpt, pm.Ls);
         prar.writeArray(  "lnExet", pm.lnExet, pm.Ls);
         prar.writeArray(  "lnCnft", pm.lnCnft, pm.Ls);
-    }
-
-    // Part 4
-
-    if( pm.Ls > 1 && pm.FIs > 0 )
-    {
-        prar.writeArray(  "Wb", pm.Wb, pm.Ls);
-        prar.writeArray(  "Wabs", pm.Wabs, pm.Ls);
-        prar.writeArray(  "Rion", pm.Rion, pm.Ls);
-
-        prar.writeArray(  "Qp", pm.Qp,  pm.FIs*QPSIZE);
-        prar.writeArray(  "Qd", pm.Qd,  pm.FIs*QDSIZE);
     }
 
     if(pm.H0)

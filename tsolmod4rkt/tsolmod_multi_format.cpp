@@ -438,17 +438,10 @@ void TSolModMulti::to_text_file_gemipm( TIO& out_format, bool addMui,
     prar.writeArray(  f_lnGmf, pm.lnGmf,  pm.L, -1L, _comment, brief_mode);
 
     if( _comment )
-        prar.writeComment( _comment, "\n# (6) Metastability constraints on DC amounts from above (DUL) and below (DLL)");
-    prar.writeArrayF(  f_RLC, pm.RLC, pm.L, 1L, _comment, brief_mode );
-    prar.writeArrayF(  f_RSC, pm.RSC, pm.L, 1L, _comment, brief_mode );
-    prar.writeArray(  f_DLL, pm.DLL, pm.L, -1L, _comment, brief_mode);
-    prar.writeArray(  f_DUL, pm.DUL,  pm.L, -1L, _comment, brief_mode);
-
-    if( _comment )
         prar.writeComment( _comment, "\n# (7) Initial data for Phases\n");
     prar.writeArray(  f_YOF, pm.YOF,  pm.FI, -1L, _comment, brief_mode);
 
-      //if(!brief_mode || prar.getAlws("dcMod" ))
+    //if(!brief_mode || prar.getAlws("dcMod" ))
     prar.writeArrayF(  f_dcMod, pm.dcMod[0], pm.L, 6L, _comment, brief_mode );
 
     out_format.dump(  _comment );
@@ -553,7 +546,8 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         pm.A[ii] = dCH->A[ii];
 
     if( pm.EZ )
-    { long int iZ=-1;
+    {
+        long int iZ=-1;
         for(  ii=0; ii<dCH->nDC; ii++ )
             if( dCH->ccIC[ii] == IC_CHARGE )
                 break;
@@ -565,7 +559,8 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     }
 
     for( ii=0; ii< dCH->nIC; ii++ )
-    { pm.Awt[ii]  = dCH->ICmm[ii]*1e3;
+    {
+        pm.Awt[ii]  = dCH->ICmm[ii]*1e3;
         fillValue(pm.SB[ii], ' ', MaxICN );
         len = strlen(dCH->ICNL[ii]);
         //len = min(  len,MaxICN);
@@ -733,14 +728,6 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_fDQF: rddar.readArray( "fDQF", pm.fDQF,  pm.L);
             break;
         case f_lnGmf: rddar.readArray( "lnGmf", pm.lnGmf,  pm.L);
-            break;
-        case f_RLC: rddar.readArray( "RLC", pm.RLC, pm.L, 1 );
-            break;
-        case f_RSC: rddar.readArray( "RSC", pm.RSC, pm.L, 1 );
-            break;
-        case f_DLL: rddar.readArray( "DLL", pm.DLL,  pm.L);
-            break;
-        case f_DUL: rddar.readArray( "DUL", pm.DUL,  pm.L);
             break;
         case f_YOF: rddar.readArray( "YOF", pm.YOF,  pm.FI);
             break;
