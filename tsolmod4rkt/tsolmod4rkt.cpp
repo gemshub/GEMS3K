@@ -1,5 +1,4 @@
 //--------------------------------------------------------------------
-// $Id: main.cpp 686 2012-06-01 14:10:22Z kulik $
 //
 // Demo test of usage of the standalone TSolMod.
 
@@ -51,13 +50,6 @@
 #include "v_service.h"
 #include "tsolmod_multi.h"
 
-// solvus-in/series1-dat.lst
-// ThermoTest-in/pHtitr-json.lst
-// ThermoTest-in/pHtitr-fun.lst
-// Thermo-time-json/series1-dat.lst
-// Neutral-fun/Neutral-dat.lst
-
-
 // Thermo-time-in/series1-dat.lst
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
@@ -81,11 +73,11 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
     try{
         // Analyzing command line arguments
         // Default arguments
-        char input_system_file_list_name[256] = "Thermo-time-in/series1-dat.lst";
+        std::string input_system_file_list_name = "Thermo-time-in/series1-dat.lst";
 
         // list of DCH, IPM and DBR input files for initializing GEMS3K
         if (argc >= 2 )
-            strncpy( input_system_file_list_name, argv[1], 256);
+            input_system_file_list_name = argv[1];
 
         // Creates TSolModMulti structure instance accessible through the "multi" pointer
         std::shared_ptr<TSolModMulti> multi(new TSolModMulti());

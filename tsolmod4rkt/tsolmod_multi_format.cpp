@@ -168,296 +168,12 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
  };
 
 
-/// Writing structure MULTI (GEM IPM work structure)
-template<typename TIO>
-void TSolModMulti::to_text_file_gemipm( TIO& out_format, bool addMui,
-                                        bool with_comments, bool brief_mode )
-{
-    const BASE_PARAM *pa_p = base_param();
-    bool _comment = with_comments;
-    char PAalp;
-    char PSigm;
-    get_PAalp_PSigm( PAalp, PSigm);
-
-    out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
-    io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 80, MULTI_dynamic_fields, out_format );
-
-    // set up array flags for permanent fields
-    if( !( pm.FIs > 0 && pm.Ls > 0 ) )
-    {
-        prar.setNoAlws( (long int)(f_sMod ) );
-        prar.setNoAlws( f_LsMod );
-        prar.setNoAlws( f_LsMdc );
-    }
-    if( PSigm == S_OFF )
-    {
-        prar.setNoAlws( f_Sigw);
-        prar.setNoAlws( f_Sigg);
-    }
-    if( !( pm.FIat > 0 &&  pm.FIs > 0 ) )
-    { /* ADSORPTION AND ION EXCHANGE */
-        prar.setNoAlws( f_Nfsp);
-        prar.setNoAlws( f_MASDT);
-        prar.setNoAlws( f_C1 );
-        prar.setNoAlws( f_C2 );
-        prar.setNoAlws( f_C3 );
-        prar.setNoAlws( f_pCh );
-        prar.setNoAlws( f_SATX );
-        prar.setNoAlws( f_MASDJ );
-        prar.setNoAlws( f_SCM );
-        prar.setNoAlws( f_SACT );
-        prar.setNoAlws( f_DCads );
-    }
-
-    if( _comment )
-    {
-        prar.writeComment( _comment, std::string("# ") + _GEMIPM_version_stamp );
-        // << "# File: " << path << endl;
-        prar.writeComment( _comment, "# Comments can be marked with # $ ; as the first character in the line");
-        prar.writeComment( _comment, "# IPM text input file for the internal GEM IPM-3 kernel data");
-        prar.writeComment( _comment, "# (should be read after the DCH file and before DBR files)\n");
-        prar.writeComment( _comment, "# ID key of the initial chemical system definition");
-    }
-
-    prar.addField( "ID_key", char_array_to_string(pm.stkey, EQ_RKLEN));
-
-    if( _comment )
-        prar.writeComment( _comment, "\n## (1) Flags that affect memory allocation");
-
-    if(!brief_mode || pa_p->PE != pa_p_.PE )
-        prar1.writeField(f_pa_PE, pa_p->PE, _comment, false  );
-
-    //   ff << "# Do not know if this stuff is really necessary" << endl;
-    //   ff << "# 'GWAT'         55.50837344" << endl;
-    //   ff << left << setw(12) << "<GWAT> " <<  right << setw(8) << pm.GWAT << endl;
-
-    prar1.writeField(f_PV, pm.PV, _comment, brief_mode  );
-    prar1.writeField(f_PSOL, pm.PSOL, _comment, brief_mode  );
-
-    prar1.writeField(f_PAalp, PAalp, _comment, brief_mode  );
-    prar1.writeField(f_PSigm, PSigm, _comment, brief_mode  );
-
-    if( !brief_mode || pm.FIat > 0 || pm.Lads > 0 )
-    {
-        if( _comment )
-            prar.writeComment( _comment, "## (2) Dimensionalities that affect memory allocation");
-        prar1.writeField(f_Lads, pm.Lads, _comment, false  );
-        prar1.writeField(f_FIa, pm.FIa, _comment, false  );
-        prar1.writeField(f_FIat,  pm.FIat, _comment, false  );
-
-        //   ff << left << setw(12) << "<sitNc> " <<  right << setw(8) << pm.sitNcat << endl;
-        //   ff << left << setw(12) << "<sitNa> " <<  right << setw(8) << pm.sitNan << endl;
-    } // brief_mode
-
-    prar.writeComment( true, "\n<END_DIM>\n");
-
-    // static data not affected by dimensionalities
-    if( _comment )
-    {
-        prar.writeComment( _comment, "## (3) Numerical controls and tolerances of GEM IPM-3 kernel");
-        prar.writeComment( _comment,"#      - Need to be changed only in special cases (see gems3k_ipm.html)");
-    }
-
-    if( !brief_mode || !essentiallyEqual(pa_p->DB, pa_p_.DB ) )
-        prar.writeField(f_pa_DB, pa_p->DB, _comment, false  );
-    if( !brief_mode || !essentiallyEqual(pa_p->DHB, pa_p_.DHB ) )
-        prar.writeField(f_pa_DHB, pa_p->DHB, _comment, false  );
-    if( !brief_mode || !essentiallyEqual(pa_p->EPS, pa_p_.EPS ) )
-        prar.writeField(f_pa_EPS, pa_p->EPS, _comment, false  );
-    if( !brief_mode || !essentiallyEqual(pa_p->DK, pa_p_.DK ) )
-        prar.writeField(f_pa_DK, pa_p->DK, _comment, false  );
-    if( !brief_mode || !essentiallyEqual(pa_p->DS, pa_p_.DS ) )
-        prar.writeField(f_pa_DS,  pa_p->DS, _comment, false  );
-    if( !brief_mode || !essentiallyEqual(pa_p->DF, pa_p_.DF ) )
-        prar.writeField(f_pa_DF, pa_p->DF, _comment, false  );
-    if( !brief_mode || !essentiallyEqual(pa_p->DFM, pa_p_.DFM ) )
-        prar.writeField(f_pa_DFM,  pa_p->DFM, _comment, false  );
-    if(!brief_mode || pa_p->DP != pa_p_.DP )
-        prar.writeField(f_pa_DP,  pa_p->DP, _comment, false  );
-    if(!brief_mode || pa_p->IIM != pa_p_.IIM )
-        prar.writeField(f_pa_IIM,  pa_p->IIM, _comment, false  );
-    if(!brief_mode || pa_p->PD != pa_p_.PD )
-        prar.writeField(f_pa_PD,  pa_p->PD, _comment, false  );
-    if(!brief_mode || pa_p->PRD != pa_p_.PRD )
-        prar.writeField(f_pa_PRD,  pa_p->PRD, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->AG, pa_p_.AG ) )
-        prar.writeField(f_pa_AG,  pa_p->AG, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DGC, pa_p_.DGC ) )
-        prar.writeField(f_pa_DGC,  pa_p->DGC, _comment, false  );
-    if(!brief_mode || pa_p->PSM != pa_p_.PSM )
-        prar.writeField(f_pa_PSM,  pa_p->PSM, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->GAR, pa_p_.GAR ) )
-        prar.writeField(f_pa_GAR,  pa_p->GAR, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->GAH, pa_p_.GAH ) )
-        prar.writeField(f_pa_GAH,  pa_p->GAH, _comment, false  );
-
-    if(!brief_mode)
-        if( _comment )
-        {
-            prar.writeComment( _comment, "\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance");
-        }
-
-    if(!brief_mode || !essentiallyEqual(pa_p->XwMin, pa_p_.XwMin ) )
-        prar.writeField(f_pa_XwMin,  pa_p->XwMin, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->ScMin, pa_p_.ScMin ) )
-        prar.writeField(f_pa_ScMin,  pa_p->ScMin, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DcMin, pa_p_.DcMin ) )
-        prar.writeField(f_pa_DcMin,  pa_p->DcMin, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->PhMin, pa_p_.PhMin ) )
-        prar.writeField(f_pa_PhMin,  pa_p->PhMin, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->ICmin, pa_p_.ICmin ))
-        prar.writeField(f_pa_ICmin,  pa_p->ICmin, _comment, false  );
-    if(!brief_mode || pa_p->PC != pa_p_.PC )
-        prar.writeField(f_pa_PC,  pa_p->PC, _comment, false  );
-
-    if( _comment )
-        prar.writeComment( _comment, "# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm\n");
-
-    if(!brief_mode || !essentiallyEqual(pa_p->DFYw, pa_p_.DFYw ) )
-        prar.writeField(f_pa_DFYw,  pa_p->DFYw, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DFYaq, pa_p_.DFYaq) )
-        prar.writeField(f_pa_DFYaq,  pa_p->DFYaq, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DFYid, pa_p_.DFYid ) )
-        prar.writeField(f_pa_DFYid,  pa_p->DFYid, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DFYr, pa_p_.DFYr ) )
-        prar.writeField(f_pa_DFYr,  pa_p->DFYr, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DFYh, pa_p_.DFYh ) )
-        prar.writeField(f_pa_DFYh,  pa_p->DFYh, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DFYc, pa_p_.DFYc ) )
-        prar.writeField(f_pa_DFYc,  pa_p->DFYc, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DFYs, pa_p_.DFYs ) )
-        prar.writeField(f_pa_DFYs,  pa_p->DFYs, _comment, false  );
-
-    if( _comment )
-        prar.writeComment( _comment, "# Tolerances and controls of the high-precision IPM-3 algorithm ");
-
-    if(!brief_mode || pa_p->DW != pa_p_.DW )
-        prar.writeField(f_pa_DW,  pa_p->DW, _comment, false  );
-    if(!brief_mode || pa_p->DT != pa_p_.DT )
-        prar.writeField(f_pa_DT,  pa_p->DT, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->GAS, pa_p_.GAS ) )
-        prar.writeField(f_pa_GAS,  pa_p->GAS, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DG, pa_p_.DG ) )
-        prar.writeField(f_pa_DG,  pa_p->DG, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DNS, pa_p_.DNS ) )
-        prar.writeField(f_pa_DNS, pa_p->DNS, _comment, false  );
-    if(!brief_mode || !essentiallyEqual(pa_p->IEPS, pa_p_.IEPS) )
-        prar.writeField(f_pa_IEPS, pa_p->IEPS, _comment, false  );
-    prar.writeField(f_pKin, pm.PLIM, _comment, brief_mode  );
-    if(!brief_mode || !essentiallyEqual(pa_p->DKIN, pa_p_.DKIN ) )
-        prar.writeField(f_pa_DKIN, pa_p->DKIN, _comment, false  );
-    if(!brief_mode || pa_p->PLLG != pa_p_.PLLG )
-        prar.writeField(f_pa_PLLG, pa_p->PLLG, _comment, false  );
-    if(!brief_mode || pm.tMin != G_TP_ )
-        prar.writeField(f_tMin, pm.tMin, _comment, false  );
-
-    //dynamic arrays
-    if( pm.FIs > 0 && pm.Ls > 0 )
-    {
-        if( _comment )
-            prar.writeComment( _comment, "\n## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)");
-        prar.writeArrayF(  f_sMod, pm.sMod[0], pm.FIs, 8L, _comment, brief_mode );
-
-        long int LsModSum;
-        long int LsIPxSum;
-        long int LsMdcSum;
-        long int LsMsnSum;
-        long int LsSitSum;
-        getLsModsum( LsModSum, LsIPxSum );
-        getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
-
-        prar.writeArray(  f_LsMod, pm.LsMod, pm.FIs*3, 3L, _comment, brief_mode);
-
-        if(LsIPxSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# IPxPH: Index lists (in TSolMod convention) for interaction parameters of non-ideal solutions");
-            prar.writeArray(  "IPxPH", pm.IPx,  LsIPxSum);
-        }
-        if(LsModSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# PMc: Tables (in TSolMod convention) of interaction parameter coefficients  for non-ideal solutions");
-            prar.writeArray(  "PMc", pm.PMc,  LsModSum);
-        }
-        prar.writeArray(  f_LsMdc, pm.LsMdc, pm.FIs*3, 3L, _comment, brief_mode);
-        if(LsMdcSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# DMc: Tables (in TSolMod convention) of  parameter coefficients for dependent components");
-            prar.writeArray(  "DMc", pm.DMc,  LsMdcSum);
-        }
-        if(LsMsnSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment,  "\n# MoiSN:  end member moiety / site multiplicity number tables (in TSolMod convention) ");
-            prar.writeArray(  "MoiSN", pm.MoiSN,  LsMsnSum);
-        }
-        long int DQFcSum, rcpcSum;
-        getLsMdc2sum( DQFcSum, rcpcSum );
-        prar.writeArray(  f_LsMdc2, pm.LsMdc2, pm.FIs*3, 3L, _comment, brief_mode);
-        if(DQFcSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# DQFc:  Collected array of DQF parameters for DCs in phases ");
-            prar.writeArray(  "DQFc", pm.DQFc,  DQFcSum);
-        }
-        //   if(rcpcSum )
-        //   {   if( _comment )
-        //          prar.writeComment( _comment, "\n# rcpc:  Collected array of reciprocal parameters for DCs in phases ");
-        //     prar.writeArray(  "rcpc", pm.rcpc,  rcpcSum);
-        //   }
-        long int PhLinSum, lPhcSum;
-        getLsPhlsum( PhLinSum,lPhcSum );
-        prar.writeArray(  f_LsPhl, pm.LsPhl, pm.FI*2, 2L, _comment, brief_mode);
-        if(PhLinSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# PhLin:  indexes of linked phases and link type codes ");
-            prar.writeArray(  "PhLin", &pm.PhLin[0][0], PhLinSum*2);
-        }
-        if(lPhcSum )
-        {
-            if( _comment )
-                prar.writeComment( _comment, "\n# lPhc:  Collected array of phase link parameters ");
-            prar.writeArray(  "lPhc", pm.lPhc,  lPhcSum);
-        }
-    } // sMod
-
-    if( _comment )
-        prar.writeComment( _comment, "\n## (5) Data arrays which are provided neither in DCH nor in DBR files");
-    prar.writeArray(  f_B, pm.B,  pm.N, -1L, _comment, brief_mode);
-
-    if( _comment )
-        prar.writeComment( _comment, "\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs");
-    prar.writeArray(  f_Pparc, pm.Pparc,  pm.L, -1L, _comment, brief_mode);
-    //  ff << "\n\n# This is not necessary - can be calculated from G0 ???????????";
-    // prar.writeArray(  "G0", pm.G0,  pm.L);
-    prar.writeArray(  f_fDQF, pm.fDQF,  pm.L, -1L, _comment, brief_mode);
-    prar.writeArray(  f_lnGmf, pm.lnGmf,  pm.L, -1L, _comment, brief_mode);
-
-    if( _comment )
-        prar.writeComment( _comment, "\n# (7) Initial data for Phases\n");
-    prar.writeArray(  f_YOF, pm.YOF,  pm.FI, -1L, _comment, brief_mode);
-
-    //if(!brief_mode || prar.getAlws("dcMod" ))
-    prar.writeArrayF(  f_dcMod, pm.dcMod[0], pm.L, 6L, _comment, brief_mode );
-
-    out_format.dump(  _comment );
-}
-
 /// Reading structure MULTI (GEM IPM work structure)
 template<typename TIO>
 void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 {
-    BASE_PARAM *pa_p = base_param();
     long int ii, nfild;
     size_t len;
-
-    //static values
-    char PAalp;
-    char PSigm;
 
     set_def();
     //mem_set( &pm.N, 0, 39*sizeof(long int));
@@ -482,12 +198,9 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     }
 
     // setup default constants
-    base_param()->PE = 1;
     pm.E = 1;
     pm.PV = 0;
     pm.PSOL = 0;
-    PAalp = '+';
-    PSigm = '+';
     pm.Lads = 0;
     pm.FIa = 0;
     pm.FIat = 0; //6
@@ -506,16 +219,11 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     {
         switch( nfild )
         {
-        case f_pa_PE: rdar.readArray("pa_PE" , &pa_p->PE, 1);
-            pm.E = pa_p->PE;
+        case f_pa_PE: rdar.readArray("pa_PE" , &pm.E, 1);
             break;
         case f_PV: rdar.readArray("PV" , &pm.PV, 1);
             break;
         case f_PSOL: rdar.readArray("PSOL" , &pm.PSOL, 1);
-            break;
-        case f_PAalp: rdar.readArray("PAalp" , &PAalp, 1, 1);
-            break;
-        case f_PSigm: rdar.readArray("PSigm" , &PSigm, 1, 1);
             break;
         case f_Lads: rdar.readArray("Lads" , &pm.Lads, 1);
             break;
@@ -534,9 +242,7 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         Error( "Error", ret);
     }
 
-    PAalp_ = PAalp;
-    PSigm_ = PSigm;
-    multi_realloc( PAalp, PSigm );
+    multi_realloc();
 
     // get dynamic data from DATACH file
     for( ii=0; ii<dCH->nPH; ii++)
@@ -604,14 +310,13 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     io_formats::TReadArrays<TIO>   rddar( 80, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
-
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
     {
         rddar.setNoAlws( (long int)(f_sMod ));
         rddar.setNoAlws( f_LsMod );
         rddar.setNoAlws( f_LsMdc );
     }
-    if( PSigm == S_OFF )
+    if( true /*PSigm == S_OFF*/ )
     {
         rddar.setNoAlws( f_Sigw );
         rddar.setNoAlws( f_Sigg );
@@ -636,7 +341,8 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     while( nfild >=0 )
     {
         switch( nfild )
-        { case f_sMod: if( !pm.sMod )
+        {
+        case f_sMod: if( !pm.sMod )
                 Error( "Error", "Array sMod is not used in this problem");
             rddar.readArray( "sMod" , pm.sMod[0], pm.FIs, 8 );
             break;
@@ -731,81 +437,7 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_YOF: rddar.readArray( "YOF", pm.YOF,  pm.FI);
             break;
-        case f_pa_DB: rddar.readArray( "pa_DB" , &pa_p->DB, 1);
-            break;
-        case f_pa_DHB: rddar.readArray("pa_DHB", &pa_p->DHB, 1);
-            break;
-        case f_pa_EPS: rddar.readArray("pa_EPS" , &pa_p->EPS, 1);
-            break;
-        case f_pa_DK: rddar.readArray("pa_DK" , &pa_p->DK, 1);
-            break;
-        case f_pa_DF: rddar.readArray("pa_DF" , &pa_p->DF, 1);
-            break;
-        case f_pa_DP: rddar.readArray("pa_DP", &pa_p->DP, 1);
-            break;
-        case f_pa_IIM: rddar.readArray("pa_IIM", &pa_p->IIM, 1);
-            break;
-        case f_pa_PD: rddar.readArray("pa_PD" , &pa_p->PD, 1);
-            break;
-        case f_pa_PRD: rddar.readArray("pa_PRD" , &pa_p->PRD, 1);
-            break;
-        case f_pa_AG: rddar.readArray("pa_AG" , &pa_p->AG, 1);
-            break;
-        case f_pa_DGC: rddar.readArray("pa_DGC" , &pa_p->DGC, 1);
-            break;
-        case f_pa_PSM: rddar.readArray("pa_PSM" , &pa_p->PSM, 1);
-            break;
-        case f_pa_GAR: rddar.readArray("pa_GAR" , &pa_p->GAR, 1);
-            break;
-        case f_pa_GAH: rddar.readArray("pa_GAH" , &pa_p->GAH, 1);
-            break;
-        case f_pa_DS: rddar.readArray("pa_DS", &pa_p->DS, 1);
-            break;
-        case f_pa_XwMin: rddar.readArray("pa_XwMin" , &pa_p->XwMin, 1);
-            break;
-        case f_pa_ScMin: rddar.readArray("pa_ScMin" , &pa_p->ScMin, 1);
-            break;
-        case f_pa_DcMin: rddar.readArray("pa_DcMin" , &pa_p->DcMin, 1);
-            break;
-        case f_pa_PhMin: rddar.readArray("pa_PhMin" , &pa_p->PhMin, 1);
-            break;
-        case f_pa_ICmin: rddar.readArray("pa_ICmin" , &pa_p->ICmin, 1);
-            break;
-        case f_pa_PC: rddar.readArray("pa_PC" , &pa_p->PC, 1);
-            break;
-        case f_pa_DFM: rddar.readArray("pa_DFM" , &pa_p->DFM, 1);
-            break;
-        case f_pa_DFYw: rddar.readArray("pa_DFYw" , &pa_p->DFYw, 1);
-            break;
-        case f_pa_DFYaq: rddar.readArray("pa_DFYaq" , &pa_p->DFYaq, 1);
-            break;
-        case f_pa_DFYid: rddar.readArray("pa_DFYid" , &pa_p->DFYid, 1);
-            break;
-        case f_pa_DFYr: rddar.readArray("pa_DFYr" , &pa_p->DFYr, 1);
-            break;
-        case f_pa_DFYh: rddar.readArray("pa_DFYh" , &pa_p->DFYh, 1);
-            break;
-        case f_pa_DFYc: rddar.readArray("pa_DFYc" , &pa_p->DFYc, 1);
-            break;
-        case f_pa_DFYs: rddar.readArray("pa_DFYs", &pa_p->DFYs, 1);
-            break;
-        case f_pa_DW: rddar.readArray("pa_DW", &pa_p->DW , 1);
-            break;
-        case f_pa_DT: rddar.readArray("pa_DT", &pa_p->DT , 1);
-            break;
-        case f_pa_GAS: rddar.readArray("pa_GAS", &pa_p->GAS, 1);
-            break;
-        case f_pa_DG: rddar.readArray("pa_DG" , &pa_p->DG, 1);
-            break;
-        case f_pa_DNS: rddar.readArray("pa_DNS" , &pa_p->DNS, 1);
-            break;
-        case f_pa_IEPS: rddar.readArray("pa_IEPS" , &pa_p->IEPS, 1);
-            break;
         case f_pKin: rddar.readArray("pKin" , &pm.PLIM, 1);
-            break;
-        case f_pa_DKIN: rddar.readArray("pa_DKIN" , &pa_p->DKIN, 1);
-            break;
-        case f_pa_PLLG: rddar.readArray("pa_PLLG" , &pa_p->PLLG, 1);
             break;
         case f_tMin: rddar.readArray("tMin" , &pm.tMin, 1);
             break;
@@ -820,17 +452,6 @@ void TSolModMulti::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     { ret += " - fields must be read from the MULTY structure";
         Error( "Error", ret);
     }
-}
-
-
-/// Writes Multi to a json/key-value string
-/// \param brief_mode - Do not write data items that contain only default values
-/// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
-std::string TSolModMulti::gemipm_to_string( bool addMui, const std::string& test_set_name, bool with_comments, bool brief_mode )
-{
-    std::stringstream ss;
-    write_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, addMui, with_comments, brief_mode, test_set_name );
-    return ss.str();
 }
 
 /// Reads Multi structure from a json/key-value string
@@ -875,46 +496,13 @@ void  TSolModMulti::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerat
     }
 }
 
-void  TSolModMulti::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
-                                             bool addMui, bool with_comments, bool brief_mode, const std::string& test_set_name )
-{
-    switch( type_f )
-    {
-    case GEMS3KGenerator::f_binary:
-        break;
-    case GEMS3KGenerator::f_json:
-    case GEMS3KGenerator::f_thermofun:
-#ifdef USE_NLOHMANNJSON
-    {
-        io_formats::NlohmannJsonWrite out_format( stream, test_set_name );
-        to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
-    }
-#else
-    {
-        io_formats::SimdJsonWrite out_format( stream, test_set_name, with_comments );
-        to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
-    }
-#endif
-        break;
-    case GEMS3KGenerator::f_key_value:
-    case GEMS3KGenerator::f_kv_thermofun:
-    {
-        io_formats::KeyValueWrite out_format( stream );
-        to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
-    }
-        break;
-    }
-}
 
 #ifdef USE_NLOHMANNJSON
 template void TSolModMulti::from_text_file_gemipm<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& in_format,  DATACH  *dCH );
-template void TSolModMulti::to_text_file_gemipm<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 #else
 template void TSolModMulti::from_text_file_gemipm<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& in_format,  DATACH  *dCH );
-template void TSolModMulti::to_text_file_gemipm<io_formats::SimdJsonWrite>( io_formats::SimdJsonWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 #endif
 template void TSolModMulti::from_text_file_gemipm<io_formats::KeyValueRead>( io_formats::KeyValueRead& in_format,  DATACH  *dCH );
-template void TSolModMulti::to_text_file_gemipm<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 
 //--------------------- end of tsolmod_multi_format.cpp ---------------------------
 

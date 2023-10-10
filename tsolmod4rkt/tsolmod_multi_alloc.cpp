@@ -27,7 +27,7 @@
 #include "verror.h"
 
 /// Realloc dynamic memory
-void TSolModMulti::multi_realloc( char PAalp, char PSigm )
+void TSolModMulti::multi_realloc()
 {
     long int ii, jj ;
     if( pm.N < 2 || pm.L < 2 || pm.FI < 1 )
@@ -271,14 +271,14 @@ void TSolModMulti::multi_kill()
     if( pm.X ) delete[] pm.X;
     if( pm.YOF ) delete[] pm.YOF;
 
-    if(   pm.SB ) delete[] pm.SB;
-    if(   pm.SM ) delete[] pm.SM;
-    if(   pm.SF ) delete[] pm.SF;
-    if(   pm.dcMod ) delete[] pm.dcMod;
-    if(   pm.ICC ) delete[] pm.ICC;
-    if(   pm.DCC ) delete[] pm.DCC;
-    if(   pm.PHC ) delete[] pm.PHC;
-    if(   pm.DCCW ) delete[] pm.DCCW;
+    if( pm.SB ) delete[] pm.SB;
+    if( pm.SM ) delete[] pm.SM;
+    if( pm.SF ) delete[] pm.SF;
+    if( pm.dcMod ) delete[] pm.dcMod;
+    if( pm.ICC ) delete[] pm.ICC;
+    if( pm.DCC ) delete[] pm.DCC;
+    if( pm.PHC ) delete[] pm.PHC;
+    if( pm.DCCW ) delete[] pm.DCCW;
     if( pm.lnGmM ) delete[] pm.lnGmM;
     if( pm.fDQF ) delete[] pm.fDQF;
     if( pm.FVOL ) delete[] pm.FVOL;
@@ -356,17 +356,17 @@ void TSolModMulti::set_def( int )
     pm.FI1a = 0;    // FI1a -   number of sorption phases present in eqstate
     pm.IT = 0;      // It - number of completed IPM iterations
     pm.E = 0;       // PE - flag of electroneutrality constraint { 0 1 }
-    pm.PD = 0;      // PD - mode of calling CalculateActivityCoefficients() { 0 1 2 3 4 }
+    pm.PD__ = 0;      // PD - mode of calling CalculateActivityCoefficients() { 0 1 2 3 4 }
     pm.PV = 0;      // PV - flag of system volume constraint { 0 1 }
     pm.PLIM = 0;    // PU - flag of activation of DC/phase restrictions { 0 1 }
     pm.Ec = 0;    // CalculateActivityCoefficients() return code: 0 (OK) or 1 (error)
     pm.K2 = 0;    // Number of Selekt2() loops
-    pm.PZ = 0;    // Indicator of IPM-2 precision algorithm activation    funT = 0; sysT = 0;
+    pm.PZ__ = 0;    // Indicator of IPM-2 precision algorithm activation    funT = 0; sysT = 0;
     pm.pNP = 0; //Mode of FIA selection: 0- automatic-LPP = 0; 1- old eqstate = 0; -1-user's choice
     pm.pESU = 0;  // Unpack old eqstate from EQSTAT record?  0-no 1-yes
     pm.pIPN = 0;  // State of IPN-arrays:  0-create; 1-available; -1 remake
     pm.pBAL = 0;  // State of reloading CSD:  1- BAL only; 0-whole CSD
-    pm.tMin = G_TP;  // Type of thermodynamic potential to minimize
+    pm.tMin = 'G';  // Type of thermodynamic potential to minimize
     pm.pTPD = 0;  // State of reloading thermod data: 0- all  1 - G0 only  2 - no
     pm.pULR = 0;  // Start recalc kinetic constraints (0-do not = 0; 1-do )internal
     pm.pKMM = 0;
@@ -412,7 +412,7 @@ void TSolModMulti::set_def( int )
     fillValue( pm.epsW, 0., 5 );
     fillValue( pm.epsWg, 0., 5 );
     pm.PCI = 0.;        // Current value of Dikin criterion of IPM convergence DK>=DX
-    pm.DXM = 0.;         // IPM convergence criterion threshold DX (1e-5)
+    pm.DXM__ = 0.;         // IPM convergence criterion threshold DX (1e-5)
     pm.lnP = 0.;        // log Ptotal
     pm.RT = 0.;         // RT: 8.31451*T (J/mole/K)
     pm.FRT = 0.;        // F/RT = 0.; F - Faraday constant = 96485.309 C/mol

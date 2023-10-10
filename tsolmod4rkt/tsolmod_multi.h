@@ -39,61 +39,9 @@
 
 class GemDataStream;
 
-const int  QPSIZE = 180, // earlier 20, 40 SD oct 2005
-           QDSIZE = 60;
-
 // Physical constants - see m_param.cpp or ms_param.cpp
 extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
-    e_CONSTANT,k_CONSTANT, cal_to_J, C_to_K, lg_to_ln, ln_to_lg, H2O_mol_to_kg, Min_phys_amount;
-
-struct BASE_PARAM /// Flags and thresholds for numeric modules
-{
-   short
-           PC,   ///< Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }
-           PD,   ///< abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }.
-                 ///< Modes: 0-invoke, 1-at MBR only, 2-every MBR it, every IPM it. 3-not MBR, every IPM it.
-                 ///< if PD < 0 then use test qd_real accuracy mode
-           PRD,  ///< Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }
-           PSM,  ///< Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace { 1 }
-           DP,   ///< Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }
-           DW,   ///< Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }
-           DT,   ///< Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }
-           PLLG, ///< IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detection }
-           PE,   ///< Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }
-           IIM   ///< Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }
-           ;
-         double DG,   ///< Standart total moles { 1e5 }
-           DHB,  ///< Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }
-           DS,   ///< Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }
-           DK,   ///< IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 < DK < 1e-4) { 1e-5 }
-           DF,   ///< Threshold for the application of the Karpov phase stability criterion: (Fa > DF) for a lost stable phase { 0.01 }
-           DFM,  ///< Threshold for Karpov stability criterion f_a for insertion of a phase (Fa < -DFM) for a present unstable phase { 0.1 }
-           DFYw, ///< Insertion mole amount for water-solvent { 1e-6 }
-           DFYaq,///< Insertion mole amount for aqueous species { 1e-6 }
-           DFYid,///< Insertion mole amount for ideal solution components { 1e-6 }
-           DFYr, ///< Insertion mole amount for major solution components { 1e-6 }
-           DFYh, ///< Insertion mole amount for minor solution components { 1e-6 }
-           DFYc, ///< Insertion mole amount for single-component phase { 1e-6 }
-           DFYs, ///< Insertion mole amount used in PhaseSelect() for a condensed phase component  { 1e-7 }
-           DB,   ///< Minimum amount of Independent Component in the bulk system composition (except charge "Zz") (moles) (1e-17)
-           AG,   ///< Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { -1 }
-           DGC,  ///< Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0.99 }
-           GAR,  ///< Initial activity coefficient value for major (M) species in a solution phase before LPP approximation { 1 }
-           GAH,  ///< Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation { 1000 }
-           GAS,  ///< Since r1583/r409: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup() { 1e-3 }.
-                 ///< before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }
-           DNS,  ///< Standard surface density (nm-2) for calculating activity of surface species (12.05)
-           XwMin,///< Cutoff mole amount for elimination of water-solvent { 1e-9 }
-           ScMin,///< Cutoff mole amount for elimination of solid sorbent {1e-7}
-           DcMin,///< Cutoff mole amount for elimination of solution- or surface species { 1e-30 }
-           PhMin,///< Cutoff mole amount for elimination of  non-electrolyte solution phase with all its components { 1e-10 }
-           ICmin,///< Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }
-           EPS,  ///< Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }
-           IEPS, ///< Convergence parameter of SACT calculation in sorption/surface complexation models { 0.01 to 0.000001, default 0.001 }
-           DKIN; ///< Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }
-    char *tprn;       ///< internal
-};
-
+e_CONSTANT,k_CONSTANT, cal_to_J, C_to_K, lg_to_ln, ln_to_lg, H2O_mol_to_kg, Min_phys_amount;
 
 typedef struct
 {  // MULTI is base structure to Project (local values)
@@ -121,12 +69,12 @@ typedef struct
     FI1a,    ///< FI1a -   number of sorption phases present in eqstate
     IT,      ///< It - number of completed IPM iterations
     E,       ///< PE - flag of electroneutrality constraint { 0 1 }
-    PD,      ///< PD - mode of calling CalculateActivityCoefficients() { 0 1 2 3 4 }
+    PD__,      ///< PD - mode of calling CalculateActivityCoefficients() { 0 1 2 3 4 }
     PV,      ///< Flag for the volume balance constraint (on Vol IC) - for indifferent equilibria at P_Sat { 0 1 }
     PLIM,    ///< PU - flag of activation of DC/phase restrictions { 0 1 }
     Ec,     ///< CalculateActivityCoefficients() return code: 0 (OK) or 1 (error)
     K2,     ///< Number of IPM loops performed ( >1 up to 6 because of PSSC() )
-    PZ,     ///< Indicator of PSSC() status (since r1594): 0 untouched, 1 phase(s) inserted
+    PZ__,     ///< Indicator of PSSC() status (since r1594): 0 untouched, 1 phase(s) inserted
     ///< 2 insertion done after 5 major IPM loops
     pNP,    ///< Mode of FIA selection: 0-automatic-LP AIA, 1-smart SIA, -1-user's choice
     pESU,   ///< Unpack old eqstate from EQSTAT record?  0-no 1-yes
@@ -186,7 +134,7 @@ typedef struct
     GWAT,       ///< used in ipm_gamma()
     YMET,       ///< reserved
     PCI,        ///< Current value of Dikin criterion of IPM convergence DK>=DX
-    DXM,        ///< IPM convergence criterion threshold DX (1e-5)
+    DXM__,        ///< IPM convergence criterion threshold DX (1e-5)
     lnP,        ///< log Ptotal
     RT,         ///< RT: 8.31451*T (J/mole/K)
     FRT,        ///< F/RT, F - Faraday constant = 96485.309 C/mol
@@ -242,9 +190,6 @@ typedef struct
     *lPhc,  ///< new: Collected array of phase link parameters (sum(LsPhl[k][1] over Fi)
     *DQFc  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc2[k][0]
     ;
-    // until here move to --> datach.h
-
-    // Contents defined in the enum below this structure
     // Other data
     double
     *fDQF,    ///< Increments to molar G0 values of DCs from pure gas fugacities or DQF terms, normalized [L]
@@ -319,8 +264,6 @@ typedef struct
     Fdev2[2];  ///< Function2 and target deviations for  minimization of thermodynamic potentials
 
 } TSOLMOD_MULTI;
-
-extern const BASE_PARAM pa_p_;
 
 // Data of MULTI
 class TSolModMulti
@@ -415,29 +358,12 @@ public:
 
 protected:
 
-    // Internal MULTI subset (could be remove unused in future)
-    char PAalp_; ///< Flag for using (+) or ignoring (-) specific surface areas of phases
-    char PSigm_; ///< Flag for using (+) or ignoring (-) specific surface free energies
-    std::shared_ptr<BASE_PARAM> pa_standalone;
     TSOLMOD_MULTI pm;
     TSOLMOD_MULTI *pmp;
 
-    BASE_PARAM* base_param() const
-    {
-        return pa_standalone.get();
-    }
-
-    // reading multi structure
-    template<typename TIO>
-    void to_text_file_gemipm( TIO& out_format, bool addMui,
-                              bool with_comments = true, bool brief_mode = false );
     template<typename TIO>
     void from_text_file_gemipm( TIO& in_format,  DATACH  *dCH );
 
-    /// Writes Multi to a json/key-value string
-    /// \param brief_mode - Do not write data items that contain only default values
-    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
-    std::string gemipm_to_string( bool addMui, const std::string& test_set_name, bool with_comments = true, bool brief_mode = false );
     /// Reads Multi structure from a json/key-value string
     bool gemipm_from_string( const std::string& data,  DATACH  *dCH, const std::string& test_set_name );
 
@@ -446,19 +372,7 @@ protected:
     ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
     void  read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f, DATACH  *dCH, const std::string& test_set_name );
 
-    /// Writes the contents of the work instance of the DATABR structure into a stream.
-    ///   \param stream    string or file stream.
-    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
-    ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
-    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
-    ///                 If   false (0), comments will not be written;
-    ///                         (json format): interpret the flag with_comments=on as "pretty JSON" and
-    ///                                   with_comments=off as "condensed JSON"
-    ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
-    void  write_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
-                                   bool addMui, bool with_comments, bool brief_mode, const std::string& test_set_name );
-
-    void multi_realloc(char PAalp, char PSigm);
+    void multi_realloc();
     void multi_kill();
     void set_def(int i=0);
 
@@ -470,7 +384,7 @@ protected:
     /// Get dimensions from LsMdc2 array
     void getLsMdc2sum( long int& DQFcSum,long int& rcpcSum );
 
-    void get_PAalp_PSigm(char &PAalp, char &PSigm);
+    //void get_PAalp_PSigm(char &PAalp, char &PSigm);
     void alloc_IPx( long int LsIPxSum );
     void alloc_PMc( long int LsModSum );
     void alloc_DMc( long int LsMdcSum );
@@ -490,27 +404,6 @@ protected:
     void ConvertDCC();
     double ConvertGj_toUniformStandardState(double g0, long j, long k);
 };
-
-// syp->PGmax
-typedef enum {  // Symbols of thermodynamic potential to minimize
-    G_TP    =  'G',   // Gibbs energy minimization G(T,P)
-    A_TV    =  'A',   // Helmholts energy minimization A(T,V)
-    U_SV    =  'U',   // isochoric-isentropicor internal energy at isochoric conditions U(S,V)
-    H_PS    =  'H',   // isobaric-isentropic or enthalpy H(P,S)
-    _S_PH   =  '1',   // negative entropy at isobaric conditions and fixed enthalpy -S(P,H)
-    _S_UV   =  '2'    // negative entropy at isochoric conditions and fixed internal energy -S(P,H)
-
-} THERM_POTENTIALS;
-
-typedef enum {  // Symbols of thermodynamic potential to minimize
-    G_TP_    =  0,   // Gibbs energy minimization G(T,P)
-    A_TV_    =  1,   // Helmholts energy minimization A(T,V)
-    U_SV_    =  2,   // isochoric-isentropicor internal energy at isochoric conditions U(S,V)
-    H_PS_    =  3,   // isobaric-isentropic or enthalpy H(P,S)
-    _S_PH_   =  4,   // negative entropy at isobaric conditions and fixed enthalpy -S(P,H)
-    _S_UV_   =  5    // negative entropy at isochoric conditions and fixed internal energy -S(P,H)
-
-} NUM_POTENTIALS;
 
 typedef enum {  // Field index into outField structure
     f_pa_PE = 0,  f_PV,  f_PSOL,  f_PAalp,  f_PSigm,

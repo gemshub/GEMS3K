@@ -35,32 +35,11 @@ const double bar_to_Pa = 1e5,
 m3_to_cm3 = 1e6,
 kg_to_g = 1e3;
 
-
-const BASE_PARAM pa_p_ =
-{    // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
-     2,  /* PC */  2,     /* PD */   -5,   /* PRD */
-     1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
-     0, /* DT */     30000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
-     1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
-     1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
-     1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
-     1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
-     1e-6, /* DFYs, */  1e-17,  /* DB */   1.,   /* AG */
-     0.,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-     1e-3, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
-     1e-13,  /* ScMin, */  1e-33, /* DcMin, */   1e-20, /* PhMin, */
-     1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
-     1e-10,  /* DKIN  */ 0,  /* tprn */
-}; // BASE_PARAM
-
 // New --------------------------------------------------------------------
 
 // Constructor of the class instance in memory for standalone GEMS3K or coupled program
 TSolModMulti::TSolModMulti()
 {
-    pa_standalone.reset( new BASE_PARAM() );
-    *pa_standalone = pa_p_;
-
     pmp = &pm;
     pm.errorCode[0] ='\0';
     pm.errorBuf[0] ='\0';
@@ -609,7 +588,7 @@ void TSolModMulti::MultiConstInit() // from MultiRemake
     pm.FI1s = 0;
     pm.FI1a = 0;
     pm.ITF = 0; pm.ITG = 0;
-    pm.PD = base_param()->PD;
+    //pm.PD__ = base_param()->PD;
     pm.Ec = pm.K2 = pm.MK = 0;
     pm.W1 = 0;
     pm.is = 0;
@@ -619,7 +598,7 @@ void TSolModMulti::MultiConstInit() // from MultiRemake
     pm.lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
     pm.logXw = -16.;
     pm.logYFk = -9.;
-    pm.DXM = base_param()->DK;
+    //pm.DXM__ = base_param()->DK;
 
     //  ???????
     pm.FX = 7777777.;
@@ -630,7 +609,7 @@ void TSolModMulti::MultiConstInit() // from MultiRemake
     pm.FitVar[4] = 1.0;
 
     // from multiConstInit_PN();
-    pm.PZ = base_param()->DW;  // in IPM
+    //pm.PZ__ = base_param()->DW;  // in IPM
     //  pm.FitVar[0] = 0.0640000030398369;
 }
 

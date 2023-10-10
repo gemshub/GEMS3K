@@ -83,11 +83,6 @@ void TSolModMulti::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
 /// Writing structure MULTI ( free format file  )
 void TSolModMulti::to_text_file( const char *path, bool append )
 {
-    //static values
-    char PAalp;
-    char PSigm;
-    get_PAalp_PSigm( PAalp, PSigm);
-
     std::ios::openmode mod = std::ios::out;
     if( append )
         mod = std::ios::out|std::ios::app;
@@ -103,8 +98,8 @@ void TSolModMulti::to_text_file( const char *path, bool append )
     prar.writeComment( true, char_array_to_string(pm.stkey, EQ_RKLEN)+"\n" );
     //  TProfil::pm->pa.p.write(ff);
 
-    prar.writeArray( "Short_PARAM",  &base_param()->PC, 10L );
-    prar.writeArray( "Double_PARAM",  &base_param()->DG, 28L );
+    //prar.writeArray( "Short_PARAM",  &base_param()->PC, 10L );
+    //prar.writeArray( "Double_PARAM",  &base_param()->DG, 28L );
     prar.writeArray( "Short_Const",  &pm.N, 39L );
     prar.writeArray(  "Double_Const",  &pm.TC, 53, 20 );
     // prar.writeArray(  "Add_Double_Const",  &pm.XwMinM, 12, 20 );
@@ -118,7 +113,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
     //dynamic values
 
     // Part 1
-    /* need  always to alloc vectors */
     prar.writeArray(  "L1", pm.L1,  pm.FI);
     prar.writeArray(  "Vol", pm.Vol,  pm.L);
     prar.writeArray(  "Pparc", pm.Pparc,  pm.L);
@@ -132,7 +126,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
     prar.writeArray(  "B", pm.B,  pm.N);
     prar.writeArray(  "X", pm.X,  pm.L);
     prar.writeArray(  "YOF", pm.YOF,  pm.FI);
-
     prar.writeArray(  "lnGmM", pm.lnGmM,  pm.L);
     prar.writeArray(  "fDQF", pm.fDQF,  pm.L);
     prar.writeArray(  "FVOL", pm.FVOL,  pm.FI);
@@ -208,13 +201,6 @@ void TSolModMulti::to_text_file( const char *path, bool append )
     prar.writeArray(  "CPh", &pm.CPh[0][0], pm.FIs*MIXPHPROPS);
     prar.writeArray(  "APh", &pm.APh[0][0], pm.FIs*MIXPHPROPS);
     prar.writeArray(  "UPh", &pm.UPh[0][0], pm.FIs*MIXPHPROPS);
-
-}
-
-void TSolModMulti::get_PAalp_PSigm(char& PAalp, char& PSigm)
-{
-    PAalp = PAalp_;
-    PSigm = PSigm_;
 }
 
 void TSolModMulti::alloc_IPx( long int LsIPxSum )

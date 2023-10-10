@@ -1,3 +1,29 @@
+//-------------------------------------------------------------------
+/// \file solmodcalc.h
+/// Declaration of the SolModCalc class - c++ API for phase models
+/// Decorator for TSolMod and derived classes implementing built-in models
+/// of mixing in fluid, liquid, aqueous, and solid-solution phases
+//
+// Copyright (c) 2023 S.Dmytriyeva
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
+//
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
+//
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
+//-------------------------------------------------------------------
+//
 #ifndef SOLMODCALC_H
 #define SOLMODCALC_H
 
@@ -16,6 +42,8 @@ struct AddSolutionData {
     double *arX;
 };
 
+/// Decorator for TSolMod and derived classes implementing built-in models of mixing
+/// in fluid, liquid, aqueous, and solid-solution phases
 class SolModCalc
 {
 
@@ -28,7 +56,7 @@ public:
 
     /// Code of the mixing model
     char modCode() const {
-      return mod_code;
+        return mod_code;
     }
 
     /// Call for calculation of temperature and pressure correction
@@ -234,7 +262,8 @@ protected:
     void SolMod_create(SolutionData &sd, const AddSolutionData &addsd);
     bool check_mode(char ModCode);
     std::map<std::string, double> property2map(double* dcs_size_array);
-    void map2property(const std::map<std::string, double>& dsc_name_map, double* dcs_size_array, double def_value);
+    void map2property(const std::map<std::string, double>& dsc_name_map,
+                      double* dcs_size_array, double def_value);
 };
 
 #endif // SOLMODCALC_H
