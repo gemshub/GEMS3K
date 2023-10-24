@@ -3,7 +3,7 @@
  
 TEMPLATE = app
 LANGUAGE = C++
-TARGET = solmod4rkt
+TARGET = solmod4rkt_test
 VERSION = 3.4.6
 
 CONFIG -= qt
@@ -41,11 +41,7 @@ INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 
 contains(DEFINES, USE_THERMOFUN) {
-#ThermoFun_CPP   =  ../ThermoFun
-#ThermoFun_H     =   $$ThermoFun_CPP
-#DEPENDPATH += $$ThermoFun_H
-#INCLUDEPATH += $$ThermoFun_H
-#include($$ThermoFun_CPP/ThermoFun.pri)
+
 LIBS += -lThermoFun -lChemicalFun
 
 } ## end USE_THERMOFUN
@@ -77,8 +73,8 @@ HEADERS	 +=         $$GEMS3K_H/verror.h  \
                     $$GEMS3K_H/v_service.h \
                     $$GEMS3K_H/jsonconfig.h \
                     $$GEMS3K_H/datach_api.h \
-                    solmodcalc.h \
-                    tsolmod_multi.h
+                    solmodengine.h \
+                    solmodfactory.h
 
 SOURCES	  +=          $$GEMS3K_CPP/gdatastream.cpp  \
                       $$GEMS3K_CPP/num_methods.cpp \
@@ -99,10 +95,9 @@ SOURCES	  +=          $$GEMS3K_CPP/gdatastream.cpp  \
                       $$GEMS3K_CPP/jsonconfig.cpp \
                       $$GEMS3K_CPP/datach_api.cpp \
                       $$GEMS3K_CPP/datach_formats.cpp \
-                      solmodcalc.cpp \
-                      tsolmod4rkt.cpp \
-                      tsolmod_multi_add.cpp \
-                      tsolmod_multi_alloc.cpp \
-                      tsolmod_multi_file.cpp \
-                      tsolmod_multi_format.cpp
+                      solmodengine.cpp \
+                      solmodfactory.cpp \
+                      solmodfactory_alloc.cpp \
+                      solmodfactory_format.cpp \
+                      tsolmod4rkt_test.cpp
 

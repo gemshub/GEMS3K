@@ -1,6 +1,7 @@
 //-------------------------------------------------------------------
-/// \file solmodcalc.h
-/// Implementation of the SolModCalc class - c++ API for phase models
+/// \file solmodengine.cpp
+///
+/// Implementation of the SolModEngine class - c++ API for phase models
 /// Decorator for TSolMod and derived classes implementing built-in models
 /// of mixing in fluid, liquid, aqueous, and solid-solution phases
 //
@@ -24,12 +25,12 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#include "solmodcalc.h"
+
+#include "solmodengine.h"
 #include "v_service.h"
 #include "verror.h"
 
-
-SolModCalc::SolModCalc(long k, long jb, SolutionData &sd, const AddSolutionData &addsd):
+SolModEngine::SolModEngine(long k, long jb, SolutionData &sd, const AddSolutionData &addsd):
     mod_code(sd.Mod_Code), phase_name(sd.phaseName),
     phase_ndx(k), dc_ndx(jb), dc_num(sd.NSpecies)
 {
@@ -55,7 +56,7 @@ SolModCalc::SolModCalc(long k, long jb, SolutionData &sd, const AddSolutionData 
     to_json_file(std::string("solmod_")+std::to_string(phase_ndx)+".json");
 }
 
-SolModCalc::SolModCalc(long k, long jb, const std::string &aphase):
+SolModEngine::SolModEngine(long k, long jb, const std::string &aphase):
     mod_code(' '), phase_name(aphase),
     phase_ndx(k), dc_ndx(jb), dc_num(1)
 {
@@ -79,14 +80,14 @@ SolModCalc::SolModCalc(long k, long jb, const std::string &aphase):
     model_name = "undefined";
 }
 
-void SolModCalc::SolModParPT()
+void SolModEngine::SolModParPT()
 {
     if(check_mode(mod_code) && solmod_task) {
         solmod_task->PTparam();
     }
 }
 
-void SolModCalc::SolModActCoeff()
+void SolModEngine::SolModActCoeff()
 {
     /// ???? If no clean illegal result
     if(arlnGam) {
@@ -98,7 +99,7 @@ void SolModCalc::SolModActCoeff()
     }
 }
 
-std::map<std::string, double> SolModCalc::SolModExcessProp()
+std::map<std::string, double> SolModEngine::SolModExcessProp()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -122,7 +123,7 @@ std::map<std::string, double> SolModCalc::SolModExcessProp()
     return ex_map;
 }
 
-std::map<std::string, double> SolModCalc::SolModIdealProp()
+std::map<std::string, double> SolModEngine::SolModIdealProp()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -147,7 +148,7 @@ std::map<std::string, double> SolModCalc::SolModIdealProp()
     return ex_map;
 }
 
-std::map<std::string, double> SolModCalc::SolModDarkenProp()
+std::map<std::string, double> SolModEngine::SolModDarkenProp()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -169,7 +170,7 @@ std::map<std::string, double> SolModCalc::SolModDarkenProp()
     return ex_map;
 }
 
-std::map<std::string, double> SolModCalc::SolModStandProp()
+std::map<std::string, double> SolModEngine::SolModStandProp()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -194,19 +195,19 @@ std::map<std::string, double> SolModCalc::SolModStandProp()
     return ex_map;
 }
 
-void SolModCalc::Get_lnGamma(double *lngamma)
+void SolModEngine::Get_lnGamma(double *lngamma)
 {
     if(solmod_task) {
         solmod_task->Get_lnGamma(lngamma);
     }
 }
 
-std::map<std::string, double> SolModCalc::GetlnGamma()
+std::map<std::string, double> SolModEngine::GetlnGamma()
 {
     return property2map(arlnGam);
 }
 
-void SolModCalc::Get_lnGamConf(double *lnGamConf)
+void SolModEngine::Get_lnGamConf(double *lnGamConf)
 {
     if(arlnCnft) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -215,12 +216,12 @@ void SolModCalc::Get_lnGamConf(double *lnGamConf)
     }
 }
 
-std::map<std::string, double> SolModCalc::GetlnGamConf()
+std::map<std::string, double> SolModEngine::GetlnGamConf()
 {
     return property2map(arlnCnft);
 }
 
-void SolModCalc::Get_lnGamRecip(double *lnGamRecip)
+void SolModEngine::Get_lnGamRecip(double *lnGamRecip)
 {
     if(arlnRcpt) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -229,12 +230,12 @@ void SolModCalc::Get_lnGamRecip(double *lnGamRecip)
     }
 }
 
-std::map<std::string, double> SolModCalc::GetlnGamRecip()
+std::map<std::string, double> SolModEngine::GetlnGamRecip()
 {
     return property2map(arlnRcpt);
 }
 
-void SolModCalc::Get_lnGamEx(double *lnGamEx)
+void SolModEngine::Get_lnGamEx(double *lnGamEx)
 {
     if(arlnExet) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -243,12 +244,12 @@ void SolModCalc::Get_lnGamEx(double *lnGamEx)
     }
 }
 
-std::map<std::string, double> SolModCalc::GetlnGamEx()
+std::map<std::string, double> SolModEngine::GetlnGamEx()
 {
     return property2map(arlnExet);
 }
 
-void SolModCalc::Get_lnGamDQF(double *lnGamDQF)
+void SolModEngine::Get_lnGamDQF(double *lnGamDQF)
 {
     if(arlnDQFt) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -257,12 +258,12 @@ void SolModCalc::Get_lnGamDQF(double *lnGamDQF)
     }
 }
 
-std::map<std::string, double> SolModCalc::GetlnGamDQF()
+std::map<std::string, double> SolModEngine::GetlnGamDQF()
 {
     return property2map(arlnDQFt);
 }
 
-void SolModCalc::Get_IncrementstoG0(double *aGEX)
+void SolModEngine::Get_IncrementstoG0(double *aGEX)
 {
     if(arGEX) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -271,12 +272,12 @@ void SolModCalc::Get_IncrementstoG0(double *aGEX)
     }
 }
 
-std::map<std::string, double> SolModCalc::GetIncrementstoG0()
+std::map<std::string, double> SolModEngine::GetIncrementstoG0()
 {
     return property2map(arGEX);
 }
 
-void SolModCalc::Get_MolarVolumes(double *aVol)
+void SolModEngine::Get_MolarVolumes(double *aVol)
 {
     if(arVol) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -285,12 +286,12 @@ void SolModCalc::Get_MolarVolumes(double *aVol)
     }
 }
 
-std::map<std::string, double> SolModCalc::GetMolarVolumes()
+std::map<std::string, double> SolModEngine::GetMolarVolumes()
 {
     return property2map(arVol);
 }
 
-double SolModCalc::GetPhaseVolume()
+double SolModEngine::GetPhaseVolume()
 {
     if(aphVOL) {
         return *aphVOL;
@@ -300,7 +301,7 @@ double SolModCalc::GetPhaseVolume()
     }
 }
 
-void SolModCalc::Get_PartialPressures(double *aPparc)
+void SolModEngine::Get_PartialPressures(double *aPparc)
 {
     if(arPparc) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -309,12 +310,12 @@ void SolModCalc::Get_PartialPressures(double *aPparc)
     }
 }
 
-std::map<std::string, double> SolModCalc::GetPartialPressures()
+std::map<std::string, double> SolModEngine::GetPartialPressures()
 {
     return property2map(arPparc);
 }
 
-void SolModCalc::Set_MoleFractionsWx(double *aWx)
+void SolModEngine::Set_MoleFractionsWx(double *aWx)
 {
     if(arWx) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -323,14 +324,14 @@ void SolModCalc::Set_MoleFractionsWx(double *aWx)
     }
 }
 
-void SolModCalc::SetMoleFractionsWx(const std::map<std::string, double> &awx_map, double defwx)
+void SolModEngine::SetMoleFractionsWx(const std::map<std::string, double> &awx_map, double defwx)
 {
     if(arWx) {
         map2property(awx_map, arWx, defwx);
     }
 }
 
-void SolModCalc::Set_SpeciesMolality(double *aM)
+void SolModEngine::Set_SpeciesMolality(double *aM)
 {
     if(arM) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -339,14 +340,14 @@ void SolModCalc::Set_SpeciesMolality(double *aM)
     }
 }
 
-void SolModCalc::SetSpeciesMolality(const std::map<std::string, double> &val_map, double def_val)
+void SolModEngine::SetSpeciesMolality(const std::map<std::string, double> &val_map, double def_val)
 {
     if(arM) {
         map2property(val_map, arM, def_val);
     }
 }
 
-void SolModCalc::Set_DCquantities(double *aX)
+void SolModEngine::Set_DCquantities(double *aX)
 {
     if(arX) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -355,14 +356,14 @@ void SolModCalc::Set_DCquantities(double *aX)
     }
 }
 
-void SolModCalc::SetDCquantities(const std::map<std::string, double> &val_map, double def_val)
+void SolModEngine::SetDCquantities(const std::map<std::string, double> &val_map, double def_val)
 {
     if(arX) {
         map2property(val_map, arX, def_val);
     }
 }
 
-void SolModCalc::SetPhaseMasses(double aFWGT)
+void SolModEngine::SetPhaseMasses(double aFWGT)
 {
     if(arFWGT) {
         *arFWGT = aFWGT;
@@ -373,7 +374,7 @@ void SolModCalc::SetPhaseMasses(double aFWGT)
 
 // Wrapper calls for creating multi-component mixing models for phases
 // using  TSolMod class. Now including multi-site ideal and scripted models
-void SolModCalc::SolMod_create(SolutionData& sd, const AddSolutionData& addsd)
+void SolModEngine::SolMod_create(SolutionData& sd, const AddSolutionData& addsd)
 {
     model_name.clear();
     TSolMod* mySM = nullptr;
@@ -598,7 +599,7 @@ void SolModCalc::SolMod_create(SolutionData& sd, const AddSolutionData& addsd)
     solmod_task.reset(mySM);
 }
 
-bool SolModCalc::check_mode(char ModCode)
+bool SolModEngine::check_mode(char ModCode)
 {
     // Extended constructor to connect to params, coeffs, and mole fractions
     switch( ModCode )
@@ -627,7 +628,7 @@ bool SolModCalc::check_mode(char ModCode)
     return false;
 }
 
-std::map<std::string, double> SolModCalc::property2map(double *dcs_size_array)
+std::map<std::string, double> SolModEngine::property2map(double *dcs_size_array)
 {
     std::map<std::string, double> dsc_name_map;
     if(!dcs_size_array) { // nullptr
@@ -639,7 +640,7 @@ std::map<std::string, double> SolModCalc::property2map(double *dcs_size_array)
     return dsc_name_map;
 }
 
-void SolModCalc::map2property(const std::map<std::string, double> &dsc_name_map, double *dcs_size_array, double def_value)
+void SolModEngine::map2property(const std::map<std::string, double> &dsc_name_map, double *dcs_size_array, double def_value)
 {
     if(!dcs_size_array) { // nullptr
         return;

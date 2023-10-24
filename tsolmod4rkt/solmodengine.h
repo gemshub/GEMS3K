@@ -1,6 +1,7 @@
 //-------------------------------------------------------------------
-/// \file solmodcalc.h
-/// Declaration of the SolModCalc class - c++ API for phase models
+/// \file solmodengine.h
+///
+/// Declaration of the SolModEngine class - c++ API for phase models
 /// Decorator for TSolMod and derived classes implementing built-in models
 /// of mixing in fluid, liquid, aqueous, and solid-solution phases
 //
@@ -24,8 +25,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifndef SOLMODCALC_H
-#define SOLMODCALC_H
+#ifndef SOLMODENGINE_H
+#define SOLMODENGINE_H
 
 #include <map>
 #include "s_solmod.h"
@@ -44,18 +45,18 @@ struct AddSolutionData {
 
 /// Decorator for TSolMod and derived classes implementing built-in models of mixing
 /// in fluid, liquid, aqueous, and solid-solution phases
-class SolModCalc
+class SolModEngine
 {
 
 public:
 
     /// The constructor
-    SolModCalc(long int k, long int jb, SolutionData& sd, const AddSolutionData& addsd);
+    SolModEngine(long int k, long int jb, SolutionData& sd, const AddSolutionData& addsd);
     /// The empty constructor
-    explicit SolModCalc(long int k=0, long int jb=0, const std::string& phase_name="undefined");
+    explicit SolModEngine(long int k=0, long int jb=0, const std::string& phase_name="undefined");
 
     /// Code of the mixing model
-    char modCode() const {
+    char model_code() const {
         return mod_code;
     }
 
@@ -266,4 +267,4 @@ protected:
                       double* dcs_size_array, double def_value);
 };
 
-#endif // SOLMODCALC_H
+#endif // SOLMODENGINE_H

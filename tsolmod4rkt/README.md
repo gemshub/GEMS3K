@@ -19,14 +19,8 @@ sudo make install
 ## C++ API
 
 ```cpp
-
-        std::shared_ptr<TSolModMulti> multi(new TSolModMulti());
-        if( multi->GEM_init(input_system_file_list_name) )  {
-            std::cout << "error occured during reading the files" << std::endl;
-            return 1;
-        }
-
-        auto& phase = multi->get_phase("Plagioclase");
+        SolModFactory task(input_system_file_list_name);
+        auto& phase = task.get_phase("Plagioclase");
         std::map<std::string, double> wx = {
             {"Albite", 0.186993363098213},
             {"Anorthite", 3.45294711467247e-09},
@@ -46,12 +40,13 @@ Added  Python API for using tsolmod4rkt (TSolMod) activity models from Reaktoro 
 
 from solmod4rkt import *
 
-task = TSolModMulti()
-task.GEM_init("Thermo-time-in/series1-dat.lst")
+task = SolModFactory("Thermo-time-in/series1-dat.lst")
 
-phase = task.get_phase("Plagioclase");
+phase = task.solution_phase("Plagioclase");
 wx = {'Albite': 0.186993363098213, 'Anorthite': 3.45294711467247e-09, 'Sanidine': 0.81300663344884}
 phase.SetMoleFractionsWx(wx, 0.)
+print(phase)
+
 phase.SolModActCoeff()
 ln_gamma = phase.GetlnGamma()
 print("\nln_gamma: ", ln_gamma)

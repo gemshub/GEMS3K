@@ -22,8 +22,8 @@ set(SOLMOD_HEADER_FILES
                     ${CMAKE_SOURCE_DIR}/GEMS3K/v_service.h
                     ${CMAKE_SOURCE_DIR}/GEMS3K/jsonconfig.h
                     ${CMAKE_SOURCE_DIR}/GEMS3K/datach_api.h
-                    solmodcalc.h
-                    tsolmod_multi.h )
+                    solmodengine.h
+                    solmodfactory.h )
 
 
 set(SOLMOD_SOURCE_FILES
@@ -46,11 +46,10 @@ set(SOLMOD_SOURCE_FILES
                       ${CMAKE_SOURCE_DIR}/GEMS3K/jsonconfig.cpp
                       ${CMAKE_SOURCE_DIR}/GEMS3K/datach_api.cpp
                       ${CMAKE_SOURCE_DIR}/GEMS3K/datach_formats.cpp
-                      solmodcalc.cpp
-                      tsolmod_multi_add.cpp
-                      tsolmod_multi_alloc.cpp
-                      tsolmod_multi_file.cpp
-                      tsolmod_multi_format.cpp )
+                      solmodengine.cpp
+                      solmodfactory.cpp
+                      solmodfactory_alloc.cpp
+                      solmodfactory_format.cpp )
 
 
 
@@ -114,11 +113,11 @@ install(FILES ${SOLMOD_HEADER_FILES}
 
 # Test application
 find_package(Threads REQUIRED)
-add_executable(tsolmod4rkt-app tsolmod4rkt.cpp)
+add_executable(tsolmod4rkt_test tsolmod4rkt_test.cpp)
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    target_link_libraries(tsolmod4rkt-app PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
+    target_link_libraries(tsolmod4rkt_test PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
 else()
-    target_link_libraries(tsolmod4rkt-app PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
+    target_link_libraries(tsolmod4rkt_test PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
 endif()
 
 #install(TARGETS tsolmod4rkt-app DESTINATION bin)

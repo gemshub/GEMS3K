@@ -1,5 +1,6 @@
 //-------------------------------------------------------------------
-/// \file ms_multi_alloc.cpp
+/// \file solmodfactory_alloc.cpp
+///
 /// Allocation of coping IPM internal structure
 //
 // Copyright (c) 2023 S.Dmytriyeva, D.Kulik
@@ -22,12 +23,12 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include "tsolmod_multi.h"
+#include "solmodfactory.h"
 #include "v_service.h"
 #include "verror.h"
 
 /// Realloc dynamic memory
-void TSolModMulti::multi_realloc()
+void SolModFactory::multi_realloc()
 {
     long int ii, jj ;
     if( pm.N < 2 || pm.L < 2 || pm.FI < 1 )
@@ -253,7 +254,7 @@ void TSolModMulti::multi_realloc()
 }
 
 /// Free of dynamic memory
-void TSolModMulti::multi_kill()
+void SolModFactory::multi_kill()
 {
     // Part 1
     // need  always to alloc vectors
@@ -330,7 +331,7 @@ void TSolModMulti::multi_kill()
 }
 
 /// Set default information
-void TSolModMulti::set_def( int )
+void SolModFactory::set_def( int )
 {
     //mem_cpy( &pm.PunE, "jjbC", 4 );
     fillValue( pm.stkey, '\0', EQ_RKLEN);
@@ -495,6 +496,54 @@ void TSolModMulti::set_def( int )
     pm.lnExet   = 0;
     pm.lnCnft   = 0;
     pm.CTerms   = 0;
+}
+
+void SolModFactory::alloc_IPx( long int LsIPxSum )
+{
+    if( pm.IPx ) delete[] pm.IPx;
+    pm.IPx = new long int[ LsIPxSum];
+}
+
+void SolModFactory::alloc_PMc( long int LsModSum )
+{
+    if( pm.PMc ) delete[] pm.PMc;
+    pm.PMc = new double[LsModSum];
+}
+
+void SolModFactory::alloc_DMc( long int LsMdcSum )
+{
+    if( pm.DMc ) delete[] pm.DMc;
+    pm.DMc = new double[LsMdcSum];
+}
+
+void SolModFactory::alloc_MoiSN( long int LsMsnSum )
+{
+    if(pm.MoiSN) delete[] pm.MoiSN;
+    pm.MoiSN = new double[LsMsnSum];
+}
+
+void SolModFactory::alloc_SitFr( long int LsSitSum )
+{
+    if(pm.SitFr) delete[] pm.SitFr;
+    pm.SitFr = new double[LsSitSum];
+}
+
+void SolModFactory::alloc_DQFc( long int DQFcSum )
+{
+    if(pm.DQFc) delete[] pm.DQFc;
+    pm.DQFc = new double[DQFcSum];
+}
+
+void SolModFactory::alloc_PhLin( long int PhLinSum )
+{
+    if(pm.PhLin) delete[] pm.PhLin;
+    pm.PhLin = new long int[PhLinSum][2];
+}
+
+void SolModFactory::alloc_lPhc( long int lPhcSum )
+{
+    if(pm.lPhc) delete[] pm.lPhc;
+    pm.lPhc = new double[lPhcSum];
 }
 
 //--------------------- end of tsolmod_multi_alloc.cpp ---------------------------

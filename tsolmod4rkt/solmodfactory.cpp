@@ -1,7 +1,6 @@
 //-------------------------------------------------------------------
-// $Id$
-//
-/// \file tsolmod_multi_add.cpp
+/// \file solmodfactory.cpp
+///
 /// Addition functions from TMultiBase class
 //
 // Copyright (c) 2023 S.Dmytriyeva,D.Kulik
@@ -24,7 +23,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include "tsolmod_multi.h"
+#include "solmodfactory.h"
 #include "jsonconfig.h"
 #include "datach_api.h"
 #include "num_methods.h"
@@ -38,7 +37,28 @@ kg_to_g = 1e3;
 // New --------------------------------------------------------------------
 
 // Constructor of the class instance in memory for standalone GEMS3K or coupled program
-TSolModMulti::TSolModMulti()
+SolModFactory::SolModFactory(const std::string &ipmfiles_lst_name)
+{
+    alloc_main();
+    // Initialization of GEMS3K internal data by reading files
+    if( GEM_init(ipmfiles_lst_name) )
+    {
+        Error(ipmfiles_lst_name, "error occured during reading the files");
+    }
+}
+
+SolModFactory::SolModFactory(const std::string &dch_json, const std::string &ipm_json,
+                             const std::string &dbr_json, const std::string &fun_json)
+{
+    alloc_main();
+    // Initialization of GEMS3K internal data by reading files
+    if( GEM_init(dch_json, ipm_json, dbr_json, fun_json) )
+    {
+        Error("Init", "error occured during reading the strings");
+    }
+}
+
+void SolModFactory::alloc_main()
 {
     pmp = &pm;
     pm.errorCode[0] ='\0';
@@ -57,13 +77,13 @@ TSolModMulti::TSolModMulti()
     load_thermodynamic_data = false;
 }
 
-TSolModMulti::~TSolModMulti()
+SolModFactory::~SolModFactory()
 {
     clear_ThermoEngine();
     freeMemory();
 }
 
-void TSolModMulti::allocMemory()
+void SolModFactory::allocMemory()
 {
     // memory allocation for data bridge structures
     CSD = new DATACH;
@@ -72,7 +92,7 @@ void TSolModMulti::allocMemory()
     dbr_dch_api::databr_reset(CNode, 2);
 }
 
-void TSolModMulti::freeMemory()
+void SolModFactory::freeMemory()
 {
     dbr_dch_api::databr_free_internal(CNode);
     delete CNode;
@@ -83,7 +103,7 @@ void TSolModMulti::freeMemory()
 }
 
 //-------------------------------------------------------------------
-long int  TSolModMulti::GEM_init( const std::string& ipmfiles_lst_name )
+long int  SolModFactory::GEM_init( const std::string& ipmfiles_lst_name )
 {
     clearipmLogError();
     clear_ThermoEngine();
@@ -161,8 +181,7 @@ long int  TSolModMulti::GEM_init( const std::string& ipmfiles_lst_name )
     }
     catch(...)
     {
-        ipmlog_error = "unknown exception";
-        return -1;
+        Error(ipmfiles_lst_name, "unknown exception");
     }
 
     if( !ipmfiles_lst_name.empty() ) {
@@ -174,8 +193,8 @@ long int  TSolModMulti::GEM_init( const std::string& ipmfiles_lst_name )
     return 1;
 }
 
-long int  TSolModMulti::GEM_init( const std::string& dch_json, const std::string& ipm_json,
-                                  const std::string& dbr_json, const std::string& fun_json)
+long int  SolModFactory::GEM_init( const std::string& dch_json, const std::string& ipm_json,
+                                   const std::string& dbr_json, const std::string& fun_json)
 {
     load_thermodynamic_data = false; // need load thermo
     clearipmLogError();
@@ -243,8 +262,7 @@ long int  TSolModMulti::GEM_init( const std::string& dch_json, const std::string
     }
     catch(...)
     {
-        ipmlog_error = "unknown exception";
-        return -1;
+        Error("GEM_init", "unknown exception");
     }
     if( !ipmlog_error.empty() ) {
         TSolMod::solmod_logger->error("GEM_init error: {}", ipmlog_error);
@@ -253,7 +271,7 @@ long int  TSolModMulti::GEM_init( const std::string& dch_json, const std::string
 }
 
 
-void TSolModMulti::UpdateThermodynamic(double TK, double PPa)
+void SolModFactory::UpdateThermodynamic(double TK, double PPa)
 {
     LoadThermodynamicData(TK, PPa);
     for(auto& phase_model: phase_models) {
@@ -261,30 +279,30 @@ void TSolModMulti::UpdateThermodynamic(double TK, double PPa)
     }
 }
 
-SolModCalc &TSolModMulti::get_phase(std::size_t idx)
+SolModEngine &SolModFactory::solution_phase(std::size_t idx)
 {
-    ErrorIf( idx>=phase_models.size(), "TSolModMulti", "array index " + std::to_string(idx) + " is out of range" );
+    ErrorIf( idx>=phase_models.size(), "SolModFactory", "array index " + std::to_string(idx) + " is out of range" );
     return phase_models[idx];
 }
 
-SolModCalc &TSolModMulti::get_phase(const std::string &name)
+SolModEngine &SolModFactory::solution_phase(const std::string &name)
 {
     for(size_t kk=0; kk<phase_names.size(); ++kk ) {
         if(phase_names[kk] == name) {
-            return  get_phase(kk);
+            return  solution_phase(kk);
         }
     }
-    Error( "TSolModMulti", "Phase '" + name + "' not found" );
+    Error( "SolModFactory", "Phase '" + name + "' not found" );
 }
 
 // Calculation by IPM (preparing for calculation, unpacking data) In IPM
-void TSolModMulti::InitalizeGEM_IPM_Data() // Reset internal data formerly MultiInit()
+void SolModFactory::InitalizeGEM_IPM_Data() // Reset internal data formerly MultiInit()
 {
     MultiConstInit();
     LoadThermodynamicData(CNode->TK, CNode->P); // Loading thermodynamic data into MULTI structure
 }
 
-void TSolModMulti::InitalizeTSolMod()
+void SolModFactory::InitalizeTSolMod()
 {
     phase_models.clear();
     phase_names.clear();
@@ -309,7 +327,7 @@ void TSolModMulti::InitalizeTSolMod()
                                 pm.PHC[k] == PH_FLUID ))
         {
             // empty model
-            phase_models.push_back(SolModCalc(k, jb, phase_name));
+            phase_models.push_back(SolModEngine(k, jb, phase_name));
             continue;
         }
         // Indexes for extracting data from IPx, PMc and DMc arrays
@@ -393,14 +411,14 @@ void TSolModMulti::InitalizeTSolMod()
             addsd.arFWGT = pm.FWGT+k;
             addsd.arX = pm.X+jb;
 
-            phase_models.push_back(SolModCalc(k, jb, sd, addsd));
+            phase_models.push_back(SolModEngine(k, jb, sd, addsd));
             // new solution models (TW, DK 2007)
             phase_models.back().SolModParPT();
             break;
         }
         default:
             // empty model
-            phase_models.push_back(SolModCalc(k, jb, phase_name));
+            phase_models.push_back(SolModEngine(k, jb, phase_name));
             break;
         }
         // move pointers
@@ -412,7 +430,7 @@ void TSolModMulti::InitalizeTSolMod()
 
 // Changed ----------------------------------------------------------------
 
-void TSolModMulti::clear_ThermoEngine()
+void SolModFactory::clear_ThermoEngine()
 {
 #ifdef USE_THERMOFUN
     // clear previous
@@ -421,7 +439,7 @@ void TSolModMulti::clear_ThermoEngine()
 #endif
 }
 
-bool TSolModMulti::load_ThermoEngine(const std::string &thermo_file_or_string)
+bool SolModFactory::load_ThermoEngine(const std::string &thermo_file_or_string)
 {
     if(thermo_file_or_string.find("\"elements\"")!=std::string::npos) {
         // input string
@@ -446,7 +464,7 @@ bool TSolModMulti::load_ThermoEngine(const std::string &thermo_file_or_string)
 #endif
 }
 
-bool TSolModMulti::load_all_thermodynamic_from_thermo(double TK, double PPa)
+bool SolModFactory::load_all_thermodynamic_from_thermo(double TK, double PPa)
 {
 #ifdef USE_THERMOFUN
     if( !thermo_engine.get() )
@@ -582,7 +600,7 @@ bool TSolModMulti::load_all_thermodynamic_from_thermo(double TK, double PPa)
 
 /// Setup/copy flags and thresholds for numeric modules to TMulti structure.
 /// Do it before calculations
-void TSolModMulti::MultiConstInit() // from MultiRemake
+void SolModFactory::MultiConstInit() // from MultiRemake
 {
     pm.FI1 = 0;
     pm.FI1s = 0;
@@ -614,7 +632,7 @@ void TSolModMulti::MultiConstInit() // from MultiRemake
 }
 
 /// Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
-void TSolModMulti::LoadThermodynamicData(double TK, double PPa)
+void SolModFactory::LoadThermodynamicData(double TK, double PPa)
 {
     // try generate thermodynamic data from ThermoEngine
     if( !load_all_thermodynamic_from_thermo( TK, PPa ))
@@ -626,7 +644,7 @@ void TSolModMulti::LoadThermodynamicData(double TK, double PPa)
 
 
 /// Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
-void TSolModMulti::load_all_thermodynamic_from_grid(double TK, double PPa )
+void SolModFactory::load_all_thermodynamic_from_grid(double TK, double PPa )
 {
     std::string error_msg;
     long int j, jj, k, xTP, jb, je=0;
@@ -795,7 +813,7 @@ void TSolModMulti::load_all_thermodynamic_from_grid(double TK, double PPa )
 // Copy -------------------------------------------------------------------
 
 /// Converting DC class codes into generic internal codes of IPM
-void TSolModMulti::ConvertDCC()
+void SolModFactory::ConvertDCC()
 {
     long int i, j, k, iRet=0;
     char DCCW;
@@ -882,7 +900,7 @@ NEXT_PHASE:
 /// Conversion of g(T,P) value for DCs into the uniform cj scale.
 /// \param k - index of phase, \param j - index DC in phase
 /// \return if error code, returns 777777777.
-double TSolModMulti::ConvertGj_toUniformStandardState(double g0, long int j, long int k)
+double SolModFactory::ConvertGj_toUniformStandardState(double g0, long int j, long int k)
 {
     double G, YOF=0;
 
@@ -959,7 +977,7 @@ double TSolModMulti::ConvertGj_toUniformStandardState(double g0, long int j, lon
 }
 
 /// Get the index of volume IC ("Vv") for the volume balance constraint
-long int TSolModMulti::getXvolume()
+long int SolModFactory::getXvolume()
 {
     long int ii, ret = -1;
     for( ii = pm.N-1; ii>=0; ii--)

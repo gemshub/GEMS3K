@@ -1,13 +1,6 @@
 //--------------------------------------------------------------------
 //
-// Demo test of usage of the standalone TSolMod.
-
-// TNode class implements a simple C/C++ interface of GEMS3K code.
-// It works with DATACH and work DATABR structures and respective
-// DCH (chemical system definition) and DBR (recipe or data bridge)
-// data files. In addition, the program reads an IPM input file which
-// can be used for tuning up numerical controls of GEM IPM-3 algorithm
-// and for setting up the parameters of non-ideal mixing models.
+/// Demo test of usage of the standalone SolModEngine.
 //
 // Copyright (C) D.Kulik, S.Dmytriyeva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
@@ -48,7 +41,7 @@
 #include <memory>
 #include "jsonconfig.h"
 #include "v_service.h"
-#include "tsolmod_multi.h"
+#include "solmodfactory.h"
 
 // Thermo-time-in/series1-dat.lst
 //The simplest case: data exchange using disk files only
@@ -79,26 +72,18 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
         if (argc >= 2 )
             input_system_file_list_name = argv[1];
 
-        // Creates TSolModMulti structure instance accessible through the "multi" pointer
-        std::shared_ptr<TSolModMulti> multi(new TSolModMulti());
-
-        // (1) Initialization of GEMS3K internal data by reading  files
-        //     whose names are given in the input_system_file_list_name
-        if( multi->GEM_init(input_system_file_list_name) )
-        {
-            std::cout << "error occured during reading the files" << std::endl;
-            return 1;
-        }
+        // Initialize SolModFactory
+        SolModFactory task(input_system_file_list_name);
 
         // Trace data after input
-        multi->to_text_file( "AfterRead.txt" );
+        task.to_text_file( "AfterRead.txt" );
 
         // Example using model calculations for task (Thermo-time-in/series1-dat.lst)
         // In future could be test input from dbr file
         std::vector<double> x = { 0.673936901807716, 6.97280484339258e-08, 0.326063028464235 };
         std::vector<double> lngam(3, 0.);
 
-        auto phase = multi->get_phase("Alkali feldspar");
+        auto phase = task.solution_phase("Alkali feldspar");
         phase.Set_MoleFractionsWx(x.data());
 
         phase.SolModActCoeff();
@@ -123,7 +108,7 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
         phase.Get_lnGamma(lngam.data());
         std::cout  << lngam[0] << " "<< lngam[1] << " " << lngam[2] << " " << std::endl;
 
-        auto& phase2 = multi->get_phase("Plagioclase");
+        auto& phase2 = task.solution_phase("Plagioclase");
         std::map<std::string, double> wx = {
             {"Albite", 0.186993363098213},
             {"Anorthite", 3.45294711467247e-09},

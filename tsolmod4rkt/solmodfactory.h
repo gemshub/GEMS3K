@@ -1,5 +1,6 @@
 //-------------------------------------------------------------------
-/// \file tsolmod_multi.h
+/// \file solmodfactory.h
+///
 /// Declaration of subset of TMulti class, configuration, and related functions
 /// based on the IPM work data structure MULTI
 //
@@ -23,12 +24,12 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifndef MS_MULTI_BASE_H
-#define MS_MULTI_BASE_H
+#ifndef SOLMODFACTORY_H
+#define SOLMODFACTORY_H
 
 #include "m_const_base.h"
 #include "gems3k_impex.h"
-#include "solmodcalc.h"
+#include "solmodengine.h"
 #include "gems3k_impex.h"
 #include "datach.h"
 #include "databr.h"
@@ -266,10 +267,66 @@ typedef struct
 } TSOLMOD_MULTI;
 
 // Data of MULTI
-class TSolModMulti
+class SolModFactory
 {
+
+public:
+
+    /// Initialization of GEM IPM2 data structures in coupled RMT-GEM programs
+    ///  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files
+    ///  in key-value, json or binary format. Parameters:
+    ///  ipmfiles_lst_name - name of a text file that contains:
+    ///    " -j | -t |-b <DCH_DAT file name> <IPM_DAT file name> [<>] <dataBR file name>
+    ///    or " -f <DCH_DAT file name> <IPM_DAT file name> <ThermoFun JSON format file> <dataBR file name>
+    ///  dbfiles_lst_name - name of a text file that contains:
+    ///    <dataBR  file name1>, ... , <dataBR file nameN> "
+    ///    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
+    ///    exist in the same directory where the ipmfiles_lst_name file is located.
+    ///    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
+    ///    and must contain valid initial chemical systems (of the same structure
+    ///    as described in the DCH_DAT file) to set up the initial state of the FMT
+    ///    node array.
+    ///  If -t flag or no flag is specified then all data files must be in key-value text
+    ///    (ASCII) format (and file names must have .dat extension);
+    ///  If -j and -f flag is specified then all data files must be in JSON format (and file names
+    ///    must have .json extension);
+    ///  If -f flag is specified then the use of ThermoFun along with GEMS3K in place of the interpolation
+    ///  of lookup arrays for standard thermodynamic data for substances;
+    ///  if -b flag is specified then all data files are assumed to be binary (little-endian)
+    ///    files.
+    SolModFactory(const std::string& ipmfiles_lst_name);
+
+    /// Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module.
+    /// Also reads the input data from the IPM, DCH and one DBR JSON input strings
+    /// (e.g. exported from GEM-Selektor or retrieved from JSON database).
+    /// Parameters:
+    ///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
+    ///  @param ipm_json -  Parameters and settings for GEMS3K IPM-3 algorithm as a json/key-value string
+    ///  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
+    ///  @param fun_json -  ThermoFun data structure as a json string
+    SolModFactory(const std::string& dch_json, const std::string& ipm_json,
+                  const std::string& dbr_json, const std::string& fun_json);
+
+    virtual ~SolModFactory();
+
+    /// Update thermodynamic data according new TK and P
+    void UpdateThermodynamic(double TK, double PPa);
+
+    /// Access to idxs phase model
+    SolModEngine &solution_phase(std::size_t idx);
+    /// Access to phase model by phase name
+    SolModEngine &solution_phase(const std::string& name);
+
+    /// Trace output full internal structure
+    void to_text_file(const char *path, bool append=false);
+
+protected:
+
+    TSOLMOD_MULTI pm;
+    TSOLMOD_MULTI *pmp;
+
     /// Internal TSolMod decorator
-    std::vector<SolModCalc> phase_models;
+    std::vector<SolModEngine> phase_models;
     /// Names of multi-component phases
     std::vector<std::string> phase_names;
     void InitalizeTSolMod();
@@ -297,69 +354,9 @@ class TSolModMulti
         ipmlog_error.clear();
     }
 
-public:
-
-    explicit TSolModMulti();
-    virtual ~TSolModMulti();
-
-    /// Initialization of GEM IPM2 data structures in coupled RMT-GEM programs
-    ///  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files
-    ///  in key-value, json or binary format. Parameters:
-    ///  ipmfiles_lst_name - name of a text file that contains:
-    ///    " -j | -t |-b <DCH_DAT file name> <IPM_DAT file name> [<>] <dataBR file name>
-    ///    or " -f <DCH_DAT file name> <IPM_DAT file name> <ThermoFun JSON format file> <dataBR file name>
-    ///  dbfiles_lst_name - name of a text file that contains:
-    ///    <dataBR  file name1>, ... , <dataBR file nameN> "
-    ///    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
-    ///    exist in the same directory where the ipmfiles_lst_name file is located.
-    ///    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
-    ///    and must contain valid initial chemical systems (of the same structure
-    ///    as described in the DCH_DAT file) to set up the initial state of the FMT
-    ///    node array.
-    ///  If -t flag or no flag is specified then all data files must be in key-value text
-    ///    (ASCII) format (and file names must have .dat extension);
-    ///  If -j and -f flag is specified then all data files must be in JSON format (and file names
-    ///    must have .json extension);
-    ///  If -f flag is specified then the use of ThermoFun along with GEMS3K in place of the interpolation
-    ///  of lookup arrays for standard thermodynamic data for substances;
-    ///  if -b flag is specified then all data files are assumed to be binary (little-endian)
-    ///    files.
-    ///  @returns:
-    ///    0: OK;
-    ///    1: GEM IPM read file or input file format error;
-    ///   -1: System error (e.g. memory allocation).
     long int GEM_init(const std::string& ipmfiles_lst_name);
-
-    /// Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module.
-    /// Also reads the input data from the IPM, DCH and one DBR JSON input strings
-    /// (e.g. exported from GEM-Selektor or retrieved from JSON database).
-    /// Parameters:
-    ///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
-    ///  @param ipm_json -  Parameters and settings for GEMS3K IPM-3 algorithm as a json/key-value string
-    ///  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
-    ///  @param fun_json -  ThermoFun data structure as a json string
-    ///  @returns:
-    ///    0: OK;
-    ///    1: GEM IPM read file or input file format error;
-    ///   -1: System error (e.g. memory allocation).
     long GEM_init(const std::string& dch_json, const std::string& ipm_json,
                   const std::string& dbr_json, const std::string& fun_json);
-
-    /// Update thermodynamic data according new TK and P
-    void UpdateThermodynamic(double TK, double PPa);
-
-    /// Access to idxs phase model
-    SolModCalc &get_phase(std::size_t idx);
-    /// Access to phase model by phase name
-    SolModCalc &get_phase(const std::string& name);
-
-    /// Trace output full internal structure
-    void to_text_file(const char *path, bool append=false);
-
-protected:
-
-    TSOLMOD_MULTI pm;
-    TSOLMOD_MULTI *pmp;
 
     template<typename TIO>
     void from_text_file_gemipm( TIO& in_format,  DATACH  *dCH );
@@ -395,6 +392,7 @@ protected:
     void alloc_lPhc( long int lPhcSum );
 
     // Fill multi arrays
+    void alloc_main();
     void InitalizeGEM_IPM_Data();
     void MultiConstInit();
     long getXvolume();
@@ -438,5 +436,5 @@ enum volume_code {  /* Codes of volume parameter ??? */
     VOL_UNDEF, VOL_CALC, VOL_CONSTR
 };
 
-#endif   //tsolmod_multi_h
+#endif   //SOLMODFACTORY_H
 
