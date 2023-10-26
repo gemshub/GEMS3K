@@ -47,6 +47,7 @@ struct AddSolutionData {
 /// in fluid, liquid, aqueous, and solid-solution phases
 class SolModEngine
 {
+   friend class SolModFactory;
 
 public:
 
@@ -60,78 +61,90 @@ public:
         return mod_code;
     }
 
-    /// Call for calculation of temperature and pressure correction
-    void SolModParPT();
-    /// Call for calculation of activity coefficients
-    void SolModActCoeff();
-    /// Call for calculation of bulk phase excess properties
-    std::map<std::string, double> SolModExcessProp();
+
+    /// Call for calculation of temperature and pressure correction for the phase
+    void SolModPTParams();
+    // What is the difference with UpdatePT() ?
+    // UpdatePT() only set new value of T an P, real changes only into SolModFactory UpdateThermoData
+    // I done this function private
+    /// Call for calculation of activity coefficients of species endmembers
+    void SolModActivityCoeffs();
+    /// Call for calculation of bulk phase excess mixing properties
+    std::map<std::string, double> SolModExcessProps();
     /// Call for calculation of bulk phase ideal mixing properties
-    std::map<std::string, double> SolModIdealProp();
-    /// Call for retrieving bulk phase Darken quadratic terms  (!!! not implemented)
-    std::map<std::string, double> SolModDarkenProp();
+    std::map<std::string, double> SolModIdealProps();
+    /// Call for retrieving bulk phase Darken quadratic terms  (not yet implemented?)
+    std::map<std::string, double> SolModDarkenProps();
     /// Call for retrieving bulk phase standard state terms
-    std::map<std::string, double> SolModStandProp();
+    std::map<std::string, double> SolModStandProps();
 
-    // not used in gems
-    //virtual long int PureSpecies();
+    /// high-level method to retrieve pure fluid fugacities
+    /// Implemented for TPRSVcalc, TCGFcalc, TSRKcalc, TPR78calc, TCORKcalc, TSTPcalc
+    // never call in gems, do we need here?
+    // PureSpecies();
 
-    /// Updates P and T in TSolMod if those have changed
-    void UpdatePT( double T_k, double P_bar)
-    {
-        if(solmod_task) {
-            solmod_task->UpdatePT(T_k, P_bar);
-        }
+    // Get functions ("getters")
+
+    /// Get number of species (endmembers) in this solution phase
+    long int Get_SpeciesNumber() {
+        return dc_num;
+    }
+    /// Get names of species (endmembers) in this phase as a list of strings
+    std::vector<std::string> Get_SpeciesNames() {
+       return dc_names;
     }
 
-    // Get functions
+    /// Copy ln of activity coefficients of species (end members) into provided array lngamma
+    void Get_lnActivityCoeffs(double* lngamma);
+    /// Get ln of activity coefficients of chemical species (end members) in a component map
+    std::map<std::string, double> GetlnActivityCoeffs();
 
-    /// Copy activity coefficients into provided array lngamma
-    void Get_lnGamma(double* lngamma);
-    /// Get activity coefficients into component map
-    std::map<std::string, double> GetlnGamma();
+    /// NB: for an endmember (species) in solution phase:
+    ///     ln_ActivityCoeff = lnConfTerm + lnRecipTerm + lnExcessTerm + lnDQFTerm
+    ///       Some or all of terms on r.h.s. can be zeros
+    /// Access methods to all components of ln_ActivityCoeff below
 
     /// Copy configurational terms adding to overall activity into provided array
-    void Get_lnGamConf(double* lnGamConf);
+    void Get_lnConfTerms(double* lnGamConf);
     /// Get configurational terms adding to overall activity into component map
-    std::map<std::string, double> GetlnGamConf();
+    std::map<std::string, double> GetlnConfTerms();
 
-    // lnGamRecip
+    // lnRecipTerm
     // Used in models TBerman, TCEFmod, TMBWmod
     // ( SM_BERMAN-'B', SM_CEF-'$', SM_MBW-'#' )
     /// Copy reciprocal terms adding to overall activity coefficients into provided array
     /// Implemented for the mixing model 'B', '$', '#'
-    void Get_lnGamRecip(double* lnGamRecip);
+    void Get_lnRecipTerms(double* lnGamRecip);
     /// Get reciprocal terms adding to overall activity coefficients into component map
     /// Implemented for the mixing model 'B', '$', '#'
-    std::map<std::string, double> GetlnGamRecip();
+    std::map<std::string, double> GetlnRecipTerms();
 
-    // lnGamEx
+    // lnExcessTerm
     // Used in models TBerman, TCEFmod, TMBWmod
     // ( SM_BERMAN-'B', SM_CEF-'$', SM_MBW-'#' )
     /// Copy excess energy terms adding to overall activity coefficients into provided array
     /// Implemented for the mixing model 'B', '$', '#'
-    void Get_lnGamEx(double* lnGamRecip);
+    void Get_lnExcessTerms(double* lnGamEx);
     /// Get excess energy terms adding to overall activity coefficients into component map
     /// Implemented for the mixing model 'B', '$', '#'
-    std::map<std::string, double> GetlnGamEx();
+    std::map<std::string, double> GetlnExcessTerms();
 
-    // lnGamDQF
+    // lnDQFTerm
     // Used in model TSubregular
     // ( SM_MARGB-'M' )
     /// Copy DQF terms adding to overall activity coefficients into provided array
     /// Implemented for the mixing model 'M'
-    void Get_lnGamDQF(double* lnGamDQF);
+    void Get_lnDQFTerms(double* lnGamDQF);
     /// Get DQF terms adding to overall activity coefficients into component map
     /// Implemented for the mixing model 'M'
-    std::map<std::string, double> GetlnGamDQF();
+    std::map<std::string, double> GetlnDQFTerms();
 
     /// Copy increments to molar G0 values of DCs from pure gas fugacities or DQF terms
     /// into provided array
-    void Get_IncrementstoG0(double* aGEX);
+    void Get_G0Increments(double* aGEX);
     /// Get increments to molar G0 values of DCs from pure gas fugacities or DQF terms
     /// into component map
-    std::map<std::string, double> GetIncrementstoG0();
+    std::map<std::string, double> GetG0Increments();
 
     // aVol
     // Used in models TPRSVcalc, TCGFcalc, TSRKcalc, TPR78calc, TCORKcalc, TSTPcalc
@@ -159,10 +172,10 @@ public:
 
     // Set functions
 
-    /// Set species (end member) mole fractions from provided array aWx -> dc_num
-    void Set_MoleFractionsWx(double* aWx);
-    /// Set species (end member) mole fractions from component map
-    void SetMoleFractionsWx(const std::map<std::string, double>& val_map, double def_val=0.);
+    /// Set species (end member) mole fractions from a provided array aWx -> dc_num
+    void Set_MoleFractions(double* aWx);
+    /// Set species (end member) mole fractions from a provided map (dictionary) val_map
+    void SetMoleFractions(const std::map<std::string, double>& val_map, double def_val=0.);
 
     // Y_m
     // Used in models TPitzer, TSIT, TEUNIQUAC, TKarpov, TDebyeHueckel, TLimitingLaw,
@@ -170,32 +183,33 @@ public:
     // ( SM_AQPITZ - 'Z', SM_AQSIT - 'S', SM_AQEXUQ - 'Q', SM_AQDH3 - '3', SM_AQDH2 - '2', SM_AQDH1 - '1',
     //   SM_AQDHS - 'Y', SM_AQDHH - 'H', SM_AQDAV - 'D', SM_AQELVIS 'J')
     /// Set molalities of aqueous species and sorbates from provided array  aM -> dc_num
-    /// Used for the mixing model 'Z','S','Q','3','2','1','Y','H','D'
+    /// Used for the mixing models 'Z','S','Q','3','2','1','Y','H','D'
     void Set_SpeciesMolality(double* aM);
-    /// Set molalities of aqueous species and sorbates from component map
-    /// Used for the mixing model 'Z','S','Q','3','2','1','Y','H','D'
+    /// Set molalities of aqueous species and sorbates from a provided map
+    /// Used for the mixing models 'Z','S','Q','3','2','1','Y','H','D'
     void SetSpeciesMolality(const std::map<std::string, double>& val_map, double def_val=0.);
 
-    // X, FWGT
-    // Used in model TCGFcalc (SM_CGFLUID - 'F')
-    /// Set  DC quantities at eqstate from provided array  aX -> dc_num
+    // X (mole amounts), mass (FWGT in grams)
+    // Used in CG fluid model TCGFcalc (SM_CGFLUID - 'F')
+    /// Set chemical species (DC) quantities (mole amounts) at eqstate from provided array  aX -> dc_num
     /// Used for the mixing model 'F'
-    void Set_DCquantities(double* aX);
+    void Set_SpeciesAmounts(double* aX);
     /// Set DC quantities at eqstate from component map
     /// Used for the mixing model 'F'
-    void SetDCquantities(const std::map<std::string, double>& val_map, double def_val=0.);
-    /// Set phase (carrier) masses, g
-    /// Used for the mixing model 'F'
-    void SetPhaseMasses(double aFWGT);
+    void SetSpeciesAmounts(const std::map<std::string, double>& val_map, double def_val=0.);
 
-    /// Writing input structure TSolMod to json format file
+    /// Set phase (carrier) mass, g
+    /// Used for the mixing model 'F'
+    void Set_PhaseMass(double aFWGT);
+
+    /// Writing the input structure of the current phase to JSON format file
     void to_json_file(const std::string& path) const
     {
         if(solmod_task.get()) {
             solmod_task->to_json_file(path);
         }
     }
-    /// Writing input structure TSolMod to json format
+    /// Writing the input structure for the current phase to JSON stream
     void to_json(std::iostream& ff) const
     {
         if(solmod_task.get()) {
@@ -203,7 +217,7 @@ public:
         }
     }
 
-    /// Trace writing arrays TSolMod to keyvalue format file
+    /// Trace writing of the current phase arrays to a key-value format file
     void to_text_file(const std::string& path, bool append=false)
     {
         if(solmod_task) {
@@ -265,6 +279,15 @@ protected:
     std::map<std::string, double> property2map(double* dcs_size_array);
     void map2property(const std::map<std::string, double>& dsc_name_map,
                       double* dcs_size_array, double def_value);
+
+    /// Updates P and T in the mixing and activity model for this phase
+    ///  (if those have changed)
+    void UpdatePT( double T_k, double P_bar)
+    {
+        if(solmod_task) {
+            solmod_task->UpdatePT(T_k, P_bar);
+        }
+    }
 };
 
 #endif // SOLMODENGINE_H

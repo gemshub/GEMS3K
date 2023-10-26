@@ -80,14 +80,14 @@ SolModEngine::SolModEngine(long k, long jb, const std::string &aphase):
     model_name = "undefined";
 }
 
-void SolModEngine::SolModParPT()
+void SolModEngine::SolModPTParams()
 {
     if(check_mode(mod_code) && solmod_task) {
         solmod_task->PTparam();
     }
 }
 
-void SolModEngine::SolModActCoeff()
+void SolModEngine::SolModActivityCoeffs()
 {
     /// ???? If no clean illegal result
     if(arlnGam) {
@@ -99,7 +99,7 @@ void SolModEngine::SolModActCoeff()
     }
 }
 
-std::map<std::string, double> SolModEngine::SolModExcessProp()
+std::map<std::string, double> SolModEngine::SolModExcessProps()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -123,7 +123,7 @@ std::map<std::string, double> SolModEngine::SolModExcessProp()
     return ex_map;
 }
 
-std::map<std::string, double> SolModEngine::SolModIdealProp()
+std::map<std::string, double> SolModEngine::SolModIdealProps()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -148,7 +148,7 @@ std::map<std::string, double> SolModEngine::SolModIdealProp()
     return ex_map;
 }
 
-std::map<std::string, double> SolModEngine::SolModDarkenProp()
+std::map<std::string, double> SolModEngine::SolModDarkenProps()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -170,7 +170,7 @@ std::map<std::string, double> SolModEngine::SolModDarkenProp()
     return ex_map;
 }
 
-std::map<std::string, double> SolModEngine::SolModStandProp()
+std::map<std::string, double> SolModEngine::SolModStandProps()
 {
     std::map<std::string, double> ex_map;
     // order of phase properties: G, H, S, CP, V, A, U
@@ -195,19 +195,19 @@ std::map<std::string, double> SolModEngine::SolModStandProp()
     return ex_map;
 }
 
-void SolModEngine::Get_lnGamma(double *lngamma)
+void SolModEngine::Get_lnActivityCoeffs(double *lngamma)
 {
     if(solmod_task) {
         solmod_task->Get_lnGamma(lngamma);
     }
 }
 
-std::map<std::string, double> SolModEngine::GetlnGamma()
+std::map<std::string, double> SolModEngine::GetlnActivityCoeffs()
 {
     return property2map(arlnGam);
 }
 
-void SolModEngine::Get_lnGamConf(double *lnGamConf)
+void SolModEngine::Get_lnConfTerms(double *lnGamConf)
 {
     if(arlnCnft) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -216,12 +216,12 @@ void SolModEngine::Get_lnGamConf(double *lnGamConf)
     }
 }
 
-std::map<std::string, double> SolModEngine::GetlnGamConf()
+std::map<std::string, double> SolModEngine::GetlnConfTerms()
 {
     return property2map(arlnCnft);
 }
 
-void SolModEngine::Get_lnGamRecip(double *lnGamRecip)
+void SolModEngine::Get_lnRecipTerms(double *lnGamRecip)
 {
     if(arlnRcpt) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -230,12 +230,12 @@ void SolModEngine::Get_lnGamRecip(double *lnGamRecip)
     }
 }
 
-std::map<std::string, double> SolModEngine::GetlnGamRecip()
+std::map<std::string, double> SolModEngine::GetlnRecipTerms()
 {
     return property2map(arlnRcpt);
 }
 
-void SolModEngine::Get_lnGamEx(double *lnGamEx)
+void SolModEngine::Get_lnExcessTerms(double *lnGamEx)
 {
     if(arlnExet) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -244,12 +244,12 @@ void SolModEngine::Get_lnGamEx(double *lnGamEx)
     }
 }
 
-std::map<std::string, double> SolModEngine::GetlnGamEx()
+std::map<std::string, double> SolModEngine::GetlnExcessTerms()
 {
     return property2map(arlnExet);
 }
 
-void SolModEngine::Get_lnGamDQF(double *lnGamDQF)
+void SolModEngine::Get_lnDQFTerms(double *lnGamDQF)
 {
     if(arlnDQFt) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -258,12 +258,12 @@ void SolModEngine::Get_lnGamDQF(double *lnGamDQF)
     }
 }
 
-std::map<std::string, double> SolModEngine::GetlnGamDQF()
+std::map<std::string, double> SolModEngine::GetlnDQFTerms()
 {
     return property2map(arlnDQFt);
 }
 
-void SolModEngine::Get_IncrementstoG0(double *aGEX)
+void SolModEngine::Get_G0Increments(double *aGEX)
 {
     if(arGEX) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -272,7 +272,7 @@ void SolModEngine::Get_IncrementstoG0(double *aGEX)
     }
 }
 
-std::map<std::string, double> SolModEngine::GetIncrementstoG0()
+std::map<std::string, double> SolModEngine::GetG0Increments()
 {
     return property2map(arGEX);
 }
@@ -315,7 +315,7 @@ std::map<std::string, double> SolModEngine::GetPartialPressures()
     return property2map(arPparc);
 }
 
-void SolModEngine::Set_MoleFractionsWx(double *aWx)
+void SolModEngine::Set_MoleFractions(double *aWx)
 {
     if(arWx) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -324,7 +324,7 @@ void SolModEngine::Set_MoleFractionsWx(double *aWx)
     }
 }
 
-void SolModEngine::SetMoleFractionsWx(const std::map<std::string, double> &awx_map, double defwx)
+void SolModEngine::SetMoleFractions(const std::map<std::string, double> &awx_map, double defwx)
 {
     if(arWx) {
         map2property(awx_map, arWx, defwx);
@@ -347,7 +347,7 @@ void SolModEngine::SetSpeciesMolality(const std::map<std::string, double> &val_m
     }
 }
 
-void SolModEngine::Set_DCquantities(double *aX)
+void SolModEngine::Set_SpeciesAmounts(double *aX)
 {
     if(arX) {
         for(int jj=0; jj<dc_num; ++jj) {
@@ -356,14 +356,14 @@ void SolModEngine::Set_DCquantities(double *aX)
     }
 }
 
-void SolModEngine::SetDCquantities(const std::map<std::string, double> &val_map, double def_val)
+void SolModEngine::SetSpeciesAmounts(const std::map<std::string, double> &val_map, double def_val)
 {
     if(arX) {
         map2property(val_map, arX, def_val);
     }
 }
 
-void SolModEngine::SetPhaseMasses(double aFWGT)
+void SolModEngine::Set_PhaseMass(double aFWGT)
 {
     if(arFWGT) {
         *arFWGT = aFWGT;

@@ -271,7 +271,7 @@ long int  SolModFactory::GEM_init( const std::string& dch_json, const std::strin
 }
 
 
-void SolModFactory::UpdateThermodynamic(double TK, double PPa)
+void SolModFactory::UpdateThermoData(double TK, double PPa)
 {
     LoadThermodynamicData(TK, PPa);
     for(auto& phase_model: phase_models) {
@@ -279,17 +279,17 @@ void SolModFactory::UpdateThermodynamic(double TK, double PPa)
     }
 }
 
-SolModEngine &SolModFactory::solution_phase(std::size_t idx)
+SolModEngine &SolModFactory::Sol_Phase(std::size_t idx)
 {
     ErrorIf( idx>=phase_models.size(), "SolModFactory", "array index " + std::to_string(idx) + " is out of range" );
     return phase_models[idx];
 }
 
-SolModEngine &SolModFactory::solution_phase(const std::string &name)
+SolModEngine &SolModFactory::SolPhase(const std::string &name)
 {
     for(size_t kk=0; kk<phase_names.size(); ++kk ) {
         if(phase_names[kk] == name) {
-            return  solution_phase(kk);
+            return  Sol_Phase(kk);
         }
     }
     Error( "SolModFactory", "Phase '" + name + "' not found" );
@@ -413,7 +413,7 @@ void SolModFactory::InitalizeTSolMod()
 
             phase_models.push_back(SolModEngine(k, jb, sd, addsd));
             // new solution models (TW, DK 2007)
-            phase_models.back().SolModParPT();
+            phase_models.back().SolModPTParams();
             break;
         }
         default:

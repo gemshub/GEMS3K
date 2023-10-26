@@ -272,9 +272,10 @@ class SolModFactory
 
 public:
 
-    /// Initialization of GEM IPM2 data structures in coupled RMT-GEM programs
-    ///  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files
-    ///  in key-value, json or binary format. Parameters:
+    /// Initialization of SolModFactory with truncated GEM IPM3 data structures from reading
+    ///  parts of the IPM, DCH and DBR text input files from the GEMS3K fileset
+    ///  in key-value, json or binary format.
+    /// Parameters:
     ///  ipmfiles_lst_name - name of a text file that contains:
     ///    " -j | -t |-b <DCH_DAT file name> <IPM_DAT file name> [<>] <dataBR file name>
     ///    or " -f <DCH_DAT file name> <IPM_DAT file name> <ThermoFun JSON format file> <dataBR file name>
@@ -296,29 +297,49 @@ public:
     ///    files.
     SolModFactory(const std::string& ipmfiles_lst_name);
 
-    /// Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module.
-    /// Also reads the input data from the IPM, DCH and one DBR JSON input strings
-    /// (e.g. exported from GEM-Selektor or retrieved from JSON database).
+    /// Initialization of SolModFactory data structures in coupled codes from the input data
+    ///  as the IPM, DCH and one DBR JSON strings (exported from GEM-Selektor or retrieved from
+    ///  JSON database or from a ZMQ message).
     /// Parameters:
-    ///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
-    ///  @param ipm_json -  Parameters and settings for GEMS3K IPM-3 algorithm as a json/key-value string
-    ///  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
-    ///  @param fun_json -  ThermoFun data structure as a json string
+    ///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json string
+    ///  @param ipm_json -  Parameters and settings for GEMS3K and TSolMod as a json string
+    ///  @param dbr_json -  DATABR - the node data bridge structure as a json string
+    ///  @param fun_json -  ThermoFun lical input data as a json string
     SolModFactory(const std::string& dch_json, const std::string& ipm_json,
                   const std::string& dbr_json, const std::string& fun_json);
 
     virtual ~SolModFactory();
 
-    /// Update thermodynamic data according new TK and P
-    void UpdateThermodynamic(double TK, double PPa);
+    /// Update SolModFactory thermodynamic data for new temperature TK (K) and pressure (Pa)
+    ///  (renamed from UpdateThermodynamic())
+    void UpdateThermoData(double TK, double PPa);
 
-    /// Access to idxs phase model
-    SolModEngine &solution_phase(std::size_t idx);
-    /// Access to phase model by phase name
-    SolModEngine &solution_phase(const std::string& name);
+    /// Get the number of solution phases (in SolModFactory)
+    long int Get_SolPhasesNumber() {
+        return phase_models.size();
+    }
+    /// Get names of solution phases as a list of strings
+    std::vector<std::string> Get_SolPhasesNames() {
+        return phase_names;
+    }
+ 
+    
 
-    /// Trace output full internal structure
-    void to_text_file(const char *path, bool append=false);
+    /// Access to a solution phase instance by its index idx in the list of phases of chemical system
+    ///   Generate exception: if the index idx < 0 or idx >= Get_SolPhaseNumber()
+    ///
+    SolModEngine &Sol_Phase(std::size_t idx);
+
+    /// Access to a solution phase instance by phase name
+    ///   Generate exception: if the name cannot be found in SolModFactory
+    ///
+    SolModEngine &SolPhase(const std::string& name);
+
+    // @Allan: Do we need this type of access:
+    //    SolModEngine &firstSolPhase() ?   SolModEngine &nextSolPhase() ?
+
+    /// Optional: Trace output of the whole internal data structure
+    void to_text_file(const std::string& path, bool append=false);
 
 protected:
 

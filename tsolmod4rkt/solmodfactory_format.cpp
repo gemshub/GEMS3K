@@ -547,7 +547,7 @@ void SolModFactory::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
 
 //---------------------------------------------------------//
 /// Writing structure MULTI ( free format file  )
-void SolModFactory::to_text_file( const char *path, bool append )
+void SolModFactory::to_text_file( const std::string& path, bool append )
 {
     std::ios::openmode mod = std::ios::out;
     if( append )
