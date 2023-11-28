@@ -31,7 +31,7 @@
 #include "verror.h"
 
 SolModEngine::SolModEngine(long k, long jb, SolutionData &sd, const AddSolutionData &addsd):
-    mod_code(sd.Mod_Code), phase_name(sd.phaseName),
+    model_code(sd.Mod_Code), phase_name(sd.phaseName),
     phase_ndx(k), dc_ndx(jb), dc_num(sd.NSpecies)
 {
     arWx = sd.arWx;
@@ -57,7 +57,7 @@ SolModEngine::SolModEngine(long k, long jb, SolutionData &sd, const AddSolutionD
 }
 
 SolModEngine::SolModEngine(long k, long jb, const std::string &aphase):
-    mod_code(' '), phase_name(aphase),
+    model_code(' '), phase_name(aphase),
     phase_ndx(k), dc_ndx(jb), dc_num(1)
 {
     arWx = nullptr;
@@ -82,7 +82,7 @@ SolModEngine::SolModEngine(long k, long jb, const std::string &aphase):
 
 void SolModEngine::SolModPTParams()
 {
-    if(check_mode(mod_code) && solmod_task) {
+    if(check_mode(model_code) && solmod_task) {
         solmod_task->PTparam();
     }
 }
@@ -93,7 +93,7 @@ void SolModEngine::SolModActivityCoeffs()
     if(arlnGam) {
         map2property({}, arlnGam, 0.);
     }
-    if(check_mode(mod_code) && solmod_task) {
+    if(check_mode(model_code) && solmod_task) {
         solmod_task->MixMod();
         //solmod_task->to_text_file(std::string("solmod_act_coef_")+std::to_string(phase_ndx)+".txt", true);
     }
@@ -108,7 +108,7 @@ std::map<std::string, double> SolModEngine::SolModExcessProps()
     for(long int j=0; j<7; j++) {
         zex[j] = 0.0;
     }
-    if(mod_code != SM_IDEAL && check_mode(mod_code) && solmod_task) {
+    if(model_code != SM_IDEAL && check_mode(model_code) && solmod_task) {
         solmod_task->ExcessProp(zex);
         ex_map["Gex"] = zex[0];
         ex_map["Hex"] = zex[1];
@@ -132,7 +132,7 @@ std::map<std::string, double> SolModEngine::SolModIdealProps()
     for(long int j=0; j<7; j++) {
         zex[j] = 0.0;
     }
-    if(check_mode(mod_code) && solmod_task) {
+    if(check_mode(model_code) && solmod_task) {
         // check what solution phase (ideal gas?)
         solmod_task->IdealProp(zex);
         ex_map["Gid"] = zex[0];
@@ -157,7 +157,7 @@ std::map<std::string, double> SolModEngine::SolModDarkenProps()
     for(long int j=0; j<7; j++) {
         zex[j] = 0.0;
     }
-    if(check_mode(mod_code) && solmod_task) {
+    if(check_mode(model_code) && solmod_task) {
         //solmod_task->(zex);
         ex_map["Gdq"] = zex[0];
         ex_map["Hdq"] = zex[1];
@@ -179,7 +179,7 @@ std::map<std::string, double> SolModEngine::SolModStandProps()
     for(long int j=0; j<7; j++) {
         zex[j] = 0.0;
     }
-    if(check_mode(mod_code) && solmod_task) {
+    if(check_mode(model_code) && solmod_task) {
         // check what solution phase (ideal gas?)
         solmod_task->StandardProp(zex);
         ex_map["Gst"] = zex[0];

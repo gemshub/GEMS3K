@@ -276,6 +276,7 @@ void SolModFactory::UpdateThermoData(double TK, double PPa)
     LoadThermodynamicData(TK, PPa);
     for(auto& phase_model: phase_models) {
         phase_model.UpdatePT(TK, PPa);
+        phase_model.SolModPTParams();
     }
 }
 

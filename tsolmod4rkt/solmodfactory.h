@@ -30,7 +30,7 @@
 #include "m_const_base.h"
 #include "gems3k_impex.h"
 #include "solmodengine.h"
-#include "gems3k_impex.h"
+//#include "gems3k_impex.h"
 #include "datach.h"
 #include "databr.h"
 
@@ -266,7 +266,8 @@ typedef struct
 
 } TSOLMOD_MULTI;
 
-// Data of MULTI
+/// Definition of SolModFactory class and API methods 
+/// for working with all solution phases in chemical system
 class SolModFactory
 {
 
@@ -310,6 +311,16 @@ public:
 
     virtual ~SolModFactory();
 
+    /// Get current temperature (K) used in SolModFactory instance
+    double Get_Temperature() {
+        return pm.T;
+    }
+
+    /// Get current pressure (Pa) used in SolModFactory instance
+    double Get_Pressure() {
+        return pm.P;
+    }
+
     /// Update SolModFactory thermodynamic data for new temperature TK (K) and pressure (Pa)
     ///  (renamed from UpdateThermodynamic())
     void UpdateThermoData(double TK, double PPa);
@@ -323,22 +334,21 @@ public:
         return phase_names;
     }
  
-    
-
-    /// Access to a solution phase instance by its index idx in the list of phases of chemical system
+    /// Access to a solution phase SolModEngine instance by the index idx 
+    /// in the list of solution phases in the chemical system
     ///   Generate exception: if the index idx < 0 or idx >= Get_SolPhaseNumber()
     ///
     SolModEngine &Sol_Phase(std::size_t idx);
 
-    /// Access to a solution phase instance by phase name
-    ///   Generate exception: if the name cannot be found in SolModFactory
+    /// Access to a solution phase SolModEngine instance by phase name
+    ///   Generate exception: if the name cannot be found in SolModFactory list
     ///
     SolModEngine &SolPhase(const std::string& name);
 
     // @Allan: Do we need this type of access:
     //    SolModEngine &firstSolPhase() ?   SolModEngine &nextSolPhase() ?
 
-    /// Optional: Trace output of the whole internal data structure
+    /// Optional/debugging: Trace output of the whole internal data structure
     void to_text_file(const std::string& path, bool append=false);
 
 protected:
