@@ -42,6 +42,15 @@ Endmember activity coefficients:
 $
 ```
 
+## How to test in Python (Jupyter notebook)
+
+TBD ...
+
+...
+
+...
+
+# Tutorial in C++
 
 ## C++ API use examples
 
@@ -60,6 +69,8 @@ phase2m.SolModActivityCoeffs();
 auto ln_gamma = phase2.GetlnActivityCoeffs();
 
 ```
+
+# Tutorial in Python (Jupyter)
 
 ## Python API use examples
 

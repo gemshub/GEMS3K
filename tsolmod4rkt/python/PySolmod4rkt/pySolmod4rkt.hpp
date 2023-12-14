@@ -24,9 +24,11 @@ void exportSolMod(py::module& m)
             // Get functions
             .def("Get_SpeciesNumber", &SolModEngine::Get_SpeciesNumber )
             .def("Get_SpeciesNames", &SolModEngine::Get_SpeciesNames )
-            .def("Get_MAmodel_code", &SolModEngine::Get_MAmodel_code )
-            .def("Get_MAmodel_type", &SolModEngine::Get_MAmodel_type )
+            .def("Get_SolPhaseName", &SolModEngine::Get_SolPhaseName )
+            .def("Get_MixModelCode", &SolModEngine::Get_MixModelCode )
+            .def("Get_MixModelType", &SolModEngine::Get_MixModelType )
 
+            .def("GetMoleFractions", &SolModEngine::GetMoleFractions )
             .def("GetlnActivityCoeffs", &SolModEngine::GetlnActivityCoeffs )
             .def("GetlnConfTerms", &SolModEngine::GetlnConfTerms )
             .def("GetlnRecipTerms", &SolModEngine::GetlnRecipTerms )

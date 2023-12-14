@@ -406,7 +406,7 @@ void GemsSettings::gems3k_update_loggers(bool use_stdout, const std::string& log
     for(const auto& logger_name: gems3k_loggers) {
         auto logger = spdlog::get(logger_name);
         if(!logger) {
-           std::cout <<  logger_name << " logger not connected" << std::endl;
+           //std::cout <<  logger_name << " logger not connected" << std::endl;
            continue;
         }
         logger->sinks().clear();

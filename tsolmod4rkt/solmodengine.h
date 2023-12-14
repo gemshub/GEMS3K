@@ -47,7 +47,7 @@ struct AddSolutionData {
 /// in fluid, liquid, aqueous, and solid-solution phases
 class SolModEngine
 {
-   friend class SolModFactory;
+    friend class SolModFactory;
 
 public:
 
@@ -57,7 +57,7 @@ public:
     /// The empty constructor
     explicit SolModEngine(long int k=0, long int jb=0, const std::string& phase_name="undefined");
 
-    /// Calculate mixing and activity model parameters for current temperature 
+    /// Calculate mixing and activity model parameters for current temperature
     /// and pressure (see SolModFactory UpdateThermoData(TK, PPa)
     /// Only parameters with T and/or P dependence coefficients will be recalculated
     /// (model-specific)
@@ -84,12 +84,29 @@ public:
     /// high-level method to retrieve pure fluid fugacities
     /// Implemented for TPRSVcalc, TCGFcalc, TSRKcalc, TPR78calc, TCORKcalc, TSTPcalc
     //! never called in gems, do we need here?  DK: Used in claculations of thermodynamic
-    //! properties of real gases at given T and P (actually, should be called from 
+    //! properties of real gases at given T and P (actually, should be called from
     //! UpdateThermoData(TK, PPa) if critical parameters of f gases are available)
     //! Call from PTparam (SolModPTParams)
     //! PureSpecies();   TBD
 
     // Get functions ("getters") - to set up calculations
+
+    /// Get the name of solution phase in the SolModEngine instance
+    std::string Get_SolPhaseName() {
+        return phase_name;
+    }
+
+    /// Get type code of mixing/activity model used for this solution phase
+    char Get_MixModelCode() {
+        return model_code;
+    }
+
+    /// Get type string for mixing/activity model used for this solution phase
+    // Example: for 'B' return "SM_BERMAN"; for 'I' return "SM_IDEAL" and so on.
+    //    Needed to make it possible to use non-TSolMod models for comparison
+    std::string Get_MixModelType() {
+        return model_name;
+    }
 
     /// Get number of species (endmembers) in this solution phase
     long int Get_SpeciesNumber() {
@@ -98,20 +115,10 @@ public:
 
     /// Get names of species (endmembers) in this phase as a list of strings
     std::vector<std::string> Get_SpeciesNames() {
-       return dc_names;
+        return dc_names;
     }
 
-    /// Get type code of mixing/activity model used for this solution phase
-    char Get_MAmodel_code() {
-        return model_code;
-    }
 
-    /// Get type string for mixing/activity model used for this solution phase
-    // Example: for 'B' return "SM_BERMAN"; for 'I' return "SM_IDEAL" and so on.
-    //    Needed to make it possible to use non-TSolMod models for comparison
-    std::string Get_MAmodel_type() {
-        return model_name;
-    }
 
     // Setters to modify SolModEngine data for calculations
 
@@ -150,11 +157,19 @@ public:
 
     /// Getters to retrieve the results of a SolModEngine calculation
 
-    /// Copy calculated ln of activity coefficients of species (end members) 
+    /// Copy mole fractions of species (end members)
+    /// into a provided array molfr of length >= Get_SpeciesNumber()
+    void Get_MoleFractions(double* molfr);
+
+    /// Get mole fractions of species
+    /// (endmembers) as a dict (component map)
+    std::map<std::string, double> GetMoleFractions();
+
+    /// Copy calculated ln of activity coefficients of species (end members)
     /// into a provided array lngamma of length >= Get_SpeciesNumber()
     void Get_lnActivityCoeffs(double* lngamma);
 
-    /// Get the calculated ln of activity coefficients of chemical species 
+    /// Get the calculated ln of activity coefficients of chemical species
     /// (endmembers) as a dict (component map)
     std::map<std::string, double> GetlnActivityCoeffs();
 
@@ -163,7 +178,7 @@ public:
     ///       Some or all of terms on r.h.s. can be zeros
     /// Access methods to all components of ln_ActivityCoeff below
 
-    /// Copy ln configurational terms of species adding to overall activity 
+    /// Copy ln configurational terms of species adding to overall activity
     /// into a provided array of length >= Get_SpeciesNumber()
     void Get_lnConfTerms(double* lnGamConf);
 
@@ -174,12 +189,12 @@ public:
     // lnRecipTerm
     // Used in models TBerman, TCEFmod, TMBWmod
     // ( SM_BERMAN-'B', SM_CEF-'$', SM_MBW-'#' )
-    /// Copy reciprocal terms adding to overall activity coefficients into 
+    /// Copy reciprocal terms adding to overall activity coefficients into
     /// a provided array of length >= Get_SpeciesNumber()
     /// Implemented for the mixing model 'B', '$', '#'
     void Get_lnRecipTerms(double* lnGamRecip);
 
-    /// Get reciprocal terms adding to overall activity coefficients into 
+    /// Get reciprocal terms adding to overall activity coefficients into
     /// a dict (component map)
     /// Implemented for the mixing model 'B', '$', '#'
     std::map<std::string, double> GetlnRecipTerms();
@@ -187,12 +202,12 @@ public:
     // lnExcessTerm
     // Used in models TBerman, TCEFmod, TMBWmod
     // ( SM_BERMAN-'B', SM_CEF-'$', SM_MBW-'#' )
-    /// Copy excess energy terms adding to overall activity coefficients 
+    /// Copy excess energy terms adding to overall activity coefficients
     /// into a provided array of length >= Get_SpeciesNumber()
     /// Implemented for the mixing model 'B', '$', '#'
     void Get_lnExcessTerms(double* lnGamEx);
 
-    /// Get excess energy terms adding to overall activity coefficients 
+    /// Get excess energy terms adding to overall activity coefficients
     /// as a dict (component map)
     /// Implemented for the mixing model 'B', '$', '#'
     std::map<std::string, double> GetlnExcessTerms();
@@ -200,21 +215,21 @@ public:
     // lnDQFTerm
     // Can be Used in model TSubregular
     // ( SM_MARGB-'M' )
-    /// Copy DQF terms adding to overall activity coefficients into a 
+    /// Copy DQF terms adding to overall activity coefficients into a
     /// provided array of length >= Get_SpeciesNumber()
     /// Implemented for the mixing model 'M' (Margules binary) in DQF form
     void Get_lnDQFTerms(double* lnGamDQF);
 
-    /// Get DQF terms adding to overall activity coefficients as a dict 
+    /// Get DQF terms adding to overall activity coefficients as a dict
     /// (component map)
     /// Implemented for the mixing model 'M' (Margules binary) in DQF form
     std::map<std::string, double> GetlnDQFTerms();
 
-    /// Copy increments to molar G0 values of DCs from pure gas fugacities 
+    /// Copy increments to molar G0 values of DCs from pure gas fugacities
     /// or DQF terms into a provided array of length >= Get_SpeciesNumber()
     void Get_G0Increments(double* aGEX);
     
-    /// Get increments to molar G0 values of DCs from pure gas fugacities 
+    /// Get increments to molar G0 values of DCs from pure gas fugacities
     /// or DQF terms as a dict (component map)
     std::map<std::string, double> GetG0Increments();
 
@@ -228,7 +243,7 @@ public:
     /// Get molar volumes of species as a dict (component map)
     /// Implemented for the mixing model 'P', 'F', 'E', '7', '8', '6'
     std::map<std::string, double> GetMolarVolumes();
- 
+
     /// Get phase volume, cm3/mol
     /// Implemented for the mixing model 'P', 'F', 'E', '7'
     double GetPhaseVolume();

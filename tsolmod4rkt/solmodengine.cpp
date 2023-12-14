@@ -195,6 +195,20 @@ std::map<std::string, double> SolModEngine::SolModStandProps()
     return ex_map;
 }
 
+void SolModEngine::Get_MoleFractions(double *molfr)
+{
+    if(arWx) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            molfr[jj] = arWx[jj];
+        }
+    }
+}
+
+std::map<std::string, double> SolModEngine::GetMoleFractions()
+{
+    return property2map(arWx);
+}
+
 void SolModEngine::Get_lnActivityCoeffs(double *lngamma)
 {
     if(solmod_task) {
