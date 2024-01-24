@@ -51,7 +51,7 @@ int main( int argc, char* argv[] )
 
     // Can this ifdef be moved somewhere so that it is not needed in examples?
     // It can be removed, but now better left check for different model cases or we make addition
-    // application to test other models posible with  check threading and memory leaks
+    // application to test other models posible with check threading and memory leaks
 #if  defined(OVERFLOW_EXCEPT)
 #ifdef __linux__
     feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
@@ -64,19 +64,21 @@ int main( int argc, char* argv[] )
 #endif
 #endif
 
-    // Read gems3k logger config file                   (is this needed in the example?)
-    // this is example to config loggers
+    // This is example to config loggers
+    // param show/hide logging to stdout
+    //       add logging to rotating file name (hide if empty)
+    //       set login level for all loggers (trace = 0, debug = 1, info = 2, warn = 3, err = 4, critical = 5, off = 6)
     gemsSettings().gems3k_update_loggers(true, "", 3);
 
     try{
-        // Analyzing command line arguments
-        // Defaults
+        // Analyzing command line arguments  (with defaults)
         std::string after_reading = "_AfterReading.txt";
         std::string input_system_file_list_name = "Thermo-time-in/series1-dat.lst";
 
-        // Get the list file name (of DCH, IPM and DBR input files) for a GEMS3K fileset
-        if (argc >= 2 )
+        // Get the list file name (of DCH, IPM, DBR input files) for a GEMS3K fileset
+        if (argc >= 2 ) {
             input_system_file_list_name = argv[1];
+        }
 
         // Initialize SolModFactory from the GEMS3K file set
         SolModFactory task(input_system_file_list_name);
@@ -114,9 +116,9 @@ int main( int argc, char* argv[] )
         auto mod_type_p1 = phase1.Get_MixModelType();
         // Getting the number of endmembers
         auto n_species_p1 = phase1.Get_SpeciesNumber();
-        std::cout << "\nPhase1: name '" << phase_name_p1 << "', mixing/activity model type '"
-                  << mod_type_p1 << "', mixing/activity model code '" <<  mod_code_p1
-                  << "', number of endmembers " << n_species_p1 << std::endl;
+        std::cout << "\nPhase1: name: '" << phase_name_p1 << "'; mixing/activity model type: '"
+                  << mod_type_p1 << "'; model code: '" <<  mod_code_p1
+                  << "'; N endmembers: " << n_species_p1 << std::endl;
 
         // Getting the list of endmember names
         auto em_names_p1 = phase1.Get_SpeciesNames();
@@ -126,13 +128,17 @@ int main( int argc, char* argv[] )
         
         // Getting phase composition in C++ style (e.g. for checking)
         double* x_ph1 = new double[n_species_p1];
+        double* a_ph1 = new double[n_species_p1];
         phase1.Get_MoleFractions(x_ph1);
-        // Printing input phase composition in C style
-        for(size_t j=0; j<n_species_p1; j++)
-        {
-            std::cout << "   '" << em_names_p1[j] << "': x= " << x_ph1[j] << std::endl;
+        // phase1.Get_Molalities(m_ph1);
+        phase1.Get_lnActivities(a_ph1);
+        // Printing input phase composition and species activities in C style
+        for(size_t j=0; j<n_species_p1; j++) {
+            std::cout << "   '" << em_names_p1[j] << "': x= " << x_ph1[j] 
+            << "': a= " << exp(a_ph1[j]) << std::endl;
         }
         delete[] x_ph1;
+        delete[] a_ph1;
         
         // Calculating activity coefficients of end members
         phase1.SolModActivityCoeffs();
@@ -142,11 +148,10 @@ int main( int argc, char* argv[] )
 
         // Get activity coefficients and print them in C style
         phase1.Get_lnActivityCoeffs(lnGamma1v.data());
-        std::cout << "Calculated activity coefficients: " << std::endl;
-        for(size_t j=0; j<n_species_p1; j++)
-        {
+        std::cout << "Calculated activity coefficients of endmembers: " << std::endl;
+        for(size_t j=0; j<n_species_p1; j++) {
             std::cout << "   '" << em_names_p1[j] << "': ln(gamma)= " << lnGamma1v[j] <<
-                         ", gamma= " << exp(lnGamma1v[j]) << std::endl;
+                         "; gamma= " << exp(lnGamma1v[j]) << std::endl;
         }
         
         // Getting SolModEngine for a felsdpar phase 2 by index
@@ -166,9 +171,9 @@ int main( int argc, char* argv[] )
         auto mod_type_p2 = phase2.Get_MixModelType();
         // Getting the number of endmembers
         auto n_species_p2 = phase2.Get_SpeciesNumber();
-        std::cout << "\nPhase2: name '" << phase_name_p2 << "', mixing/activity model type '"
-                  << mod_type_p2 << "', mixing/activity model code '" <<  mod_code_p2
-                  << "', number of endmembers " << n_species_p2 << std::endl;
+        std::cout << "\nPhase2: name: '" << phase_name_p2 << "'; mixing/activity model type: '"
+                  << mod_type_p2 << "'; model code: '" <<  mod_code_p2
+                  << "'; N endmembers: " << n_species_p2 << std::endl;
 
         // Setting phase composition
         phase2.SetMoleFractions(x2m);
@@ -177,6 +182,12 @@ int main( int argc, char* argv[] )
         // Printing input phase composition in dict style
         for(const auto& item: x_ph2 ) {
             std::cout << "   '" << item.first << "': x= " << item.second << std::endl;
+        }
+
+        auto a_ph2 = phase2.GetlnActivities();
+        // Printing input phase composition in dict style
+        for(const auto& item: a_ph2 ) {
+            std::cout << "   '" << item.first << "': a= " << item.second << std::endl;
         }
 
         // Calculating activity coefficients of end members
@@ -190,14 +201,14 @@ int main( int argc, char* argv[] )
         std::cout << "Calculated activity coefficients: " << std::endl;
         for(const auto& item: lnGamma2m ) {
             std::cout << "   '" << item.first << "': ln(gamma)= " << item.second <<
-                         ", gamma= " << exp(item.second) << std::endl;
+                         "; gamma= " << exp(item.second) << std::endl;
         }
 
 
         // Calculate (a dict) of ideal properties of mixing in the phase2
         auto map_ideal = phase2.SolModIdealProps();
         phase2.to_text_file("solmod_act_coef.txt", true);
-        std::cout << "\nIdeal properties of mixing:\n";
+        std::cout << "\nIdeal properties of mixing in phase2:\n";
         for(const auto& item: map_ideal ) {
             std::cout << "   '" << item.first << "': " << item.second << std::endl;
         }
@@ -205,7 +216,7 @@ int main( int argc, char* argv[] )
         // Calculate (a dict) of excess properties of mixing in the phase2
         auto map_excess = phase2.SolModExcessProps();
         phase2.to_text_file("solmod_act_coef.txt", true);
-        std::cout << "\nExcess properties of mixing:\n";
+        std::cout << "\nExcess properties of mixing in phase2:\n";
         for(const auto& item: map_excess ) {
             std::cout << "   '" << item.first << "': " << item.second << std::endl;
         }

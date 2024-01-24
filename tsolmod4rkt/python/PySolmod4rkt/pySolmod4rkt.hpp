@@ -29,6 +29,8 @@ void exportSolMod(py::module& m)
             .def("Get_MixModelType", &SolModEngine::Get_MixModelType )
 
             .def("GetMoleFractions", &SolModEngine::GetMoleFractions )
+            .def("GetMolalities", &SolModEngine::GetMolalities )
+            .def("GetlnActivities", &SolModEngine::GetlnActivities )
             .def("GetlnActivityCoeffs", &SolModEngine::GetlnActivityCoeffs )
             .def("GetlnConfTerms", &SolModEngine::GetlnConfTerms )
             .def("GetlnRecipTerms", &SolModEngine::GetlnRecipTerms )

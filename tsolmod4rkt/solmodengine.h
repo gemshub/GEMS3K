@@ -165,6 +165,22 @@ public:
     /// (endmembers) as a dict (component map)
     std::map<std::string, double> GetMoleFractions();
 
+    /// Copy molalities of (aqueous) species
+    /// into a provided array molal of length >= Get_SpeciesNumber()
+    void Get_Molalities(double* molal);
+
+    /// Get molalities of (aqueous) species
+    /// as a dict (component map)
+    std::map<std::string, double> GetMolalities();
+
+    /// Copy ln(activities) of species (end members)
+    /// into a provided array lnactiv of length >= Get_SpeciesNumber()
+    void Get_lnActivities(double* lnactiv);
+
+    /// Get ln(activities) of species (end membbers)
+    /// (endmembers) as a dict (component map)
+    std::map<std::string, double> GetlnActivities();
+
     /// Copy calculated ln of activity coefficients of species (end members)
     /// into a provided array lngamma of length >= Get_SpeciesNumber()
     void Get_lnActivityCoeffs(double* lngamma);
@@ -287,7 +303,7 @@ public:
 
 protected:
 
-    /// Model name (posible add to TSolMod structure for test output)
+    /// Model name (possibly, add to TSolMod structure for test output)
     std::string model_name;
     /// Code of the mixing model
     char model_code;
@@ -336,6 +352,7 @@ protected:
 
     void SolMod_create(SolutionData &sd, const AddSolutionData &addsd);
     bool check_mode(char ModCode);
+    bool check_molal_scale(char ModCode);
     std::map<std::string, double> property2map(double* dcs_size_array);
     void map2property(const std::map<std::string, double>& dsc_name_map,
                       double* dcs_size_array, double def_value);

@@ -209,6 +209,21 @@ std::map<std::string, double> SolModEngine::GetMoleFractions()
     return property2map(arWx);
 }
 
+void SolModEngine::Get_Molalities(double *molal)
+{
+    if(arM) {
+        for(int jj=0; jj<dc_num; ++jj) {
+            molal[jj] = arM[jj];
+        }
+    }
+}
+
+std::map<std::string, double> SolModEngine::GetMolalities()
+{
+    return property2map(arM);
+}
+
+
 void SolModEngine::Get_lnActivityCoeffs(double *lngamma)
 {
     if(solmod_task) {
@@ -219,6 +234,46 @@ void SolModEngine::Get_lnActivityCoeffs(double *lngamma)
 std::map<std::string, double> SolModEngine::GetlnActivityCoeffs()
 {
     return property2map(arlnGam);
+}
+
+void SolModEngine::Get_lnActivities(double* lnactiv)
+{ 
+    if(lnactiv && arM && arlnGam && arWx) {
+        for(int jj=0; jj<dc_num; ++jj)
+        {
+            lnactiv[jj] = 0.0;
+            if( check_molal_scale(model_code) && arM[jj] > 1e-23 ) {
+                lnactiv[jj] = log(arM[jj]) + arlnGam[jj];
+            }
+            else {
+                if( arWx[jj] > 1e-23 ) {
+                    lnactiv[jj] = log(arWx[jj]) + arlnGam[jj];
+                }
+            }
+        }
+    }
+}
+
+std::map<std::string, double> SolModEngine::GetlnActivities()
+{
+    std::map<std::string, double> dsc_name_map;
+    if(!arlnGam || !arM || !arWx) { // nullptr
+        return dsc_name_map;
+    }
+    double lna;
+    for(int jj=0; jj<dc_num; ++jj) {
+        lna = 0.0;
+        if( check_molal_scale(model_code) && arM[jj] > 1e-23 ) {
+            lna = log(arM[jj]) + arlnGam[jj];
+        }
+        else {
+            if( arWx[jj] > 1e-23 ) {
+                lna = log(arWx[jj]) + arlnGam[jj];
+            }
+        }
+        dsc_name_map[dc_names[jj]] = lna;
+    }
+    return dsc_name_map;
 }
 
 void SolModEngine::Get_lnConfTerms(double *lnGamConf)
@@ -640,6 +695,22 @@ bool SolModEngine::check_mode(char ModCode)
         break;
     }
     return false;
+}
+
+bool SolModEngine::check_molal_scale(char ModCode)
+{
+    // Returns true if concentrations are expressed in molality scale
+    switch( ModCode )
+    {    
+    // aqueous DH models
+    case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
+    // aqueous SIT models
+    case SM_AQPITZ: case SM_AQSIT: case SM_AQEXUQ: case SM_AQELVIS:
+        return true;
+    default:
+        return false; 
+    }
+    return false;      
 }
 
 std::map<std::string, double> SolModEngine::property2map(double *dcs_size_array)
