@@ -119,7 +119,6 @@ public:
     }
 
 
-
     // Setters to modify SolModEngine data for calculations
 
     /// Set species (end member) mole fractions from a provided array aWx -> dc_num
@@ -155,7 +154,8 @@ public:
     /// Used for the mixing model 'F'
     void Set_PhaseMass(double aFWGT);
 
-    /// Getters to retrieve the results of a SolModEngine calculation
+
+    // Getters to retrieve the results of a SolModEngine calculation
 
     /// Copy mole fractions of species (end members)
     /// into a provided array molfr of length >= Get_SpeciesNumber()

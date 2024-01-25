@@ -22,48 +22,14 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>
 //-------------------------------------------------------------------
 
-// Can this ifdef be moved somewhere so that it is not needed in examples?
-#ifdef OVERFLOW_EXCEPT
-#ifdef __linux__
-#include <cfenv>
-#elif _MSC_VER
-#include <float.h>
-#else
-#include <cfenv>
-#endif
-#endif
-
 #include <iostream>
-#include <fstream>
-#include <time.h>
-#include <math.h>
-#include <string>
-#include <iomanip>
-#include <memory>
 #include "jsonconfig.h"
-#include "v_service.h"
 #include "solmodfactory.h"
 
-// Thermo-time-in/series1-dat.lst
+// Thermo-time-in/series1-dat.lst  Binodal compositions of two feldspars 
 //The simplest case: data exchange using disk files only
-int main( int argc, char* argv[] )
+int main()
 {
-
-    // Can this ifdef be moved somewhere so that it is not needed in examples?
-    // It can be removed, but now better left check for different model cases or we make addition
-    // application to test other models posible with check threading and memory leaks
-#if  defined(OVERFLOW_EXCEPT)
-#ifdef __linux__
-    feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
-#elif _MSC_VER
-    _clearfp();
-    _controlfp(_controlfp(0, 0) & ~(_EM_INVALID | _EM_ZERODIVIDE | _EM_OVERFLOW),
-               _MCW_EM);
-#else
-
-#endif
-#endif
-
     // This is example to config loggers
     // param show/hide logging to stdout
     //       add logging to rotating file name (hide if empty)
@@ -72,20 +38,14 @@ int main( int argc, char* argv[] )
 
     try{
         // Analyzing command line arguments  (with defaults)
-        std::string after_reading = "_AfterReading.txt";
         std::string input_system_file_list_name = "Thermo-time-in/series1-dat.lst";
-
-        // Get the list file name (of DCH, IPM, DBR input files) for a GEMS3K fileset
-        if (argc >= 2 ) {
-            input_system_file_list_name = argv[1];
-        }
+        std::string after_reading = "Thermo-time-in/series1-AfterReading.txt";
 
         // Initialize SolModFactory from the GEMS3K file set
         SolModFactory task(input_system_file_list_name);
 
         // Optional: Check the data read for SolModFactory initialization
-        std::string task_data_file_name = input_system_file_list_name + after_reading;
-        task.to_text_file( task_data_file_name );
+        task.to_text_file( after_reading );
 
         // Getting the number of solution phases
         auto PhSolNumber = task.Get_SolPhasesNumber();
@@ -93,10 +53,11 @@ int main( int argc, char* argv[] )
         // Getting the list of names of solution phases
         auto PhSolNames = task.Get_SolPhasesNames();
 
-        std::cout << "\nTask: " << task_data_file_name << "\nPhSolNumber: " << PhSolNumber
-                  << "\nPhSolNames: ";
+        std::cout << "\nTask: " << input_system_file_list_name << "\n T(K): " << task.Get_Temperature()
+                << " P(bar): " << task.Get_Pressure() << " N(PhSolutions): " << PhSolNumber
+                << "\nPhSolNames: ";
         for_each(PhSolNames.begin(), PhSolNames.end(), [](const auto& element)
-        { //printing using " " separator
+        {
             std::cout << "'" << element << "' ";
         });
         std::cout << std::endl;
@@ -105,10 +66,13 @@ int main( int argc, char* argv[] )
         // Two feldspar phases co-existing on binodal solvus
         // In future this could be a test input from dbr file or directly from json string
 
-        // Getting SolModEngine for a feldspar phase 1 by name (and print in C style)
-        std::vector<double> x1v = { 0.674, 7e-08, 0.326 };
+        // Setting composition of the first feldspar phase (in mole fractions)
+        std::vector<double> x1v = { 0.20987, 1.7e-09, 0.79013 };
+        // Creating an empty vector to retrieve activity coeffcients
         std::vector<double> lnGamma1v(3, 0.);
-        auto phase1 = task.SolPhase("Alkali feldspar");
+ 
+        // Getting SolModEngine for a feldspar phase 1 by name (and print in C style)
+         auto phase1 = task.SolPhase("Alkali feldspar");
         
         // Checking the mixing model in this phase
         auto phase_name_p1 = phase1.Get_SolPhaseName();
@@ -125,6 +89,9 @@ int main( int argc, char* argv[] )
 
         // Setting phase composition
         phase1.Set_MoleFractions(x1v.data());
+
+        // Calculating activity coefficients of end members
+        phase1.SolModActivityCoeffs();
         
         // Getting phase composition in C++ style (e.g. for checking)
         double* x_ph1 = new double[n_species_p1];
@@ -132,40 +99,38 @@ int main( int argc, char* argv[] )
         phase1.Get_MoleFractions(x_ph1);
         // phase1.Get_Molalities(m_ph1);
         phase1.Get_lnActivities(a_ph1);
+
         // Printing input phase composition and species activities in C style
         for(size_t j=0; j<n_species_p1; j++) {
             std::cout << "   '" << em_names_p1[j] << "': x= " << x_ph1[j] 
-            << "': a= " << exp(a_ph1[j]) << std::endl;
+            << "; a= " << exp(a_ph1[j]) << std::endl;
         }
         delete[] x_ph1;
         delete[] a_ph1;
         
-        // Calculating activity coefficients of end members
-        phase1.SolModActivityCoeffs();
-        
         // Writing results to a text file
-        phase1.to_text_file("solmod_act_coef.txt", true);
+        phase1.to_text_file("solmod_act_coef.txt", false);
 
         // Get activity coefficients and print them in C style
         phase1.Get_lnActivityCoeffs(lnGamma1v.data());
-        std::cout << "Calculated activity coefficients of endmembers: " << std::endl;
+        std::cout << "Calculated activity coefficients of endmembers:" << std::endl;
         for(size_t j=0; j<n_species_p1; j++) {
             std::cout << "   '" << em_names_p1[j] << "': ln(gamma)= " << lnGamma1v[j] <<
                          "; gamma= " << exp(lnGamma1v[j]) << std::endl;
         }
         
         // Getting SolModEngine for a felsdpar phase 2 by index
-        //  (and get and print results in dict style in similar order as for phase1
-        std::map<std::string, double> x2m = {
-            {"Albite", 0.187},
-            {"Anorthite", 3.5e-09},
-            {"Sanidine", 0.813}};
-        std::map<std::string, double> lnGamma2m;
-
         size_t p2index = 2;
         auto phase2 = task.Sol_Phase( p2index );
 
-        // Checking the mixing model in this phase
+        // To get and print results in dict style in similar order as for phase 1
+        std::map<std::string, double> x2m = {
+            {"Albite", 0.94371},
+            {"Anorthite", 1.12e-07},
+            {"Sanidine", 0.05629}};
+        std::map<std::string, double> lnGamma2m;
+
+        // Checking the mixing model in feldspar phase 2
         auto phase_name_p2 = phase2.Get_SolPhaseName();
         auto mod_code_p2 = phase2.Get_MixModelCode();
         auto mod_type_p2 = phase2.Get_MixModelType();
@@ -175,35 +140,35 @@ int main( int argc, char* argv[] )
                   << mod_type_p2 << "'; model code: '" <<  mod_code_p2
                   << "'; N endmembers: " << n_species_p2 << std::endl;
 
-        // Setting phase composition
+        // Setting phase 2 composition
         phase2.SetMoleFractions(x2m);
 
+        // Calculating activity coefficients of end members in phase 2
+        phase2.SolModActivityCoeffs();
+
         auto x_ph2 = phase2.GetMoleFractions();
-        // Printing input phase composition in dict style
+        // Printing input phase 2 composition in dict style
         for(const auto& item: x_ph2 ) {
             std::cout << "   '" << item.first << "': x= " << item.second << std::endl;
         }
-
+        
+        std::cout << "Calculated activities of endmembers:" << std::endl;
         auto a_ph2 = phase2.GetlnActivities();
-        // Printing input phase composition in dict style
+        // Printing output activities in dict style
         for(const auto& item: a_ph2 ) {
-            std::cout << "   '" << item.first << "': a= " << item.second << std::endl;
+            std::cout << "   '" << item.first << "': a= " << exp(item.second) << std::endl;
         }
 
-        // Calculating activity coefficients of end members
-        phase2.SolModActivityCoeffs();
-
-        // Writing results to a text file
+        // Writing results for phase 2 to a text file
         phase2.to_text_file("solmod_act_coef.txt", true);
 
         // Get activity coefficients and print them in dict style
         lnGamma2m = phase2.GetlnActivityCoeffs();
-        std::cout << "Calculated activity coefficients: " << std::endl;
+        std::cout << "Calculated activity coefficients of endmembers: " << std::endl;
         for(const auto& item: lnGamma2m ) {
             std::cout << "   '" << item.first << "': ln(gamma)= " << item.second <<
                          "; gamma= " << exp(item.second) << std::endl;
         }
-
 
         // Calculate (a dict) of ideal properties of mixing in the phase2
         auto map_ideal = phase2.SolModIdealProps();
@@ -220,7 +185,6 @@ int main( int argc, char* argv[] )
         for(const auto& item: map_excess ) {
             std::cout << "   '" << item.first << "': " << item.second << std::endl;
         }
-
 
         return 0;
     }
