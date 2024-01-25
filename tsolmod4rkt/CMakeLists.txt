@@ -1,6 +1,7 @@
 # options
 message(STATUS "Building isolate tsolmod4rkt library ")
 file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt-build/Thermo-time-in" DESTINATION "${CMAKE_BINARY_DIR}/bin")
+file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt/solmod4rkt_test.py" DESTINATION "${CMAKE_BINARY_DIR}/bin")
 
 
 include_directories(${CMAKE_SOURCE_DIR})

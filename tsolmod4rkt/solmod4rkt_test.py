@@ -25,7 +25,7 @@ phase1.SolModActivityCoeffs()
 x_ph1 = phase1.GetMoleFractions()
 a_ph1 = phase1.GetlnActivities()
 for key in x_ph1:
-    print("   '{}': x= {}; a= {}".format(key, x_ph1[key], math.exp(a_ph1[key])))
+    print("   '{}': x= {:.6g}; a= {:.6g}".format(key, x_ph1[key], math.exp(a_ph1[key])))
 
 # Writing results to a text file
 phase1.to_text_file("solmod_act_coef.txt", True)
@@ -34,7 +34,7 @@ phase1.to_text_file("solmod_act_coef.txt", True)
 lnGamma1v = phase1.GetlnActivityCoeffs()
 print("Calculated activity coefficients of endmembers:")
 for key, value in lnGamma1v.items():
-    print("   '{}': ln(gamma)= {}; gamma= {}".format(key, value, math.exp(value)))
+    print("   '{}': ln(gamma)= {:.6g}; gamma= {:.6g}".format(key, value, math.exp(value)))
 
 
 # Getting SolModEngine for a feldspar phase 2 by index
@@ -55,7 +55,7 @@ print("  ", phase2.GetMoleFractions())
 # Printing output activities
 print("Calculated activities of endmembers: ")
 for key, value in phase2.GetlnActivities().items():
-    print("   '{}': a= {}".format(key, math.exp(value)))
+    print("   '{}': a= {:.6g}".format(key, math.exp(value)))
 
 # Writing results to a text file
 phase2.to_text_file("solmod_act_coef.txt", True)
@@ -64,7 +64,7 @@ phase2.to_text_file("solmod_act_coef.txt", True)
 lnGamma2v = phase2.GetlnActivityCoeffs()
 print("Calculated activity coefficients of endmembers:")
 for key, value in lnGamma2v.items():
-    print("   '{}': ln(gamma)= {}; gamma= {}".format(key, value, math.exp(value)))
+    print("   '{}': ln(gamma)= {:.6g}; gamma= {:.6g}".format(key, value, math.exp(value)))
 
 
 map_ideal = phase2.SolModIdealProps()
