@@ -29,7 +29,7 @@ In order to test that the built tsolmod4rkt library works, run the C++ example a
 
 ```sh
 cd build/bin$ 
-./tsolmod4rkt_test
+./solmod4rkt_test
 ```
 The last four lines of the console output should look like this:
 
@@ -44,11 +44,34 @@ $
 
 ## How to test in Python (Jupyter notebook)
 
-TBD ...
+Check if Python 3 is installed:
 
-...
+```
+$ python3 --version
+Python 3.10.12
 
-...
+$ pip --version
+pip 22.0.2 from /usr/lib/python3/dist-packages/pip (python 3.10)
+```
+
+## How to install Jupyter
+
+```
+$ cd ~
+$ pip install jupyterlab
+$
+$ pip install notebook
+```
+
+If there are many warnings, add the following lines in the end of ~/.profile
+and ~/.bashrc files, and re-login:
+
+```sh
+# Path to Jupyter(lab)
+export PATH="/home/you/.local/bin:$PATH"
+```
+where "you" should be replaced with the name of your user (home directory).
+
 
 # Tutorial in C++
 
@@ -71,6 +94,29 @@ auto ln_gamma = phase2.GetlnActivityCoeffs();
 ```
 
 # Tutorial in Python (Jupyter)
+
+## Execute a Python file:
+
+```
+$ cd GEMS3K/build/bin
+$ python3 solmod4rkt_test01.py
+
+```
+## Run Jupyter notebook in JupyterLab:
+
+```
+$ cd GEMS3K/build/bin
+$ jupyter lab
+```
+Open in JupyterLab a file "solmod4rkt_test01.jpynb" and walk through it.
+
+## Run Jupyter notebook as classic notebook
+```
+$ cd GEMS3K/build/bin
+$ jupyter notebook
+```
+
+Open in notebook a file "solmod4rkt_test01.jpynb" and walk through it.
 
 ## Python API use examples
 
