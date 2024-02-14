@@ -47,6 +47,7 @@ ln_to_lg = 0.434294481,
 H2O_mol_to_kg = 55.50837344,
 Min_phys_amount = 1.66e-24;
 
+
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
 // which is put into <> to comprise a data object tag, e.g. <IterDone>, in
@@ -163,7 +164,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
    { "LsISmo",    0 , 0, 0,  "# LsISmo: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]" },
    // TSorpMod & TKinMet stuff
    { "SorMc",    0 , 0, 0,  "# SorMc: Phase-related kinetics and sorption model parameters: [Fis][16]" },
-   // TSolMod stuff
+   // TSolMod extern const double bar_to_Pa, m3_to_cm3,  kg_to_g;
    { "LsMdc2",    0 , 0, 0,  "# LsMdc2: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member" },
    { "LsPhl",    0 , 0, 0,  "# LsPhl: Number of phase links; number of link parameters; [Fi][2]" }
  };
@@ -436,6 +437,14 @@ void SolModFactory::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_lnGmf: rddar.readArray( "lnGmf", pm.lnGmf,  pm.L);
             break;
+        case f_RLC: rddar.readArray( "RLC", pm.RLC, pm.L, 1 );
+            break;
+        case f_RSC: rddar.readArray( "RSC", pm.RSC, pm.L, 1 );
+            break;
+        case f_DLL: rddar.readArray( "DLL", pm.DLL,  pm.L);
+            break;
+        case f_DUL: rddar.readArray( "DUL", pm.DUL,  pm.L);
+            break;
         case f_YOF: rddar.readArray( "YOF", pm.YOF,  pm.FI);
             break;
         case f_pKin: rddar.readArray("pKin" , &pm.PLIM, 1);
@@ -580,6 +589,8 @@ void SolModFactory::to_text_file( const std::string& path, bool append )
 
     // Part 1
     prar.writeArray(  "L1", pm.L1,  pm.FI);
+   prar.writeArray(  "DUL", pm.DUL,  pm.L);
+   prar.writeArray(  "DLL", pm.DLL,  pm.L);
     prar.writeArray(  "Vol", pm.Vol,  pm.L);
     prar.writeArray(  "Pparc", pm.Pparc,  pm.L);
     prar.writeArray(  "MM", pm.MM,  pm.L);
@@ -590,7 +601,9 @@ void SolModFactory::to_text_file( const std::string& path, bool append )
     prar.writeArray(  "lnGam", pm.lnGam,  pm.L);
     prar.writeArray(  "lnGmo", pm.lnGmo,  pm.L);
     prar.writeArray(  "B", pm.B,  pm.N);
-    prar.writeArray(  "X", pm.X,  pm.L);
+    
+   prar.writeArray(  "XF", pm.XF,  pm.FI);
+  prar.writeArray(  "X", pm.X,  pm.L);
     prar.writeArray(  "YOF", pm.YOF,  pm.FI);
     prar.writeArray(  "lnGmM", pm.lnGmM,  pm.L);
     prar.writeArray(  "fDQF", pm.fDQF,  pm.L);
@@ -605,6 +618,10 @@ void SolModFactory::to_text_file( const std::string& path, bool append )
     }
 
     // Part 2  not always required arrays
+    if( pm.FIs > 0 && pm.Ls > 0 )
+    {
+     prar.writeArray(  "XFA", pm.XFA,  pm.FIs);
+    }
     if( pm.LO > 1 )
     {
         prar.writeArray(  "Y_m", pm.Y_m,  pm.L);
@@ -669,8 +686,163 @@ void SolModFactory::to_text_file( const std::string& path, bool append )
     prar.writeArray(  "UPh", &pm.UPh[0][0], pm.FIs*MIXPHPROPS);
 }
 
+void SolModFactory::unpackDataBr( bool uPrimalSol )
+{
+    long int ii;
+    pmp->kTau = CNode->Tm;
+    pmp->kdT = CNode->dt;
 
+    pmp->TCc = CNode->TK-C_to_K;
+    pmp->Tc = CNode->TK;
+    pmp->Pc  = CNode->P/bar_to_Pa;
+    pmp->VXc = CNode->Vs/1.e-6; // from cm3 to m3
+    // Obligatory arrays - always unpacked!
+    for( ii=0; ii<CSD->nDCb; ii++ ) {
+        pmp->DUL[ CSD->xdc[ii] ] = CNode->dul[ii];
+        pmp->DLL[ CSD->xdc[ii] ] = CNode->dll[ii];
+        if( pmp->DUL[ CSD->xdc[ii] ] < pmp->DLL[ CSD->xdc[ii] ] )   {
+            Error("unpackDataBr", std::string("Upper kinetic restriction less than the lower one for DC&RC")
+                  +char_array_to_string( pmp->SM[CSD->xdc[ii]], MAXDCNAME));
+        }
+    }
+    for( ii=0; ii<CSD->nICb; ii++ )  {
+        pmp->B[ CSD->xic[ii] ] = CNode->bIC[ii];
+        if( ii < CSD->nICb-1 && pmp->B[ CSD->xic[ii] ] <  1e-17 /*multi_ptr()->base_param()->DB*/ ) {
+            Error("unpackDataBr", std::string("Bulk mole amount of IC ")+
+                  char_array_to_string(pmp->SB[CSD->xic[ii]], 6)+" is "+
+                    std::to_string(pmp->B[ CSD->xic[ii] ])+" - out of range" );
+        }
+    }
+    //    for( ii=0; ii<CSD->nPHb; ii++ ) {
+    //        if( CSD->nAalp > 0 )
+    //            pmp->Aalp[ CSD->xph[ii] ] = CNode->aPH[ii]/kg_to_g;
+    //        pmp->Falp[ CSD->xph[ii] ] = CNode->omPH[ii];
+    //    }
 
+    for( ii=0; ii<CSD->nPHb; ii++ ) {
+        pmp->XF[ CSD->xph[ii] ] = CNode->xPH[ii];
+    }
+
+    if( !uPrimalSol ) {
+        //  Using primal solution retained in the MULTI structure instead -
+        ; // the primal solution data from the DATABR structure are not unpacked
+
+        //   pmp->IT = 0;
+    }
+    else {   // Unpacking primal solution provided in the node DATABR structure
+        pmp->IT = CNode->IterDone; // ?  pmp->ITF+pmp->IT;
+        //pmp->IT = 0;
+        pmp->MBX = CNode->Ms;
+        pmp->IC = CNode->IC;
+        pmp->Eh = CNode->Eh;
+        for( ii=0; ii<CSD->nDCb; ii++ ) {
+            pmp->X[ CSD->xdc[ii] ] = CNode->xDC[ii];
+        }
+
+        //        for( ii=0; ii<CSD->nPSb; ii++ )  {
+        //            pmp->PUL[ CSD->xph[ii] ] = CNode->amru[ii];
+        //            pmp->PLL[ CSD->xph[ii] ] = CNode->amrl[ii];
+        //        }
+
+        for( ii=0; ii<CSD->nPHb; ii++ )  {
+            pmp->XF[ CSD->xph[ii] ] = Ph_Moles(ii);
+            pmp->FVOL[ CSD->xph[ii] ] = Ph_Volume(ii)*m3_to_cm3;
+            pmp->FWGT[ CSD->xph[ii] ] = Ph_Mass(ii)*kg_to_g;
+        }
+
+        //        for( long int k=0; k<CSD->nPSb; k++ )
+        //            for(long int i=0; i<CSD->nICb; i++ ) {
+        //                long int dbr_ndx= (k*CSD->nICb)+i,
+        //                        mul_ndx = ( CSD->xph[k]*CSD->nIC )+ CSD->xic[i];
+        //                pmp->BF[ mul_ndx ] = CNode->bPS[dbr_ndx];
+        //            }
+
+        for( ii=0; ii<CSD->nPSb; ii++ ) {
+            pmp->XFA[ CSD->xph[ii] ] = CNode->xPA[ii];
+        }
+
+        for( ii=0; ii<CSD->nDCb; ii++ )  {
+            pmp->Gamma[ CSD->xdc[ii] ] = CNode->gam[ii];
+        }
+
+        //        long int jb, je = 0;
+        //        for( long int k=0; k<pmp->FIs; k++ ) { // loop on solution phases
+        //            jb = je;
+        //            je += pmp->L1[ k ];
+        //            // Load activity coeffs for phases-solutions
+        //            for( ii=jb; ii<je; ii++ )  {
+        //                pmp->lnGam[ii] =  multi_ptr()->PhaseSpecificGamma( ii, jb, je, k, 1L );
+        //            }
+        //        }
+    }
+    //  End
+}
+
+//Retrieves the current phase volume in m3 ( xph is DBR phase index) in the reactive sub-system.
+// Works both for multicomponent and for single-component phases. Returns 0.0 if the phase mole amount is zero.
+double  SolModFactory::Ph_Volume( const long int xBR ) const
+{
+    double vol;
+    if( xBR < CSD->nPSb )
+    {    // Phase-solution
+        vol = CNode->vPS[xBR];
+        // Perhaps not yet accounting for the volume of mixing!
+    }
+    else
+    {
+        long int xdc = Phx_to_DCx( Ph_xDB_to_xCH( xBR ));
+        vol = pm.Vol[xdc];//  /1e5
+        vol *= CNode->xDC[DC_xCH_to_xDB(xdc)];
+    }
+    return vol;
+}
+
+//Retrieves the current phase amount in moles (xph is DBR phase index) in the reactive sub-system.
+double  SolModFactory::Ph_Moles( const long int xBR ) const
+{
+    double mol;
+    mol = CNode->xPH[xBR];
+
+    return mol;
+}
+
+// Retrieves the phase mass in kg (xph is DBR phase index).
+// Works for multicomponent and for single-component phases. Returns 0.0 if phase amount is zero.
+double  SolModFactory::Ph_Mass( const long int xBR ) const
+{
+    double mass;
+    if( xBR < CSD->nPSb )
+        mass = CNode->mPS[xBR];
+    else
+    {
+        long int xDC = Phx_to_DCx( Ph_xDB_to_xCH( xBR ));
+        mass = CNode->xDC[ DC_xCH_to_xDB(xDC) ] * CSD->DCmm[xDC];
+    }
+    return mass;
+}
+
+// Converts the DC DCH index into the DC DBR index
+// or returns -1 if this DC is not used in the data bridge
+long int SolModFactory::DC_xCH_to_xDB( const long int xCH ) const
+{
+    for(long int ii = 0; ii<CSD->nDCb; ii++ )
+        if( CSD->xdc[ii] == xCH )
+            return ii;
+    return -1;
+}
+
+// Returns the DCH index of the first DC belonging to the phase with DCH index Phx
+long int  SolModFactory::Phx_to_DCx( const long int Phx ) const
+{
+    long int k, DCx = 0;
+    for( k=0; k<CSD->nPHb; k++ )
+    {
+        if( k == Phx )
+            break;
+        DCx += CSD->nDCinPH[ k];
+    }
+    return DCx;
+}
 
 
 #ifdef USE_NLOHMANNJSON

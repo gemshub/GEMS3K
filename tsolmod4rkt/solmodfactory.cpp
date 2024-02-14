@@ -249,6 +249,7 @@ long int  SolModFactory::GEM_init( const std::string& dch_json, const std::strin
         InitalizeGEM_IPM_Data();
         // Creating and initializing the TSolMod array
         InitalizeTSolMod();
+        unpackDataBr(true);
         TSolMod::solmod_logger->info("Initialization of system {}", char_array_to_string(pmp->stkey,EQ_RKLEN));
         return 0;
     }
@@ -294,6 +295,42 @@ SolModEngine &SolModFactory::SolPhase(const std::string &name)
         }
     }
     Error( "SolModFactory", "Phase '" + name + "' not found" );
+}
+
+std::vector<std::vector<double>> SolModFactory::Get_StoichiometryMatrix()
+{
+    std::vector<std::vector<double>> A_matr;
+    for(long int ii=0; ii<CSD->nDC; ++ii) {
+        A_matr.push_back(std::vector<double>(CSD->A+ii*CSD->nIC, CSD->A+ii*CSD->nIC+CSD->nIC));
+    }
+    return A_matr;
+}
+
+std::vector<std::string> SolModFactory::Get_AllElementNames()
+{
+    std::vector<std::string> names;
+    for(long int ii=0; ii<CSD->nIC; ++ii) {
+        names.push_back(char_array_to_string(CSD->ICNL[ii], MAXICNAME));
+    }
+    return names;
+}
+
+std::vector<std::string> SolModFactory::Get_AllSpeciesNames()
+{
+    std::vector<std::string> names;
+    for(long int ii=0; ii<CSD->nDC; ++ii) {
+        names.push_back(char_array_to_string(CSD->DCNL[ii], MAXDCNAME));
+    }
+    return names;
+}
+
+std::vector<std::string> SolModFactory::Get_AllPhasesNames()
+{
+    std::vector<std::string> names;
+    for(long int ii=0; ii<CSD->nPH; ++ii) {
+        names.push_back(char_array_to_string(CSD->PHNL[ii], MAXPHNAME));
+    }
+    return names;
 }
 
 // Calculation by IPM (preparing for calculation, unpacking data) In IPM
@@ -988,6 +1025,7 @@ long int SolModFactory::getXvolume()
     }
     return ret;
 }
+
 
 //--------------------- end of tsolmod_multi_add.cpp ---------------------------
 

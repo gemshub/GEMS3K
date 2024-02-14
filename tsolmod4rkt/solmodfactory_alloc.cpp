@@ -40,6 +40,8 @@ void SolModFactory::multi_realloc()
     for( ii=0; ii<pm.FI; ii++)
     {   pm.L1[ii] = 0;
     }
+    pm.DUL = new double[pm.L];
+    pm.DLL = new double[pm.L];
     pm.Vol = new double[pm.L];
     pm.Pparc = new double[pm.L];
     pm.MM = new double[pm.L];
@@ -48,12 +50,16 @@ void SolModFactory::multi_realloc()
     pm.lnGam = new double[pm.L];
     pm.lnGmo = new double[pm.L];
     pm.X = new double[pm.L];
+    pm.RLC = new char[pm.L];
+    pm.RSC = new char[pm.L];
     pm.DCC = new char[pm.L];
     pm.DCCW = new char[pm.L];
     pm.lnGmM = new double[pm.L];
     pm.fDQF = new double[pm.L]; //24
     for( ii=0; ii<pm.L; ii++ )
     {
+        pm.DUL[ii] = 1e6;
+        pm.DLL[ii] = 0.0;
         pm.Vol[ii] = 0.0;
         pm.Pparc[ii] = 1.;
         pm.MM[ii] = 0.0;
@@ -62,6 +68,8 @@ void SolModFactory::multi_realloc()
         pm.lnGam[ii] = 0.0;
         pm.lnGmo[ii] = 0.0;
         pm.X[ii] = 0.0;
+        pm.RLC[ii] = 'B';
+        pm.RSC[ii] = 'M';
         pm.DCC[ii] = 0;
         pm.DCCW[ii] = 0;
         pm.lnGmM[ii] = 0.0;
@@ -82,12 +90,14 @@ void SolModFactory::multi_realloc()
         pm.ICC[ii] = 0;
     }
 
+    pm.XF = new double[pm.FI];
     pm.YOF = new double[pm.FI];
     pm.PHC = new char[pm.FI];
     pm.FVOL = new double[pm.FI];
     pm.FWGT = new double[pm.FI]; //9
     for( ii=0; ii<pm.FI; ii++ )
     {
+        pm.XF[ii] = 0.0;
         pm.YOF[ii] = 0.0;
         pm.PHC[ii] = 0;
         pm.FVOL[ii] = 0.0;
@@ -129,6 +139,20 @@ void SolModFactory::multi_realloc()
     }
 
     // Part 2  not always required arrays
+
+    if( pm.FIs > 0 && pm.Ls > 0 )
+    {
+        pm.XFA = new double[pm.FIs];
+        for( ii=0; ii<pm.FIs; ii++ )
+        {
+            pm.XFA[ii] = 0.0;
+        }
+    }
+    else
+    {
+        pm.XFA = 0;
+    }
+
     if( pm.LO > 1 )
     {
         pm.Y_m = new double[pm.L];
@@ -259,6 +283,9 @@ void SolModFactory::multi_kill()
     // Part 1
     // need  always to alloc vectors
     if( pm.L1) delete[] pm.L1;
+
+    if( pm.DUL ) delete[] pm.DUL;
+    if( pm.DLL ) delete[] pm.DLL;
     if( pm.Vol ) delete[] pm.Vol;
     if( pm.Pparc ) delete[] pm.Pparc;
     if( pm.MM ) delete[] pm.MM;
@@ -269,6 +296,7 @@ void SolModFactory::multi_kill()
     if( pm.lnGam ) delete[] pm.lnGam;
     if( pm.lnGmo ) delete[] pm.lnGmo;
     if( pm.B ) delete[] pm.B;
+    if( pm.XF ) delete[] pm.XF;
     if( pm.X ) delete[] pm.X;
     if( pm.YOF ) delete[] pm.YOF;
 
@@ -276,6 +304,8 @@ void SolModFactory::multi_kill()
     if( pm.SM ) delete[] pm.SM;
     if( pm.SF ) delete[] pm.SF;
     if( pm.dcMod ) delete[] pm.dcMod;
+    if( pm.RLC ) delete[] pm.RLC;
+    if( pm.RSC ) delete[] pm.RSC;
     if( pm.ICC ) delete[] pm.ICC;
     if( pm.DCC ) delete[] pm.DCC;
     if( pm.PHC ) delete[] pm.PHC;
@@ -289,6 +319,7 @@ void SolModFactory::multi_kill()
     if( pm.Gamma ) delete[] pm.Gamma;
     if( pm.lnGmf ) delete[] pm.lnGmf;
 
+    if( pm.XFA ) delete[] pm.XFA;
     if( pm.Y_m ) delete[] pm.Y_m;
     if( pm.EZ ) delete[] pm.EZ;
 
@@ -435,6 +466,8 @@ void SolModFactory::set_def( int )
     pm.L1    = nullptr;
     pm.LsMod = nullptr;
     pm.LsMdc = nullptr;
+    pm.DUL   = nullptr;
+    pm.DLL   = nullptr;
     pm.fDQF   = nullptr;
     pm.YOF   = nullptr;
     pm.PMc   = nullptr;
@@ -463,6 +496,8 @@ void SolModFactory::set_def( int )
     pm.lnGam = nullptr;
     pm.lnGmo = nullptr;
     pm.B     = nullptr;
+    pm.XF    = nullptr;
+    pm.XFA   = nullptr;
     pm.X     = nullptr;
     pm.Wx    = nullptr;
     pm.sMod  = nullptr;
@@ -470,6 +505,8 @@ void SolModFactory::set_def( int )
     pm.SB    = nullptr;
     pm.SM    = nullptr;
     pm.SF    = nullptr;
+    pm.RLC   = nullptr;
+    pm.RSC   = nullptr;
     pm.ICC   = nullptr;
     pm.DCC   = nullptr;
     pm.PHC   = nullptr;

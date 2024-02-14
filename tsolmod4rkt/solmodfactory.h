@@ -27,6 +27,7 @@
 #ifndef SOLMODFACTORY_H
 #define SOLMODFACTORY_H
 
+#include <vector>
 #include "m_const_base.h"
 #include "gems3k_impex.h"
 #include "solmodengine.h"
@@ -42,6 +43,8 @@ class GemDataStream;
 // Physical constants - see m_param.cpp or ms_param.cpp
 extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
 e_CONSTANT,k_CONSTANT, cal_to_J, C_to_K, lg_to_ln, ln_to_lg, H2O_mol_to_kg, Min_phys_amount;
+
+extern const double bar_to_Pa, m3_to_cm3,  kg_to_g;
 
 typedef struct
 {  // MULTI is base structure to Project (local values)
@@ -192,6 +195,8 @@ typedef struct
     ;
     // Other data
     double
+    *DUL,     ///< VG Vector of upper kinetic restrictions to x_j, moles [L]
+    *DLL,     ///< NG Vector of lower kinetic restrictions to x_j, moles [L]
     *fDQF,    ///< Increments to molar G0 values of DCs from pure gas fugacities or DQF terms, normalized [L]
     *YOF,     ///< Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition) [FI]
     *Vol,     ///< DC molar volumes, cm3/mol [L]
@@ -217,7 +222,10 @@ typedef struct
     double *lnCnft; ///< new: configurational terms adding to overall activity [Ls_]
     double *CTerms;   ///< new: Coulombic terms (electrostatic activity coefficients) [Ls_]
 
-    double  *B;  ///< Input bulk chem. compos. of the system - b vector, moles of IC[N]
+    double  *B,  ///< Input bulk chem. compos. of the system - b vector, moles of IC[N]
+    *XF,    ///< Output total number of moles of phases Xa[0:FI-1]
+    *XFA;   ///< Quantity of carrier in asymmetric phases Xwa, moles [FIs]
+
     double (*VPh)[MIXPHPROPS],     ///< Volume properties for mixed phases [FIs]
     (*GPh)[MIXPHPROPS],     ///< Gibbs energy properties for mixed phases [FIs]
     (*HPh)[MIXPHPROPS],     ///< Enthalpy properties for mixed phases [FIs]
@@ -235,7 +243,10 @@ typedef struct
     char  (*SM)[MAXDCNAME];  ///< List of DC names in the system [L]
     char  (*SF)[MAXPHNAME+MAXSYMB];  ///< List of phase names in the system [FI]
     // Class codes
-    char *ICC,   ///< Classifier of IC { e o h a z v i <int> } [N]
+    char
+    *RLC,   ///< Code of metastability constraints for DCs [L] enum DC_LIMITS
+    *RSC,   ///< Units of metastability/kinetic constraints for DCs  [L]
+    *ICC,   ///< Classifier of IC { e o h a z v i <int> } [N]
     *DCC,   ///< Classifier of DC { TESKWL GVCHNI JMFD QPR <0-9>  AB  XYZ O } [L]
     *PHC;   ///< Classifier of phases { a g f p m l x d h } [FI]
     char *DCCW;  ///< internal DC class codes [L]
@@ -328,12 +339,13 @@ public:
     long int Get_SolPhasesNumber() {
         return phase_models.size();
     }
+
     /// Get names of solution phases as a list of strings
     std::vector<std::string> Get_SolPhasesNames() {
         return phase_names;
     }
- 
-    /// Access to a solution phase SolModEngine instance by the index idx 
+
+    /// Access to a solution phase SolModEngine instance by the index idx
     /// in the list of solution phases in the chemical system
     ///   Generate exception: if the index idx < 0 or idx >= Get_SolPhaseNumber()
     ///
@@ -344,8 +356,171 @@ public:
     ///
     SolModEngine &SolPhase(const std::string& name);
 
-    // @Allan: Do we need this type of access:
-    //    SolModEngine &firstSolPhase() ?   SolModEngine &nextSolPhase() ?
+    //Objects in MULTI to expose in SolModFactory API
+
+    /// Get the number of independent components ( elements and charge in chemical system)
+    long int Get_AllElementsNumber() {
+        return pmp->N;
+    }
+
+    /// Get the number of dependent components ( chemical species in chemical system)
+    long int Get_AllSpeciesNumber() {
+        return pmp->L;
+    }
+
+    /// Get the total number of dependent components (chemical species) in phases-solutions
+    long int Get_AllSolSpeciesNumber() {
+        return pmp->Ls;
+    }
+
+    /// Get index of water-solvent in the whole chemical system (in aqueous phase, always the first one)
+    long int Get_IndexOfH2O_solvent() {
+        // water is the last species in aqueous phase)
+        return pmp->LO;
+    }
+
+    /// Get number of gases in gas/fluid phase, returns 0 if no gas phase
+    long int GetGasesNumber() {
+        return pmp->PG;
+    }
+
+    /// Get the number of all phases (in chemical system)
+    long int Get_AllPhasesNumber() {
+        return pmp->FI;
+    }
+
+    /// Get the vector of numbers of species included in each phase
+    std::vector<long int> Get_SpeciesInPhasesNumbers() {
+        return std::vector<long int>(pm.L1, pm.L1+pm.FI);
+    }
+
+    /// Get the species stoichometry matrix for the whole system (size N*L)
+    std::vector<std::vector<double>> Get_StoichiometryMatrix();
+
+    /// Get molar masses of independent components (elements)
+    std::vector<double> Get_ElementMolarMasses() {
+        return std::vector<double>(pm.Awt, pm.Awt+pm.N);
+    }
+
+    /// Get increments to molar G0 values of DCs from pure gas fugacities or DQF terms
+    std::vector<double> Get_IncrementsMolarG0() {
+        return std::vector<double>(pm.fDQF, pm.fDQF+pm.L);
+    }
+
+    ///Get surface free energy parameter for phases (J/g) (to accomodate for variable phase composition)
+    std::vector<double> Get_SurfaceFreeEnergyParameter() {
+        return std::vector<double>(pm.YOF, pm.YOF+pm.FI);
+    }
+
+    /// Get molar volumes of dependent components (chemical species)
+    std::vector<double> Get_SpeciesMolarVolumes() {
+        return std::vector<double>(pm.Vol, pm.Vol+pm.L);
+    }
+
+    /// Get molar masses of dependent components (chemical species)
+    std::vector<double> Get_SpeciesMolarMasses() {
+        // pm.MM[ii] = dCH->DCmm[ii]*1e3; ?? do we need *1e3
+        return std::vector<double>(pm.MM, pm.MM+pm.L);
+    }
+
+    /// Get mole amounts of independent components (elements)
+    std::vector<double> Get_ElementMoleAmounts() {
+        return std::vector<double>(pm.B, pm.B+pm.N);
+    }
+
+    /// Get mole amounts of dependent components (chemical species)
+    std::vector<double> Get_SpeciesMoleAmounts() {
+        return std::vector<double>(pm.X, pm.X+pm.L);
+    }
+
+    /// Get mole fractions of dependent components (chemical species) in phases
+    std::vector<double> Get_SpeciesMoleFractions() {
+        return std::vector<double>(pm.Wx, pm.Wx+pm.L);
+    }
+
+    /// Get mole amounts of phases (incl pure phases)
+    std::vector<double> Get_PhaseMoleAmounts() {
+        return std::vector<double>(pm.XF, pm.XF+pm.FI);
+    }
+
+    /// Get mole amounts of carriers e.g. water in phases-solutions
+    std::vector<double> Get_PhaseCarrierMoleAmounts() {
+        if(pm.XFA) {
+            return std::vector<double>(pm.XFA, pm.XFA+pm.FIs);
+        }
+        return {};
+    }
+
+    /// Get names of all elements as a list of strings
+    std::vector<std::string> Get_AllElementNames();
+
+    /// Get names of all chemical species as a list of strings
+    std::vector<std::string> Get_AllSpeciesNames();
+
+    /// Get names of all phases as a list of strings
+    std::vector<std::string> Get_AllPhasesNames();
+
+
+    /// Get element class codes
+    std::vector<char> Get_ElementClassCodes() {
+        return std::vector<char>(pm.ICC, pm.ICC+pm.N);
+    }
+
+    /// Get chemical species class codes
+    std::vector<char> Get_SpeciesClassCodes() {
+        return std::vector<char>(pm.DCC, pm.DCC+pm.L);
+    }
+
+    /// Get generic chemical species class codes
+    std::vector<char> Get_SpeciesGenericClassCodes() {
+        return std::vector<char>(pm.DCCW, pm.DCCW+pm.L);
+    }
+
+    /// Get phases aggregate state codes
+    std::vector<char> Get_PhasesAggrStateCodes() {
+        return std::vector<char>(pm.PHC, pm.PHC+pm.FI);
+    }
+
+    /// Get st.Gibbs energies at T,P of dependent components (species)
+    std::vector<double> Get_SpeciesGibbsEnergiesJm() {
+        if(pm.tpp_G) {
+            return std::vector<double>(pm.tpp_G, pm.tpp_G+pm.L);
+        }
+        return {};
+    }
+    /// Get entropies at T,P of dependent components (species)
+    std::vector<double> Get_SpeciesAbsEntropiesJKm() {
+        if(pm.tpp_S) {
+            return std::vector<double>(pm.tpp_S, pm.tpp_S+pm.L);
+        }
+        return {};
+    }
+    /// Get molar volumes at T,P of dependent components (species)
+    std::vector<double> Get_SpeciesMolarVolumesJb() {
+        if(pm.tpp_Vm) {
+            return std::vector<double>(pm.tpp_Vm, pm.tpp_Vm+pm.L);
+        }
+        return {};
+    }
+    /// Get upper bounds for amounts of dependent components (chemical species)
+    std::vector<double> Get_SpeciesUpperBounds() {
+        return std::vector<double>(pm.DUL, pm.DUL+pm.L);
+    }
+
+    /// Get lower bounds for amounts of dependent components (chemical species)
+    std::vector<double> Get_SpeciesLowerBounds() {
+        return std::vector<double>(pm.DLL, pm.DLL+pm.L);
+    }
+
+    /// Get codes for metastability constraints via bounds
+    std::vector<char> Get_SpeciesBoundCodes() {
+        return std::vector<char>(pm.RLC, pm.RLC+pm.L);
+    }
+
+    /// Get units for metastability constraints via bounds
+    std::vector<char> Get_SpeciesBoundUnitCodes() {
+        return std::vector<char>(pm.RSC, pm.RSC+pm.L);
+    }
 
     /// Optional/debugging: Trace output of the whole internal data structure
     void to_text_file(const std::string& path, bool append=false);
@@ -431,6 +606,18 @@ protected:
     void LoadThermodynamicData(double TK, double PPa);
     void ConvertDCC();
     double ConvertGj_toUniformStandardState(double g0, long j, long k);
+
+    void unpackDataBr(bool uPrimalSol);
+    double Ph_Mass(const long xBR) const;
+    double Ph_Moles(const long xBR) const;
+    double Ph_Volume(const long xBR) const;
+
+    inline long int DC_xDB_to_xCH( const long int xBR ) const
+    { return CSD->xdc[xBR]; }
+    inline long int Ph_xDB_to_xCH( const long int xBR ) const
+    { return CSD->xph[xBR]; }
+    long int DC_xCH_to_xDB( const long int xCH ) const;
+    long int Phx_to_DCx( const long int Phx ) const;
 };
 
 typedef enum {  // Field index into outField structure
