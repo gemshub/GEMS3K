@@ -1,6 +1,7 @@
 # options
 message(STATUS "Building isolate tsolmod4rkt library ")
 file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt-build/Thermo-time-in" DESTINATION "${CMAKE_BINARY_DIR}/bin")
+file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt-build/Thermo-time-all" DESTINATION "${CMAKE_BINARY_DIR}/bin")
 file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt/solmod4rkt_test01.py" DESTINATION "${CMAKE_BINARY_DIR}/bin")
 file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt/solmod4rkt_test01.ipynb" DESTINATION "${CMAKE_BINARY_DIR}/bin")
 
@@ -120,6 +121,13 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     target_link_libraries(solmod4rkt_test PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
 else()
     target_link_libraries(solmod4rkt_test PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
+endif()
+
+add_executable(solmodfactory_test solmodfactory_test.cpp)
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+    target_link_libraries(solmodfactory_test PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
+else()
+    target_link_libraries(solmodfactory_test PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
 endif()
 
 #install(TARGETS tsolmod4rkt-app DESTINATION bin)

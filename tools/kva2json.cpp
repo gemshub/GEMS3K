@@ -142,9 +142,12 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
             return false;
         };
 
+        node_arr->GEM_print_ipm( "AfterCalc.txt" );   // possible debugging printout
+
         auto dbr_list =  node_arr->genGEMS3KInputFiles(  export_data.ipmfiles_lst_name, messageF, export_data.nIV,
                                                          export_data.io_mode, export_data.brief_mode,
                                                          export_data.with_comments, export_data.putNodT1, export_data.add_mui );
+
 
         // (4) Here a possible loop on more dbr files begins
         if( !dbr_lst_path.empty() )

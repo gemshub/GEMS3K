@@ -453,6 +453,16 @@ void SolModFactory::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_pKin: rddar.readArray("pKin" , &pm.PLIM, 1);
             break;
+        case f_pa_DS: rddar.readArray("pa_DS", &pm.DSM, 1);
+            break;
+        case f_pa_XwMin: rddar.readArray("pa_XwMin" , &pm.XwMinM, 1);
+            break;
+        case f_pa_ScMin: rddar.readArray("pa_ScMin" , &pm.ScMinM, 1);
+            break;
+        case f_pa_DcMin: rddar.readArray("pa_DcMin" , &pm.DcMinM, 1);
+            break;
+        case f_pa_PhMin: rddar.readArray("pa_PhMin" , &pm.PhMinM, 1);
+            break;
         case f_tMin: rddar.readArray("tMin" , &pm.tMin, 1);
             break;
         case f_dcMod:   rddar.readArray( "dcMod" , pm.dcMod[0], pm.L, 6 );
@@ -585,7 +595,7 @@ void SolModFactory::to_text_file( const std::string& path, bool append )
     //prar.writeArray( "Double_PARAM",  &base_param()->DG, 28L );
     prar.writeArray( "Short_Const",  &pm.N, 39L );
     prar.writeArray(  "Double_Const",  &pm.TC, 53, 20 );
-    // prar.writeArray(  "Add_Double_Const",  &pm.XwMinM, 12, 20 );
+    prar.writeArray(  "Add_Double_Const",  &pm.XwMinM, 4 );
     prar.writeArray(  "EpsW", pm.epsW, 5);
     prar.writeArray(  "EpsWg", pm.epsWg, 5);
     prar.writeArray(  "DenW", pm.denW, 5);
@@ -785,6 +795,7 @@ void SolModFactory::unpackDataBr( bool uPrimalSol )
         //                pmp->lnGam[ii] =  multi_ptr()->PhaseSpecificGamma( ii, jb, je, k, 1L );
         //            }
         //        }
+        CalculateConcentrations(); // pm.Wx
     }
     //  End
 }
@@ -855,6 +866,56 @@ long int  SolModFactory::Phx_to_DCx( const long int Phx ) const
     return DCx;
 }
 
+void SolModFactory::CalculateConcentrations()
+{
+    long int k, jj, jb, je;
+
+    for( jj=0; jj<pm.Ls; jj++ ) {
+        pm.Wx[jj] = 0.;
+    }
+    jb=0;
+    pm.VXc = 0.0;
+    for( k=0; k<pm.FI; k++ ) {
+        // cycle by phases
+        je=jb+pm.L1[k];
+        if( k >= pm.FIs || pm.L1[k] == 1 )  {
+            // this is a single- component phase
+            pm.Wx[jb] = 1.0;
+            if( pm.XF[k] < pm.DSM ) {
+                pm.Wx[jb] = 0.0;
+            }
+            goto NEXT_PHASE;
+        }
+        if( pm.XF[k] <= pm.DSM ||
+                (pm.PHC[k] == PH_AQUEL && ( pm.XFA[k] <= pm.XwMinM || pm.XF[k] <= pm.DSM ) )
+                || ( pm.PHC[k] == PH_SORPTION && pm.XFA[k] <= pm.ScMinM ))
+        {
+            for(jj=jb; jj<je; jj++) {
+                pm.Wx[jj] = 0.0;
+            }
+            goto NEXT_PHASE;
+        }
+
+        // calculation of species concentrations in k-th phase
+        for(jj=jb; jj<je; jj++) {
+
+            if( pm.X[jj] <= pm.DcMinM ) { // zeroing off
+                pm.Wx[jj] = 0.0;
+                continue;
+            }
+            // calculation of the mole fraction
+            if( pm.DCC[jj] == DC_SCP_CONDEN ) {
+                pm.Wx[jj] = 1;
+            }
+            else {
+                pm.Wx[jj] = pm.X[jj]/pm.XF[k];
+            }
+        }   // jj
+
+NEXT_PHASE:
+        jb = je;
+    }  // k
+}
 
 #ifdef USE_NLOHMANNJSON
 template void SolModFactory::from_text_file_gemipm<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& in_format,  DATACH  *dCH );

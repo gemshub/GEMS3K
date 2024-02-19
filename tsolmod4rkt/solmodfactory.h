@@ -275,6 +275,15 @@ typedef struct
     Fdev1[2],  ///< Function1 and target deviations for  minimization of thermodynamic potentials
     Fdev2[2];  ///< Function2 and target deviations for  minimization of thermodynamic potentials
 
+    // Experimental: modified cutoff and insertion values (DK 28.04.2010)
+    double
+    // cutoffs (rescaled to system size)
+    XwMinM, ///< Cutoff mole amount for elimination of water-solvent { 1e-13 }
+    ScMinM, ///< Cutoff mole amount for elimination of solid sorbent { 1e-13 }
+    DcMinM, ///< Cutoff mole amount for elimination of solution- or surface species { 1e-30 }
+    PhMinM; ///< Cutoff mole amount for elimination of non-electrolyte condensed phase { 1e-23 }
+
+
 } TSOLMOD_MULTI;
 
 /// Definition of SolModFactory class and API methods 
@@ -650,6 +659,7 @@ protected:
     { return CSD->xph[xBR]; }
     long int DC_xCH_to_xDB( const long int xCH ) const;
     long int Phx_to_DCx( const long int Phx ) const;
+    void CalculateConcentrations();
 };
 
 typedef enum {  // Field index into outField structure

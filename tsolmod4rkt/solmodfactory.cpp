@@ -168,6 +168,7 @@ long int  SolModFactory::GEM_init( const std::string& ipmfiles_lst_name )
         InitalizeGEM_IPM_Data();
         // Creating and initializing the TSolMod array
         InitalizeTSolMod();
+        unpackDataBr(true);
         TSolMod::solmod_logger->info("Initialization of system {}", char_array_to_string(pmp->stkey,EQ_RKLEN));
         return 0;
     }

@@ -536,6 +536,11 @@ void SolModFactory::set_def( int )
     pm.lnExet   = 0;
     pm.lnCnft   = 0;
     pm.CTerms   = 0;
+
+    pm.XwMinM = 1e-13;
+    pm.ScMinM = 1e-13;
+    pm.DcMinM = 1e-33;
+    pm.PhMinM = 1e-20;
 }
 
 void SolModFactory::alloc_IPx( long int LsIPxSum )

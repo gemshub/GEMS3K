@@ -99,5 +99,6 @@ SOURCES	  +=          $$GEMS3K_CPP/gdatastream.cpp  \
                       solmodfactory.cpp \
                       solmodfactory_alloc.cpp \
                       solmodfactory_format.cpp \
-                      solmod4rkt_test01.cpp
+                      #solmod4rkt_test01.cpp \
+                      solmodfactory_test.cpp
 
