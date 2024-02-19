@@ -180,6 +180,7 @@ void SolModFactory::multi_realloc()
     pm.U0    = new double[pm.L];
     pm.S0    = new double[pm.L];
     pm.A0    = new double[pm.L];
+    pm.V0    = new double[pm.L];
     for( ii=0; ii<pm.L; ii++ )
     {
         pm.Cp0[ii]   = 0.;
@@ -187,7 +188,7 @@ void SolModFactory::multi_realloc()
         pm.U0[ii]    = 0.;
         pm.S0[ii]    = 0.;
         pm.A0[ii]    = 0.;
-
+        pm.V0[ii]    = 0.;
     }
     pm.VPh   = new double[pm.FIs][MIXPHPROPS];
     pm.GPh   = new double[pm.FIs][MIXPHPROPS];
@@ -324,6 +325,7 @@ void SolModFactory::multi_kill()
     if( pm.EZ ) delete[] pm.EZ;
 
     if(pm.H0)  	delete[] pm.H0;
+    if(pm.V0)  	delete[] pm.V0;
     if(pm.A0)  	delete[] pm.A0;
     if(pm.U0)  	delete[] pm.U0;
     if(pm.S0)  	delete[] pm.S0;
@@ -477,6 +479,7 @@ void SolModFactory::set_def( int )
     pm.Vol   = nullptr;
     pm.MM    = nullptr;
     pm.H0    = nullptr;
+    pm.V0    = nullptr;
     pm.A0    = nullptr;
     pm.U0    = nullptr;
     pm.S0    = nullptr;

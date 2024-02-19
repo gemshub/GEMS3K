@@ -183,6 +183,7 @@ typedef struct
     *A,   ///< DC stoichiometry matrix A composed of a_ji [0:N-1][0:L-1]
     *Awt,    ///< IC atomic (molar) mass, g/mole [0:N-1]
 
+    *V0,     ///< array for (standard) molar volumes of DC V(T,P) (J/Pa) [L]
     *H0,     ///< DC pmolar enthalpies, reserved [L]
     *A0,     ///< DC molar Helmholtz energies, reserved [L]
     *U0,     ///< DC molar internal energies, reserved [L]
@@ -391,7 +392,7 @@ public:
 
     /// Get the vector of numbers of species included in each phase
     std::vector<long int> Get_SpeciesInPhasesNumbers() {
-        return std::vector<long int>(pm.L1, pm.L1+pm.FI);
+        return to_vector(pm.L1, pm.FI);
     }
 
     /// Get the species stoichometry matrix for the whole system (size N*L)
@@ -399,56 +400,88 @@ public:
 
     /// Get molar masses of independent components (elements)
     std::vector<double> Get_ElementMolarMasses() {
-        return std::vector<double>(pm.Awt, pm.Awt+pm.N);
+        return to_vector(pm.Awt, pm.N);
     }
 
     /// Get increments to molar G0 values of DCs from pure gas fugacities or DQF terms
     std::vector<double> Get_IncrementsMolarG0() {
-        return std::vector<double>(pm.fDQF, pm.fDQF+pm.L);
+        return to_vector(pm.fDQF, pm.L);
     }
 
     ///Get surface free energy parameter for phases (J/g) (to accomodate for variable phase composition)
     std::vector<double> Get_SurfaceFreeEnergyParameter() {
-        return std::vector<double>(pm.YOF, pm.YOF+pm.FI);
+        return to_vector(pm.YOF, pm.FI);
     }
 
     /// Get molar volumes of dependent components (chemical species)
     std::vector<double> Get_SpeciesMolarVolumes() {
-        return std::vector<double>(pm.Vol, pm.Vol+pm.L);
+        return to_vector(pm.Vol, pm.L);
+    }
+
+    /// Retrieves molar Gibbs energy G0(P,TK) of dependent components (species)
+    std::vector<double> Get_GibbsEnergyG0() {
+        return to_vector(pm.G0, pm.L);
+    }
+
+    /// Retrieves molar volume V0(P,TK) of dependent components (species) (in J/Pa)
+    std::vector<double> Get_MolarVolumeV0() {
+        return to_vector(pm.V0, pm.L);
+    }
+
+    /// Retrieves molar enthalpy H0(P,TK) of dependent components (species) (in J/mol)
+    std::vector<double> Get_MolarEnthalpyH0() {
+        return to_vector(pm.H0, pm.L);
+    }
+
+    /// Retrieves  absolute molar enropy S0(P,TK) of dependent components (species) (in J/K/mol)
+    std::vector<double> Get_MolarEnropyS0() {
+        return to_vector(pm.S0, pm.L);
+    }
+
+    /// Retrieves  constant-pressure heat capacity Cp0(P,TK) of dependent components (species) (in J/K/mol)
+    std::vector<double> Get_HeatCapacityCp0() {
+        return to_vector(pm.Cp0, pm.L);
+    }
+
+    /// Retrieves Helmholtz energy of dependent components (species) (in J/mol)
+    std::vector<double> Get_HelmholtzEnergyA0() {
+        return to_vector(pm.A0, pm.L);
+    }
+
+    /// Retrieves Internal energy of dependent components (species)  (in J/mol)
+    std::vector<double> Get_InternalEnergyU0() {
+        return  to_vector(pm.U0, pm.L);
     }
 
     /// Get molar masses of dependent components (chemical species)
     std::vector<double> Get_SpeciesMolarMasses() {
         // pm.MM[ii] = dCH->DCmm[ii]*1e3; ?? do we need *1e3
-        return std::vector<double>(pm.MM, pm.MM+pm.L);
+        return to_vector(pm.MM, pm.L);
     }
 
     /// Get mole amounts of independent components (elements)
     std::vector<double> Get_ElementMoleAmounts() {
-        return std::vector<double>(pm.B, pm.B+pm.N);
+        return to_vector(pm.B, pm.N);
     }
 
     /// Get mole amounts of dependent components (chemical species)
     std::vector<double> Get_SpeciesMoleAmounts() {
-        return std::vector<double>(pm.X, pm.X+pm.L);
+        return to_vector(pm.X, pm.L);
     }
 
     /// Get mole fractions of dependent components (chemical species) in phases
     std::vector<double> Get_SpeciesMoleFractions() {
-        return std::vector<double>(pm.Wx, pm.Wx+pm.L);
+        return to_vector(pm.Wx, pm.L);
     }
 
     /// Get mole amounts of phases (incl pure phases)
     std::vector<double> Get_PhaseMoleAmounts() {
-        return std::vector<double>(pm.XF, pm.XF+pm.FI);
+        return to_vector(pm.XF, pm.FI);
     }
 
     /// Get mole amounts of carriers e.g. water in phases-solutions
     std::vector<double> Get_PhaseCarrierMoleAmounts() {
-        if(pm.XFA) {
-            return std::vector<double>(pm.XFA, pm.XFA+pm.FIs);
-        }
-        return {};
+        return to_vector(pm.XFA, pm.FIs);
     }
 
     /// Get names of all elements as a list of strings
@@ -460,66 +493,56 @@ public:
     /// Get names of all phases as a list of strings
     std::vector<std::string> Get_AllPhasesNames();
 
-
     /// Get element class codes
     std::vector<char> Get_ElementClassCodes() {
-        return std::vector<char>(pm.ICC, pm.ICC+pm.N);
+        return to_vector(pm.ICC, pm.N);
     }
 
     /// Get chemical species class codes
     std::vector<char> Get_SpeciesClassCodes() {
-        return std::vector<char>(pm.DCC, pm.DCC+pm.L);
+        return to_vector(pm.DCC, pm.L);
     }
 
     /// Get generic chemical species class codes
     std::vector<char> Get_SpeciesGenericClassCodes() {
-        return std::vector<char>(pm.DCCW, pm.DCCW+pm.L);
+        return to_vector(pm.DCCW, pm.L);
     }
 
     /// Get phases aggregate state codes
     std::vector<char> Get_PhasesAggrStateCodes() {
-        return std::vector<char>(pm.PHC, pm.PHC+pm.FI);
+        return to_vector(pm.PHC, +pm.FI);
     }
 
     /// Get st.Gibbs energies at T,P of dependent components (species)
     std::vector<double> Get_SpeciesGibbsEnergiesJm() {
-        if(pm.tpp_G) {
-            return std::vector<double>(pm.tpp_G, pm.tpp_G+pm.L);
-        }
-        return {};
+        return to_vector(pm.tpp_G, pm.L);
     }
     /// Get entropies at T,P of dependent components (species)
     std::vector<double> Get_SpeciesAbsEntropiesJKm() {
-        if(pm.tpp_S) {
-            return std::vector<double>(pm.tpp_S, pm.tpp_S+pm.L);
-        }
-        return {};
+        return to_vector(pm.tpp_S, pm.L);
     }
     /// Get molar volumes at T,P of dependent components (species)
     std::vector<double> Get_SpeciesMolarVolumesJb() {
-        if(pm.tpp_Vm) {
-            return std::vector<double>(pm.tpp_Vm, pm.tpp_Vm+pm.L);
-        }
-        return {};
+        return to_vector(pm.tpp_Vm, +pm.L);
     }
     /// Get upper bounds for amounts of dependent components (chemical species)
     std::vector<double> Get_SpeciesUpperBounds() {
-        return std::vector<double>(pm.DUL, pm.DUL+pm.L);
+        return to_vector(pm.DUL, pm.L);
     }
 
     /// Get lower bounds for amounts of dependent components (chemical species)
     std::vector<double> Get_SpeciesLowerBounds() {
-        return std::vector<double>(pm.DLL, pm.DLL+pm.L);
+        return to_vector(pm.DLL, pm.L);
     }
 
     /// Get codes for metastability constraints via bounds
     std::vector<char> Get_SpeciesBoundCodes() {
-        return std::vector<char>(pm.RLC, pm.RLC+pm.L);
+        return to_vector(pm.RLC, pm.L);
     }
 
     /// Get units for metastability constraints via bounds
     std::vector<char> Get_SpeciesBoundUnitCodes() {
-        return std::vector<char>(pm.RSC, pm.RSC+pm.L);
+        return to_vector(pm.RSC, pm.L);
     }
 
     /// Optional/debugging: Trace output of the whole internal data structure
@@ -548,6 +571,15 @@ protected:
     std::unique_ptr<ThermoFun::ThermoEngine> thermo_engine;
 #endif
     std::string thermo_json_string;
+
+    template < class T >
+    std::vector<T> to_vector( const T* array, size_t size) {
+        if(array) {
+            return std::vector<T>(array, array+size);
+        }
+        return {};
+    }
+
 
     /// Clear thermodynamic data from ThermoEngine
     void clear_ThermoEngine();

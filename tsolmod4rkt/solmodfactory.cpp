@@ -602,11 +602,12 @@ bool SolModFactory::load_all_thermodynamic_from_thermo(double TK, double PPa)
 
                 G0 = propAl.gibbs_energy.val;
                 pmp->Vol[j] = propAl.volume.val*10;
-                if( dCH->S0 ) pmp->S0[j] = propAl.entropy.val;
-                if( dCH->H0 ) pmp->H0[j] = propAl.enthalpy.val;
-                if( dCH->Cp0 ) pmp->Cp0[j] = propAl.heat_capacity_cp.val;
-                if( dCH->A0 ) pmp->A0[j] = propAl.helmholtz_energy.val;
-                if( dCH->U0 ) pmp->U0[j] = propAl.internal_energy.val;
+                if( pmp->V0 ) pmp->V0[j] = propAl.volume.val/bar_to_Pa;
+                if( pmp->S0 ) pmp->S0[j] = propAl.entropy.val;
+                if( pmp->H0 ) pmp->H0[j] = propAl.enthalpy.val;
+                if( pmp->Cp0 ) pmp->Cp0[j] = propAl.heat_capacity_cp.val;
+                if( pmp->A0 ) pmp->A0[j] = propAl.helmholtz_energy.val;
+                if( pmp->U0 ) pmp->U0[j] = propAl.internal_energy.val;
 
                 pmp->G0[j] = ConvertGj_toUniformStandardState(G0, j, k);
 #ifdef  USE_THERMO_LOG
@@ -614,11 +615,11 @@ bool SolModFactory::load_all_thermodynamic_from_thermo(double TK, double PPa)
                     f_log << "\n" << symbol << ";" << floating_point_to_string(G0)
                           << ";" << floating_point_to_string(pmp->G0[j])
                           << ";" << floating_point_to_string(pmp->Vol[j]);
-                    if( dCH->S0 ) f_log << ";" << floating_point_to_string(pmp->S0[j]);
-                    if( dCH->H0 ) f_log << ";" << floating_point_to_string(pmp->H0[j]);
-                    if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pmp->Cp0[j]);
-                    if( dCH->A0 ) f_log << ";" << floating_point_to_string(pmp->A0[j]);
-                    if( dCH->U0 ) f_log << ";" << floating_point_to_string(pmp->U0[j]);
+                    if( pmp->S0 ) f_log << ";" << floating_point_to_string(pmp->S0[j]);
+                    if( pmp->H0 ) f_log << ";" << floating_point_to_string(pmp->H0[j]);
+                    if( pmp->Cp0 ) f_log << ";" << floating_point_to_string(pmp->Cp0[j]);
+                    if( pmp->A0 ) f_log << ";" << floating_point_to_string(pmp->A0[j]);
+                    if( pmp->U0 ) f_log << ";" << floating_point_to_string(pmp->U0[j]);
                 }
 #endif
             }  // j
@@ -773,7 +774,7 @@ void SolModFactory::load_all_thermodynamic_from_grid(double TK, double PPa )
             if( xTP >= 0 )
             {
                 Go = dCH->G0[ jj+xTP];
-                Vv = dCH->V0[ jj+xTP]*1e5;
+                Vv = dCH->V0[ jj+xTP];
                 if( dCH->S0 ) S0 = dCH->S0[ jj+xTP];
                 if( dCH->H0 ) h0 = dCH->H0[ jj+xTP];
                 if( dCH->Cp0 ) Cp0 = dCH->Cp0[ jj+xTP];
@@ -785,7 +786,7 @@ void SolModFactory::load_all_thermodynamic_from_grid(double TK, double PPa )
                 Go = LagranInterp( dCH->Pval, dCH->TKval, dCH->G0+jj,
                                    PPa, TK, dCH->nTp, dCH->nPp, 6 ); // from test G0[Ca+2] enough
                 Vv = LagranInterp( dCH->Pval, dCH->TKval, dCH->V0+jj,
-                                   PPa, TK, dCH->nTp, dCH->nPp, 5 )*1e5;
+                                   PPa, TK, dCH->nTp, dCH->nPp, 5 );
                 if( dCH->S0 ) S0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->S0+jj,
                                                   PPa, TK, dCH->nTp, dCH->nPp, 4 ); // from test S0[Ca+2] enough
                 if( dCH->H0 ) h0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->H0+jj,
@@ -806,6 +807,9 @@ void SolModFactory::load_all_thermodynamic_from_grid(double TK, double PPa )
 
             Ge = 0.;
             pm.G0[j] = ConvertGj_toUniformStandardState( Go+Gg+Ge, j, k ); // formerly Cj_init_calc()
+            if( pm.V0 ) pm.V0[j] = Vv;
+            Vv *=bar_to_Pa;
+
             // Inside this function, pm.YOF[k] can be added!
 
             switch( pm.PV )

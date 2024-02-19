@@ -240,7 +240,8 @@ void SolModFactory::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     // testing read
     std::string ret = rdar.testRead();
     if( !ret.empty() )
-    { ret += " - fields must be read from the MULTI structure";
+    {
+        ret += " - fields must be read from the MULTI structure";
         Error( "Error", ret);
     }
 
@@ -344,11 +345,13 @@ void SolModFactory::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     {
         switch( nfild )
         {
-        case f_sMod: if( !pm.sMod )
+        case f_sMod:
+            if( !pm.sMod )
                 Error( "Error", "Array sMod is not used in this problem");
             rddar.readArray( "sMod" , pm.sMod[0], pm.FIs, 8 );
             break;
-        case f_LsMod:{ if( !pm.LsMod )
+        case f_LsMod:  {
+            if( !pm.LsMod )
                 Error( "Error", "Array LsMod is not used in this problem");
             rddar.readArray( "LsMod" , pm.LsMod, pm.FIs*3) ;
             long int LsModSum;
@@ -368,7 +371,8 @@ void SolModFactory::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             }
             break;
         }
-        case f_LsMdc: { if( !pm.LsMdc )
+        case f_LsMdc: {
+            if( !pm.LsMdc )
                 Error( "Error", "Array LsMdc not used in this problem");
             rddar.readArray( "LsMdc" , pm.LsMdc, pm.FIs*3 );
             long int LsMdcSum;
@@ -406,8 +410,8 @@ void SolModFactory::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             }
             break;
         }
-        case f_LsPhl:
-        { if( !pm.LsPhl )
+        case f_LsPhl: {
+            if( !pm.LsPhl )
                 Error( "Error", "Array LsPhl not used in this problem");
             rddar.readArray(  "LsPhl",  pm.LsPhl, pm.FI*2);
             long int PhLinSum, lPhcSum;
@@ -507,7 +511,8 @@ void  SolModFactory::read_ipm_format_stream( std::iostream& stream, GEMS3KGenera
 }
 
 void SolModFactory::getLsModsum( long int& LsModSum, long int& LsIPxSum )
-{  LsModSum = 0;
+{
+    LsModSum = 0;
     LsIPxSum = 0;
     for(long int i=0; i<pm.FIs; i++)
     {
@@ -517,7 +522,8 @@ void SolModFactory::getLsModsum( long int& LsModSum, long int& LsIPxSum )
 }
 
 void SolModFactory::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum )
-{  LsMdcSum = 0;
+{
+    LsMdcSum = 0;
     LsMsnSum = 0;
     LsSitSum = 0;
 
@@ -531,7 +537,8 @@ void SolModFactory::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int&
 
 // dimensions from LsPhl array
 void SolModFactory::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
-{  PhLinSum = 0;
+{
+    PhLinSum = 0;
     lPhcSum = 0;
 
     for(long int i=0; i<pm.FI; i++)
@@ -544,7 +551,8 @@ void SolModFactory::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
 
 // dimensions from LsMdc2 array
 void SolModFactory::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
-{  DQFcSum = 0;
+{
+    DQFcSum = 0;
     rcpcSum = 0;
 
     for(long int i=0; i<pm.FIs; i++)
@@ -589,9 +597,12 @@ void SolModFactory::to_text_file( const std::string& path, bool append )
 
     // Part 1
     prar.writeArray(  "L1", pm.L1,  pm.FI);
-   prar.writeArray(  "DUL", pm.DUL,  pm.L);
-   prar.writeArray(  "DLL", pm.DLL,  pm.L);
+    prar.writeArray(  "DUL", pm.DUL,  pm.L);
+    prar.writeArray(  "DLL", pm.DLL,  pm.L);
     prar.writeArray(  "Vol", pm.Vol,  pm.L);
+    if(pm.V0)
+        prar.writeArray("V0",pm.V0, pm.L);
+
     prar.writeArray(  "Pparc", pm.Pparc,  pm.L);
     prar.writeArray(  "MM", pm.MM,  pm.L);
     prar.writeArray(  "Awt", pm.Awt, pm.N);
@@ -602,8 +613,8 @@ void SolModFactory::to_text_file( const std::string& path, bool append )
     prar.writeArray(  "lnGmo", pm.lnGmo,  pm.L);
     prar.writeArray(  "B", pm.B,  pm.N);
     
-   prar.writeArray(  "XF", pm.XF,  pm.FI);
-  prar.writeArray(  "X", pm.X,  pm.L);
+    prar.writeArray(  "XF", pm.XF,  pm.FI);
+    prar.writeArray(  "X", pm.X,  pm.L);
     prar.writeArray(  "YOF", pm.YOF,  pm.FI);
     prar.writeArray(  "lnGmM", pm.lnGmM,  pm.L);
     prar.writeArray(  "fDQF", pm.fDQF,  pm.L);
@@ -620,7 +631,7 @@ void SolModFactory::to_text_file( const std::string& path, bool append )
     // Part 2  not always required arrays
     if( pm.FIs > 0 && pm.Ls > 0 )
     {
-     prar.writeArray(  "XFA", pm.XFA,  pm.FIs);
+        prar.writeArray(  "XFA", pm.XFA,  pm.FIs);
     }
     if( pm.LO > 1 )
     {
@@ -791,7 +802,7 @@ double  SolModFactory::Ph_Volume( const long int xBR ) const
     else
     {
         long int xdc = Phx_to_DCx( Ph_xDB_to_xCH( xBR ));
-        vol = pm.Vol[xdc];//  /1e5
+        vol = pm.V0[xdc];//  /1e5
         vol *= CNode->xDC[DC_xCH_to_xDB(xdc)];
     }
     return vol;
