@@ -361,6 +361,45 @@ void SolModFactory::InitalizeTSolMod()
 
         jb = je;
         je += pm.L1[k];
+        sMod = pm.sMod[k];
+
+        SolutionData sd;
+        AddSolutionData addsd;
+
+        sd.phaseName = phase_name;
+        sd.Mod_Code = sMod[SPHAS_TYP];
+        sd.Mix_Code = sMod[MIX_TYP];
+        sd.NSpecies = pm.L1[k];          // Number of components (end members) in the phase
+
+        // properties generic to all models
+        sd.arWx = pm.Wx+jb;       // End member mole fractions
+        sd.arlnGam = pm.lnGam+jb; // End member ln activity coeffs
+
+        if( je <= pm.Ls) {
+            sd.arlnDQFt = pm.lnDQFt+jb; // End member ln activity coeffs
+            sd.arlnRcpt = pm.lnRcpt+jb; // End member ln activity coeffs
+            sd.arlnExet = pm.lnExet+jb; // End member ln activity coeffs
+            sd.arlnCnft = pm.lnCnft+jb; // End member ln activity coeffs
+            sd.arCTermt = pm.CTerms+jb; // End member coulombic terms
+        }
+        sd.aphVOL = pm.FVOL+k;  // CalculateConcentrations
+        sd.DC_Codes = pm.DCC+jb;  // pointer to Dcomp class codes (added 02.05.2010 TW)
+        sd.arGEX = pm.fDQF+jb;      // DQF parameters or pure-gas fugacities
+        sd.arPparc = pm.Pparc+jb;
+        sd.TP_Code = &pm.dcMod[jb];
+        sd.T_k = pm.Tc;
+        sd.P_bar = pm.P;
+        sd.arVol = pm.Vol+jb;
+        sd.arSM = pm.SM+jb;
+
+        addsd.arZ = pm.EZ+jb;
+        addsd.arM = pm.Y_m+jb;
+        addsd.ardenW = pm.denW;
+        addsd.arepsW = pm.epsW;
+        addsd.arG0 = pm.G0+jb;
+        addsd.arFWGT = pm.FWGT+k;
+        addsd.arX = pm.X+jb;
+
         if( pm.L1[k] == 1 && !( pm.PHC[k] == PH_GASMIX ||
                                 pm.PHC[k] == PH_PLASMA ||
                                 pm.PHC[k] == PH_FLUID ))
@@ -376,7 +415,6 @@ void SolModFactory::InitalizeTSolMod()
         jpe += pm.LsMod[k*3]*pm.LsMod[k*3+2];
         jdb = jde;
         jde += pm.LsMdc[k*3]*pm.L1[k];
-        sMod = pm.sMod[k];
 
         jmb = jme;
         jme += pm.LsMdc[k*3+1]*pm.LsMdc[k*3+2]*pm.L1[k];
@@ -401,13 +439,9 @@ void SolModFactory::InitalizeTSolMod()
         case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID: case PH_ADSORPT:
         case PH_IONEX:
         {
-            SolutionData sd;
-            AddSolutionData addsd;
-
-            sd.phaseName = phase_name;
+            // init model data
             sd.Mod_Code = sMod[SPHAS_TYP];
             sd.Mix_Code = sMod[MIX_TYP];
-            sd.NSpecies = pm.L1[k];          // Number of components (end members) in the phase
             sd.NParams = pm.LsMod[k*3];      // Number of interaction parameters
             sd.NPcoefs = pm.LsMod[k*3+2];    // and number of coefs per parameter in PMc table
             sd.MaxOrder =  pm.LsMod[k*3+1];  // max. parameter order (cols in IPx)
@@ -420,35 +454,10 @@ void SolModFactory::InitalizeTSolMod()
             sd.arIPx = pm.IPx+ipb;   // Pointer to list of indexes for non-ideal solutions -> NPar x MaxOrd
             sd.arIPc = pm.PMc+jpb;   // Interaction parameter coefficients f(TP) -> NPar x NPcoef
             sd.arDCc = pm.DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
-            sd.arWx = pm.Wx+jb;       // End member mole fractions
-            sd.arlnGam = pm.lnGam+jb; // End member ln activity coeffs
 
-            sd.arlnDQFt = pm.lnDQFt+jb; // End member ln activity coeffs
-            sd.arlnRcpt = pm.lnRcpt+jb; // End member ln activity coeffs
-            sd.arlnExet = pm.lnExet+jb; // End member ln activity coeffs
-            sd.arlnCnft = pm.lnCnft+jb; // End member ln activity coeffs
-            sd.arCTermt = pm.CTerms+jb; // End member coulombic terms
-
-            sd.aphVOL = pm.FVOL+k;
-            sd.DC_Codes = pm.DCC+jb;  // pointer to Dcomp class codes (added 02.05.2010 TW)
             sd.arMoiSN = pm.MoiSN+jmb;  // Pointer to sublattice-moiety multiplicity array
             sd.arSitFr = pm.SitFr+jsb;  // Pointer to sublattice-moiety multiplicity array
-            sd.arGEX = pm.fDQF+jb;      // DQF parameters or pure-gas fugacities
-            sd.arPparc = pm.Pparc+jb;
-            sd.TP_Code = &pm.dcMod[jb];
-            sd.T_k = pm.Tc;
-            sd.P_bar = pm.P;
             sd.arDQFc = pm.DQFc+ jdqfc;
-            sd.arVol = pm.Vol+jb;
-            sd.arSM = pm.SM+jb;
-
-            addsd.arZ = pm.EZ+jb;
-            addsd.arM = pm.Y_m+jb;
-            addsd.ardenW = pm.denW;
-            addsd.arepsW = pm.epsW;
-            addsd.arG0 = pm.G0+jb;
-            addsd.arFWGT = pm.FWGT+k;
-            addsd.arX = pm.X+jb;
 
             phase_models.push_back(SolModEngine(k, jb, sd, addsd));
             // new solution models (TW, DK 2007)

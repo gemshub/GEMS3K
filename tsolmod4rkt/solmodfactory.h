@@ -427,11 +427,13 @@ public:
         return to_vector(pm.Vol, pm.L);
     }
 
+    /// Get st.Gibbs energies at T,P of dependent components (species)
     /// Retrieves molar Gibbs energy G0(P,TK) of dependent components (species)
     std::vector<double> Get_GibbsEnergyG0() {
         return to_vector(pm.G0, pm.L);
     }
 
+    /// Get molar volumes at T,P of dependent components (species)
     /// Retrieves molar volume V0(P,TK) of dependent components (species) (in J/Pa)
     std::vector<double> Get_MolarVolumeV0() {
         return to_vector(pm.V0, pm.L);
@@ -522,18 +524,6 @@ public:
         return to_vector(pm.PHC, +pm.FI);
     }
 
-    /// Get st.Gibbs energies at T,P of dependent components (species)
-    std::vector<double> Get_SpeciesGibbsEnergiesJm() {
-        return to_vector(pm.tpp_G, pm.L);
-    }
-    /// Get entropies at T,P of dependent components (species)
-    std::vector<double> Get_SpeciesAbsEntropiesJKm() {
-        return to_vector(pm.tpp_S, pm.L);
-    }
-    /// Get molar volumes at T,P of dependent components (species)
-    std::vector<double> Get_SpeciesMolarVolumesJb() {
-        return to_vector(pm.tpp_Vm, +pm.L);
-    }
     /// Get upper bounds for amounts of dependent components (chemical species)
     std::vector<double> Get_SpeciesUpperBounds() {
         return to_vector(pm.DUL, pm.L);
@@ -660,6 +650,7 @@ protected:
     long int DC_xCH_to_xDB( const long int xCH ) const;
     long int Phx_to_DCx( const long int Phx ) const;
     void CalculateConcentrations();
+    double PhaseSpecificGamma(long j, long k);
 };
 
 typedef enum {  // Field index into outField structure

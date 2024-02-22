@@ -81,52 +81,52 @@ enum tp_codes {  /// codes for fluid subroutines in EoS models (see v_mod.h)
 /// (c) March 2007 DK/TW
 struct SolutionData {
     std::string phaseName;
-    long int NSpecies;  ///< Number of species (end members) in the phase
-    long int NParams;   ///< Total number of non-zero interaction parameters
-    long int NPcoefs;   ///< Number of coefficients per interaction parameter
-    long int MaxOrder;  ///< Maximum order of interaction parameters
-    long int NPperDC;   ///< Number of parameters per species (DC)
-    long int NSublat;   ///< number of sublattices nS
-    long int NMoiet;    ///< number of moieties nM
+    long int NSpecies=1;  ///< Number of species (end members) in the phase
+    long int NParams=0;   ///< Total number of non-zero interaction parameters
+    long int NPcoefs=0;   ///< Number of coefficients per interaction parameter
+    long int MaxOrder=0;  ///< Maximum order of interaction parameters
+    long int NPperDC=0;   ///< Number of parameters per species (DC)
+    long int NSublat=0;   ///< number of sublattices nS
+    long int NMoiet=0;    ///< number of moieties nM
 
 //    long int NlPhs;     ///< new: Number of linked phases
 //    long int NlPhC;     ///< new: Number of linked phase parameter coefficient per link (default 0)
-    long int NDQFpDC;   ///< new: Number of DQF parameters per species (end member)
+    long int NDQFpDC=0;   ///< new: Number of DQF parameters per species (end member)
 //    long int NrcPpDC;   ///< new: Number of reciprocal parameters per species (end member)
 
-    char Mod_Code;      ///< Code of the mixing model
-    char Mix_Code;      ///< Code for specific EoS mixing rule
-    char *DC_Codes;     ///< DC class codes for species -> NSpecies
-    char (*TP_Code)[6]; ///< Codes for TP correction methods for species ->NSpecies
-    long int *arIPx;    ///< Pointer to list of indexes of non-zero interaction parameters
-    char  (*arSM)[MAXDCNAME];  ///< List of DC names in the phase
+    char Mod_Code='N';      ///< Code of the mixing model
+    char Mix_Code='N';      ///< Code for specific EoS mixing rule
+    char *DC_Codes=nullptr;     ///< DC class codes for species -> NSpecies
+    char (*TP_Code)[6]=nullptr; ///< Codes for TP correction methods for species ->NSpecies
+    long int *arIPx=nullptr;    ///< Pointer to list of indexes of non-zero interaction parameters
+    char  (*arSM)[MAXDCNAME]=nullptr;  ///< List of DC names in the phase
 
 //    long int *arPhLin;  ///< new: indexes of linked phase and link type codes [NlPhs*2] read-only
 
-    double *arIPc;      ///< Table of interaction parameter coefficients
-    double *arDCc;      ///< End-member properties coefficients
-    double *arMoiSN;    ///< End member moiety- site multiplicity number tables -> NSpecies x NSublat x NMoiet
-    double *arSitFr;    ///< Tables of sublattice site fractions for moieties -> NSublat x NMoiet
-    double *arSitFj;    ///< new: Table of end member sublattice activity coefficients -> NSpecies x NSublat
-    double *arGEX;      ///< Pure-species fugacities, G0 increment terms  -> NSpecies
+    double *arIPc=nullptr;      ///< Table of interaction parameter coefficients
+    double *arDCc=nullptr;      ///< End-member properties coefficients
+    double *arMoiSN=nullptr;    ///< End member moiety- site multiplicity number tables -> NSpecies x NSublat x NMoiet
+    double *arSitFr=nullptr;    ///< Tables of sublattice site fractions for moieties -> NSublat x NMoiet
+    double *arSitFj=nullptr;    ///< new: Table of end member sublattice activity coefficients -> NSpecies x NSublat
+    double *arGEX=nullptr;      ///< Pure-species fugacities, G0 increment terms  -> NSpecies
 
 //    double *lPhc;  ///< new: array of phase link parameters -> NlPhs x NlPhC (read-only)
-    double *arDQFc;  ///< new: array of DQF parameters for DCs in phases ->  NSpecies x NDQFpDC; (read-only)
+    double *arDQFc=nullptr;  ///< new: array of DQF parameters for DCs in phases ->  NSpecies x NDQFpDC; (read-only)
 //    double *rcpc;  ///< new: array of reciprocal parameters for DCs in phases -> NSpecies x NrcPpDC; (read-only)
 
-    double *arPparc;    ///< Partial pressures -> NSpecies
-    double *arWx;       ///< Species (end member) mole fractions ->NSpecies
-    double *arlnGam;    ///< Output: activity coefficients of species (end members)   
+    double *arPparc=nullptr;    ///< Partial pressures -> NSpecies
+    double *arWx=nullptr;       ///< Species (end member) mole fractions ->NSpecies
+    double *arlnGam=nullptr;    ///< Output: activity coefficients of species (end members)
 
     // Detailed output on terms of partial end-member properties, allocated in MULTI
-    double *arlnDQFt; ///< new: DQF terms adding to overall activity coefficients [Ls_]
-    double *arlnRcpt; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
-    double *arlnExet; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
-    double *arlnCnft; ///< new: configurational terms adding to overall activity [Ls_]
-    double *arCTermt; ///< new: Coulombic terms adding to overall activity coefficients [Ls_]
+    double *arlnDQFt=nullptr; ///< new: DQF terms adding to overall activity coefficients [Ls_]
+    double *arlnRcpt=nullptr; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
+    double *arlnExet=nullptr; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
+    double *arlnCnft=nullptr; ///< new: configurational terms adding to overall activity [Ls_]
+    double *arCTermt=nullptr; ///< new: Coulombic terms adding to overall activity coefficients [Ls_]
 
-    double *arVol;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
-    double *aphVOL;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
+    double *arVol=nullptr;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
+    double *aphVOL=nullptr;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
     double T_k;         ///< Temperature, K (initial)
     double P_bar;       ///< Pressure, bar (initial)
 };

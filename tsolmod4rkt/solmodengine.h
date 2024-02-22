@@ -34,13 +34,13 @@
 /// Addition parameters for specific models,
 /// could be add to main SolutionData
 struct AddSolutionData {
-    double *arZ;
-    double *arM;
-    double *ardenW;
-    double *arepsW;
-    double *arG0;
-    double *arFWGT;
-    double *arX;
+    double *arZ=nullptr;
+    double *arM=nullptr;
+    double *ardenW=nullptr;
+    double *arepsW=nullptr;
+    double *arG0=nullptr;
+    double *arFWGT=nullptr;
+    double *arX=nullptr;
 };
 
 /// Decorator for TSolMod and derived classes implementing built-in models of mixing

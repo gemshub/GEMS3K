@@ -786,15 +786,15 @@ void SolModFactory::unpackDataBr( bool uPrimalSol )
             pmp->Gamma[ CSD->xdc[ii] ] = CNode->gam[ii];
         }
 
-        //        long int jb, je = 0;
-        //        for( long int k=0; k<pmp->FIs; k++ ) { // loop on solution phases
-        //            jb = je;
-        //            je += pmp->L1[ k ];
-        //            // Load activity coeffs for phases-solutions
-        //            for( ii=jb; ii<je; ii++ )  {
-        //                pmp->lnGam[ii] =  multi_ptr()->PhaseSpecificGamma( ii, jb, je, k, 1L );
-        //            }
-        //        }
+        long int jb, je = 0;
+        for( long int k=0; k<pmp->FIs; k++ ) { // loop on solution phases
+            jb = je;
+            je += pmp->L1[ k ];
+            // Load activity coeffs for phases-solutions
+            for( ii=jb; ii<je; ii++ )  {
+                pmp->lnGam[ii] =  PhaseSpecificGamma(ii, k);
+            }
+        }
         CalculateConcentrations(); // pm.Wx
     }
     //  End
@@ -866,55 +866,274 @@ long int  SolModFactory::Phx_to_DCx( const long int Phx ) const
     return DCx;
 }
 
+
 void SolModFactory::CalculateConcentrations()
 {
     long int k, jj, jb, je;
+    double Factor=0.0;
 
     for( jj=0; jj<pm.Ls; jj++ ) {
         pm.Wx[jj] = 0.;
     }
     jb=0;
     pm.VXc = 0.0;
-    for( k=0; k<pm.FI; k++ ) {
-        // cycle by phases
+    for( k=0; k<pm.FI; k++ ) {  // cycle by phases
         je=jb+pm.L1[k];
-        if( k >= pm.FIs || pm.L1[k] == 1 )  {
-            // this is a single- component phase
+        //pm.FWGT[k] = 0.0;
+        //pm.FVOL[k] = 0.0;
+
+        if( k >= pm.FIs || pm.L1[k] == 1 ) { // this is a single- component phase
             pm.Wx[jb] = 1.0;
-            if( pm.XF[k] < pm.DSM ) {
+            if( pm.XF[k] < pm.DSM )  {   // This phase to be zeroed off
+                if( pm.LO )
+                    pm.Y_m[jb] = 0.0;
                 pm.Wx[jb] = 0.0;
+                goto NEXT_PHASE;
             }
+            if( pm.LO && pm.XFA[0] > 0 )
+                pm.Y_m[jb] = pm.X[jb] * 1000./18.01528/pm.XFA[0]; // molality
+            //pm.FWGT[k] += pm.X[jb] * pm.MM[jb];
+            //pm.FVOL[k] += pm.X[jb] * pm.Vol[jb];
             goto NEXT_PHASE;
         }
+
         if( pm.XF[k] <= pm.DSM ||
                 (pm.PHC[k] == PH_AQUEL && ( pm.XFA[k] <= pm.XwMinM || pm.XF[k] <= pm.DSM ) )
-                || ( pm.PHC[k] == PH_SORPTION && pm.XFA[k] <= pm.ScMinM ))
-        {
-            for(jj=jb; jj<je; jj++) {
+                || ( pm.PHC[k] == PH_SORPTION && pm.XFA[k] <= pm.ScMinM ))     {
+            for(jj=jb; jj<je; jj++)   {
                 pm.Wx[jj] = 0.0;
+                if( pm.LO )
+                    pm.Y_m[jj] = 0.0;
+                //pm.lnGam[jj] = 0.0;
             }
             goto NEXT_PHASE;
         }
 
+        switch( pm.PHC[k] )
+        {
+        case PH_AQUEL: {
+            double MMC = 0.0; // molar mass of carrier
+            if( pm.XFA[k] > pm.XwMinM )
+            {
+                for(jj=jb; jj<je; jj++)
+                    if( pm.DCC[jj] == DC_AQ_SOLVENT ||
+                            pm.DCC[jj] == DC_AQ_SOLVCOM )
+                        MMC += pm.MM[jj]*pm.X[jj]/pm.XFA[k];
+            }
+            else MMC=18.01528; // Assuming water-solvent
+            //            if( (XFA[k] > pm.lowPosNum) && (MMC > pm.lowPosNum) )
+            if( (pm.XFA[k] > pm.XwMinM) && (MMC > pm.lowPosNum) )
+                Factor = 1000./MMC/pm.XFA[k]; // molality
+            else Factor = 0.0;
+        }
+            [[fallthrough]];
+        case PH_GASMIX:
+        case PH_FLUID:
+        case PH_PLASMA:
+        case PH_SIMELT:
+        case PH_HCARBL:
+        case PH_IONEX:
+        case PH_ADSORPT:
+        case PH_SINCOND:
+        case PH_SINDIS:
+        case PH_LIQUID:
+            pm.YFk = pm.XF[k];
+            //for(jj=jb; jj<je; jj++)
+            //{
+            //    if( pm.X[jj] > pm.DcMinM)
+            //        pm.FWGT[k] += pm.X[jj]*pm.MM[jj];
+            //}
+            break;
+        case PH_POLYEL:
+        case PH_SORPTION: // only sorbent end-members!
+            pm.YFk = pm.XFA[k];
+            if( pm.XFA[k] < pm.ScMinM )
+                pm.XFA[k] = pm.ScMinM;
+            //for( jj=jb; jj<je; jj++ )    {
+            //    if( pm.DCC[jj] == DC_SUR_CARRIER ||
+            //            pm.DCC[jj] == DC_SUR_MINAL ||
+            //            pm.DCC[jj] == DC_PEL_CARRIER )    {
+            //        // Only sorbent mass
+            //        pm.FWGT[k] += pm.X[jj]*pm.MM[jj];
+            //    }
+            //}
+            pm.logYFk = log(pm.YFk);
+            break;
+        default:
+            return; // Phase class code error!
+        }
         // calculation of species concentrations in k-th phase
-        for(jj=jb; jj<je; jj++) {
+        for( long int j=jb; j<je; j++ )  {
 
-            if( pm.X[jj] <= pm.DcMinM ) { // zeroing off
-                pm.Wx[jj] = 0.0;
+            if( pm.X[j] <= pm.DcMinM ) { // zeroing off
+                pm.Wx[j] = 0.0;
+                //pm.lnGam[j] = 0.0;
+                if( pm.PHC[0] == PH_AQUEL )
+                    pm.Y_m[j] = 0.0;
                 continue;
             }
             // calculation of the mole fraction
-            if( pm.DCC[jj] == DC_SCP_CONDEN ) {
-                pm.Wx[jj] = 1;
+            pm.Wx[j] = pm.X[j]/pm.XF[k];
+            switch( pm.DCC[j] ) // choice of expressions
+            {
+            case DC_SCP_CONDEN:
+                pm.Wx[j] = 1;
+                if( pm.LO ) {
+                    pm.Y_m[j] = pm.X[j]*Factor; // molality
+                }
+                //pm.FVOL[k] += pm.Vol[j]*pm.X[j];
+                break;
+            case DC_AQ_ELECTRON:
+                pm.Y_m[j] = 0.0;
+                break;
+            case DC_AQ_PROTON:  // in molal scale!
+            case DC_AQ_SPECIES:
+            case DC_AQ_SURCOMP:
+                //pm.FVOL[k] += pm.Vol[j]*pm.X[j]; // fixed 04.02.03 KD
+                pm.Y_m[j] = pm.X[j]*Factor;
+                break;
+            case DC_AQ_SOLVENT: // mole fractions of solvent
+            case DC_AQ_SOLVCOM:
+                //            pm.Y_m[j] = X[j]/XFA[k];  Replaced by DK 12.03.2012
+                pm.Y_m[j] = H2O_mol_to_kg;
+                //pm.FVOL[k] += pm.Vol[j]*pm.X[j];
+                break;
+            case DC_GAS_COMP:
+            case DC_GAS_H2O:
+            case DC_GAS_CO2:   // gases
+            case DC_GAS_H2:
+            case DC_GAS_N2:
+                //pm.FVOL[k] += pm.Vol[j]*pm.X[j];
+                break;
+            case DC_SOL_IDEAL:
+            case DC_SOL_MINOR:   //solution end member
+            case DC_SOL_MAJOR:
+            case DC_SOL_MINDEP:
+            case DC_SOL_MAJDEP:
+            case DC_SCM_SPECIES:
+                //pm.FVOL[k] += pm.Vol[j]*pm.X[j];
+                if( pm.LO ) {
+                    pm.Y_m[j] = pm.X[j]*Factor; // molality
+                }
+                break;
+            case DC_SUR_GROUP: // adsorption:
+                pm.Y_m[j] = pm.X[j]*Factor; // molality
+                //pm.FVOL[k] += pm.Vol[j]*pm.X[j];
+                break;
+            case DC_SSC_A0:
+            case DC_SSC_A1:
+            case DC_SSC_A2:
+            case DC_SSC_A3:
+            case DC_SSC_A4:
+            case DC_WSC_A0:
+            case DC_WSC_A1:
+            case DC_WSC_A2:
+            case DC_WSC_A3:
+            case DC_WSC_A4:  // case DC_SUR_GROUP:
+            case DC_SUR_COMPLEX:
+            case DC_SUR_IPAIR:
+            case DC_IESC_A:
+            case DC_IEWC_B:
+                pm.Y_m[j] = pm.X[j]*Factor; // molality
+                //pm.FVOL[k] += pm.Vol[j]*pm.X[j];
+                break;
+            case DC_PEL_CARRIER:
+            case DC_SUR_MINAL:
+            case DC_SUR_CARRIER: // sorbent
+                pm.Y_m[j] = pm.X[j]*Factor; // molality
+                //pm.FVOL[k] += pm.Vol[j]*pm.X[j];
+                break;
+            default:
+                break; // error in DC class code
             }
-            else {
-                pm.Wx[jj] = pm.X[jj]/pm.XF[k];
-            }
-        }   // jj
+            ;
+        }   // j
 
 NEXT_PHASE:
+        pm.VXc += pm.FVOL[k];
         jb = je;
     }  // k
+}
+
+
+//  Function for converting internal lnGam[j] value into an external (phase-scale-specific)
+//      Gamma[j] if DirFlag = 0 or external into internal value if DirFlag = 1.
+//  Returns the respectively corrected external gamma activity coefficient or internal lnGam
+//  Returns trivial values (lnGam = 0 or Gamma = 1) when the respective component
+//    amount is zero (X[j] == 0) (is this a correct policy for zeroed-off components?)
+double SolModFactory::PhaseSpecificGamma( long int j, long int k )
+{
+    double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0.;//, MMC = 0.;
+
+    if( k>=pm.FIs || pm.sMod[k][SPHAS_TYP] != SM_AQPITZ)
+    {
+        switch( pm.PHC[k] )
+        {
+        case PH_AQUEL:
+            if( noZero( pm.XF[k] ) && noZero( pm.XFA[k] ) )
+            {
+                NonLogTerm = 1. - pm.XFA[k]/pm.XF[k];
+                NonLogTermW = 2. - pm.XFA[k]/pm.XF[k] - pm.XF[k]/pm.XFA[k];
+            }
+            break;
+        case PH_GASMIX:  case PH_FLUID:   case PH_PLASMA:   case PH_SIMELT:
+        case PH_HCARBL:  case PH_SINCOND:  case PH_SINDIS:  case PH_LIQUID:
+        case PH_IONEX:
+            break;
+        case PH_POLYEL:
+        case PH_SORPTION: // only sorbent end-members!
+            if( noZero( pm.XF[k] ) && noZero( pm.XFA[k] ) )
+            {
+                NonLogTerm = 1. - pm.XFA[k]/pm.XF[k];  // Also for sorption phases
+                NonLogTermS = 2. - pm.XFA[k]/pm.XF[k] - pm.XF[k]/pm.XFA[k];
+            }
+            break;
+        case PH_ADSORPT: // 'z' phase - adsorption on site balances
+            break;
+        default:
+            break; // Phase class code error should be generated here!
+        }
+    }
+#ifdef NOMUPNONLOGTERM
+    NonLogTerm = 0.0;
+    NonLogTermS = 0.0;
+#endif
+    // Converting Gamma[j] into lnGam[j]
+    if( approximatelyZero(pm.X[j]) && approximatelyZero(pm.XF[k]) )   // && !pm->XF[k]  added by DK 13.04.2012
+        return 0.;
+    double Gamma = pm.Gamma[j];
+    double lnGam = 0.0;
+    if( !essentiallyEqual(Gamma, 1.0) && Gamma > pm.lowPosNum )
+        lnGam = log( Gamma );
+    switch( pm.DCC[j] )
+    { // Aqueous electrolyte
+    case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
+        lnGam -= NonLogTerm;  // Correction by asymmetry term
+        break;
+    case DC_AQ_SOLVCOM:	    case DC_AQ_SOLVENT:
+        lnGam -= NonLogTermW;
+        break;
+    case DC_GAS_COMP: case DC_GAS_H2O: case DC_GAS_CO2: case DC_GAS_H2: case DC_GAS_N2:
+        break;
+    case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR: case DC_SOL_MINDEP:
+    case DC_SOL_MAJDEP:                   case DC_SCM_SPECIES:
+        break;
+    case DC_SCP_CONDEN: case DC_SUR_MINAL:
+        break;
+    case DC_SUR_CARRIER: case DC_PEL_CARRIER:
+        lnGam -= NonLogTermS;
+        break;
+        // Sorption phases
+    case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
+    case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2: case DC_WSC_A3: case DC_WSC_A4:
+    case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
+    case DC_IEWC_B:
+        lnGam -= NonLogTerm;
+        break;
+    default:
+        break;
+    }
+    return lnGam;
 }
 
 #ifdef USE_NLOHMANNJSON
