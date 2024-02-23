@@ -352,7 +352,7 @@ void SolModFactory::InitalizeTSolMod()
     long int  jmb, jme=0, jsb, jse=0;
     char *sMod;
 
-    for( k=0; k<pm.FIs; k++ )
+    for( k=0; k<pm.FI; k++ )
     {
         // loop on solution phases
         auto phase_name = char_array_to_string(pm.SF[k]+MAXSYMB, MAXPHNAME);
@@ -361,14 +361,13 @@ void SolModFactory::InitalizeTSolMod()
 
         jb = je;
         je += pm.L1[k];
-        sMod = pm.sMod[k];
 
         SolutionData sd;
         AddSolutionData addsd;
 
         sd.phaseName = phase_name;
-        sd.Mod_Code = sMod[SPHAS_TYP];
-        sd.Mix_Code = sMod[MIX_TYP];
+        sd.Mod_Code = 'N';
+        sd.Mix_Code = 'N';
         sd.NSpecies = pm.L1[k];          // Number of components (end members) in the phase
 
         // properties generic to all models
@@ -400,12 +399,12 @@ void SolModFactory::InitalizeTSolMod()
         addsd.arFWGT = pm.FWGT+k;
         addsd.arX = pm.X+jb;
 
-        if( pm.L1[k] == 1 && !( pm.PHC[k] == PH_GASMIX ||
+        if( k >= pm.FIs || ( pm.L1[k] == 1 && !( pm.PHC[k] == PH_GASMIX ||
                                 pm.PHC[k] == PH_PLASMA ||
-                                pm.PHC[k] == PH_FLUID ))
+                                pm.PHC[k] == PH_FLUID ) ) )
         {
             // empty model
-            phase_models.push_back(SolModEngine(k, jb, phase_name));
+            phase_models.push_back(SolModEngine(k, jb, sd, addsd));
             continue;
         }
         // Indexes for extracting data from IPx, PMc and DMc arrays
@@ -420,6 +419,7 @@ void SolModFactory::InitalizeTSolMod()
         jme += pm.LsMdc[k*3+1]*pm.LsMdc[k*3+2]*pm.L1[k];
         jsb = jse;
         jse += pm.LsMdc[k*3+1]*pm.LsMdc[k*3+2];
+        sMod = pm.sMod[k];
 
         double nxk = 1./pm.L1[k];
         for( j= jb; j<je; j++ )   {
@@ -466,7 +466,7 @@ void SolModFactory::InitalizeTSolMod()
         }
         default:
             // empty model
-            phase_models.push_back(SolModEngine(k, jb, phase_name));
+            phase_models.push_back(SolModEngine(k, jb, sd, addsd));
             break;
         }
         // move pointers

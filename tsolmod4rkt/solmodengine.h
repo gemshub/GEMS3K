@@ -165,6 +165,9 @@ public:
     /// (endmembers) as a dict (component map)
     std::map<std::string, double> GetMoleFractions();
 
+    /// Get mole fractions of species (endmembers) as a vector
+    std::vector<double> Get_MoleFractions();
+
     /// Copy molalities of (aqueous) species
     /// into a provided array molal of length >= Get_SpeciesNumber()
     void Get_Molalities(double* molal);
@@ -173,13 +176,19 @@ public:
     /// as a dict (component map)
     std::map<std::string, double> GetMolalities();
 
+    /// Get molalities of (aqueous) speciesas a vector
+    std::vector<double> Get_Molalities();
+
     /// Copy ln(activities) of species (end members)
     /// into a provided array lnactiv of length >= Get_SpeciesNumber()
     void Get_lnActivities(double* lnactiv);
 
     /// Get ln(activities) of species (end membbers)
-    /// (endmembers) as a dict (component map)
+    /// as a dict (component map)
     std::map<std::string, double> GetlnActivities();
+
+    /// Get ln(activities) of species (end membbers) as a vector
+    std::vector<double> Get_lnActivities();
 
     /// Copy calculated ln of activity coefficients of species (end members)
     /// into a provided array lngamma of length >= Get_SpeciesNumber()
@@ -188,6 +197,10 @@ public:
     /// Get the calculated ln of activity coefficients of chemical species
     /// (endmembers) as a dict (component map)
     std::map<std::string, double> GetlnActivityCoeffs();
+
+    /// Get the calculated ln of activity coefficients of chemical species
+    /// (endmembers) as a vector
+    std::vector<double> Get_lnActivityCoeffs();
 
     /// NB: for an endmember (species) in solution phase:
     ///     ln_ActivityCoeff = lnConfTerm + lnRecipTerm + lnExcessTerm + lnDQFTerm
@@ -202,6 +215,9 @@ public:
     /// dict (component map).
     std::map<std::string, double> GetlnConfTerms();
 
+    /// Get ln configurational terms of species adding to overall activity as a vector
+    std::vector<double> Get_lnConfTerms();
+
     // lnRecipTerm
     // Used in models TBerman, TCEFmod, TMBWmod
     // ( SM_BERMAN-'B', SM_CEF-'$', SM_MBW-'#' )
@@ -214,6 +230,11 @@ public:
     /// a dict (component map)
     /// Implemented for the mixing model 'B', '$', '#'
     std::map<std::string, double> GetlnRecipTerms();
+
+    /// Get reciprocal terms adding to overall activity coefficients into
+    /// a vector
+    /// Implemented for the mixing model 'B', '$', '#'
+    std::vector<double> Get_lnRecipTerms();
 
     // lnExcessTerm
     // Used in models TBerman, TCEFmod, TMBWmod
@@ -228,6 +249,11 @@ public:
     /// Implemented for the mixing model 'B', '$', '#'
     std::map<std::string, double> GetlnExcessTerms();
 
+    /// Get excess energy terms adding to overall activity coefficients
+    /// as a vector
+    /// Implemented for the mixing model 'B', '$', '#'
+    std::vector<double> Get_lnExcessTerms();
+
     // lnDQFTerm
     // Can be Used in model TSubregular
     // ( SM_MARGB-'M' )
@@ -241,6 +267,10 @@ public:
     /// Implemented for the mixing model 'M' (Margules binary) in DQF form
     std::map<std::string, double> GetlnDQFTerms();
 
+    /// Get DQF terms adding to overall activity coefficients as a vector
+    /// Implemented for the mixing model 'M' (Margules binary) in DQF form
+    std::vector<double> Get_lnDQFTerms();
+
     /// Copy increments to molar G0 values of DCs from pure gas fugacities
     /// or DQF terms into a provided array of length >= Get_SpeciesNumber()
     void Get_G0Increments(double* aGEX);
@@ -248,6 +278,10 @@ public:
     /// Get increments to molar G0 values of DCs from pure gas fugacities
     /// or DQF terms as a dict (component map)
     std::map<std::string, double> GetG0Increments();
+
+    /// Get increments to molar G0 values of DCs from pure gas fugacities
+    /// or DQF terms as a vector
+    std::vector<double> Get_G0Increments();
 
     // aVol
     // Used in models TPRSVcalc, TCGFcalc, TSRKcalc, TPR78calc, TCORKcalc, TSTPcalc
@@ -259,6 +293,10 @@ public:
     /// Get molar volumes of species as a dict (component map)
     /// Implemented for the mixing model 'P', 'F', 'E', '7', '8', '6'
     std::map<std::string, double> GetMolarVolumes();
+
+    /// Get molar volumes of species as a vector
+    /// Implemented for the mixing model 'P', 'F', 'E', '7', '8', '6'
+    std::vector<double> Get_MolarVolumes();
 
     /// Get phase volume, cm3/mol
     /// Implemented for the mixing model 'P', 'F', 'E', '7'
@@ -276,20 +314,22 @@ public:
     /// Implemented for the mixing model 'P', 'F', 'E', '7', '8', '6'
     std::map<std::string, double> GetPartialPressures();
 
+    /// Get partial pressures or fugacities of pure DC as a vector.
+    /// Implemented for the mixing model 'P', 'F', 'E', '7', '8', '6'
+    std::vector<double> Get_PartialPressures();
+
     /// Maintenance and debugging methods
 
     /// Writing SolModEngine data for the current phase to a JSON format file
-    void to_json_file(const std::string& path) const
-    {
-        if(solmod_task.get()) {
-            solmod_task->to_json_file(path);
-        }
-    }
+    void to_json_file(const std::string& path) const;
     /// Writing SolModEngine data for the current phase to JSON stream
     void to_json(std::iostream& ff) const
     {
         if(solmod_task.get()) {
             solmod_task->to_json_stream(ff);
+        }
+        else {
+            to_json_stream_short(ff);
         }
     }
 
@@ -300,6 +340,9 @@ public:
             solmod_task->to_text_file(path, append);
         }
     }
+
+    /// Trace writing of data arrays for the current phase to JSON stream
+    void to_json_stream_short(std::iostream &ff) const;
 
 protected:
 
@@ -356,6 +399,7 @@ protected:
     std::map<std::string, double> property2map(double* dcs_size_array);
     void map2property(const std::map<std::string, double>& dsc_name_map,
                       double* dcs_size_array, double def_value);
+    std::vector<double> property2vector(double *dcs_size_array);
 
     /// Updates P and T in the mixing and activity model for this phase
     ///  (if those have changed)

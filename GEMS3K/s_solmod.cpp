@@ -413,7 +413,7 @@ void TSolMod::to_json_stream(std::iostream& ff) const
     prar.writeArray( "aGEX",  aGEX, NComp );
     prar.writeArray( "aPparc",  aPparc, NComp );
     prar.writeArray( "aVol",  aVol, NComp );
-    prar.writeArray( "x",  x, NComp );
+    prar.writeArray( "aWx",  x, NComp );
     prar.writeArray( "lnGamma",  lnGamma, NComp );
     prar.writeArray( "DQFcf",  DQFcf, NComp*NDQFpc );
     prar.writeArray( "aSitFR",  aSitFR, NSub*NMoi );
@@ -440,7 +440,7 @@ void TSolMod::to_text_file(const std::string& path, bool append) const
         prar.writeArray( "aIP",  aIP, NPar );
     prar.writeArray( "aGEX",  aGEX, NComp );
     prar.writeArray( "aPparc",  aPparc, NComp );
-    prar.writeArray( "x",  x, NComp );
+    prar.writeArray( "aWx",  x, NComp );
     prar.writeArray( "aVol",  aVol, NComp );
     prar.writeArray( "lnGamma",  lnGamma, NComp );
     prar.writeArray( "lnGamConf", lnGamConf, NComp );

@@ -196,7 +196,8 @@ public:
     /// \param l_size - Setup number of elements in line
     /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
     /// \param brief_mode - Do not write data items that contain only default values
-    void writeArray( long f_num, const std::vector<double>& arr, long int l_size=0,
+    template < typename T >
+    void writeArray( long f_num, const std::vector<T>& arr, long int l_size=0,
                      bool with_comments = false, bool brief_mode = false)
     {
         if( !brief_mode || getAlws(f_num) )
@@ -206,6 +207,18 @@ public:
             out_format.write_array( flds[f_num].name, arr, l_size );
         }
     }
+
+    /// Writes double vector to a text file.
+    /// <flds[f_num].name> arr[0] ... arr[size-1]
+    /// \param l_size - Setup number of elements in line
+    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
+    /// \param brief_mode - Do not write data items that contain only default values
+    template < typename T >
+    void writeArray( const std::string& name, const std::vector<T>& arr, long int l_size=0)
+    {
+        out_format.write_array( name, arr, l_size );
+    }
+
 
     /// Writes char array to a text file.
     /// <flds[f_num].name> "arr[0]" ... "arr[size-1]"

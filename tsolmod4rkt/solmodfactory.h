@@ -346,7 +346,7 @@ public:
     void UpdateThermoData(double TK, double PPa);
 
     /// Get the number of solution phases (in SolModFactory)
-    long int Get_SolPhasesNumber() {
+    long int Get_ModelsPhasesNumber() {
         return phase_models.size();
     }
 
@@ -397,6 +397,11 @@ public:
     /// Get the number of all phases (in chemical system)
     long int Get_AllPhasesNumber() {
         return pmp->FI;
+    }
+
+    /// Get the number of solution phases (in SolModFactory)
+    long int Get_SolPhasesNumber() {
+        return pmp->FIs;
     }
 
     /// Get the vector of numbers of species included in each phase

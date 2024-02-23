@@ -29,6 +29,9 @@
 #include "solmodengine.h"
 #include "v_service.h"
 #include "verror.h"
+#include "io_template.h"
+#include "io_simdjson.h"
+#include "jsonconfig.h"
 
 SolModEngine::SolModEngine(long k, long jb, SolutionData &sd, const AddSolutionData &addsd):
     model_code(sd.Mod_Code), phase_name(sd.phaseName),
@@ -209,6 +212,11 @@ std::map<std::string, double> SolModEngine::GetMoleFractions()
     return property2map(arWx);
 }
 
+std::vector<double> SolModEngine::Get_MoleFractions()
+{
+    return property2vector(arWx);
+}
+
 void SolModEngine::Get_Molalities(double *molal)
 {
     if(arM) {
@@ -223,6 +231,11 @@ std::map<std::string, double> SolModEngine::GetMolalities()
     return property2map(arM);
 }
 
+std::vector<double> SolModEngine::Get_Molalities()
+{
+    return property2vector(arM);
+}
+
 
 void SolModEngine::Get_lnActivityCoeffs(double *lngamma)
 {
@@ -234,6 +247,11 @@ void SolModEngine::Get_lnActivityCoeffs(double *lngamma)
 std::map<std::string, double> SolModEngine::GetlnActivityCoeffs()
 {
     return property2map(arlnGam);
+}
+
+std::vector<double> SolModEngine::Get_lnActivityCoeffs()
+{
+    return property2vector(arlnGam);
 }
 
 void SolModEngine::Get_lnActivities(double* lnactiv)
@@ -256,9 +274,15 @@ void SolModEngine::Get_lnActivities(double* lnactiv)
 
 std::map<std::string, double> SolModEngine::GetlnActivities()
 {
-    std::map<std::string, double> dsc_name_map;
+    auto vec = Get_lnActivities();
+    return property2map(vec.data());
+}
+
+std::vector<double> SolModEngine::Get_lnActivities()
+{
+    std::vector<double> dsc_name_vec;
     if(!arlnGam || !arM || !arWx) { // nullptr
-        return dsc_name_map;
+        return dsc_name_vec;
     }
     double lna;
     for(int jj=0; jj<dc_num; ++jj) {
@@ -271,9 +295,9 @@ std::map<std::string, double> SolModEngine::GetlnActivities()
                 lna = log(arWx[jj]) + arlnGam[jj];
             }
         }
-        dsc_name_map[dc_names[jj]] = lna;
+        dsc_name_vec.push_back(lna);
     }
-    return dsc_name_map;
+    return dsc_name_vec;
 }
 
 void SolModEngine::Get_lnConfTerms(double *lnGamConf)
@@ -290,6 +314,11 @@ std::map<std::string, double> SolModEngine::GetlnConfTerms()
     return property2map(arlnCnft);
 }
 
+std::vector<double> SolModEngine::Get_lnConfTerms()
+{
+   return property2vector(arlnCnft);
+}
+
 void SolModEngine::Get_lnRecipTerms(double *lnGamRecip)
 {
     if(arlnRcpt) {
@@ -302,6 +331,11 @@ void SolModEngine::Get_lnRecipTerms(double *lnGamRecip)
 std::map<std::string, double> SolModEngine::GetlnRecipTerms()
 {
     return property2map(arlnRcpt);
+}
+
+std::vector<double> SolModEngine::Get_lnRecipTerms()
+{
+    return property2vector(arlnRcpt);
 }
 
 void SolModEngine::Get_lnExcessTerms(double *lnGamEx)
@@ -318,6 +352,11 @@ std::map<std::string, double> SolModEngine::GetlnExcessTerms()
     return property2map(arlnExet);
 }
 
+std::vector<double> SolModEngine::Get_lnExcessTerms()
+{
+    return property2vector(arlnExet);
+}
+
 void SolModEngine::Get_lnDQFTerms(double *lnGamDQF)
 {
     if(arlnDQFt) {
@@ -330,6 +369,11 @@ void SolModEngine::Get_lnDQFTerms(double *lnGamDQF)
 std::map<std::string, double> SolModEngine::GetlnDQFTerms()
 {
     return property2map(arlnDQFt);
+}
+
+std::vector<double> SolModEngine::Get_lnDQFTerms()
+{
+    return property2vector(arlnDQFt);
 }
 
 void SolModEngine::Get_G0Increments(double *aGEX)
@@ -346,6 +390,11 @@ std::map<std::string, double> SolModEngine::GetG0Increments()
     return property2map(arGEX);
 }
 
+std::vector<double> SolModEngine::Get_G0Increments()
+{
+    return property2vector(arGEX);
+}
+
 void SolModEngine::Get_MolarVolumes(double *aVol)
 {
     if(arVol) {
@@ -358,6 +407,11 @@ void SolModEngine::Get_MolarVolumes(double *aVol)
 std::map<std::string, double> SolModEngine::GetMolarVolumes()
 {
     return property2map(arVol);
+}
+
+std::vector<double> SolModEngine::Get_MolarVolumes()
+{
+    return property2vector(arVol);
 }
 
 double SolModEngine::GetPhaseVolume()
@@ -383,6 +437,12 @@ std::map<std::string, double> SolModEngine::GetPartialPressures()
 {
     return property2map(arPparc);
 }
+
+std::vector<double> SolModEngine::Get_PartialPressures()
+{
+    return property2vector(arPparc);
+}
+
 
 void SolModEngine::Set_MoleFractions(double *aWx)
 {
@@ -663,6 +723,7 @@ void SolModEngine::SolMod_create(SolutionData& sd, const AddSolutionData& addsd)
         break;
     }
     default:
+        model_name = "Undefined";
         break;
     }
     solmod_task.reset(mySM);
@@ -725,6 +786,14 @@ std::map<std::string, double> SolModEngine::property2map(double *dcs_size_array)
     return dsc_name_map;
 }
 
+std::vector<double> SolModEngine::property2vector(double *dcs_size_array)
+{
+    if(dcs_size_array) {
+        return std::vector<double>(dcs_size_array, dcs_size_array+dc_num);
+    }
+    return {};
+}
+
 void SolModEngine::map2property(const std::map<std::string, double> &dsc_name_map, double *dcs_size_array, double def_value)
 {
     if(!dcs_size_array) { // nullptr
@@ -739,4 +808,35 @@ void SolModEngine::map2property(const std::map<std::string, double> &dsc_name_ma
             dcs_size_array[jj] = def_value;
         }
     }
+}
+
+void SolModEngine::to_json_stream_short(std::iostream& ff) const
+{
+    io_formats::SimdJsonWrite out_format( ff, "set_name", true );
+    out_format.put_head( phase_name, "tsolmod");
+    io_formats::TPrintArrays<io_formats::SimdJsonWrite>  prar( 0, {}, out_format );
+
+    prar.addField("PhaseName", phase_name);
+    prar.addField("ModCode", model_code);
+    prar.addField("NComp", dc_num);
+    prar.writeArray( "phVOL",  aphVOL, 1L );
+    prar.writeArray( "aFWGT",  arFWGT, 1L );
+
+    prar.writeArray( "DCNL", dc_names, 10 );
+    prar.writeArray( "aGEX",  arGEX, dc_num );
+    prar.writeArray( "aPparc",  arPparc, dc_num );
+    prar.writeArray( "aVol",  arVol, dc_num );
+    prar.writeArray( "aWx",  arWx, dc_num );
+    prar.writeArray( "lnGamma",  arlnGam, dc_num );
+    prar.writeArray( "aM",  arM, dc_num );
+    prar.writeArray( "aX",  arX, dc_num );
+
+    out_format.dump( true );
+}
+
+void SolModEngine::to_json_file(const std::string &path) const
+{
+    std::fstream ff(GemsSettings::with_directory(path), std::ios::out);
+    ErrorIf(!ff.good(), path, "Fileopen error");
+    to_json(ff);
 }

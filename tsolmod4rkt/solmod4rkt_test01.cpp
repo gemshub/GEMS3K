@@ -94,19 +94,15 @@ int main()
         phase1.SolModActivityCoeffs();
         
         // Getting phase composition in C++ style (e.g. for checking)
-        double* x_ph1 = new double[n_species_p1];
-        double* a_ph1 = new double[n_species_p1];
-        phase1.Get_MoleFractions(x_ph1);
+        auto x_ph1 = phase1.Get_MoleFractions();
         // phase1.Get_Molalities(m_ph1);
-        phase1.Get_lnActivities(a_ph1);
+        auto a_ph1 = phase1.Get_lnActivities();
 
         // Printing input phase composition and species activities in C style
         for(size_t j=0; j<n_species_p1; j++) {
             std::cout << "   '" << em_names_p1[j] << "': x= " << x_ph1[j] 
             << "; a= " << exp(a_ph1[j]) << std::endl;
         }
-        delete[] x_ph1;
-        delete[] a_ph1;
         
         // Writing results to a text file
         phase1.to_text_file("solmod_act_coef.txt", false);

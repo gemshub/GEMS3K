@@ -130,6 +130,13 @@ else()
     target_link_libraries(solmodfactory_test PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
 endif()
 
+add_executable(solmodengine_test solmodengine_test.cpp)
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+    target_link_libraries(solmodengine_test PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
+else()
+    target_link_libraries(solmodengine_test PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
+endif()
+
 #install(TARGETS tsolmod4rkt-app DESTINATION bin)
 
 # Find the Python interpreter
