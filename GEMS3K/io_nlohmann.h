@@ -41,7 +41,7 @@ class NlohmannJsonWrite
     /// Internal structure of file data
     nlohmann::json json_data;
     nlohmann::json top_data;
-    std::iostream& fout;
+    std::ostream& fout;
     std::string current_set_name;
     std::string top_field_name;
 
@@ -168,7 +168,7 @@ class NlohmannJsonRead
 public:
 
     /// Constructor
-    NlohmannJsonRead( std::iostream& ff, const std::string& test_set_name,  const std::string& field_name );
+    NlohmannJsonRead( std::ostream& ff, const std::string& test_set_name,  const std::string& field_name );
 
     /// Reset json loop
     void reset()

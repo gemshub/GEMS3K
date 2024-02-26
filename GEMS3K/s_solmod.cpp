@@ -27,6 +27,7 @@
 #include "s_solmod.h"
 #include "v_detail.h"
 #include "io_template.h"
+#include "io_nlohmann.h"
 #include "io_simdjson.h"
 #include "io_keyvalue.h"
 #include "jsonconfig.h"
@@ -383,11 +384,15 @@ void TSolMod::to_json_file(const std::string& path) const
     to_json_stream(ff);
 }
 
-void TSolMod::to_json_stream(std::iostream& ff) const
+void TSolMod::to_json_stream(std::ostream& ff) const
 {
+#ifdef USE_NLOHMANNJSON
+    io_formats::NlohmannJsonWrite out_format( ff, "set_name" );
+#else
     io_formats::SimdJsonWrite out_format( ff, "set_name", true );
+#endif
     out_format.put_head( PhaseName, "tsolmod");
-    io_formats::TPrintArrays<io_formats::SimdJsonWrite>  prar( 0, {}, out_format );
+    io_formats::TPrintArrays  prar( 0, {}, out_format );
 
     prar.addField("PhaseName", PhaseName);
     prar.addField("Tk", Tk);

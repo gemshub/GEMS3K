@@ -37,12 +37,12 @@ class KeyValueWrite
 {
 
     /// Internal structure of file data
-    std::iostream& fout;
+    std::ostream& fout;
 
 public:
 
     /// Constructor
-    KeyValueWrite( std::iostream& ff ): fout(ff) {}
+    KeyValueWrite( std::ostream& ff ): fout(ff) {}
 
     std::string set_name() const
     {

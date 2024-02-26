@@ -2,6 +2,7 @@
 message(STATUS "Building isolate tsolmod4rkt library ")
 file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt-build/Thermo-time-in" DESTINATION "${CMAKE_BINARY_DIR}/bin")
 file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt-build/Thermo-time-all" DESTINATION "${CMAKE_BINARY_DIR}/bin")
+file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt/solmod4rkt_demo.py" DESTINATION "${CMAKE_BINARY_DIR}/bin")
 file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt/solmod4rkt_test01.py" DESTINATION "${CMAKE_BINARY_DIR}/bin")
 file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt/solmod4rkt_test01.ipynb" DESTINATION "${CMAKE_BINARY_DIR}/bin")
 
@@ -116,28 +117,20 @@ install(FILES ${SOLMOD_HEADER_FILES}
 
 # Test application
 find_package(Threads REQUIRED)
-add_executable(solmod4rkt_test solmod4rkt_test01.cpp)
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    target_link_libraries(solmod4rkt_test PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
-else()
-    target_link_libraries(solmod4rkt_test PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
-endif()
+set(Test_apps
+       solmod4rkt_test01
+       solmodfactory_demo
+       solmodengine_demo )
 
-add_executable(solmodfactory_test solmodfactory_test.cpp)
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    target_link_libraries(solmodfactory_test PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
-else()
-    target_link_libraries(solmodfactory_test PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
-endif()
-
-add_executable(solmodengine_test solmodengine_test.cpp)
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    target_link_libraries(solmodengine_test PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
-else()
-    target_link_libraries(solmodengine_test PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
-endif()
-
-#install(TARGETS tsolmod4rkt-app DESTINATION bin)
+foreach (appName ${Test_apps})
+    add_executable(${appName} ${appName}.cpp)
+    if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+        target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
+    else()
+        target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
+    endif()
+    #install(TARGETS ${appName}} DESTINATION bin)
+endforeach()
 
 # Find the Python interpreter
 #if(THERMOMATCH_BUILD_PYTHON)

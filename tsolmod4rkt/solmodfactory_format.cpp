@@ -3,7 +3,7 @@
 ///
 /// Implementation of writing/reading IPM text I/O files
 //
-// Copyright (c) 2023 S.Dmytriyeva,D.Kulik
+// Copyright (c) 2023-2024 S.Dmytriyeva,D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -520,7 +520,7 @@ void  SolModFactory::read_ipm_format_stream( std::iostream& stream, GEMS3KGenera
     }
 }
 
-void SolModFactory::getLsModsum( long int& LsModSum, long int& LsIPxSum )
+void SolModFactory::getLsModsum( long int& LsModSum, long int& LsIPxSum ) const
 {
     LsModSum = 0;
     LsIPxSum = 0;
@@ -531,7 +531,7 @@ void SolModFactory::getLsModsum( long int& LsModSum, long int& LsIPxSum )
     }
 }
 
-void SolModFactory::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum )
+void SolModFactory::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum ) const
 {
     LsMdcSum = 0;
     LsMsnSum = 0;
@@ -546,7 +546,7 @@ void SolModFactory::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int&
 }
 
 // dimensions from LsPhl array
-void SolModFactory::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
+void SolModFactory::getLsPhlsum( long int& PhLinSum,long int& lPhcSum ) const
 {
     PhLinSum = 0;
     lPhcSum = 0;
@@ -560,7 +560,7 @@ void SolModFactory::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
 }
 
 // dimensions from LsMdc2 array
-void SolModFactory::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
+void SolModFactory::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum ) const
 {
     DQFcSum = 0;
     rcpcSum = 0;
@@ -573,24 +573,35 @@ void SolModFactory::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
 }
 
 //---------------------------------------------------------//
+
+std::ostream& operator<<(std::ostream& out, const SolModFactory& obj)
+{
+  obj.to_stream(out);
+  return out;
+}
+
+
 /// Writing structure MULTI ( free format file  )
-void SolModFactory::to_text_file( const std::string& path, bool append )
+void SolModFactory::to_text_file( const std::string& path, bool append ) const
 {
     std::ios::openmode mod = std::ios::out;
     if( append )
         mod = std::ios::out|std::ios::app;
     std::fstream ff(GemsSettings::with_directory(path), mod );
     ErrorIf( !ff.good() , path, "Fileopen error");
+    if( append )
+        ff << "\nNext record -----------------------------";
+    to_stream(ff);
 
+}
+
+void SolModFactory::to_stream(std::ostream &ff) const
+{
     io_formats::KeyValueWrite out_format( ff );
     out_format.put_head( "", "ipm");
     io_formats::TPrintArrays<io_formats::KeyValueWrite>  prar( 0, {}, out_format );
 
-    if( append )
-        prar.writeComment( true,"\nNext record" );
     prar.writeComment( true, char_array_to_string(pm.stkey, EQ_RKLEN)+"\n" );
-    //  TProfil::pm->pa.p.write(ff);
-
     //prar.writeArray( "Short_PARAM",  &base_param()->PC, 10L );
     //prar.writeArray( "Double_PARAM",  &base_param()->DG, 28L );
     prar.writeArray( "Short_Const",  &pm.N, 39L );
@@ -1143,6 +1154,6 @@ template void SolModFactory::from_text_file_gemipm<io_formats::SimdJsonRead>( io
 #endif
 template void SolModFactory::from_text_file_gemipm<io_formats::KeyValueRead>( io_formats::KeyValueRead& in_format,  DATACH  *dCH );
 
-//--------------------- end of tsolmod_multi_format.cpp ---------------------------
+//--------------------- end of solmodfactory_format.cpp ---------------------------
 
 

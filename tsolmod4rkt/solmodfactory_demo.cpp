@@ -1,6 +1,7 @@
 //--------------------------------------------------------------------
 //
-/// Demo test of usage of the standalone SolModEngine.
+/// Demo test of usage of the of subset of TMulti class, configuration,
+/// and related functions
 //
 // Copyright (C) S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
@@ -94,7 +95,7 @@ int main( int argc, char* argv[] )
         print_vector( "PhaseCarrierMoleAmounts: ", task.Get_PhaseCarrierMoleAmounts());
 
         std::cout << "\nNumber of Species: " << task.Get_AllSpeciesNumber();
-        std::cout << "\nNumber of SolSpecies: " << task.Get_AllSolSpeciesNumber();
+        std::cout << "\nNumber of SolSpecies: " << task.Get_SolSpeciesNumber();
         std::cout << "\nIndex of water-solvent: " << task.Get_IndexOfH2O_solvent();
         std::cout << "\nGases Number: " << task.GetGasesNumber();
         print_vector( "AllSpeciesNames: ", task.Get_AllSpeciesNames());
@@ -128,13 +129,6 @@ int main( int argc, char* argv[] )
             std::cout << std::endl;
         };
         std::cout << std::endl;
-
-        // Get st.Gibbs energies at T,P of dependent components (species)
-        // std::vector<double> Get_SpeciesGibbsEnergiesJm()
-        // Get entropies at T,P of dependent components (species)
-        // std::vector<double> Get_SpeciesAbsEntropiesJKm()
-        // Get molar volumes at T,P of dependent components (species)
-        // std::vector<double> Get_SpeciesMolarVolumesJb()
 
         return 0;
     }

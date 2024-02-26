@@ -5,7 +5,7 @@
 /// Decorator for TSolMod and derived classes implementing built-in models
 /// of mixing in fluid, liquid, aqueous, and solid-solution phases
 //
-// Copyright (c) 2023 S.Dmytriyeva
+// Copyright (c) 2023-2024 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -30,6 +30,7 @@
 #include "v_service.h"
 #include "verror.h"
 #include "io_template.h"
+#include "io_nlohmann.h"
 #include "io_simdjson.h"
 #include "jsonconfig.h"
 
@@ -56,7 +57,7 @@ SolModEngine::SolModEngine(long k, long jb, SolutionData &sd, const AddSolutionD
         dc_names.push_back(char_array_to_string(sd.arSM[ii], MAXDCNAME));
     }
     SolMod_create(sd, addsd);
-    to_json_file(std::string("solmod_")+std::to_string(phase_ndx)+".json");
+    //to_json_file(std::string("solmod_")+std::to_string(phase_ndx)+".json");
 }
 
 SolModEngine::SolModEngine(long k, long jb, const std::string &aphase):
@@ -810,11 +811,15 @@ void SolModEngine::map2property(const std::map<std::string, double> &dsc_name_ma
     }
 }
 
-void SolModEngine::to_json_stream_short(std::iostream& ff) const
+void SolModEngine::to_json_stream_short(std::ostream& ff) const
 {
+#ifdef USE_NLOHMANNJSON
+    io_formats::NlohmannJsonWrite out_format( ff, "set_name" );
+#else
     io_formats::SimdJsonWrite out_format( ff, "set_name", true );
+#endif
     out_format.put_head( phase_name, "tsolmod");
-    io_formats::TPrintArrays<io_formats::SimdJsonWrite>  prar( 0, {}, out_format );
+    io_formats::TPrintArrays  prar( 0, {}, out_format );
 
     prar.addField("PhaseName", phase_name);
     prar.addField("ModCode", model_code);
@@ -840,3 +845,12 @@ void SolModEngine::to_json_file(const std::string &path) const
     ErrorIf(!ff.good(), path, "Fileopen error");
     to_json(ff);
 }
+
+std::ostream& operator<<(std::ostream& out, const SolModEngine& obj)
+{
+    obj.to_json(out);
+    return out;
+}
+
+//--------------------- end of solmodengine.cpp ---------------------------
+

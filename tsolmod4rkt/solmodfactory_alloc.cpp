@@ -3,7 +3,7 @@
 ///
 /// Allocation of coping IPM internal structure
 //
-// Copyright (c) 2023 S.Dmytriyeva, D.Kulik
+// Copyright (c) 2023-2024 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -38,7 +38,8 @@ void SolModFactory::multi_realloc()
     // need  always to alloc vectors
     pm.L1 = new long int[pm.FI];
     for( ii=0; ii<pm.FI; ii++)
-    {   pm.L1[ii] = 0;
+    {
+        pm.L1[ii] = 0;
     }
     pm.DUL = new double[pm.L];
     pm.DLL = new double[pm.L];
@@ -591,4 +592,4 @@ void SolModFactory::alloc_lPhc( long int lPhcSum )
     pm.lPhc = new double[lPhcSum];
 }
 
-//--------------------- end of tsolmod_multi_alloc.cpp ---------------------------
+//--------------------- end of solmodfactory_alloc.cpp ---------------------------

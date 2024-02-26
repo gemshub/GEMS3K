@@ -1,8 +1,15 @@
+import os
 import math
 from solmod4rkt import *
 
 # Initialize SolModFactory from the GEMS3K file set
 task_data_file_name = "Thermo-time-in/series1-dat.lst"
+
+# Test file exist
+if not os.path.exists(task_data_file_name):
+    print( "File does not exist: ", task_data_file_name)
+    exit(1)
+
 task = SolModFactory(task_data_file_name)
 
 print("Task:", task_data_file_name)

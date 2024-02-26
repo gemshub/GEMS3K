@@ -276,7 +276,7 @@ class TSolMod
         void to_json_file(const std::string& path) const;
 
         /// Writing input structure TSolMod as json format
-        void to_json_stream(std::iostream& ff) const;
+        void to_json_stream(std::ostream& ff) const;
 };
 
 

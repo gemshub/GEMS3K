@@ -42,7 +42,7 @@ class SimdJsonWrite
 public:
 
     /// Constructor
-    SimdJsonWrite( std::iostream& ff, const std::string& test_set_name, bool not_brief ):
+    SimdJsonWrite( std::ostream& ff, const std::string& test_set_name, bool not_brief ):
         fout(ff), dense(not_brief), current_set_name(test_set_name)
     {}
 
@@ -142,7 +142,7 @@ public:
 private:
 
     /// Internal structure of file data
-    std::iostream& fout;
+    std::ostream& fout;
     bool dense = false;
     bool first = false;
     const long values_in_line = 10;

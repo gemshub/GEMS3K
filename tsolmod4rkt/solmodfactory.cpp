@@ -1,9 +1,9 @@
 //-------------------------------------------------------------------
 /// \file solmodfactory.cpp
 ///
-/// Addition functions from TMultiBase class
+/// Implementation of subset of TMulti class,
 //
-// Copyright (c) 2023 S.Dmytriyeva,D.Kulik
+// Copyright (c) 2023-2024 S.Dmytriyeva,D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -1041,5 +1041,5 @@ long int SolModFactory::getXvolume()
 }
 
 
-//--------------------- end of tsolmod_multi_add.cpp ---------------------------
+//--------------------- end of solmodfactory.cpp ---------------------------
 

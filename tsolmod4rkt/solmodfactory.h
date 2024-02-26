@@ -4,7 +4,7 @@
 /// Declaration of subset of TMulti class, configuration, and related functions
 /// based on the IPM work data structure MULTI
 //
-// Copyright (c) 2023 S.Dmytriyeva, D.Kulik, T.Wagner
+// Copyright (c) 2023-2024 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -345,13 +345,13 @@ public:
     ///  (renamed from UpdateThermodynamic())
     void UpdateThermoData(double TK, double PPa);
 
-    /// Get the number of solution phases (in SolModFactory)
+    /// Get the number of phases (in SolModFactory)
     long int Get_ModelsPhasesNumber() {
         return phase_models.size();
     }
 
-    /// Get names of solution phases as a list of strings
-    std::vector<std::string> Get_SolPhasesNames() {
+    /// Get names of phases as a list of strings
+    std::vector<std::string> Get_ModelsPhasesNames() {
         return phase_names;
     }
 
@@ -379,7 +379,7 @@ public:
     }
 
     /// Get the total number of dependent components (chemical species) in phases-solutions
-    long int Get_AllSolSpeciesNumber() {
+    long int Get_SolSpeciesNumber() {
         return pmp->Ls;
     }
 
@@ -402,6 +402,20 @@ public:
     /// Get the number of solution phases (in SolModFactory)
     long int Get_SolPhasesNumber() {
         return pmp->FIs;
+    }
+
+    /// Get names of all elements as a list of strings
+    std::vector<std::string> Get_AllElementNames();
+
+    /// Get names of all chemical species as a list of strings
+    std::vector<std::string> Get_AllSpeciesNames();
+
+    /// Get names of all phases as a list of strings
+    std::vector<std::string> Get_AllPhasesNames();
+
+    /// Get names of solution phases as a list of strings
+    std::vector<std::string> Get_SolPhasesNames() {
+        return {phase_names.begin(), phase_names.begin()+pmp->FIs};
     }
 
     /// Get the vector of numbers of species included in each phase
@@ -500,15 +514,6 @@ public:
         return to_vector(pm.XFA, pm.FIs);
     }
 
-    /// Get names of all elements as a list of strings
-    std::vector<std::string> Get_AllElementNames();
-
-    /// Get names of all chemical species as a list of strings
-    std::vector<std::string> Get_AllSpeciesNames();
-
-    /// Get names of all phases as a list of strings
-    std::vector<std::string> Get_AllPhasesNames();
-
     /// Get element class codes
     std::vector<char> Get_ElementClassCodes() {
         return to_vector(pm.ICC, pm.N);
@@ -550,7 +555,10 @@ public:
     }
 
     /// Optional/debugging: Trace output of the whole internal data structure
-    void to_text_file(const std::string& path, bool append=false);
+    void to_stream(std::ostream &ff) const;
+
+    /// Optional/debugging: Trace output of the whole internal data structure
+    void to_text_file(const std::string& path, bool append=false) const;
 
 protected:
 
@@ -615,12 +623,12 @@ protected:
     void set_def(int i=0);
 
     // New functions for TSolMod parameter arrays
-    void getLsModsum( long int& LsModSum, long int& LsIPxSum );
-    void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
+    void getLsModsum( long int& LsModSum, long int& LsIPxSum ) const;
+    void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum ) const;
     /// Get dimensions from LsPhl array
-    void getLsPhlsum( long int& PhLinSum,long int& lPhcSum );
+    void getLsPhlsum( long int& PhLinSum,long int& lPhcSum ) const;
     /// Get dimensions from LsMdc2 array
-    void getLsMdc2sum( long int& DQFcSum,long int& rcpcSum );
+    void getLsMdc2sum( long int& DQFcSum,long int& rcpcSum ) const;
 
     //void get_PAalp_PSigm(char &PAalp, char &PSigm);
     void alloc_IPx( long int LsIPxSum );
@@ -657,6 +665,8 @@ protected:
     void CalculateConcentrations();
     double PhaseSpecificGamma(long j, long k);
 };
+
+std::ostream& operator<<(std::ostream& out, const SolModFactory& obj);
 
 typedef enum {  // Field index into outField structure
     f_pa_PE = 0,  f_PV,  f_PSOL,  f_PAalp,  f_PSigm,

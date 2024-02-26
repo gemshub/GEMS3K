@@ -82,6 +82,7 @@ int main( int argc, char* argv[] )
 
         for(size_t k=0; k<task.Get_AllPhasesNumber(); ++k) {
           auto phase = task.Sol_Phase(k);
+          phase.to_json_file(std::string("solmod_")+std::to_string(k)+".json");
 
           std::cout << "\nPhase: '" << phase.Get_SolPhaseName() << "'; mixing/activity model type: '"
                     << phase.Get_MixModelType() << "'; model code: '" <<  phase.Get_MixModelCode()

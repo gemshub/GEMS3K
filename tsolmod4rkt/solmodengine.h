@@ -5,7 +5,7 @@
 /// Decorator for TSolMod and derived classes implementing built-in models
 /// of mixing in fluid, liquid, aqueous, and solid-solution phases
 //
-// Copyright (c) 2023 S.Dmytriyeva
+// Copyright (c) 2023-2024 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -323,7 +323,7 @@ public:
     /// Writing SolModEngine data for the current phase to a JSON format file
     void to_json_file(const std::string& path) const;
     /// Writing SolModEngine data for the current phase to JSON stream
-    void to_json(std::iostream& ff) const
+    void to_json(std::ostream& ff) const
     {
         if(solmod_task.get()) {
             solmod_task->to_json_stream(ff);
@@ -342,7 +342,7 @@ public:
     }
 
     /// Trace writing of data arrays for the current phase to JSON stream
-    void to_json_stream_short(std::iostream &ff) const;
+    void to_json_stream_short(std::ostream &ff) const;
 
 protected:
 
@@ -410,5 +410,7 @@ protected:
         }
     }
 };
+
+std::ostream& operator<<(std::ostream& out, const SolModEngine& obj);
 
 #endif // SOLMODENGINE_H

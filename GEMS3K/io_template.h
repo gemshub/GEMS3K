@@ -211,8 +211,6 @@ public:
     /// Writes double vector to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
-    /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
-    /// \param brief_mode - Do not write data items that contain only default values
     template < typename T >
     void writeArray( const std::string& name, const std::vector<T>& arr, long int l_size=0)
     {

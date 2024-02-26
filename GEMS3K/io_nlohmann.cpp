@@ -59,7 +59,7 @@ template <> void NlohmannJsonWrite::write_key_value( const std::string& field_na
     json_data[ key( field_name ) ] = std::string(value);
 }
 
-NlohmannJsonRead::NlohmannJsonRead(std::iostream &ff, const std::string &test_set_name, const std::string &field_name):
+NlohmannJsonRead::NlohmannJsonRead(std::ostream &ff, const std::string &test_set_name, const std::string &field_name):
     json_data()
 {
     std::stringstream buffer;
