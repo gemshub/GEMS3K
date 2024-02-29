@@ -24,9 +24,11 @@
 
 #include <iostream>
 #include <vector>
+#include <filesystem>
 #include "jsonconfig.h"
 #include "solmodfactory.h"
 #include "v_service.h"
+namespace fs = std::filesystem;
 
 void print_vector( const std::string& header, const std::vector<std::string>& data);
 
@@ -59,13 +61,17 @@ int main( int argc, char* argv[] )
 
     try{
         // Analyzing command line arguments  (with defaults)
-        std::string input_system_file_list_name = "Thermo-time-all/series1-dat.lst";
-        std::string after_reading;
+        std::string input_system_file_list_name = "test01/gems3k-files/series1-dat.lst";
         if (argc >= 2 ) {
             input_system_file_list_name = argv[1];
         }
-        after_reading = input_system_file_list_name;
+        std::string after_reading = input_system_file_list_name;
         replace(after_reading, "-dat.lst", "-AfterReading.txt");
+
+        fs::path result_dir{input_system_file_list_name};
+        result_dir = result_dir.parent_path().parent_path()/"results";
+        create_directory(result_dir);
+        std::string solmod_results = result_dir.string()+"/";
 
         // Initialize SolModFactory from the GEMS3K file set
         SolModFactory task(input_system_file_list_name);
@@ -81,35 +87,35 @@ int main( int argc, char* argv[] )
         print_vector( "AllPhasesNames: ", task.Get_AllPhasesNames());
 
         for(size_t k=0; k<task.Get_AllPhasesNumber(); ++k) {
-          auto phase = task.Sol_Phase(k);
-          phase.to_json_file(std::string("solmod_")+std::to_string(k)+".json");
+            auto phase = task.Sol_Phase(k);
+            phase.to_json_file(solmod_results+std::string("solmod_")+std::to_string(k)+".json");
 
-          std::cout << "\nPhase: '" << phase.Get_SolPhaseName() << "'; mixing/activity model type: '"
-                    << phase.Get_MixModelType() << "'; model code: '" <<  phase.Get_MixModelCode()
-                    << "'; N endmembers: " << phase.Get_SpeciesNumber();
-          print_vector( "SpeciesNames: ", phase.Get_SpeciesNames());
+            std::cout << "\nPhase: '" << phase.Get_SolPhaseName() << "'; mixing/activity model type: '"
+                      << phase.Get_MixModelType() << "'; model code: '" <<  phase.Get_MixModelCode()
+                      << "'; N endmembers: " << phase.Get_SpeciesNumber();
+            print_vector( "SpeciesNames: ", phase.Get_SpeciesNames());
 
-          // Calculate activity coefficients of endmembers (components, species)
-          phase.SolModActivityCoeffs();
+            // Calculate activity coefficients of endmembers (components, species)
+            phase.SolModActivityCoeffs();
 
-          // Calculate (a dict) of ideal properties of mixing in the phase2
-          auto map_ideal = phase.SolModIdealProps();
-          std::cout << "Ideal properties of mixing in phase:  \n";
-          for(const auto& item: map_ideal ) {
-              std::cout << "   '" << item.first << "': " << item.second << "; ";
-          }
+            // Calculate (a dict) of ideal properties of mixing in the phase2
+            auto map_ideal = phase.SolModIdealProps();
+            std::cout << "Ideal properties of mixing in phase:  \n";
+            for(const auto& item: map_ideal ) {
+                std::cout << "   '" << item.first << "': " << item.second << "; ";
+            }
 
-          print_vector( "\nMoleFractions: ", phase.Get_MoleFractions());
-          print_vector( "Molalities: ", phase.Get_Molalities());
-          print_vector( "lnActivities: ", phase.Get_lnActivities());
-          print_vector( "lnActivityCoeffs: ", phase.Get_lnActivityCoeffs());
-          print_vector( "lnConfTerms: ", phase.Get_lnConfTerms());
-          print_vector( "lnRecipTerms: ", phase.Get_lnRecipTerms());
-          print_vector( "lnExcessTerms: ", phase.Get_lnExcessTerms());
-          print_vector( "lnDQFTerms: ", phase.Get_lnDQFTerms());
-          print_vector( "G0Increments: ", phase.Get_G0Increments());
-          print_vector( "MolarVolumes: ", phase.Get_MolarVolumes());
-          print_vector( "PartialPressures: ", phase.Get_PartialPressures());
+            print_vector( "\nMoleFractions: ", phase.Get_MoleFractions());
+            print_vector( "Molalities: ", phase.Get_Molalities());
+            print_vector( "lnActivities: ", phase.Get_lnActivities());
+            print_vector( "lnActivityCoeffs: ", phase.Get_lnActivityCoeffs());
+            print_vector( "lnConfTerms: ", phase.Get_lnConfTerms());
+            print_vector( "lnRecipTerms: ", phase.Get_lnRecipTerms());
+            print_vector( "lnExcessTerms: ", phase.Get_lnExcessTerms());
+            print_vector( "lnDQFTerms: ", phase.Get_lnDQFTerms());
+            print_vector( "G0Increments: ", phase.Get_G0Increments());
+            print_vector( "MolarVolumes: ", phase.Get_MolarVolumes());
+            print_vector( "PartialPressures: ", phase.Get_PartialPressures());
         }
         return 0;
     }

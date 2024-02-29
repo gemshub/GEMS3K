@@ -2,7 +2,7 @@ import os
 from solmod4rkt import *
 
 # Path to the GEMS3K file set
-task_data_file_name = "Thermo-time-all/series1-dat.lst"
+task_data_file_name = "test01/gems3k-files/series1-dat.lst"
 
 # Test file exist
 if not os.path.exists(task_data_file_name):

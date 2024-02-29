@@ -1,10 +1,7 @@
 # options
 message(STATUS "Building isolate tsolmod4rkt library ")
-file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt-build/Thermo-time-in" DESTINATION "${CMAKE_BINARY_DIR}/bin")
-file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt-build/Thermo-time-all" DESTINATION "${CMAKE_BINARY_DIR}/bin")
+file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt-build/test01" DESTINATION "${CMAKE_BINARY_DIR}/bin")
 file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt/solmod4rkt_demo.py" DESTINATION "${CMAKE_BINARY_DIR}/bin")
-file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt/solmod4rkt_test01.py" DESTINATION "${CMAKE_BINARY_DIR}/bin")
-file(COPY "${CMAKE_SOURCE_DIR}/tsolmod4rkt/solmod4rkt_test01.ipynb" DESTINATION "${CMAKE_BINARY_DIR}/bin")
 
 
 include_directories(${CMAKE_SOURCE_DIR})
@@ -119,6 +116,7 @@ install(FILES ${SOLMOD_HEADER_FILES}
 find_package(Threads REQUIRED)
 set(Test_apps
        solmod4rkt_test01
+       solmodfactory_test
        solmodfactory_demo
        solmodengine_demo )
 

@@ -23,8 +23,10 @@
 //-------------------------------------------------------------------
 
 #include <iostream>
+#include <filesystem>
 #include "jsonconfig.h"
 #include "solmodfactory.h"
+namespace fs = std::filesystem;
 
 // Thermo-time-in/series1-dat.lst  Binodal compositions of two feldspars 
 //The simplest case: data exchange using disk files only
@@ -38,14 +40,18 @@ int main()
 
     try{
         // Analyzing command line arguments  (with defaults)
-        std::string input_system_file_list_name = "Thermo-time-in/series1-dat.lst";
-        std::string after_reading = "Thermo-time-in/series1-AfterReading.txt";
+        std::string input_system_file_list_name = "test01/gems3k-files/series1-dat.lst";
+        std::string after_reading = "test01/gems3k-files/series1-AfterReading.txt";
+        fs::path result_dir{input_system_file_list_name};
+        result_dir = result_dir.parent_path().parent_path()/"results";
+        create_directory(result_dir);
+        std::string solmod_results = result_dir.string()+"/solmod_act_coef.txt";
 
         // Initialize SolModFactory from the GEMS3K file set
         SolModFactory task(input_system_file_list_name);
 
         // Optional: Check the data read for SolModFactory initialization
-        task.to_text_file( after_reading );
+        task.to_text_file(after_reading);
 
         // Getting the number of solution phases
         auto PhSolNumber = task.Get_SolPhasesNumber();
@@ -105,7 +111,7 @@ int main()
         }
         
         // Writing results to a text file
-        phase1.to_text_file("solmod_act_coef.txt", false);
+        phase1.to_text_file(solmod_results, false);
 
         // Get activity coefficients and print them in C style
         phase1.Get_lnActivityCoeffs(lnGamma1v.data());
@@ -156,7 +162,7 @@ int main()
         }
 
         // Writing results for phase 2 to a text file
-        phase2.to_text_file("solmod_act_coef.txt", true);
+        phase2.to_text_file(solmod_results, true);
 
         // Get activity coefficients and print them in dict style
         lnGamma2m = phase2.GetlnActivityCoeffs();
@@ -168,7 +174,7 @@ int main()
 
         // Calculate (a dict) of ideal properties of mixing in the phase2
         auto map_ideal = phase2.SolModIdealProps();
-        phase2.to_text_file("solmod_act_coef.txt", true);
+        phase2.to_text_file(solmod_results, true);
         std::cout << "\nIdeal properties of mixing in phase2:\n";
         for(const auto& item: map_ideal ) {
             std::cout << "   '" << item.first << "': " << item.second << std::endl;
@@ -176,7 +182,7 @@ int main()
 
         // Calculate (a dict) of excess properties of mixing in the phase2
         auto map_excess = phase2.SolModExcessProps();
-        phase2.to_text_file("solmod_act_coef.txt", true);
+        phase2.to_text_file(solmod_results, true);
         std::cout << "\nExcess properties of mixing in phase2:\n";
         for(const auto& item: map_excess ) {
             std::cout << "   '" << item.first << "': " << item.second << std::endl;

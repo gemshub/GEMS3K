@@ -3,7 +3,7 @@ import math
 from solmod4rkt import *
 
 # Initialize SolModFactory from the GEMS3K file set
-task_data_file_name = "Thermo-time-in/series1-dat.lst"
+task_data_file_name = "test01/gems3k-files/series1-dat.lst"
 
 # Test file exist
 if not os.path.exists(task_data_file_name):
@@ -34,9 +34,6 @@ a_ph1 = phase1.GetlnActivities()
 for key in x_ph1:
     print("   '{}': x= {:.6g}; a= {:.6g}".format(key, x_ph1[key], math.exp(a_ph1[key])))
 
-# Writing results to a text file
-phase1.to_text_file("solmod_act_coef.txt", True)
-
 # Get activity coefficients and print them
 lnGamma1v = phase1.GetlnActivityCoeffs()
 print("Calculated activity coefficients of endmembers:")
@@ -63,9 +60,6 @@ print("  ", phase2.GetMoleFractions())
 print("Calculated activities of endmembers: ")
 for key, value in phase2.GetlnActivities().items():
     print("   '{}': a= {:.6g}".format(key, math.exp(value)))
-
-# Writing results to a text file
-phase2.to_text_file("solmod_act_coef.txt", True)
 
 # Get activity coefficients and print them
 lnGamma2v = phase2.GetlnActivityCoeffs()

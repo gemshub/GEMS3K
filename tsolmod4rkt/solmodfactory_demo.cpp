@@ -59,7 +59,7 @@ int main( int argc, char* argv[] )
 
     try{
         // Analyzing command line arguments  (with defaults)
-        std::string input_system_file_list_name = "Thermo-time-all/series1-dat.lst";
+        std::string input_system_file_list_name = "test01/gems3k-files/series1-dat.lst";
         std::string after_reading;
         if (argc >= 2 ) {
             input_system_file_list_name = argv[1];
@@ -71,7 +71,7 @@ int main( int argc, char* argv[] )
         SolModFactory task(input_system_file_list_name);
 
         // Check the data read for SolModFactory initialization
-        task.to_text_file( after_reading );
+        task.to_text_file(after_reading);
 
         std::cout << "Task: " << input_system_file_list_name <<
                      "\n T(K): " << task.Get_Temperature() << " P(bar): " << task.Get_Pressure();

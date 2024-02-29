@@ -14,22 +14,24 @@ sudo ./install-dependencies.sh
 mkdir build
 cd build
 cmake .. -DBUILD_SOLMOD=ON
-make
+make -j 3
 sudo make install
 ```
-This will build and install GEMS3K and tsolmod4rkt libraries into /usr/local/lib and /usr/local/include system folders. If you wish instead to install into your home directory then run the above script after repacing the 'cmake' command with the following one:
+This will build and install GEMS3K and tsolmod4rkt libraries into /usr/local/lib and /usr/local/include system folders (this needs sudo before make install). If you wish instead to install into your home directory then run the above script after repacing the 'cmake' command with the following one:
 
 ```sh
 cmake .. -DBUILD_SOLMOD=ON -DCMAKE_INSTALL_PREFIX=/home/username/local
+make -j 3
+make install
 ```
 
-This will install both libraries into the indicated folder; sudo is not required for the 'make install' command then. 
+Here 'username' is your user name. This will install both libraries into the indicated folder; sudo is not required for the 'make install' command then.
 
 In order to test that the built tsolmod4rkt library works, run the C++ example as follows:
 
 ```sh
 cd build/bin$ 
-./solmod4rkt_test
+./solmod4rkt_test01
 ```
 The last four lines of the console output should look like this:
 
@@ -42,7 +44,7 @@ Endmember activity coefficients:
 $
 ```
 
-## How to test in Python (Jupyter notebook)
+## How to test in Python (or using a Jupyter notebook)
 
 Check if Python 3 is installed:
 
@@ -54,7 +56,7 @@ $ pip --version
 pip 22.0.2 from /usr/lib/python3/dist-packages/pip (python 3.10)
 ```
 
-## How to install Jupyter
+## Install Jupyter
 
 ```
 $ cd ~
@@ -71,6 +73,17 @@ and ~/.bashrc files, and re-login:
 export PATH="/home/you/.local/bin:$PATH"
 ```
 where "you" should be replaced with the name of your user (home directory).
+
+## Build tsolmod4rkt library as described above, but using the following commands:
+
+```sh
+cd ~/GEMS3K
+mkdir build
+cd build
+cmake .. -DBUILD_SOLMOD=ON -DCMAKE_INSTALL_PREFIX=/home/username/local -DSOLMOD4RKT_PYTHON_INSTALL_PREFIX=/home/username/local
+make -j 3
+make install
+```
 
 
 # Tutorial in C++
@@ -99,7 +112,8 @@ auto ln_gamma = phase2.GetlnActivityCoeffs();
 
 ```
 $ cd GEMS3K/build/bin
-$ python3 solmod4rkt_test01.py
+$ python3 test01/solmod4rkt_test01.py
+$ python3 solmod4rkt_demo.py
 
 ```
 ## Run Jupyter notebook in JupyterLab:
@@ -124,7 +138,7 @@ Open in notebook a file "solmod4rkt_test01.jpynb" and walk through it.
 
 from solmod4rkt import *
 
-task = SolModFactory("Thermo-time-in/series1-dat.lst")
+task = SolModFactory("test01/gems3k-files/series1-dat.lst")
 
 phase = task.SolPhase("Plagioclase");
 wx = {'Albite': 0.186993363098213, 'Anorthite': 3.45294711467247e-09, 'Sanidine': 0.81300663344884}

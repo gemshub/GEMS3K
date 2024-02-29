@@ -217,9 +217,10 @@ int test_SolModEngine_API(SolModFactory& task, const std::string& template_file_
 //The simplest case: data exchange using disk files only
 int main(int argc, char* argv[])
 {
+    gemsSettings().gems3k_update_loggers(true, "", 4);
     try{
         // Analyzing command line arguments  (with defaults)
-        std::string input_system_file_list_name = "Thermo-time-all/series1-dat.lst";
+        std::string input_system_file_list_name = "test01/gems3k-files/series1-dat.lst";
         if (argc >= 2 ) {
             input_system_file_list_name = argv[1];
         }
@@ -261,6 +262,10 @@ int test_SolModFactory_API(SolModFactory& task, const std::string& template_file
 {
     // Load templalte data
     KeyValueFile templ_data(template_file_path);
+    if(!templ_data.exist()) {
+       std::cerr <<  "Error: Trying read not existing file  " <<  template_file_path << "\n";
+      return 1;
+    }
     templ_data.load_all();
 
     std::string diff_string;
@@ -287,10 +292,10 @@ int test_SolModFactory_API(SolModFactory& task, const std::string& template_file
     diff_string += templ_data.compare_to( "U0", task.Get_InternalEnergyU0());
 
     if(diff_string.empty() ) {
-        std::cout <<  "Test SolModFactory API Pass: " << ipmfiles_lst_name <<  std::endl;
+        std::cout <<  "\033[32mTest SolModFactory API Pass: \033[0m" << ipmfiles_lst_name <<  std::endl;
     }
     else {
-        std::cout << "Test SolModFactory API Fail: " << ipmfiles_lst_name <<  std::endl;
+        std::cout << "\033[31mTest SolModFactory API Fail: \033[0m" << ipmfiles_lst_name <<  std::endl;
         std::cout <<  "  Difference-------------------------------------------------";
         std::cout <<  diff_string << "\n\n";
     }
@@ -302,6 +307,10 @@ int test_SolModEngine_API(SolModFactory& task, const std::string& template_file_
 {
     // Load templalte data
     KeyValueFile templ_data(template_file_path);
+    if(!templ_data.exist()) {
+       std::cerr <<  "Error: Trying read not existing file  " <<  template_file_path << "\n";
+      return 1;
+    }
     templ_data.load_all();
 
     size_t jb=0, je=0;
@@ -389,10 +398,10 @@ int test_SolModEngine_API(SolModFactory& task, const std::string& template_file_
     }
 
     if(diff_string_all.empty() ) {
-        std::cout <<  "Test SolModEngine API Pass: " << ipmfiles_lst_name <<  std::endl;
+        std::cout <<  "\033[32mTest SolModEngine API Pass: \033[0m" << ipmfiles_lst_name <<  std::endl;
     }
     else {
-        std::cout << "Test SolModEngine API Fail: " << ipmfiles_lst_name <<  std::endl;
+        std::cout << "\033[31mTest SolModEngine API Fail: \033[0m" << ipmfiles_lst_name <<  std::endl;
         std::cout <<  "  Difference-------------------------------------------------";
         std::cout <<  diff_string_all << "\n\n";
     }
