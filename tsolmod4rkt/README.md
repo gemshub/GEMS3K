@@ -17,17 +17,26 @@ cmake .. -DBUILD_SOLMOD=ON
 make -j 3
 sudo make install
 ```
-This will build and install GEMS3K and tsolmod4rkt libraries into /usr/local/lib and /usr/local/include system folders (this needs sudo before make install). If you wish instead to install into your home directory then run the above script after repacing the 'cmake' command with the following one:
+This will build and install GEMS3K and tsolmod4rkt libraries into /usr/local/lib and /usr/local/include system folders (this needs sudo before make install).
+
+If you wish to install into your home directory (recommended for using solmod4rkt in Python tests and in Jupyter notebooks) then use the following commands:
 
 ```sh
+cd ~/GEMS3K
+sudo ./install-dependencies.sh
+mkdir build
+cd build
 cmake .. -DBUILD_SOLMOD=ON -DCMAKE_INSTALL_PREFIX=/home/username/local
 make -j 3
 make install
 ```
 
-Here 'username' is your user name. This will install both libraries into the indicated folder; sudo is not required for the 'make install' command then.
+Here 'username' is your user name. This will install GEMS3K and tsolmod4rkt libraries into the indicated folder, hence sudo is not required for the 'make install' command. Python package solmod4rkt will be installed into
 
-In order to test that the built tsolmod4rkt library works, run the C++ example as follows:
+/home/username/.local/lib/python3.10/site-packages/solmod4rkt
+/home/username/.local/lib/python3.10/site-packages/solmod4rkt-4.3.6.dist-info
+
+In order to test that the tsolmod4rkt build actually works, run the C++ example as follows:
 
 ```sh
 cd build/bin$ 
@@ -74,18 +83,6 @@ export PATH="/home/you/.local/bin:$PATH"
 ```
 where "you" should be replaced with the name of your user (home directory).
 
-## Build tsolmod4rkt library as described above, but using the following commands:
-
-```sh
-cd ~/GEMS3K
-mkdir build
-cd build
-cmake .. -DBUILD_SOLMOD=ON -DCMAKE_INSTALL_PREFIX=/home/username/local -DSOLMOD4RKT_PYTHON_INSTALL_PREFIX=/home/username/local
-make -j 3
-make install
-```
-
-
 # Tutorial in C++
 
 ## C++ API use examples
@@ -108,21 +105,34 @@ auto ln_gamma = phase2.GetlnActivityCoeffs();
 
 # Tutorial in Python (Jupyter)
 
-## Execute a Python file:
+## Execute a Python demo file:
 
 ```
 $ cd GEMS3K/build/bin
-$ python3 test01/solmod4rkt_test01.py
 $ python3 solmod4rkt_demo.py
-
 ```
+and explore the console output. Test sequence Python files can be executed as
+```
+$ cd GEMS3K/build/bin
+$ python3 ./test01/solmod4rkt_test01.py
+...
+```
+
+Each test folder like test01 has the following structure:
+
+build/bin/test01/gems3k-files/
+build/bin/test01/solmod4rkt_test01.py
+build/bin/test01/solmod4rkt_test01.ipynb
+
+The subfolder gems3k-files/ should contain GEMS3K JSON files exported for use in this test. After executing the test python file, the output will be printed into text files containing 'AfterReading' (input GEMS3K files) and 'AfterCalc' (after TSolMod calculations for phases-solutions).
+
 ## Run Jupyter notebook in JupyterLab:
 
 ```
 $ cd GEMS3K/build/bin
 $ jupyter lab
 ```
-Open in JupyterLab a file "solmod4rkt_test01.jpynb" and walk through it.
+Open in JupyterLab a file "/test01/solmod4rkt_test01.jpynb" and walk through it.
 
 ## Run Jupyter notebook as classic notebook
 ```
