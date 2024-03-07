@@ -432,6 +432,8 @@ pm.GamFs = nullptr;
         pm.emRd   = 0;
         pm.emDf   = 0;
         pm.xICuC = 0;
+        memset( pm.errorCode, '\0', 100 );
+        memset( pm.errorBuf,  '\0',  1024 );
 }
 
 /// Writing structure MULTI (GEM IPM work structure) to binary file

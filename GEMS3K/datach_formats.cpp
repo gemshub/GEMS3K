@@ -188,9 +188,6 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
         prar.writeComment( _comment, "# (1): Flags controlling GEM IPM-3 operation and data exchange");
     }
 
-#ifndef NODEARRAYLEVEL
-    CNode->NodeStatusFMT = No_nodearray;
-#endif
     prar.writeField(f_NodeHandle, CNode->NodeHandle, _comment, brief_mode  );
     prar.writeField(f_NodeTypeHY, CNode->NodeTypeHY, _comment, brief_mode  );
     prar.writeField(f_NodeTypeMT, CNode->NodeTypeMT, _comment, brief_mode  );
@@ -919,10 +916,6 @@ void datach_from_file(DATACH* CSD, GemDataStream& ff)
 // writing DataBR to binary file
 void databr_to_file(const DATACH* CSD, const DATABR* CNode, GemDataStream& ff)
 {
-
-#ifndef NODEARRAYLEVEL
-    CNode->NodeStatusFMT = No_nodearray;
-#endif
     // const data
     ff.writeArray( &CNode->NodeHandle, 6 );
 

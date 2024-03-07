@@ -94,6 +94,15 @@ void *TNode::get_ptrTSolMod(int xPH) const
 {
     return multi_ptr()->pTSolMod(xPH);
 }
+void TNode::Access_GEM_IMP_init()
+{
+    multi_ptr()->GEM_IPM_Init();
+}
+long TNode::get_sizeTSolMod()
+{
+    return multi_ptr()->sizeFIs;
+}
+
 
 //Returns DCH index of IC given the IC Name string (null-terminated)
 // or -1 if no such name was found in the DATACH IC name list

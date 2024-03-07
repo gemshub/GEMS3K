@@ -210,6 +210,9 @@ public:
     /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
     std::string databr_to_string( bool with_comments = true, bool brief_mode = false ) const
     {
+#ifndef NODEARRAYLEVEL
+        CNode->NodeStatusFMT = No_nodearray;
+#endif
         return dbr_dch_api::databr_to_string(current_output_set_name, CSD, CNode, with_comments, brief_mode);
     }
     /// Reads work node (DATABR structure) from a json/key-value string
@@ -596,6 +599,9 @@ public:
     // and DataBR (or node) data structures for components and phases
     // (i.e. between the chemical system definition and the node)
 
+    //DM 25.02.2014 (call from gemsfit)
+    void Access_GEM_IMP_init();
+    long get_sizeTSolMod();
     /// Return a pointer to a phase (TSolMod) with index xPH
     void *get_ptrTSolMod( int xPH ) const;
 
@@ -612,6 +618,9 @@ public:
     char* xCH_to_DC_name( int xCH ) const
     {return CSD->DCNL[xCH];}
 
+    char* xCH_to_PH_name( int xCH ) const
+    {return CSD->PHNL[xCH];}
+
     /// Returns IC Name string given the ICH index of IC, check MaxICnameLength
     /// or -1 if no such name was found in the DATACH IC name list
     char* xCH_to_IC_name( int xCH ) const
@@ -626,6 +635,12 @@ public:
     /// and number of coefficients per parameter in PMc table [3*FIs]
     long int* Get_LsMod ( ) const
     {return pmm->LsMod;}
+
+    /// Returns the Dimensions of TSolMod <DMc> and <MoiSN> arrays [nPS*3]: In each row (for phase):
+    /// number of parameters per component; [1] 0; [2] 0. For multi-site (sublattice) models:
+    /// [1] number of sublattices nS; [2] total number of moieties nM acting in sublattice sites
+    long int* Get_LsMdc ( ) const
+    {return pmm->LsMdc;}
 
     /// Returns DCH index of Phase given the Phase Name string
     /// or -1 if no such name was found in the DATACH Phase name list
@@ -1046,8 +1061,7 @@ public:
     {  PMc_val = pmm->PMc[xPMc]; load_thermodynamic_data = false; }
 
     /// Gets code of the aquesous solution model
-    inline void Get_sMod( int ndx, std::string &sMod)
-    {  sMod = pmm->sMod[ndx];}
+    void Get_sMod( int ndx, std::string &sMod);
 
     /// Sets the value of the phase component parameter.
     /// Internal re-scaling to mass of the system is applied.
@@ -1055,6 +1069,12 @@ public:
     /// \param xDMC is the index of the interaction parameter
     inline void Set_DMc( const double DMc_val, const long int xDMc)
     { pmm->DMc[xDMc] = DMc_val; load_thermodynamic_data = false; }
+
+    /// Gets the value of the interaction parameter.
+    inline void Get_DMc( double &DMc_val, const long int xDMc)
+    {  DMc_val = pmm->DMc[xDMc];  }
+
+
 
     /// Retrieves the current total amount of Independent Component.
     /// Also amount of ICs not included into DATABR list can be retrieved.

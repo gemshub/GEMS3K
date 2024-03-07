@@ -334,6 +334,9 @@ bool GemsSettings::update_logger()
 
     log_thermodynamic = log_section->value_or_default("thermodynamic-log", log_thermodynamic);
     data_logger_directory = log_section->value_or_default<std::string>("logs-directory", data_logger_directory);
+    if(!data_logger_directory.empty() && data_logger_directory.back() != '/' && data_logger_directory.back() != '\\') {
+        data_logger_directory += "/";
+    }
     gems3k_loggers = log_section->value_or_default<std::set<std::string>>("modules", {});
     gems3k_loggers.insert(default_gems3k_loggers.begin(), default_gems3k_loggers.end());
     gems3k_logger_level = log_section->value_or_default<std::string>("level", "info");

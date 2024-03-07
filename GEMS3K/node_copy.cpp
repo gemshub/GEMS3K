@@ -59,6 +59,9 @@ void  TNode::read_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator:
 void  TNode::write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f,
                                     bool with_comments, bool brief_mode )
 {
+#ifndef NODEARRAYLEVEL
+    CNode->NodeStatusFMT = No_nodearray;
+#endif
     switch( type_f )
     {
     case GEMS3KGenerator::f_binary:
@@ -292,6 +295,9 @@ long int  TNode::GEM_write_dbr( std::string& dbr_json )
     // Writes work node (DATABR structure) into a json string
     try
     {
+#ifndef NODEARRAYLEVEL
+        CNode->NodeStatusFMT = No_nodearray;
+#endif
         std::stringstream ss;
         dbr_dch_api::write_dbr_format_stream(current_output_set_name, CSD, CNode, ss, GEMS3KGenerator::f_json, false, false );
         dbr_json =  ss.str();

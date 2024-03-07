@@ -30,7 +30,6 @@ DEPENDPATH +=
 DEPENDPATH += .
 DEPENDPATH += $$GEMS3K_H
 
-INCLUDEPATH += /usr/lib/gcc/x86_64-linux-gnu/9/include
 INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 

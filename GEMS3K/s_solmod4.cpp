@@ -82,6 +82,14 @@ void THelgeson::free_internal()
 	delete[]dLnGdP;
 }
 
+// Used in GEMSFITS for mixed electrolites DM 15.08.2014
+long THelgeson::Set_Felect_bc(long int Flagelect, double Bc, double Ac)
+{
+    flagElect = Flagelect;
+    bc = Bc;
+    ac = Ac;
+    return 0;
+}
 
 /// Calculates T,P corrected parameters
 long int THelgeson::PTparam()

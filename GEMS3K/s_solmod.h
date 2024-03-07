@@ -257,6 +257,11 @@ class TSolMod
             return 0;
         }
 
+        virtual long int Set_Felect_bc(long int /*Flagelect*/, double /*Bc*/, double /*Ac*/)
+        {
+            return 0;
+        };
+
         /// Set new system state
 		long int UpdatePT ( double T_k, double P_bar );
 
@@ -1887,6 +1892,8 @@ class THelgeson: public TSolMod
         /// Calculates ideal mixing properties
 		long int IdealProp( double *Zid );
 
+        /// Set function used in GEMSFITS for mixed electrolites DM 15.08.2014
+        long int Set_Felect_bc (long int Flagelect, double Bc, double Ac);
 };
 
 

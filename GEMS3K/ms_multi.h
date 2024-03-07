@@ -536,6 +536,7 @@ class TMultiBase
     char PSigm_; ///< Flag for using (+) or ignoring (-) specific surface free energies
     std::shared_ptr<BASE_PARAM> pa_standalone;
 
+    friend class TNode;
 protected:
     /// Default logger for ipm chemical
     static std::shared_ptr<spdlog::logger> ipm_logger;

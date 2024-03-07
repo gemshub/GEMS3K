@@ -148,7 +148,6 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
                                                          export_data.io_mode, export_data.brief_mode,
                                                          export_data.with_comments, export_data.putNodT1, export_data.add_mui );
 
-
         // (4) Here a possible loop on more dbr files begins
         if( !dbr_lst_path.empty() )
         {

@@ -148,6 +148,11 @@ bool  TNode::check_TP( double TK, double P ) const
     return true;
 }
 
+void TNode::Get_sMod(int ndx, std::string &sMod)
+{
+    sMod = char_array_to_string(pmm->sMod[ndx], 8);
+}
+
 //-------------------------------------------------------------------------------------------------------------------------------
 // (2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure
 //   and metastability constraints provided in the work instance of DATABR structure.
