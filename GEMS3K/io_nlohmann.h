@@ -41,7 +41,7 @@ class NlohmannJsonWrite
     /// Internal structure of file data
     nlohmann::json json_data;
     nlohmann::json top_data;
-    std::iostream& fout;
+    std::ostream& fout;
     std::string current_set_name;
     std::string top_field_name;
 
@@ -101,9 +101,8 @@ public:
     /// Writes double vector to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
-    /// \param with_comments - Write files with comments for all data entries
-    /// \param brief_mode - Do not write data items that contain only default values
-    void write_array( const std::string& field_name, const std::vector<double>& arr, long int  )
+    template < typename T >
+    void write_array( const std::string& field_name, const std::vector<T>& arr, long int l_size )
     {
         json_data[ key(field_name) ] = arr;
     }
@@ -169,7 +168,7 @@ class NlohmannJsonRead
 public:
 
     /// Constructor
-    NlohmannJsonRead( std::iostream& ff, const std::string& test_set_name,  const std::string& field_name );
+    NlohmannJsonRead( std::ostream& ff, const std::string& test_set_name,  const std::string& field_name );
 
     /// Reset json loop
     void reset()

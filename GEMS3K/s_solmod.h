@@ -5,7 +5,7 @@
 /// Declarations of TSolMod and derived classes implementing built-in models
 /// of mixing in fluid, liquid, aqueous and solid-solution phases
 
-// Copyright (C) 2003-2014  T.Wagner, D.Kulik, S.Dmitrieva, F.Hingerl, S.Churakov
+// Copyright (C) 2003-2023  T.Wagner, D.Kulik, S.Dmitrieva, F.Hingerl, S.Churakov
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -80,51 +80,53 @@ enum tp_codes {  /// codes for fluid subroutines in EoS models (see v_mod.h)
 /// Base class for subclasses of built-in mixing models.
 /// (c) March 2007 DK/TW
 struct SolutionData {
-    long int NSpecies;  ///< Number of species (end members) in the phase
-    long int NParams;   ///< Total number of non-zero interaction parameters
-    long int NPcoefs;   ///< Number of coefficients per interaction parameter
-    long int MaxOrder;  ///< Maximum order of interaction parameters
-    long int NPperDC;   ///< Number of parameters per species (DC)
-    long int NSublat;   ///< number of sublattices nS
-    long int NMoiet;    ///< number of moieties nM
+    std::string phaseName;
+    long int NSpecies=1;  ///< Number of species (end members) in the phase
+    long int NParams=0;   ///< Total number of non-zero interaction parameters
+    long int NPcoefs=0;   ///< Number of coefficients per interaction parameter
+    long int MaxOrder=0;  ///< Maximum order of interaction parameters
+    long int NPperDC=0;   ///< Number of parameters per species (DC)
+    long int NSublat=0;   ///< number of sublattices nS
+    long int NMoiet=0;    ///< number of moieties nM
 
 //    long int NlPhs;     ///< new: Number of linked phases
 //    long int NlPhC;     ///< new: Number of linked phase parameter coefficient per link (default 0)
-    long int NDQFpDC;   ///< new: Number of DQF parameters per species (end member)
+    long int NDQFpDC=0;   ///< new: Number of DQF parameters per species (end member)
 //    long int NrcPpDC;   ///< new: Number of reciprocal parameters per species (end member)
 
-    char Mod_Code;      ///< Code of the mixing model
-    char Mix_Code;      ///< Code for specific EoS mixing rule
-    char *DC_Codes;     ///< DC class codes for species -> NSpecies
-    char (*TP_Code)[6]; ///< Codes for TP correction methods for species ->NSpecies
-    long int *arIPx;    ///< Pointer to list of indexes of non-zero interaction parameters
+    char Mod_Code='N';      ///< Code of the mixing model
+    char Mix_Code='N';      ///< Code for specific EoS mixing rule
+    char *DC_Codes=nullptr;     ///< DC class codes for species -> NSpecies
+    char (*TP_Code)[6]=nullptr; ///< Codes for TP correction methods for species ->NSpecies
+    long int *arIPx=nullptr;    ///< Pointer to list of indexes of non-zero interaction parameters
+    char  (*arSM)[MAXDCNAME]=nullptr;  ///< List of DC names in the phase
 
 //    long int *arPhLin;  ///< new: indexes of linked phase and link type codes [NlPhs*2] read-only
 
-    double *arIPc;      ///< Table of interaction parameter coefficients
-    double *arDCc;      ///< End-member properties coefficients
-    double *arMoiSN;    ///< End member moiety- site multiplicity number tables -> NSpecies x NSublat x NMoiet
-    double *arSitFr;    ///< Tables of sublattice site fractions for moieties -> NSublat x NMoiet
-    double *arSitFj;    ///< new: Table of end member sublattice activity coefficients -> NSpecies x NSublat
-    double *arGEX;      ///< Pure-species fugacities, G0 increment terms  -> NSpecies
+    double *arIPc=nullptr;      ///< Table of interaction parameter coefficients
+    double *arDCc=nullptr;      ///< End-member properties coefficients
+    double *arMoiSN=nullptr;    ///< End member moiety- site multiplicity number tables -> NSpecies x NSublat x NMoiet
+    double *arSitFr=nullptr;    ///< Tables of sublattice site fractions for moieties -> NSublat x NMoiet
+    double *arSitFj=nullptr;    ///< new: Table of end member sublattice activity coefficients -> NSpecies x NSublat
+    double *arGEX=nullptr;      ///< Pure-species fugacities, G0 increment terms  -> NSpecies
 
 //    double *lPhc;  ///< new: array of phase link parameters -> NlPhs x NlPhC (read-only)
-    double *DQFc;  ///< new: array of DQF parameters for DCs in phases ->  NSpecies x NDQFpDC; (read-only)
+    double *arDQFc=nullptr;  ///< new: array of DQF parameters for DCs in phases ->  NSpecies x NDQFpDC; (read-only)
 //    double *rcpc;  ///< new: array of reciprocal parameters for DCs in phases -> NSpecies x NrcPpDC; (read-only)
 
-    double *arPparc;    ///< Partial pressures -> NSpecies
-    double *arWx;       ///< Species (end member) mole fractions ->NSpecies
-    double *arlnGam;    ///< Output: activity coefficients of species (end members)   
+    double *arPparc=nullptr;    ///< Partial pressures -> NSpecies
+    double *arWx=nullptr;       ///< Species (end member) mole fractions ->NSpecies
+    double *arlnGam=nullptr;    ///< Output: activity coefficients of species (end members)
 
     // Detailed output on terms of partial end-member properties, allocated in MULTI
-    double *arlnDQFt; ///< new: DQF terms adding to overall activity coefficients [Ls_]
-    double *arlnRcpt; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
-    double *arlnExet; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
-    double *arlnCnft; ///< new: configurational terms adding to overall activity [Ls_]
- double *arCTermt; ///< new: Coulombic terms adding to overall activity coefficients [Ls_]
+    double *arlnDQFt=nullptr; ///< new: DQF terms adding to overall activity coefficients [Ls_]
+    double *arlnRcpt=nullptr; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
+    double *arlnExet=nullptr; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
+    double *arlnCnft=nullptr; ///< new: configurational terms adding to overall activity [Ls_]
+    double *arCTermt=nullptr; ///< new: Coulombic terms adding to overall activity coefficients [Ls_]
 
-    double *arVol;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
-    double *aphVOL;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
+    double *arVol=nullptr;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
+    double *aphVOL=nullptr;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
     double T_k;         ///< Temperature, K (initial)
     double P_bar;       ///< Pressure, bar (initial)
 };
@@ -134,14 +136,12 @@ class TSolMod
 {
 	protected:
 
-        /// Default logger for TSolMod class
-        static std::shared_ptr<spdlog::logger> solmod_logger;
-
         char ModCode;   ///< Code of the mixing model
         char MixCode;	///< Code for specific EoS mixing rules or site-balance based electrostatic SCMs
-                char *DC_Codes; ///< Class codes of end members (species) ->NComp
+        char *DC_Codes; ///< Class codes of end members (species) ->NComp
 
-        char PhaseName[MAXPHNAME+1];    ///< Phase name (for specific built-in models)
+        std::string PhaseName;    ///< Phase name
+        char  (*DC_Names)[MAXDCNAME];  ///< List of DC names in the system [L]
 
         long int NComp;   ///< Number of components in the solution phase
         long int NPar;     ///< Number of non-zero interaction parameters
@@ -169,14 +169,14 @@ class TSolMod
         double *aDCc;   ///< End-member properties coefficients
         double *aGEX;   ///< Reciprocal energies, DQF terms, pure fugacities of DC (corrected to TP)
         double *aPparc;  ///< Output partial pressures (activities, fugacities) -> NComp
-        double **aDC;   ///< Table of corrected end member properties at T,P of interest  !!!!!! Move to GC EOS subclass!
+        //double **aDC;   ///< Table of corrected end member properties at T,P of interest  !!!!!! Move to GC EOS subclass!
         double *aMoiSN; ///< End member moiety- site multiplicity number tables -> NComp x NSub x NMoi
         double *aSitFR; ///< Table of sublattice site fractions for moieties -> NSub x NMoi
 
 //    double *lPhcf;  ///< new: array of phase link parameters -> NlPh x NlPc (read-only)
-    double *DQFcf;  ///< new: array of DQF parameters for DCs in phases ->  NComp x NDQFpc; (read-only)
-                    ///< x_DQF[j]: mole fraction at transition; a, b, c - coefficients of T,P correction
-                    ///< according to the equation aGEX[j] = A + B*T + C*P (so far only binary Margules)
+       double *DQFcf;  ///< new: array of DQF parameters for DCs in phases ->  NComp x NDQFpc; (read-only)
+                      ///< x_DQF[j]: mole fraction at transition; a, b, c - coefficients of T,P correction
+                      ///< according to the equation aGEX[j] = A + B*T + C*P (so far only binary Margules)
 //    double *rcpcf;  ///< new: array of reciprocal parameters for DCs in phases -> NComp x NrcPpc; (read-only)
 
         double *x;      ///< Pointer to mole fractions of end members (provided)
@@ -193,7 +193,7 @@ class TSolMod
         double Grs, Hrs, Srs, CPrs, Vrs, Ars, Urs;   ///< molar residual functions (fluids)
         double *lnGamConf, *lnGamRecip, *lnGamEx, *lnGamDQF, *CTerm; ///< Work pointers for lnGamma components
         double *lnGamma;   ///< Pointer to ln activity coefficients of end members (check that it is collected from three above arrays)
-        double *lnGamCorr;   ///< Pointer to ln activity coefficients of correction term for Modified Bragg-Williams model, [Vinograd et al. 2018]
+        //double *lnGamCorr;   ///< Pointer to ln activity coefficients of correction term for Modified Bragg-Williams model, [Vinograd et al. 2018]
 
         double **y;       ///< table of moiety site fractions [NSub][NMoi]
         double ***mn;     ///< array of end member moiety-site multiplicity numbers [NComp][NSub][NMoi]
@@ -215,8 +215,11 @@ class TSolMod
 
         public:
 
+        /// Default logger for TSolMod class
+        static std::shared_ptr<spdlog::logger> solmod_logger;
+
         /// Generic constructor
-        TSolMod( SolutionData *sd );
+        TSolMod(SolutionData *sd);
 
          /// Generic constructor for DComp/DCthermo
         TSolMod( long int NSpecies,  char Mod_Code,  double T_k, double P_bar );
@@ -254,15 +257,16 @@ class TSolMod
             return 0;
         }
 
+        virtual long int Set_Felect_bc(long int /*Flagelect*/, double /*Bc*/, double /*Ac*/)
+        {
+            return 0;
+        };
+
         /// Set new system state
 		long int UpdatePT ( double T_k, double P_bar );
 
         bool testSizes( SolutionData *sd );
 
-        /// Getting phase name
-		void GetPhaseName( const char *PhName );
-
-		
         // copy activity coefficients into provided array lngamma
 		inline void Get_lnGamma( double* lngamma )		
 		{ 
@@ -270,9 +274,15 @@ class TSolMod
 				lngamma[i] = lnGamma[i]; 
 		}
 
+        /// Trace writing arrays TSolMod to keyvalue format file
+        void to_text_file(const std::string& path, bool append) const;
 
+        /// Writing input structure TSolMod to json format file
+        void to_json_file(const std::string& path) const;
+
+        /// Writing input structure TSolMod as json format
+        void to_json_stream(std::ostream& ff) const;
 };
-
 
 
 /// Subclass for the ideal model (both simple and multi-site)
@@ -1443,6 +1453,8 @@ private:
     double **Bet1;	   ///< Beta1 table for cation-anion interactions [Nc][Na]
     double **Bet2;	   ///< Beta2 table for cation-anion interactions [Nc][Na]
     double **Cphi;     ///< Cphi  table for cation-anion interactions [Nc][Na]
+    double **Alp1;     ///< Alpha1 coefficient of the IS terms for cation-anion interactions [Nc][Na]
+    double **Alp2;     ///< Alpha2 coefficient of the IS terms for cation-anion interactions [Nc][Na]
     double **Lam;      ///< Lam table for neutral-cation interactions [Nn][Nc]
     double **Lam1;     ///< Lam1 table for neutral-anion interactions [Nn][Na]
     double **Theta;    ///< Theta table for cation-cation interactions [Nc][Nc]
@@ -1450,6 +1462,8 @@ private:
     double ***Psi;     ///< Psi array for cation-cation-anion interactions [Nc][Nc][Na]
     double ***Psi1;    ///< Psi1 array for anion-anion-cation interactions [Na][Na][Nc]
     double ***Zeta;    ///< Zeta array for neutral-cation-anion interactions [Nn][Nc][Na]
+    double ***Eta;     ///< Eeta array for neutral-cation-cation interactions [Nc][Nc][Nn]
+    double ***Eta1;    ///< Eeta array for neutral-anion-anion interactions [Na][Na][Nn]
 
 
             // Work parameter arrays
@@ -1472,7 +1486,7 @@ private:
 	enum eTableType
 	{
         bet0_ = -10, bet1_ = -11, bet2_ = -12, Cphi_ = -20, Lam_ = -30, Lam1_ = -31, Lam2_ = -32,
-		Theta_ = -40,  Theta1_ = -41, Psi_ = -50, Psi1_ = -51, Zeta_ = -60
+        Theta_ = -40,  Theta1_ = -41, Psi_ = -50, Psi1_ = -51, Zeta_ = -60, Eta_ = -70, Eta1_ = -71, Alp1_ = -80, Alp2_= -81
 	};
 
     // internal setup
@@ -1488,6 +1502,11 @@ private:
     /// Calculation of Etheta and Ethetap values
 	void Ecalc( double z, double z1, double I, double DH_term,
 					double& Etheta, double& Ethetap );
+
+    void ETHETAS(double ZJ, double ZK, double I, double DH_term, double& etheta, double& ethetap);
+
+    void ETHETA_PARAMS(double X, double& JAY, double& JPRIME );
+
 	inline long int getN() const
 	{
 		return Nc+Na+Nn;
@@ -1882,6 +1901,8 @@ class THelgeson: public TSolMod
         /// Calculates ideal mixing properties
 		long int IdealProp( double *Zid );
 
+        /// Set function used in GEMSFITS for mixed electrolites DM 15.08.2014
+        long int Set_Felect_bc (long int Flagelect, double Bc, double Ac);
 };
 
 

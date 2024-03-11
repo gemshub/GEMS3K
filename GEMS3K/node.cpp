@@ -108,9 +108,9 @@ void TNode::allocMemory()
     CSD = new DATACH;
     CNode = new DATABR;
     // mem_set( CSD, 0, sizeof(DATACH) );
-    datach_reset();
+    dbr_dch_api::datach_reset(CSD);
     // mem_set( CNode, 0, sizeof(DATABR) );
-    databr_reset( CNode, 2 );
+    dbr_dch_api::databr_reset(CNode, 2);
 
     // allocation internal structures
     internal_multi.reset(new TMultiBase(this));
@@ -125,10 +125,10 @@ void TNode::allocMemory()
 
 void TNode::freeMemory()
 {
-    datach_free();
+    dbr_dch_api::datach_free(CSD);
     // CSD = 0;
     delete CSD;
-    CNode = databr_free( CNode );
+    CNode = databr_free(CNode);
 }
 
 std::string TNode::system_id() const
@@ -140,54 +140,17 @@ std::string TNode::system_id() const
 // intervals of the DATACH lookup arrays (returns true) or not (returns false)
 bool  TNode::check_TP( double TK, double P ) const
 {
-    bool okT = true, okP = true;
-    double T_=TK, P_=P;
-
-    if( CSD->mLook == 1 )
-    {
-        for(long int  jj=0; jj<CSD->nPp; jj++)
-            if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) )
-            {
-                return true;
-            }
-        Error( "check_TP: ", std::string("Temperature ")+std::to_string(TK)+
-               " and pressure "+std::to_string(P)+" out of range");
-        //return false;
+    auto error_mesg = dbr_dch_api::check_TP(CSD, TK, P);
+    if( !error_mesg.empty() ) {
+        ipmlog_file->info("In node {}: {}", CNode->NodeHandle, error_mesg);
+        return false;
     }
-    else
-    {
-        if( TK <= CSD->TKval[0] - CSD->Ttol )
-        { 				// Lower boundary of T interpolation interval
-            okT = false;
-            T_ = CSD->TKval[0] - CSD->Ttol;
-        }
-        if( TK >= CSD->TKval[CSD->nTp-1] + CSD->Ttol )
-        {
-            okT = false;
-            T_ = CSD->TKval[CSD->nTp-1] + CSD->Ttol;
-        }
-        if( okT == false ) {
-            ipmlog_file->info("In node {},  Given TK={} is beyond the interpolation "
-                              "range for thermodynamic data near boundary T_= {}", CNode->NodeHandle, TK, T_);
-        }
+    return true;
+}
 
-        if( P <= CSD->Pval[0] - CSD->Ptol )
-        {
-            okP = false;
-            P_ = CSD->Pval[0] - CSD->Ptol;
-        }
-        if( P >= CSD->Pval[CSD->nPp-1] + CSD->Ptol )
-        {
-            okP = false;
-            P_ = CSD->Pval[CSD->nPp-1] + CSD->Ptol;
-        }
-        if( !okP ) {
-            ipmlog_file->info("In node {},  Given P={} is beyond the interpolation "
-                              "range for thermodynamic data near boundary P_= {}", CNode->NodeHandle, P, P_);
-        }
-        return ( okT && okP );
-    }
-    return ( okT && okP );
+void TNode::Get_sMod(int ndx, std::string &sMod)
+{
+    sMod = char_array_to_string(pmm->sMod[ndx], 8);
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------

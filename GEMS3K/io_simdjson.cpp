@@ -298,19 +298,19 @@ template <> void SimdJsonWrite::add_value( const std::string& value )
     fout  << "\"" << val << "\"";
 }
 
-void SimdJsonWrite::write_array(const std::string &field_name, const std::vector<double> &arr, long l_size)
-{
-    long jj=0, sz = ( l_size > 0 ? l_size: values_in_line );
-    add_key( key( field_name ) );
-    fout  << ( dense ? "[\n        " : "[\n" );
+//void SimdJsonWrite::write_array(const std::string &field_name, const std::vector<double> &arr, long l_size)
+//{
+//    long jj=0, sz = ( l_size > 0 ? l_size: values_in_line );
+//    add_key( key( field_name ) );
+//    fout  << ( dense ? "[\n        " : "[\n" );
 
-    for( size_t ii=0; ii<arr.size(); ii++, jj++ )
-    {
-        add_next( ii, jj, sz );
-        add_value( arr[ii] );
-    }
-    fout << ( dense ? "\n    ]" : "\n]" );
-}
+//    for( size_t ii=0; ii<arr.size(); ii++, jj++ )
+//    {
+//        add_next( ii, jj, sz );
+//        add_value( arr[ii] );
+//    }
+//    fout << ( dense ? "\n    ]" : "\n]" );
+//}
 
 }  // io_formats
 

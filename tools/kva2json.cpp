@@ -119,6 +119,7 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
             std::cout << "error occured during reading the files" << std::endl;
             return 1;
         }
+        node_arr->GEM_print_ipm( "AfterRead.txt" );   // possible debugging printout
         //std::cout << "Loaded System ID: " << node_arr->getCalcNode()->system_id() <<  std::endl;
 
         TestModeGEMParam calc_param;  // use default data
@@ -140,6 +141,8 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
             //std::cout << "TProcess GEM3k output" <<  message.c_str() << point << std::endl;
             return false;
         };
+
+        node_arr->GEM_print_ipm( "AfterCalc.txt" );   // possible debugging printout
 
         auto dbr_list =  node_arr->genGEMS3KInputFiles(  export_data.ipmfiles_lst_name, messageF, export_data.nIV,
                                                          export_data.io_mode, export_data.brief_mode,

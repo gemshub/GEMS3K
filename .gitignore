@@ -1,11 +1,15 @@
 .directory
 .vscode/
+*.pro.user
 build/
 build*/
 install/
 cgems/
 GEMS3K/ms_multi_new.h
 GEMS3K/s_fgl_new.h
+tsolmod4rkt/*.pro.user
+tsolmod4rkt/*.pro.user.*
+tsolmod4rkt-build/
 tools-build/*.json
 tools-build/*.dat
 tools-build/*.txt

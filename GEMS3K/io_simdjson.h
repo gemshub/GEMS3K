@@ -42,7 +42,7 @@ class SimdJsonWrite
 public:
 
     /// Constructor
-    SimdJsonWrite( std::iostream& ff, const std::string& test_set_name, bool not_brief ):
+    SimdJsonWrite( std::ostream& ff, const std::string& test_set_name, bool not_brief ):
         fout(ff), dense(not_brief), current_set_name(test_set_name)
     {}
 
@@ -67,10 +67,20 @@ public:
     /// Writes double vector to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
-    /// \param with_comments - interpret the flag with_comments=true as "pretty JSON" and
-    ///                                   with_comments=false as "condensed JSON"
-    /// \param brief_mode - Do not write data items that contain only default values
-    void write_array( const std::string& field_name, const std::vector<double>& arr, long int l_size );
+    template < typename T >
+    void write_array( const std::string& field_name, const std::vector<T>& arr, long int l_size )
+    {
+        long jj=0, sz = ( l_size > 0 ? l_size: values_in_line );
+        add_key( key( field_name ) );
+        fout  << ( dense ? "[\n        " : "[\n" );
+
+        for( size_t ii=0; ii<arr.size(); ii++, jj++ )
+        {
+            add_next( ii, jj, sz );
+            add_value( arr[ii] );
+        }
+        fout << ( dense ? "\n    ]" : "\n]" );
+    }
 
     /// Writes T array to a text file.
     template < typename T, typename LT >
@@ -132,7 +142,7 @@ public:
 private:
 
     /// Internal structure of file data
-    std::iostream& fout;
+    std::ostream& fout;
     bool dense = false;
     bool first = false;
     const long values_in_line = 10;

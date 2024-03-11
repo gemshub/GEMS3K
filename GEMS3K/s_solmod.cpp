@@ -26,6 +26,11 @@
 
 #include "s_solmod.h"
 #include "v_detail.h"
+#include "io_template.h"
+#include "io_nlohmann.h"
+#include "io_simdjson.h"
+#include "io_keyvalue.h"
+#include "jsonconfig.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 // Thread-safe logger to stdout with colors
@@ -39,16 +44,17 @@ std::shared_ptr<spdlog::logger> TSolMod::solmod_logger = spdlog::stdout_color_mt
 
 /// generic constructor (new)
 TSolMod::TSolMod( SolutionData *sd ):
-        ModCode(sd->Mod_Code), MixCode(sd->Mix_Code), NComp(sd->NSpecies),  NPar(sd->NParams),
+        ModCode(sd->Mod_Code), MixCode(sd->Mix_Code), PhaseName(sd->phaseName), NComp(sd->NSpecies), NPar(sd->NParams),
         NPcoef(sd->NPcoefs), MaxOrd(sd->MaxOrder),  NP_DC(sd->NPperDC), /*NPTP_DC(NPTPperDC),*/
         NSub(sd->NSublat), NMoi(sd->NMoiet), R_CONST(8.31451), Tk(sd->T_k), Pbar(sd->P_bar)
 {
+    DC_Names = sd->arSM;
 //   NlPh = sd->NlPhs;
 //    NlPc = sd->NlPhC;
     NDQFpc = sd->NDQFpDC;
 //    NrcPpc = sd->NrcPpDC;
 //   lPhcf = sd->lPhc;
-    DQFcf = sd->DQFc;  // read-only
+    DQFcf = sd->arDQFc;  // read-only
 //    rcpcf = sd->rcpc;  // read-only
 //    if(rcpcf == NULL) NrcPpc = 0;
     //PhLin = sd->arPhLin;
@@ -58,7 +64,6 @@ TSolMod::TSolMod( SolutionData *sd ):
 //        PhLin[i][0] = sd->arPhLin[2*i];
 //        PhLin[i][1] = sd->arPhLin[2*i+1];
 //    }
-    //aSitFj = sd->arSitFj;
     // pointer assignments
     aIPx = sd->arIPx;   // Direct access to index list and parameter coeff arrays!
     aIPc = sd->arIPc;
@@ -74,9 +79,9 @@ TSolMod::TSolMod( SolutionData *sd ):
     aVol = sd->arVol;
     lnGamma = sd->arlnGam;
     lnGamConf = sd->arlnCnft;  // new double[NComp];
+    //lnGamCorr = sd->arlnCnft;  // new double[NComp];
     lnGamRecip = sd->arlnRcpt; // new double[NComp];
     lnGamEx = sd->arlnExet;    // new double[NComp];
-    lnGamCorr = sd->arlnCnft;  // new double[NComp];
     lnGamDQF = sd->arlnDQFt;   // new double[NComp];
     CTerm = sd->arCTermt;     // Coulombic terms (new)
    // Arrays for lnGamma components - should we zero off?
@@ -85,7 +90,7 @@ TSolMod::TSolMod( SolutionData *sd ):
        lnGamConf[i] = 0.0;
        lnGamRecip[i] = 0.0;
        lnGamEx[i] = 0.0;
-       lnGamCorr[i] = 0.0;
+       //lnGamCorr[i] = 0.0;
        lnGamDQF[i] = 0.0;
        CTerm[i] = 0.0;
     }
@@ -101,7 +106,7 @@ TSolMod::TSolMod( SolutionData *sd ):
 
 /// generic constructor (new) for calling from DComp/DCthermo calculations
 TSolMod::TSolMod( long int NSpecies, char Mod_Code,  double T_k, double P_bar ):
-        ModCode(Mod_Code), MixCode(0), NComp(NSpecies),  NPar(0),
+        ModCode(Mod_Code), MixCode(0), PhaseName("undef"), NComp(NSpecies),  NPar(0),
         NPcoef(0), MaxOrd(0),  NP_DC(0), /*NPTP_DC(NPTPperDC),*/
         NSub(0), NMoi(0), R_CONST(8.31451), Tk(T_k), Pbar(P_bar)
 {
@@ -284,14 +289,6 @@ long int TSolMod::UpdatePT ( double T_k, double P_bar )
 	  return 0;
 }
 
-
-/// gets phase name for specific built-in models (class TModOther)
-void TSolMod::GetPhaseName( const char *PhName )
-{
-     strncpy( PhaseName, PhName, MAXPHNAME );
-     PhaseName[MAXPHNAME] = 0;
-}
-
 /// Calculation of configurational terms for the ideal mixing (c) DK, TW Nov. 2010
 /// Based upon the formalism of Price (1985)
 /// Returns 0 if calculated o.k., or 1 if this is not a multi-site model
@@ -379,5 +376,89 @@ double TSolMod::ideal_conf_entropy()
     Sicnf = (-1.)*R_CONST*sic;
     return Sicnf;
 }
+
+void TSolMod::to_json_file(const std::string& path) const
+{
+    std::fstream ff(GemsSettings::with_directory(path), std::ios::out);
+    ErrorIf(!ff.good(), path, "Fileopen error");
+    to_json_stream(ff);
+}
+
+void TSolMod::to_json_stream(std::ostream& ff) const
+{
+#ifdef USE_NLOHMANNJSON
+    io_formats::NlohmannJsonWrite out_format( ff, "set_name" );
+#else
+    io_formats::SimdJsonWrite out_format( ff, "set_name", true );
+#endif
+    out_format.put_head( PhaseName, "tsolmod");
+    io_formats::TPrintArrays  prar( 0, {}, out_format );
+
+    prar.addField("PhaseName", PhaseName);
+    prar.addField("Tk", Tk);
+    prar.addField("Pbar", Pbar);
+
+    prar.addField("ModCode", ModCode);
+    prar.addField("MixCode", MixCode);
+    prar.addField("NComp", NComp);
+    prar.addField("NPar", NPar);
+    prar.addField("NPcoef", NPcoef);
+    prar.addField("MaxOrd", MaxOrd);
+    prar.addField("NP_DC", NP_DC);
+    prar.addField("NSub", NSub);
+    prar.addField("NMoi", NMoi);
+    prar.addField("NDQFpc", NDQFpc);
+    prar.writeArray( "phVOL",  phVOL, 1L );
+
+    prar.writeArray( "aIPx",  aIPx, NPar*MaxOrd );
+    prar.writeArray( "aIPc",  aIPc, NPar*NPcoef );
+    prar.writeArray( "aDCc",  aDCc, NComp*NP_DC );
+    prar.writeArray( "DCNL", DC_Names[0], NComp, MAXDCNAME );
+    prar.writeArray( "DC_Codes",  DC_Codes, NComp, 1L );
+    prar.writeArray( "aGEX",  aGEX, NComp );
+    prar.writeArray( "aPparc",  aPparc, NComp );
+    prar.writeArray( "aVol",  aVol, NComp );
+    prar.writeArray( "aWx",  x, NComp );
+    prar.writeArray( "lnGamma",  lnGamma, NComp );
+    prar.writeArray( "DQFcf",  DQFcf, NComp*NDQFpc );
+    prar.writeArray( "aSitFR",  aSitFR, NSub*NMoi );
+    prar.writeArray( "aMoiSN",  aMoiSN, NComp*NSub*NMoi );
+    out_format.dump( true );
+}
+
+void TSolMod::to_text_file(const std::string& path, bool append) const
+{
+    std::ios::openmode mod = std::ios::out;
+    if( append )
+        mod = std::ios::out|std::ios::app;
+    std::fstream ff(GemsSettings::with_directory(path), mod );
+    ErrorIf( !ff.good() , path, "Fileopen error");
+
+    io_formats::KeyValueWrite out_format( ff );
+    out_format.put_head( PhaseName, "tsolmod");
+    io_formats::TPrintArrays<io_formats::KeyValueWrite>  prar( 0, {}, out_format );
+
+    prar.addField("PhaseName", PhaseName);
+    prar.addField("Tk", Tk);
+    prar.addField("Pbar", Pbar);
+    if(NPar)
+        prar.writeArray( "aIP",  aIP, NPar );
+    prar.writeArray( "aGEX",  aGEX, NComp );
+    prar.writeArray( "aPparc",  aPparc, NComp );
+    prar.writeArray( "aWx",  x, NComp );
+    prar.writeArray( "aVol",  aVol, NComp );
+    prar.writeArray( "lnGamma",  lnGamma, NComp );
+    prar.writeArray( "lnGamConf", lnGamConf, NComp );
+    prar.writeArray( "lnGamRecip",  lnGamRecip, NComp );
+    prar.writeArray( "lnGamEx",  lnGamEx, NComp );
+    prar.writeArray( "lnGamDQF",  lnGamDQF, NComp );
+    // not use prar.writeArray( "CTerm",  CTerm, NComp );
+    prar.writeArray( "Gex",  &Gex, 7L );
+    prar.writeArray( "Gid",  &Gid, 7L );
+    prar.writeArray( "Gdq",  &Gdq, 7L );
+    prar.writeArray( "Grs",  &Grs, 7L );
+    prar.writeComment( true, "-----------------------------------\n");
+}
+
 
 //--------------------- End of s_solmod.cpp ----------------------------------------

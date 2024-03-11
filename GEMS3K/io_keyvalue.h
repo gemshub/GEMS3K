@@ -37,12 +37,12 @@ class KeyValueWrite
 {
 
     /// Internal structure of file data
-    std::iostream& fout;
+    std::ostream& fout;
 
 public:
 
     /// Constructor
-    KeyValueWrite( std::iostream& ff ): fout(ff) {}
+    KeyValueWrite( std::ostream& ff ): fout(ff) {}
 
     std::string set_name() const
     {
@@ -78,9 +78,24 @@ public:
     /// Writes double vector to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
-    /// \param with_comments - Write files with comments for all data entries
-    /// \param brief_mode - Do not write data items that contain only default values
-    void write_array( const std::string& field_name, const std::vector<double>& arr, long int  );
+    template < typename T >
+    void write_array( const std::string& field_name, const std::vector<T>& arr, long int l_size )
+    {
+        int sz = ( l_size > 0 ? l_size: 40 );
+        int jj = 0;
+        fout << std::endl << "<" << field_name << ">" << std::endl;
+
+        for( size_t ii=0; ii<arr.size(); ii++, jj++  )
+        {
+            if(jj == sz)
+            {
+                jj=0;
+                fout << std::endl;
+            }
+            writeValue( arr[ii] );
+            fout << " ";
+        }
+    }
 
     /// Writes T array to a text file.
     template < typename T, typename LT >

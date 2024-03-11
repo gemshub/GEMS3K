@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.9)
 
 # Set the name of the project
-project(GEMS3K VERSION 4.3.6 LANGUAGES CXX C)
+project(GEMS3K VERSION 4.4.0 LANGUAGES CXX C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -43,6 +43,7 @@ option(USE_THERMOFUN "Use ThermoFun" ON)
 option(BUILD_GEM2MT "Install GEM2MT lib." ON)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
 option(BUILD_TOOLS "Build tools" ON)
+option(BUILD_SOLMOD "Build isolate TSolMod " ON)
 
 # Used into conda only
 if(DEFINED ENV{CONDA_PREFIX})
@@ -129,6 +130,10 @@ endif()
 
 if(BUILD_TOOLS)
    add_subdirectory(tools)
+endif()
+
+if(BUILD_SOLMOD)
+   add_subdirectory(tsolmod4rkt)
 endif()
 
 # Install the cmake config files that permit users to use find_package(gems3k)

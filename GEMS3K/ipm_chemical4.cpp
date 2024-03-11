@@ -278,7 +278,6 @@ void TMultiBase::KM_Create( long int jb, long int k, long int kc, long int kp,
         case KM_PRO_MWR_:  // Kinetics of generic dissolution/precipitation (no uptake, ionex, adsorption)
         {
                 TMWReaKin* myPT = new TMWReaKin( &kmd );
-//                myPT->GetPhaseName( pm.SF[k] );
                 myKM = myPT;
                 break;
         }
