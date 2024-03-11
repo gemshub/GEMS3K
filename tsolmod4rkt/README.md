@@ -34,7 +34,7 @@ make install
 Here 'username' is your user name. This will install GEMS3K and tsolmod4rkt libraries into the indicated folder, hence sudo is not required for the 'make install' command. Python package solmod4rkt will be installed into
 
 /home/username/.local/lib/python3.10/site-packages/solmod4rkt
-/home/username/.local/lib/python3.10/site-packages/solmod4rkt-4.3.6.dist-info
+/home/username/.local/lib/python3.10/site-packages/solmod4rkt-4.4.0.dist-info
 
 In order to test that the tsolmod4rkt build actually works, run the C++ example as follows:
 
