@@ -1453,6 +1453,8 @@ private:
     double **Bet1;	   ///< Beta1 table for cation-anion interactions [Nc][Na]
     double **Bet2;	   ///< Beta2 table for cation-anion interactions [Nc][Na]
     double **Cphi;     ///< Cphi  table for cation-anion interactions [Nc][Na]
+    double **Alp1;     ///< Alpha1 coefficient of the IS terms for cation-anion interactions [Nc][Na]
+    double **Alp2;     ///< Alpha2 coefficient of the IS terms for cation-anion interactions [Nc][Na]
     double **Lam;      ///< Lam table for neutral-cation interactions [Nn][Nc]
     double **Lam1;     ///< Lam1 table for neutral-anion interactions [Nn][Na]
     double **Theta;    ///< Theta table for cation-cation interactions [Nc][Nc]
@@ -1460,6 +1462,8 @@ private:
     double ***Psi;     ///< Psi array for cation-cation-anion interactions [Nc][Nc][Na]
     double ***Psi1;    ///< Psi1 array for anion-anion-cation interactions [Na][Na][Nc]
     double ***Zeta;    ///< Zeta array for neutral-cation-anion interactions [Nn][Nc][Na]
+    double ***Eta;     ///< Eeta array for neutral-cation-cation interactions [Nc][Nc][Nn]
+    double ***Eta1;    ///< Eeta array for neutral-anion-anion interactions [Na][Na][Nn]
 
 
             // Work parameter arrays
@@ -1482,7 +1486,7 @@ private:
 	enum eTableType
 	{
         bet0_ = -10, bet1_ = -11, bet2_ = -12, Cphi_ = -20, Lam_ = -30, Lam1_ = -31, Lam2_ = -32,
-		Theta_ = -40,  Theta1_ = -41, Psi_ = -50, Psi1_ = -51, Zeta_ = -60
+        Theta_ = -40,  Theta1_ = -41, Psi_ = -50, Psi1_ = -51, Zeta_ = -60, Eta_ = -70, Eta1_ = -71, Alp1_ = -80, Alp2_= -81
 	};
 
     // internal setup
@@ -1498,6 +1502,11 @@ private:
     /// Calculation of Etheta and Ethetap values
 	void Ecalc( double z, double z1, double I, double DH_term,
 					double& Etheta, double& Ethetap );
+
+    void ETHETAS(double ZJ, double ZK, double I, double DH_term, double& etheta, double& ethetap);
+
+    void ETHETA_PARAMS(double X, double& JAY, double& JPRIME );
+
 	inline long int getN() const
 	{
 		return Nc+Na+Nn;
