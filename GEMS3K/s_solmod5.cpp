@@ -30,7 +30,6 @@
 using namespace std;
 #include "verror.h"
 #include "s_solmod.h"
-#include "v_detail.h"
 #include "jsonconfig.h"
 
 //=============================================================================================

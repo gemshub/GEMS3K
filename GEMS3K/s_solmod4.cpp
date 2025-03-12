@@ -27,10 +27,10 @@
 //-------------------------------------------------------------------
 //
 
+
 #include <fstream>
 using namespace std;
 #include "s_solmod.h"
-#include "v_detail.h"
 #include "jsonconfig.h"
 
 

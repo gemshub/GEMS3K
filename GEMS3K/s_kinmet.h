@@ -27,8 +27,8 @@
 #define S_KINMET_H
 
 #include <vector>
-#include <spdlog/spdlog.h>
-
+//#include <spdlog/spdlog.h>
+#include "verror.h"
 
 const int MAXDCNAME_ = 16, MAXPHNAME_ = 16, MAXSYMB_ = 4;   // see also v_mod.h
 
