@@ -28,7 +28,7 @@
 
 #include <fstream>
 using namespace std;
-#include "verror.h"
+//#include "verror.h"
 #include "s_solmod.h"
 #include "jsonconfig.h"
 

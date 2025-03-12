@@ -33,7 +33,7 @@
 #include <vector>
 //#include <spdlog/spdlog.h>
 #include "m_const_base.h"
-#include "verror.h"
+//#include "v_detail.h"
 
 // re-declaration of enums below required for GEMS3K
 // dc_class_codes for fluids will be replaced by tp_codes

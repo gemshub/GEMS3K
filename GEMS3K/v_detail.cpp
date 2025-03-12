@@ -10,14 +10,14 @@ TError::~TError()
 
 [[ noreturn ]] void Error (const std::string& title, const std::string& message)
 {
-    gems_logger->error("{}: {}", title, message);
+    //gems_logger->error("{}: {}", title, message);
     throw TError(title, message);
 }
 
 void ErrorIf (bool error, const std::string& title, const std::string& message)
 {
     if(error) {
-        gems_logger->error("{}: {}", title, message);
+        //gems_logger->error("{}: {}", title, message);
         throw TError(title, message);
     }
 }
