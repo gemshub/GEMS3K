@@ -6,7 +6,7 @@ if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019" (
 )
 
 echo "Configuring..."
-cmake -G"Visual Studio 16 2019" -A x64 -S .  -DBUILD_SHARED_LIBS=OFF -B build
+cmake -G"Visual Studio 16 2019" -A x64 -S . -DCMAKE_INSTALL_PREFIX:PATH="%CONDA_PREFIX%\Library" -DBUILD_SHARED_LIBS=OFF -B build
 echo "Building..."
 cmake --build build --config %CONFIGURATION% --target install
 if errorlevel 1 exit 1
