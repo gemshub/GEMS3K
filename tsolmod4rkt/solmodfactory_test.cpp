@@ -24,6 +24,7 @@
 //-------------------------------------------------------------------
 
 #include <iostream>
+#include <fstream>
 #include <filesystem>
 #include <regex>
 #include "jsonconfig.h"

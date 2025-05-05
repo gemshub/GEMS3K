@@ -5,7 +5,7 @@
 #include <set>
 #include <optional>
 #include <algorithm>
-#include "v_detail.h"
+#include "verror.h"
 
 /// Get home directory in  C++
 std::string  home_dir();

@@ -1,6 +1,6 @@
 #include <set>
-#include <spdlog/sinks/stdout_color_sinks.h>
 #include "v_detail.h"
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 // Thread-safe logger to stdout with colors
 std::shared_ptr<spdlog::logger> gems_logger = spdlog::stdout_color_mt("gems3k");

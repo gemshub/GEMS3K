@@ -110,6 +110,20 @@ sudo ./install_no_thermofun.sh
 
 * For using qmake or QtCreator for building the GEMS3K chemical solver library and examples, please consult this web page: http://gems.web.psi.ch/GEMS3K/techinfo.htm
 
+
+#### The options and cases for compiling the code
+
+* USE_THERMOFUN (default ON) - Enable using the ThermoFun library for calculating the standard state thermodynamic properties of substances and reactions at a given temperature and pressure. Otherwise possible only load thermodynamic data from DATACH using Lagrangian Interpolator.
+
+* BUILD_SOLMOD  (default ON) - Enable building the [tsolmod4rkt library](tsolmod4rkt/README.md) of mixing and activity models into a separate library with C++ and Python APIs. 
+
+* BUILD_GEM2MT  (default ON) - Enable building the standalone math-transport library.
+
+* BUILD_TOOLS   (default ON) - Enable building the [kva2json utility](tools/README.md) to convert GEMS3K files formats. 
+
+* BUILD_NLOHMANNJSON (default OFF) - Enable using the [nlohmann JSON](https://github.com/nlohmann/json) to serialize/deserialize input files, otherwise, the simdjson library is used.
+
+
 #### Attention: 
 
 Since version 3.7.0, the GEMS3K "ipm.dat" files exported by earlier versions of GEM-Selektor may need a small modification: the "<ID_key> " needs to be entered at the beginning of an exported "ipm.dat file". This can be done using any plain-txt editor (TextEdit, nano, SublimeText, VScode).

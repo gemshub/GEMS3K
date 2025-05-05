@@ -40,10 +40,15 @@ endif()
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
 option(USE_THERMOFUN "Use ThermoFun" ON)
-option(BUILD_GEM2MT "Install GEM2MT lib." ON)
+option(BUILD_GEM2MT "Install GEM2MT lib." OFF)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
 option(BUILD_TOOLS "Build tools" ON)
 option(BUILD_SOLMOD "Build isolate TSolMod " ON)
+
+# Currently is not setup to produce a dynamic library using MSVC, only static
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+    set(BUILD_SHARED_LIBS OFF)
+endif()
 
 # Used into conda only
 if(DEFINED ENV{CONDA_PREFIX})
@@ -73,6 +78,7 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
         /D_SCL_SECURE_NO_WARNINGS
         /D_CRT_SECURE_NO_WARNINGS=1
         /MP4
+        /utf-8
         /EHsc
         /D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
         /DNOMINMAX

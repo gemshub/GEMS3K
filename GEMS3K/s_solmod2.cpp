@@ -26,7 +26,7 @@
 //-------------------------------------------------------------------
 
 #include "s_solmod.h"
-#include "v_detail.h"
+//#include "v_detail.h"
 
 //=======================================================================================================
 // Peng-Robinson-Stryjek-Vera (PRSV) model for fluid mixtures

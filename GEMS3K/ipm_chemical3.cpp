@@ -879,7 +879,9 @@ void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int
             delete phSolMod[k];
 
      phSolMod[k] = mySM; // set up new pointer for the solution model
+    if(TSolMod::solmod_logger->should_log(spdlog::level::debug)) {
      phSolMod[k]->to_json_file(std::string("solmod_")+std::to_string(k)+".json");
+    }
 }
 
 /// Wrapper call for calculation of temperature and pressure correction
@@ -932,7 +934,9 @@ void TMultiBase::SolModActCoeff( long int k, char ModCode )
              ErrorIf( !phSolMod[k], "SolModActCoeff: ","Invalid index of phase");
              TSolMod* mySM = phSolMod[k];
              mySM->MixMod();
-             phSolMod[k]->to_text_file(std::string("solmod_act_coef_")+std::to_string(k)+".txt", true);
+             if(TSolMod::solmod_logger->should_log(spdlog::level::debug)) {
+                 phSolMod[k]->to_text_file(std::string("solmod_act_coef_")+std::to_string(k)+".txt", true);
+             }
              break;
         }
         default:

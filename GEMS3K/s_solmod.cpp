@@ -25,7 +25,6 @@
 //-------------------------------------------------------------------
 
 #include "s_solmod.h"
-#include "v_detail.h"
 #include "io_template.h"
 #include "io_nlohmann.h"
 #include "io_simdjson.h"

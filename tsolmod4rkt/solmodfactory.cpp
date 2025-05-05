@@ -23,6 +23,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include <fstream>
 #include "solmodfactory.h"
 #include "jsonconfig.h"
 #include "datach_api.h"
