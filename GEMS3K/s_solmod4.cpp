@@ -27,7 +27,6 @@
 //-------------------------------------------------------------------
 //
 
-
 #include <fstream>
 using namespace std;
 #include "s_solmod.h"

@@ -685,6 +685,7 @@ void datach_from_text_file(DATACH* CSD, TIO& in_format, bool use_thermofun)
         if( CSD->S0 ) CSD->S0[ii] = 0.;
         if( CSD->A0 ) CSD->A0[ii] = 0.;
         if( CSD->U0 ) CSD->U0[ii] = 0.;
+        if( CSD->V0 ) CSD->V0[ii] = 0.;
     }
     CSD->Ttol = 0.1;
     CSD->Ptol = 10000;
