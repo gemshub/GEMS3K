@@ -59,6 +59,7 @@
 #include "datach_api.h"
 #include "activities.h"
 #include "v_detail.h"
+#include "v_service.h"
 
 #include "ms_multi.h"
 
@@ -246,12 +247,12 @@ public:
     /// Return code of error in IPM
     std::string code_error_IPM() const
     {
-        return std::string(pmm->errorCode, 100);
+        return char_array_to_string(pmm->errorCode, 100);
     }
     /// Returndescription of error in IPM
     std::string description_error_IPM() const
     {
-        return std::string(pmm->errorBuf, 1024);
+        return char_array_to_string(pmm->errorBuf, 1024);
     }
 
     //  Calls for direct coupling of a FMT code with GEMS3K
