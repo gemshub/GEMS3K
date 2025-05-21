@@ -49,7 +49,7 @@ void TMultiBase::GibbsEnergyMinimization()
   bool IAstatus;
   Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
 
-  //TNode::ipmlog_file->debug(" GEMIPM TC={}", pm.TCc);
+  TNode::ipmlog_file->debug(" GEMIPM TC={}", pm.TCc);
 
 FORCED_AIA:
     GEM_IPM_Init();
