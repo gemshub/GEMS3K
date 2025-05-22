@@ -9,7 +9,7 @@ echo ******                    ******
 echo
 
 echo git clone ChemicalFun...
-git clone https://bitbucket.org/gems4/chemicalfun.git
+git clone https://github.com/thermohub/chemicalfun.git
 cd chemicalfun
 
 echo "Configuring..."
@@ -25,7 +25,7 @@ echo ******                    ******
 echo
 
 echo git clone thermofun...
-git clone https://bitbucket.org/gems4/thermofun.git
+git clone https://github.com/thermohub/thermofun.git
 cd thermofun
 
 echo "Configuring..."
