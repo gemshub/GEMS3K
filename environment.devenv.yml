@@ -12,9 +12,9 @@ dependencies:
   - ccache  # [unix]
   - pybind11
   - nlohmann_json
-  #- thermofun>=0.4.3
-  - eigen=3.4.0
-  - spdlog
+  - thermofun>=0.4.3
+  #- eigen=3.4.0
+  #- spdlog
   - python>=3.7
   - pytest
 
