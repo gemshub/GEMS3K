@@ -33,7 +33,10 @@ if(BUILD_SHARED_LIBS)
       endif()
     endif()
     install( TARGETS GEMS3K
-             EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
+             EXPORT GEMS3KTargets
+             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries)
 
     # Install debug symbols
     if(MSVC)
