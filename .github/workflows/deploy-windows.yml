@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: windows-latest
-        conda_platform: win-64
+        os: [ windows-latest ]
+        conda_platform: [ win-64 ]
 
     steps:
 
