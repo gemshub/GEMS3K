@@ -40,7 +40,7 @@ jobs:
         id: strings2
         shell: bash
         run: >
-          echo "deploy-output-name=gemsgui-windows-${{ github.sha }}-${{ steps.timestamp.outputs.now }}.zip" >> "$GITHUB_OUTPUT"
+          echo "deploy-output-name=gems3k-windows-${{ github.sha }}-${{ steps.timestamp.outputs.now }}.zip" >> "$GITHUB_OUTPUT"
 
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
@@ -60,7 +60,6 @@ jobs:
         shell: cmd
         run: |
           call conda activate GEMS3K || goto :eof
-#          call conda-install-dependencies.bat || goto :eof
           cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ steps.strings.outputs.deploy-output-dir }} -A x64 -S . -B build  || goto :eof
           cmake --build build --target install --config Release || goto :eof
 
