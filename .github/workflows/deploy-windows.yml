@@ -2,7 +2,7 @@ name: deploy-windows
 on:
   push:
     branches:
-      - no_client_mode
+      - no_client_mode1
   release:
     types:
       - published

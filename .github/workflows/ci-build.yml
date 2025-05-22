@@ -1,0 +1,73 @@
+name: ci-build
+on:
+  push:
+    branches:
+      - no_client_mode
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-13
+        include:
+          - os: ubuntu-latest
+            conda_platform: linux-64
+            artifact_name: gems3k-linux
+          - os: windows-latest
+            conda_platform: win-64
+            artifact_name: gems3k-windows
+          - os: macos-13
+            conda_platform: osx-64
+            artifact_name: gems3k-macos
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-activate-base: false
+          channels: conda-forge, defaults
+          channel-priority: true
+
+      - name: Configuring Conda Environment
+        run: |
+          conda config --set always_yes yes --set changeps1 no
+          conda config --add channels conda-forge
+          conda install conda-devenv
+          conda devenv
+
+      - name: Building, Testing & Installing GEMS3K
+        if: matrix.os != 'windows-latest'
+        shell: bash -l {0}
+        run: |
+          conda activate GEMSGUI
+          mkdir .build && cd .build
+          cmake -GNinja .. -DCMAKE_BUILD_TYPE=Release
+          ninja
+          ninja install
+
+      - name: Building, Testing & Installing GEMS3K (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: cmd
+        run: |
+          call conda activate GEMSGUI || goto :eof
+          cmake -DCMAKE_BUILD_TYPE=Release -A x64 -S . -B build  || goto :eof
+          cmake --build build --target install  --config Release  || goto :eof
+
+      - name: Check conda
+        run: |
+          conda config --show
+          conda list --show-channel-urls
+
