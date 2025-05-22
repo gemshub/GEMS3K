@@ -8,7 +8,7 @@ file(GLOB SOURCE_FILES *.cpp)
 #file(GLOB SIMDJSON_FILES ${CMAKE_SOURCE_DIR}/simdjson/simdjson.cpp)
 
 # Compile the C++ source code into object files
-add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES})
+#add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES})
 
 if(USE_SPDLOG_PRECOMPILED)
    if(NOT TARGET spdlog::spdlog)
@@ -21,7 +21,7 @@ endif()
 if(BUILD_SHARED_LIBS)
     # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-    add_library(GEMS3K SHARED $<TARGET_OBJECTS:GEMS3K_OBJECT>)
+    add_library(GEMS3K SHARED ${HEADER_FILES} ${SOURCE_FILES})
     add_library(GEMS3K::GEMS3K ALIAS GEMS3K)
     if(USE_THERMOFUN MATCHES ON)
       target_compile_definitions(GEMS3K PUBLIC USE_SPDLOG_PRECOMPILED)
@@ -47,7 +47,7 @@ endif()
 
 # Check if a static library is to be built
 if(BUILD_STATIC_LIBS)
-   add_library(GEMS3K-static STATIC $<TARGET_OBJECTS:GEMS3K_OBJECT>)
+   add_library(GEMS3K-static STATIC ${HEADER_FILES} ${SOURCE_FILES})
     add_library(GEMS3K::GEMS3K-static ALIAS GEMS3K-static)
    if(USE_THERMOFUN MATCHES ON)
      target_link_libraries(GEMS3K-static PUBLIC ThermoFun::ThermoFun)

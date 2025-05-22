@@ -55,7 +55,7 @@ set(SOLMOD_SOURCE_FILES
 
 
 # Compile the C++ source code into object files
-add_library(SOLMOD_OBJECT OBJECT ${SOLMOD_HEADER_FILES} ${SOLMOD_SOURCE_FILES})
+#add_library(SOLMOD_OBJECT OBJECT ${SOLMOD_HEADER_FILES} ${SOLMOD_SOURCE_FILES})
 
 #if(USE_SPDLOG_PRECOMPILED)
 #   if(NOT TARGET spdlog::spdlog)
@@ -68,7 +68,7 @@ add_library(SOLMOD_OBJECT OBJECT ${SOLMOD_HEADER_FILES} ${SOLMOD_SOURCE_FILES})
 if(BUILD_SHARED_LIBS)
     # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-    add_library(tsolmod4rkt SHARED $<TARGET_OBJECTS:SOLMOD_OBJECT>)
+    add_library(tsolmod4rkt SHARED ${SOLMOD_HEADER_FILES} ${SOLMOD_SOURCE_FILES})
     add_library(GEMS3K::tsolmod4rkt ALIAS tsolmod4rkt)
     if(USE_THERMOFUN MATCHES ON)
       target_compile_definitions(tsolmod4rkt PUBLIC USE_SPDLOG_PRECOMPILED)
@@ -94,7 +94,7 @@ endif()
 
 # Check if a static library is to be built
 if(BUILD_STATIC_LIBS)
-   add_library(tsolmod4rkt-static STATIC $<TARGET_OBJECTS:SOLMOD_OBJECT>)
+   add_library(tsolmod4rkt-static STATIC ${SOLMOD_HEADER_FILES} ${SOLMOD_SOURCE_FILES})
     add_library(GEMS3K::tsolmod4rkt-static ALIAS tsolmod4rkt-static)
    if(USE_THERMOFUN MATCHES ON)
      target_link_libraries(tsolmod4rkt-static PUBLIC ThermoFun::ThermoFun)

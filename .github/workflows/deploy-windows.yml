@@ -15,13 +15,8 @@ jobs:
       fail-fast: false
 
       matrix:
-        os:
-          - windows-lates
-
-        include:
-          - os: windows-latest
-            conda_platform: win-64
-            artifact_name: gemsg3k-windows
+        os: windows-latest
+        conda_platform: win-64
 
     steps:
 
