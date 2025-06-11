@@ -10,7 +10,7 @@ trigger:
 jobs:
 - job: Linux
   pool:
-    vmImage: 'ubuntu-20.04'
+    vmImage: 'ubuntu-24.04'
 
   steps:
   - task: Bash@3
