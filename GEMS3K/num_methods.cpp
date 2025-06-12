@@ -27,6 +27,8 @@
 
 #include <cmath>
 #include <algorithm>
+#include <iostream>
+#include <sstream>
 #include "verror.h"
 #include "num_methods.h"
 
@@ -75,17 +77,24 @@ double LagranInterp(double *y, double *x, double *d, double yoi,
                     double xoi, long int M, long int N, long int pp )
 {
     double s,z,s1[21];
+    std::ostringstream oss;
     long int ppy, ppx, py, px, i, j, k, jx, jy, jy1;
 
     py = N-1;
     px = M-1;
 
    if (yoi < y[0] || yoi > y[py] )
-     Error( "LagranInterp",
-       "E34RErun: yoi < y[0] or yoi > y[py] ( row argument outside the range )");
+   {
+        oss.clear();
+        oss << "E34RErun LagranInterp: yoi (" << yoi << ") < y[0] (" << y[0] << ") or yoi > y[py] (" << y[py] << ") " << "(column argument outside the range)";
+        Error( "LagranInterp", oss.str());
+   }
    if(xoi < x[0] || xoi > x[px] )
-   Error( "LagranInterp",
-    "E34RErun: xoi < x[0] or xoi > x[px] ( column argument outside the range )");
+   {
+       oss.clear();
+       oss << "E34RErun LagranInterp: xoi (" << xoi << ") < x[0] (" << x[0] << ") or xoi > x[px] (" << x[px] << ") " << "(column argument outside the range)";
+       Error( "LagranInterp", oss.str());
+   }
 
    if( N==1 && M==1 ) // zero dimension interpolation
       return d[0];
@@ -180,12 +189,16 @@ double LagranInterp1D(double *x, double *d, double xoi, long int M, long int pp 
 {
     double s,z;
     long int  ppx, px, i, k, jx;
+    std::ostringstream oss;
 
     px = M-1;
 
-   if(xoi < x[0] || xoi > x[px] )
-   Error( "LagranInterp",
-    "E34RErun: xoi < x[0] or xoi > x[px] ( column argument outside the range )");
+    if(xoi < x[0] || xoi > x[px] )
+    {
+        oss.clear();
+        oss << "E34RErun LagranInterp: xoi (" << xoi << ") < x[0] (" << x[0] << ") or xoi > x[px] (" << x[px] << ") " << "(column argument outside the range)";
+        Error( "LagranInterp", oss.str());
+    }
 
    if( M==1 ) // zero dimension interpolation
       return d[0];
