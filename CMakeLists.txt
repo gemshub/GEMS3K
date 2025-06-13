@@ -4,9 +4,9 @@ cmake_minimum_required(VERSION 3.16)
 # Set the name of the project
 project(GEMS3K VERSION 4.4.2 LANGUAGES CXX C)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MACOSX_RPATH ON)
 
 # Include the cmake variables with values for installation directories
@@ -29,12 +29,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Set libraries to be compiled with position independent code mode (i.e., fPIC option in GNU compilers)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Set the default build type to Release
-if(NOT CMAKE_BUILD_TYPE)
-    message(STATUS "Setting build type to 'Release' as none was specified.")
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
+
 
 # Define which types of libraries to build
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
@@ -55,6 +50,13 @@ if(DEFINED ENV{CONDA_PREFIX})
    option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" ON)
 else()
    option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" OFF)
+endif()
+
+# Set the default build type to Release
+if(NOT CMAKE_BUILD_TYPE)
+    message(STATUS "Setting build type to 'Release' as none was specified.")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 # Set the list of compiler flags for GNU compiler

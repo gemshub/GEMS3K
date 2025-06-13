@@ -54,58 +54,36 @@ set(SOLMOD_SOURCE_FILES
 
 
 
-# Compile the C++ source code into object files
-#add_library(SOLMOD_OBJECT OBJECT ${SOLMOD_HEADER_FILES} ${SOLMOD_SOURCE_FILES})
+ # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
+ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
-#if(USE_SPDLOG_PRECOMPILED)
-#   if(NOT TARGET spdlog::spdlog)
-#       find_package(spdlog CONFIG REQUIRED)
-#   endif()
-#endif()
+add_library(tsolmod4rkt ${SOLMOD_HEADER_FILES} ${SOLMOD_SOURCE_FILES})
+add_library(GEMS3K::tsolmod4rkt ALIAS tsolmod4rkt)
 
-
-# Check if a shared library is to be built
-if(BUILD_SHARED_LIBS)
-    # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-    add_library(tsolmod4rkt SHARED ${SOLMOD_HEADER_FILES} ${SOLMOD_SOURCE_FILES})
-    add_library(GEMS3K::tsolmod4rkt ALIAS tsolmod4rkt)
-    if(USE_THERMOFUN MATCHES ON)
+if(USE_THERMOFUN MATCHES ON)
       target_compile_definitions(tsolmod4rkt PUBLIC USE_SPDLOG_PRECOMPILED)
       target_link_libraries(tsolmod4rkt PUBLIC ThermoFun::ThermoFun)
-    else()
+else()
       if(USE_SPDLOG_PRECOMPILED)
          target_compile_definitions(tsolmod4rkt PUBLIC USE_SPDLOG_PRECOMPILED)
          target_link_libraries(tsolmod4rkt PUBLIC spdlog::spdlog)
       endif()
-    endif()
-    install( TARGETS tsolmod4rkt
-             EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
+endif()
 
-    # Install debug symbols
-    if(MSVC)
+# Create install target for library
+install(TARGETS tsolmod4rkt
+    EXPORT GEMS3KTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries)
+
+# Install debug symbols
+if(MSVC)
     install(
         FILES $<TARGET_PDB_FILE:tsolmod4rkt>
         DESTINATION ${CMAKE_INSTALL_BINDIR}
         COMPONENT libraries
         OPTIONAL)
-    endif()
-endif()
-
-# Check if a static library is to be built
-if(BUILD_STATIC_LIBS)
-   add_library(tsolmod4rkt-static STATIC ${SOLMOD_HEADER_FILES} ${SOLMOD_SOURCE_FILES})
-    add_library(GEMS3K::tsolmod4rkt-static ALIAS tsolmod4rkt-static)
-   if(USE_THERMOFUN MATCHES ON)
-     target_link_libraries(tsolmod4rkt-static PUBLIC ThermoFun::ThermoFun)
-   else()
-       if(USE_SPDLOG_PRECOMPILED)
-          target_compile_definitions(tsolmod4rkt-static PUBLIC USE_SPDLOG_PRECOMPILED)
-          target_link_libraries(tsolmod4rkt-static PUBLIC spdlog::spdlog)
-       endif()
-   endif()
-   install( TARGETS tsolmod4rkt-static
-           EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
 endif()
 
 # Install solmod header files
@@ -122,11 +100,7 @@ set(Test_apps
 
 foreach (appName ${Test_apps})
     add_executable(${appName} ${appName}.cpp)
-    if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-        target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
-    else()
-        target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
-    endif()
+    target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
     #install(TARGETS ${appName}} DESTINATION bin)
 endforeach()
 
