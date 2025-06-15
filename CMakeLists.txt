@@ -21,6 +21,35 @@ include(CCache)
 # Ensure proper configuration if in a conda environment
 include(CondaAware)
 
+# Versioning
+set(GEMS3K_VERSION "${PROJECT_VERSION}")
+find_package(Git)
+if(GIT_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    OUTPUT_VARIABLE GEMS3K_VERSION_HASH
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    OUTPUT_VARIABLE GEMS3K_GIT_BRANCH
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+else()
+  set(GEMS3K_VERSION_HASH "<unknown>")
+  set(GEMS3K_GIT_BRANCH "<unknown>")
+endif()
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/gems3k_version.h.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/GEMS3K/gems3k_version.h"
+  @ONLY
+  )
+
 # Set the output directories of the built libraries and binaries
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -28,8 +57,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Set libraries to be compiled with position independent code mode (i.e., fPIC option in GNU compilers)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-
 
 # Define which types of libraries to build
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)

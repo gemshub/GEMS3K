@@ -54,6 +54,7 @@
 #include "v_service.h"
 #include "args_tool.h"
 
+extern std::string _GEMIPM_version_stamp;
 void show_usage( const std::string &name );
 int extract_args( int argc, char* argv[], std::string& input_lst_path, std::string& dbr_lst_path, GEMS3KImpexData& export_data );
 
@@ -97,9 +98,9 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
 #endif
 
     // Read config file
-    gemsSettings().gems3k_update_loggers(true, "", 1);
+    gemsSettings().gems3k_update_loggers(true, "", 2);
 
-
+    gems_logger->info(_GEMIPM_version_stamp);
     try{
         std::string input_lst_path;
         std::string  dbr_lst_path;
