@@ -100,7 +100,7 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
     // Read config file
     gemsSettings().gems3k_update_loggers(true, "", 2);
 
-    gems_logger->info(_GEMIPM_version_stamp);
+    //gems_logger->info(_GEMIPM_version_stamp);
     try{
         std::string input_lst_path;
         std::string  dbr_lst_path;
