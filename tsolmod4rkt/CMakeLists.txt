@@ -87,7 +87,7 @@ if(BUILD_SHARED_LIBS)
     # Install debug symbols
     if(MSVC)
     install(
-        FILES $<TARGET_PDB_FILE:solmod>
+        FILES $<TARGET_PDB_FILE:tsolmod4rkt>
         DESTINATION ${CMAKE_INSTALL_BINDIR}
         COMPONENT libraries
         OPTIONAL)
