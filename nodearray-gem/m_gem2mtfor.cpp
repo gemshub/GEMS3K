@@ -17,7 +17,7 @@
 #include "GEMS3K/io_simdjson.h"
 #include "GEMS3K/io_keyvalue.h"
 
-extern std::string _GEMIPM_version_stamp;
+extern const std::string _GEMIPM_version_stamp;
 
 //=============================================================
 

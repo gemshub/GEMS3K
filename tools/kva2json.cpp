@@ -54,7 +54,6 @@
 #include "v_service.h"
 #include "args_tool.h"
 
-extern std::string _GEMIPM_version_stamp;
 void show_usage( const std::string &name );
 int extract_args( int argc, char* argv[], std::string& input_lst_path, std::string& dbr_lst_path, GEMS3KImpexData& export_data );
 

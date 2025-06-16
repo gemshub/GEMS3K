@@ -127,7 +127,11 @@ set(Test_apps
 
 foreach (appName ${Test_apps})
     add_executable(${appName} ${appName}.cpp)
-    target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
+    if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+         target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
+     else()
+         target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
+     endif()
     #install(TARGETS ${appName}} DESTINATION bin)
 endforeach()
 

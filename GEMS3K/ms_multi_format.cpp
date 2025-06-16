@@ -30,7 +30,7 @@
 #include "io_simdjson.h"
 #include "io_keyvalue.h"
 #include "ms_multi.h"
-extern std::string _GEMIPM_version_stamp;
+extern const std::string _GEMIPM_version_stamp;
 
 
 const double R_CONSTANT = 8.31451,
