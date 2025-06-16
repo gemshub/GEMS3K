@@ -34,7 +34,10 @@
 #include "m_const_base.h"
 #include "gems3k_version.h"
 
-const std::string _GEMIPM_version_stamp = std::string(" GEMS3K v.") + GEMS3K_VERSION + " c." + GEMS3K_VERSION_HASH;
+const std::string _GEMIPM_version_stamp = std::string(" GEMS3K v.") + GEMS3K_VERSION +
+                                          " (ChemicalFun v." + GEMS3K_ChemicalFun +
+                                          ", ThermoFun v." + GEMS3K_ThermoFun + ") c."
+                                          + GEMS3K_VERSION_HASH;
 
 namespace  dbr_dch_api {
 

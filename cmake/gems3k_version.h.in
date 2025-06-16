@@ -3,3 +3,5 @@
 #cmakedefine GEMS3K_VERSION "@GEMS3K_VERSION@"
 #cmakedefine GEMS3K_VERSION_HASH "@GEMS3K_VERSION_HASH@"
 #cmakedefine GEMS3K_GIT_BRANCH "@GEMS3K_GIT_BRANCH@"
+#cmakedefine GEMS3K_ChemicalFun "@GEMS3K_ChemicalFun@"
+#cmakedefine GEMS3K_ThermoFun "@GEMS3K_ThermoFun@"

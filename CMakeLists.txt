@@ -21,35 +21,6 @@ include(CCache)
 # Ensure proper configuration if in a conda environment
 include(CondaAware)
 
-# Versioning
-set(GEMS3K_VERSION "${PROJECT_VERSION}")
-find_package(Git)
-if(GIT_FOUND)
-  execute_process(
-    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_VARIABLE GEMS3K_VERSION_HASH
-    ERROR_QUIET
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-  execute_process(
-    COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_VARIABLE GEMS3K_GIT_BRANCH
-    ERROR_QUIET
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-else()
-  set(GEMS3K_VERSION_HASH "<unknown>")
-  set(GEMS3K_GIT_BRANCH "<unknown>")
-endif()
-
-configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/gems3k_version.h.in"
-  "${CMAKE_CURRENT_SOURCE_DIR}/GEMS3K/gems3k_version.h"
-  @ONLY
-  )
-
 # Set the output directories of the built libraries and binaries
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -133,6 +104,43 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 # Find all GEMS3K dependencies
 include(GEMS3KFindDeps)
+
+# Versioning
+set(GEMS3K_VERSION "${PROJECT_VERSION}")
+find_package(Git)
+if(GIT_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    OUTPUT_VARIABLE GEMS3K_VERSION_HASH
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    OUTPUT_VARIABLE GEMS3K_GIT_BRANCH
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+else()
+  set(GEMS3K_VERSION_HASH "<unknown>")
+  set(GEMS3K_GIT_BRANCH "<unknown>")
+endif()
+
+if(USE_THERMOFUN MATCHES ON)
+   set(GEMS3K_ChemicalFun "${ChemicalFun_VERSION}")
+   set(GEMS3K_ThermoFun "${ThermoFun_VERSION}")
+else()
+   set(GEMS3K_ChemicalFun "-")
+   set(GEMS3K_ThermoFun "-")
+endif()
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/gems3k_version.h.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/GEMS3K/gems3k_version.h"
+  @ONLY
+  )
 
 # Set some necessary definitions
 add_definitions(-DNODEARRAYLEVEL)
