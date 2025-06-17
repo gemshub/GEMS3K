@@ -3,12 +3,12 @@ on:
   push:
     branches:
       - no_client_mode
-      - master1
+      - master
       - main
   pull_request:
     branches:
       - main
-      - master1
+      - master
 
 jobs:
   build:
