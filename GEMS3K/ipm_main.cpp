@@ -891,6 +891,7 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
       if( nDivIC )
       { // Printing error message
         char buf[512];
+          memset(buf, '\0', 512);
         StatusDivg = true;
         sprintf( buf, "Divergence in dual solution approximation (u) \n at IPM iteration %ld with gen.tolerance %g "
              "for %ld ICs:   %-6.5s", pm.ITG, DivTol, nDivIC, pm.SB[ICNud[0]] );
@@ -1667,7 +1668,7 @@ void TMultiBase::addErrorMessage( const char * msg)
   auto lenm = strlen( msg );
   if( len + lenm < 1023 )
   {
-    memcpy(pm.errorBuf+len, msg, lenm  );
+    memcpy(pm.errorBuf+len, msg, lenm);
     pm.errorBuf[len+lenm] ='\0';
   }
 }

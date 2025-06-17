@@ -32,8 +32,12 @@
 #include "gdatastream.h"
 #include "v_detail.h"
 #include "m_const_base.h"
+#include "gems3k_version.h"
 
-extern const char* _GEMIPM_version_stamp;
+const std::string _GEMIPM_version_stamp = std::string(" GEMS3K v.") + GEMS3K_VERSION +
+                                          " (ChemicalFun v." + GEMS3K_ChemicalFun +
+                                          ", ThermoFun v." + GEMS3K_ThermoFun + ") c."
+                                          + GEMS3K_VERSION_HASH;
 
 namespace  dbr_dch_api {
 
@@ -685,6 +689,7 @@ void datach_from_text_file(DATACH* CSD, TIO& in_format, bool use_thermofun)
         if( CSD->S0 ) CSD->S0[ii] = 0.;
         if( CSD->A0 ) CSD->A0[ii] = 0.;
         if( CSD->U0 ) CSD->U0[ii] = 0.;
+        if( CSD->V0 ) CSD->V0[ii] = 0.;
     }
     CSD->Ttol = 0.1;
     CSD->Ptol = 10000;

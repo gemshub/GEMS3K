@@ -68,23 +68,6 @@ template <> void KeyValueWrite::write_key_value( const std::string& field_name, 
     fout  << "\"" << value << "\"";
 }
 
-//void KeyValueWrite::write_array(const std::string &field_name, const std::vector<double> &arr, long l_size )
-//{
-//    int sz = ( l_size > 0 ? l_size: 40 );
-//    int jj = 0;
-//    fout << std::endl << "<" << field_name << ">" << std::endl;
-
-//    for( size_t ii=0; ii<arr.size(); ii++, jj++  )
-//    {
-//        if(jj == sz)
-//        {
-//            jj=0;
-//            fout << std::endl;
-//        }
-//        writeValue( arr[ii] );
-//        fout << " ";
-//    }
-//}
 
 
 //------------------------------------------------------------------

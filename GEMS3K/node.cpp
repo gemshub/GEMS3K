@@ -37,8 +37,8 @@
 
 // Thread-safe logger to stdout with colors
 std::shared_ptr<spdlog::logger> TNode::node_logger = spdlog::stdout_color_mt("tnode");
-// Thread-safe logger to file
-std::shared_ptr<spdlog::logger> TNode::ipmlog_file;
+// Thread-safe logger to file !!!!  to do change
+std::shared_ptr<spdlog::logger> TNode::ipmlog_file;// = spdlog::stdout_color_mt("ipmlog");
 
 // Conversion factors
 const double bar_to_Pa = 1e5,

@@ -30,8 +30,8 @@
 #include "io_simdjson.h"
 #include "io_keyvalue.h"
 #include "ms_multi.h"
+extern const std::string _GEMIPM_version_stamp;
 
-const char *_GEMIPM_version_stamp = " GEMS3K v.4.4.0 c.a16684f";
 
 const double R_CONSTANT = 8.31451,
               NA_CONSTANT = 6.0221367e23,
