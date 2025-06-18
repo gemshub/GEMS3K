@@ -123,6 +123,12 @@ if(GIT_FOUND)
     ERROR_QUIET
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+    if(NOT GEMS3K_VERSION_HASH)
+        set(GEMS3K_VERSION_HASH "---")
+    endif()
+    if(NOT GEMS3K_GIT_BRANCH)
+        set(GEMS3K_GIT_BRANCH "---")
+    endif()
 else()
   set(GEMS3K_VERSION_HASH "<unknown>")
   set(GEMS3K_GIT_BRANCH "<unknown>")
