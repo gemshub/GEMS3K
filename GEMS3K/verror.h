@@ -31,6 +31,8 @@
 /// Default logger for gems3k library
 extern std::shared_ptr<spdlog::logger> gems_logger;
 
+extern const std::string _GEMIPM_version_stamp;
+
 struct TError
 {
     std::string mess;

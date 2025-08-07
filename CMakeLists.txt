@@ -1,12 +1,12 @@
 # Require a certain version of cmake
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.16)
 
 # Set the name of the project
-project(GEMS3K VERSION 4.4.0 LANGUAGES CXX C)
+project(GEMS3K VERSION 4.4.2 LANGUAGES CXX C)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MACOSX_RPATH ON)
 
 # Include the cmake variables with values for installation directories
@@ -29,13 +29,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Set libraries to be compiled with position independent code mode (i.e., fPIC option in GNU compilers)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Set the default build type to Release
-if(NOT CMAKE_BUILD_TYPE)
-    message(STATUS "Setting build type to 'Release' as none was specified.")
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
-
 # Define which types of libraries to build
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
@@ -46,15 +39,22 @@ option(BUILD_TOOLS "Build tools" ON)
 option(BUILD_SOLMOD "Build isolate TSolMod " ON)
 
 # Currently is not setup to produce a dynamic library using MSVC, only static
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    set(BUILD_SHARED_LIBS OFF)
-endif()
+#if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+#    set(BUILD_SHARED_LIBS OFF)
+#endif()
 
 # Used into conda only
 if(DEFINED ENV{CONDA_PREFIX})
    option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" ON)
 else()
    option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" OFF)
+endif()
+
+# Set the default build type to Release
+if(NOT CMAKE_BUILD_TYPE)
+    message(STATUS "Setting build type to 'Release' as none was specified.")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 # Set the list of compiler flags for GNU compiler
@@ -104,6 +104,49 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 # Find all GEMS3K dependencies
 include(GEMS3KFindDeps)
+
+# Versioning
+set(GEMS3K_VERSION "${PROJECT_VERSION}")
+find_package(Git)
+if(GIT_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    OUTPUT_VARIABLE GEMS3K_VERSION_HASH
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    OUTPUT_VARIABLE GEMS3K_GIT_BRANCH
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(NOT GEMS3K_VERSION_HASH)
+        set(GEMS3K_VERSION_HASH "---")
+    endif()
+    if(NOT GEMS3K_GIT_BRANCH)
+        set(GEMS3K_GIT_BRANCH "---")
+    endif()
+else()
+  set(GEMS3K_VERSION_HASH "<unknown>")
+  set(GEMS3K_GIT_BRANCH "<unknown>")
+endif()
+
+if(USE_THERMOFUN MATCHES ON)
+   set(GEMS3K_ChemicalFun "${ChemicalFun_VERSION}")
+   set(GEMS3K_ThermoFun "${ThermoFun_VERSION}")
+else()
+   set(GEMS3K_ChemicalFun "-")
+   set(GEMS3K_ThermoFun "-")
+endif()
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/gems3k_version.h.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/GEMS3K/gems3k_version.h"
+  @ONLY
+  )
 
 # Set some necessary definitions
 add_definitions(-DNODEARRAYLEVEL)

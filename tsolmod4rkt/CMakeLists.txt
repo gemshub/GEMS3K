@@ -53,7 +53,6 @@ set(SOLMOD_SOURCE_FILES
                       solmodfactory_format.cpp )
 
 
-
 # Compile the C++ source code into object files
 add_library(SOLMOD_OBJECT OBJECT ${SOLMOD_HEADER_FILES} ${SOLMOD_SOURCE_FILES})
 
@@ -80,12 +79,15 @@ if(BUILD_SHARED_LIBS)
       endif()
     endif()
     install( TARGETS tsolmod4rkt
-             EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
+       EXPORT GEMS3KTargets
+       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries)
 
     # Install debug symbols
     if(MSVC)
     install(
-        FILES $<TARGET_PDB_FILE:solmod>
+        FILES $<TARGET_PDB_FILE:tsolmod4rkt>
         DESTINATION ${CMAKE_INSTALL_BINDIR}
         COMPONENT libraries
         OPTIONAL)
@@ -105,7 +107,10 @@ if(BUILD_STATIC_LIBS)
        endif()
    endif()
    install( TARGETS tsolmod4rkt-static
-           EXPORT GEMS3KTargets DESTINATION "lib" COMPONENT libraries)
+      EXPORT GEMS3KTargets
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries)
 endif()
 
 # Install solmod header files
@@ -123,10 +128,10 @@ set(Test_apps
 foreach (appName ${Test_apps})
     add_executable(${appName} ${appName}.cpp)
     if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-        target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
-    else()
-        target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
-    endif()
+         target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt-static Threads::Threads)
+     else()
+         target_link_libraries(${appName} PUBLIC GEMS3K::tsolmod4rkt Threads::Threads)
+     endif()
     #install(TARGETS ${appName}} DESTINATION bin)
 endforeach()
 
