@@ -49,9 +49,9 @@
 #include <string>
 #include <iomanip>
 #include <memory>
-#include "nodearray.h"
-#include "jsonconfig.h"
-#include "v_service.h"
+#include "GEMS3K/nodearray.h"
+#include "GEMS3K/jsonconfig.h"
+#include "GEMS3K/v_service.h"
 #include "args_tool.h"
 
 void show_usage( const std::string &name );
@@ -79,6 +79,8 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, std::stri
 // -j -c -i Neutral-old/Neutral-dat.lst -e Neutral-old-out/Neutral-dat.lst
 
 // -j -c -i CemGEMS-formatted/CemHyds-dat.lst -e CemGEMS-out/CemHyds-dat.lst
+// -j -c -i Aqueous-Al/bhm-dat.lst -e Aqueous-Al-out/bhm-dat.lst
+// -t  -i tp_test/H2O-dat.lst -e tp_test-out2/H2O-dat.lst
 
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
