@@ -37,7 +37,7 @@ option(BUILD_GEM2MT "Install GEM2MT lib." OFF)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
 option(BUILD_TOOLS "Build tools" ON)
 option(BUILD_SOLMOD "Build isolate TSolMod " ON)
-option(BUILD_SOLMOD_PYTHON "Build isolate TSolMod " OFF)
+option(BUILD_SOLMOD_PYTHON "Build isolate TSolMod " ON)
 
 # Currently is not setup to produce a dynamic library using MSVC, only static
 #if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
