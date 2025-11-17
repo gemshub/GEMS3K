@@ -337,10 +337,15 @@ void datach_realloc(DATACH* CSD)
     CSD->A = new double[CSD->nIC*CSD->nDC];
     CSD->ICmm = new double[CSD->nIC];
     CSD->DCmm = new double[CSD->nDC];
-    CSD->DCmm[0] = 0.0;   // Added by DK on 03.03.2007
+    for(int  j=0; j<CSD->nDC; j++ )  {
+        CSD->DCmm[j] = 0.0;
+    }
 
     CSD->TKval = new double[CSD->nTp];
     CSD->Psat = new double[CSD->nTp];
+    for(int  j=0; j<CSD->nTp; j++ )  {
+        CSD->Psat[j] = 0.;
+    }
     CSD->Pval = new double[CSD->nPp];
 
     CSD->denW = new double[ 5*gridTP(CSD)];
