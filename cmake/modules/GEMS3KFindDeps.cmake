@@ -4,6 +4,18 @@
 #  message(FATAL_ERROR "zeromq library not found")
 #endif()
 
+# Find pybind11 library (if needed)
+if(BUILD_SOLMOD_PYTHON)
+    find_package (Python3 COMPONENTS Interpreter Development)
+    find_package(pybind11 REQUIRED)
+    if(NOT pybind11_FOUND)
+        message(WARNING "Could not find pybind11 - the Python module `thermofun` will not be built.")
+        set(BUILD_SOLMOD_PYTHON OFF)
+    else()
+        message(STATUS "Found pybind11 v${pybind11_VERSION}: ${pybind11_INCLUDE_DIRS}")
+    endif()
+endif()
+
 if(USE_THERMOFUN MATCHES ON)
   find_package(ThermoFun REQUIRED)
   if(NOT ThermoFun_FOUND)

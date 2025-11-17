@@ -25,7 +25,7 @@ endif()
 add_custom_target(solmod4rkt ALL
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:PySolmod4rkt>
         ${CMAKE_CURRENT_BINARY_DIR}/$<TARGET_FILE_NAME:PySolmod4rkt>
-        COMMAND ${PYTHON_EXECUTABLE}  -m pip install --prefix ${CMAKE_BINARY_DIR} --ignore-installed .
+        COMMAND ${Python3_EXECUTABLE}  -m pip install --prefix ${CMAKE_BINARY_DIR} --ignore-installed .
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Set dependencies of PySolmod4rkt target
@@ -46,7 +46,7 @@ install(CODE
     endif()
 
     execute_process(
-        COMMAND ${PYTHON_EXECUTABLE} -m pip install ${CMAKE_CURRENT_BINARY_DIR}
+        COMMAND ${Python3_EXECUTABLE} -m pip install ${CMAKE_CURRENT_BINARY_DIR}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 ")
 else()
@@ -69,7 +69,7 @@ install(CODE
     endif()
 
     execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -m pip install --prefix \${SOLMOD4RKT_PYTHON_INSTALL_PREFIX_NATIVE} ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${Python3_EXECUTABLE} -m pip install --prefix \${SOLMOD4RKT_PYTHON_INSTALL_PREFIX_NATIVE} ${CMAKE_CURRENT_BINARY_DIR}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 ")
 endif()

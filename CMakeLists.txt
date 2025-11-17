@@ -37,6 +37,7 @@ option(BUILD_GEM2MT "Install GEM2MT lib." OFF)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
 option(BUILD_TOOLS "Build tools" ON)
 option(BUILD_SOLMOD "Build isolate TSolMod " ON)
+option(BUILD_SOLMOD_PYTHON "Build isolate TSolMod " OFF)
 
 # Currently is not setup to produce a dynamic library using MSVC, only static
 #if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
@@ -47,7 +48,7 @@ option(BUILD_SOLMOD "Build isolate TSolMod " ON)
 if(DEFINED ENV{CONDA_PREFIX})
    option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" ON)
 else()
-   option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" OFF)
+   option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" ON)
 endif()
 
 # Set the default build type to Release
