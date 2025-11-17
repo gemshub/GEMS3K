@@ -48,7 +48,7 @@ option(BUILD_SOLMOD_PYTHON "Build isolate TSolMod " ON)
 if(DEFINED ENV{CONDA_PREFIX})
    option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" ON)
 else()
-   option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" ON)
+   option(USE_SPDLOG_PRECOMPILED "Use spdlog in compiled version" OFF)
 endif()
 
 # Set the default build type to Release
