@@ -40,6 +40,7 @@ DEPENDPATH += $$GEMS3K_H
 INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 
+#LIBS += -lGEMS3K
 contains(DEFINES, USE_THERMOFUN) {
 
 #ThermoFun_CPP   =  ../ThermoFun
@@ -56,7 +57,7 @@ QMAKE_LFLAGS +=
 #QMAKE_CXXFLAGS += -Wall -Wno-unused
 OBJECTS_DIR = obj
 
-include($$GEMS3K_CPP/gems3k.pri) 
+include($$GEMS3K_CPP/gems3k.pri)
 
 HEADERS   +=   args_tool.h
 SOURCES   +=   kva2json.cpp

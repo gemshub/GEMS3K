@@ -464,15 +464,18 @@ void TMultiBase::multi_realloc( char PAalp, char PSigm )
         fillValue( pm.SFs[ii], '\0',MAXPHNAME+MAXSYMB);
     }
     pm.SM = new char[pm.L][MAXDCNAME];
-    for( ii=0; ii<pm.L; ii++)
+    pm.dcMod = new char[pm.L][6];
+    for( ii=0; ii<pm.L; ii++) {
         fillValue( pm.SM[ii], '\0', MAXDCNAME);
+        fillValue( pm.dcMod[ii], '\0', 6);
+    }
     pm.SM2 = new char[pm.Ls][MAXDCNAME];
     for( ii=0; ii<pm.Ls; ii++)
         fillValue( pm.SM2[ii], '\0', MAXDCNAME);
     pm.SF2 = new char[pm.FIs][MAXPHNAME+MAXSYMB];
     for( ii=0; ii<pm.FIs; ii++)
         fillValue( pm.SF2[ii], '\0', MAXPHNAME+MAXSYMB);
-    pm.dcMod = new char[pm.L][6];
+
 
     if( pm.L > 0 )
     {

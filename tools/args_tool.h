@@ -1,5 +1,5 @@
 #pragma once
-#include "gems3k_impex.h"
+#include "GEMS3K/gems3k_impex.h"
 
 /// Descripton of data to generate MULTI, DATACH and DATABR files structure prepared from GEMS.
 class GEMS3KImpexData
