@@ -123,7 +123,7 @@ test -f /usr/local/lib/libChemicalFun.$EXTN || {
         # Building thermofun library
         mkdir -p ~/code && \
         cd ~/code && \
-        git clone https://bitbucket.org/gems4/chemicalfun.git -b $BRANCH_TFUN  && \
+        git clone https://github.com/thermohub/chemicalfun.git -b $BRANCH_TFUN  && \
         cd chemicalfun && \
         mkdir -p build && \
         cd build && \
@@ -144,7 +144,7 @@ test -f /usr/local/lib/libThermoFun.$EXTN || {
 	# Building thermofun library
 	mkdir -p ~/code && \
         cd ~/code && \
-        git clone https://bitbucket.org/gems4/thermofun.git -b $BRANCH_TFUN && \
+        git clone https://github.com/thermohub/thermofun.git -b $BRANCH_TFUN && \
         cd thermofun && \
         mkdir -p build && \
         cd build && \
