@@ -1,8 +1,8 @@
 # Require a certain version of cmake
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.16..4.2)
 
 # Set the name of the project
-project(GEMS3K VERSION 4.4.3 LANGUAGES CXX C)
+project(GEMS3K VERSION 4.4.4 LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
