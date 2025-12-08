@@ -137,7 +137,7 @@ endforeach()
 
 # Find the Python interpreter
 if(BUILD_SOLMOD_PYTHON)
-    add_subdirectory(python2)
+    add_subdirectory(python)
 endif()
 
 

@@ -69,6 +69,13 @@ jobs:
           cmake --build build --target install --config Release || goto :eof
           python -c "import solmod4rkt" || goto :eof
 
+      - name: Run tests that read chemicalfun
+        shell: bash -l {0}
+        run: |
+          conda activate chemicalfun
+          python -c "import chemicalfun"
+          conda list
+
       - name: Check conda
         run: |
           conda config --show
