@@ -134,7 +134,7 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
         //std::cout << "Loaded System ID: " << node_arr->getCalcNode()->system_id() <<  std::endl;
 
         TestModeGEMParam calc_param;  // use default data
-        //calc_param.useSIA = '-';
+        calc_param.useSIA = '-';
         FILE* diffile = fopen( "tools-ICdif-log.dat", "w+" );
         if( !diffile )
             return 1;

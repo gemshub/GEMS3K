@@ -688,6 +688,11 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         Error( "Error", ret);
     }
 
+    // Try fix error 09.12.2025 lost pm.E after reading gems3k files
+    if( pm.E && dCH->ccIC[dCH->nICb-1] != IC_CHARGE) {
+        pm.E = 0;
+    }
+
     PAalp_ = PAalp;
     PSigm_ = PSigm;
     multi_realloc( PAalp, PSigm );

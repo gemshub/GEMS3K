@@ -459,8 +459,9 @@ bool TNodeArray::NeedGEMS( TNode* wrkNode, const TestModeGEMParam& modeParam, DA
             // in this node because its vector b has changed
         }
     }
-    C1->bIC[CH->nICb-1] = 0.;   // zeroing charge off in bulk composition
-
+    if( CH->ccIC[CH->nICb-1] == IC_CHARGE ) {
+        C1->bIC[CH->nICb-1] = 0.;   // zeroing charge off in bulk composition
+    }
     return NeedGEM;
 }
 
