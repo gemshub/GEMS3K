@@ -832,6 +832,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
                 alloc_SitFr(LsSitSum);
                 fillValue( pm.SitFr, 0., LsSitSum );
                 rddar.readArray( "MoiSN", pm.MoiSN,  LsMsnSum);
+                // ??? rddar.readArray( "SitFr", pm.SitFr,  LsSitSum);
             }
             break;
         }

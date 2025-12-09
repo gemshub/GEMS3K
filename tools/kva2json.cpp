@@ -82,6 +82,15 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, std::stri
 // -j -c -i Aqueous-Al/bhm-dat.lst -e Aqueous-Al-out/bhm-dat.lst
 // -t  -i tp_test/H2O-dat.lst -e tp_test-out2/H2O-dat.lst
 
+// -j -c -i UOx_jsonfun/UOx-dat.lst -e UOx_jsonfun-out/UOx-dat.lst
+// -j -c -i UOx_nofun/UOx-dat.lst -e UOx_nofun-out/UOx-dat.lst
+
+// -j -c -i BermanSSS/Biotite4-dat.lst -e BermanSSS-out/Biotite4-dat.lst
+// -j -c -i BermanSSS_f/Biotite4-dat.lst -e BermanSSS_f-out/Biotite4-dat.lst
+// -j -c -i Berman2/Garnet2-dat.lst -e Berman2-out/Garnet2-dat.lst
+// -j -c -i Berman2_f/Garnet2-dat.lst -e Berman2_f-out/Garnet2-dat.lst
+
+
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
 {
@@ -125,6 +134,7 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
         //std::cout << "Loaded System ID: " << node_arr->getCalcNode()->system_id() <<  std::endl;
 
         TestModeGEMParam calc_param;  // use default data
+        //calc_param.useSIA = '-';
         FILE* diffile = fopen( "tools-ICdif-log.dat", "w+" );
         if( !diffile )
             return 1;

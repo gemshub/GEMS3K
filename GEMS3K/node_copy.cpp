@@ -600,18 +600,7 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         double funT = TK, funP=P*bar_to_Pa;   // T in K, P in Pa
 
         DATACH  *dCH = pCSD();
-        auto water_props = thermo_engine->propertiesSolvent(funT,funP, "H2O@");
-        auto water_electro = thermo_engine->electroPropertiesSolvent(funT,funP, "H2O@");
 
-        auto water_vapor = thermo_engine->database().getSubstance("H2O@");
-        water_vapor.setMethod_P( ThermoFun::MethodCorrP_Thrift::type::CPM_GAS);
-
-        ThermoFun::Database db2;
-        db2.addSubstance(water_vapor);
-
-        ThermoFun::ThermoEngine te2(db2);
-        auto water_gas_props = te2.propertiesSolvent(funT,funP, "H2O@");
-        auto water_gas_electro = te2.electroPropertiesSolvent(funT,funP, "H2O@");
 
         pmm->Pc = P;
         if( P < 1e-5 )
@@ -629,28 +618,42 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         pmm->FRT = F_CONSTANT/pmm->RT;
         pmm->lnP = log( P );
 
-        pmm->denW[0] = water_props.density.val/1e3;
-        pmm->epsW[0] = water_electro.epsilon.val;
-        pmm->denW[1] = water_props.densityT.val/1e3;
-        pmm->epsW[1] = water_electro.epsilonT.val;
-        pmm->denW[2] = water_props.densityTT.val/1e3;
-        pmm->epsW[2] = water_electro.epsilonTT.val;
-        pmm->denW[3] = water_props.densityP.val*1e2; // /1e3;
-        pmm->epsW[3] = water_electro.epsilonP.val;
-        pmm->denW[4] = water_props.densityPP.val/1e3;
-        pmm->epsW[4] = water_electro.epsilonPP.val;
+        if( CSD->ccPH[0] == PH_AQUEL )
+        {
+            auto water_props = thermo_engine->propertiesSolvent(funT,funP, "H2O@");
+            auto water_electro = thermo_engine->electroPropertiesSolvent(funT,funP, "H2O@");
 
-        pmm->denWg[0] = water_gas_props.density.val/1e3;
-        pmm->epsWg[0] = water_gas_electro.epsilon.val;
-        pmm->denWg[1] = water_gas_props.densityT.val/1e3;
-        pmm->epsWg[1] = water_gas_electro.epsilonT.val;
-        pmm->denWg[2] = water_gas_props.densityTT.val/1e3;
-        pmm->epsWg[2] = water_gas_electro.epsilonTT.val;
-        pmm->denWg[3] = water_gas_props.densityP.val*1e2; // /1e3;
-        pmm->epsWg[3] = water_gas_electro.epsilonP.val;
-        pmm->denWg[4] = water_gas_props.densityPP.val/1e3;
-        pmm->epsWg[4] = water_gas_electro.epsilonPP.val;
+            auto water_vapor = thermo_engine->database().getSubstance("H2O@");
+            water_vapor.setMethod_P( ThermoFun::MethodCorrP_Thrift::type::CPM_GAS);
 
+            ThermoFun::Database db2;
+            db2.addSubstance(water_vapor);
+
+            ThermoFun::ThermoEngine te2(db2);
+            auto water_gas_props = te2.propertiesSolvent(funT,funP, "H2O@");
+            auto water_gas_electro = te2.electroPropertiesSolvent(funT,funP, "H2O@");
+            pmm->denW[0] = water_props.density.val/1e3;
+            pmm->epsW[0] = water_electro.epsilon.val;
+            pmm->denW[1] = water_props.densityT.val/1e3;
+            pmm->epsW[1] = water_electro.epsilonT.val;
+            pmm->denW[2] = water_props.densityTT.val/1e3;
+            pmm->epsW[2] = water_electro.epsilonTT.val;
+            pmm->denW[3] = water_props.densityP.val*1e2; // /1e3;
+            pmm->epsW[3] = water_electro.epsilonP.val;
+            pmm->denW[4] = water_props.densityPP.val/1e3;
+            pmm->epsW[4] = water_electro.epsilonPP.val;
+
+            pmm->denWg[0] = water_gas_props.density.val/1e3;
+            pmm->epsWg[0] = water_gas_electro.epsilon.val;
+            pmm->denWg[1] = water_gas_props.densityT.val/1e3;
+            pmm->epsWg[1] = water_gas_electro.epsilonT.val;
+            pmm->denWg[2] = water_gas_props.densityTT.val/1e3;
+            pmm->epsWg[2] = water_gas_electro.epsilonTT.val;
+            pmm->denWg[3] = water_gas_props.densityP.val*1e2; // /1e3;
+            pmm->epsWg[3] = water_gas_electro.epsilonP.val;
+            pmm->denWg[4] = water_gas_props.densityPP.val/1e3;
+            pmm->epsWg[4] = water_gas_electro.epsilonPP.val;
+        }
 #ifdef  USE_THERMO_LOG
         std::fstream f_log;
         if(GemsSettings::log_thermodynamic) {
@@ -694,8 +697,8 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
 #ifdef  USE_THERMO_LOG
                 if(GemsSettings::log_thermodynamic) {
                     f_log << "\n" << symbol << ";" << floating_point_to_string(G0)
-                          << ";" << floating_point_to_string(pmm->G0[j])
-                          << ";" << floating_point_to_string(pmm->Vol[j]);
+                    << ";" << floating_point_to_string(pmm->G0[j])
+                    << ";" << floating_point_to_string(pmm->Vol[j]);
                     if( dCH->S0 ) f_log << ";" << floating_point_to_string(pmm->S0[j]);
                     if( dCH->H0 ) f_log << ";" << floating_point_to_string(pmm->H0[j]);
                     if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pmm->Cp0[j]);

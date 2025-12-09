@@ -848,7 +848,8 @@ void datach_to_file(const DATACH* CSD, GemDataStream& ff)
     ff.writeArray( CSD->ccPH, CSD->nPH );
 
     if( CSD->ccPH[0] == PH_AQUEL )
-    { ff.writeArray( CSD->denW,  5*gridTP(CSD) );
+    {
+        ff.writeArray( CSD->denW,  5*gridTP(CSD) );
         ff.writeArray( CSD->denWg,  5*gridTP(CSD) );
         ff.writeArray( CSD->epsW, 5*gridTP(CSD) );
         ff.writeArray( CSD->epsWg, 5*gridTP(CSD) );
