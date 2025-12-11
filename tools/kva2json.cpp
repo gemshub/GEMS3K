@@ -228,7 +228,7 @@ void show_usage( const std::string &name )
               << "\t-h,\t--help\t\tshow this help message\n\n"
                  // file type
               << "\t-j,\t--json        \twrite IPM, DCH and DBR files in json mode (default) \n"
-#ifdef USE_THERMOFUN
+#ifndef NO_USE_THERMOFUN
               << "\t-f,\t--thermofun    \twrite IPM, DCH, ThermoFun and DBR files in json mode  \n"
               << "\t-o,\t--kv_thermofun \twrite IPM, DCH, ThermoFun and DBR files in txt mode  \n"
 #endif
@@ -257,7 +257,7 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path,
         {
             export_data.io_mode = GEMS3KGenerator::f_json;
         }
-//#ifdef USE_THERMOFUN
+//#ifndef NO_USE_THERMOFUN
         else if ((arg == "-f") || (arg == "--thermofun"))
         {
             export_data.io_mode = GEMS3KGenerator::f_thermofun;

@@ -551,7 +551,7 @@ void TNode::CheckMtparam()
 
 void TNode::clear_ThermoEngine()
 {
-#ifdef USE_THERMOFUN
+#ifndef NO_USE_THERMOFUN
     // clear previous
     thermo_engine.reset();
     thermo_json_string="";
@@ -573,7 +573,7 @@ bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
         thermo_json_string = buffer.str();
     }
 
-#ifdef USE_THERMOFUN
+#ifndef NO_USE_THERMOFUN
     thermo_engine.reset(new ThermoFun::ThermoEngine(thermo_file_or_string));
     node_logger->info("ThermoEngine substances: {}", thermo_engine->database().numberOfSubstances());
     node_logger->info("Read ThermoEngine: {}", thermo_file_or_string);
@@ -587,7 +587,7 @@ bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
 
 bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
 {
-#ifdef USE_THERMOFUN
+#ifndef NO_USE_THERMOFUN
     if( !thermo_engine.get() )
         return false;
     try{

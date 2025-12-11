@@ -15,7 +15,7 @@ CONFIG += c++17
 
 DEFINES += NODEARRAYLEVEL
 #DEFINES += USE_NLOHMANNJSON
-DEFINES += USE_THERMOFUN
+#DEFINES += NO_USE_THERMOFUN
 DEFINES += USE_THERMO_LOG
 !win32:!macx-clang:DEFINES += OVERFLOW_EXCEPT  #compile with nan inf exceptions
 
@@ -47,11 +47,11 @@ OBJECTS_DIR = obj
 
 SOURCES      +=   main.cpp
 
-contains(DEFINES, USE_THERMOFUN) {
+!contains(DEFINES, NO_USE_THERMOFUN) {
 
 LIBS += -lThermoFun -lChemicalFun
 
-} ## end USE_THERMOFUN
+} ## end NO_USE_THERMOFUN
 
 
 include($$GEMS3K_CPP/gems3k.pri) 

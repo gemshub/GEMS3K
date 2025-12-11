@@ -14,7 +14,7 @@ CONFIG += c++17
 
 DEFINES += NODEARRAYLEVEL
 #DEFINES += USE_NLOHMANNJSON
-DEFINES += USE_THERMOFUN
+#DEFINES += NO_USE_THERMOFUN
 DEFINES += USE_THERMO_LOG
 DEFINES += OVERFLOW_EXCEPT  #compile with nan inf exceptions
 #DEFINES += SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_OFF
@@ -41,7 +41,7 @@ INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 
 #LIBS += -lGEMS3K
-contains(DEFINES, USE_THERMOFUN) {
+!contains(DEFINES, NO_USE_THERMOFUN) {
 
 #ThermoFun_CPP   =  ../ThermoFun
 #ThermoFun_H     =   $$ThermoFun_CPP
@@ -49,8 +49,8 @@ contains(DEFINES, USE_THERMOFUN) {
 #INCLUDEPATH += $$ThermoFun_H
 #include($$ThermoFun_CPP/ThermoFun.pri)
 LIBS += -lThermoFun -lChemicalFun
-
-} ## end USE_THERMOFUN
+message("NO_USE_THERMOFUN is not defined.")
+} ## end NO_USE_THERMOFUN
 
 
 QMAKE_LFLAGS +=

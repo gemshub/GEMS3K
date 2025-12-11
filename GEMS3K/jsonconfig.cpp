@@ -287,7 +287,7 @@ std::string GemsSettings::logger_section_name = "log";
 
 std::set<std::string> GemsSettings::default_gems3k_loggers = {
     "gems3k", "ipm", "tnode", "kinmet", "solmod",
-    #ifdef USE_THERMOFUN
+    #ifndef NO_USE_THERMOFUN
     "chemicalfun", "thermofun"
     #endif
 };
