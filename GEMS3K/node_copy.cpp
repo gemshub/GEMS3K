@@ -575,7 +575,8 @@ bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
 
 #ifdef USE_THERMOFUN
     thermo_engine.reset(new ThermoFun::ThermoEngine(thermo_file_or_string));
-    node_logger->trace("Read ThermoEngine: {}", thermo_file_or_string);
+    node_logger->info("ThermoEngine substances: {}", thermo_engine->database().numberOfSubstances());
+    node_logger->info("Read ThermoEngine: {}", thermo_file_or_string);
     return true;
 #else
     node_logger->warn("Try read ThermoEngine not in USE_THERMOFUN mode {}", thermo_file_or_string);
@@ -620,7 +621,7 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
 
         if( CSD->ccPH[0] == PH_AQUEL )
         {
-            auto water_props = thermo_engine->propertiesSolvent(funT,funP, "H2O@");
+            auto water_props = thermo_engine->propertiesSolvent(funT,funP, "H2O@", 1);
             auto water_electro = thermo_engine->electroPropertiesSolvent(funT,funP, "H2O@");
 
             auto water_vapor = thermo_engine->database().getSubstance("H2O@");

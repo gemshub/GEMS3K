@@ -10,7 +10,7 @@ CONFIG -= qt
 CONFIG += warn_on
 CONFIG += thread console
 CONFIG += c++17
-#CONFIG += sanitaze sanitaze_thread
+CONFIG += sanitaze sanitaze_thread
 
 DEFINES += NODEARRAYLEVEL
 #DEFINES += USE_NLOHMANNJSON
@@ -60,6 +60,6 @@ OBJECTS_DIR = obj
 include($$GEMS3K_CPP/gems3k.pri)
 
 HEADERS   +=   args_tool.h
-SOURCES   +=   kva2json.cpp
+#SOURCES   +=   kva2json.cpp
 
-#SOURCES   +=   thread_test.cpp
+SOURCES   +=   thread_test.cpp

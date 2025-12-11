@@ -1854,22 +1854,22 @@ class THelgeson: public TSolMod
         double *EpsW;  ///< water dielectrical properties
         //double *an;  ///< individual ion size-parameters
         //double *bg;  ///< individual extended-term parameters
-        double ac;  ///< common ion size parameters
-        double bc;  ///< common extended-term parameter
+        double ac=0.;  ///< common ion size parameters
+        double bc=0.;  ///< common extended-term parameter
 
         // internal work objects
-        double ao, daodT, d2aodT2, daodP;  ///< ion-size parameter (TP corrected)
-        double bgam, dbgdT, d2bgdT2, dbgdP;  ///< extended-term parameter (TP corrected)
+        double ao=0., daodT=0., d2aodT2=0., daodP=0.;  ///< ion-size parameter (TP corrected)
+        double bgam=0., dbgdT=0., d2bgdT2=0., dbgdP=0.;  ///< extended-term parameter (TP corrected)
         double *LnG;  ///< activity coefficient
         double *dLnGdT;  ///< derivatives
 		double *d2LnGdT2;
 		double *dLnGdP;
-        double IS;  ///< ionic strength
-        double molT;  ///< total molality of aqueous species (except water solvent)
-        double molZ;  ///< total molality of charged species
-        double A, dAdT, d2AdT2, dAdP;  ///< A term of DH equation (and derivatives)
-        double B, dBdT, d2BdT2, dBdP;  ///< B term of DH equation (and derivatives)
-        double Gf, dGfdT, d2GfdT2, dGfdP;  ///< g function (and derivatives)
+        double IS=0.;  ///< ionic strength
+        double molT=0.;  ///< total molality of aqueous species (except water solvent)
+        double molZ=0.;  ///< total molality of charged species
+        double A=0., dAdT=0., d2AdT2=0., dAdP=0.;  ///< A term of DH equation (and derivatives)
+        double B=0., dBdT=0., d2BdT2=0., dBdP=0.;  ///< B term of DH equation (and derivatives)
+        double Gf=0., dGfdT=0., d2GfdT2=0., dGfdP=0.;  ///< g function (and derivatives)
 
         // internal functions
 		void alloc_internal();
