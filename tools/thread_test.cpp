@@ -70,8 +70,8 @@ int main(int argc, char* argv[])
     try{
         std::vector<std::string> dat_lst_files;
 
-        if( argc <= 2) {
-            dat_lst_files = files_into_directory("gems3k", "-dat.lst");
+        if( argc == 2) {
+            dat_lst_files = files_into_directory(argv[1], "-dat.lst");
         }
         else {
             size_t lst_count = 0;

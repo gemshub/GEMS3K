@@ -10,7 +10,7 @@ CONFIG -= qt
 CONFIG += warn_on
 CONFIG += thread console
 CONFIG += c++17
-CONFIG += sanitaze sanitaze_thread
+#CONFIG += sanitaze sanitaze_thread
 
 DEFINES += NODEARRAYLEVEL
 #DEFINES += USE_NLOHMANNJSON

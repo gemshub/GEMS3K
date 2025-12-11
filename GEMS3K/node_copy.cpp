@@ -621,18 +621,20 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
 
         if( CSD->ccPH[0] == PH_AQUEL )
         {
-            auto water_props = thermo_engine->propertiesSolvent(funT,funP, "H2O@", 1);
-            auto water_electro = thermo_engine->electroPropertiesSolvent(funT,funP, "H2O@");
+            std::string h2o_key = dCH->DCNL[pmm->LO];
+            node_logger->info("water-solvent: {}", h2o_key);
+            auto water_props = thermo_engine->propertiesSolvent(funT, funP, h2o_key);
+            auto water_electro = thermo_engine->electroPropertiesSolvent(funT, funP, h2o_key);
 
-            auto water_vapor = thermo_engine->database().getSubstance("H2O@");
+            auto water_vapor = thermo_engine->database().getSubstance(h2o_key);
             water_vapor.setMethod_P( ThermoFun::MethodCorrP_Thrift::type::CPM_GAS);
 
             ThermoFun::Database db2;
             db2.addSubstance(water_vapor);
 
             ThermoFun::ThermoEngine te2(db2);
-            auto water_gas_props = te2.propertiesSolvent(funT,funP, "H2O@");
-            auto water_gas_electro = te2.electroPropertiesSolvent(funT,funP, "H2O@");
+            auto water_gas_props = te2.propertiesSolvent(funT, funP, h2o_key);
+            auto water_gas_electro = te2.electroPropertiesSolvent(funT, funP, h2o_key);
             pmm->denW[0] = water_props.density.val/1e3;
             pmm->epsW[0] = water_electro.epsilon.val;
             pmm->denW[1] = water_props.densityT.val/1e3;
@@ -684,7 +686,7 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
             for( j=jb; j<je; j++ )
             {
                 std::string symbol = std::string(CSD->DCNL[j], 0, MaxDCN);
-                auto propAl    = thermo_engine->thermoPropertiesSubstance(funT,funP, symbol);
+                auto propAl    = thermo_engine->thermoPropertiesSubstance(funT, funP, symbol);
 
                 G0 = propAl.gibbs_energy.val;
                 pmm->Vol[j] = propAl.volume.val*10;
