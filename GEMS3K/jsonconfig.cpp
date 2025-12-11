@@ -295,7 +295,7 @@ std::set<std::string> GemsSettings::default_gems3k_loggers = {
 std::string GemsSettings::gems3k_logger_pattern("[%n] [%^%l%$] %v");
 size_t GemsSettings::log_file_size = 1048576;
 size_t GemsSettings::log_file_count = 1;
-bool GemsSettings::log_thermodynamic = false;
+bool GemsSettings::log_thermodynamic = true;
 
 
 GemsSettings& gemsSettings()

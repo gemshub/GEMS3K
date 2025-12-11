@@ -60,6 +60,6 @@ OBJECTS_DIR = obj
 include($$GEMS3K_CPP/gems3k.pri)
 
 HEADERS   +=   args_tool.h
-#SOURCES   +=   kva2json.cpp
+SOURCES   +=   kva2json.cpp
 
-SOURCES   +=   thread_test.cpp
+#SOURCES   +=   thread_test.cpp
