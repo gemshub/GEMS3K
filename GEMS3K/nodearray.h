@@ -596,7 +596,7 @@ Hi,     ///< Total enthalpy of inert subsystem (J) (reserved)            +      
 // Actual time step (s) in T1 node (needed for TKinMet, can change in GEM calculation)
 #define node1_dt( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->dt)
 
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
 // \section  FMT variables (units or dimensionsless) - to be used for storing them
 //  at the nodearray level, normally not used in the single-node FMT-GEM coupling
 

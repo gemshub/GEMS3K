@@ -658,7 +658,7 @@ void databr_reset(DATABR *CnNde1, long int level)
     //  at the nodearray level = 0.; normally not used in the single-node FMT-GEM coupling
     CnNde1->Tm = 0.;
     CnNde1->dt = 0.;
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     CnNde1->Dif = 0.;
     CnNde1->Vt = 0.;
     CnNde1->vp = 0.;

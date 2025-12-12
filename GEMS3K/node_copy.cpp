@@ -59,7 +59,7 @@ void  TNode::read_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator:
 void  TNode::write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f,
                                     bool with_comments, bool brief_mode )
 {
-#ifndef NODEARRAYLEVEL
+#ifdef NO_NODEARRAYLEVEL
     CNode->NodeStatusFMT = No_nodearray;
 #endif
     switch( type_f )
@@ -295,7 +295,7 @@ long int  TNode::GEM_write_dbr( std::string& dbr_json )
     // Writes work node (DATABR structure) into a json string
     try
     {
-#ifndef NODEARRAYLEVEL
+#ifdef NO_NODEARRAYLEVEL
         CNode->NodeStatusFMT = No_nodearray;
 #endif
         std::stringstream ss;
@@ -485,7 +485,7 @@ void TNode::databr_copy( DATABR* otherCNode )
     // const data
     copyValues( &CNode->NodeHandle, &otherCNode->NodeHandle, 6 );
 
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     if( CNode->NodeStatusFMT != No_nodearray )
          copyValues( &CNode->TK, &otherCNode->TK, 32 );
     else
@@ -690,11 +690,11 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
 
                 G0 = propAl.gibbs_energy.val;
                 pmm->Vol[j] = propAl.volume.val*10;
-                if( dCH->S0 ) pmm->S0[j] = propAl.entropy.val;
-                if( dCH->H0 ) pmm->H0[j] = propAl.enthalpy.val;
-                if( dCH->Cp0 ) pmm->Cp0[j] = propAl.heat_capacity_cp.val;
-                if( dCH->A0 ) pmm->A0[j] = propAl.helmholtz_energy.val;
-                if( dCH->U0 ) pmm->U0[j] = propAl.internal_energy.val;
+                if( pmm->S0 ) pmm->S0[j] = propAl.entropy.val;
+                if( pmm->H0 ) pmm->H0[j] = propAl.enthalpy.val;
+                if( pmm->Cp0 ) pmm->Cp0[j] = propAl.heat_capacity_cp.val;
+                if( pmm->A0 ) pmm->A0[j] = propAl.helmholtz_energy.val;
+                if( pmm->U0 ) pmm->U0[j] = propAl.internal_energy.val;
 
                 pmm->G0[j] = multi_ptr()->ConvertGj_toUniformStandardState(G0, j, k);
 #ifdef  USE_THERMO_LOG
@@ -702,11 +702,11 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
                     f_log << "\n" << symbol << ";" << floating_point_to_string(G0)
                     << ";" << floating_point_to_string(pmm->G0[j])
                     << ";" << floating_point_to_string(pmm->Vol[j]);
-                    if( dCH->S0 ) f_log << ";" << floating_point_to_string(pmm->S0[j]);
-                    if( dCH->H0 ) f_log << ";" << floating_point_to_string(pmm->H0[j]);
-                    if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pmm->Cp0[j]);
-                    if( dCH->A0 ) f_log << ";" << floating_point_to_string(pmm->A0[j]);
-                    if( dCH->U0 ) f_log << ";" << floating_point_to_string(pmm->U0[j]);
+                    if( pmm->S0 ) f_log << ";" << floating_point_to_string(pmm->S0[j]);
+                    if( pmm->H0 ) f_log << ";" << floating_point_to_string(pmm->H0[j]);
+                    if( pmm->Cp0 ) f_log << ";" << floating_point_to_string(pmm->Cp0[j]);
+                    if( pmm->A0 ) f_log << ";" << floating_point_to_string(pmm->A0[j]);
+                    if( pmm->U0 ) f_log << ";" << floating_point_to_string(pmm->U0[j]);
                 }
 #endif
             }  // j

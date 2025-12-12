@@ -73,7 +73,7 @@ std::vector<io_formats::outField> DataBR_fields =  {  // [f_lga+1/*60*/]
   { "Eh",   0, 0, 1, "# Eh: Eh of aqueous solution, V (GEM output)" },
   { "Tm",   0, 0, 1, "# Tm: Actual total simulation time, s (kinetics, metastability, transport)" },
   { "dt",   0, 0, 1, "# dt: Actual time step, s (kinetics, metastability, transport)" },
-//#ifdef NODEARRAYLEVEL
+//#ifndef NO_NODEARRAYLEVEL
 // Scalar parameters below are only used at TNodeArray level
   { "Dif",  0, 0, 1, "# Dif: General diffusivity of disolved matter, m2/s (mass transport)" },
   { "Vt",   0, 0, 1, "# Vt: Total volume of the node, m3 (mass transport)" },
@@ -228,7 +228,7 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
     prar.writeField(f_Tm, CNode->Tm, _comment, brief_mode  );
     prar.writeField(f_dt, CNode->dt, _comment, brief_mode  );
 
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     if( CNode->NodeStatusFMT != No_nodearray /*TNodeArray::na->nNodes() > 1*/ )
     {
         if( _comment )
@@ -308,7 +308,7 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
 template<typename TIO>
 void databr_from_text_file(const DATACH* CSD, DATABR* CNode, TIO& in_format )
 {
-#ifndef NODEARRAYLEVEL
+#ifdef NO_NODEARRAYLEVEL
     double tmpVal;
 #endif
 
@@ -366,7 +366,7 @@ void databr_from_text_file(const DATACH* CSD, DATABR* CNode, TIO& in_format )
             break;
         case f_dt: rdar.readArray( "dt",  &CNode->dt, 1);
             break;
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
         case f_Dif: rdar.readArray( "Dif",  &CNode->Dif, 1);
             break;
         case f_Vt: rdar.readArray( "Vt",  &CNode->Vt, 1);
@@ -925,7 +925,7 @@ void databr_to_file(const DATACH* CSD, const DATABR* CNode, GemDataStream& ff)
     // const data
     ff.writeArray( &CNode->NodeHandle, 6 );
 
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     if( CNode->NodeStatusFMT != No_nodearray )
         ff.writeArray( &CNode->TK, 32 );
     else
@@ -968,7 +968,7 @@ void databr_from_file(const DATACH* CSD, DATABR* CNode, GemDataStream& ff)
     // const data
     ff.readArray( &CNode->NodeHandle, 6 );
 
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     if( CNode->NodeStatusFMT != No_nodearray )
         ff.readArray( &CNode->TK, 32 );
     else

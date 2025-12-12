@@ -618,11 +618,11 @@ bool SolModFactory::load_all_thermodynamic_from_thermo(double TK, double PPa)
 
                 G0 = propAl.gibbs_energy.val;
                 pmp->Vol[j] = propAl.volume.val*10;
-                if( dCH->S0 ) pmp->S0[j] = propAl.entropy.val;
-                if( dCH->H0 ) pmp->H0[j] = propAl.enthalpy.val;
-                if( dCH->Cp0 ) pmp->Cp0[j] = propAl.heat_capacity_cp.val;
-                if( dCH->A0 ) pmp->A0[j] = propAl.helmholtz_energy.val;
-                if( dCH->U0 ) pmp->U0[j] = propAl.internal_energy.val;
+                if( pmp->S0 ) pmp->S0[j] = propAl.entropy.val;
+                if( pmp->H0 ) pmp->H0[j] = propAl.enthalpy.val;
+                if( pmp->Cp0 ) pmp->Cp0[j] = propAl.heat_capacity_cp.val;
+                if( pmp->A0 ) pmp->A0[j] = propAl.helmholtz_energy.val;
+                if( pmp->U0 ) pmp->U0[j] = propAl.internal_energy.val;
 
                 pmp->G0[j] = ConvertGj_toUniformStandardState(G0, j, k);
 #ifdef  USE_THERMO_LOG
@@ -630,11 +630,11 @@ bool SolModFactory::load_all_thermodynamic_from_thermo(double TK, double PPa)
                     f_log << "\n" << symbol << ";" << floating_point_to_string(G0)
                     << ";" << floating_point_to_string(pmp->G0[j])
                     << ";" << floating_point_to_string(pmp->Vol[j]);
-                    if( dCH->S0 ) f_log << ";" << floating_point_to_string(pmp->S0[j]);
-                    if( dCH->H0 ) f_log << ";" << floating_point_to_string(pmp->H0[j]);
-                    if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pmp->Cp0[j]);
-                    if( dCH->A0 ) f_log << ";" << floating_point_to_string(pmp->A0[j]);
-                    if( dCH->U0 ) f_log << ";" << floating_point_to_string(pmp->U0[j]);
+                    if( pmp->S0 ) f_log << ";" << floating_point_to_string(pmp->S0[j]);
+                    if( pmp->H0 ) f_log << ";" << floating_point_to_string(pmp->H0[j]);
+                    if( pmp->Cp0 ) f_log << ";" << floating_point_to_string(pmp->Cp0[j]);
+                    if( pmp->A0 ) f_log << ";" << floating_point_to_string(pmp->A0[j]);
+                    if( pmp->U0 ) f_log << ";" << floating_point_to_string(pmp->U0[j]);
                 }
 #endif
             }  // j

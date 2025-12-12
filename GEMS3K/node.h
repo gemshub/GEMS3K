@@ -211,7 +211,7 @@ public:
     /// \param with_comments - Write files with comments for all data entries or as "pretty JSON"
     std::string databr_to_string( bool with_comments = true, bool brief_mode = false ) const
     {
-#ifndef NODEARRAYLEVEL
+#ifdef NO_NODEARRAYLEVEL
         CNode->NodeStatusFMT = No_nodearray;
 #endif
         return dbr_dch_api::databr_to_string(current_output_set_name, CSD, CNode, with_comments, brief_mode);

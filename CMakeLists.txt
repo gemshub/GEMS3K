@@ -150,8 +150,6 @@ configure_file(
   )
 
 # Set some necessary definitions
-add_definitions(-DNODEARRAYLEVEL)
-
 if(USE_THERMOFUN MATCHES OFF)
   add_definitions(-DNO_USE_THERMOFUN)
 else()

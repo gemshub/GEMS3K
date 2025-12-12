@@ -27,7 +27,7 @@
 //-------------------------------------------------------------------
 //
 
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
 
 #include "nodearray.h"
 #include "gdatastream.h"

@@ -71,7 +71,7 @@ typedef struct  /// DATABR - template node data bridge structure
     Eh,     ///< Eh of aqueous solution (V)                                  -      -      +     +
     Tm,     ///< Actual total simulation time (s)                            +      +      -     -
     dt      ///< Actual time step (s) - needed for TKinMet, can change!      +      +     (+)   (+)
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
       ,
 // \section  FMT variables (units or dimensionsless) - to be used for storing them
 //  at the nodearray level, normally not used in the single-node FMT-GEM coupling
@@ -189,7 +189,7 @@ f_IterDone, f_TK, f_P, f_Vs,f_Vi,
 f_Ms, f_Mi, f_Hs, f_Hi, f_Gs,
 f_IS, f_pH, f_pe, f_Eh,
 f_Tm, f_dt,
-//#ifdef NODEARRAYLEVEL
+//#ifndef NO_NODEARRAYLEVEL
 f_Dif,f_Vt, f_vp, f_eps,
 f_Km, f_Kf, f_S,  f_Tr, f_h,
 f_rho,f_al, f_at, f_av, f_hDl,
