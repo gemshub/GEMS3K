@@ -618,6 +618,7 @@ bool SolModFactory::load_all_thermodynamic_from_thermo(double TK, double PPa)
 
                 G0 = propAl.gibbs_energy.val;
                 pmp->Vol[j] = propAl.volume.val*10;
+                if( pmp->V0 ) pmp->V0[j] = propAl.volume.val/bar_to_Pa;
                 if( pmp->S0 ) pmp->S0[j] = propAl.entropy.val;
                 if( pmp->H0 ) pmp->H0[j] = propAl.enthalpy.val;
                 if( pmp->Cp0 ) pmp->Cp0[j] = propAl.heat_capacity_cp.val;
