@@ -481,7 +481,7 @@ void SolModFactory::InitalizeTSolMod()
 
 void SolModFactory::clear_ThermoEngine()
 {
-#ifndef NO_USE_THERMOFUN
+#ifndef NO_THERMOFUN
     // clear previous
     thermo_engine.reset();
     thermo_json_string="";
@@ -503,7 +503,7 @@ bool SolModFactory::load_ThermoEngine(const std::string &thermo_file_or_string)
         thermo_json_string = buffer.str();
     }
 
-#ifndef NO_USE_THERMOFUN
+#ifndef NO_THERMOFUN
     thermo_engine.reset(new ThermoFun::ThermoEngine(thermo_file_or_string));
     TSolMod::solmod_logger->trace("Read ThermoEngine: {}", thermo_file_or_string);
     return true;
@@ -515,7 +515,7 @@ bool SolModFactory::load_ThermoEngine(const std::string &thermo_file_or_string)
 
 bool SolModFactory::load_all_thermodynamic_from_thermo(double TK, double PPa)
 {
-#ifndef NO_USE_THERMOFUN
+#ifndef NO_THERMOFUN
     if( !thermo_engine.get() )
         return false;
     try{

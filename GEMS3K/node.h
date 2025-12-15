@@ -63,7 +63,7 @@
 
 #include "ms_multi.h"
 
-#ifndef NO_USE_THERMOFUN
+#ifndef NO_THERMOFUN
 #include "ThermoFun/ThermoFun.h"
 #endif
 
@@ -105,7 +105,7 @@ protected:
     DATACH* CSD;  ///< Pointer to chemical system data structure CSD (DATACH)
     DATABR* CNode;  ///< Pointer to a work node data bridge structure (node)
 
-#ifndef NO_USE_THERMOFUN
+#ifndef NO_THERMOFUN
     std::unique_ptr<ThermoFun::ThermoEngine> thermo_engine;
 #endif
     std::string thermo_json_string;

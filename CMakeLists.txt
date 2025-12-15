@@ -151,7 +151,7 @@ configure_file(
 
 # Set some necessary definitions
 if(USE_THERMOFUN MATCHES OFF)
-  add_definitions(-DNO_USE_THERMOFUN)
+  add_definitions(-DNO_THERMOFUN)
 else()
   #add_definitions(-DUSE_THERMO_LOG)
 endif()

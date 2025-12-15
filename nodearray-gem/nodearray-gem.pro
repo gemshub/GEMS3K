@@ -15,7 +15,7 @@ CONFIG += sanitaze sanitaze_thread
 #DEFINES += NO_NODEARRAYLEVEL
 #DEFINES += USE_NLOHMANNJSON
 #DEFINES += useOMP
-#DEFINES += NO_USE_THERMOFUN
+#DEFINES += NO_THERMOFUN
 #DEFINES += USE_THERMO_LOG
 DEFINES += OVERFLOW_EXCEPT  #compile with nan inf exceptions
 
@@ -41,9 +41,9 @@ INCLUDEPATH += $$GEMS3K_H
 #QMAKE_LFLAGS += -pg
 OBJECTS_DIR = obj
 
-!contains(DEFINES, NO_USE_THERMOFUN) {
+!contains(DEFINES, NO_THERMOFUN) {
 LIBS += -lThermoFun -lChemicalFun
-} ## end NO_USE_THERMOFUN
+} ## end NO_THERMOFUN
 
 include($$GEMS3K_CPP/gems3k.pri)
 
