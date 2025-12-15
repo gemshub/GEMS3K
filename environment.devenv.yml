@@ -15,6 +15,5 @@ dependencies:
   - pytest
   - pybind11
   - nlohmann_json
-  - chemicalfun=0.1.12
-  - thermofun>=0.5.0
+  - thermofun>=0.5.4
 
