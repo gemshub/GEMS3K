@@ -59,7 +59,7 @@ void  TNode::read_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator:
 void  TNode::write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f,
                                     bool with_comments, bool brief_mode )
 {
-#ifndef NODEARRAYLEVEL
+#ifdef NO_NODEARRAYLEVEL
     CNode->NodeStatusFMT = No_nodearray;
 #endif
     switch( type_f )
@@ -295,7 +295,7 @@ long int  TNode::GEM_write_dbr( std::string& dbr_json )
     // Writes work node (DATABR structure) into a json string
     try
     {
-#ifndef NODEARRAYLEVEL
+#ifdef NO_NODEARRAYLEVEL
         CNode->NodeStatusFMT = No_nodearray;
 #endif
         std::stringstream ss;
@@ -485,7 +485,7 @@ void TNode::databr_copy( DATABR* otherCNode )
     // const data
     copyValues( &CNode->NodeHandle, &otherCNode->NodeHandle, 6 );
 
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     if( CNode->NodeStatusFMT != No_nodearray )
          copyValues( &CNode->TK, &otherCNode->TK, 32 );
     else
@@ -551,7 +551,7 @@ void TNode::CheckMtparam()
 
 void TNode::clear_ThermoEngine()
 {
-#ifdef USE_THERMOFUN
+#ifndef NO_THERMOFUN
     // clear previous
     thermo_engine.reset();
     thermo_json_string="";
@@ -573,9 +573,10 @@ bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
         thermo_json_string = buffer.str();
     }
 
-#ifdef USE_THERMOFUN
+#ifndef NO_THERMOFUN
     thermo_engine.reset(new ThermoFun::ThermoEngine(thermo_file_or_string));
-    node_logger->trace("Read ThermoEngine: {}", thermo_file_or_string);
+    node_logger->info("ThermoEngine substances: {}", thermo_engine->database().numberOfSubstances());
+    node_logger->info("Read ThermoEngine: {}", thermo_file_or_string);
     return true;
 #else
     node_logger->warn("Try read ThermoEngine not in USE_THERMOFUN mode {}", thermo_file_or_string);
@@ -586,7 +587,7 @@ bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
 
 bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
 {
-#ifdef USE_THERMOFUN
+#ifndef NO_THERMOFUN
     if( !thermo_engine.get() )
         return false;
     try{
@@ -600,18 +601,7 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         double funT = TK, funP=P*bar_to_Pa;   // T in K, P in Pa
 
         DATACH  *dCH = pCSD();
-        auto water_props = thermo_engine->propertiesSolvent(funT,funP, "H2O@");
-        auto water_electro = thermo_engine->electroPropertiesSolvent(funT,funP, "H2O@");
 
-        auto water_vapor = thermo_engine->database().getSubstance("H2O@");
-        water_vapor.setMethod_P( ThermoFun::MethodCorrP_Thrift::type::CPM_GAS);
-
-        ThermoFun::Database db2;
-        db2.addSubstance(water_vapor);
-
-        ThermoFun::ThermoEngine te2(db2);
-        auto water_gas_props = te2.propertiesSolvent(funT,funP, "H2O@");
-        auto water_gas_electro = te2.electroPropertiesSolvent(funT,funP, "H2O@");
 
         pmm->Pc = P;
         if( P < 1e-5 )
@@ -629,28 +619,44 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         pmm->FRT = F_CONSTANT/pmm->RT;
         pmm->lnP = log( P );
 
-        pmm->denW[0] = water_props.density.val/1e3;
-        pmm->epsW[0] = water_electro.epsilon.val;
-        pmm->denW[1] = water_props.densityT.val/1e3;
-        pmm->epsW[1] = water_electro.epsilonT.val;
-        pmm->denW[2] = water_props.densityTT.val/1e3;
-        pmm->epsW[2] = water_electro.epsilonTT.val;
-        pmm->denW[3] = water_props.densityP.val*1e2; // /1e3;
-        pmm->epsW[3] = water_electro.epsilonP.val;
-        pmm->denW[4] = water_props.densityPP.val/1e3;
-        pmm->epsW[4] = water_electro.epsilonPP.val;
+        if( CSD->ccPH[0] == PH_AQUEL )
+        {
+            std::string h2o_key = dCH->DCNL[pmm->LO];
+            node_logger->info("water-solvent: {}", h2o_key);
+            auto water_props = thermo_engine->propertiesSolvent(funT, funP, h2o_key);
+            auto water_electro = thermo_engine->electroPropertiesSolvent(funT, funP, h2o_key);
 
-        pmm->denWg[0] = water_gas_props.density.val/1e3;
-        pmm->epsWg[0] = water_gas_electro.epsilon.val;
-        pmm->denWg[1] = water_gas_props.densityT.val/1e3;
-        pmm->epsWg[1] = water_gas_electro.epsilonT.val;
-        pmm->denWg[2] = water_gas_props.densityTT.val/1e3;
-        pmm->epsWg[2] = water_gas_electro.epsilonTT.val;
-        pmm->denWg[3] = water_gas_props.densityP.val*1e2; // /1e3;
-        pmm->epsWg[3] = water_gas_electro.epsilonP.val;
-        pmm->denWg[4] = water_gas_props.densityPP.val/1e3;
-        pmm->epsWg[4] = water_gas_electro.epsilonPP.val;
+            auto water_vapor = thermo_engine->database().getSubstance(h2o_key);
+            water_vapor.setMethod_P( ThermoFun::MethodCorrP_Thrift::type::CPM_GAS);
 
+            ThermoFun::Database db2;
+            db2.addSubstance(water_vapor);
+
+            ThermoFun::ThermoEngine te2(db2);
+            auto water_gas_props = te2.propertiesSolvent(funT, funP, h2o_key);
+            auto water_gas_electro = te2.electroPropertiesSolvent(funT, funP, h2o_key);
+            pmm->denW[0] = water_props.density.val/1e3;
+            pmm->epsW[0] = water_electro.epsilon.val;
+            pmm->denW[1] = water_props.densityT.val/1e3;
+            pmm->epsW[1] = water_electro.epsilonT.val;
+            pmm->denW[2] = water_props.densityTT.val/1e3;
+            pmm->epsW[2] = water_electro.epsilonTT.val;
+            pmm->denW[3] = water_props.densityP.val*1e2; // /1e3;
+            pmm->epsW[3] = water_electro.epsilonP.val;
+            pmm->denW[4] = water_props.densityPP.val/1e3;
+            pmm->epsW[4] = water_electro.epsilonPP.val;
+
+            pmm->denWg[0] = water_gas_props.density.val/1e3;
+            pmm->epsWg[0] = water_gas_electro.epsilon.val;
+            pmm->denWg[1] = water_gas_props.densityT.val/1e3;
+            pmm->epsWg[1] = water_gas_electro.epsilonT.val;
+            pmm->denWg[2] = water_gas_props.densityTT.val/1e3;
+            pmm->epsWg[2] = water_gas_electro.epsilonTT.val;
+            pmm->denWg[3] = water_gas_props.densityP.val*1e2; // /1e3;
+            pmm->epsWg[3] = water_gas_electro.epsilonP.val;
+            pmm->denWg[4] = water_gas_props.densityPP.val/1e3;
+            pmm->epsWg[4] = water_gas_electro.epsilonPP.val;
+        }
 #ifdef  USE_THERMO_LOG
         std::fstream f_log;
         if(GemsSettings::log_thermodynamic) {
@@ -680,27 +686,27 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
             for( j=jb; j<je; j++ )
             {
                 std::string symbol = std::string(CSD->DCNL[j], 0, MaxDCN);
-                auto propAl    = thermo_engine->thermoPropertiesSubstance(funT,funP, symbol);
+                auto propAl    = thermo_engine->thermoPropertiesSubstance(funT, funP, symbol);
 
                 G0 = propAl.gibbs_energy.val;
                 pmm->Vol[j] = propAl.volume.val*10;
-                if( dCH->S0 ) pmm->S0[j] = propAl.entropy.val;
-                if( dCH->H0 ) pmm->H0[j] = propAl.enthalpy.val;
-                if( dCH->Cp0 ) pmm->Cp0[j] = propAl.heat_capacity_cp.val;
-                if( dCH->A0 ) pmm->A0[j] = propAl.helmholtz_energy.val;
-                if( dCH->U0 ) pmm->U0[j] = propAl.internal_energy.val;
+                if( pmm->S0 ) pmm->S0[j] = propAl.entropy.val;
+                if( pmm->H0 ) pmm->H0[j] = propAl.enthalpy.val;
+                if( pmm->Cp0 ) pmm->Cp0[j] = propAl.heat_capacity_cp.val;
+                if( pmm->A0 ) pmm->A0[j] = propAl.helmholtz_energy.val;
+                if( pmm->U0 ) pmm->U0[j] = propAl.internal_energy.val;
 
                 pmm->G0[j] = multi_ptr()->ConvertGj_toUniformStandardState(G0, j, k);
 #ifdef  USE_THERMO_LOG
                 if(GemsSettings::log_thermodynamic) {
                     f_log << "\n" << symbol << ";" << floating_point_to_string(G0)
-                          << ";" << floating_point_to_string(pmm->G0[j])
-                          << ";" << floating_point_to_string(pmm->Vol[j]);
-                    if( dCH->S0 ) f_log << ";" << floating_point_to_string(pmm->S0[j]);
-                    if( dCH->H0 ) f_log << ";" << floating_point_to_string(pmm->H0[j]);
-                    if( dCH->Cp0 ) f_log << ";" << floating_point_to_string(pmm->Cp0[j]);
-                    if( dCH->A0 ) f_log << ";" << floating_point_to_string(pmm->A0[j]);
-                    if( dCH->U0 ) f_log << ";" << floating_point_to_string(pmm->U0[j]);
+                    << ";" << floating_point_to_string(pmm->G0[j])
+                    << ";" << floating_point_to_string(pmm->Vol[j]);
+                    if( pmm->S0 ) f_log << ";" << floating_point_to_string(pmm->S0[j]);
+                    if( pmm->H0 ) f_log << ";" << floating_point_to_string(pmm->H0[j]);
+                    if( pmm->Cp0 ) f_log << ";" << floating_point_to_string(pmm->Cp0[j]);
+                    if( pmm->A0 ) f_log << ";" << floating_point_to_string(pmm->A0[j]);
+                    if( pmm->U0 ) f_log << ";" << floating_point_to_string(pmm->U0[j]);
                 }
 #endif
             }  // j

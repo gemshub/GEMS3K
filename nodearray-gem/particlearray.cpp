@@ -204,7 +204,7 @@ double TParticleArray::InterpolationVp_hDl_1D( long int px,
   dbr1 = nodes->pNodT1()[nodInd1];  // nodes at current time point
   if( nodInd2 < 0 || nodInd2 >= nNodes )
   {
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     vp = dbr1->vp;
     hDl = dbr1->hDl;
     al = dbr1->al;
@@ -221,7 +221,7 @@ double TParticleArray::InterpolationVp_hDl_1D( long int px,
     dbr2 = nodes->pNodT1()[nodInd2];
     // vx = v1 - (v2-v1)/(x2-x1)*(x-x1);
     double d = (ParT1[px].xyz.x-x1m)/(x2m-x1m);
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     vp = dbr1->vp;
     vp -= (dbr2->vp - dbr1->vp )*d;
     al = dbr1->al;

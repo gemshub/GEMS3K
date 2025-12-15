@@ -390,11 +390,21 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
             {
                 Go = dCH->G0[ jj+xTP];
                 Vv = dCH->V0[ jj+xTP]*1e5;
-                if( dCH->S0 ) S0 = dCH->S0[ jj+xTP];
-                if( dCH->H0 ) h0 = dCH->H0[ jj+xTP];
-                if( dCH->Cp0 ) Cp0 = dCH->Cp0[ jj+xTP];
-                if( dCH->A0 ) a0 = dCH->A0[ jj+xTP];
-                if( dCH->U0 ) h0 = dCH->U0[ jj+xTP];
+                if( dCH->S0 ) {
+                    S0 = dCH->S0[ jj+xTP];
+                }
+                if( dCH->H0 ) {
+                    h0 = dCH->H0[ jj+xTP];
+                }
+                if( dCH->Cp0 ) {
+                    Cp0 = dCH->Cp0[ jj+xTP];
+                }
+                if(dCH->A0) {
+                    a0 = dCH->A0[ jj+xTP];
+                }
+                if(dCH->U0) {
+                    u0 = dCH->U0[ jj+xTP];
+                }
             }
             else
             {

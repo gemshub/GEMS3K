@@ -1,0 +1,32 @@
+[build-system]
+requires = [
+    "setuptools >= 61.2",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "solmod4rkt"
+version= "${PROJECT_VERSION}"
+requires-python = ">= 3.10"
+authors = [
+  {name = "D. Kulik", email = "dkulik@congineer.com"},
+  {name = "S. Dmytriieva", email = "sv.dmytr@gmail.com"},
+  {name = "G.D. Miron", email = "dan.miron@psi.ch"}
+]
+maintainers = [
+  {name = "G.D. Miron", email = "dan.miron@psi.ch"}
+]
+description = "The Python API of implementing built-in models of mixing in fluid, liquid, aqueous and solid-solution phases."
+license = "GPL-3.0-or-later"
+keywords = ["fluid phases", "liquid phases", "aqueous phase", "solid-solution phases"]
+
+[project.urls]
+Homepage = "https://gemshub.github.io/site/"
+Repository = "https://github.com/gemshub/GEMS3K.git"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+solmod4rkt = ["PySolmod4rkt*"]

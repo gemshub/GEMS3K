@@ -27,7 +27,7 @@
 //-------------------------------------------------------------------
 //
 
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
 
 #include "nodearray.h"
 #include "v_service.h"
@@ -67,7 +67,7 @@ void TNodeArray::CopyWorkNodeFromArray( TNode* wrkNode, long int ii, long int nN
 
     wrkNode->pCNode()->Tm = arr_BR[ii]->Tm;
     wrkNode->pCNode()->dt = arr_BR[ii]->dt;
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     wrkNode->pCNode()->Dif = arr_BR[ii]->Dif;
     wrkNode->pCNode()->Vt = arr_BR[ii]->Vt;
     wrkNode->pCNode()->vp = arr_BR[ii]->vp;
@@ -143,7 +143,7 @@ void TNodeArray::MoveWorkNodeToArray( TNode* wrkNode, long int ii, long int nNod
 
     arr_BR[ii]->Tm = wrkNode->pCNode()->Tm;
     arr_BR[ii]->dt = wrkNode->pCNode()->dt;
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     arr_BR[ii]->Dif = wrkNode->pCNode()->Dif;
     arr_BR[ii]->Vt = wrkNode->pCNode()->Vt;
     arr_BR[ii]->vp = wrkNode->pCNode()->vp;

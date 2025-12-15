@@ -34,7 +34,7 @@
 #include "datach.h"
 #include "databr.h"
 
-#ifdef USE_THERMOFUN
+#ifndef NO_THERMOFUN
 #include "ThermoFun/ThermoFun.h"
 #endif
 
@@ -579,7 +579,7 @@ protected:
     std::string current_input_set_name;
     std::string ipmlog_error;
 
-#ifdef USE_THERMOFUN
+#ifndef NO_THERMOFUN
     std::unique_ptr<ThermoFun::ThermoEngine> thermo_engine;
 #endif
     std::string thermo_json_string;

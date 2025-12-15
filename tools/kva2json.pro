@@ -12,10 +12,10 @@ CONFIG += thread console
 CONFIG += c++17
 #CONFIG += sanitaze sanitaze_thread
 
-DEFINES += NODEARRAYLEVEL
+#DEFINES += NO_NODEARRAYLEVEL
 #DEFINES += USE_NLOHMANNJSON
-DEFINES += USE_THERMOFUN
-DEFINES += USE_THERMO_LOG
+#DEFINES += NO_THERMOFUN
+#DEFINES += USE_THERMO_LOG
 DEFINES += OVERFLOW_EXCEPT  #compile with nan inf exceptions
 #DEFINES += SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_OFF
 
@@ -41,7 +41,7 @@ INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 
 #LIBS += -lGEMS3K
-contains(DEFINES, USE_THERMOFUN) {
+!contains(DEFINES, NO_THERMOFUN) {
 
 #ThermoFun_CPP   =  ../ThermoFun
 #ThermoFun_H     =   $$ThermoFun_CPP
@@ -49,8 +49,8 @@ contains(DEFINES, USE_THERMOFUN) {
 #INCLUDEPATH += $$ThermoFun_H
 #include($$ThermoFun_CPP/ThermoFun.pri)
 LIBS += -lThermoFun -lChemicalFun
-
-} ## end USE_THERMOFUN
+message("NO_THERMOFUN is not defined.")
+} ## end NO_THERMOFUN
 
 
 QMAKE_LFLAGS +=

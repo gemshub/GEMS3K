@@ -688,6 +688,11 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         Error( "Error", ret);
     }
 
+    // Try fix error 09.12.2025 lost pm.E after reading gems3k files
+    if( pm.E && dCH->ccIC[dCH->nICb-1] != IC_CHARGE) {
+        pm.E = 0;
+    }
+
     PAalp_ = PAalp;
     PSigm_ = PSigm;
     multi_realloc( PAalp, PSigm );
@@ -832,6 +837,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
                 alloc_SitFr(LsSitSum);
                 fillValue( pm.SitFr, 0., LsSitSum );
                 rddar.readArray( "MoiSN", pm.MoiSN,  LsMsnSum);
+                // ??? rddar.readArray( "SitFr", pm.SitFr,  LsSitSum);
             }
             break;
         }

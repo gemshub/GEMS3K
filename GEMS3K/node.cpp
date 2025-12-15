@@ -49,14 +49,17 @@ void TNode::write_ThermoFun_format_stream(std::iostream &stream, bool compact) {
     stream << thermo_json_string;
 }
 
+std::once_flag once_flag;
+
 // Constructor of the class instance in memory for standalone GEMS3K or coupled program
 TNode::TNode()
 {
-    if(!ipmlog_file) {
+    std::call_once(once_flag, [](){
+        // Thread-safe one-time operation
         ipmlog_file = spdlog::rotating_logger_mt("ipmlog", GemsSettings::with_directory("ipmlog.txt"),
                                                  GemsSettings::log_file_size,
                                                  GemsSettings::log_file_count);
-    }
+    });
     CSD = NULL;
     CNode = NULL;
     allocMemory();

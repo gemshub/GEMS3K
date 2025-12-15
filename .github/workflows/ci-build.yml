@@ -21,15 +21,12 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
-          - macos-13
           - macos-latest
         include:
           - os: ubuntu-latest
             conda_platform: linux-64
           - os: windows-latest
             conda_platform: win-64
-          - os: macos-13
-            conda_platform: osx-64
           - os: macos-latest
             conda_platform: osx-arm64
 
@@ -71,6 +68,13 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH="%CONDA_PREFIX%\Library" -A x64 -S . -B build  || goto :eof
           cmake --build build --target install --config Release || goto :eof
           python -c "import solmod4rkt" || goto :eof
+
+      - name: Run tests that read GEMS3K
+        shell: bash -l {0}
+        run: |
+          conda activate GEMS3K
+          python -c "import solmod4rkt"
+          conda list
 
       - name: Check conda
         run: |

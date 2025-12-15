@@ -5,15 +5,15 @@ channels:
   - defaults
 
 dependencies:
-  - pip
   - gxx_linux-64 # [linux]
   - cmake>=3.16
   - ninja
   - git
   - ccache  # [unix]
+  - python>=3.10
+  - pip
+  - pytest
   - pybind11
   - nlohmann_json
-  - thermofun>=0.5.0
-  - python>=3.12
-  - pytest
+  - thermofun>=0.5.4
 

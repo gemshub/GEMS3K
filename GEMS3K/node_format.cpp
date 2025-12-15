@@ -80,7 +80,7 @@ void TNode::databr_element_to_vtk( std::fstream& ff, DATABR *CNode_, long int nf
         break;
     case f_dt:prar.writeValue( CNode_->dt);
         break;
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     case f_Dif: prar.writeValue( CNode_->Dif);
         break;
     case f_Vt: prar.writeValue( CNode_->Vt);

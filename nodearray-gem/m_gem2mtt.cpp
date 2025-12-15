@@ -58,7 +58,7 @@ void  TGEM2MT::putHydP( DATABRPTR* C0 )
     for( long int jj=0; jj<mtp->nC; jj ++)
     {
         C0[jj]->NodeTypeHY = mtp->DiCp[jj][1];
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
         if( mtp->HydP )
         { C0[jj]->Vt = mtp->HydP[jj][0];
             C0[jj]->vp = mtp->HydP[jj][1];

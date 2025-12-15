@@ -352,6 +352,12 @@ void datach_realloc(DATACH* CSD)
     CSD->denWg = new double[ 5*gridTP(CSD)];
     CSD->epsW = new double[ 5*gridTP(CSD)];
     CSD->epsWg = new double[ 5*gridTP(CSD)];
+    for(int  j=0; j<5*gridTP(CSD); j++ )  {
+        CSD->denW[j] = 0.;
+        CSD->denWg[j] = 0.;
+        CSD->epsW[j] = 0.;
+        CSD->epsWg[j] = 0.;
+    }
 
     CSD->G0 = new double[CSD->nDC*gridTP(CSD)];
     CSD->V0 = new double[CSD->nDC*gridTP(CSD)];
@@ -652,7 +658,7 @@ void databr_reset(DATABR *CnNde1, long int level)
     //  at the nodearray level = 0.; normally not used in the single-node FMT-GEM coupling
     CnNde1->Tm = 0.;
     CnNde1->dt = 0.;
-#ifdef NODEARRAYLEVEL
+#ifndef NO_NODEARRAYLEVEL
     CnNde1->Dif = 0.;
     CnNde1->Vt = 0.;
     CnNde1->vp = 0.;
