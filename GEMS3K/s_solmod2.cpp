@@ -1219,11 +1219,14 @@ long int TCGFcalc::CGActivCoefPT( double *X,double *param, double *act,
 {
     double *xtmp,*Fx;
     double P = Pbar1/10.;
-    std::shared_ptr<double> xtmp_mem = std::make_shared<double>(NN); // new double [NN];
-    std::shared_ptr<double> Fx_mem = std::make_shared<double>(NN); // new double [NN];
+    // std::shared_ptr<double> xtmp_mem = std::make_shared<double>(NN); // new double [NN];
+    // std::shared_ptr<double> Fx_mem = std::make_shared<double>(NN); // new double [NN];
 
-    xtmp = xtmp_mem.get();
-    Fx = Fx_mem.get();
+    // xtmp = xtmp_mem.get();
+    // Fx = Fx_mem.get();
+
+    xtmp = new double [NN];
+    Fx = new double [NN];
 
 	if(!paar)
 		paar = new  EOSPARAM(X, param, NN);
@@ -1241,8 +1244,11 @@ long int TCGFcalc::CGActivCoefPT( double *X,double *param, double *act,
 
 	ro = ROTOTALMIX(P,T,paar);
 
-	if( ro < 0.0 )  // Too low pressure, no corrections will be done
-		return ( -1 );
+    if( ro < 0.0 ) {  // Too low pressure, no corrections will be done
+        delete[]xtmp;
+        delete[]Fx;
+        return ( -1 );
+    }
 
 	Z = P/(R*T*ro);
 	F0 = FTOTALMIX(T,ro,paar);
@@ -1283,8 +1289,8 @@ long int TCGFcalc::CGActivCoefPT( double *X,double *param, double *act,
 
 	// GMix+=F0 + ax;
 	// MLPutRealList(stdlink,act,paar.NCmp());
-    //delete[]xtmp;
-    //delete[]Fx;
+    delete[]xtmp;
+    delete[]Fx;
 	roro = ro;  // added, 21.06.2008 (TW)
 
 	return 0;  // changed, 21.06.2008 (TW)
