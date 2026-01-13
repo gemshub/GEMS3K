@@ -1612,7 +1612,7 @@ double TCGFcalc::DENSITY( double *X, double *param, unsigned long NN, double Pba
 
 	delete [] xtmp;
 	if( ro < 0. )
-		Error( ""," Error - density cannot be found at this T,P" );
+		Error( "","CG fluid: Error - density cannot be found at this T,P" );
 	return ro;
 }
 
@@ -2166,7 +2166,7 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
 
      if ( i==FIRSTSEED || i==0 )
      {
-         solmod_logger->error("Input pressure is too high!\n");
+         solmod_logger->error("CG fluid: Input pressure is too high!\n");
          // exit(1);
          return (-1.0);
      }
