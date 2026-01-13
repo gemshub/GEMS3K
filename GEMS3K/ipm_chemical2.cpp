@@ -595,9 +595,10 @@ void TMultiBase::IS_EtaCalc()
                         pm.XetaB[k][ist] += pm.X[j]*Ez;
                         pm.XetaA[k][ist] += pm.X[j]*CD0;  // added for testing
                     }
-                    else if( pm.SCM[k][ist] == SC_CCM )
+                    else if( pm.SCM[k][ist] == SC_CCM || pm.SCM[k][ist] == SC_ISCCM )
                     { // Added 25.07.03 to implement the extended CCM Nilsson ea 1996
 // New CD version of BSM  added 25.10.2004
+                        // 2026 SC_ISCCM uses dependcy of capacity with IS C = sqrt(IS)/alpha, alpha is given instead of capacity
                            pm.XetaB[k][ist] += pm.X[j] * CDb;
                            pm.XetaA[k][ist] += pm.X[j] * CD0;
                     }
@@ -697,6 +698,7 @@ TMultiBase::GouyChapman(  long int, long int, long int k )
         switch( pm.SCM[k][ist] )
         {
         case SC_CCM:  // Constant-Capacitance Model Schindler, extension Nilsson
+        case SC_ISCCM: // 2026 SC_ISCCM uses dependcy of capacity with IS C = sqrt(IS)/alpha, alpha is given instead of capacity
             SigA = pm.Xetaf[k][ist] + XetaA[ist];
             SigDDL = -SigA - XetaB[ist];
             SigB = XetaB[ist];
@@ -796,9 +798,13 @@ GEMU_CALC:
             pm.XpsiB[k][ist] = PsiD;
             break;
         case SC_CCM:  // Constant-Capacitance Model Schindler, ext. Nilsson
+        case SC_ISCCM: // 2026 SC_ISCCM uses dependcy of capacity with IS C = sqrt(IS)/alpha, alpha is given instead of capacity
             if( pm.XcapB[k][ist] > 0.001 )
             {  // Classic CCM Schindler with inner-sphere species only
-               PsiA = SigA / pm.XcapA[k][ist];
+                if (pm.SCM[k][ist] == SC_ISCCM)
+                    PsiA = SigA / (sqrt(I)/pm.XcapA[k][ist]);
+                else
+                    PsiA = SigA / pm.XcapA[k][ist];
                if( fabs( PsiA ) > 0.7 ) // truncated 0-plane potential
                {
                    PsiA = PsiA<0? -0.7: 0.7;

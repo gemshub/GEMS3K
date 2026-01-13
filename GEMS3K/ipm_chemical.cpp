@@ -523,7 +523,7 @@ case DC_SCM_SPECIES:
                   }
                }
             }
-            else if( pm.SCM[k][ist] == SC_BSM || pm.SCM[k][ist] == SC_CCM )
+            else if( pm.SCM[k][ist] == SC_BSM || pm.SCM[k][ist] == SC_CCM || pm.SCM[k][ist] == SC_ISCCM )
             { // Basic Stern model, Christl & Kretzschmar, 1999
             // New CD version of TLM  added 25.10.2004
                if( fabs( CD0 ) > 1e-20 && fabs( CDb ) > 1e-20 )
