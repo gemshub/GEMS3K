@@ -56,7 +56,7 @@ void TMultiBase::AutoInitialApproximation( )
         for( i=0; i<pm.N; i++)
              DU[i+Q] = 0.;
         EPS = base_param()->EPS; //  13.10.00  KC  DK
-        GZ = 1./EPS;    
+        GZ = 1./EPS;
 
         T=0; // Calcuation of all non-zero values in A and G arrays
         for(i=0;i<pm.L;i++)
