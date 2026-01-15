@@ -619,6 +619,13 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         pmm->FRT = F_CONSTANT/pmm->RT;
         pmm->lnP = log( P );
 
+#ifdef  USE_THERMO_LOG
+        std::fstream f_log;
+        if(GemsSettings::log_thermodynamic) {
+            f_log.open(GemsSettings::with_directory("thermodynamic-log.csv"), std::ios::out/*|std::ios::app*/);
+            f_log << "\n Calc ThermoEngine;T;" << TK << ";P;" << PPa << "\n";
+        }
+#endif
         if( CSD->ccPH[0] == PH_AQUEL )
         {
             std::string h2o_key = dCH->DCNL[pmm->LO];
@@ -656,26 +663,23 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
             pmm->epsWg[3] = water_gas_electro.epsilonP.val;
             pmm->denWg[4] = water_gas_props.densityPP.val/1e3;
             pmm->epsWg[4] = water_gas_electro.epsilonPP.val;
-        }
 #ifdef  USE_THERMO_LOG
-        std::fstream f_log;
-        if(GemsSettings::log_thermodynamic) {
-            f_log.open(GemsSettings::with_directory("thermodynamic-log.csv"), std::ios::out/*|std::ios::app*/ );
-            f_log << "\nCalc ThermoEngine;T;" << TK << ";P;" << PPa << "\n";
-            f_log << "denW";
-            for( jj=0; jj<5; jj++)
-                f_log << ";" << floating_point_to_string(pmm->denW[jj]);
-            f_log << "\nepsW";
-            for( jj=0; jj<5; jj++)
-                f_log << ";" << floating_point_to_string(pmm->epsW[jj]);
-            f_log << "\ndenWg";
-            for( jj=0; jj<5; jj++)
-                f_log << ";" << floating_point_to_string(pmm->denWg[jj]);
-            f_log << "\nepsWg";
-            for( jj=0; jj<5; jj++)
-                f_log << ";" << floating_point_to_string(pmm->epsWg[jj]);
-        }
+            if(GemsSettings::log_thermodynamic) {
+                f_log << "denW";
+                for( jj=0; jj<5; jj++)
+                    f_log << ";" << floating_point_to_string(pmm->denW[jj]);
+                f_log << "\nepsW";
+                for( jj=0; jj<5; jj++)
+                    f_log << ";" << floating_point_to_string(pmm->epsW[jj]);
+                f_log << "\ndenWg";
+                for( jj=0; jj<5; jj++)
+                    f_log << ";" << floating_point_to_string(pmm->denWg[jj]);
+                f_log << "\nepsWg";
+                for( jj=0; jj<5; jj++)
+                    f_log << ";" << floating_point_to_string(pmm->epsWg[jj]);
+            }
 #endif
+        }
 
         for( k=0; k<pmm->FI; k++ )
         {
