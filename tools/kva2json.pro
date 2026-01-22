@@ -9,7 +9,7 @@ VERSION = 3.4.6
 CONFIG -= qt
 CONFIG += warn_on
 CONFIG += thread console
-CONFIG += c++17
+CONFIG += c++20
 #CONFIG += sanitaze sanitaze_thread
 
 #DEFINES += NO_NODEARRAYLEVEL
@@ -61,5 +61,5 @@ include($$GEMS3K_CPP/gems3k.pri)
 
 HEADERS   +=   args_tool.h
 SOURCES   +=   kva2json.cpp
-
+#SOURCES   +=   thermofun_test.cpp
 #SOURCES   +=   thread_test.cpp

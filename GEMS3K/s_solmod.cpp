@@ -67,6 +67,9 @@ TSolMod::TSolMod( SolutionData *sd ):
     aIPx = sd->arIPx;   // Direct access to index list and parameter coeff arrays!
     aIPc = sd->arIPc;
     aIP = new double[NPar];
+    for(int ii=0; ii<NPar; ii++ )
+        aIP[ii] = 0.0;
+
     aGEX = sd->arGEX;   // Reciprocal energies, Darken terms, pure fugacities of DC (corr. to TP)
     aPparc = sd->arPparc; // Partial pressures NComp
     aMoiSN = sd->arMoiSN; // End member moiety- site multiplicity number tables NComp x NSub x NMoi

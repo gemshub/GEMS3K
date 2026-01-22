@@ -56,9 +56,12 @@ TNode::TNode()
 {
     std::call_once(once_flag, [](){
         // Thread-safe one-time operation
+    if(!ipmlog_file) {
         ipmlog_file = spdlog::rotating_logger_mt("ipmlog", GemsSettings::with_directory("ipmlog.txt"),
                                                  GemsSettings::log_file_size,
                                                  GemsSettings::log_file_count);
+
+    }
     });
     CSD = NULL;
     CNode = NULL;

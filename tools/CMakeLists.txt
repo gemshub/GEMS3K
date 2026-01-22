@@ -7,7 +7,8 @@ find_package(Threads REQUIRED)
 
 set(Tools
        kva2json
-       thread_test )
+       thread_test
+       thermofun_test)
 
 foreach (toolName ${Tools})
 
