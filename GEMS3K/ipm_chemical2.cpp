@@ -814,22 +814,31 @@ GEMU_CALC:
             }
             if (pm.XcapB[k][ist]<0.001)
             { // Extended CCM model [Nilsson ea 1996] as TLM with PsiD = 0
-                if (pm.XcapB[k][ist] == 0.0)
-                    break;
-               if (pm.SCM[k][ist] == SC_ISCCM)
-                   PsiB = - SigB / (sqrt(I)/pm.XcapB[k][ist]);
-               else
-                   PsiB = - SigB / pm.XcapB[k][ist];
-
+                if( approximatelyZero(pm.XcapB[k][ist])) {
+                    PsiB = -SigB<0? -0.3: 0.3;
+                    ipm_logger->debug("Extended CCM model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
+                }
+                else {
+                    if (pm.SCM[k][ist] == SC_ISCCM)
+                        PsiB = - SigB / (sqrt(I)/pm.XcapB[k][ist]);
+                    else
+                        PsiB = - SigB / pm.XcapB[k][ist];
+                }
                if( fabs( PsiB ) > 0.3 )  // truncated B-plane potential
                {
                    PsiB = PsiB<0? -0.3: 0.3;
                    status = 65;
                }
-               if (pm.SCM[k][ist] == SC_ISCCM)
-                   PsiA = PsiB + SigA / (sqrt(I)/pm.XcapA[k][ist]);
-               else
-                   PsiA = PsiB + SigA / pm.XcapA[k][ist];
+               if( approximatelyZero(pm.XcapA[k][ist])) {
+                   PsiA = PsiB<0? -0.7: 0.7;
+                   ipm_logger->debug("Extended CCM model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+               }
+               else {
+                   if (pm.SCM[k][ist] == SC_ISCCM)
+                       PsiA = PsiB + SigA / (sqrt(I)/pm.XcapA[k][ist]);
+                   else
+                       PsiA = PsiB + SigA / pm.XcapA[k][ist];
+               }
                if( fabs( PsiA ) > 0.7 )
                {
                   PsiA = PsiA<0? -0.7: 0.7;
@@ -841,16 +850,26 @@ GEMU_CALC:
             break;
         case SC_MTL:  // Modified Triple Layer Model for X- Robertson | Kulik
 // PsiD = 0.0; // test
-            if (pm.XcapB[k][ist] == 0.0)
-                break;
-            PsiB = PsiD - SigDDL / pm.XcapB[k][ist];
+            if( approximatelyZero(pm.XcapB[k][ist])) {
+                PsiB = PsiD<0 ? -0.6: 0.6;
+                ipm_logger->debug("Modified Triple Layer Model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
+            }
+            else {
+                PsiB = PsiD - SigDDL / pm.XcapB[k][ist];
+            }
             if( fabs( PsiB ) > 0.6)  // truncated B-plane potential
             {
                 ipm_logger->debug("EDL (MTL) PsiB = {} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 67;
             }
-            PsiA = PsiB + SigA / pm.XcapA[k][ist];
+            if( approximatelyZero(pm.XcapA[k][ist])) {
+                PsiA = PsiB<0? -1.1: 1.1;
+                ipm_logger->debug("Modified Triple Layer Model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+            }
+            else {
+                PsiA = PsiB + SigA / pm.XcapA[k][ist];
+            }
             if( fabs( PsiA ) > 1.1 )  // truncated 0 plane potential
             {
                 ipm_logger->debug("EDL (MTL) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
@@ -861,16 +880,26 @@ GEMU_CALC:
             pm.XpsiB[k][ist] = PsiB;
             break;
         case SC_TLM:  // Triple-Layer Model   [Hayes 1987]
-            if (pm.XcapB[k][ist] == 0.0)
-                break;
-            PsiB = PsiD - SigDDL / pm.XcapB[k][ist];
+            if( approximatelyZero(pm.XcapB[k][ist])) {
+                PsiB = PsiD<0 ? -0.6: 0.6;
+                ipm_logger->debug("Triple-Layer Model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
+            }
+            else {
+                PsiB = PsiD - SigDDL / pm.XcapB[k][ist];
+            }
             if( fabs( PsiB ) > 0.6 )  // // truncated B-plane potential
             {
                 ipm_logger->debug("EDL (TLM) PsiB ={} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 69;
             }
-            PsiA = PsiB + SigA / pm.XcapA[k][ist];
+            if( approximatelyZero(pm.XcapA[k][ist])) {
+                PsiA = PsiB<0? -1.1: 1.1;
+                ipm_logger->debug("Triple-Layer Model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+            }
+            else {
+                PsiA = PsiB + SigA / pm.XcapA[k][ist];
+            }
             if( fabs( PsiA ) > 1.1 )  // truncated 0-plane potential
             {
                 ipm_logger->debug("EDL (TLM) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
@@ -883,9 +912,13 @@ GEMU_CALC:
         case SC_3LM: // Three-Layer Model [Hiemstra & van Riemsdijk 1996]
 //            PsiB = PsiD + SigD / pm.XcapB[k][ist];
             ipm_logger->debug("EDL (3LM) PsiB(D) ={} IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
-            if (pm.XcapB[k][ist] == 0.0)
-                break;
-            PsiB = PsiD + ( SigA + SigB ) / pm.XcapB[k][ist];  // Compare!
+            if( approximatelyZero(pm.XcapB[k][ist])) {
+                PsiB = PsiD<0 ? -0.6: 0.6;
+                ipm_logger->debug("Three-Layer Model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
+            }
+            else {
+                PsiB = PsiD + ( SigA + SigB ) / pm.XcapB[k][ist];  // Compare!
+            }
             ipm_logger->debug("EDL (3LM) PsiB(AB) ={} IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
             if( fabs( PsiB ) > 0.6 )  // truncated B-plane potential
             {
@@ -893,9 +926,13 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 71;
             }
-            if (pm.XcapA[k][ist] == 0.0)
-                break;
-            PsiA = PsiB + SigA / pm.XcapA[k][ist];
+            if( approximatelyZero(pm.XcapA[k][ist])) {
+                PsiA = PsiB<0? -1.1: 1.1;
+                ipm_logger->debug("Three-Layer Model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+            }
+            else {
+                PsiA = PsiB + SigA / pm.XcapA[k][ist];
+            }
             if( fabs( PsiA ) > 1.1 )   // truncated 0-plane potential
             {
                ipm_logger->debug("EDL (3LM) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
@@ -913,9 +950,13 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 73;
             }
-            if (pm.XcapA[k][ist] == 0.0)
-                break;
-            PsiA = PsiB + SigA / pm.XcapA[k][ist];
+            if( approximatelyZero(pm.XcapA[k][ist])) {
+                PsiA = PsiB<0? -1.1: 1.1;
+                ipm_logger->debug("Basic Stern model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+            }
+            else {
+                PsiA = PsiB + SigA / pm.XcapA[k][ist];
+            }
             if( fabs( PsiA ) > 1.1 )  // truncated 0-plane potential
             {
                 ipm_logger->debug("EDL (BSM) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
@@ -933,9 +974,13 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 75;
             }
-            if (pm.XcapA[k][ist] == 0.0)
-                break;
-            PsiA = PsiB + SigA / pm.XcapA[k][ist];
+            if( approximatelyZero(pm.XcapA[k][ist])) {
+                PsiA = PsiB<0? -1.1: 1.1;
+                ipm_logger->debug("BSM for permanent charge surfaces XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+            }
+            else {
+                PsiA = PsiB + SigA / pm.XcapA[k][ist];
+            }
             if( fabs( PsiA ) > 1.1 ) // truncated 0-plane potential
             {
                 ipm_logger->debug("EDL (MXC) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
