@@ -799,7 +799,7 @@ GEMU_CALC:
             break;
         case SC_CCM:  // Constant-Capacitance Model Schindler, ext. Nilsson
         case SC_ISCCM: // 2026 SC_ISCCM uses dependcy of capacity with IS C = sqrt(IS)/alpha, alpha is given instead of capacity
-            if( pm.XcapB[k][ist] > 0.001 )
+            if( pm.XcapA[k][ist] > 0.0 )
             {  // Classic CCM Schindler with inner-sphere species only
                 if (pm.SCM[k][ist] == SC_ISCCM)
                     PsiA = SigA / (sqrt(I)/pm.XcapA[k][ist]);
@@ -812,14 +812,24 @@ GEMU_CALC:
                }
                pm.XpsiA[k][ist] = PsiA;
             }
-            else { // Extended CCM model [Nilsson ea 1996] as TLM with PsiD = 0
-               PsiB = - SigB / pm.XcapB[k][ist];
+            if (pm.XcapB[k][ist]<0.001)
+            { // Extended CCM model [Nilsson ea 1996] as TLM with PsiD = 0
+                if (pm.XcapB[k][ist] == 0.0)
+                    break;
+               if (pm.SCM[k][ist] == SC_ISCCM)
+                   PsiB = - SigB / (sqrt(I)/pm.XcapB[k][ist]);
+               else
+                   PsiB = - SigB / pm.XcapB[k][ist];
+
                if( fabs( PsiB ) > 0.3 )  // truncated B-plane potential
                {
                    PsiB = PsiB<0? -0.3: 0.3;
                    status = 65;
                }
-               PsiA = PsiB + SigA / pm.XcapA[k][ist];
+               if (pm.SCM[k][ist] == SC_ISCCM)
+                   PsiA = PsiB + SigA / (sqrt(I)/pm.XcapA[k][ist]);
+               else
+                   PsiA = PsiB + SigA / pm.XcapA[k][ist];
                if( fabs( PsiA ) > 0.7 )
                {
                   PsiA = PsiA<0? -0.7: 0.7;
@@ -831,6 +841,8 @@ GEMU_CALC:
             break;
         case SC_MTL:  // Modified Triple Layer Model for X- Robertson | Kulik
 // PsiD = 0.0; // test
+            if (pm.XcapB[k][ist] == 0.0)
+                break;
             PsiB = PsiD - SigDDL / pm.XcapB[k][ist];
             if( fabs( PsiB ) > 0.6)  // truncated B-plane potential
             {
@@ -849,6 +861,8 @@ GEMU_CALC:
             pm.XpsiB[k][ist] = PsiB;
             break;
         case SC_TLM:  // Triple-Layer Model   [Hayes 1987]
+            if (pm.XcapB[k][ist] == 0.0)
+                break;
             PsiB = PsiD - SigDDL / pm.XcapB[k][ist];
             if( fabs( PsiB ) > 0.6 )  // // truncated B-plane potential
             {
@@ -869,6 +883,8 @@ GEMU_CALC:
         case SC_3LM: // Three-Layer Model [Hiemstra & van Riemsdijk 1996]
 //            PsiB = PsiD + SigD / pm.XcapB[k][ist];
             ipm_logger->debug("EDL (3LM) PsiB(D) ={} IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
+            if (pm.XcapB[k][ist] == 0.0)
+                break;
             PsiB = PsiD + ( SigA + SigB ) / pm.XcapB[k][ist];  // Compare!
             ipm_logger->debug("EDL (3LM) PsiB(AB) ={} IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
             if( fabs( PsiB ) > 0.6 )  // truncated B-plane potential
@@ -877,6 +893,8 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 71;
             }
+            if (pm.XcapA[k][ist] == 0.0)
+                break;
             PsiA = PsiB + SigA / pm.XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 )   // truncated 0-plane potential
             {
@@ -895,6 +913,8 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 73;
             }
+            if (pm.XcapA[k][ist] == 0.0)
+                break;
             PsiA = PsiB + SigA / pm.XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 )  // truncated 0-plane potential
             {
@@ -913,6 +933,8 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 75;
             }
+            if (pm.XcapA[k][ist] == 0.0)
+                break;
             PsiA = PsiB + SigA / pm.XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 ) // truncated 0-plane potential
             {
