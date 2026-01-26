@@ -815,7 +815,7 @@ GEMU_CALC:
             if (pm.XcapB[k][ist]<0.001)
             { // Extended CCM model [Nilsson ea 1996] as TLM with PsiD = 0
                 if( approximatelyZero(pm.XcapB[k][ist])) {
-                    PsiB = -SigB<0? -0.3: 0.3;
+                    PsiB = 0.0; //-SigB<0? -0.3: 0.3;
                     ipm_logger->debug("Extended CCM model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
                 }
                 else {
@@ -830,7 +830,7 @@ GEMU_CALC:
                    status = 65;
                }
                if( approximatelyZero(pm.XcapA[k][ist])) {
-                   PsiA = PsiB<0? -0.7: 0.7;
+                   PsiA = 0.0; // SigA<0? -0.7: 0.7;
                    ipm_logger->debug("Extended CCM model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
                }
                else {
@@ -851,7 +851,7 @@ GEMU_CALC:
         case SC_MTL:  // Modified Triple Layer Model for X- Robertson | Kulik
 // PsiD = 0.0; // test
             if( approximatelyZero(pm.XcapB[k][ist])) {
-                PsiB = PsiD<0 ? -0.6: 0.6;
+                PsiB = 0.0; //SigB<0 ? -0.6: 0.6;
                 ipm_logger->debug("Modified Triple Layer Model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
             }
             else {
@@ -864,7 +864,7 @@ GEMU_CALC:
                 status = 67;
             }
             if( approximatelyZero(pm.XcapA[k][ist])) {
-                PsiA = PsiB<0? -1.1: 1.1;
+                PsiA = 0.0; //SigA<0? -1.1: 1.1;
                 ipm_logger->debug("Modified Triple Layer Model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
             }
             else {
@@ -881,7 +881,7 @@ GEMU_CALC:
             break;
         case SC_TLM:  // Triple-Layer Model   [Hayes 1987]
             if( approximatelyZero(pm.XcapB[k][ist])) {
-                PsiB = PsiD<0 ? -0.6: 0.6;
+                PsiB = 0.0; // SigB<0 ? -0.6: 0.6;
                 ipm_logger->debug("Triple-Layer Model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
             }
             else {
@@ -894,7 +894,7 @@ GEMU_CALC:
                 status = 69;
             }
             if( approximatelyZero(pm.XcapA[k][ist])) {
-                PsiA = PsiB<0? -1.1: 1.1;
+                PsiA = 0.0; // SigA<0? -1.1: 1.1;
                 ipm_logger->debug("Triple-Layer Model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
             }
             else {
@@ -913,7 +913,7 @@ GEMU_CALC:
 //            PsiB = PsiD + SigD / pm.XcapB[k][ist];
             ipm_logger->debug("EDL (3LM) PsiB(D) ={} IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
             if( approximatelyZero(pm.XcapB[k][ist])) {
-                PsiB = PsiD<0 ? -0.6: 0.6;
+                PsiB = 0.0; //SigA<0 ? -0.6: 0.6;
                 ipm_logger->debug("Three-Layer Model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
             }
             else {
@@ -927,7 +927,7 @@ GEMU_CALC:
                 status = 71;
             }
             if( approximatelyZero(pm.XcapA[k][ist])) {
-                PsiA = PsiB<0? -1.1: 1.1;
+                PsiA = 0.0; // SigA<0? -1.1: 1.1;
                 ipm_logger->debug("Three-Layer Model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
             }
             else {
@@ -951,7 +951,7 @@ GEMU_CALC:
                 status = 73;
             }
             if( approximatelyZero(pm.XcapA[k][ist])) {
-                PsiA = PsiB<0? -1.1: 1.1;
+                PsiA = 0.0; // SigA<0? -1.1: 1.1;
                 ipm_logger->debug("Basic Stern model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
             }
             else {
@@ -975,7 +975,7 @@ GEMU_CALC:
                 status = 75;
             }
             if( approximatelyZero(pm.XcapA[k][ist])) {
-                PsiA = PsiB<0? -1.1: 1.1;
+                PsiA = 0.0; // SigA<0? -1.1: 1.1;
                 ipm_logger->debug("BSM for permanent charge surfaces XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
             }
             else {
