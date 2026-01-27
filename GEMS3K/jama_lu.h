@@ -3,7 +3,6 @@
 
 #include "tnt.h"
 #include <algorithm>
-#include "v_detail.h"
 using namespace TNT;
 using namespace std;
 
