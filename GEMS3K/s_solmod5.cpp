@@ -31,6 +31,7 @@ using namespace std;
 //#include "verror.h"
 #include "s_solmod.h"
 #include "jsonconfig.h"
+#include "v_detail.h"
 
 //=============================================================================================
 // SIT model (NEA version) reimplementation for aqueous electrolyte solutions

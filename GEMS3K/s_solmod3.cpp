@@ -28,7 +28,7 @@
 //-------------------------------------------------------------------
 
 #include "s_solmod.h"
-//#include "v_detail.h"
+#include "v_detail.h"
 
 //=============================================================================================
 // Implementation of ideal mixing model for multicomponent solid solutions
