@@ -28,7 +28,7 @@
 //-------------------------------------------------------------------
 
 #include "s_solmod.h"
-//#include "v_detail.h"
+#include "v_detail.h"
 
 //=============================================================================================
 // Implementation of ideal mixing model for multicomponent solid solutions
@@ -2433,7 +2433,7 @@ long int TBerman::ExcessPart()
             if( y0jsm <= 0. )
                continue; // skip - this moiety is not present on s site in this end member
 
-            if (y[s][m] == 0. && y0jsm > 0.) // DM 08.03.2024 // to prevent zerodivide in eq (5.2-3)
+            if (approximatelyZero(y[s][m]) && y0jsm > 0.) // DM 08.03.2024 // to prevent zerodivide in eq (5.2-3)
                 continue;
 
             // looking through the parameters list

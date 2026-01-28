@@ -3,7 +3,6 @@
 
 #include "tnt.h"
 #include <algorithm>
-#include "v_detail.h"
 using namespace TNT;
 using namespace std;
 
@@ -82,16 +81,16 @@ class LU
       // Outer loop.
 
       for (int j = 0; j < n; j++) {
-         int i;
+
          // Make a copy of the j-th column to localize references.
 
-         for ( i = 0; i < m; i++) {
+         for (int i = 0; i < m; i++) {
             LUcolj[i] = LU_[i][j];
          }
 
          // Apply previous transformations.
 
-         for ( i = 0; i < m; i++) {
+         for (int i = 0; i < m; i++) {
             LUrowi = LU_[i];
 
             // Most of the time is spent in the following dot product.
@@ -108,8 +107,8 @@ class LU
          // Find pivot and exchange if necessary.
 
          int p = j;
-         for ( i = j+1; i < m; i++) {
-            if (fabs(LUcolj[i]) > fabs(LUcolj[p])) {
+         for (int i = j+1; i < m; i++) {
+            if (abs(LUcolj[i]) > abs(LUcolj[p])) {
                p = i;
             }
          }
@@ -128,7 +127,7 @@ class LU
 
          // Compute multipliers.
 
-         if ( (j < m) && noZero(LU_[j][j]) ) {
+         if ( (j < m) && (LU_[j][j] != 0.0) ) {
             for (int ii = j+1; ii < m; ii++) {
                LU_[ii][j] /= LU_[j][j];
             }
@@ -144,7 +143,7 @@ class LU
 
    int isNonsingular () {
       for (int j = 0; j < n; j++) {
-         if ( approximatelyZero( LU_[j][j] ))
+         if (LU_[j][j] == 0)
             return 0;
       }
       return 1;
@@ -270,7 +269,7 @@ class LU
 
    Array1D<Real> solve (const Array1D<Real> &b)
    {
-     int k;
+
 	  /* Dimensions: A is mxn, X is nxk, B is mxk */
 
       if (b.dim1() != m) {
@@ -284,14 +283,14 @@ class LU
       Array1D<Real> x = permute_copy(b, piv1);
 
       // Solve L*Y = B(piv)
-      for ( k = 0; k < n; k++) {
+      for (int k = 0; k < n; k++) {
          for (int i = k+1; i < n; i++) {
                x[i] -= x[k]*LU_[i][k];
             }
          }
 
 	  // Solve U*X = Y;
-      for ( k = n-1; k >= 0; k--) {
+      for (int k = n-1; k >= 0; k--) {
             x[k] /= LU_[k][k];
       		for (int i = 0; i < k; i++)
             	x[i] -= x[k]*LU_[i][k];

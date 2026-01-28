@@ -31,6 +31,7 @@ using namespace std;
 //#include "verror.h"
 #include "s_solmod.h"
 #include "jsonconfig.h"
+#include "v_detail.h"
 
 //=============================================================================================
 // SIT model (NEA version) reimplementation for aqueous electrolyte solutions
@@ -1573,7 +1574,7 @@ void TPitzer::ETHETAS(double ZJ, double ZK, double I, double DH_term, double& et
    //*etheta = 0.0;
    //*ethetap = 0.0;
 
-   if (ZJ == ZK)
+    if (essentiallyEqual(ZJ, ZK))
       return /*(OK)*/;
 
    const double XCON = 6.0e0 * DH_term * sqrt(I);
