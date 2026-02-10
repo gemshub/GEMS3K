@@ -300,6 +300,12 @@ class LU
       return x;
    }
 
+   std::string to_string() const
+   {
+       std::string buf = "LU Decomposition\n";
+       return buf+LU_.to_string();
+   }
+
 }; /* class LU */
 
 } /* namespace JAMA */

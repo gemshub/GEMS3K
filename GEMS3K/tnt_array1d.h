@@ -26,7 +26,7 @@
 #include <cassert>
 #endif
 
-
+#include "sstream"
 #include "tnt_i_refvec.h"
 
 namespace TNT
@@ -78,6 +78,8 @@ class Array1D
 
 	inline int ref_count() const;
 	inline Array1D<T> subarray(int i0, int i1);
+
+    inline std::string to_string() const;
 
 };
 
@@ -224,6 +226,16 @@ inline Array1D<T> Array1D<T>::subarray(int i0, int i1)
 	{
 		return Array1D<T>();
 	}
+}
+
+template<class T>
+inline std::string Array1D<T>::to_string() const
+{
+    std::stringstream buf;
+    for(int jj=0; jj<n_; ++jj) {
+        buf << data_[jj] << " ";
+    }
+    return buf.str();
 }
 
 

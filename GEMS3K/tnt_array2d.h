@@ -200,6 +200,8 @@ class Array2D
 	inline int ref_count_dim1();
 	Array2D subarray(int i0, int i1, int j0, int j1);
 
+    inline std::string to_string() const;
+
 };
 
 
@@ -439,6 +441,19 @@ template <class T>
 inline int Array2D<T>::ref_count_dim1()
 {
 	return v_.ref_count();
+}
+
+template<class T>
+inline std::string Array2D<T>::to_string() const
+{
+    std::stringstream buf;
+    for(int i=0; i<m_; ++i) {
+        for(int j=0; j<n_; j++) {
+            buf << v_[i][j] << " ";
+        }
+        buf << "\n";
+    }
+    return buf.str();
 }
 
 

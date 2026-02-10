@@ -720,6 +720,9 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         }
     } // ii
 
+    // Add full multy to test
+    auto multi_txt = filepath+".txt";
+    calcNode->multi_ptr()->to_text_file(multi_txt.c_str(), false);
     return dbr_lst_file_path;
 }
 

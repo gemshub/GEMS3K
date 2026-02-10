@@ -154,7 +154,7 @@ void GemDataStream::setByteOrder( int bo )
 #else
     swap = (byteorder == BigEndian);
 #endif
-    gems_logger->debug("byteorder is BigEndian {}", swap);
+    gems_logger->trace("byteorder is BigEndian {}", swap);
 }
 
 // NOTE: these functions better to write as a templates!!
