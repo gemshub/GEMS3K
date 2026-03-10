@@ -312,7 +312,7 @@ std::vector<std::string> SolModFactory::Get_AllElementNames()
 {
     std::vector<std::string> names;
     for(long int ii=0; ii<CSD->nIC; ++ii) {
-        names.push_back(char_array_to_string(CSD->ICNL[ii], MAXICNAME));
+        names.push_back(CSD->ICNL[ii]);
     }
     return names;
 }
@@ -321,7 +321,7 @@ std::vector<std::string> SolModFactory::Get_AllSpeciesNames()
 {
     std::vector<std::string> names;
     for(long int ii=0; ii<CSD->nDC; ++ii) {
-        names.push_back(char_array_to_string(CSD->DCNL[ii], MAXDCNAME));
+        names.push_back(CSD->DCNL[ii]);
     }
     return names;
 }
@@ -330,7 +330,7 @@ std::vector<std::string> SolModFactory::Get_AllPhasesNames()
 {
     std::vector<std::string> names;
     for(long int ii=0; ii<CSD->nPH; ++ii) {
-        names.push_back(char_array_to_string(CSD->PHNL[ii], MAXPHNAME));
+        names.push_back(CSD->PHNL[ii]);
     }
     return names;
 }

@@ -717,11 +717,11 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     }
 
     for( ii=0; ii< dCH->nIC; ii++ )
-    { pm.Awt[ii]  = dCH->ICmm[ii]*1e3;
+    {
+        pm.Awt[ii]  = dCH->ICmm[ii]*1e3;
         fillValue(pm.SB[ii], ' ', MaxICN );
-        len = strlen(dCH->ICNL[ii]);
-        //len = min(  len,MaxICN);
-        copyValues( pm.SB[ii], dCH->ICNL[ii], std::min<size_t>(len,MAXICNAME));
+        len = dCH->ICNL[ii].length();
+        copyValues(pm.SB[ii], dCH->ICNL[ii], std::min<size_t>(len,MAXICNAME));
         pm.SB[ii][MaxICN] = dCH->ccIC[ii];
         pm.ICC[ii] =  dCH->ccIC[ii];
     }
@@ -738,15 +738,13 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     {
         pm.MM[ii] = dCH->DCmm[ii]*1e3;
         pm.DCC[ii] = dCH->ccDC[ii];
-        len =strlen(dCH->DCNL[ii]);
-        //len = min(  len,MaxDCN);
-        copyValues( pm.SM[ii], dCH->DCNL[ii], std::min<size_t>(len,MAXDCNAME) );
+        len = dCH->DCNL[ii].length();
+        copyValues(pm.SM[ii], dCH->DCNL[ii], std::min<size_t>(len,MAXDCNAME) );
     }
 
     for( ii=0; ii< dCH->nPH; ii++ )
     {
-        len =strlen(dCH->PHNL[ii]);
-        //len = min(  len,MaxPHN);
+        len = dCH->PHNL[ii].length();
         fillValue( pm.SF[ii], ' ', MAXPHNAME+MAXSYMB );
         copyValues( pm.SF[ii]+MAXSYMB, dCH->PHNL[ii], std::min<size_t>(len,MAXPHNAME) );
         pm.SF[ii][0] = dCH->ccPH[ii];
@@ -1247,7 +1245,7 @@ void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerato
     case GEMS3KGenerator::f_thermofun:
 #ifdef USE_NLOHMANNJSON
     {
-        io_formats::NlohmannJsonWrite out_format( stream, test_set_name );
+        io_formats::NlohmannJsonWrite out_format( stream, test_set_name, with_comments );
         to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
     }
 #else

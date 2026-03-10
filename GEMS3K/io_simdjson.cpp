@@ -106,6 +106,8 @@ public:
     void read_double_array( const std::string& name, std::vector<double>& arr );
     /// Reads int vector from a text file.
     void read_int_array(const std::string &field_name, std::vector<int64_t>& arr);
+    /// Reads string vector from a text file.
+    void read_strings_array( const std::string& name, std::vector<std::string>& arr );
 
 protected:
 
@@ -191,6 +193,28 @@ void SimdJsonImpl::read_int_array(const std::string &field_name, std::vector<int
     }
 }
 
+void SimdJsonImpl::read_strings_array(const std::string &field_name, std::vector<std::string>& arr)
+{
+    try {
+        arr.clear();
+        simdjson::dom::element json_arr = json_data[field_name];
+
+        if(json_arr.type() == simdjson::dom::element_type::ARRAY) {
+            for(const auto& sv: json_arr) {
+                arr.push_back(static_cast<std::string>(sv));
+            }
+        }
+        else  {
+            std::string_view sv = json_arr;
+            arr.push_back(static_cast<std::string>(sv));
+        }
+    }
+    catch(simdjson::simdjson_error& err) {
+        gems_logger->error("SimdJson read error : {}.{}", std::to_string(err.error()), err.what());
+        Error( std::string("SimdJson read error :") + std::to_string(err.error()), err.what() );
+    }
+}
+
 
 
 //------------------------------------------------------------------------------------------
@@ -232,6 +256,11 @@ void SimdJsonRead::read_double_array(const std::string &field_name, std::vector<
 void SimdJsonRead::read_int_array(const std::string &field_name, std::vector<int64_t>& arr)
 {
     impl->read_int_array( field_name, arr);
+}
+
+void SimdJsonRead::read_strings_array(const std::string &field_name, std::vector<std::string>& arr)
+{
+    impl->read_strings_array(field_name, arr);
 }
 
 template <> float SimdJsonRead::internal_cast( double value )

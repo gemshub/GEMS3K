@@ -814,7 +814,7 @@ void SolModEngine::map2property(const std::map<std::string, double> &dsc_name_ma
 void SolModEngine::to_json_stream_short(std::ostream& ff) const
 {
 #ifdef USE_NLOHMANNJSON
-    io_formats::NlohmannJsonWrite out_format( ff, "set_name" );
+    io_formats::NlohmannJsonWrite out_format( ff, "set_name", true );
 #else
     io_formats::SimdJsonWrite out_format( ff, "set_name", true );
 #endif

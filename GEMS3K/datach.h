@@ -30,6 +30,10 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //------------------------------------------------------------------------------
 //
+
+#include <vector>
+#include <string>
+
 #ifndef DataCh_H_
 #define DataCh_H_
 
@@ -109,9 +113,9 @@ typedef struct
     *U0;    ///< Optional lookup array for Internal energy of DC (J/K/mol) [nDC][nPp][nTp]
 
 // Name lists
-  char (*ICNL)[MaxICN]; ///< List of IC names in the system, [nIC]  of MaxICN length
-  char (*DCNL)[MaxDCN]; ///< List of DC names in the system, [nDC] of MaxDCN length
-  char (*PHNL)[MaxPHN]; ///< List of Phase names  [nPH]  of MaxPHN length
+  std::vector<std::string> ICNL; ///< List of IC names in the system, [nIC]  of MaxICN length
+  std::vector<std::string> DCNL; ///< List of DC names in the system, [nDC] of MaxDCN length
+  std::vector<std::string> PHNL; ///< List of Phase names  [nPH]  of MaxPHN length
 
 // Class code lists
    char *ccIC,   ///< Class codes of IC, see  enum ICL_CLASSES  [nIC]

@@ -608,23 +608,23 @@ public:
 
     /// Returns DCH index of IC given the IC Name string (null-terminated)
     /// or -1 if no such name was found in the DATACH IC name list
-    long int IC_name_to_xCH( const char *Name ) const;
+    long int IC_name_to_xCH(const std::string& name) const;
 
     /// Returns DCH index of DC given the DC Name string
     /// or -1 if no such name was found in the DATACH DC name list
-    long int DC_name_to_xCH( const char *Name ) const;
+    long int DC_name_to_xCH(const std::string& name) const;
 
     /// Returns DC Name string given the DCH index of DC, check MaxDCnameLength
     /// or -1 if no such name was found in the DATACH DC name list
-    char* xCH_to_DC_name( int xCH ) const
+    const std::string& xCH_to_DC_name( int xCH ) const
     {return CSD->DCNL[xCH];}
 
-    char* xCH_to_PH_name( int xCH ) const
+    const std::string& xCH_to_PH_name( int xCH ) const
     {return CSD->PHNL[xCH];}
 
     /// Returns IC Name string given the ICH index of IC, check MaxICnameLength
     /// or -1 if no such name was found in the DATACH IC name list
-    char* xCH_to_IC_name( int xCH ) const
+    const std::string& xCH_to_IC_name( int xCH ) const
     {return CSD->ICNL[xCH];}
 
     /// Returns the class codes of phase given the ICH index of PH, check check MaxPHnameLength
@@ -645,22 +645,22 @@ public:
 
     /// Returns DCH index of Phase given the Phase Name string
     /// or -1 if no such name was found in the DATACH Phase name list
-    long int Ph_name_to_xCH( const char *Name ) const;
+    long int Ph_name_to_xCH(const std::string& name) const;
 
     /// Returns DBR index of IC given the IC Name string
     /// or -1 if no such name was found in the DATACH IC name list
-    inline long int IC_name_to_xDB( const char *Name ) const
-    { return IC_xCH_to_xDB( IC_name_to_xCH( Name ) ); }
+    inline long int IC_name_to_xDB(const std::string& name) const
+    { return IC_xCH_to_xDB( IC_name_to_xCH( name ) ); }
 
     /// Returns DBR index of DC given the DC Name string
     /// or -1 if no such name was found in the DATACH DC name list
-    inline long int DC_name_to_xDB( const char *Name ) const
-    { return DC_xCH_to_xDB( DC_name_to_xCH( Name ) ); }
+    inline long int DC_name_to_xDB(const std::string& name) const
+    { return DC_xCH_to_xDB( DC_name_to_xCH( name ) ); }
 
     /// Returns DBR index of Phase given the Phase Name string
     /// or -1 if no such name was found in the DATACH Phase name list
-    inline long int Ph_name_to_xDB( const char *Name ) const
-    { return Ph_xCH_to_xDB( Ph_name_to_xCH( Name ) ); }
+    inline long int Ph_name_to_xDB(const std::string& name) const
+    { return Ph_xCH_to_xDB( Ph_name_to_xCH( name ) ); }
 
     /// Converts the IC DCH index into the IC DBR index
     /// or returns -1 if this IC is not used in the data bridge

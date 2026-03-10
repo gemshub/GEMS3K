@@ -106,46 +106,40 @@ long TNode::get_sizeTSolMod()
 
 //Returns DCH index of IC given the IC Name string (null-terminated)
 // or -1 if no such name was found in the DATACH IC name list
-long int TNode::IC_name_to_xCH( const char *Name ) const
+long int TNode::IC_name_to_xCH(const std::string& name) const
 {
     long int ii;
-    size_t len = strlen( Name );
-    len =  std::min<size_t>(len,MaxICN);
-
-    for(ii = 0; ii<CSD->nIC; ii++ )
-        if(!memcmp(Name, CSD->ICNL[ii], len ))
-            if( len == MaxICN || CSD->ICNL[ii][len] == ' ' || CSD->ICNL[ii][len] == '\0' )
-                return ii;
+    for(ii = 0; ii<CSD->ICNL.size(); ii++) {
+        if(name == CSD->ICNL[ii]) {
+            return ii;
+        }
+    }
     return -1;
 }
 
 // Returns DCH index of DC given the DC Name string
 // or -1 if no such name was found in the DATACH DC name list
-long int TNode::DC_name_to_xCH( const char *Name ) const
+long int TNode::DC_name_to_xCH(const std::string& name) const
 {
     long int ii;
-    size_t len = strlen( Name );
-    len =  std::min<size_t>(len,MaxDCN);
-
-    for( ii = 0; ii<CSD->nDC; ii++ )
-        if(!memcmp(Name, CSD->DCNL[ii], std::min<size_t>(len,MaxDCN)))
-            if( len == MaxDCN || CSD->DCNL[ii][len] == ' ' || CSD->DCNL[ii][len] == '\0' )
-                return ii;
+    for(ii = 0; ii<CSD->DCNL.size(); ii++) {
+        if(name == CSD->DCNL[ii]) {
+            return ii;
+        }
+    }
     return -1;
 }
 
 // Returns DCH index of Phase given the Phase Name string
 // or -1 if no such name was found in the DATACH Phase name list
-long int TNode::Ph_name_to_xCH( const char *Name ) const
+long int TNode::Ph_name_to_xCH(const std::string& name) const
 {
     long int ii;
-    size_t len = strlen( Name );
-    len =  std::min<size_t>(len,MaxPHN);
-
-    for( ii = 0; ii<CSD->nPH; ii++ )
-        if(!memcmp(Name, CSD->PHNL[ii], std::min<size_t>(len,MaxPHN)))
-            if( len == MaxPHN || CSD->PHNL[ii][len] == ' ' || CSD->PHNL[ii][len] == '\0' )
-                return ii;
+    for(ii = 0; ii<CSD->nPH; ii++) {
+        if(name == CSD->PHNL[ii]) {
+            return ii;
+        }
+    }
     return -1;
 }
 

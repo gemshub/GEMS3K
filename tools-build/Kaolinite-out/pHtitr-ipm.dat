@@ -1,5 +1,5 @@
 
-#  GEMS3K v.3.9.5 c.6dae7a9
+#  GEMS3K v.4.5.1 (ChemicalFun v.0.1.13, ThermoFun v.0.5.4) c.f050197
 # Comments can be marked with # $ ; as the first character in the line
 # IPM text input file for the internal GEM IPM-3 kernel data
 # (should be read after the DCH file and before DBR files)

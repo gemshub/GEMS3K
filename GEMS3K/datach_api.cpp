@@ -199,7 +199,7 @@ void write_dch_format_stream(const std::string& current_output_set_name, const D
     case GEMS3KGenerator::f_thermofun:
 #ifdef USE_NLOHMANNJSON
     {
-        io_formats::NlohmannJsonWrite out_format(stream, current_output_set_name);
+        io_formats::NlohmannJsonWrite out_format(stream, current_output_set_name, with_comments);
         datach_to_text_file(pCSD, out_format, type_f==GEMS3KGenerator::f_thermofun, with_comments, brief_mode);
     }
 #else
@@ -261,7 +261,7 @@ void write_dbr_format_stream(const std::string& current_output_set_name, const D
     case GEMS3KGenerator::f_thermofun:
 #ifdef USE_NLOHMANNJSON
     {
-        io_formats::NlohmannJsonWrite out_format( stream, current_output_set_name );
+        io_formats::NlohmannJsonWrite out_format( stream, current_output_set_name, with_comments );
         databr_to_text_file(pCSD, pCNode, out_format, with_comments, brief_mode);
     }
 #else
@@ -371,9 +371,13 @@ void datach_realloc(DATACH* CSD)
         CSD->DD = new double[CSD->nDCs*gridTP(CSD)];
     else
         CSD->DD = 0;
-    CSD->ICNL = new char[CSD->nIC][MaxICN];
-    CSD->DCNL = new char[CSD->nDC][MaxDCN];
-    CSD->PHNL = new char[CSD->nPH][MaxPHN];
+
+    CSD->ICNL.clear();
+    CSD->DCNL.clear();
+    CSD->PHNL.clear();
+    ///CSD->ICNL = new char[CSD->nIC][MaxICN];
+    ///CSD->DCNL = new char[CSD->nDC][MaxDCN];
+    ///CSD->PHNL = new char[CSD->nPH][MaxPHN];
 
     CSD->ccIC = new char[CSD->nIC];
     CSD->ccDC = new char[CSD->nDC];
@@ -474,18 +478,9 @@ void datach_free(DATACH* CSD)
         CSD->DD = 0;
     }
 
-    if( CSD->ICNL )
-    { delete[] CSD->ICNL;
-        CSD->ICNL = 0;
-    }
-    if( CSD->DCNL )
-    { delete[] CSD->DCNL;
-        CSD->DCNL = 0;
-    }
-    if( CSD->PHNL )
-    { delete[] CSD->PHNL;
-        CSD->PHNL = 0;
-    }
+    CSD->ICNL.clear();
+    CSD->DCNL.clear();
+    CSD->PHNL.clear();
 
     if( CSD->ccIC )
     { delete[] CSD->ccIC;
@@ -770,9 +765,9 @@ void datach_reset(DATACH* CSD)
     CSD->Cp0 = 0;
     CSD->A0 = 0;
     CSD->U0 = 0;
-    CSD->ICNL = 0;
-    CSD->DCNL = 0;
-    CSD->PHNL = 0;
+    CSD->ICNL.clear();
+    CSD->DCNL.clear();
+    CSD->PHNL.clear();
     CSD->ccIC = 0;
     CSD->ccDC = 0;
     CSD->ccPH = 0;

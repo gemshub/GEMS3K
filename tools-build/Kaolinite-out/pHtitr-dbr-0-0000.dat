@@ -1,5 +1,5 @@
 
-#  GEMS3K v.3.9.5 c.6dae7a9
+#  GEMS3K v.4.5.1 (ChemicalFun v.0.1.13, ThermoFun v.0.5.4) c.f050197
 # Comments can be marked with # $ ; as the first character in the line
 # DBR text input file for node system recipe and speciation data
 # (should be read only after the DCH and the IPM files)
@@ -30,11 +30,11 @@
 # Ms: Mass of reactive subsystem, kg (GEM output)
 <Ms>  1.03351311372714
 # Mi: Mass of inert subsystem, kg (mass transport)
-<Mi>  0
+<Mi>  -inf
 # Hs: Total enthalpy of reactive subsystem, J (reserved)
 <Hs>  0
 # Hi: Total enthalpy of inert subsystem, J (reserved, mass transport) 
-<Hi>  0
+<Hi>  nan
 # Gs: Total Gibbs energy of the reactive subsystem, J/(RT) (GEM output)
 <Gs>  -5393.36071433982
 # IS: Effective aqueous ionic strength, molal (GEM output)
