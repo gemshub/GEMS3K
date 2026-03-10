@@ -640,7 +640,7 @@ void TNodeArray::logDiffsIC( FILE* diffile, long int t, double at, long int nx, 
 
     fprintf( diffile, "\nStep= %-8ld  Time= %-12.4g\nNode#   ", t, at );
     for( ie=0; ie < (pCSD()->nICb); ie++ )
-        fprintf( diffile, "%-12.4s ", pCSD()->ICNL[ie] );
+        fprintf( diffile, "%-12.4s ", pCSD()->ICNL[ie].c_str() );
     for (i=0; i<nx; i++)    // node iteration
     {
         fprintf( diffile, "\n%5ld   ", i );
@@ -666,7 +666,7 @@ void TNodeArray::logProfileAqDC( FILE* logfile, long int t, double at, long int 
     fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g, s\tDissolved species concentrations, M\n", t, at );
     fprintf(logfile, "%s","Node#   ");
     for( is=0; is < (pCSD()->nDCb); is++ )
-        fprintf( logfile, "%-12.4s ", pCSD()->DCNL[is] );
+        fprintf( logfile, "%-12.4s ", pCSD()->DCNL[is].c_str() );
     for (i=0; i<nx; i++)    // node iteration
     {
         fprintf( logfile, "\n%5ld   ", i );
@@ -691,7 +691,7 @@ void TNodeArray::logProfileAqIC( FILE* logfile, long int t, double at, long int 
     fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tDissolved IC total concentrations, M\n", t, at );
     fprintf(logfile, "%s","Node#   ");
     for( ie=0; ie < (pCSD()->nICb); ie++ )
-        fprintf( logfile, "%-12.4s ", pCSD()->ICNL[ie] );
+        fprintf( logfile, "%-12.4s ", pCSD()->ICNL[ie].c_str() );
     for (i=0; i<nx; i++)    // node iteration
     {
         fprintf( logfile, "\n%5ld   ", i );
@@ -717,7 +717,7 @@ void TNodeArray::logProfileTotIC( FILE* logfile, long int t, double at, long int
     fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tBulk IC amounts, moles\n", t, at );
     fprintf(logfile, "%s","Node#   ");
     for( ie=0; ie < (pCSD()->nICb); ie++ )
-        fprintf( logfile, "%-12.4s ", pCSD()->ICNL[ie] );
+        fprintf( logfile, "%-12.4s ", pCSD()->ICNL[ie].c_str() );
     for (i=0; i<nx; i++)    // node iteration
     {
         fprintf( logfile, "\n%5ld   ", i );
@@ -740,7 +740,7 @@ void TNodeArray::logProfilePhMol( FILE* logfile, PhaseDataLogFunction phLog, lon
     fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tAmounts of reactive phases, moles\n", t, at );
     fprintf(logfile, "%s","Node#   ");
     for( ip=0; ip < (pCSD()->nPHb); ip++ )
-        fprintf( logfile, "%-12.12s ", pCSD()->PHNL[ip] );
+        fprintf( logfile, "%-12.12s ", pCSD()->PHNL[ip].c_str() );
     for (i=0; i<nx; i++)    // node iteration
     {
         fprintf( logfile, "\n%5ld   ", i );
@@ -767,7 +767,7 @@ void TNodeArray::logProfilePhVol( FILE* logfile, long int t, double at, long int
     fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tVolumes of reactive phases, moles\n", t, at );
     fprintf(logfile, "%s","Node#   ");
     for( ip=0; ip < (pCSD()->nPHb); ip++ )
-        fprintf( logfile, "%-12.12s ", pCSD()->PHNL[ip] );
+        fprintf( logfile, "%-12.12s ", pCSD()->PHNL[ip].c_str() );
     for (i=0; i<nx; i++)    // node iteration
     {
         fprintf( logfile, "\n%5ld  ", i );
