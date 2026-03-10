@@ -123,7 +123,7 @@ public:
     }
 
     void writeArray(const std::vector<std::string>& arr);
-    void readArray(std::vector<std::string> arr, int size);
+    void readArray(std::vector<std::string>& arr, int size);
 
     void readArray( char* arr, int size );
     void writeArray( char* arr, int size );

@@ -282,7 +282,7 @@ void GemDataStream::writeArray(const std::vector<std::string> &arr)
     }
 }
 
-void GemDataStream::readArray(std::vector<std::string> arr, int count)
+void GemDataStream::readArray(std::vector<std::string>& arr, int count)
 {
     arr.clear();
     arr.reserve(count);
