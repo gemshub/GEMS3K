@@ -267,10 +267,10 @@ void SolModFactory::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     for( ii=0; ii< dCH->nIC; ii++ )
     {
         pm.Awt[ii]  = dCH->ICmm[ii]*1e3;
-        fillValue(pm.SB[ii], ' ', MaxICN );
+        fillValue(pm.SB[ii], ' ', MAXICNAME );
         len = dCH->ICNL[ii].length();
         copyValues( pm.SB[ii], dCH->ICNL[ii], std::min<size_t>(len,MAXICNAME));
-        pm.SB[ii][MaxICN] = dCH->ccIC[ii];
+        pm.SB[ii][MAXICNAME] = dCH->ccIC[ii];
         pm.ICC[ii] =  dCH->ccIC[ii];
     }
 

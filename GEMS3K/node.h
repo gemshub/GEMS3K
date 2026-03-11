@@ -74,11 +74,6 @@ extern const double bar_to_Pa,
 m3_to_cm3,
 kg_to_g;
 
-// const long int
-// MaxICnameLength =      6,      // IC name length
-// MaxDCnameLength =      16,     // DC name length
-// MaxPHnameLength =      16;     // PH name length
-
 /// \class TNode (GEMS3K kernel)
 /// Implements a simple C/C++ interface between GEM IPM and FMT codes.
 /// Works with DATACH and work DATABR structures without using
@@ -610,9 +605,12 @@ public:
     /// or -1 if no such name was found in the DATACH IC name list
     long int IC_name_to_xCH(const std::string& name) const;
 
-    /// Returns DCH index of DC given the DC Name string
+    /// Returns first DCH index of DC given the DC Name string
     /// or -1 if no such name was found in the DATACH DC name list
     long int DC_name_to_xCH(const std::string& name) const;
+
+    /// Returns all DCH indexes and the corresponding phase names  given the DC Name string
+    std::map<std::string, long int> DC_name_to_xCH_map(const std::string& name) const;
 
     /// Returns DC Name string given the DCH index of DC, check MaxDCnameLength
     /// or -1 if no such name was found in the DATACH DC name list
@@ -652,10 +650,13 @@ public:
     inline long int IC_name_to_xDB(const std::string& name) const
     { return IC_xCH_to_xDB( IC_name_to_xCH( name ) ); }
 
-    /// Returns DBR index of DC given the DC Name string
+    /// Returns first DBR index of DC given the DC Name string
     /// or -1 if no such name was found in the DATACH DC name list
     inline long int DC_name_to_xDB(const std::string& name) const
     { return DC_xCH_to_xDB( DC_name_to_xCH( name ) ); }
+
+    /// Returns all DBR indexes and the corresponding phase names  given the DC Name string
+    std::map<std::string, long int> DC_xCH_to_xDB_map(const std::string& name) const;
 
     /// Returns DBR index of Phase given the Phase Name string
     /// or -1 if no such name was found in the DATACH Phase name list

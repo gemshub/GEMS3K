@@ -375,9 +375,6 @@ void datach_realloc(DATACH* CSD)
     CSD->ICNL.clear();
     CSD->DCNL.clear();
     CSD->PHNL.clear();
-    ///CSD->ICNL = new char[CSD->nIC][MaxICN];
-    ///CSD->DCNL = new char[CSD->nDC][MaxDCN];
-    ///CSD->PHNL = new char[CSD->nPH][MaxPHN];
 
     CSD->ccIC = new char[CSD->nIC];
     CSD->ccDC = new char[CSD->nDC];

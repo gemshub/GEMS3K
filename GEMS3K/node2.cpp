@@ -130,17 +130,48 @@ long int TNode::DC_name_to_xCH(const std::string& name) const
     return -1;
 }
 
+std::map<std::string, long> TNode::DC_name_to_xCH_map(const std::string &name) const
+{
+    std::map<std::string, long> ndx_map;
+    long int k, jb=0, je=0, jj;
+
+    for(k=0; k<CSD->nPHb; k++) {
+        jb = je;
+        je += CSD->nDCinPH[k];
+        for(jj = jb; jj<je; jj++) {
+            if(name == CSD->DCNL[jj]) {
+                ndx_map[CSD->PHNL[k]] = jj;
+                break;
+            }
+        }
+    }
+    return ndx_map;
+}
+
 // Returns DCH index of Phase given the Phase Name string
 // or -1 if no such name was found in the DATACH Phase name list
 long int TNode::Ph_name_to_xCH(const std::string& name) const
 {
     long int ii;
-    for(ii = 0; ii<CSD->nPH; ii++) {
+    for(ii = 0; ii<CSD->PHNL.size(); ii++) {
         if(name == CSD->PHNL[ii]) {
             return ii;
         }
     }
     return -1;
+}
+
+std::map<std::string, long> TNode::DC_xCH_to_xDB_map(const std::string &name) const
+{
+    std::map<std::string, long> xDB_map;
+    auto xCH_map = DC_name_to_xCH_map(name);
+    for(auto& item: xCH_map) {
+        auto xDB = DC_xCH_to_xDB(item.second);
+        if(xDB>=0) {
+            xDB_map[item.first] = xDB;
+        }
+    }
+    return xDB_map;
 }
 
 // Converts the IC DCH index into the IC DBR index

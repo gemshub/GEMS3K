@@ -689,7 +689,7 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
             // depending on the presence of these arrays in DATACH and Multi structures
             for( j=jb; j<je; j++ )
             {
-                std::string symbol = std::string(CSD->DCNL[j], 0, MaxDCN);
+                std::string symbol = CSD->DCNL[j];
                 auto propAl    = thermo_engine->thermoPropertiesSubstance(funT, funP, symbol);
 
                 G0 = propAl.gibbs_energy.val;
