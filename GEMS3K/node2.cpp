@@ -114,6 +114,7 @@ long int TNode::IC_name_to_xCH(const std::string& name) const
             return ii;
         }
     }
+    gems_logger->warn("Element {} not found in the DATACH IC name list", name);
     return -1;
 }
 
@@ -127,6 +128,7 @@ long int TNode::DC_name_to_xCH(const std::string& name) const
             return ii;
         }
     }
+    gems_logger->warn("Substance {} not found in the DATACH DC name list", name);
     return -1;
 }
 
@@ -158,6 +160,7 @@ long int TNode::Ph_name_to_xCH(const std::string& name) const
             return ii;
         }
     }
+    gems_logger->warn("Phase {} not found in the DATACH Phase name list", name);
     return -1;
 }
 
@@ -181,6 +184,7 @@ long int TNode::IC_xCH_to_xDB( const long int xCH ) const
     for(long int ii = 0; ii<CSD->nICb; ii++ )
         if( CSD->xic[ii] == xCH )
             return ii;
+    gems_logger->warn("IC index {} is not used in the data bridge", xCH);
     return -1;
 }
 
@@ -191,6 +195,7 @@ long int TNode::DC_xCH_to_xDB( const long int xCH ) const
     for(long int ii = 0; ii<CSD->nDCb; ii++ )
         if( CSD->xdc[ii] == xCH )
             return ii;
+    gems_logger->warn("DC index {} is not used in the data bridge", xCH);
     return -1;
 }
 
@@ -201,7 +206,35 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     for(long int ii = 0; ii<CSD->nPHb; ii++ )
         if( CSD->xph[ii] == xCH )
             return ii;
+    gems_logger->warn("Phase index {} is not used in the data bridge", xCH);
     return -1;
+}
+
+bool TNode::check_IC_xCH(const long xCH) const
+{
+    if(xCH>=CSD->nIC || xCH<0) {
+        gems_logger->warn("IC index {}({}) is not a valid", xCH, CSD->nICb);
+        return false;
+    }
+    return true;
+}
+
+bool TNode::check_DC_xCH(const long xCH) const
+{
+    if(xCH>=CSD->nDC || xCH<0) {
+        gems_logger->warn("DC index {}({}) is not a valid", xCH, CSD->nICb);
+        return false;
+    }
+    return true;
+}
+
+bool TNode::check_Phase_xCH(const long xCH) const
+{
+    if(xCH>=CSD->nPH || xCH<0) {
+        gems_logger->warn("Phase index {}({}) is not a valid", xCH, CSD->nICb);
+        return false;
+    }
+    return true;
 }
 
 // Returns the DCH index of the first DC belonging to the phase with DCH index Phx

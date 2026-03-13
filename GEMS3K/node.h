@@ -675,6 +675,18 @@ public:
     /// or returns -1 if this Phase is not used in the data bridge
     long int Ph_xCH_to_xDB( const long int xCH ) const;
 
+    /// Checking if a specific IC DCH index is valid or "exists" within an array.
+    /// Return false and print a warning message if the index is not a valid.
+    bool check_IC_xCH( const long int xCH ) const;
+
+    /// Checking if a specific DC DCH index is valid or "exists" within an array.
+    /// Return false and print a warning message if the index is not a valid.
+    bool check_DC_xCH( const long int xCH ) const;
+
+    /// Checking if a specific Phase DCH index is valid or "exists" within an array.
+    /// Return false and print a warning message if the index is not a valid.
+    bool check_Phase_xCH( const long int xCH ) const;
+
     /// Converts the IC DBR index into the IC DCH index
     inline long int IC_xDB_to_xCH( const long int xBR ) const
     { return CSD->xic[xBR]; }
