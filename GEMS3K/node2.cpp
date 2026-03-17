@@ -213,7 +213,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
 bool TNode::check_IC_xCH(const long xCH) const
 {
     if(xCH>=CSD->nIC || xCH<0) {
-        gems_logger->warn("IC index {}({}) is not a valid", xCH, CSD->nICb);
+        gems_logger->warn("IC index {}({}) is not a valid", xCH, CSD->nIC);
         return false;
     }
     return true;
@@ -222,7 +222,7 @@ bool TNode::check_IC_xCH(const long xCH) const
 bool TNode::check_DC_xCH(const long xCH) const
 {
     if(xCH>=CSD->nDC || xCH<0) {
-        gems_logger->warn("DC index {}({}) is not a valid", xCH, CSD->nICb);
+        gems_logger->warn("DC index {}({}) is not a valid", xCH, CSD->nDC);
         return false;
     }
     return true;
@@ -231,7 +231,7 @@ bool TNode::check_DC_xCH(const long xCH) const
 bool TNode::check_Phase_xCH(const long xCH) const
 {
     if(xCH>=CSD->nPH || xCH<0) {
-        gems_logger->warn("Phase index {}({}) is not a valid", xCH, CSD->nICb);
+        gems_logger->warn("Phase index {}({}) is not a valid", xCH, CSD->nPH);
         return false;
     }
     return true;
