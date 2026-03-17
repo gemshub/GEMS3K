@@ -106,47 +106,75 @@ long TNode::get_sizeTSolMod()
 
 //Returns DCH index of IC given the IC Name string (null-terminated)
 // or -1 if no such name was found in the DATACH IC name list
-long int TNode::IC_name_to_xCH( const char *Name ) const
+long int TNode::IC_name_to_xCH(const std::string& name) const
 {
     long int ii;
-    size_t len = strlen( Name );
-    len =  std::min<size_t>(len,MaxICN);
-
-    for(ii = 0; ii<CSD->nIC; ii++ )
-        if(!memcmp(Name, CSD->ICNL[ii], len ))
-            if( len == MaxICN || CSD->ICNL[ii][len] == ' ' || CSD->ICNL[ii][len] == '\0' )
-                return ii;
+    for(ii = 0; ii<CSD->ICNL.size(); ii++) {
+        if(name == CSD->ICNL[ii]) {
+            return ii;
+        }
+    }
+    gems_logger->warn("Element {} not found in the DATACH IC name list", name);
     return -1;
 }
 
 // Returns DCH index of DC given the DC Name string
 // or -1 if no such name was found in the DATACH DC name list
-long int TNode::DC_name_to_xCH( const char *Name ) const
+long int TNode::DC_name_to_xCH(const std::string& name) const
 {
     long int ii;
-    size_t len = strlen( Name );
-    len =  std::min<size_t>(len,MaxDCN);
-
-    for( ii = 0; ii<CSD->nDC; ii++ )
-        if(!memcmp(Name, CSD->DCNL[ii], std::min<size_t>(len,MaxDCN)))
-            if( len == MaxDCN || CSD->DCNL[ii][len] == ' ' || CSD->DCNL[ii][len] == '\0' )
-                return ii;
+    for(ii = 0; ii<CSD->DCNL.size(); ii++) {
+        if(name == CSD->DCNL[ii]) {
+            return ii;
+        }
+    }
+    gems_logger->warn("Substance {} not found in the DATACH DC name list", name);
     return -1;
+}
+
+std::map<std::string, long> TNode::DC_name_to_xCH_map(const std::string &name) const
+{
+    std::map<std::string, long> ndx_map;
+    long int k, jb=0, je=0, jj;
+
+    for(k=0; k<CSD->nPHb; k++) {
+        jb = je;
+        je += CSD->nDCinPH[k];
+        for(jj = jb; jj<je; jj++) {
+            if(name == CSD->DCNL[jj]) {
+                ndx_map[CSD->PHNL[k]] = jj;
+                break;
+            }
+        }
+    }
+    return ndx_map;
 }
 
 // Returns DCH index of Phase given the Phase Name string
 // or -1 if no such name was found in the DATACH Phase name list
-long int TNode::Ph_name_to_xCH( const char *Name ) const
+long int TNode::Ph_name_to_xCH(const std::string& name) const
 {
     long int ii;
-    size_t len = strlen( Name );
-    len =  std::min<size_t>(len,MaxPHN);
-
-    for( ii = 0; ii<CSD->nPH; ii++ )
-        if(!memcmp(Name, CSD->PHNL[ii], std::min<size_t>(len,MaxPHN)))
-            if( len == MaxPHN || CSD->PHNL[ii][len] == ' ' || CSD->PHNL[ii][len] == '\0' )
-                return ii;
+    for(ii = 0; ii<CSD->PHNL.size(); ii++) {
+        if(name == CSD->PHNL[ii]) {
+            return ii;
+        }
+    }
+    gems_logger->warn("Phase {} not found in the DATACH Phase name list", name);
     return -1;
+}
+
+std::map<std::string, long> TNode::DC_xCH_to_xDB_map(const std::string &name) const
+{
+    std::map<std::string, long> xDB_map;
+    auto xCH_map = DC_name_to_xCH_map(name);
+    for(auto& item: xCH_map) {
+        auto xDB = DC_xCH_to_xDB(item.second);
+        if(xDB>=0) {
+            xDB_map[item.first] = xDB;
+        }
+    }
+    return xDB_map;
 }
 
 // Converts the IC DCH index into the IC DBR index
@@ -156,6 +184,7 @@ long int TNode::IC_xCH_to_xDB( const long int xCH ) const
     for(long int ii = 0; ii<CSD->nICb; ii++ )
         if( CSD->xic[ii] == xCH )
             return ii;
+    gems_logger->warn("IC index {} is not used in the data bridge", xCH);
     return -1;
 }
 
@@ -166,6 +195,7 @@ long int TNode::DC_xCH_to_xDB( const long int xCH ) const
     for(long int ii = 0; ii<CSD->nDCb; ii++ )
         if( CSD->xdc[ii] == xCH )
             return ii;
+    gems_logger->warn("DC index {} is not used in the data bridge", xCH);
     return -1;
 }
 
@@ -176,7 +206,35 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     for(long int ii = 0; ii<CSD->nPHb; ii++ )
         if( CSD->xph[ii] == xCH )
             return ii;
+    gems_logger->warn("Phase index {} is not used in the data bridge", xCH);
     return -1;
+}
+
+bool TNode::check_IC_xCH(const long xCH) const
+{
+    if(xCH>=CSD->nIC || xCH<0) {
+        gems_logger->warn("IC index {}({}) is not a valid", xCH, CSD->nIC);
+        return false;
+    }
+    return true;
+}
+
+bool TNode::check_DC_xCH(const long xCH) const
+{
+    if(xCH>=CSD->nDC || xCH<0) {
+        gems_logger->warn("DC index {}({}) is not a valid", xCH, CSD->nDC);
+        return false;
+    }
+    return true;
+}
+
+bool TNode::check_Phase_xCH(const long xCH) const
+{
+    if(xCH>=CSD->nPH || xCH<0) {
+        gems_logger->warn("Phase index {}({}) is not a valid", xCH, CSD->nPH);
+        return false;
+    }
+    return true;
 }
 
 // Returns the DCH index of the first DC belonging to the phase with DCH index Phx

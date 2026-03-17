@@ -83,7 +83,15 @@ public:
     {
         int sz = ( l_size > 0 ? l_size: 40 );
         int jj = 0;
-        fout << std::endl << "<" << field_name << ">" << std::endl;
+        bool isComment = false;
+
+        if( !field_name.empty() )
+            fout << std::endl << "<" << field_name << ">" << std::endl;
+        else
+        {
+            fout << std::endl << "#  ";
+            isComment = true;
+        }
 
         for( size_t ii=0; ii<arr.size(); ii++, jj++  )
         {
@@ -91,6 +99,8 @@ public:
             {
                 jj=0;
                 fout << std::endl;
+                if(isComment)
+                    fout << "#  ";
             }
             writeValue( arr[ii] );
             fout << " ";
@@ -224,7 +234,10 @@ public:
     void read_strings_array( const std::string& field_name, char* arr, long int size, long int el_size );
 
     /// Reads double vector from a text file.
-    void read_array( const std::string& name, std::vector<double> arr );
+    void read_array( const std::string& name, std::vector<double>& arr );
+
+    /// Reads string vector from a text file.
+    void read_strings_array( const std::string& name, std::vector<std::string>& arr );
 
     /// Skip old format non-empty line
     bool skip_line();

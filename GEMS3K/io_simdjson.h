@@ -70,6 +70,9 @@ public:
     template < typename T >
     void write_array( const std::string& field_name, const std::vector<T>& arr, long int l_size )
     {
+        if( field_name.empty() )  // comment
+            return;
+
         long jj=0, sz = ( l_size > 0 ? l_size: values_in_line );
         add_key( key( field_name ) );
         fout  << ( dense ? "[\n        " : "[\n" );
@@ -251,6 +254,8 @@ public:
     void read_double_array( const std::string& name, std::vector<double>& arr );
     /// Reads int vector from a text file.
     void read_int_array(const std::string &field_name, std::vector<int64_t>& arr);
+    /// Reads string vector from a text file.
+    void read_strings_array( const std::string& name, std::vector<std::string>& arr );
 
     /// Empty function
     bool skip_line() { return false; }

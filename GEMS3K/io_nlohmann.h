@@ -59,7 +59,7 @@ class NlohmannJsonWrite
 public:
 
     /// Constructor
-    NlohmannJsonWrite( std::iostream& ff, const std::string& test_set_name ):
+    NlohmannJsonWrite( std::ostream& ff, const std::string& test_set_name, bool not_brief):
         json_data(), top_data(), fout(ff), current_set_name(test_set_name)
     {}
     const std::string& set_name() const
@@ -104,6 +104,9 @@ public:
     template < typename T >
     void write_array( const std::string& field_name, const std::vector<T>& arr, long int l_size )
     {
+        if(field_name.empty()) {  // comment
+            return;
+        }
         json_data[ key(field_name) ] = arr;
     }
 
@@ -225,7 +228,10 @@ public:
     void read_strings_array( const std::string& field_name, char* arr, long int size, long int el_size );
 
     /// Reads double vector from a text file.
-    void read_array( const std::string& name, std::vector<double> arr );
+    void read_array( const std::string& name, std::vector<double>& arr );
+
+    /// Reads strings vector from a text file.
+    void read_strings_array(const std::string &field_name, std::vector<std::string> &arr);
 
     /// Empty function
     bool skip_line() { return false; }

@@ -312,7 +312,7 @@ std::vector<std::string> SolModFactory::Get_AllElementNames()
 {
     std::vector<std::string> names;
     for(long int ii=0; ii<CSD->nIC; ++ii) {
-        names.push_back(char_array_to_string(CSD->ICNL[ii], MAXICNAME));
+        names.push_back(CSD->ICNL[ii]);
     }
     return names;
 }
@@ -321,7 +321,7 @@ std::vector<std::string> SolModFactory::Get_AllSpeciesNames()
 {
     std::vector<std::string> names;
     for(long int ii=0; ii<CSD->nDC; ++ii) {
-        names.push_back(char_array_to_string(CSD->DCNL[ii], MAXDCNAME));
+        names.push_back(CSD->DCNL[ii]);
     }
     return names;
 }
@@ -330,7 +330,7 @@ std::vector<std::string> SolModFactory::Get_AllPhasesNames()
 {
     std::vector<std::string> names;
     for(long int ii=0; ii<CSD->nPH; ++ii) {
-        names.push_back(char_array_to_string(CSD->PHNL[ii], MAXPHNAME));
+        names.push_back(CSD->PHNL[ii]);
     }
     return names;
 }
@@ -613,7 +613,7 @@ bool SolModFactory::load_all_thermodynamic_from_thermo(double TK, double PPa)
             // depending on the presence of these arrays in DATACH and Multi structures
             for( j=jb; j<je; j++ )
             {
-                std::string symbol = std::string(CSD->DCNL[j], 0, MaxDCN);
+                std::string symbol = CSD->DCNL[j];
                 auto propAl    = thermo_engine->thermoPropertiesSubstance(funT, funP, symbol);
 
                 G0 = propAl.gibbs_energy.val;
@@ -853,7 +853,7 @@ void SolModFactory::load_all_thermodynamic_from_grid(double TK, double PPa )
 
 #ifdef  USE_THERMO_LOG
             if(GemsSettings::log_thermodynamic) {
-                f_log << "\n" << std::string(dCH->DCNL[j], 0, MaxDCN) << ";" << floating_point_to_string(Go)
+                f_log << "\n" << dCH->DCNL[j] << ";" << floating_point_to_string(Go)
                       << ";" << floating_point_to_string(pm.G0[j])
                       << ";" << floating_point_to_string(pm.Vol[j]);
                 if( dCH->S0 ) f_log << ";" << floating_point_to_string(pm.S0[j]);
