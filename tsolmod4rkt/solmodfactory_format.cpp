@@ -267,11 +267,10 @@ void SolModFactory::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     for( ii=0; ii< dCH->nIC; ii++ )
     {
         pm.Awt[ii]  = dCH->ICmm[ii]*1e3;
-        fillValue(pm.SB[ii], ' ', MaxICN );
-        len = strlen(dCH->ICNL[ii]);
-        //len = min(  len,MaxICN);
+        fillValue(pm.SB[ii], ' ', MAXICNAME );
+        len = dCH->ICNL[ii].length();
         copyValues( pm.SB[ii], dCH->ICNL[ii], std::min<size_t>(len,MAXICNAME));
-        pm.SB[ii][MaxICN] = dCH->ccIC[ii];
+        pm.SB[ii][MAXICNAME] = dCH->ccIC[ii];
         pm.ICC[ii] =  dCH->ccIC[ii];
     }
 
@@ -287,15 +286,13 @@ void SolModFactory::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     {
         pm.MM[ii] = dCH->DCmm[ii]*1e3;
         pm.DCC[ii] = dCH->ccDC[ii];
-        len =strlen(dCH->DCNL[ii]);
-        //len = min(  len,MaxDCN);
+        len = dCH->DCNL[ii].length();
         copyValues( pm.SM[ii], dCH->DCNL[ii], std::min<size_t>(len,MAXDCNAME) );
     }
 
     for( ii=0; ii< dCH->nPH; ii++ )
     {
-        len =strlen(dCH->PHNL[ii]);
-        //len = min(  len,MaxPHN);
+        len = dCH->PHNL[ii].length();
         fillValue( pm.SF[ii], ' ', MAXPHNAME+MAXSYMB );
         copyValues( pm.SF[ii]+MAXSYMB, dCH->PHNL[ii], std::min<size_t>(len,MAXPHNAME) );
         pm.SF[ii][0] = dCH->ccPH[ii];

@@ -175,11 +175,12 @@ void KeyValueRead::read_strings_array( const std::string&, char *arr, long size,
     }
 }
 
-void KeyValueRead::read_array( const std::string &, std::vector<double> arr )
+void KeyValueRead::read_array( const std::string &, std::vector<double>& arr )
 {
     double dval;
     char input;
 
+    arr.clear();
     if( fin.eof() )
         return;
     fin.get( input );
@@ -192,6 +193,29 @@ void KeyValueRead::read_array( const std::string &, std::vector<double> arr )
         fin.get( input );
         if(  fin.eof() )
             break;
+    }
+}
+
+void KeyValueRead::read_strings_array(const std::string &, std::vector<std::string>& arr)
+{
+    char input, buf[200];
+    arr.clear();
+
+    skip_space();
+    if(fin.eof()) {
+        return;
+    }
+    fin.get(input);
+    while(input != '<' && input != '\0') {
+        //fin.putback(input);
+        //fin.get(input);
+        fin.getline(buf, 200, '\'');
+        arr.push_back(buf);
+        skip_space();
+        if(fin.eof()) {
+            break;
+        }
+        fin.get(input);
     }
 }
 

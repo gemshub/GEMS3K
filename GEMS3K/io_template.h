@@ -315,10 +315,21 @@ public:
 
 
     /// Reads double vector from a text file.
-    void readArray( const std::string& name, std::vector<double> arr )
+    void readArray( const std::string& name, std::vector<double>& arr )
     {
         set_current_name( name, arr.size() );
         in_format.read_array( name, arr );
+    }
+
+    /// Reads double vector from a text file.
+    void readArray( const std::string& name, std::vector<std::string>& arr, long int check_size )
+    {
+        set_current_name(name, arr.size());
+        in_format.read_strings_array(name, arr);
+        if(arr.size()!=check_size) {
+            Error(std::string("String vector read error"),
+                  name+" readed size "+std::to_string(arr.size())+" wait size "+std::to_string(check_size));
+        }
     }
 
 
