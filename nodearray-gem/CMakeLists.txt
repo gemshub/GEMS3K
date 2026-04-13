@@ -22,7 +22,12 @@ if(BUILD_SHARED_LIBS)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
     add_library(GEM2MT SHARED $<TARGET_OBJECTS:GEM2MT_OBJECT>)
     add_library(GEMS3K::GEM2MT ALIAS GEM2MT)
-    target_link_libraries(GEM2MT PUBLIC GEMS3K::GEMS3K)
+    #target_link_libraries(GEM2MT PUBLIC GEMS3K::GEMS3K)
+    if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+        target_link_libraries(GEM2MT PUBLIC GEMS3K::GEMS3K-static)
+    else()
+        target_link_libraries(GEM2MT PUBLIC GEMS3K::GEMS3K)
+    endif()
     install( TARGETS GEM2MT
        EXPORT GEMS3KTargets
        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
