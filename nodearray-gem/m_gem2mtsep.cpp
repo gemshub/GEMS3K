@@ -11,6 +11,12 @@
 //
 //-------------------------------------------------------------------
 
+#ifndef _WIN32
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
+
 #include "m_gem2mt.h"
 #include "GEMS3K/io_keyvalue.h"
 #include "GEMS3K/io_simdjson.h"
