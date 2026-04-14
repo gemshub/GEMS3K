@@ -17,6 +17,7 @@ set(SOURCE_FILES
 #add_library(GEM2MT_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES})
 
 # Check if a shared library is to be built
+if(NOT MSVC)
 if(BUILD_SHARED_LIBS)
     # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -36,6 +37,7 @@ if(BUILD_SHARED_LIBS)
           COMPONENT libraries
           OPTIONAL )
     endif()
+endif()
 endif()
 
 
