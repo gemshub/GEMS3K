@@ -902,11 +902,11 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
 
           if( stalled || stalledIter >= 10 )
           {
-              gems_logger->set_level(spdlog::level::debug);
-              gems_logger->debug("MBR({}): stall at IT1={} stalledIter={} "
-                                "maxDeltaY={:.3e} curRes={:.3e} prevRes={:.3e}",
-                                WhereCalledFrom, IT1, stalledIter,
-                                maxDeltaY, cur_maxResidual, prev_maxResidual);
+              if( gems_logger->should_log(spdlog::level::debug) )
+                  gems_logger->debug("MBR({}): stall at IT1={} stalledIter={} "
+                                     "maxDeltaY={:.3e} curRes={:.3e} prevRes={:.3e}",
+                                     WhereCalledFrom, IT1, stalledIter,
+                                     maxDeltaY, cur_maxResidual, prev_maxResidual);
               // Reset iRet if stall is caused only by physically degenerate ICs:
               // - degeneracy is due to negligible bulk amount, not numerical failure
               // - active ICs have converged sufficiently
