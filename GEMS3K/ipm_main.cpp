@@ -902,8 +902,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
 
           if( stalled || stalledIter >= 10 )
           {
-              if( gems_logger->should_log(spdlog::level::debug) )
-                  gems_logger->debug("MBR({}): stall at IT1={} stalledIter={} "
+              gems_logger->warn("MBR({}): stall at IT1={} stalledIter={} "
                                      "maxDeltaY={:.3e} curRes={:.3e} prevRes={:.3e}",
                                      WhereCalledFrom, IT1, stalledIter,
                                      maxDeltaY, cur_maxResidual, prev_maxResidual);
@@ -1510,15 +1509,15 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
         if( !lu.isNonsingular() )
         {
             // Singular matrix — log diagnostics to identify the cause
-            ipm_logger->trace("MakeAndSolveSystemOfLinearEquations FAILED:");
-            ipm_logger->trace("LU Decomposition\n{}", lu.to_string());
+            ipm_logger->warn("MakeAndSolveSystemOfLinearEquations FAILED:");
+            ipm_logger->warn("LU Decomposition\n{}", lu.to_string());
             for( long int r=0; r<N; r++ )
             {
                 double row_norm = 0.0;
                 for( long int c=0; c<N; c++ )
                     row_norm += std::abs( *(AA+(r)+(c)*N) );
                 if( row_norm < 1e-20 )
-                    ipm_logger->trace("  IC[{}] B={:.3e} W={:.3e} — zero row, "
+                    ipm_logger->warn("  IC[{}] B={:.3e} W={:.3e} — zero row, "
                                       "no active species contribute to this IC",
                                       r, pm.B[r], pm.W[r]);
             }
