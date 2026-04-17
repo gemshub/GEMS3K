@@ -1517,9 +1517,9 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
                 for( long int c=0; c<N; c++ )
                     row_norm += std::abs( *(AA+(r)+(c)*N) );
                 if( row_norm < 1e-20 )
-                    ipm_logger->warn("  IC[{}] B={:.3e} W={:.3e} — zero row, "
+                    ipm_logger->trace("  IC[{}] B={:.3e} — zero row, "
                                       "no active species contribute to this IC",
-                                      r, pm.B[r], pm.W[r]);
+                                      r, pm.B[r]);
             }
             return 1; // Singular matrix - too bad! No solution ...
         }
