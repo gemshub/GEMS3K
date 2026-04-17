@@ -172,7 +172,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
    switch( eRet )
    {
    case 0:  // OK
- #ifdef DEBUG
+ #ifndef NDEBUG
        if(gems_logger->should_log(spdlog::level::debug)) {
            gems_logger->debug("Before CalculateActivityCoefficients:");
            for(int j = 0; j < pm.L; j++)
@@ -182,7 +182,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 #endif
 
        CalculateActivityCoefficients(LINK_PP_MODE);
-#ifdef DEBUG
+#ifndef NDEBUG
        if(gems_logger->should_log(spdlog::level::debug)) {
            gems_logger->debug("After CalculateActivityCoefficients:");
            for(int j = 0; j < pm.L; j++)
@@ -230,7 +230,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
        if( pa_p->PC > 2 )
            cleanupStatus = 0; // in this case separate SpeciationCleanup() is called
 
-#ifdef DEBUG
+#ifndef NDEBUG
        if(gems_logger->should_log(spdlog::level::debug)) {
            gems_logger->debug("Before PhaseSelectionSpeciationCleanup - species amounts:");
            for(int i = 0; i < pm.N; i++)
@@ -239,7 +239,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 #endif
        ps_rcode = PhaseSelectionSpeciationCleanup( k_miss, k_unst, cleanupStatus );
 
-#ifdef DEBUG
+#ifndef NDEBUG
        if(gems_logger->should_log(spdlog::level::debug)) {
            gems_logger->debug("After PhaseSelectionSpeciationCleanup - species amounts:");
            for(int i = 0; i < pm.N; i++)
@@ -422,7 +422,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 
   if( nCNud <= 0 )
   {
-#ifdef DEBUG
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
        if(gems_logger->should_log(spdlog::level::debug)) {
            gems_logger->debug("W and F arrays before second MBR:");
            for(int j = 0; j < pm.L; j++)
@@ -1481,7 +1481,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
         B[ii] = BB[ii];
 #endif
 
-#ifdef DEBUG
+#ifndef NDEBUG
         ipm_logger->debug("MakeAndSolveSystemOfLinearEquations\n {} \n {} \n",
                           A.to_string(), B.to_string());
 #endif
@@ -1490,7 +1490,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
     //    (credit: http://math.nist.gov/tnt/download.html)
     // this routine constructs the Cholesky decomposition, A = L x LT .
     JAMA::Cholesky<double> chol(A);
- #ifdef DEBUG
+ #ifndef NDEBUG
     ipm_logger->debug("Cholesky Decomposition\n{}", chol.to_string());
  #endif
 
