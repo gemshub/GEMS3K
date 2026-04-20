@@ -171,9 +171,26 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 // Diagnostics of IPM results
    switch( eRet )
    {
-     case 0:  // OK
-            CalculateActivityCoefficients( LINK_PP_MODE);
-            break;
+   case 0:  // OK
+ #ifndef NDEBUG
+       if(gems_logger->should_log(spdlog::level::debug)) {
+           gems_logger->debug("Before CalculateActivityCoefficients:");
+           for(int j = 0; j < pm.L; j++)
+               gems_logger->debug("  j={} Y={:.6e} X={:.6e} W={:.6e} F={:.6e} lnGam={:.6e}",
+                                  j, pm.Y[j], pm.X[j], pm.W[j], pm.F[j], pm.lnGam[j]);
+       }
+#endif
+
+       CalculateActivityCoefficients(LINK_PP_MODE);
+#ifndef NDEBUG
+       if(gems_logger->should_log(spdlog::level::debug)) {
+           gems_logger->debug("After CalculateActivityCoefficients:");
+           for(int j = 0; j < pm.L; j++)
+               gems_logger->debug("  j={} Y={:.6e} X={:.6e} W={:.6e} F={:.6e} lnGam={:.6e}",
+                                  j, pm.Y[j], pm.X[j], pm.W[j], pm.F[j], pm.lnGam[j]);
+       }
+#endif
+       break;
      case 2:  // max number of iterations has been exceeded in InteriorPointsMethod()
      case 1: // degeneration in R matrix  for InteriorPointsMethod()
          if( pm.pNP )
@@ -213,7 +230,32 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
        if( pa_p->PC > 2 )
            cleanupStatus = 0; // in this case separate SpeciationCleanup() is called
 
+#ifndef NDEBUG
+       if(gems_logger->should_log(spdlog::level::debug)) {
+           gems_logger->debug("Before PhaseSelectionSpeciationCleanup - species amounts:");
+           for(int i = 0; i < pm.N; i++)
+               gems_logger->debug("  x[{}] = {:.6e}", i, pm.X[i]); // or whatever the species array is
+       }
+#endif
        ps_rcode = PhaseSelectionSpeciationCleanup( k_miss, k_unst, cleanupStatus );
+
+#ifndef NDEBUG
+       if(gems_logger->should_log(spdlog::level::debug)) {
+           gems_logger->debug("After PhaseSelectionSpeciationCleanup - species amounts:");
+           for(int i = 0; i < pm.N; i++)
+               gems_logger->debug("  x[{}] = {:.6e}", i, pm.X[i]);
+           gems_logger->debug("cleanupStatus={}, k_miss={}, k_unst={}", cleanupStatus, k_miss, k_unst);
+       }
+
+       if(gems_logger->should_log(spdlog::level::debug)) {
+           gems_logger->debug("After PSSC - Y vs W:");
+           for(int j = 0; j < pm.L; j++)
+               if(pm.Y[j] > min(pm.lowPosNum, pm.DcMinM))
+                   gems_logger->debug("  j={} Y={:.6e} W={:.6e} ratio={:.3f}",
+                                      j, pm.Y[j], pm.W[j],
+                                      pm.W[j] > 0 ? pm.Y[j]/pm.W[j] : 0.0);
+       }
+#endif
 
   // STEPWISE (3)  - stop point to examine output from SpeciationCleanup()
   STEP_POINT("After PSSC()");
@@ -380,6 +422,14 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 
   if( nCNud <= 0 )
   {
+#if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
+       if(gems_logger->should_log(spdlog::level::debug)) {
+           gems_logger->debug("W and F arrays before second MBR:");
+           for(int j = 0; j < pm.L; j++)
+               if(pm.Y[j] > min(pm.lowPosNum, pm.DcMinM))
+                   gems_logger->debug("  j={} Y={:.6e} W={:.6e} F={:.6e}", j, pm.Y[j], pm.W[j], pm.F[j]);
+       }
+#endif
     eRet = MassBalanceRefinement( pm.K2 ); // Mass balance improvement in all normal cases
     switch( eRet )
     {
@@ -653,7 +703,7 @@ STEP_POINT("Before FIA");
 ///                         2 - after post-IPM cleanup
 ///                         3 - additional (after PhaseSelection)
 /// \return  0 -  OK,
-///          1 -  no SLE colution at the specified precision pa.p.DHB
+///          1 -  no SLE solution at the specified precision pa.p.DHB
 ///          2  - used up more than pa.p.DP iterations
 ///          3  - too small step length (< 1e-6), no descent possible
 ///          4  - error in Initial mass balance residuals (debugging)
@@ -684,12 +734,18 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
                     buf += ")) Invalid initial Lagrange multiplier for metastability-constrained DC ";
                     buf += char_array_to_string( pm.SM[jK], MAXDCNAME);
         setErrorMessage( 17, "E17IPM: Mass Balance Refinement: ", buf.c_str());
-      	return 5;
+        return 5;
     }
 
 
 //----------------------------------------------------------------------------
 // BEGIN:  main loop
+    // AbsMbCutoff_stall computed once before the loop —
+    // mirrors the convergence check logic for the combined mode
+    double AbsMbCutoff_stall = pm.DHBM;
+    // Track previous max residual to detect oscillation
+    double prev_maxResidual = std::numeric_limits<double>::max();
+    long int stalledIter = 0;
     for( IT1=0; IT1 < pa_p->DP; IT1++, pm.ITF++ )
     {
         // get size of task
@@ -715,7 +771,10 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
            if( AbsMbAccExp < 2. )  // If DT is set to 1 or -1 then DHBM is used also as the absolute cutoff
                AbsMbCutoff = pm.DHBM;
            else
+           {
                AbsMbCutoff = pow( 10, -AbsMbAccExp );
+               AbsMbCutoff_stall = pow( 10., -AbsMbAccExp );
+           }
            for( I=0;I<Z;I++ )
               if( fabs( pm.C[I]) > AbsMbCutoff || fabs(pm.C[I]) > pm.B[I] * pm.DHBM )
                   break;
@@ -745,13 +804,17 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
 
        if( sRet == 1 )  // error: no SLE solution!
        {
-    	 iRet = 1;
-         std::string buf = "(EFD("+std::to_string(WhereCalledFrom);
-                     buf += "Degeneration in R matrix (fault in SLE solver).\n"
-                            "Mass balance cannot be improved, not possible to proceed.";
-         setErrorMessage( 5, "E05IPM: Mass Balance Refinement: " , buf.c_str() );
-         gems_logger->warn(buf);
+           iRet = 1;
+           std::string buf = "(EFD("+std::to_string(WhereCalledFrom)+ ")";
+           buf += "Degeneration in R matrix (fault in SLE solver).\n"
+                  "Mass balance cannot be improved, not possible to proceed.";
+           setErrorMessage( 5, "E05IPM: Mass Balance Refinement: " , buf.c_str() );
+           gems_logger->warn(buf);
        }
+       else
+           iRet = 0;  // reset: matrix was singular in a previous iteration but recovered —
+               // stale Uefd was used for MU descent direction in the failed iteration,
+               // subsequent iterations may succeed as Y evolves away from singularity
 
       // SOLVED: solution of linear matrix has been obtained
          //          pm.PCI = calcDikin( N, true);
@@ -775,6 +838,83 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
       // from step size LM and the gradient vector MU
       for(J=0;J<pm.L;J++)
             pm.Y[J] += LM * pm.MU[J];
+
+      // Stall detection: exit early if residuals are no longer improving
+      // for 3 consecutive iterations
+      {
+          double maxDeltaY = 0.0;
+          for( J=0; J<pm.L; J++ )
+              maxDeltaY = std::max( maxDeltaY, fabs(pm.MU[J]) * LM );
+
+          // Stall detection: compute max residual across all failing active ICs
+          // Start from I — ICs before I already passed the convergence check
+          double cur_maxResidual = 0.0;
+          bool any_failing = false;
+          bool degenerate_cause = false;
+          for( long int II=I; II<pm.N+1; II++ )
+          {
+              bool ic_failing;
+              double ic_tol = pm.B[II] * pm.DHBM;
+              if( !pa_p->DT )
+                  ic_failing = fabs(pm.C[II]) > ic_tol;
+              else
+                  ic_failing = fabs(pm.C[II]) > AbsMbCutoff_stall ||
+                               fabs(pm.C[II]) > ic_tol;
+              if( ic_failing )
+              {
+                  if( pm.B[II] >= pm.DcMinM )
+                  {
+                      // Non-negligible IC is failing — not purely degenerate
+                      any_failing = true;
+                      cur_maxResidual = std::max( cur_maxResidual, fabs(pm.C[II]) );
+                      degenerate_cause = false;  // permanently cleared
+                  }
+                  else if( !any_failing )
+                  {
+                      // Negligible IC failing, no non-negligible failures yet
+                      degenerate_cause = true;
+                  }
+
+                  if( pm.B[II] < 1e-15 ) // need to remove hardcoded value
+                  {
+                    gems_logger->debug("MBR({}): B[4]={:.3e}", WhereCalledFrom, pm.B[II]);
+                    iRet = 0; // treat as degenerate but not physically negligible, to avoid triggering AIA fallback
+                  }
+              }
+          }
+
+          bool stalled = false;
+          if( any_failing )
+          {
+              // Stall if residuals are not improving AND steps are tiny
+              // relative to the residual magnitude
+              if( maxDeltaY < cur_maxResidual * pm.DHBM )
+                  stalled = true;
+              // Also stall if residuals are oscillating (not decreasing)
+              if( cur_maxResidual >= prev_maxResidual * 0.999 )
+                  stalledIter++;
+              else
+              {
+                  stalledIter = 0;  // residuals improving, reset
+                  prev_maxResidual = cur_maxResidual;
+              }
+          }
+
+          if( stalled || stalledIter >= 10 )
+          {
+              gems_logger->warn("MBR({}): stall at IT1={} stalledIter={} "
+                                     "maxDeltaY={:.3e} curRes={:.3e} prevRes={:.3e}",
+                                     WhereCalledFrom, IT1, stalledIter,
+                                     maxDeltaY, cur_maxResidual, prev_maxResidual);
+              // Reset iRet if stall is caused only by physically degenerate ICs:
+              // - degeneracy is due to negligible bulk amount, not numerical failure
+              // - active ICs have converged sufficiently
+              // - returning iRet=1 would incorrectly trigger AIA fallback
+              if( iRet == 1 && degenerate_cause )
+                  iRet = 0;
+              break;
+          }
+      }
 
 // STEPWISE (5) Stop point at end of iteration of FIA()
 STEP_POINT("FIA Iteration");
@@ -1291,7 +1431,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
     long int ii, i, jj, kk, k, Na = pm.N;
     Alloc_A_B( N );
 
-    // Making the  matrix of IPM linear equations
+    // Making the matrix of IPM linear equations
     for( kk = 0; kk < N; kk++)
         for( ii=0; ii < N; ii++ )
             (*(AA+(ii)+(kk)*N)) = 0.;
@@ -1302,7 +1442,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
         {
             for( k = arrL[jj]; k < arrL[jj+1]; k++)
                 for( i = arrL[jj]; i < arrL[jj+1]; i++ )
-                { ii = arrAN[i];
+                {   ii = arrAN[i];
                     kk = arrAN[k];
                     if( ii >= N || kk >= N )
                         continue;
@@ -1320,7 +1460,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
         for( jj=0; jj < pm.L; jj++ )
             if( pm.Y[jj] > min( pm.lowPosNum, pm.DcMinM ) )
                 for( i = arrL[jj]; i < arrL[jj+1]; i++ )
-                {  ii = arrAN[i];
+                {   ii = arrAN[i];
                     if( ii >= N )
                         continue;
                     BB[ii] += pm.F[jj] * a(jj,ii) * pm.W[jj];
@@ -1333,7 +1473,6 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
 #else
     Array2D<double> A( N, N);
     Array1D<double> B( N );
-
     for( kk = 0; kk < N; kk++)
         for( ii = 0; ii < N; ii++ )
             A[kk][ii] = (*(AA+(ii)+(kk)*N));
@@ -1341,19 +1480,20 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
         B[ii] = BB[ii];
 #endif
 
-    if(gems_logger->should_log(spdlog::level::debug)) {
-        gems_logger->debug("MakeAndSolveSystemOfLinearEquations\n {} \n {} \n", A.to_string(), B.to_string());
-    }
+#ifndef NDEBUG
+        ipm_logger->debug("MakeAndSolveSystemOfLinearEquations\n {} \n {} \n",
+                          A.to_string(), B.to_string());
+#endif
 
     // From here on, the NIST TNT Jama/C++ linear algebra package is used
     //    (credit: http://math.nist.gov/tnt/download.html)
     // this routine constructs the Cholesky decomposition, A = L x LT .
-    JAMA::Cholesky<double>  chol(A);
-    if(gems_logger->should_log(spdlog::level::debug)) {
-        gems_logger->debug("{}", chol.to_string());
-    }
+    JAMA::Cholesky<double> chol(A);
+ #ifndef NDEBUG
+    ipm_logger->debug("Cholesky Decomposition\n{}", chol.to_string());
+ #endif
 
-    if( chol.is_spd() )  // is positive definite A.
+    if( chol.is_spd() )
     {
         B = chol.solve( B );
     }
@@ -1362,17 +1502,27 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
         // no solution by Cholesky decomposition; Trying the LU Decompositon
         // The LU decompostion with pivoting always exists, even if the matrix is
         // singular, so the constructor will never fail.
-
-        JAMA::LU<double>  lu(A);
-        if(gems_logger->should_log(spdlog::level::debug)) {
-            gems_logger->debug("{}", lu.to_string());
-        }
-
-        // The primary use of the LU decomposition is in the solution
+        JAMA::LU<double> lu(A);
+                // The primary use of the LU decomposition is in the solution
         // of square systems of simultaneous linear equations.
         // This will fail if isNonsingular() returns false.
         if( !lu.isNonsingular() )
+        {
+            // Singular matrix — log diagnostics to identify the cause
+            ipm_logger->warn("MakeAndSolveSystemOfLinearEquations FAILED:");
+            ipm_logger->warn("LU Decomposition\n{}", lu.to_string());
+            for( long int r=0; r<N; r++ )
+            {
+                double row_norm = 0.0;
+                for( long int c=0; c<N; c++ )
+                    row_norm += std::abs( *(AA+(r)+(c)*N) );
+                if( row_norm < 1e-20 )
+                    ipm_logger->trace("  IC[{}] B={:.3e} — zero row, "
+                                      "no active species contribute to this IC",
+                                      r, pm.B[r]);
+            }
             return 1; // Singular matrix - too bad! No solution ...
+        }
 
         B = lu.solve( B );
     }
