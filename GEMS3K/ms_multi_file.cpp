@@ -1077,7 +1077,7 @@ ff.readArray((double*)pm.D, MST*MST);
 
 
 /// Writing structure MULTI ( free format file  )
-void TMultiBase::to_text_file( const char *path, bool append )
+void TMultiBase::to_text_file(const std::string& path, bool append )
 {
     //static values
    char PAalp;
@@ -1362,6 +1362,24 @@ void TMultiBase::to_text_file( const char *path, bool append )
     prar.writeArray(  "APh", &pm.APh[0][0], pm.FIs*MIXPHPROPS);
     prar.writeArray(  "UPh", &pm.UPh[0][0], pm.FIs*MIXPHPROPS);
 
+}
+
+void TMultiBase::solmod_to_text_file(const std::string& path)
+{
+    for(long int k=0; k<pm.FIs; k++) { // loop on solution phases
+        if(phSolMod[k]) {
+            phSolMod[k]->to_text_file(path+ std::string("solmod_coef_")+std::to_string(k)+".txt", false);
+        }
+    }
+}
+
+void TMultiBase::solmod_to_json_file(const std::string& path)
+{
+    for(long int k=0; k<pm.FIs; k++) { // loop on solution phases
+        if(phSolMod[k]) {
+            phSolMod[k]->to_json_file(path+ std::string("solmod_")+std::to_string(k)+".json");
+        }
+    }
 }
 
 //--------------------- End of ms_multi_file.cpp ---------------------------
