@@ -910,7 +910,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
               // - degeneracy is due to negligible bulk amount, not numerical failure
               // - active ICs have converged sufficiently
               // - returning iRet=1 would incorrectly trigger AIA fallback
-              if( iRet == 1 && degenerate_cause )
+              // if( iRet == 1 && degenerate_cause )
                   iRet = 0;
               break;
           }
