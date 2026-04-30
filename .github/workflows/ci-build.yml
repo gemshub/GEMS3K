@@ -43,11 +43,12 @@ jobs:
           channel-priority: true
 
       - name: Configuring Conda Environment
+        shell: bash -l {0}
         run: |
           conda config --set always_yes yes --set changeps1 no
           conda config --add channels conda-forge
-          conda install conda-devenv
-          conda devenv
+          conda install -n base -c conda-forge conda-devenv
+          python -m conda_devenv
 
       - name: Building, Testing & Installing GEMS3K
         if: matrix.os != 'windows-latest'
