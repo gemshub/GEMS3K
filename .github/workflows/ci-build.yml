@@ -38,7 +38,7 @@ jobs:
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          auto-activate: false
+          auto-activate: true
           channels: conda-forge, defaults
           channel-priority: true
 
@@ -48,7 +48,7 @@ jobs:
           conda config --set always_yes yes --set changeps1 no
           conda config --add channels conda-forge
           conda install -n base -c conda-forge conda-devenv
-          python -m conda_devenv
+          conda devenv
 
       - name: Building, Testing & Installing GEMS3K
         if: matrix.os != 'windows-latest'
