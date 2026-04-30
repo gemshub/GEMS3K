@@ -38,15 +38,15 @@ jobs:
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          auto-activate-base: false
+          auto-activate: false
           channels: conda-forge, defaults
           channel-priority: true
 
       - name: Configuring Conda Environment
         run: |
-          conda activate base
           conda config --set always_yes yes --set changeps1 no
           conda config --add channels conda-forge
+          conda activate base
           conda commands | grep devenv
           conda devenv
 
