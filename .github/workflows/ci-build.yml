@@ -41,8 +41,15 @@ jobs:
           auto-activate: true
           channels: conda-forge, defaults
           channel-priority: true
-          miniconda-version: "latest"
-          activate-environment: GEMS3K
+
+      - name: Configuring Conda Environment
+        run: |
+          conda config --set always_yes yes --set changeps1 no
+          conda config --add channels conda-forge
+          conda install -n base -c conda-forge conda-devenv
+
+      - name: Run conda-devenv
+        run: conda devenv
 
       - name: Building, Testing & Installing GEMS3K
         if: matrix.os != 'windows-latest'
