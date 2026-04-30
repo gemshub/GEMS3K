@@ -46,8 +46,6 @@ jobs:
         run: |
           conda config --set always_yes yes --set changeps1 no
           conda config --add channels conda-forge
-          conda activate base
-          conda commands | grep devenv
           conda devenv
 
       - name: Building, Testing & Installing GEMS3K
