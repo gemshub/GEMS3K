@@ -39,6 +39,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v4
         with:
           auto-activate: true
+          mamba-version: "*"
           channels: conda-forge, defaults
 
       - name: Configuring Conda Environment
