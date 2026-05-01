@@ -46,7 +46,11 @@ jobs:
           conda config --set plugins.use_sharded_repodata false
           conda config --set always_yes yes --set changeps1 no
           conda install -c conda-forge conda-devenv
-          conda devenv
+          #conda devenv
+
+      - name: Verify Installation
+        shell: bash -l {0}
+        run: python -m conda_devenv --help
 
       - name: Building, Testing & Installing GEMS3K
         if: matrix.os != 'windows-latest'
