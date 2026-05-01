@@ -44,11 +44,8 @@ jobs:
 
       - name: Configuring Conda Environment
         run: |
-          conda config --set always_yes yes --set changeps1 no
-          conda config --add channels conda-forge
-          conda install -c conda-forge conda-devenv
-          conda init
-          conda devenv
+          mamba install conda-devenv
+          python -m conda_devenv
 
       - name: Building, Testing & Installing GEMS3K
         if: matrix.os != 'windows-latest'
