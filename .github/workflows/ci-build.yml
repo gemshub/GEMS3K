@@ -39,13 +39,15 @@ jobs:
         uses: conda-incubator/setup-miniconda@v4
         with:
           auto-activate: true
-          mamba-version: "*"
           channels: conda-forge, defaults
 
       - name: Configuring Conda Environment
         run: |
-          mamba install conda-devenv
-          python -m conda_devenv
+          conda config --set always_yes yes --set changeps1 no
+          conda config --add channels conda-forge
+          conda install -c conda-forge conda-devenv
+          conda-devenv --version
+          conda devenv
 
       - name: Building, Testing & Installing GEMS3K
         if: matrix.os != 'windows-latest'
