@@ -43,6 +43,7 @@ jobs:
 
       - name: Configuring Conda Environment
         run: |
+          conda install certifi
           conda install -c conda-forge conda-devenv
           #conda devenv
 
