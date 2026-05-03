@@ -54,7 +54,7 @@ jobs:
         run: |
           conda config --set always_yes yes --set changeps1 no
           conda config --add channels conda-forge
-          conda config --set subdir ${{ matrix.conda_platform }}
+          conda clean -a -y
           conda env create -f environment.devenv.yml -n GEMS3K
 
       - name: Building, Testing & Installing GEMS3K
