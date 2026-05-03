@@ -42,14 +42,20 @@ jobs:
           channels: conda-forge, defaults
 
       - name: Configuring Conda Environment
+        if: matrix.os != 'macos-latest'
         run: |
           conda install certifi
           conda install -c conda-forge conda-devenv
-          #conda devenv
+          conda devenv
 
-      - name: Verify Installation
+      - name: Configuring Conda Environment
+        if: matrix.os == 'macos-latest'
         shell: bash -l {0}
-        run: conda devenv
+        run: |
+          conda config --set always_yes yes --set changeps1 no
+          conda config --add channels conda-forge
+          conda config --set subdir ${{ matrix.conda_platform }}
+          conda env create -f environment.devenv.yml -n GEMS3K
 
       - name: Building, Testing & Installing GEMS3K
         if: matrix.os != 'windows-latest'
