@@ -39,17 +39,9 @@ jobs:
         uses: conda-incubator/setup-miniconda@v4
         with:
           auto-activate: true
-          channels: conda-forge, defaults
+          channels: conda-forge
 
       - name: Configuring Conda Environment
-        if: matrix.os != 'macos-latest'
-        run: |
-          conda install certifi
-          conda install -c conda-forge conda-devenv
-          conda devenv
-
-      - name: Configuring Conda Environment
-        if: matrix.os == 'macos-latest'
         shell: bash -l {0}
         run: |
           conda config --set always_yes yes --set changeps1 no
