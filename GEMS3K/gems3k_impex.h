@@ -94,6 +94,12 @@ public:
         return base_name;
     }
 
+    /// Get GEMS3K I/O set directory
+    std::string get_dir() const
+    {
+        return (impex_dir.empty() ? impex_dir: impex_dir+"/");
+    }
+
     /// Get current extension
     std::string extension() const
     {

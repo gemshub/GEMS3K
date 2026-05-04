@@ -851,7 +851,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
           double cur_maxResidual = 0.0;
           bool any_failing = false;
           bool degenerate_cause = false;
-          for( long int II=I; II<pm.N+1; II++ )
+          for( long int II=I; II<pm.N; II++ )
           {
               bool ic_failing;
               double ic_tol = pm.B[II] * pm.DHBM;
@@ -877,7 +877,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
 
                   if( pm.B[II] < 1e-15 ) // need to remove hardcoded value
                   {
-                    gems_logger->debug("MBR({}): B[4]={:.3e}", WhereCalledFrom, pm.B[II]);
+                    gems_logger->warn("MBR({}): B[{}]={:.3e}", WhereCalledFrom, II, pm.B[II]);
                     iRet = 0; // treat as degenerate but not physically negligible, to avoid triggering AIA fallback
                   }
               }
@@ -910,7 +910,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
               // - degeneracy is due to negligible bulk amount, not numerical failure
               // - active ICs have converged sufficiently
               // - returning iRet=1 would incorrectly trigger AIA fallback
-              if( iRet == 1 && degenerate_cause )
+              // if( iRet == 1 && degenerate_cause )
                   iRet = 0;
               break;
           }

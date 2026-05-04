@@ -14,13 +14,14 @@ set(SOURCE_FILES
      "m_gem2mtfor.cpp")
 
 # Compile the C++ source code into object files
-add_library(GEM2MT_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES})
+#add_library(GEM2MT_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES})
 
 # Check if a shared library is to be built
+if(NOT MSVC)
 if(BUILD_SHARED_LIBS)
     # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-    add_library(GEM2MT SHARED $<TARGET_OBJECTS:GEM2MT_OBJECT>)
+    add_library(GEM2MT SHARED ${HEADER_FILES} ${SOURCE_FILES})
     add_library(GEMS3K::GEM2MT ALIAS GEM2MT)
     target_link_libraries(GEM2MT PUBLIC GEMS3K::GEMS3K)
     install( TARGETS GEM2MT
@@ -37,13 +38,14 @@ if(BUILD_SHARED_LIBS)
           OPTIONAL )
     endif()
 endif()
+endif()
 
 
 # Check if a static library is to be built
 if(BUILD_STATIC_LIBS)
-   add_library(GEM2MT-static STATIC $<TARGET_OBJECTS:GEM2MT_OBJECT>)
+   add_library(GEM2MT-static STATIC ${HEADER_FILES} ${SOURCE_FILES})
    add_library(GEMS3K::GEM2MT-static ALIAS GEM2MT-static)
-   target_link_libraries(GEM2MT-static PUBLIC GEMS3K::GEMS3K-static)
+   target_link_libraries(GEM2MT-static PUBLIC GEMS3K::GEMS3K)
    install( TARGETS GEM2MT-static
       EXPORT GEMS3KTargets
       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries

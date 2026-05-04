@@ -570,7 +570,9 @@ public:
 
     //connection to mass transport
     void to_file( GemDataStream& ff );
-    void to_text_file( const char *path, bool append=false  );
+    void to_text_file(const std::string& path, bool append=false);
+    void solmod_to_text_file(const std::string& path);
+    void solmod_to_json_file(const std::string& path);
     void from_file( GemDataStream& ff );
     template<typename TIO>
     void to_text_file_gemipm( TIO& out_format, bool addMui,
