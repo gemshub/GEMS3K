@@ -875,11 +875,11 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
                       degenerate_cause = true;
                   }
 
-                  if( pm.B[II] < 1e-15 ) // need to remove hardcoded value
-                  {
-                    gems_logger->warn("MBR({}): B[{}]={:.3e}", WhereCalledFrom, II, pm.B[II]);
-                    iRet = 0; // treat as degenerate but not physically negligible, to avoid triggering AIA fallback
-                  }
+                  #if( pm.B[II] < 1e-15 ) // need to remove hardcoded value
+                  #{
+                  #  gems_logger->warn("MBR({}): B[{}]={:.3e}", WhereCalledFrom, II, pm.B[II]);
+                  #  iRet = 0; // treat as degenerate but not physically negligible, to avoid triggering AIA fallback
+                  #}
               }
           }
 
