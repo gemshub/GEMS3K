@@ -2,13 +2,16 @@ name: GEMS3K
 
 channels:
   - conda-forge
+  - defaults
 
 dependencies:
-  - compilers
-  - cmake>=3.16
-  - ninja
+  - cmake
   - git
-  - ccache
+  - gcc_linux-64  # [linux] 
+  - gxx_linux-64  # [linux] 
+  - sysroot_linux-64 # [linux] 
+  - make  # [unix]
+  - ninja
   - python>=3.10
   - pip
   - pytest

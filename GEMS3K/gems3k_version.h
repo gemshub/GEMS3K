@@ -1,7 +1,7 @@
 #pragma once
 
-#define GEMS3K_VERSION "4.5.3"
-#define GEMS3K_VERSION_HASH "50d8d0f"
+#define GEMS3K_VERSION "4.5.5"
+#define GEMS3K_VERSION_HASH "2cf017f"
 #define GEMS3K_GIT_BRANCH "master"
 #define GEMS3K_ChemicalFun "0.1.13"
 #define GEMS3K_ThermoFun "0.5.4"
