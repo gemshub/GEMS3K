@@ -5,7 +5,7 @@ channels:
   - defaults
 
 dependencies:
-  - cmake
+  - cmake>=3.16
   - git
   - gcc_linux-64  # [linux] 
   - gxx_linux-64  # [linux] 

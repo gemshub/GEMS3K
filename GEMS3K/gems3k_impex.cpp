@@ -38,7 +38,7 @@ GEMS3KGenerator::GEMS3KGenerator(const std::string &filepath, long anIV, IOModes
 bool GEMS3KGenerator::create_dir() const
 {
     fs::path ps(get_dir());
-    if(fs::exists(ps)) {
+    if(ps.empty() || fs::exists(ps)) {
         return true;
     }
     return fs::create_directories(ps);
