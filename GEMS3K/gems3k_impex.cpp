@@ -37,11 +37,22 @@ GEMS3KGenerator::GEMS3KGenerator(const std::string &filepath, long anIV, IOModes
 
 bool GEMS3KGenerator::create_dir() const
 {
-    fs::path ps(get_dir());
-    if(ps.empty() || fs::exists(ps)) {
-        return true;
+    const std::string dir = get_dir();
+    if( dir.empty() ) {
+        return true; // current working directory
     }
-    return fs::create_directories(ps);
+
+    std::error_code ec;
+    const fs::path ps(dir);
+
+    if( fs::exists(ps, ec) ) {
+        return !ec && fs::is_directory(ps, ec);
+    }
+    if( ec ) {
+        return false;
+    }
+
+    return fs::create_directories(ps, ec) || (!ec && fs::is_directory(ps, ec));
 }
 
 std::string GEMS3KGenerator::gen_dbr_file_name(int time_point, size_t index) const
