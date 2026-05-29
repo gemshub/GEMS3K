@@ -570,8 +570,13 @@ public:
     TActivity* pActiv() const  /// Get pointer to TActivity class instance
     { return atp.get(); }
 
-    const MULTI* otherPMM() const
-    { return pmm; }
+    const MULTI& otherPMM() const
+    { 
+        if (!pmm) {
+            throw std::runtime_error("TNode::otherPMM(): pmm is null");
+        }
+        return *pmm; 
+    }
 
     // These methods get contents of fields in the work node structure
     double cTC() const     /// Get current node Temperature T, Celsius
