@@ -149,8 +149,8 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
             node_arr->CopyNodeFromTo( ii, export_data.nIV, node_arr->pNodT1(), node_arr->pNodT0() );
 
         // (3) Writing results in defined output format
-        ProcessProgressFunction messageF = [](const std::string& , long ){
-            //std::cout << "TProcess GEM3k output" <<  message.c_str() << point << std::endl;
+        ProcessProgressFunction messageF = [](const std::string& message, long point){
+            //std::cout << "TProcess GEM3k output" <<  message << point << std::endl;
             return false;
         };
 

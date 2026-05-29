@@ -1,5 +1,5 @@
 
-#  GEMS3K v.4.5.1 (ChemicalFun v.0.1.13, ThermoFun v.0.5.4) c.f050197
+#  GEMS3K v.4.5.3 (ChemicalFun v.0.1.13, ThermoFun v.0.5.4) c.58c9180
 # Comments can be marked with # $ ; as the first character in the line
 # DCH text input file (should be read before IPM and DBR files)
 
@@ -134,7 +134,7 @@
 # denWg: Look-up array for the density of water vapour, kg/m3, and its derivatives [5*nPp*nTp]
 <denWg>
 0.767104546309221 
--0 
+0 
 0 
 0 
 0 

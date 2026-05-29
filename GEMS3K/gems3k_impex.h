@@ -100,6 +100,9 @@ public:
         return (impex_dir.empty() ? impex_dir: impex_dir+"/");
     }
 
+    /// Create GEMS3K out set directory
+    bool create_dir() const;
+
     /// Get current extension
     std::string extension() const
     {

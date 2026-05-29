@@ -656,6 +656,10 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     GEMS3KGenerator generator( filepath, nIV, type_f );
     calcNode->current_output_set_name = generator.get_name();
 
+    if( !generator.create_dir() ) {
+        message("Error create directory "+generator.get_dir(), 0);
+        return "";
+    }
     // open *-dat.lst
     fout_dat_lst.open( filepath, std::ios::out );
     fout_dat_lst << generator.gen_dat_lst_head();
