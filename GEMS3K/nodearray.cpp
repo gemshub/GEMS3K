@@ -658,7 +658,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
 
     if( !generator.create_dir() ) {
         message("Error create directory "+generator.get_dir(), 0);
-        return "error";
+        return "";
     }
     // open *-dat.lst
     fout_dat_lst.open( filepath, std::ios::out );
