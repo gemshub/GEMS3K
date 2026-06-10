@@ -224,6 +224,9 @@ public:
     ///        log_level:     set login level for all loggers
     void gems3k_update_loggers(bool use_stdout, const std::string &logfile_name, size_t log_level);
 
+    /// Update only log_level for all loggers
+    void gems3k_update_log_level(size_t log_level);
+
 private:
 
     // logger internal data --------------------------------
