@@ -427,6 +427,28 @@ void GemsSettings::gems3k_update_loggers(bool use_stdout, const std::string& log
     }
 }
 
+void GemsSettings::gems3k_update_log_level(size_t log_level)
+{
+    spdlog::level::level_enum log_lev = spdlog::level::info;
+    if( log_level<7 ) {
+        log_lev = static_cast<spdlog::level::level_enum>(log_level);
+    }
+
+    for(const auto& logger_name: gems3k_loggers) {
+        auto logger = spdlog::get(logger_name);
+        if(!logger) {
+            std::cout <<  logger_name << " logger not connected" << std::endl;
+            continue;
+        }
+        logger->set_level(log_lev);
+    }
+    auto logger = spdlog::get("ipmlog");
+    if(logger){ // changed level for file output
+        logger->set_level(log_lev);
+    }
+}
+
+
 void GemsSettings::gems3k_clear_loggers(const std::string& logfile_name)
 {
     std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
