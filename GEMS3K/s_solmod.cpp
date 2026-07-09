@@ -177,14 +177,14 @@ void TSolMod::alloc_multisite()
         {
             mn[j][s] = new double [NMoi];
             // for(long int m=0; m<NMoi; m++) {
-            //     mn[j][s][m] = -1.;
+            //     mn[j][s][m] = 0.;
             // }
 
         }
    }
    mns = new double[NSub];
    // for(j=0; j<NSub; j++) {
-   //     mns[j] = -1.;
+   //     mns[j] = 1.;
    // }
 }
 
@@ -194,22 +194,36 @@ void TSolMod::alloc_multisite()
 /// from that for the previous end member (this is an error)
 long int TSolMod::init_multisite()
 {
+    std::string deb_info;
     long int j, s, m, k=0;
     if( !NSub || !NMoi )
         return 0;   // This is not a multi-site model
 
-    solmod_logger->info("!!! phase: {}", PhaseName);
     for( s=0; s<NSub; s++)
         for( m=0; m<NMoi; m++)
             y[s][m] = 0.0;
     // copying multiplicity numbers
     for( j=0; j<NComp; j++)
         for( s=0; s<NSub; s++)
-           for( m=0; m<NMoi; m++)
-           {  // extracting multiplicity numbers
-              mn[j][s][m] = aMoiSN[k];
-              k++;
-           }
+            for( m=0; m<NMoi; m++)
+            {  // extracting multiplicity numbers
+                mn[j][s][m] = aMoiSN[k];
+                k++;
+            }
+
+    if(TSolMod::solmod_logger->should_log(spdlog::level::trace)) {
+        solmod_logger->trace("!!! phase: {}", PhaseName);
+        for( j=0; j<NComp; j++) {
+            for( s=0; s<NSub; s++) {
+                deb_info += to_string(mn[j][s], NMoi);
+                deb_info += "\n";
+            }
+            deb_info += "\n";
+        }
+        solmod_logger->trace("array of end member moiety-site multiplicity numbers [NComp={}][NSub={}][NMoi={}]:  {}",
+                            NComp, NSub, NMoi, deb_info);
+    }
+
     // calculation of total site multiplicity numbers
     double mnsj;
     for( s=0; s<NSub; s++) {
@@ -232,24 +246,12 @@ long int TSolMod::init_multisite()
             }
         }
     }
-    // debug print
-    std::string deb_info;
-    for(j=0; j<NSub; j++) {
-        deb_info += std::to_string(mns[j])+" ";
+
+    if(TSolMod::solmod_logger->should_log(spdlog::level::trace)) {
+        // debug print
+        deb_info = to_string(mns, NSub);
+        solmod_logger->trace("array of total site multiplicities: NSub = {}:  {}", NSub, deb_info);
     }
-    solmod_logger->info("array of total site multiplicities: size = {}:  {}", NSub, deb_info);
-    deb_info.clear();
-    for( j=0; j<NComp; j++) {
-        for( s=0; s<NSub; s++) {
-            for( m=0; m<NMoi; m++) {  // extracting multiplicity numbers
-                deb_info += std::to_string(mn[j][s][m])+" ";
-            }
-            deb_info += "\n";
-        }
-        deb_info += "\n";
-    }
-    solmod_logger->info("array of end member moiety-site multiplicity numbers [NComp={}][NSub={}][NMoi={}]:  {}",
-                        NComp, NSub, NMoi, deb_info);
     return 0;
 }
 
