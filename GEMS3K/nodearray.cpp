@@ -707,7 +707,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         message( "Writing to disk a set of node array files from interrupted RMT task. \nPlease, wait...", ii );
         CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT0 );
         auto dbr_file_name = generator.gen_dbr_file_name( 0, ii );
-        calcNode->write_dbr_format_file( generator.get_path(dbr_file_name), generator.files_mode(), with_comments, brief_mode );
+        calcNode->write_dbr_format_file( generator.get_path(dbr_file_name), generator.files_mode(), with_comments, brief_mode, true );
 
         fout_dat_lst << " \"" << dbr_file_name << "\"";
         if( !first )
@@ -720,7 +720,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
 
             CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT1 );
             auto dbr2_file_name = generator.gen_dbr_file_name( 1, ii );
-            calcNode->write_dbr_format_file( generator.get_path(dbr2_file_name), generator.files_mode(), with_comments, brief_mode );
+            calcNode->write_dbr_format_file( generator.get_path(dbr2_file_name), generator.files_mode(), with_comments, brief_mode, true );
         }
     } // ii
 

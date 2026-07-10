@@ -57,8 +57,12 @@ void  TNode::read_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator:
 }
 
 void  TNode::write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f,
-                                    bool with_comments, bool brief_mode )
+                                    bool with_comments, bool brief_mode, bool checkTP )
 {
+    if(checkTP && dbr_dch_api::change_TP(CSD, CNode->TK, CNode->P)) {
+        brief_mode = true;
+    }
+
 #ifdef NO_NODEARRAYLEVEL
     CNode->NodeStatusFMT = No_nodearray;
 #endif

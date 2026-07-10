@@ -51,24 +51,25 @@ std::string check_TP(const DATACH* CSD, double TK, double P)
 
     if( CSD->mLook == 1 )
     {
-        for(long int  jj=0; jj<CSD->nPp; jj++)
-            if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) )
-            {
+        for(long int  jj=0; jj<CSD->nPp; jj++) {
+            if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) ) {
                 return error_msg;
             }
-        Error( "check_TP: ", std::string("Temperature ")+std::to_string(TK)+
-               " and pressure "+std::to_string(P)+" out of range");
-        //return false;
+        }
+        error_msg += "Current TK=" + std::to_string(TK);
+        error_msg += " and P=" + std::to_string(P);
+        error_msg += " are beyond the T, P pairs list (no interpolation mode)";
+
+        //Error( "check_TP: ", std::string("Temperature ")+std::to_string(TK)+
+        //       " and pressure "+std::to_string(P)+" out of range");
+        return error_msg;
     }
-    else
-    {
-        if( TK <= CSD->TKval[0] - CSD->Ttol )
-        { 				// Lower boundary of T interpolation interval
+    else  {
+        if( TK <= CSD->TKval[0] - CSD->Ttol )  {	// Lower boundary of T interpolation interval
             okT = false;
             T_ = CSD->TKval[0] - CSD->Ttol;
         }
-        if( TK >= CSD->TKval[CSD->nTp-1] + CSD->Ttol )
-        {
+        if( TK >= CSD->TKval[CSD->nTp-1] + CSD->Ttol )  {
             okT = false;
             T_ = CSD->TKval[CSD->nTp-1] + CSD->Ttol;
         }
@@ -78,13 +79,11 @@ std::string check_TP(const DATACH* CSD, double TK, double P)
             error_msg += std::to_string(T_);
         }
 
-        if( P <= CSD->Pval[0] - CSD->Ptol )
-        {
+        if( P <= CSD->Pval[0] - CSD->Ptol ) {
             okP = false;
             P_ = CSD->Pval[0] - CSD->Ptol;
         }
-        if( P >= CSD->Pval[CSD->nPp-1] + CSD->Ptol )
-        {
+        if( P >= CSD->Pval[CSD->nPp-1] + CSD->Ptol ) {
             okP = false;
             P_ = CSD->Pval[CSD->nPp-1] + CSD->Ptol;
         }
@@ -96,6 +95,41 @@ std::string check_TP(const DATACH* CSD, double TK, double P)
         return error_msg;
     }
     return error_msg;
+}
+
+bool change_TP(const DATACH* CSD, double& TK, double& P)
+{
+    bool ok = false;
+
+    if( CSD->mLook==1 ) {
+        for(long int jj=0; jj<CSD->nPp; jj++) {
+            if( (fabs(P-CSD->Pval[jj]) < CSD->Ptol) && (fabs(TK-CSD->TKval[jj]) < CSD->Ttol) ) {
+                return ok;
+            }
+        }
+        TK = CSD->TKval[0];
+        P = CSD->Pval[0];
+        return true;
+    }
+    else  {
+        if( TK <= CSD->TKval[0]-CSD->Ttol )  {	// Lower boundary of T interpolation interval
+            ok = true;
+            TK = CSD->TKval[0];
+        }
+        else if( TK >= CSD->TKval[CSD->nTp-1]+CSD->Ttol )  {
+            ok= true;
+            TK = CSD->TKval[CSD->nTp-1];
+        }
+        if( P <= CSD->Pval[0]-CSD->Ptol ) {
+            ok = true;
+            P = CSD->Pval[0];
+        }
+        else if( P >= CSD->Pval[CSD->nPp-1]+CSD->Ptol ) {
+            ok = true;
+            P = CSD->Pval[CSD->nPp-1];
+        }
+    }
+    return ok;
 }
 
 long int check_grid_T(const DATACH* CSD, double TK)
