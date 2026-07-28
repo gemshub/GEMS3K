@@ -758,6 +758,14 @@ public:
     /// \return 0
     double Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 );
 
+    ///
+    /// \brief Set_aPH
+    /// \param xPH index of phase
+    /// \param aPH sepcific surface area in m2/kg
+    /// \return
+    ///
+    double Set_aPH(const long int xPH, const double aPH );
+
     /// Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
     /// from the DATACH structure.
     /// \param xCH is the DC DCH index

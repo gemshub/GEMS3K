@@ -279,6 +279,20 @@ double TNode::Set_DC_G0(const long int xCH, const double P, const double TK, con
     return 0;
 }
 
+
+// used in GEMSFIT only
+//Sets specific surface area (m2/kg)
+//in the DATACH structure ( xPH is the PH DCH index)
+double TNode::Set_aPH(const long int xPH, const double aPH )
+{
+    if( CSD->nAalp >0 )
+    {
+        CNode->aPH[xPH] = aPH;
+        return 0;
+    }
+    return 1;
+}
+
 //Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
 //from the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
 // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
