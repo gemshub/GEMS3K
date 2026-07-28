@@ -87,7 +87,6 @@ public:
     GemDataStream &operator>>( unsigned long &i ) { return operator>>((long&)i); }
     GemDataStream &operator>>( float &f );
     GemDataStream &operator>>( double &f );
-//    GemDataStream &operator>>( char *&str );
 
     GemDataStream &operator<<( char i );
     GemDataStream &operator<<( unsigned char i ) { return operator<<((char) i); }
@@ -100,41 +99,34 @@ public:
     GemDataStream &operator<<( unsigned long i ) { return operator<<((long) i); }
     GemDataStream &operator<<( float f );
     GemDataStream &operator<<( double f );
-//    GemDataStream &operator<<( const char *str );
-
-    void readArray( char* arr, int size );
-    void readArray( short* arr, int size );
-    void readArray( int* arr, int size );
-    void readArray( long* arr, int size );
-    void readArray( float* arr, int size );
-    void readArray( double* arr, int size );
-
-    void writeArray( char* arr, int size );
-    void writeArray( short* arr, int size );
-    void writeArray( int* arr, int size );
-    void writeArray( long* arr, int size );
-    void writeArray( float* arr, int size );
-    void writeArray( double* arr, int size );
 
     template <class T>
     void writeArray( T* arr, int size )
     {
-      if( !arr )
-        return;
-      for(int ii=0; ii<size; ii++)
-       *this << arr[ii];
+        if(!arr) {
+            return;
+        }
+        for(int ii=0; ii<size; ii++) {
+            *this << arr[ii];
+        }
     }
 
     template <class T>
     void readArray( T* arr, int size )
     {
-      if( !arr )
-        return;
-      for(int ii=0; ii<size; ii++)
-       *this >> arr[ii];
+        if(!arr) {
+            return;
+        }
+        for(int ii=0; ii<size; ii++) {
+            *this >> arr[ii];
+        }
     }
 
+    void writeArray(const std::vector<std::string>& arr);
+    void readArray(std::vector<std::string>& arr, int size);
 
+    void readArray( char* arr, int size );
+    void writeArray( char* arr, int size );
 };
 
 #endif

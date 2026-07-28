@@ -132,7 +132,7 @@ void NlohmannJsonRead::read_strings_array(const std::string &field_name, char *a
     }
 }
 
-void NlohmannJsonRead::read_array(const std::string &field_name, std::vector<double> arr)
+void NlohmannJsonRead::read_array(const std::string &field_name, std::vector<double>& arr)
 {
     std::string jkey = key( field_name );
 
@@ -145,7 +145,23 @@ void NlohmannJsonRead::read_array(const std::string &field_name, std::vector<dou
         Error( "Json read error 05", msg );
     }
 
-    if( !json_arr_it->is_array()  )
+    if( json_arr_it->is_array()  )
+        json_arr_it->get_to(arr);
+}
+void NlohmannJsonRead::read_strings_array(const std::string &field_name, std::vector<std::string>& arr)
+{
+    std::string jkey = key( field_name );
+
+    auto json_arr_it = json_data.find(jkey);
+    if( json_arr_it == json_data.end() )
+    {
+        std::string msg;
+        msg = field_name;
+        msg += " - No data where expected.\n";
+        Error( "Json read error 05", msg );
+    }
+
+    if( json_arr_it->is_array()  )
         json_arr_it->get_to(arr);
 }
 

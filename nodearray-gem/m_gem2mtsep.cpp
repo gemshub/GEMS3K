@@ -11,11 +11,15 @@
 //
 //-------------------------------------------------------------------
 
+#include <filesystem>
+
 #include "m_gem2mt.h"
 #include "GEMS3K/io_keyvalue.h"
 #include "GEMS3K/io_simdjson.h"
 #include "GEMS3K/io_nlohmann.h"
 #include "GEMS3K/nodearray.h"
+
+namespace fs = std::filesystem;
 
 TGEM2MT* TGEM2MT::pm;
 
@@ -47,12 +51,7 @@ void TGEM2MT::RecCalc()
 
         if( mtp->PsVTK != S_OFF )
         {
-#ifdef  _WIN32
-                mkdir( pathVTK.c_str() );
-#else
-                mkdir( pathVTK.c_str(), 0755 );
-#endif
-            // vfMakeDirectory(window(), pathVTK.c_str() );
+            fs::create_directory(pathVTK);
         }
 
         if( mtp->iStat != AS_RUN  )

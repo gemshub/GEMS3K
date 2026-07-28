@@ -88,6 +88,16 @@ inline void copyValues( T* arr, T* data, IT size )
     arr[ii] = data[ii];
 }
 
+inline void copyValues(char* arr, std::string data, size_t arr_size)
+{
+    size_t csize = std::min(arr_size, data.size());
+    if(!arr) {
+        return;
+    }
+    for(size_t ii=0; ii<csize; ii++) {
+        arr[ii] = data[ii];
+    }
+}
 template <class IT>
 inline void copyValues( double* arr, float* data, IT size )
 {

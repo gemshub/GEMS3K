@@ -474,9 +474,9 @@ void TNode::datach_copy( DATACH* otherCSD )
     if(  CSD->iGrd  )
          copyValues( CSD->DD, otherCSD->DD, CSD->nDCs*gridTP() );
 
-    copyValues( (char *)CSD->ICNL, (char *)otherCSD->ICNL, MaxICN*CSD->nIC );
-    copyValues( (char *)CSD->DCNL, (char *)otherCSD->DCNL, MaxDCN*CSD->nDC );
-    copyValues( (char *)CSD->PHNL, (char *)otherCSD->PHNL, MaxPHN*CSD->nPH );
+    CSD->ICNL = otherCSD->ICNL;
+    CSD->DCNL = otherCSD->DCNL;
+    CSD->PHNL = otherCSD->PHNL;
 }
 
 // Copy node (work DATABR structure) data from other DBR.
@@ -689,7 +689,7 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
             // depending on the presence of these arrays in DATACH and Multi structures
             for( j=jb; j<je; j++ )
             {
-                std::string symbol = std::string(CSD->DCNL[j], 0, MaxDCN);
+                std::string symbol = CSD->DCNL[j];
                 auto propAl    = thermo_engine->thermoPropertiesSubstance(funT, funP, symbol);
 
                 G0 = propAl.gibbs_energy.val;

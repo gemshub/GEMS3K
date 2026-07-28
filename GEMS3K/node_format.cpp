@@ -178,16 +178,16 @@ void TNode::databr_name_to_vtk( std::fstream& ff, long int nfild, long int ndx, 
   switch( dbr_dch_api::DataBR_fields[nfild].indexation )
   {
     case 1: break;
-    case nICbi: str = char_array_to_string( CSD->ICNL[ IC_xDB_to_xCH( ndx ) ],MaxICN );
+    case nICbi: str = CSD->ICNL[IC_xDB_to_xCH(ndx)];
                 break;
-    case nDCbi: str = char_array_to_string( CSD->DCNL[ DC_xDB_to_xCH( ndx ) ],MaxDCN );
+    case nDCbi: str = CSD->DCNL[DC_xDB_to_xCH(ndx)];
               break;
     case nPHbi:
-    case nPSbi: str = char_array_to_string(CSD->PHNL[ Ph_xDB_to_xCH( ndx ) ],MaxPHN );
+    case nPSbi: str = CSD->PHNL[Ph_xDB_to_xCH(ndx)];
             break;
     case nPSbnICbi:
-                str = char_array_to_string(  CSD->PHNL[ Ph_xDB_to_xCH( ndx/nx2 ) ],MaxPHN );
-                str2 = char_array_to_string( CSD->ICNL[ IC_xDB_to_xCH( ndx%nx2 ) ], MaxICN );
+                str = CSD->PHNL[Ph_xDB_to_xCH(ndx/nx2)];
+                str2 = CSD->ICNL[IC_xDB_to_xCH(ndx%nx2)];
           break;
     default: str = std::string( "UNDEFINED");
   }

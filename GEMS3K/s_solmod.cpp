@@ -389,7 +389,7 @@ void TSolMod::to_json_file(const std::string& path) const
 void TSolMod::to_json_stream(std::ostream& ff) const
 {
 #ifdef USE_NLOHMANNJSON
-    io_formats::NlohmannJsonWrite out_format( ff, "set_name" );
+    io_formats::NlohmannJsonWrite out_format( ff, "set_name", true);
 #else
     io_formats::SimdJsonWrite out_format( ff, "set_name", true );
 #endif

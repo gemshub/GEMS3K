@@ -257,7 +257,7 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
     {
         prar.writeComment( _comment, "\n### Arrays: for dimensions and index lists, see Section (2) of DCH file\n" );
         prar.writeComment( _comment, "## (4) Data for Independent Components");
-        prar.writeArray( "", CSD->ICNL[0], CSD->nIC, MaxICN );
+        prar.writeArray("", CSD->ICNL, CSD->nIC);
     }
 
     prar.writeArray(  f_bIC,  CNode->bIC, CSD->nICb, -1L,_comment, brief_mode );
@@ -268,7 +268,7 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
     if( _comment )
     {
         prar.writeComment( _comment, "\n## (5) Data for Dependent Components");
-        prar.writeArray(  "", CSD->DCNL[0], CSD->nDC, MaxDCN );
+        prar.writeArray("", CSD->DCNL, CSD->nDC);
     }
 
     prar.writeArray(  f_xDC,  CNode->xDC, CSD->nDCb, -1L,_comment, brief_mode  );
@@ -279,7 +279,7 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
     if( _comment )
     {
         prar.writeComment( _comment, "\n## (6) Data for Phases");
-        prar.writeArray(  "", CSD->PHNL[0], CSD->nPH, MaxPHN );
+        prar.writeArray("", CSD->PHNL, CSD->nPH);
     }
 
     prar.writeArray(  f_aPH,  CNode->aPH, CSD->nPHb, -1L,_comment, brief_mode );
@@ -296,7 +296,7 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
         if( _comment )
         {
             prar.writeComment( _comment,  DataBR_fields[f_bPS].comment.c_str() );
-            prar.writeArray(  "", CSD->ICNL[0], CSD->nIC, MaxICN );
+            prar.writeArray("", CSD->ICNL, CSD->nIC);
         }
         prar.writeArray(  f_bPS,  CNode->bPS, CSD->nPSb*CSD->nICb, CSD->nICb,false, brief_mode );
     }
@@ -545,7 +545,7 @@ void datach_to_text_file(const DATACH* CSD, TIO& out_format, bool use_thermofun,
     {
         if( _comment )
             prar.writeComment( _comment, "# ICNL: List of Independent Component names (<=4 characters per name) [nIC]");
-        prar.writeArray(  "ICNL", CSD->ICNL[0], CSD->nIC, MaxICN );
+        prar.writeArray("ICNL", CSD->ICNL);
     }
     prar.writeArrayF(  f_ccIC, CSD->ccIC, CSD->nIC, 1L,_comment, brief_mode );
     prar.writeArray(  f_ICmm, CSD->ICmm, CSD->nIC, -1L,_comment, brief_mode);
@@ -556,7 +556,7 @@ void datach_to_text_file(const DATACH* CSD, TIO& out_format, bool use_thermofun,
     {
         if( _comment )
             prar.writeComment( _comment, "# DCNL: Name list of Dependent Components (<=16 characters per name) [nDC]");
-        prar.writeArray(  "DCNL", CSD->DCNL[0], CSD->nDC, MaxDCN );
+        prar.writeArray("DCNL", CSD->DCNL);
     }
     prar.writeArrayF(  f_ccDC, CSD->ccDC, CSD->nDC, 1L,_comment, brief_mode );
     prar.writeArray(  f_DCmm, CSD->DCmm, CSD->nDC, -1L,_comment, brief_mode);
@@ -567,7 +567,7 @@ void datach_to_text_file(const DATACH* CSD, TIO& out_format, bool use_thermofun,
     {
         if( _comment )
             prar.writeComment( _comment, "# PHNL: List of Phase names (<=16 characters per name) [nPH]");
-        prar.writeArray(  "PHNL", CSD->PHNL[0], CSD->nPH, MaxPHN );
+        prar.writeArray("PHNL", CSD->PHNL);
     }
     prar.writeArrayF(  f_ccPH, CSD->ccPH, CSD->nPH, 1L,_comment, brief_mode );
     prar.writeArray(  f_nDCinPH, CSD->nDCinPH, CSD->nPH, -1L,_comment, brief_mode);
@@ -723,19 +723,19 @@ void datach_from_text_file(DATACH* CSD, TIO& in_format, bool use_thermofun)
             break;
         case f_xph: rddar.readArray( "xph", CSD->xph, CSD->nPHb);
             break;
-        case f_ICNL: rddar.readArray( "ICNL", CSD->ICNL[0], CSD->nIC, MaxICN );
+        case f_ICNL: rddar.readArray( "ICNL", CSD->ICNL, CSD->nIC);
             break;
         case f_ccIC: rddar.readArray( "ccIC", CSD->ccIC, CSD->nIC, 1 );
             break;
         case f_ICmm: rddar.readArray( "ICmm", CSD->ICmm, CSD->nIC);
             break;
-        case f_DCNL: rddar.readArray( "DCNL", CSD->DCNL[0], CSD->nDC, MaxDCN );
+        case f_DCNL: rddar.readArray( "DCNL", CSD->DCNL, CSD->nDC);
             break;
         case f_ccDC: rddar.readArray( "ccDC", CSD->ccDC, CSD->nDC, 1 );
             break;
         case f_DCmm: rddar.readArray( "DCmm", CSD->DCmm, CSD->nDC);
             break;
-        case f_PHNL: rddar.readArray( "PHNL", CSD->PHNL[0], CSD->nPH, MaxPHN );
+        case f_PHNL: rddar.readArray( "PHNL", CSD->PHNL, CSD->nPH);
             break;
         case f_ccPH: rddar.readArray( "ccPH", CSD->ccPH, CSD->nPH, 1 );
             break;
@@ -864,9 +864,9 @@ void datach_to_file(const DATACH* CSD, GemDataStream& ff)
     if(  CSD->iGrd  )
         ff.writeArray( CSD->DD, CSD->nDCs*gridTP(CSD) );
 
-    ff.writeArray( (char *)CSD->ICNL, MaxICN*CSD->nIC );
-    ff.writeArray( (char *)CSD->DCNL, MaxDCN*CSD->nDC );
-    ff.writeArray( (char *)CSD->PHNL, MaxPHN*CSD->nPH );
+    ff.writeArray(CSD->ICNL);
+    ff.writeArray(CSD->DCNL);
+    ff.writeArray(CSD->PHNL);
 }
 
 // Reading DataCH structure from binary file
@@ -914,9 +914,9 @@ void datach_from_file(DATACH* CSD, GemDataStream& ff)
     if(  CSD->iGrd  )
         ff.readArray( CSD->DD, CSD->nDCs*gridTP(CSD) );
 
-    ff.readArray( (char *)CSD->ICNL, MaxICN*CSD->nIC );
-    ff.readArray( (char *)CSD->DCNL, MaxDCN*CSD->nDC );
-    ff.readArray( (char *)CSD->PHNL, MaxPHN*CSD->nPH );
+    ff.readArray(CSD->ICNL, CSD->nIC);
+    ff.readArray(CSD->DCNL, CSD->nDC);
+    ff.readArray(CSD->PHNL, CSD->nPH);
 }
 
 // writing DataBR to binary file

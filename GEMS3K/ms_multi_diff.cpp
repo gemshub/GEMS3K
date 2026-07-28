@@ -460,7 +460,7 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
 
 #ifdef  USE_THERMO_LOG
             if(GemsSettings::log_thermodynamic) {
-                f_log << "\n" << std::string(dCH->DCNL[j], 0, MaxDCN) << ";" << floating_point_to_string(Go)
+                f_log << "\n" << dCH->DCNL[j] << ";" << floating_point_to_string(Go)
                       << ";" << floating_point_to_string(pm.G0[j])
                       << ";" << floating_point_to_string(pm.Vol[j]);
                 if( dCH->S0 ) f_log << ";" << floating_point_to_string(pm.S0[j]);

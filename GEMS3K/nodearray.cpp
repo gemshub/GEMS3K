@@ -656,6 +656,10 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     GEMS3KGenerator generator( filepath, nIV, type_f );
     calcNode->current_output_set_name = generator.get_name();
 
+    if( !generator.create_dir() ) {
+        message("Error create directory "+generator.get_dir(), 0);
+        return "";
+    }
     // open *-dat.lst
     fout_dat_lst.open( filepath, std::ios::out );
     fout_dat_lst << generator.gen_dat_lst_head();
@@ -721,8 +725,10 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     } // ii
 
     // Add full multy to test
-    auto multi_txt = filepath+".txt";
-    calcNode->multi_ptr()->to_text_file(multi_txt.c_str(), false);
+    //auto multi_path = generator.get_dir();
+    //calcNode->multi_ptr()->to_text_file((multi_path+"all_multy_txt").c_str(), false);
+    //calcNode->multi_ptr()->solmod_to_text_file(multi_path);
+    //calcNode->multi_ptr()->solmod_to_json_file(multi_path);
     return dbr_lst_file_path;
 }
 
