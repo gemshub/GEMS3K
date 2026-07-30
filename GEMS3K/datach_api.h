@@ -139,6 +139,9 @@ long int gridTP(const DATACH* pCSD);
 /// Checks if given temperature TK and pressure P fit within the interpolation
 /// intervals of the DATACH lookup arrays (returns empty message) or not (returns error message)
 std::string check_TP(const DATACH* CSD, double TK, double P);
+/// Checks if the given temperature TK and pressure P fit within the interpolation intervals of the
+/// DATACH lookup arrays (returns false) or not (changes TK and P to limits and returns true)
+bool change_TP(const DATACH* CSD, double& TK, double& P);
 /// Tests TK as a grid point for the interpolation of thermodynamic data.
 /// \return index in the lookup grid array or -1  if it is not a grid point
 long int check_grid_T(const DATACH* CSD, double TK);

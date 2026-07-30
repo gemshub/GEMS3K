@@ -55,6 +55,7 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include  <map>
 // #include "allan_ipm.h"
 #include "datach_api.h"
 #include "activities.h"
@@ -1271,7 +1272,8 @@ protected:
     ///                         (json format): interpret the flag with_comments=on as "pretty JSON" and
     ///                                   with_comments=off as "condensed JSON"
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
-    void  write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode );
+    ///  \param checkTP        if true, check that the T-P of the current system is in the lookup table (change the given T-P interval if not and use brief_mode).
+    void  write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f, bool with_comments, bool brief_mode, bool checkTP=false );
 
 
     // Methods to perform output to vtk files
