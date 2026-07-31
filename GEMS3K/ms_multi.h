@@ -99,6 +99,16 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
            DKIN; ///< Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }
     char *tprn;       ///< internal
 
+    // Enable (1, default) or disable (0) stall detection in MassBalanceRefinement(): with it
+    // disabled, a stalled MBR run no longer exits early (iRet reset to 0) but keeps iterating
+    // until DP is exhausted, surfacing as a real "Maximum allowed number of MBR iterations
+    // exceeded" failure instead. GEMS3K-internal only: deliberately placed after every other
+    // field (with a default member initializer) so that none of GEMSGUI's positional
+    // BASE_PARAM/SPP_SETTING aggregate initializers or its binary project-file (de)serialization
+    // need to know this field exists at all - it always keeps its default of 1 there. Only
+    // GEMS3K's own keyword-based ipm-dat I/O (ms_multi_format.cpp, "pa_PSTALL") can override it.
+    short PSTALL = 1;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -153,7 +163,8 @@ typedef struct
     js,     ///< js - index of DC for IPN equations ( CalculateActivityCoefficients() )
     next,   ///< for IPN equations (is it really necessary? TW please check!
     sitNcat,    //< Can be re-used
-    sitNan      // Can be re-used
+    sitNan,     // Can be re-used
+    SolveCallCount ///< Number of calls to MakeAndSolveSystemOfLinearEquations() during this GEM call (reset per call)
     ;
     double
     TC,  	///< Temperature T, min. (0,2000 C)
@@ -195,6 +206,10 @@ typedef struct
     GWAT,       ///< used in ipm_gamma()
     YMET,       ///< reserved
     PCI,        ///< Current value of Dikin criterion of IPM convergence DK>=DX
+    CondNum,    ///< Estimated 2-norm condition number of the IPM linear system A (worst case over this GEM call, power/inverse iteration on the Cholesky/LU factors), 0 if not yet computed
+    CondNumDiag,///< Cheap proxy: max/min |diagonal| ratio of the IPM linear system A (worst case over this GEM call), 0 if not yet computed
+    SolveTimeMs,   ///< Wall-clock time (ms), summed over all calls to MakeAndSolveSystemOfLinearEquations() during this GEM call (matrix build + decomposition + solve + condition-number diagnostics)
+    CondNumTimeMs, ///< Wall-clock time (ms), summed over all calls, spent specifically computing the condition-number diagnostics (subset of SolveTimeMs) — isolates the cost of that instrumentation from the rest of the linear solve
     DXM,        ///< IPM convergence criterion threshold DX (1e-5)
     lnP,        ///< log Ptotal
     RT,         ///< RT: 8.31451*T (J/mole/K)
@@ -906,7 +921,8 @@ typedef enum {  // Field index into outField structure
     f_pa_PLLG,  f_tMin,  f_dcMod,
     //new
     f_kMod, f_LsKin, f_LsUpt, f_xICuC, f_PfFact,
-    f_LsESmo, f_LsISmo, f_SorMc, f_LsMdc2, f_LsPhl
+    f_LsESmo, f_LsISmo, f_SorMc, f_LsMdc2, f_LsPhl,
+    f_pa_PSTALL
 
 } MULTI_DYNAMIC_FIELDS;
 

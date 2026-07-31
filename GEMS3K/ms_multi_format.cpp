@@ -164,7 +164,8 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "SorMc",    0 , 0, 0,  "# SorMc: Phase-related kinetics and sorption model parameters: [Fis][16]" },
     // TSolMod stuff
     { "LsMdc2",    0 , 0, 0,  "# LsMdc2: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member" },
-    { "LsPhl",    0 , 0, 0,  "# LsPhl: Number of phase links; number of link parameters; [Fi][2]" }
+    { "LsPhl",    0 , 0, 0,  "# LsPhl: Number of phase links; number of link parameters; [Fi][2]" },
+    { "pa_PSTALL", 0 , 0, 0, "# pa_PSTALL: Enable (1) or disable (0) stall detection in MassBalanceRefinement { 1 }" }
 };
 
 
@@ -183,7 +184,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 80, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 81, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -351,6 +352,8 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_DKIN, pa_p->DKIN, _comment, false  );
     if(!brief_mode || pa_p->PLLG != pa_p_.PLLG )
         prar.writeField(f_pa_PLLG, pa_p->PLLG, _comment, false  );
+    if(!brief_mode || pa_p->PSTALL != pa_p_.PSTALL )
+        prar.writeField(f_pa_PSTALL, pa_p->PSTALL, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -756,7 +759,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 80, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 81, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1165,6 +1168,8 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_muj: rddar.readArray("muj" , pm.muj, pm.L);
             break;
         case f_pa_PLLG: rddar.readArray("pa_PLLG" , &pa_p->PLLG, 1);
+            break;
+        case f_pa_PSTALL: rddar.readArray("pa_PSTALL" , &pa_p->PSTALL, 1);
             break;
         case f_tMin: rddar.readArray("tMin" , &pm.tMin, 1);
             break;
