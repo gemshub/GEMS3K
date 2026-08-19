@@ -1504,10 +1504,6 @@ private:
 	void Ecalc( double z, double z1, double I, double DH_term,
 					double& Etheta, double& Ethetap );
 
-    void ETHETAS(double ZJ, double ZK, double I, double DH_term, double& etheta, double& ethetap);
-
-    void ETHETA_PARAMS(double X, double& JAY, double& JPRIME );
-
 	inline long int getN() const
 	{
 		return Nc+Na+Nn;
