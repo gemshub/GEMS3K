@@ -16,6 +16,18 @@ if(USE_SPDLOG_PRECOMPILED)
    endif()
 endif()
 
+# General gate for benchmark/diagnostics-only instrumentation (condition-number
+# estimation, per-phase timing, and future additions in the same spirit —
+# structured failure counters, stall/convergence-trajectory export, etc., per
+# GEMS3K/CLAUDE.md's sequencing plan). This code adds real overhead per call
+# (e.g. condition-number estimation costs ~44% of the linear-solve step itself
+# — see ipm_main.cpp's MakeAndSolveSystemOfLinearEquations()), so it's OFF by
+# default: normal/production use of GEMS3K pays nothing extra. gems-benchmark's
+# build turns this ON to get per-system diagnostics. New instrumentation of
+# this kind should reuse GEMS3K_BENCHMARK_DIAGNOSTICS rather than adding a new
+# macro per feature.
+option(ENABLE_BENCHMARK_DIAGNOSTICS "Enable benchmark/diagnostics-only instrumentation (condition-number estimation, per-phase timing, etc.) in the IPM solver (adds overhead; for benchmarking/diagnostics only)" OFF)
+
 # Check if a shared library is to be built
 if(BUILD_SHARED_LIBS)
    # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
@@ -23,6 +35,9 @@ if(BUILD_SHARED_LIBS)
 
    add_library(GEMS3K ${HEADER_FILES} ${SOURCE_FILES})
    add_library(GEMS3K::GEMS3K ALIAS GEMS3K)
+   if(ENABLE_BENCHMARK_DIAGNOSTICS)
+       target_compile_definitions(GEMS3K PRIVATE GEMS3K_BENCHMARK_DIAGNOSTICS)
+   endif()
    if(USE_THERMOFUN MATCHES ON)
        target_compile_definitions(GEMS3K PUBLIC USE_SPDLOG_PRECOMPILED)
        target_link_libraries(GEMS3K PUBLIC ThermoFun::ThermoFun)
@@ -53,6 +68,9 @@ endif()
 if(BUILD_STATIC_LIBS)
    add_library(GEMS3K-static STATIC ${HEADER_FILES} ${SOURCE_FILES})
     add_library(GEMS3K::GEMS3K-static ALIAS GEMS3K-static)
+   if(ENABLE_BENCHMARK_DIAGNOSTICS)
+       target_compile_definitions(GEMS3K-static PRIVATE GEMS3K_BENCHMARK_DIAGNOSTICS)
+   endif()
    if(USE_THERMOFUN MATCHES ON)
      target_link_libraries(GEMS3K-static PUBLIC ThermoFun::ThermoFun)
    endif()
