@@ -40,6 +40,7 @@
 #include "s_sorpmod.h"
 #include "s_kinmet.h"
 #include "gems3k_impex.h"
+#include "ipm_optima.h"
 
 class GemDataStream;
 class TProfil;
@@ -633,6 +634,49 @@ public:
     void InitalizeGEM_IPM_Data();
     virtual void DC_LoadThermodynamicData( TNode* aNa = nullptr );
 
+#ifdef USE_OPTIMA_SOLVER
+    // Equilibrium via the Optima library's general primal-dual interior-
+    // point NLP solver, as an alternative to the IPM/MBR loop above - see
+    // ipm_optima.cpp and GEMS3K/CLAUDE.md, "GEMS3K chemistry + Optima,
+    // joint pH/Eh solve". Dispatched from TNode::GEM_run() (node.cpp) for
+    // NEED_GEM_AOP/SOP, exactly as CalculateEquilibriumState() is
+    // dispatched for NEED_GEM_AIA/SIA. Reads pm.pNP (set by GEM_run()
+    // before the call, same flag AIA/SIA already use) to choose a cold
+    // (AutoInitialApproximation(), pNP==0, "AOP") or warm (reuse the
+    // existing pm.Y[], pNP==1, "SOP") starting point. Any control
+    // conditions registered via SetControlCondition_pH()/_Eh() (or a
+    // custom EqControlCondition appended directly to
+    // optima_control_conditions) are folded into the same joint Newton
+    // solve; with none registered this is a plain equilibrium solve,
+    // architecturally equivalent to AIA/SIA but solved via Optima instead
+    // of GEMS3K's own IPM/MBR.
+    double CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM );
+
+    /// Registers (or replaces, by name) a pH control condition for the
+    /// next CalculateEquilibriumStateOptima() call. Persists across calls
+    /// until ClearControlConditions() - not single-shot.
+    void SetControlCondition_pH( double pH_target, double tolerance = 1e-3 );
+    /// Registers (or replaces, by name) an Eh control condition (V) for
+    /// the next CalculateEquilibriumStateOptima() call.
+    void SetControlCondition_Eh( double Eh_target, double tolerance = 2e-3 );
+    /// Removes every registered control condition.
+    void ClearControlConditions();
+
+    /// Read-only access to the registered control conditions - after a
+    /// CalculateEquilibriumStateOptima() call, each entry's
+    /// titrantAmount/achievedValue/targetMet fields hold that call's result.
+    const std::vector<EqControlCondition>& GetControlConditions() const
+    { return optima_control_conditions; }
+
+    /// Worst-case (infinity-norm) mass-balance residual |A*Y - B| over the
+    /// current pm.Y[]/pm.B[] - a standalone diagnostic for callers/tests to
+    /// inspect directly. CalculateEquilibriumStateOptima()'s own post-solve
+    /// trustworthiness check uses CheckMassBalanceResiduals() instead (the
+    /// same per-IC-tolerance check the native solver's own testMulti() path
+    /// uses), not this method.
+    double OptimaMaxMassBalanceResidual();
+#endif
+
     // acces for node class
     TSolMod * pTSolMod (int xPH);
 
@@ -644,6 +688,18 @@ public:
     double InternalEnergy( double TC, double P );
 
 protected:
+
+#ifdef USE_OPTIMA_SOLVER
+    /// Control conditions registered via SetControlCondition_pH()/_Eh()
+    /// (or appended directly by a caller building a fully custom
+    /// EqControlCondition - see ipm_optima.h), active for the next
+    /// CalculateEquilibriumStateOptima() call. `stoich`/`fixedGradientFn`/
+    /// `achievedValueFn` are already fully resolved by the time an entry
+    /// lands here (index lookups need only CSD, valid immediately after
+    /// GEM_init(); the closed-form functions capture resolved indices by
+    /// value and read G0[]/T lazily, at actual call time).
+    std::vector<EqControlCondition> optima_control_conditions;
+#endif
 
     MULTI pm;
     MULTI *pmp;

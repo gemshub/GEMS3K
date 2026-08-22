@@ -251,6 +251,31 @@ public:
         return char_array_to_string(pmm->errorBuf, 1024);
     }
 
+#ifdef USE_OPTIMA_SOLVER
+    /// Registers (or replaces) a pH equilibrium control condition for the
+    /// next GEM_run() call made in NEED_GEM_AOP/SOP mode (see NODECODECH
+    /// in databr.h and TMultiBase::CalculateEquilibriumStateOptima()).
+    /// Persists across calls until Clear_ControlConditions().
+    void Set_pH_target( double pH_target, double tolerance = 1e-3 )
+    { multi_ptr()->SetControlCondition_pH( pH_target, tolerance ); }
+    /// Registers (or replaces) an Eh (V) equilibrium control condition.
+    void Set_Eh_target( double Eh_target, double tolerance = 2e-3 )
+    { multi_ptr()->SetControlCondition_Eh( Eh_target, tolerance ); }
+    /// Removes every registered control condition.
+    void Clear_ControlConditions()
+    { multi_ptr()->ClearControlConditions(); }
+    /// Titrant amount actually solved for the given condition ("pH"/"Eh")
+    /// in the last AOP/SOP GEM_run() call, or 0 if that condition was not
+    /// active. See EqControlCondition (ipm_optima.h) for the full result
+    /// (achieved value, whether the target was actually met).
+    double Get_ControlCondition_titrant( const std::string& name ) const
+    {
+        for( const auto& c : multi_ptr()->GetControlConditions() )
+            if( c.name == name ) return c.titrantAmount;
+        return 0.;
+    }
+#endif
+
     //  Calls for direct coupling of a FMT code with GEMS3K
 
     /// (6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.

@@ -16,6 +16,19 @@ if(USE_SPDLOG_PRECOMPILED)
    endif()
 endif()
 
+# Equilibrium via the Optima library's general primal-dual interior-point
+# NLP solver, as an alternative to GEMS3K's own IPM/MBR loop (AOP/SOP
+# solver modes, see NODECODECH in databr.h and ipm_optima.cpp). OFF by
+# default - purely additive/opt-in: adds TMultiBase::CalculateEquilibriumStateOptima()
+# and the AOP/SOP dispatch in TNode::GEM_run() only when explicitly
+# enabled; normal builds (and every existing AIA/SIA code path) are
+# unaffected either way. Requires Optima to be findable via
+# CMAKE_PREFIX_PATH (e.g. a conda env that has it installed).
+option(USE_OPTIMA_SOLVER "Enable the Optima-based equilibrium solver (AOP/SOP modes, requires Optima to be installed)" OFF)
+if(USE_OPTIMA_SOLVER)
+    find_package(Optima REQUIRED)
+endif()
+
 # Check if a shared library is to be built
 if(BUILD_SHARED_LIBS)
    # Enable automatic creation of a module definition (.def) file for a SHARED library on Windows.
@@ -23,6 +36,10 @@ if(BUILD_SHARED_LIBS)
 
    add_library(GEMS3K ${HEADER_FILES} ${SOURCE_FILES})
    add_library(GEMS3K::GEMS3K ALIAS GEMS3K)
+   if(USE_OPTIMA_SOLVER)
+       target_compile_definitions(GEMS3K PUBLIC USE_OPTIMA_SOLVER)
+       target_link_libraries(GEMS3K PUBLIC Optima::Optima)
+   endif()
    if(USE_THERMOFUN MATCHES ON)
        target_compile_definitions(GEMS3K PUBLIC USE_SPDLOG_PRECOMPILED)
        target_link_libraries(GEMS3K PUBLIC ThermoFun::ThermoFun)
@@ -53,6 +70,10 @@ endif()
 if(BUILD_STATIC_LIBS)
    add_library(GEMS3K-static STATIC ${HEADER_FILES} ${SOURCE_FILES})
     add_library(GEMS3K::GEMS3K-static ALIAS GEMS3K-static)
+   if(USE_OPTIMA_SOLVER)
+       target_compile_definitions(GEMS3K-static PUBLIC USE_OPTIMA_SOLVER)
+       target_link_libraries(GEMS3K-static PUBLIC Optima::Optima)
+   endif()
    if(USE_THERMOFUN MATCHES ON)
      target_link_libraries(GEMS3K-static PUBLIC ThermoFun::ThermoFun)
    endif()

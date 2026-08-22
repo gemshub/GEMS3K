@@ -185,14 +185,14 @@ long int TNode::GEM_run( bool uPrimalSol )
         check_TP( CNode->TK, CNode->P);
         // Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
         // setting up up PIA or AIA mode
-        if( CNode->NodeStatusCH == NEED_GEM_SIA )
+        if( CNode->NodeStatusCH == NEED_GEM_SIA || CNode->NodeStatusCH == NEED_GEM_SOP )
         {
             pmm->pNP = 1;
             unpackDataBr( uPrimalSol );
         }
-        else if( CNode->NodeStatusCH == NEED_GEM_AIA )
+        else if( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_AOP )
         {
-            pmm->pNP = 0; // As default setting AIA mode
+            pmm->pNP = 0; // As default setting AIA/AOP mode
             if (CNode->dt > 0.)
                 uPrimalSol = true;
             unpackDataBr( uPrimalSol );
@@ -221,8 +221,26 @@ long int TNode::GEM_run( bool uPrimalSol )
                 pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
         }
 
-        // GEM IPM calculation of equilibrium state
-        CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
+        // GEM IPM calculation of equilibrium state - AOP/SOP dispatch to
+        // the Optima-based solver (ipm_optima.cpp) instead of GEMS3K's own
+        // IPM/MBR loop; only meaningful if built with USE_OPTIMA_SOLVER. If
+        // not, fall back to the equivalent native AIA/SIA solve rather than
+        // failing outright - a caller requesting AOP/SOP shouldn't have to
+        // know in advance whether this particular GEMS3K build has Optima.
+        if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP )
+        {
+#ifdef USE_OPTIMA_SOLVER
+            CalcTime = multi_ptr()->CalculateEquilibriumStateOptima( NumIterFIA, NumIterIPM );
+#else
+            node_logger->warn("GEM_run(): NEED_GEM_AOP/SOP requested but GEMS3K was not built with "
+                               "USE_OPTIMA_SOLVER - falling back to the equivalent native {} solve",
+                               CNode->NodeStatusCH == NEED_GEM_AOP ? "AIA" : "SIA");
+            CNode->NodeStatusCH = ( CNode->NodeStatusCH == NEED_GEM_AOP ) ? NEED_GEM_AIA : NEED_GEM_SIA;
+            CalcTime = multi_ptr()->CalculateEquilibriumState( NumIterFIA, NumIterIPM );
+#endif
+        }
+        else
+            CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
 
         // Extracting and packing GEM IPM results into work DATABR structure
         packDataBr();
@@ -240,6 +258,10 @@ long int TNode::GEM_run( bool uPrimalSol )
         {
             if( CNode->NodeStatusCH  == NEED_GEM_AIA )
                 CNode->NodeStatusCH = BAD_GEM_AIA;
+            else if( CNode->NodeStatusCH == NEED_GEM_AOP )
+                CNode->NodeStatusCH = BAD_GEM_AOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_SOP )
+                CNode->NodeStatusCH = BAD_GEM_SOP;
             else
                 CNode->NodeStatusCH = BAD_GEM_SIA;
 
@@ -250,6 +272,10 @@ long int TNode::GEM_run( bool uPrimalSol )
         {
             if( CNode->NodeStatusCH  == NEED_GEM_AIA )
                 CNode->NodeStatusCH = OK_GEM_AIA;
+            else if( CNode->NodeStatusCH == NEED_GEM_AOP )
+                CNode->NodeStatusCH = OK_GEM_AOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_SOP )
+                CNode->NodeStatusCH = OK_GEM_SOP;
             else
                 CNode->NodeStatusCH = OK_GEM_SIA;
         }
@@ -261,6 +287,10 @@ long int TNode::GEM_run( bool uPrimalSol )
         ipmlog_error = err.title + std::string(": ") + err.mess;
         if( CNode->NodeStatusCH  == NEED_GEM_AIA )
             CNode->NodeStatusCH = ERR_GEM_AIA;
+        else if( CNode->NodeStatusCH == NEED_GEM_AOP )
+            CNode->NodeStatusCH = ERR_GEM_AOP;
+        else if( CNode->NodeStatusCH == NEED_GEM_SOP )
+            CNode->NodeStatusCH = ERR_GEM_SOP;
         else
             CNode->NodeStatusCH = ERR_GEM_SIA;
     }
@@ -316,10 +346,27 @@ void TNode::packDataBr()
 
     // set default data to DataBr
     //   CNode->NodeStatusCH = NEED_GEM_AIA;
-    if( pmm->pNP == 0 )
-        CNode->NodeStatusCH = NEED_GEM_AIA;
+    // pmm->pNP (0=cold,1=warm) is the single source of truth for which
+    // mode the solver actually used (it can be flipped mid-solve - see
+    // ipm_main.cpp's own "call SolveSimplex() also in SIA mode!" case) -
+    // but AOP/SOP share the same pNP convention as AIA/SIA (see GEM_run()),
+    // so this reset must also preserve whether the request was an
+    // Optima-solver one, checked from the still-unmodified NodeStatusCH
+    // this is the first place to rewrite it after GEM_run()'s own dispatch.
+    if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP )
+    {
+        if( pmm->pNP == 0 )
+            CNode->NodeStatusCH = NEED_GEM_AOP;
+        else
+            CNode->NodeStatusCH = NEED_GEM_SOP;
+    }
     else
-        CNode->NodeStatusCH = NEED_GEM_SIA;
+    {
+        if( pmm->pNP == 0 )
+            CNode->NodeStatusCH = NEED_GEM_AIA;
+        else
+            CNode->NodeStatusCH = NEED_GEM_SIA;
+    }
 
     CNode->TK = pmm->TCc+C_to_K; //25
     CNode->P = pmm->Pc*bar_to_Pa; //1

@@ -141,7 +141,24 @@ typedef DATABR*  DATABRPTR;
  OK_GEM_SIA   = 6,   ///< OK after GEM calculation with SIA
  BAD_GEM_SIA  = 7,   ///< Bad (not fully trustful) result after GEM calculation with SIA
  ERR_GEM_SIA  = 8,   ///< Failure (no result) in GEM calculation with SIA
- T_ERROR_GEM  = 9    ///< Terminal error has occurred in GEMS3K (e.g. memory corruption). Restart is required.
+ T_ERROR_GEM  = 9,   ///< Terminal error has occurred in GEMS3K (e.g. memory corruption). Restart is required.
+ // "Optima" modes: equilibrium via the Optima library's general primal-
+ // dual interior-point NLP solver (TMultiBase::CalculateEquilibriumStateOptima(),
+ // ipm_optima.cpp) instead of GEMS3K's own IPM/MBR loop - only meaningful
+ // if GEMS3K was built with USE_OPTIMA_SOLVER; otherwise TNode::GEM_run()
+ // logs a warning and falls back to the equivalent native
+ // AIA/SIA solve (returning OK/BAD/ERR_GEM_AIA/SIA). AOP
+ // mirrors AIA (cold/LPP-simplex start), SOP mirrors SIA (warm start
+ // reusing the previous speciation)
+ NEED_GEM_AOP = 10,  ///< Need GEM calculation via Optima with cold (AIA-equivalent) initial approximation
+ OK_GEM_AOP   = 11,  ///< OK after GEM calculation via Optima with cold initial approximation
+ BAD_GEM_AOP  = 12,  ///< Bad (not fully trustful) result after GEM calculation via Optima with cold initial approximation
+ ERR_GEM_AOP  = 13,  ///< Failure (no result) in GEM calculation via Optima with cold initial approximation
+ NEED_GEM_SOP = 14,  ///< Need GEM calculation via Optima with warm (SIA-equivalent) initial approximation
+                     ///<   using the previous speciation (full DATABR lists only)
+ OK_GEM_SOP   = 15,  ///< OK after GEM calculation via Optima with warm initial approximation
+ BAD_GEM_SOP  = 16,  ///< Bad (not fully trustful) result after GEM calculation via Optima with warm initial approximation
+ ERR_GEM_SOP  = 17   ///< Failure (no result) in GEM calculation via Optima with warm initial approximation
 } /*NODECODECH*/;
 
 
