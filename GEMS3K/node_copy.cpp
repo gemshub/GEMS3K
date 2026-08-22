@@ -57,8 +57,12 @@ void  TNode::read_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator:
 }
 
 void  TNode::write_dbr_format_file( const std::string& dbr_file, GEMS3KGenerator::IOModes type_f,
-                                    bool with_comments, bool brief_mode )
+                                    bool with_comments, bool brief_mode, bool checkTP )
 {
+    if(checkTP && dbr_dch_api::change_TP(CSD, CNode->TK, CNode->P)) {
+        brief_mode = true;
+    }
+
 #ifdef NO_NODEARRAYLEVEL
     CNode->NodeStatusFMT = No_nodearray;
 #endif
@@ -540,8 +544,8 @@ void TNode::CheckMtparam()
     P = PPa/bar_to_Pa;
     //pmp->pTPD = 2;
     node_logger->debug("CheckMtparam T: {} - {}  P: {} - {}", pmm->Tc, TK, pmm->Pc, P);
-    if( !load_thermodynamic_data || fabs( pmm->Tc - TK ) > CSD->Ttol
-            || fabs( pmm->Pc - P )  > CSD->Ptol/bar_to_Pa  )
+    if( !load_thermodynamic_data || fabs( pmm->Tc - TK ) >= CSD->Ttol
+            || fabs( pmm->Pc - P )  >= CSD->Ptol/bar_to_Pa  )
     {
         pmm->pTPD = 0;      //T, P is changed
     }

@@ -176,9 +176,16 @@ void TSolMod::alloc_multisite()
         for(s=0; s<NSub; s++)
         {
             mn[j][s] = new double [NMoi];
+            // for(long int m=0; m<NMoi; m++) {
+            //     mn[j][s][m] = 0.;
+            // }
+
         }
    }
    mns = new double[NSub];
+   // for(j=0; j<NSub; j++) {
+   //     mns[j] = 1.;
+   // }
 }
 
 
@@ -187,6 +194,7 @@ void TSolMod::alloc_multisite()
 /// from that for the previous end member (this is an error)
 long int TSolMod::init_multisite()
 {
+    std::string deb_info;
     long int j, s, m, k=0;
     if( !NSub || !NMoi )
         return 0;   // This is not a multi-site model
@@ -197,30 +205,52 @@ long int TSolMod::init_multisite()
     // copying multiplicity numbers
     for( j=0; j<NComp; j++)
         for( s=0; s<NSub; s++)
-           for( m=0; m<NMoi; m++)
-           {  // extracting multiplicity numbers
-              mn[j][s][m] = aMoiSN[k];
-              k++;
-           }
+            for( m=0; m<NMoi; m++)
+            {  // extracting multiplicity numbers
+                mn[j][s][m] = aMoiSN[k];
+                k++;
+            }
+
+    if(TSolMod::solmod_logger->should_log(spdlog::level::trace)) {
+        solmod_logger->trace("!!! phase: {}", PhaseName);
+        for( j=0; j<NComp; j++) {
+            for( s=0; s<NSub; s++) {
+                deb_info += to_string(mn[j][s], NMoi);
+                deb_info += "\n";
+            }
+            deb_info += "\n";
+        }
+        solmod_logger->trace("array of end member moiety-site multiplicity numbers [NComp={}][NSub={}][NMoi={}]:  {}",
+                            NComp, NSub, NMoi, deb_info);
+    }
+
     // calculation of total site multiplicity numbers
     double mnsj;
-    for( s=0; s<NSub; s++)
-    {
-       for( j=0; j<NComp; j++)
-       {
-          mnsj = 0.;
-          for( m=0; m<NMoi; m++ )
-             mnsj += mn[j][s][m];     // eq 5.1-6
-          if( !j )
-             mns[s] = mnsj;  // use NormDoubleRound(mnsj, 6)?
-          else {  // comparing with mns for previous end member
-              if( fabs( mns[s] - mnsj ) > 1e-6 )  // bugfix 06.06.2011 DK
-              { // error - inconsistent multiplicity number in different end members
-                 return j; // returns the end member index
-              }
-//              mns[s] = mnsj;
-          }
-       }
+    for( s=0; s<NSub; s++) {
+        for( j=0; j<NComp; j++) {
+            mnsj = 0.;
+            for( m=0; m<NMoi; m++ ) {
+                mnsj += mn[j][s][m];     // eq 5.1-6
+            }
+            if( !j ) {
+                mns[s] = mnsj;  // use NormDoubleRound(mnsj, 6)?
+            }
+            else {  // comparing with mns for previous end member
+                if( fabs( mns[s] - mnsj ) > 1e-6 )  // bugfix 06.06.2011 DK
+                { // error - inconsistent multiplicity number in different end members
+                    solmod_logger->warn("{} error - inconsistent multiplicity number in different end members: j = {} s= {}  mns[s]= {} mnsj={}",
+                                        PhaseName, j, s, mns[s], mnsj);
+                    //return j; // returns the end member index
+                }
+                //              mns[s] = mnsj;
+            }
+        }
+    }
+
+    if(TSolMod::solmod_logger->should_log(spdlog::level::trace)) {
+        // debug print
+        deb_info = to_string(mns, NSub);
+        solmod_logger->trace("array of total site multiplicities: NSub = {}:  {}", NSub, deb_info);
     }
     return 0;
 }

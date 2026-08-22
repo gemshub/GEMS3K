@@ -1345,7 +1345,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 else
                     in = getIn( aIPx[ii * MaxOrd + 2] );
             }
-            ErrorIf( ic<0||in<0||i<0, "PTcalc", "Index of anion and 2 indexes of cations needed here"  );
+            ErrorIf( ic<0||in<0||i<0, "PTcalc", "Index of neutral and 2 indexes of cations needed here"  );
 
             Eta[ic][i][in] = setvalue(ii, Gex_or_Sex);
             Eta[i][ic][in] = Eta[ic][i][in]; // ca-ca-n
@@ -1370,7 +1370,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 else
                     in = getIn( aIPx[ii * MaxOrd + 2] );
             }
-            ErrorIf( in<0||ia<0||i<0, "PTcalc", "Indexes of 2 anions and one cation needed here"  );
+            ErrorIf( in<0||ia<0||i<0, "PTcalc", "Indexes of 2 anions and one neutral needed here"  );
 
             Eta1[ia][i][in] = setvalue(ii, Gex_or_Sex);
             Eta1[i][ia][in] = Eta1[ia][i][in]; // an-an-n
