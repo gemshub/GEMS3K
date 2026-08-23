@@ -346,13 +346,9 @@ void TNode::packDataBr()
 
     // set default data to DataBr
     //   CNode->NodeStatusCH = NEED_GEM_AIA;
-    // pmm->pNP (0=cold,1=warm) is the single source of truth for which
-    // mode the solver actually used (it can be flipped mid-solve - see
-    // ipm_main.cpp's own "call SolveSimplex() also in SIA mode!" case) -
-    // but AOP/SOP share the same pNP convention as AIA/SIA (see GEM_run()),
-    // so this reset must also preserve whether the request was an
-    // Optima-solver one, checked from the still-unmodified NodeStatusCH
-    // this is the first place to rewrite it after GEM_run()'s own dispatch.
+    // pmm->pNP (0=cold,1=warm) selects AIA/SIA vs. AOP/SOP; AOP/SOP share
+    // pNP's convention with AIA/SIA, so which pair to reset to is read
+    // from the still-unmodified NodeStatusCH before this overwrites it.
     if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP )
     {
         if( pmm->pNP == 0 )

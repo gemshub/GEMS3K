@@ -4,20 +4,16 @@
 /// \file ipm_optima.h
 /// Generic "control condition" record for the Optima-based joint
 /// equilibrium solve (TMultiBase::CalculateEquilibriumStateOptima(),
-/// ipm_optima.cpp). Reaktoro's EquilibriumSpecs implements pH, Eh,
-/// fixed fugacity, and fixed species activity all through one
-/// mechanism: an implicit titrant unknown, coupled into the mass
-/// balance via its own stoichiometry, whose objective gradient is
-/// pinned to a closed-form value derived from the requested target,
-/// solved jointly with the ordinary equilibrium unknowns in one
-/// Newton system (see GEMS3K/CLAUDE.md, "Reaktoro's actual pH/Eh
-/// mechanism, read from source"). EqControlCondition is that same
-/// generic record for GEMS3K - pH and Eh are just the two built-in
-/// condition types constructed by
-/// TMultiBase::SetControlCondition_pH()/_Eh(); a future condition
-/// (fixed fugacity, fixed activity of a named species, ...) is added
-/// by constructing one more EqControlCondition the same way, without
-/// touching the Newton-system assembly in ipm_optima.cpp at all.
+/// ipm_optima.cpp). A control condition (pH, Eh, ...) is an implicit
+/// titrant unknown, coupled into the mass balance via its own
+/// stoichiometry, whose objective gradient is pinned to a closed-form
+/// value derived from the requested target and solved jointly with the
+/// ordinary equilibrium unknowns in one Newton system. pH and Eh are
+/// the two built-in condition types, constructed by
+/// TMultiBase::SetControlCondition_pH()/_Eh(); a further condition
+/// (fixed fugacity, fixed activity of a named species, ...) is added by
+/// constructing one more EqControlCondition the same way, without
+/// touching the Newton-system assembly in ipm_optima.cpp.
 //
 // Copyright (c) 1992-2026
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
@@ -54,10 +50,9 @@
 /// `stoich`, whose objective-gradient entry is pinned (not recomputed from
 /// composition) to `fixedGradientFn(target)`. At the joint KKT-stationary
 /// point this forces whatever real species share the same mass-balance
-/// row(s) to the chemical potential implied by `target` - ordinary open-
-/// system/reservoir thermodynamics, solved in one Newton system together
-/// with the rest of the equilibrium (see ipm_optima.cpp,
-/// TMultiBase::CalculateEquilibriumStateOptima()).
+/// row(s) to the chemical potential implied by `target`, solved in one
+/// Newton system together with the rest of the equilibrium (see
+/// ipm_optima.cpp, TMultiBase::CalculateEquilibriumStateOptima()).
 struct EqControlCondition
 {
     std::string name;    ///< diagnostic label, e.g. "pH", "Eh" - also used by
@@ -69,45 +64,31 @@ struct EqControlCondition
                              ///< value (the default) means "not explicitly set" - the check falls back
                              ///< to defaultToleranceFn() below instead of a hardcoded constant.
 
-    /// Called only when `tolerance < 0` (the caller didn't pass an explicit
-    /// value to SetControlCondition_pH()/_Eh()): derives the default from
-    /// GEMS3K's own existing pa_p->GAS ("threshold for primal-dual chem.pot.
-    /// difference (mol/mol) used in SpeciationCleanup()") converted into this
-    /// condition's own units via the same linear map as fixedGradientFn/
-    /// achievedValueFn - reusing GEMS3K's own numerical settings instead of a
-    /// new BASE_PARAM field, per the same "reuse pa_p, don't add parallel
-    /// Optima-only fields" convention already used for IIM/DK/DHB/DW above.
-    /// Deliberately lazy (evaluated at solve time, not at
-    /// SetControlCondition_*() time) since it reads pm.T for Eh, which - like
-    /// fixedGradientFn - is only guaranteed current right before the Newton
-    /// system is assembled. Note this couples the pH/Eh target-tolerance to
-    /// pa_p->GAS's other consumer (PhaseSelectionSpeciationCleanup()'s own
-    /// divergent-dual gate, ipm_main.cpp) - tuning GAS for one affects the
-    /// other; pass an explicit `tolerance` to either setter to opt out.
+    /// Called only when `tolerance < 0`: derives the default from GEMS3K's
+    /// own pa_p->GAS ("threshold for primal-dual chem.pot. difference
+    /// (mol/mol), also used by PhaseSelectionSpeciationCleanup()"),
+    /// converted into this condition's own units via the same linear map
+    /// as fixedGradientFn/achievedValueFn. Evaluated at solve time (not at
+    /// SetControlCondition_*() time) since the Eh case reads pm.T, which is
+    /// only current right before the Newton system is assembled.
     std::function<double()> defaultToleranceFn;
 
-    /// (IC row index, coefficient) pairs: this condition's Aex column,
-    /// i.e. how one unit of its titrant unknown contributes to each
-    /// mass-balance row. Resolved once, at SetControlCondition_*() time
-    /// (index lookups only, valid immediately after GEM_init() - see
-    /// ResolveControlConditionIndices() in ipm_optima.cpp).
+    /// (IC row index, coefficient) pairs: this condition's Aex column, i.e.
+    /// how one unit of its titrant unknown contributes to each mass-balance
+    /// row. Resolved once, at SetControlCondition_*() time.
     std::vector<std::pair<long int,double>> stoich;
 
     /// Maps `target` to the fixed objective-gradient value pinned for this
     /// unknown. Evaluated once per solve, right before the Newton system is
-    /// assembled (not at SetControlCondition_*() time) - it typically reads
+    /// assembled (not at SetControlCondition_*() time), since it reads
     /// call-invariant constants (G0[], T) that are only valid once thermo
-    /// data has been loaded for this call's (T,P), which happens inside
-    /// CalculateEquilibriumStateOptima() itself, after SetControlCondition_*()
-    /// has already returned.
+    /// data has been loaded for this call's (T,P).
     std::function<double(double target)> fixedGradientFn;
 
     /// Inverse of fixedGradientFn's own linear combination: maps the
-    /// achieved `sum_i U[i]*stoich[i]` (the same quantity the KKT
-    /// stationarity condition pins to fixedGradientFn(target)) back to the
-    /// condition's own units, for the post-solve "was the target actually
-    /// met" verification - see CalculateEquilibriumStateOptima()'s comment
-    /// on why Optima::Result::succeeded alone is not sufficient.
+    /// achieved `sum_i U[i]*stoich[i]` (the quantity the KKT stationarity
+    /// condition pins to fixedGradientFn(target)) back to the condition's
+    /// own units, for the post-solve "was the target actually met" check.
     std::function<double(double achievedMuj)> achievedValueFn;
 
     long int slot = -1;  ///< assigned unknown index (L + k) once active - filled in by CalculateEquilibriumStateOptima(), not by the caller

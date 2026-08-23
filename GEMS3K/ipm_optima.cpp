@@ -19,9 +19,7 @@
 /// any future closed-form target such as fixed fugacity or fixed
 /// species activity) are folded into the same joint Newton solve as
 /// extra unknowns with a fixed objective-gradient, matching Reaktoro's
-/// own EquilibriumSpecs mechanism (see ipm_optima.h and GEMS3K/
-/// CLAUDE.md, "Reaktoro's actual pH/Eh mechanism, read from source" /
-/// "GEMS3K chemistry + Optima, joint pH/Eh solve"). With none
+/// own EquilibriumSpecs mechanism (see ipm_optima.h). With none
 /// registered this is a plain equilibrium solve, architecturally
 /// equivalent to AIA/SIA but solved via Optima instead of IPM/MBR.
 ///
@@ -95,8 +93,7 @@ void TMultiBase::SetControlCondition_pH( double pH_target, double tolerance )
     // pH = -ln_to_lg*(Muj - G0[H+] + lnFmol)  =>  Muj_target = G0[H+] - lnFmol - pH_target/ln_to_lg
     // (ipm_chemical2.cpp's own pH formula; Muj = sum_i U[i]*a(H+,i), which is
     // exactly sum_i U[i]*stoich[i] above, since stoich matches H+'s own
-    // stoichiometry - see ipm_optima.h's header comment for why that
-    // equality is what makes the joint-solve mechanism work at all)
+    // stoichiometry)
     c.fixedGradientFn = [this, xHplusDC]( double target )
     { return pm.G0[xHplusDC] - kLnFmol - target / ln_to_lg; };
     c.achievedValueFn = [this, xHplusDC]( double achievedMuj )
@@ -124,12 +121,11 @@ void TMultiBase::SetControlCondition_Eh( double Eh_target, double tolerance )
     c.target = Eh_target;
     c.tolerance = tolerance;
     // Direct electron/charge (Zz-row) titrant, matching Reaktoro's own
-    // qvar.substance="e-" choice - deliberately NOT the O2 titrant GEMS3K's
-    // earlier (native-MBR-based) Tier A work used elsewhere, precisely
-    // because a direct charge titrant is what admits a closed-form fixed
-    // gradient at all (O2's mass balance coupling is the O row only, with
-    // no direct algebraic relationship to Zz's dual/Eh. Scoped to
-    // this Optima joint-solve mechanism only.
+    // qvar.substance="e-" choice. An O2 titrant (mass-balance coupling on
+    // the O row only) would have no direct algebraic relationship to Zz's
+    // dual/Eh, so it wouldn't admit a closed-form fixed gradient here -
+    // the direct charge titrant is what makes the one-shot joint solve
+    // possible.
     c.stoich = { { xZz, -1.0 } };
     // Default tolerance (used only when the caller passes tolerance<0):
     // same pa_p->GAS reuse as SetControlCondition_pH(), mapped through Eh's
@@ -170,14 +166,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 {
     double ScFact = 1.;
     const BASE_PARAM* pa_p = base_param();
-    // Reuse GEMS3K's own existing tolerances directly rather than adding
-    // parallel Optima-specific BASE_PARAM fields - per GEMS3K/CLAUDE.md's
-    // "Key learnings" ("DcMinM=1e-33 is too small ... DHBM=1e-13 ... more
-    // appropriate"), DHB is the established stand-in for a numerical DC
-    // amount floor in this codebase, not DcMin's own (much smaller)
-    // default. IIM/DK are literally the same "max iterations"/"convergence
-    // tolerance" knobs Optima needs, just for a different solver; DW is
-    // reused as-is for "hard-error vs soft-BAD on non-convergence".
+    // Reuse GEMS3K's own tolerances rather than adding parallel
+    // Optima-specific BASE_PARAM fields: DHB is the numerical DC-amount
+    // floor, IIM/DK are the "max iterations"/"convergence tolerance"
+    // knobs (below), DW gates hard-error vs. soft-BAD on non-convergence.
     const double dcFloor = std::max( pa_p->DHB, 1e-300 );
 
     InitalizeGEM_IPM_Data();
@@ -199,12 +191,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     {
         // Allocates/parametrizes each multicomponent phase's TSolMod
         // instance (phSolMod[k]) at the current T,P - a prerequisite for
-        // any later LINK_UX_MODE call, normally done by the native path's
-        // own GEM_IPM_Init() (ipm_simplex.cpp) before it ever calls
-        // AutoInitialApproximation(). Needed on both AOP and SOP paths -
-        // without it, the very first CalculateActivityCoefficients(LINK_UX_MODE)
-        // call below throws "SolModActCoeff: Invalid index of phase" against
-        // a still-null phSolMod[k].
+        // any later LINK_UX_MODE call. The native path gets this from its
+        // own GEM_IPM_Init() (ipm_simplex.cpp); this path has no such
+        // step, so it must be called explicitly here.
         CalculateActivityCoefficients( LINK_TP_MODE );
 
         // pm.pNP is set by TNode::GEM_run() before this call, exactly as it
@@ -344,14 +333,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             pm.Y[j] = state.x[j];
             pm.X[j] = state.x[j];
         }
-        // Empirically, Optima's Lagrange multipliers ye come out with the
-        // opposite sign convention from GEMS3K's own dual U[] (confirmed by
-        // the Eh sign flip against the GEMS3K-native reference answer on
-        // tools/Cu-Pourbaix) - negate here rather than resign every place
-        // U[] is used below. Not verified against Optima's own Lagrangian
-        // sign convention in its source - if this is extended, confirm
-        // against Optima's actual KKT formulation rather than trusting the
-        // empirical fix indefinitely.
+        // Optima's Lagrange multipliers ye use the opposite sign convention
+        // from GEMS3K's own dual U[] - negate here rather than resign every
+        // place U[] is used below.
         for( long int i = 0; i < N; i++ )
             pm.U[i] = -state.ye[i];
 
@@ -379,11 +363,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // consumer of pm.B[], including TNode::packDataBr()'s CNode->bIC[]
         // output) would compare Y against the ORIGINAL, un-titrated bulk
         // composition, not the effective one Optima actually solved
-        // against - the same class of bug already documented and fixed
-        // once for the native-MBR-based Tier A mechanism (see GEMS3K/
-        // CLAUDE.md, "Tier A implementation attempt", bug #4). The caller
-        // sees the titrated bulk composition on output, same as that
-        // established precedent.
+        // against. The caller sees the titrated bulk composition on
+        // output.
         // Sign: Optima's linear equality is Aex*x_ext=be, i.e.
         // A*Y + sum_k stoich_k*xi_k = B (the titrant column sits on the
         // SAME side as A*Y, not folded into the RHS) - so the effective
@@ -397,13 +378,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         }
 
         // Verify each active condition actually reached its target - not
-        // just that Optima's own KKT residual reports solved. At a bound-
-        // active titrant slot the box constraint's own dual absorbs the
-        // KKT residual, so the fixed-gradient condition this whole
-        // mechanism relies on can be silently NOT satisfied even while
-        // Optima reports succeeded=true. Don't trust
-        // one channel (Optima's flag) without checking the other
-        // (GEMS3K's own achieved-value readback).
+        // just that Optima's own KKT residual reports solved. At a
+        // bound-active titrant slot, the box constraint's own dual
+        // absorbs the KKT residual, so the fixed-gradient condition this
+        // mechanism relies on can be unsatisfied even while Optima
+        // reports succeeded=true.
         bool allTargetsMet = true;
         std::string targetMissBuf;
         for( long int k = 0; k < R; k++ )

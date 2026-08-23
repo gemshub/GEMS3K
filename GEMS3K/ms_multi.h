@@ -637,8 +637,7 @@ public:
 #ifdef USE_OPTIMA_SOLVER
     // Equilibrium via the Optima library's general primal-dual interior-
     // point NLP solver, as an alternative to the IPM/MBR loop above - see
-    // ipm_optima.cpp and GEMS3K/CLAUDE.md, "GEMS3K chemistry + Optima,
-    // joint pH/Eh solve". Dispatched from TNode::GEM_run() (node.cpp) for
+    // ipm_optima.cpp. Dispatched from TNode::GEM_run() (node.cpp) for
     // NEED_GEM_AOP/SOP, exactly as CalculateEquilibriumState() is
     // dispatched for NEED_GEM_AIA/SIA. Reads pm.pNP (set by GEM_run()
     // before the call, same flag AIA/SIA already use) to choose a cold

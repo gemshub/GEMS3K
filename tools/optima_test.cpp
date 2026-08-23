@@ -1,18 +1,14 @@
 // Tests the AOP/SOP Optima-based equilibrium solver modes end-to-end via
 // TNode::GEM_run() (NEED_GEM_AOP/SOP, not by calling TMultiBase methods
-// directly - see NODECODECH in databr.h). See GEMS3K/CLAUDE.md for design
-// background (this ports the earlier ipm_contraints-branch Optima
-// prototype work into two general-purpose solver modes plus a generalized
-// control-condition mechanism, replacing the old hardcoded xiH/xiE slots).
+// directly - see NODECODECH in databr.h).
 //
 // Two parts:
 //  1. Plain AOP solve of the untitrated tools/Cu-Pourbaix base recipe,
 //     checked against GEMS3K's own native AIA reference answer
 //     (pH=4.50059, Eh=0.951744).
-//  2. The same 5-point pH/Eh sweep used throughout the earlier prototype
-//     work, driven through Set_pH_target()/Set_Eh_target() + NEED_GEM_AOP,
-//     exercising the generalized EqControlCondition mechanism
-//     (ipm_optima.h/.cpp).
+//  2. A 5-point pH/Eh sweep driven through Set_pH_target()/Set_Eh_target()
+//     + NEED_GEM_AOP, exercising the generalized EqControlCondition
+//     mechanism (ipm_optima.h/.cpp).
 
 #include "node.h"
 
