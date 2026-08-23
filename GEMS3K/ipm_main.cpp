@@ -35,6 +35,7 @@
 #include "kinetics.h"
 #include "v_service.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <chrono>
 
 // Thread-safe logger to stdout with colors
 std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = spdlog::stdout_color_mt("ipm");
@@ -48,8 +49,28 @@ void TMultiBase::GibbsEnergyMinimization()
 {
   bool IAstatus;
   Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
+  pm.CondNum = 0.;      // reset condition-number diagnostics for this GEM call;
+  pm.CondNumDiag = 0.;  // updated to the worst case seen across internal linear solves below
+  pm.SolveTimeMs = 0.;      // per-phase timing: reset, accumulated across internal linear
+  pm.CondNumTimeMs = 0.;    // solves below (SolveTimeMs) and its diagnostics-only subset
+  pm.SolveCallCount = 0;    // (CondNumTimeMs); lets per-system overhead be measured directly,
+                            // from a single run, instead of differencing two separate builds
 
   TNode::ipmlog_file->debug(" GEMIPM TC={}", pm.TCc);
+
+#ifndef NDEBUG
+  // DATABR values as received, before any internal processing -- lets a caller-side
+  // bug (e.g. a bulk composition silently zeroed before GEMS3K ever runs) be visually
+  // distinguished from a solver-side one without needing a second historical build.
+  if(gems_logger->should_log(spdlog::level::debug)) {
+      gems_logger->debug("GibbsEnergyMinimization() entry - bulk composition B[]:");
+      for(int i = 0; i < pm.N; i++)
+          gems_logger->debug("  B[{}] = {:.6e}", i, pm.B[i]);
+      gems_logger->debug("GibbsEnergyMinimization() entry - DC limits DUL[]/DLL[]:");
+      for(int j = 0; j < pm.L; j++)
+          gems_logger->debug("  j={} DUL={:.6e} DLL={:.6e}", j, pm.DUL[j], pm.DLL[j]);
+  }
+#endif
 
 FORCED_AIA:
     GEM_IPM_Init();
@@ -131,6 +152,14 @@ void TMultiBase::GEM_IPM( long int /*rLoop*/ )
 mEFD:  // Mass balance refinement (formerly EnterFeasibleDomain())
      eRet = MassBalanceRefinement( pm.K2 ); // Here the MBR() algorithm is called
 
+#ifndef NDEBUG
+   if(gems_logger->should_log(spdlog::level::debug)) {
+       gems_logger->debug("After MassBalanceRefinement (eRet={}) - species amounts:", eRet);
+       for(int j = 0; j < pm.L; j++)
+           gems_logger->debug("  j={} Y={:.6e} X={:.6e}", j, pm.Y[j], pm.X[j]);
+   }
+#endif
+
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpC.txt" );   // Debugging
 #endif
@@ -160,6 +189,14 @@ STEP_POINT("After FIA");
 
    // calling the MainIPMDescent() minimization algorithm
    eRet = InteriorPointsMethod( status/*, pm.K2*/ );
+
+#ifndef NDEBUG
+   if(gems_logger->should_log(spdlog::level::debug)) {
+       gems_logger->debug("After InteriorPointsMethod (eRet={}, status={}) - species amounts:", eRet, status);
+       for(int j = 0; j < pm.L; j++)
+           gems_logger->debug("  j={} Y={:.6e} X={:.6e}", j, pm.Y[j], pm.X[j]);
+   }
+#endif
 
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpD.txt" );   // Debugging
@@ -840,7 +877,12 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
             pm.Y[J] += LM * pm.MU[J];
 
       // Stall detection: exit early if residuals are no longer improving
-      // for 3 consecutive iterations
+      // for 3 consecutive iterations. Gated behind pa_p->PSTALL (default 1,
+      // preserving prior behavior) -- with it disabled, a stalled run no
+      // longer exits early and instead keeps iterating until pa_p->DP is
+      // exhausted, surfacing as a real "Maximum allowed number of MBR
+      // iterations exceeded" failure below instead of a silent iRet=0.
+      if( pa_p->PSTALL )
       {
           double maxDeltaY = 0.0;
           for( J=0; J<pm.L; J++ )
@@ -1413,6 +1455,108 @@ void TMultiBase::WeightMultipliers( bool square )
 
 #define  a(j,i) ((*(pm.A+(i)+(j)*Na)))
 
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+// The following diagnostics (condition-number estimation + per-phase timing)
+// add real overhead per linear solve — up to several hundred percent of the
+// Cholesky/LU solve itself for small systems (see gems-benchmark/CLAUDE.md,
+// 2026-07-28). Gated so normal/production use of GEMS3K compiles none of
+// this in; only builds that explicitly opt in (GEMS3K's CMake option
+// ENABLE_BENCHMARK_DIAGNOSTICS, used by gems-benchmark) pay the cost. Future
+// benchmark/diagnostics-only instrumentation should reuse this same macro
+// rather than introducing a new one per feature.
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/// Cheap proxy for conditioning: ratio of largest to smallest |diagonal|
+/// entry of the (symmetric) IPM matrix AA (N x N, column-major, AA[i+k*N]).
+/// O(N), computed before any decomposition. Returns +inf if the smallest
+/// diagonal magnitude is (numerically) zero.
+static double DiagRatioConditionProxy( const double* AA, long int N )
+{
+    if( N <= 0 )
+        return 0.;
+    double diag_max = 0., diag_min = std::numeric_limits<double>::max();
+    for( long int i = 0; i < N; i++ )
+    {
+        double d = fabs( AA[i + i*N] );
+        if( d > diag_max )
+            diag_max = d;
+        if( d < diag_min )
+            diag_min = d;
+    }
+    if( diag_min < 1e-300 )
+        return std::numeric_limits<double>::infinity();
+    return diag_max / diag_min;
+}
+
+/// A few steps of power iteration on the symmetric matrix AA (N x N,
+/// column-major, AA[i+k*N]) to estimate its largest-magnitude eigenvalue.
+/// Reuses no factorization (plain matrix-vector products) so it works
+/// regardless of whether Cholesky or LU ends up solving the system.
+static double PowerIterationMaxEig( const double* AA, long int N, int iters )
+{
+    if( N <= 0 )
+        return 0.;
+    std::vector<double> x(N), Ax(N);
+    for( long int i = 0; i < N; i++ )
+        x[i] = 1. + 0.001 * (double)(i % 7);
+
+    double lambda_max = 0.;
+    for( int it = 0; it < iters; it++ )
+    {
+        for( long int i = 0; i < N; i++ )
+        {
+            double s = 0.;
+            for( long int j = 0; j < N; j++ )
+                s += AA[i + j*N] * x[j];
+            Ax[i] = s;
+        }
+        double norm = 0.;
+        for( long int i = 0; i < N; i++ )
+            norm += Ax[i]*Ax[i];
+        norm = sqrt( norm );
+        if( norm < 1e-300 )
+            return 0.;
+        for( long int i = 0; i < N; i++ )
+            x[i] = Ax[i] / norm;
+        lambda_max = norm;
+    }
+    return lambda_max;
+}
+
+/// A few steps of inverse iteration using an already-computed factorization
+/// (JAMA::Cholesky or JAMA::LU, both expose Array1D<double> solve(const
+/// Array1D<double>&)) to estimate the smallest-magnitude eigenvalue of the
+/// factorized matrix. Cheap: each step is just a triangular solve reusing
+/// the factors already paid for by the main solve() call.
+template <class Decomp>
+static double InverseIterationMinEig( Decomp& decomp, long int N, int iters )
+{
+    if( N <= 0 )
+        return 0.;
+    Array1D<double> x(N);
+    for( long int i = 0; i < N; i++ )
+        x[(int)i] = 1. + 0.001 * (double)(i % 7);
+
+    double inv_norm = 0.;
+    for( int it = 0; it < iters; it++ )
+    {
+        Array1D<double> y = decomp.solve( x );
+        double norm = 0.;
+        for( long int i = 0; i < N; i++ )
+            norm += y[(int)i]*y[(int)i];
+        norm = sqrt( norm );
+        if( norm < 1e-300 )
+            return std::numeric_limits<double>::infinity();
+        for( long int i = 0; i < N; i++ )
+            x[(int)i] = y[(int)i] / norm;
+        inv_norm = norm;
+    }
+    if( inv_norm < 1e-300 )
+        return std::numeric_limits<double>::infinity();
+    return 1. / inv_norm;
+}
+#endif // GEMS3K_BENCHMARK_DIAGNOSTICS
+
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Make and Solve a system of linear equations to find the dual vector
 /// approximation using a method of Cholesky Decomposition. Good if a
@@ -1428,6 +1572,12 @@ void TMultiBase::WeightMultipliers( bool square )
 ///         1  - no solution, degenerated or inconsistent system
 long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initAppr )
 {
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+    auto solve_t0 = std::chrono::high_resolution_clock::now();
+    double diag_ms = 0.;   // condition-number-diagnostics-only time, this call
+    pm.SolveCallCount++;
+#endif
+
     long int ii, i, jj, kk, k, Na = pm.N;
     Alloc_A_B( N );
 
@@ -1485,6 +1635,19 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
                           A.to_string(), B.to_string());
 #endif
 
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+    // Condition-number diagnostics: cheap diagonal-ratio proxy (always available)
+    // and a power-iteration estimate of the largest eigenvalue (reused below for
+    // both the Cholesky and LU branches, whichever ends up solving the system).
+    // Timed separately from the rest of the solve (diag_ms) so its cost can be
+    // attributed per system instead of inferred from noisy whole-call timing.
+    auto diag_t0 = std::chrono::high_resolution_clock::now();
+    pm.CondNumDiag = std::max( pm.CondNumDiag, DiagRatioConditionProxy( AA, N ) );
+    double lambda_max = PowerIterationMaxEig( AA, N, 6 );
+    diag_ms += std::chrono::duration<double, std::milli>(
+                   std::chrono::high_resolution_clock::now() - diag_t0 ).count();
+#endif
+
     // From here on, the NIST TNT Jama/C++ linear algebra package is used
     //    (credit: http://math.nist.gov/tnt/download.html)
     // this routine constructs the Cholesky decomposition, A = L x LT .
@@ -1496,6 +1659,15 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
     if( chol.is_spd() )
     {
         B = chol.solve( B );
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+        auto inv_t0 = std::chrono::high_resolution_clock::now();
+        double lambda_min = InverseIterationMinEig( chol, N, 6 );
+        diag_ms += std::chrono::duration<double, std::milli>(
+                       std::chrono::high_resolution_clock::now() - inv_t0 ).count();
+        double cond = ( lambda_min > 1e-300 ) ? lambda_max / lambda_min
+                                               : std::numeric_limits<double>::infinity();
+        pm.CondNum = std::max( pm.CondNum, cond );
+#endif
     }
     else
     {
@@ -1511,6 +1683,9 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
             // Singular matrix — log diagnostics to identify the cause
             ipm_logger->warn("MakeAndSolveSystemOfLinearEquations FAILED:");
             ipm_logger->warn("LU Decomposition\n{}", lu.to_string());
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+            pm.CondNum = std::numeric_limits<double>::infinity();
+#endif
             for( long int r=0; r<N; r++ )
             {
                 double row_norm = 0.0;
@@ -1521,10 +1696,24 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
                                       "no active species contribute to this IC",
                                       r, pm.B[r]);
             }
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+            pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
+                                  std::chrono::high_resolution_clock::now() - solve_t0 ).count();
+            pm.CondNumTimeMs += diag_ms;
+#endif
             return 1; // Singular matrix - too bad! No solution ...
         }
 
         B = lu.solve( B );
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+        auto inv_t0 = std::chrono::high_resolution_clock::now();
+        double lambda_min = InverseIterationMinEig( lu, N, 6 );
+        diag_ms += std::chrono::duration<double, std::milli>(
+                       std::chrono::high_resolution_clock::now() - inv_t0 ).count();
+        double cond = ( lambda_min > 1e-300 ) ? lambda_max / lambda_min
+                                               : std::numeric_limits<double>::infinity();
+        pm.CondNum = std::max( pm.CondNum, cond );
+#endif
     }
 
     if( initAppr )
@@ -1536,6 +1725,11 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
         for( ii = 0; ii < N; ii++ )
             pm.U[ii] = B[(int)ii];
     }
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+    pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
+                          std::chrono::high_resolution_clock::now() - solve_t0 ).count();
+    pm.CondNumTimeMs += diag_ms;
+#endif
     return 0;
 }
 

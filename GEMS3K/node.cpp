@@ -181,6 +181,23 @@ long int TNode::GEM_run( bool uPrimalSol )
     try
     {
         ipmlog_file->debug(" GEM_run() begin Mode= {}", CNode->NodeStatusCH);
+
+#ifndef NDEBUG
+        // Bulk composition (IC amounts) as received, before any internal processing --
+        // makes a caller-side bulk-composition bug visible without a second historical build.
+        if (node_logger->should_log(spdlog::level::debug)) {
+            for (long int i = 0; i < CSD->nICb; i++)
+                node_logger->debug("bIC[{}] {} = {:.6e}", i, CSD->ICNL[i], CNode->bIC[i]);
+        }
+        // Cheap sanity warning: an IC pinned at/below the numerical floor is exactly the
+        // symptom that once took hours of manual instrumentation to spot by hand.
+        for (long int i = 0; i < CSD->nICb; i++) {
+            if (CNode->bIC[i] > 0. && CNode->bIC[i] <= pmm->DcMinM)
+                node_logger->warn("bIC[{}] {} = {:.6e} is at/below the numerical floor (DcMinM={:.3e})",
+                                   i, CSD->ICNL[i], CNode->bIC[i], pmm->DcMinM);
+        }
+#endif
+
         // Checking T and P  for interpolation intervals
         check_TP( CNode->TK, CNode->P);
         // Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
