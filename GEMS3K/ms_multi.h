@@ -654,11 +654,15 @@ public:
 
     /// Registers (or replaces, by name) a pH control condition for the
     /// next CalculateEquilibriumStateOptima() call. Persists across calls
-    /// until ClearControlConditions() - not single-shot.
-    void SetControlCondition_pH( double pH_target, double tolerance = 1e-3 );
+    /// until ClearControlConditions() - not single-shot. `tolerance < 0`
+    /// (the default) defers to pa_p->GAS via EqControlCondition::
+    /// defaultToleranceFn() instead of a hardcoded constant - see
+    /// ipm_optima.h.
+    void SetControlCondition_pH( double pH_target, double tolerance = -1. );
     /// Registers (or replaces, by name) an Eh control condition (V) for
-    /// the next CalculateEquilibriumStateOptima() call.
-    void SetControlCondition_Eh( double Eh_target, double tolerance = 2e-3 );
+    /// the next CalculateEquilibriumStateOptima() call. `tolerance < 0`
+    /// (the default) defers to pa_p->GAS, same as SetControlCondition_pH().
+    void SetControlCondition_Eh( double Eh_target, double tolerance = -1. );
     /// Removes every registered control condition.
     void ClearControlConditions();
 

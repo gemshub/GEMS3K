@@ -64,7 +64,27 @@ struct EqControlCondition
                           ///< SetControlCondition_pH()/_Eh() to replace a
                           ///< previously-registered condition of the same name
     double target = 0.;  ///< requested value, in the condition's own natural units (pH units, V, ...)
-    double tolerance = 1e-3; ///< achieved-vs-target tolerance for the post-solve verification check (see CalculateEquilibriumStateOptima()'s targetMet check)
+    double tolerance = -1.; ///< achieved-vs-target tolerance for the post-solve verification check
+                             ///< (see CalculateEquilibriumStateOptima()'s targetMet check). A negative
+                             ///< value (the default) means "not explicitly set" - the check falls back
+                             ///< to defaultToleranceFn() below instead of a hardcoded constant.
+
+    /// Called only when `tolerance < 0` (the caller didn't pass an explicit
+    /// value to SetControlCondition_pH()/_Eh()): derives the default from
+    /// GEMS3K's own existing pa_p->GAS ("threshold for primal-dual chem.pot.
+    /// difference (mol/mol) used in SpeciationCleanup()") converted into this
+    /// condition's own units via the same linear map as fixedGradientFn/
+    /// achievedValueFn - reusing GEMS3K's own numerical settings instead of a
+    /// new BASE_PARAM field, per the same "reuse pa_p, don't add parallel
+    /// Optima-only fields" convention already used for IIM/DK/DHB/DW above.
+    /// Deliberately lazy (evaluated at solve time, not at
+    /// SetControlCondition_*() time) since it reads pm.T for Eh, which - like
+    /// fixedGradientFn - is only guaranteed current right before the Newton
+    /// system is assembled. Note this couples the pH/Eh target-tolerance to
+    /// pa_p->GAS's other consumer (PhaseSelectionSpeciationCleanup()'s own
+    /// divergent-dual gate, ipm_main.cpp) - tuning GAS for one affects the
+    /// other; pass an explicit `tolerance` to either setter to opt out.
+    std::function<double()> defaultToleranceFn;
 
     /// (IC row index, coefficient) pairs: this condition's Aex column,
     /// i.e. how one unit of its titrant unknown contributes to each

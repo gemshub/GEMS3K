@@ -255,11 +255,15 @@ public:
     /// Registers (or replaces) a pH equilibrium control condition for the
     /// next GEM_run() call made in NEED_GEM_AOP/SOP mode (see NODECODECH
     /// in databr.h and TMultiBase::CalculateEquilibriumStateOptima()).
-    /// Persists across calls until Clear_ControlConditions().
-    void Set_pH_target( double pH_target, double tolerance = 1e-3 )
+    /// Persists across calls until Clear_ControlConditions(). `tolerance < 0`
+    /// (the default) derives the tolerance from pa_p->GAS instead of a
+    /// hardcoded constant - see ipm_optima.h/SetControlCondition_pH().
+    void Set_pH_target( double pH_target, double tolerance = -1. )
     { multi_ptr()->SetControlCondition_pH( pH_target, tolerance ); }
     /// Registers (or replaces) an Eh (V) equilibrium control condition.
-    void Set_Eh_target( double Eh_target, double tolerance = 2e-3 )
+    /// `tolerance < 0` (the default) derives it from pa_p->GAS, same as
+    /// Set_pH_target().
+    void Set_Eh_target( double Eh_target, double tolerance = -1. )
     { multi_ptr()->SetControlCondition_Eh( Eh_target, tolerance ); }
     /// Removes every registered control condition.
     void Clear_ControlConditions()

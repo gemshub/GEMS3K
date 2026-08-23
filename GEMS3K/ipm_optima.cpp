@@ -87,6 +87,11 @@ void TMultiBase::SetControlCondition_pH( double pH_target, double tolerance )
     c.target = pH_target;
     c.tolerance = tolerance;
     c.stoich = { { xH, 1.0 }, { xZz, 1.0 } };
+    // Default tolerance (used only when the caller passes tolerance<0):
+    // pa_p->GAS is a chem.pot.-difference threshold (mol/mol); pH's own
+    // formula below is linear in Muj with slope -ln_to_lg, so a Muj-space
+    // tolerance of GAS maps to a pH-space tolerance of ln_to_lg*GAS.
+    c.defaultToleranceFn = [this]() { return std::fabs( ln_to_lg ) * base_param()->GAS; };
     // pH = -ln_to_lg*(Muj - G0[H+] + lnFmol)  =>  Muj_target = G0[H+] - lnFmol - pH_target/ln_to_lg
     // (ipm_chemical2.cpp's own pH formula; Muj = sum_i U[i]*a(H+,i), which is
     // exactly sum_i U[i]*stoich[i] above, since stoich matches H+'s own
@@ -126,6 +131,11 @@ void TMultiBase::SetControlCondition_Eh( double Eh_target, double tolerance )
     // no direct algebraic relationship to Zz's dual/Eh. Scoped to
     // this Optima joint-solve mechanism only.
     c.stoich = { { xZz, -1.0 } };
+    // Default tolerance (used only when the caller passes tolerance<0):
+    // same pa_p->GAS reuse as SetControlCondition_pH(), mapped through Eh's
+    // own slope (0.000086*T) instead of pH's. Lazy (reads pm.T at solve
+    // time, not here) for the same reason fixedGradientFn below is lazy.
+    c.defaultToleranceFn = [this]() { return 0.000086 * pm.T * base_param()->GAS; };
     // Eh = 0.000086*U[Zz]*T  =>  U[Zz]_target = Eh_target/(0.000086*T);
     // achievedMuj = sum_i U[i]*stoich[i] = -U[Zz], so the fixed gradient
     // (pinned to achievedMuj, via the KKT stationarity of this slot) is
@@ -402,7 +412,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             for( const auto& rc : conditions[k].stoich )
                 achievedMuj += pm.U[ rc.first ] * rc.second;
             conditions[k].achievedValue = conditions[k].achievedValueFn( achievedMuj );
-            conditions[k].targetMet = std::fabs( conditions[k].achievedValue - conditions[k].target ) <= conditions[k].tolerance;
+            double tol = conditions[k].tolerance;
+            if( tol < 0. && conditions[k].defaultToleranceFn )
+                tol = conditions[k].defaultToleranceFn();
+            conditions[k].targetMet = std::fabs( conditions[k].achievedValue - conditions[k].target ) <= tol;
             if( !conditions[k].targetMet )
             {
                 allTargetsMet = false;
