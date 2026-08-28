@@ -165,7 +165,16 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     // TSolMod stuff
     { "LsMdc2",    0 , 0, 0,  "# LsMdc2: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member" },
     { "LsPhl",    0 , 0, 0,  "# LsPhl: Number of phase links; number of link parameters; [Fi][2]" },
-    { "pa_PSTALL", 0 , 0, 0, "# pa_PSTALL: Enable (1) or disable (0) stall detection in MassBalanceRefinement { 1 }" }
+    { "pa_PSTALL", 0 , 0, 0, "# pa_PSTALL: Enable (1) or disable (0) stall detection in MassBalanceRefinement { 1 }" },
+    { "pa_OptimaTol", 0 , 0, 0, "# pa_OptimaTol: Optima solver's own KKT optimality-error convergence tolerance { 1e-8 }" },
+    { "pa_LogBarrierTau", 0 , 0, 0, "# pa_LogBarrierTau: log-barrier penalty weight for pure single-species phases in the Optima solver { 1e-16 }" },
+    { "pa_OptimaMaxStepRatio", 0 , 0, 0, "# pa_OptimaMaxStepRatio: max per-iteration relative Newton step in the Optima solver (0=disabled, needs the modified local Optima checkout) { 0 }" },
+    { "pa_PhaseHessianFloor", 0 , 0, 0, "# pa_PhaseHessianFloor: eigenvalue floor (fraction of the block's own largest) for the exact per-phase curvature block of non-aqueous multicomponent phases in the Optima solver; 0 disables it { 0.01 }" },
+    { "pa_OptimaStallWindow", 0 , 0, 0, "# pa_OptimaStallWindow: abandon an Optima (AOP/SOP/ROP) solve after this many consecutive iterations with no improvement at all in the best-so-far optimality error; 0 disables it { 500 }" },
+    { "pa_OptimaMaxSeconds", 0 , 0, 0, "# pa_OptimaMaxSeconds: wall-clock budget in seconds for one Optima (AOP/SOP/ROP) solve including retries; 0 disables it. Per-project guard only - a time limit is not reproducible across machines { 0 }" },
+    { "pa_OptimaFDHessian", 0 , 0, 0, "# pa_OptimaFDHessian: 1 = compute the finite-difference PartiallyExact Hessian columns in the Optima solver, 0 = skip them (much cheaper; measured equivalent accuracy) { 1 }" },
+    { "pa_OptimaMoleFracHessian", 0 , 0, 0, "# pa_OptimaMoleFracHessian: ideal-mixing Hessian form for non-aqueous solution phases in the Optima solver: 0 = diag(1/X), 1 = full mole-fraction Jacobian (Leal et al. 2017 Eq. 80) { 0 }" },
+    { "pa_OptimaPhaseCompaction", 0 , 0, 0, "# pa_OptimaPhaseCompaction: Newton iterations for the Optima path's phase-classification probe pass; absent phases are then pinned at the floor for the real solve. 0 = off { 0 }" }
 };
 
 
@@ -184,7 +193,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 81, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 90, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -354,6 +363,18 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_PLLG, pa_p->PLLG, _comment, false  );
     if(!brief_mode || pa_p->PSTALL != pa_p_.PSTALL )
         prar.writeField(f_pa_PSTALL, pa_p->PSTALL, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaTol, pa_p_.OptimaTol) )
+        prar.writeField(f_pa_OptimaTol, pa_p->OptimaTol, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->LogBarrierTau, pa_p_.LogBarrierTau) )
+        prar.writeField(f_pa_LogBarrierTau, pa_p->LogBarrierTau, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaMaxStepRatio, pa_p_.OptimaMaxStepRatio) )
+        prar.writeField(f_pa_OptimaMaxStepRatio, pa_p->OptimaMaxStepRatio, _comment, false  );
+        prar.writeField(f_pa_PhaseHessianFloor, pa_p->PhaseHessianFloor, _comment, false  );
+        prar.writeField(f_pa_OptimaStallWindow, pa_p->OptimaStallWindow, _comment, false  );
+        prar.writeField(f_pa_OptimaMaxSeconds, pa_p->OptimaMaxSeconds, _comment, false  );
+        prar.writeField(f_pa_OptimaFDHessian, pa_p->OptimaFDHessian, _comment, false  );
+        prar.writeField(f_pa_OptimaMoleFracHessian, pa_p->OptimaMoleFracHessian, _comment, false  );
+        prar.writeField(f_pa_OptimaPhaseCompaction, pa_p->OptimaPhaseCompaction, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -759,7 +780,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 81, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 90, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1171,6 +1192,24 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_pa_PSTALL: rddar.readArray("pa_PSTALL" , &pa_p->PSTALL, 1);
             break;
+        case f_pa_OptimaTol: rddar.readArray("pa_OptimaTol" , &pa_p->OptimaTol, 1);
+            break;
+        case f_pa_LogBarrierTau: rddar.readArray("pa_LogBarrierTau" , &pa_p->LogBarrierTau, 1);
+            break;
+        case f_pa_OptimaMaxStepRatio: rddar.readArray("pa_OptimaMaxStepRatio" , &pa_p->OptimaMaxStepRatio, 1);
+            break;
+        case f_pa_PhaseHessianFloor: rddar.readArray("pa_PhaseHessianFloor" , &pa_p->PhaseHessianFloor, 1);
+            break;
+        case f_pa_OptimaStallWindow: rddar.readArray("pa_OptimaStallWindow" , &pa_p->OptimaStallWindow, 1);
+                break;
+        case f_pa_OptimaMaxSeconds: rddar.readArray("pa_OptimaMaxSeconds" , &pa_p->OptimaMaxSeconds, 1);
+                break;
+        case f_pa_OptimaFDHessian: rddar.readArray("pa_OptimaFDHessian" , &pa_p->OptimaFDHessian, 1);
+                break;
+        case f_pa_OptimaMoleFracHessian: rddar.readArray("pa_OptimaMoleFracHessian" , &pa_p->OptimaMoleFracHessian, 1);
+                break;
+        case f_pa_OptimaPhaseCompaction: rddar.readArray("pa_OptimaPhaseCompaction" , &pa_p->OptimaPhaseCompaction, 1);
+                break;
         case f_tMin: rddar.readArray("tMin" , &pm.tMin, 1);
             break;
         case f_dcMod:   rddar.readArray( "dcMod" , pm.dcMod[0], pm.L, 6 );

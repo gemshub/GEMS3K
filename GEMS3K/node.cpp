@@ -207,9 +207,11 @@ long int TNode::GEM_run( bool uPrimalSol )
             pmm->pNP = 1;
             unpackDataBr( uPrimalSol );
         }
-        else if( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_AOP )
+        else if( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_AOP
+                 || CNode->NodeStatusCH == NEED_GEM_ROP )
         {
-            pmm->pNP = 0; // As default setting AIA/AOP mode
+            pmm->pNP = 0; // As default setting AIA/AOP/ROP mode - ROP is a single mode
+                          // (no warm-start pair), see NODECODECH's own comment in databr.h
             if (CNode->dt > 0.)
                 uPrimalSol = true;
             unpackDataBr( uPrimalSol );
@@ -244,15 +246,17 @@ long int TNode::GEM_run( bool uPrimalSol )
         // not, fall back to the equivalent native AIA/SIA solve rather than
         // failing outright - a caller requesting AOP/SOP shouldn't have to
         // know in advance whether this particular GEMS3K build has Optima.
-        if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP )
+        if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP
+            || CNode->NodeStatusCH == NEED_GEM_ROP )
         {
 #ifdef USE_OPTIMA_SOLVER
-            CalcTime = multi_ptr()->CalculateEquilibriumStateOptima( NumIterFIA, NumIterIPM );
+            CalcTime = multi_ptr()->CalculateEquilibriumStateOptima( NumIterFIA, NumIterIPM,
+                                       CNode->NodeStatusCH == NEED_GEM_ROP );
 #else
-            node_logger->warn("GEM_run(): NEED_GEM_AOP/SOP requested but GEMS3K was not built with "
+            node_logger->warn("GEM_run(): NEED_GEM_AOP/SOP/ROP requested but GEMS3K was not built with "
                                "USE_OPTIMA_SOLVER - falling back to the equivalent native {} solve",
-                               CNode->NodeStatusCH == NEED_GEM_AOP ? "AIA" : "SIA");
-            CNode->NodeStatusCH = ( CNode->NodeStatusCH == NEED_GEM_AOP ) ? NEED_GEM_AIA : NEED_GEM_SIA;
+                               CNode->NodeStatusCH == NEED_GEM_SOP ? "SIA" : "AIA");
+            CNode->NodeStatusCH = ( CNode->NodeStatusCH == NEED_GEM_SOP ) ? NEED_GEM_SIA : NEED_GEM_AIA;
             CalcTime = multi_ptr()->CalculateEquilibriumState( NumIterFIA, NumIterIPM );
 #endif
         }
@@ -279,6 +283,8 @@ long int TNode::GEM_run( bool uPrimalSol )
                 CNode->NodeStatusCH = BAD_GEM_AOP;
             else if( CNode->NodeStatusCH == NEED_GEM_SOP )
                 CNode->NodeStatusCH = BAD_GEM_SOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_ROP )
+                CNode->NodeStatusCH = BAD_GEM_ROP;
             else
                 CNode->NodeStatusCH = BAD_GEM_SIA;
 
@@ -293,6 +299,8 @@ long int TNode::GEM_run( bool uPrimalSol )
                 CNode->NodeStatusCH = OK_GEM_AOP;
             else if( CNode->NodeStatusCH == NEED_GEM_SOP )
                 CNode->NodeStatusCH = OK_GEM_SOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_ROP )
+                CNode->NodeStatusCH = OK_GEM_ROP;
             else
                 CNode->NodeStatusCH = OK_GEM_SIA;
         }
@@ -308,6 +316,8 @@ long int TNode::GEM_run( bool uPrimalSol )
             CNode->NodeStatusCH = ERR_GEM_AOP;
         else if( CNode->NodeStatusCH == NEED_GEM_SOP )
             CNode->NodeStatusCH = ERR_GEM_SOP;
+        else if( CNode->NodeStatusCH == NEED_GEM_ROP )
+            CNode->NodeStatusCH = ERR_GEM_ROP;
         else
             CNode->NodeStatusCH = ERR_GEM_SIA;
     }
@@ -366,7 +376,11 @@ void TNode::packDataBr()
     // pmm->pNP (0=cold,1=warm) selects AIA/SIA vs. AOP/SOP; AOP/SOP share
     // pNP's convention with AIA/SIA, so which pair to reset to is read
     // from the still-unmodified NodeStatusCH before this overwrites it.
-    if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP )
+    if( CNode->NodeStatusCH == NEED_GEM_ROP )
+    {
+        ; // ROP is a single mode, no pNP-driven cold/warm pair - nothing to preserve/derive
+    }
+    else if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP )
     {
         if( pmm->pNP == 0 )
             CNode->NodeStatusCH = NEED_GEM_AOP;

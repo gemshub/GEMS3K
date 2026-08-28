@@ -824,6 +824,89 @@ NEXT_PHASE:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/// Total Gibbs energy G(X) of the converged system, in RT units, on a basis
+/// that is identical for every solver path.  See the declaration in ms_multi.h
+/// for why total G (and not the OK/FAIL status) is the correctness criterion.
+///
+/// This deliberately does NOT reuse GX()'s own accumulation, because GX() reads
+/// pm.G[], which is NOT a path-independent basis: native's GEM_IPM() resets
+/// pm.G[i] = pm.G0[i] on exit (ipm_main.cpp), discarding the fDQF and F0
+/// (activity-coefficient) terms, while CalculateEquilibriumStateOptima() leaves
+/// pm.G[j] = G0 + fDQF + F0 as its last LINK_UX_MODE update wrote it.  Comparing
+/// GX(0.) across the two therefore compares an ideal-mixing G against a real one.
+/// Measured on f_Flowline (CLAUDE.md 2026-08-25): identical assemblage, identical
+/// amounts to 7 significant figures, identical lnGam/F0 per species - yet GX(0.)
+/// differed by 1.0818 RT, exactly sum(X_j * F0_j) over the aqueous phase.
+///
+/// So the excess term is rebuilt here from G0[]+fDQF[]+F0[], which both paths do
+/// leave current and equal.  Everything else - the Y->X copy, the phase-inclusion
+/// tests, the DcMinM cutoff, the per-species-class formulas - mirrors GX(0.)
+/// exactly.  Post-solve only: it copies Y into X and refreshes pm.XF/pm.XFA.
+double TMultiBase::TotalGibbsEnergy()
+{
+    long int i, j, k;
+    double x, XF, XFw, FX, Gi, Gj, logXw, logYFk;
+
+    for( i=0; i<pm.L; i++ )
+        pm.X[i] = pm.Y[i];
+    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+
+    FX = 0.;
+    j = 0;
+    for( k=0; k<pm.FI; k++ )
+    {
+        i = j + pm.L1[k];
+        logXw = -101.;
+        XFw = 0.0;
+        if( pm.FIs && k < pm.FIs )
+            XFw = pm.XFA[k];
+        if( ( pm.PHC[k] == PH_AQUEL && XFw >= pm.XwMinM )
+                || ( pm.PHC[k] == PH_SORPTION && XFw >= pm.ScMinM )
+                || ( pm.PHC[k] == PH_POLYEL && XFw >= pm.ScMinM ) )
+            logXw = log( XFw );
+
+        XF = pm.XF[k];
+        if( !(pm.FIs && k < pm.FIs) )
+        {
+            if( XF < pm.PhMinM )
+                goto NEXT_PHASE_TG;
+        }
+        else if( XF < pm.DSM && logXw < -100. )
+            goto NEXT_PHASE_TG;
+
+        logYFk = log( XF );
+
+        for( ; j<i; j++ )
+        {
+            x = pm.X[j];
+            if( x < pm.DcMinM )
+                continue;
+            Gj = pm.G0[j] + pm.fDQF[j] + pm.F0[j];   // rebuilt, not pm.G[j]
+            switch( pm.DCCW[j] )
+            {
+            case DC_ASYM_SPECIES:
+                Gi = x * ( Gj + log(x) - logXw );
+                break;
+            case DC_ASYM_CARRIER:
+            case DC_SYMMETRIC:
+                Gi = x * ( Gj + log(x) - logYFk );
+                break;
+            case DC_SINGLE:
+                Gi = Gj * x;
+                break;
+            default:
+                Gi = 7777777.;
+            }
+            FX += Gi;
+        }   // j
+NEXT_PHASE_TG:
+        j = i;
+    }  // k
+    ipm_logger->trace("TotalGibbsEnergy  {}", FX);
+    return(FX);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Conversion of g(T,P) value for DCs into the uniform cj scale.
 /// \param k - index of phase, \param j - index DC in phase
 /// \return if error code, returns 777777777.

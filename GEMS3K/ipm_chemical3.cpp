@@ -35,6 +35,16 @@
 // added 18.06.2008 DK
 double TMultiBase::SmoothingFactor( )
 {
+   // Optima path only (AOP/SOP/ROP): return an exact 1.0, making the
+   // IPM-2 smoothing blend in DC_PrimalChemicalPotentialUpdate() an
+   // algebraic no-op. Required because that blend reads `Fold =
+   // pm.F0[j]` from the PREVIOUS evaluation, which makes the objective
+   // Optima minimises path-dependent rather than a function of x alone
+   // (see TMultiBase::optima_disable_smoothing in ms_multi.h for the
+   // full chain, and CLAUDE.md 2026-08-25 plan-v5 Phase A / A.1).
+   // Native AIA/SIA never sets this flag - bit-identical by construction.
+   if( optima_disable_smoothing )
+      return 1.0;
    if( pm.FitVar[4] < 0 )
    {  // To start SIA mode (smart initial approximation)
       return 1.0;

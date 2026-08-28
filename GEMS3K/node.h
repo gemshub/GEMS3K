@@ -493,6 +493,33 @@ public:
     ///  \return NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
     long int  GEM_run( bool uPrimalSol );   // calls GEM for a work node
 
+#ifdef USE_OPTIMA_SOLVER
+    /// Convenience dispatch combining ROP's speed with native AIA's
+    /// robustness (see GEMS3K's CLAUDE.md, 2026-08-24, "Combining
+    /// native's robustness with ROP's/Reaktoro's speed"): tries
+    /// NEED_GEM_ROP first (fast - matches or beats Reaktoro's own
+    /// iteration count - on the chemical systems it handles well, per
+    /// that session's 25-project sweep), and falls back to a plain
+    /// NEED_GEM_AIA solve on anything but a clean OK_GEM_ROP. No changes
+    /// to either solver - purely a caller-side retry using two already-
+    /// independently-validated paths, so average-case speed depends
+    /// entirely on how often a given caller's own systems resemble the
+    /// ones ROP already handles well versus the harder ones (Solvus-
+    /// family-like) that still need the AIA fallback and so pay ROP's
+    /// own (wasted) attempt cost on top.
+    long int GEM_run_ROP_or_AIA( bool uPrimalSol )
+    {
+        CNode->NodeStatusCH = NEED_GEM_ROP;
+        long int status = GEM_run( uPrimalSol );
+        if( status != OK_GEM_ROP )
+        {
+            CNode->NodeStatusCH = NEED_GEM_AIA;
+            status = GEM_run( uPrimalSol );
+        }
+        return status;
+    }
+#endif
+
     /// Returns GEMIPM2 calculation time in seconds elapsed during the last call of GEM_run() - can be used for monitoring
     ///                      the performance of calculations.
     /// \return double number, may contain 0.0 if the calculation time is less than the internal time resolution of C/C++ function
@@ -986,6 +1013,12 @@ public:
 
     /// Retrieves pH of the aqueous solution
     double Get_pH( );
+
+    /// Total Gibbs energy G(X) of the last converged state, in RT units.
+    /// The correctness criterion for comparing solver paths - see
+    /// TMultiBase::TotalGibbsEnergy() (ms_multi.h) for why the OK/FAIL status
+    /// and pm.FX are both unsuitable. Call only after a completed GEM_run().
+    double Get_GibbsEnergy() { return multi_ptr()->TotalGibbsEnergy(); }
 
     /// Retrieves pe of the aqueous solution
     double Get_pe( );

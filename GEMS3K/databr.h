@@ -158,7 +158,22 @@ typedef DATABR*  DATABRPTR;
                      ///<   using the previous speciation (full DATABR lists only)
  OK_GEM_SOP   = 15,  ///< OK after GEM calculation via Optima with warm initial approximation
  BAD_GEM_SOP  = 16,  ///< Bad (not fully trustful) result after GEM calculation via Optima with warm initial approximation
- ERR_GEM_SOP  = 17   ///< Failure (no result) in GEM calculation via Optima with warm initial approximation
+ ERR_GEM_SOP  = 17,  ///< Failure (no result) in GEM calculation via Optima with warm initial approximation
+ // "ROP" mode: a single, faithful port of Reaktoro's OWN equilibrium
+ // mechanism onto GEMS3K's chemistry (same uniform tiny initial guess,
+ // same PartiallyExact Hessian strategy, same untouched Optima::Options
+ // defaults, same single apply_min_max_fix_and_accept-toggle fallback -
+ // see TMultiBase::CalculateEquilibriumStateOptima()'s reaktoroMode
+ // branch, ipm_optima.cpp) - NOT just AOP's own seed/options swapped in.
+ // Unlike AOP/SOP there is no cold/warm pair: Reaktoro's own default
+ // equilibrate() always starts from the same uniform seed regardless of
+ // any previous state, so ROP is a single mode. Only meaningful if built
+ // with USE_OPTIMA_SOLVER; otherwise TNode::GEM_run() falls back to AIA,
+ // same as AOP/SOP.
+ NEED_GEM_ROP = 18,  ///< Need GEM calculation via Optima, using Reaktoro's own mechanism (uniform seed, PartiallyExact Hessian, untouched Optima defaults)
+ OK_GEM_ROP   = 19,  ///< OK after GEM calculation via the ROP mechanism
+ BAD_GEM_ROP  = 20,  ///< Bad (not fully trustful) result after GEM calculation via the ROP mechanism
+ ERR_GEM_ROP  = 21   ///< Failure (no result) in GEM calculation via the ROP mechanism
 } /*NODECODECH*/;
 
 

@@ -110,6 +110,279 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     // GEMS3K's own keyword-based ipm-dat I/O (ms_multi_format.cpp, "pa_PSTALL") can override it.
     short PSTALL = 1;
 
+    // GEMS3K+Optima solver (ipm_optima.cpp, CalculateEquilibriumStateOptima(),
+    // USE_OPTIMA_SOLVER builds only) tuning, GEMS3K-internal only - same
+    // trailing-field/default-member-initializer placement as PSTALL above,
+    // for the same reason (no GEMSGUI project-file impact; keyword-only I/O
+    // via ms_multi_format.cpp). No existing pa_p field measures either
+    // quantity, so unlike IIM/DHB/DW (reused as-is for this solver), these
+    // get their own fields rather than borrowing an unrelated one.
+    //
+    // Optima's own KKT optimality-error convergence tolerance - deliberately
+    // NOT the same quantity as pa_DK (GEMS3K's native Dikin-criterion
+    // threshold measures a structurally different residual; reusing DK's
+    // typical project values verbatim was confirmed to let Optima report a
+    // false "converged" well short of the true stationary point). Default
+    // matches Optima's own library default (Optima::ConvergenceOptions::
+    // tolerance, Optima/ConvergenceOptions.hpp).
+    double OptimaTol = 1.0e-8;
+
+    // Logarithmic-barrier penalty weight added to the Optima objective for
+    // pure single-species phases (species whose chemical potential does not
+    // depend on composition - e.g. simple mineral phases), ported from
+    // Reaktoro's own EquilibriumSetup.cpp (updateGibbsEnergy()/
+    // updateGradX()/updateHessX() - read from source, not guessed). Default
+    // matches Reaktoro's own default (EquilibriumOptions::epsilon *
+    // logarithm_barrier_factor = 1e-16*1.0). IMPORTANT, confirmed
+    // 2026-08-23: at this default magnitude the term does NOT fix the
+    // known failure case (Resources/gems3k/j_Flowline_G_series1_..., where
+    // plain Optima converges to a wrong-but-KKT-stationary point) - tested
+    // directly, same wrong answer as with the term absent entirely. A much
+    // larger tau (1e-2) does reach the right answer on that case but then
+    // Optima's own convergence check never cleanly triggers (hits its
+    // iteration cap, reports failure despite the iterate being correct);
+    // 1e-4 was no better than 1e-16. The mechanism is real (ported
+    // faithfully from Reaktoro's source) but Reaktoro's own robustness on
+    // this class of problem is evidently NOT explained by this term at its
+    // own default value - the actual mechanism is still unidentified (see
+    // GEMS3K's CLAUDE.md, 2026-08-23, for the full investigation and what
+    // was ruled out). Left present and exposed via ipm-dat because it's a
+    // real, sourced piece of Reaktoro's own objective and doesn't regress
+    // anything at its default value - not because it's known to fix the
+    // open problem.
+    double LogBarrierTau = 1.0e-16;
+
+    // Relative trust-region cap on Optima's per-iteration Newton step,
+    // passed through to the modified Optima::BacktrackSearchOptions::
+    // max_step_ratio (Optima/BacktrackSearch.cpp/.hpp, local checkout
+    // /home/dmiron/git/hub/optima, NOT the vendored/conda-packaged Optima -
+    // this option does not exist in stock Optima and only takes effect
+    // when GEMS3K is built against the modified local checkout, see
+    // debug-optima-vs-reaktoro/README.md for the build recipe). Disabled
+    // (0., no cap, byte-identical to stock Optima's own BacktrackSearch
+    // behavior) by default - kept OFF deliberately, not merely un-tuned.
+    // Tried first (2026-08-24) as the fix for the aqueous-solvent-
+    // collapses-to-floor failure (GEMS3K's CLAUDE.md, 2026-08-23) and
+    // directly disproven: on Resources/gems3k/j_Flowline_G_series1_...,
+    // every tested value (2, 3, 5, 10) made the SAME case actively WORSE
+    // (a clean-but-wrong convergence turned into an outright KKT-residual
+    // blowup, ~1e15-1e16) rather than better - root-cause tracing (this
+    // same CLAUDE.md entry) found the real defect was an AIA cold-start
+    // seed placing the solvent below its own solutes' total mass, not a
+    // step-size/globalization problem this cap could ever have addressed;
+    // capping the step size just slowed the same wrong trajectory down
+    // without changing its direction. Left in place (Optima source and
+    // this field both) as available infrastructure for a genuinely
+    // step-size-related failure mode, should one turn up on a different
+    // system - re-validate on its own merits before enabling, don't
+    // assume the j_Flowline finding above generalizes either way.
+    double OptimaMaxStepRatio = 0.0;
+
+    // Eigenvalue floor, as a fraction of the block's own largest |eigenvalue|,
+    // applied to the exact (finite-differenced, symmetrised) curvature block of
+    // every NON-AQUEOUS multicomponent phase in the Optima solver. 0 disables
+    // the exact block entirely, restoring the previous behaviour (analytic
+    // ideal-mixing curvature plus FD columns for Optima's basic set only).
+    //
+    // Why this exists: inside a miscibility gap the true curvature of a
+    // solution phase is INDEFINITE - the negative eigenvalue along the
+    // unmixing direction is what a spinodal is - so Newton needs a
+    // positive-definite model to get a descent direction at all, and the floor
+    // is what sets how far it steps along that soft direction. Without the
+    // exact block, the ideal-mixing model is O(1/X) stiff where the truth goes
+    // to zero and Newton contracts at 1 - H/B -> 1 (measured on the
+    // sanidine-albite solvus: rate 0.9424 at 600 C, 0.9946 at 640, 1.0000 at
+    // 650, taking FULL Newton steps throughout). With the exact block but no
+    // floor, the step is unbounded and annihilates the phase.
+    //
+    // The default was chosen on that benchmark plus the 25-project suite, and
+    // the response is monotone in the floor over most of its range (a larger
+    // floor means shorter steps means more iterations) but NOT everywhere - see
+    // GEMS3K's CLAUDE.md, 2026-08-26. Same trailing-field placement rules as
+    // PSTALL above; NOTE that adding a field here also requires bumping BOTH
+    // hardcoded counts in ms_multi_format.cpp (prar/rddar), which is what kept
+    // OptimaTol/LogBarrierTau/OptimaMaxStepRatio unreadable until 2026-08-26.
+    double PhaseHessianFloor = 0.01;
+
+    /// Stall/freeze limit for the Optima solver (AOP/SOP/ROP): abandon a
+    /// solve after this many consecutive Newton iterations in which the
+    /// best-so-far optimality error has not improved AT ALL. 0 disables it.
+    ///
+    /// TRIAGE, NOT A FIX. It converts a hang into a fast, honest failure and
+    /// lets the existing retry tiers start sooner; the underlying step-length
+    /// failure is untouched (GEMS3K's CLAUDE.md / Docs/gems3k-optima-plan-v5.md
+    /// section 15-16, 2026-08-27). Every remaining AOP failure in the whole
+    /// benchmark corpus - f_/j_TestPNTDB, f_/j_TestSUP98, and the two largest
+    /// gems3k-psina projects - is a FROZEN ITERATE: the objective and the
+    /// residual are bit-identical from iteration 0, so those runs burn their
+    /// entire budget (40 minutes at 1392 species) and return nothing.
+    ///
+    /// Keyed on the best-so-far error rather than on the objective or on the
+    /// iterate displacement, because both of those were measured and DO NOT
+    /// discriminate: f is frozen to 6 significant figures on f_CASHNK (which
+    /// progresses) as well as on complex_1 (which does not), and complex_1's
+    /// iterate actually moves MORE per window than f_CASHNK's.
+    ///
+    /// DEFAULT OFF, per user direction 2026-08-27: "for cases known to have
+    /// converged don't add limit of iterations or time". A guard belongs only on
+    /// a system already known to be pathological; a project that converges today
+    /// must not acquire a new way to fail. Enable it per project, in that
+    /// project's own -ipm.json, alongside pa_OptimaMaxSeconds below.
+    ///
+    /// That principle was reached the hard way. A default of 500 looked safe:
+    /// the longest no-improvement run among converging projects appeared to be
+    /// mid_1's 141 (f_GEOTHERM 77, f_Solvus 40, CSHSnplus 30). But the 301-point
+    /// solvus temperature sweep - which the 5-degree-sampled `solvus.aop` CTest
+    /// does NOT cover - has a point at 588 C that stagnates for 500-705
+    /// iterations and then RECOVERS, converging at 1075. At 500 it regressed
+    /// from converged to failed. The lesson is that the window would have to
+    /// clear the worst *recovering* stagnation anywhere in the corpus, which is
+    /// not a quantity anyone can bound in advance - so do not try to; switch it
+    /// on only where it has been shown to help.
+    ///
+    /// Currently enabled (500) in: f_/j_CASHNK, where the no-improvement run is
+    /// 9781 and the limit hands control to the phase-extinction retry early
+    /// (j_CASHNK 10001 -> 563 iterations, same G to every digit); and
+    /// f_/j_TestPNTDB, where it is what makes them converge at all - the primary
+    /// solve is frozen from iteration 0, and cutting it off reaches a retry that
+    /// was previously unreachable.
+    long int OptimaStallWindow = 0;
+
+    /// Wall-clock budget in SECONDS for one Optima (AOP/SOP/ROP) solve,
+    /// including its retries. 0 (the default) disables it.
+    ///
+    /// DEFAULT OFF, AND DELIBERATELY SO. Unlike OptimaStallWindow above - which
+    /// counts iterations and is therefore bit-reproducible - a wall-clock limit
+    /// makes the result depend on the machine, the build and what else is
+    /// running. Enabling it globally would make GEMS3K non-deterministic. It is
+    /// meant to be set PER PROJECT, in that project's own -ipm.json, for a
+    /// system already known to be pathological, as a guard rather than a
+    /// tolerance.
+    ///
+    /// Set for f_/j_TestSUP98 at ~2x their native solve time, per user
+    /// direction 2026-08-27: those two are the only projects in the corpus
+    /// where AOP neither converges nor stalls - it progresses slowly and
+    /// indefinitely (>30 min against native's ~0.1 s), so the iteration-based
+    /// stall detector cannot catch them. Remove the setting once the underlying
+    /// cause is fixed; it is a stop-gap, not a finding.
+    ///
+    /// Granularity is one Newton iteration - the check runs in the same
+    /// per-iteration convergence hook as the stall detector, so a single
+    /// iteration longer than the budget cannot be interrupted.
+    double OptimaMaxSeconds = 0.0;
+
+    /// Whether the Optima path computes the finite-difference "PartiallyExact"
+    /// Hessian columns (Reaktoro's own default strategy). 1 = yes (current
+    /// behaviour), 0 = skip them and rely on the analytic ideal-mixing block
+    /// plus the regularised exact per-phase block (pa_PhaseHessianFloor).
+    ///
+    /// EXISTS BECAUSE IT LOOKS REDUNDANT AND EXPENSIVE, but that is not yet
+    /// validated enough to change the default. The FD loop runs once per
+    /// Optima-reported BASIC variable per iteration - basic variables number
+    /// pm.N, the IC count - and each pass is a full
+    /// CalculateActivityCoefficients(LINK_UX_MODE) + PrimalChemicalPotentials
+    /// over all L species. So f_TestSUP98 pays 82 full activity evaluations over
+    /// 923 species EVERY Newton iteration, and the cost grows as N x L, which
+    /// matches the measured ~n^2.32 per-iteration scaling.
+    ///
+    /// Measured 2026-08-27 with it disabled - FEWER iterations and lower cost
+    /// everywhere tried, with G bit-identical in every case:
+    ///   f_Flowline  93 -> 78 it,   19 -> 12 ms
+    ///   f_Solvus   145 -> 67 it,   52 -> 20 ms   (2.6x)
+    ///   o_Solvus    96 -> 65 it,   42 -> 23 ms
+    ///   mid_1     4184 -> 2620 it, 53 -> 30 s
+    ///   f_GEOTHERM 1765 -> 1063 it, 34 -> 4.6 s  (7.4x)
+    /// and on the 301-point solvus sweep Tc, worst limb error and out-of-tolerance
+    /// count are all IDENTICAL at 2.2x lower cost - including the near-critical
+    /// band, which is the case the FD columns were introduced for.
+    ///
+    /// BUT IT IS NOT REDUNDANT - so it stays ON by default. Measured per-mode
+    /// with an adequate budget, disabling it breaks exactly TWO projects:
+    ///   f_CASHNK    OK 10003 it -> FAIL 5116
+    ///   j_TiQ_PRSV  OK 20 it    -> FAIL 7001
+    /// Everything else is unaffected or faster without it, including both
+    /// Pitzer systems (j_PitzerTHE 0.96x; f_/j_GEOTHERM 5-7x FASTER) and the
+    /// Van Laar Solvus family (0.46-0.69x). So neither "Pitzer aqueous" nor
+    /// "has a non-aqueous solution phase" predicts the requirement.
+    ///
+    /// Treat the requirement as a numerical property of the trajectory, NOT of
+    /// the activity model: f_CASHNK needs it and j_CASHNK - same chemistry,
+    /// same models, differing only in the thermodynamic-data path - does not.
+    /// Do not infer a per-model rule from two cases that disagree across export
+    /// formats of one system.
+    ///
+    /// What is solid is the cost, and that it is wasted on most systems.
+    /// pa_PhaseHessianFloor's exact block already covers present end-members of
+    /// non-aqueous multicomponent phases, and pure phases have zero true
+    /// curvature (their chemical potential is composition-independent), so
+    /// their FD columns are noise bought with a full activity evaluation each.
+    /// Narrowing this loop to the columns nothing else covers is the follow-up
+    /// - see Docs/gems3k-optima-plan-v5.md section 21.
+    long int OptimaFDHessian = 1;
+
+    /// Form of the ideal-mixing Hessian block for NON-AQUEOUS multicomponent
+    /// (solution) phases in the Optima path. GEMS3K-only, keyword ipm-dat I/O.
+    ///   0 (default) - diag(1/X[j]), no off-diagonal. Formally NOT the
+    ///                 derivative of the F[] the same code computes.
+    ///   1           - the full ideal mole-fraction Jacobian
+    ///                 d ln x_j/d n_i = delta_ij/X[j] - 1/Xf, i.e. Leal, Kulik,
+    ///                 Smith & Saar (2017) Eq. 80 (Docs/literature/), what
+    ///                 Reaktoro's own non-aqueous approxfuncs assembles, and the
+    ///                 exact derivative of DC_SYMMETRIC's F = G + ln n_j - ln nSum.
+    ///
+    /// DEFAULT OFF DESPITE BEING THE CORRECT DERIVATIVE, because it measures
+    /// worse on this corpus overall. The extra term is a rank-1
+    /// -(1/Xf)*ones*ones^T per block: identically zero along the unmixing
+    /// direction, and the whole curvature along the phase-SCALING direction,
+    /// where the true block is singular by construction. So it governs only how
+    /// freely a phase's TOTAL amount moves.
+    ///
+    /// Measured 2026-08-27 (AOP):
+    ///   f_CASHNK              10003 -> 643 it, 15.6x, same pH/Eh/Vs/Ms
+    ///   f_Solvus 400 C          145 -> 101 it ; j_Solvus 108 -> 100
+    ///   301-point solvus sweep    0 -> 13 convergence failures,
+    ///                             worst limb err 2.7e-3 -> 2.7e-1,
+    ///                             iterations 49k -> 187k
+    ///   j_CASHNK                563 -> 1600 it ; f_/j_CalcDolo ~+10%
+    /// Enable per project for phase-extinction-limited cases (a vestigial phase
+    /// decaying slowly toward its floor); leave off otherwise.
+    long int OptimaMoleFracHessian = 0;
+
+    /// PSSC-EQUIVALENT PHASE COMPACTION for the Optima path: number of Newton
+    /// iterations to spend on a cheap CLASSIFICATION pass before the real
+    /// solve. 0 (default) = off, behaviour unchanged.
+    ///
+    /// WHY A CLASSIFICATION PASS AT ALL. Native drops absent phases from the
+    /// active set on every call (PhaseSelectionSpeciationCleanup(), pa_PC=2);
+    /// the Optima path has always carried every absent phase as a live
+    /// box-constrained unknown for the whole solve. Measured (plan-v5 section
+    /// 20): the ABSOLUTE COUNT of absent phases tracks this solver's cost far
+    /// better than problem size - 07PSIna_G_mid_1 has 117 of 122 phases absent
+    /// and runs 4184 iterations / 49.5 s against native's 124 / 19.6 ms.
+    /// Dropping them would cut the unknown count from 265 to ~84, and at the
+    /// measured ~n^2.32 per-iteration scaling that alone is ~10x.
+    ///
+    /// WHY IT CANNOT BE DONE POST-SOLVE, which is the whole reason this is a
+    /// separate knob from the phase-selection repair loop that always runs: a
+    /// stability index is a function of the DUAL potentials, so nothing can
+    /// classify phases before a solve has produced one - and a pass that runs
+    /// only after the full solve cannot make that full solve cheaper. A short,
+    /// deliberately unconverged probe solve is the cheapest thing that produces
+    /// a usable dual.
+    ///
+    /// SAFETY: a phase pinned here is fixed only in problem.xlower/xupper, not
+    /// in pm.DUL/pm.DLL, so it is NOT exempt from the phase-assemblage
+    /// stability check - a phase wrongly pinned reports "absent but stable" and
+    /// is READMITTED by the phase-selection loop, with its original box
+    /// restored and a seed taken from the bulk composition. Misclassification
+    /// from a short probe is therefore self-correcting, not silent.
+    ///
+    /// Suggested starting value if trying this on a many-absent-phase project:
+    /// 50-100. Too short and the probe classifies from a still-meaningless
+    /// dual (costing readmission loops); too long and the probe costs what it
+    /// was meant to save.
+    long int OptimaPhaseCompaction = 0;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -645,6 +918,34 @@ public:
     // EXTERNAL FUNCTIONS
     // MultiCalc
     void Alloc_internal();
+    /// Total Gibbs energy G(X) of the converged system, in RT units (moles),
+    /// computed identically for every solver path so that results are
+    /// comparable across native AIA/SIA and Optima AOP/SOP/ROP.
+    ///
+    /// Why this exists (plan v5 section 4.1, CLAUDE.md 2026-08-25): total G is
+    /// the correct correctness criterion for a Gibbs minimiser, and the
+    /// OK/FAIL status is not - `f_/j_Solvus` AOP is a demonstrated case of a
+    /// wrong answer reported OK (pH 5.1999 where native and a globalized step
+    /// both give 5.1473). `pm.FX` cannot be used for this: it is written only
+    /// by native's own IPM loop (ipm_main.cpp), never by
+    /// CalculateEquilibriumStateOptima(), so it is stale or meaningless on the
+    /// Optima paths.
+    ///
+    /// Reads the converged primal from pm.Y[] (both solver families leave the
+    /// solution there - native via its IPM loop, Optima via the
+    /// pm.Y[j]=pm.X[j]=state.x[j] unpack in ipm_optima.cpp) and, as a side
+    /// effect, copies Y into X and refreshes pm.XF/pm.XFA. That is a no-op on a
+    /// converged state, where X and Y already agree - do not call this mid-solve.
+    ///
+    /// It deliberately does NOT call GX(0.). GX() reads pm.G[], which is not a
+    /// path-independent basis: native's GEM_IPM() resets pm.G[i] = pm.G0[i] on
+    /// exit (ipm_main.cpp), dropping the fDQF and F0 activity-coefficient terms,
+    /// while CalculateEquilibriumStateOptima() leaves them in. The excess term is
+    /// therefore rebuilt here from G0[]+fDQF[]+F0[], which both paths do leave
+    /// current and equal - see the implementation in ipm_chemical.cpp for the
+    /// measurement that established this.
+    double TotalGibbsEnergy();
+
     double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
     virtual void DC_LoadThermodynamicData( TNode* aNa = nullptr );
@@ -664,7 +965,33 @@ public:
     // solve; with none registered this is a plain equilibrium solve,
     // architecturally equivalent to AIA/SIA but solved via Optima instead
     // of GEMS3K's own IPM/MBR.
-    double CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM );
+    //
+    // `reaktoroMode` (default false = AOP/SOP's own established behavior,
+    // unchanged): when true, dispatched for NEED_GEM_ROP instead - a
+    // faithful port of Reaktoro's OWN equilibrium mechanism onto this same
+    // objective/constraint plumbing, not just AOP's seed/options swapped
+    // in. Differs from the AOP/SOP path in every one of: (1) initial
+    // guess - a uniform tiny seed for every species (Reaktoro's own
+    // ChemicalState default), no AutoInitialApproximation() call at all;
+    // (2) Hessian - PartiallyExact (Reaktoro's own default:
+    // EquilibriumHessian.cpp's approximate() as a base, with columns for
+    // Optima-reported *basic* variables, opts.ibasicvars, overwritten by a
+    // finite-difference port of Reaktoro's autodiff-exact
+    // d(chem.potential)/dn - GEMS3K has no autodiff, so this is an FD
+    // port of the same mechanism, not a claim of bit-identical numerics);
+    // (3) Optima::Options - left at the library's own untouched defaults
+    // (Reaktoro's own EquilibriumOptions.hpp carries a plain Optima::
+    // Options with no override), not GEMS3K's pa_p->IIM/OptimaTol/
+    // OptimaMaxStepRatio overrides; (4) fallback - Reaktoro's own single
+    // retry (EquilibriumSolver.cpp), re-solving ONCE from the ORIGINAL
+    // (pre-first-solve) state with backtracksearch.apply_min_max_fix_and_
+    // accept toggled - NOT AOP's solvent-dominance reseed retry. See
+    // GEMS3K's CLAUDE.md, 2026-08-24, "ROP" for the full scoping. Always a
+    // single mode (pm.pNP forced to the cold/AIA-equivalent convention by
+    // TNode::GEM_run() for NEED_GEM_ROP) - Reaktoro's own default
+    // equilibrate() always starts from the same seed regardless of any
+    // prior state, so there is no warm-start ROP variant.
+    double CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool reaktoroMode = false );
 
     /// Registers (or replaces, by name) a pH control condition for the
     /// next CalculateEquilibriumStateOptima() call. Persists across calls
@@ -693,6 +1020,126 @@ public:
     /// same per-IC-tolerance check the native solver's own testMulti() path
     /// uses), not this method.
     double OptimaMaxMassBalanceResidual();
+
+    /// Shared solvent-collapse detection/reseed-value computation, used by
+    /// both AOP's and ROP's own retry logic inside
+    /// CalculateEquilibriumStateOptima() (ipm_optima.cpp) - unified
+    /// 2026-08-24 after the two independently-written versions' reseed
+    /// formulas had drifted apart (AOP's own included an `otherTotal`
+    /// fallback and an `upperBound` cap that an earlier ROP draft lacked).
+    /// Detects whether the aqueous solvent (pm.LO) dominates its own phase
+    /// by mass in the given trial amounts `x` (length pm.L) - the
+    /// confirmed signature of the "aqueous solvent collapses to its
+    /// floor" trap (GEMS3K's CLAUDE.md, 2026-08-23/24). Returns false (no
+    /// correction needed) if it already dominates or `pm.LO` doesn't
+    /// exist for this project; otherwise returns true and sets
+    /// `waterSeedOut` to `min(bulk-H/2, bulk-O)` (falling back to the
+    /// phase's own other-species total if H/O can't be resolved by name),
+    /// capped by `upperBound` if positive.
+    ///
+    /// Superseded (not removed - see its own declaration comment) by
+    /// `DetectPhaseCollapseAndReseed()` below, which generalizes this
+    /// aqueous-only check to every multicomponent phase - the underlying
+    /// "phase reported absent" cliff in `PrimalChemicalPotentials()`
+    /// (`YF[k]<=pm.DSM`) is generic, aqueous just being the first
+    /// instance this investigation happened to hit (an extra,
+    /// aqueous-specific `Y[pm.LO]<=pm.XwMinM` check sits alongside the
+    /// generic one, so aqueous remains a strictly stricter case of the
+    /// same trap, not a separate mechanism).
+    bool DetectSolventCollapseAndReseed( const double* x, double upperBound, double& waterSeedOut );
+
+    /// Generalizes DetectSolventCollapseAndReseed() (see its own
+    /// declaration comment for why) to every multicomponent phase
+    /// (`0..pm.FIs-1` with more than one species - single-species phases
+    /// have their own separate `pm.PhMinM` guard and are not at risk of
+    /// the "sparse allocation starves this phase" failure mode this
+    /// targets, since there's only ever one species to allocate to).
+    /// Scans the given trial amounts `x` (length pm.L) for any phase
+    /// whose total sits too close to its own "phase absent" threshold
+    /// (`pm.DSM`, or `max(pm.DSM,pm.XwMinM)` for the aqueous phase
+    /// specifically) and, for each such phase, computes a physically-
+    /// grounded reseed bound - `min` over every IC the phase's own
+    /// end-members actually touch of `bIC[i] / (that phase's own largest
+    /// stoichiometric coefficient for IC i)` - the same generalization of
+    /// the water-specific `min(bulk-H/2, bulk-O)` formula applied to any
+    /// phase's own stoichiometry - distributed EVENLY across the phase's
+    /// own end-members (a simple, safe default: it doesn't guess which
+    /// end-member the true equilibrium favors, it only needs to clear the
+    /// phase-absence cliff - Newton's own gradient-driven iteration is
+    /// expected to correct the actual mix from there). Appends
+    /// `(species index, reseed value)` pairs to `reseedsOut` (only for
+    /// entries where the reseed value exceeds the trial amount already
+    /// there) and returns true iff at least one was appended.
+    /// `excludePhaseIdx` (default -1, none): skip this one phase entirely
+    /// - used to avoid double-handling the aqueous phase, which already
+    /// has its own dedicated, separately-validated
+    /// DetectSolventCollapseAndReseed() call (kept as-is, not replaced,
+    /// to avoid any behavior change to the already-validated water-
+    /// specific path this generalizes beyond).
+    bool DetectPhaseCollapseAndReseed( const double* x,
+                                        std::vector<std::pair<long int,double>>& reseedsOut,
+                                        long int excludePhaseIdx = -1 );
+
+    /// A genuine LP-feasibility seed for ROP: solves min sum_j(n_j) s.t.
+    /// pm.A*n = pm.B, n >= 0 via a small self-contained two-phase dense
+    /// simplex (ipm_optima.cpp, anonymous-namespace TwoPhaseSimplexMinSum())
+    /// - the same class of computation Reaktoro's own compared-against
+    /// iteration counts actually started from (reaktoro_bench.py's
+    /// build_seed(), scipy.optimize.linprog), not a bare uniform-tiny
+    /// value. Exists to replace ROP's reliance on a uniform seed plus
+    /// retries entirely: two independent attempts at reordering those
+    /// retries (GEMS3K's CLAUDE.md, 2026-08-24, "Why ROP doesn't just try
+    /// the fast (water-first) option first") both broke a real project
+    /// (j_CASHNK), because this is a non-convex NLP and different retry
+    /// orderings are different Newton starting points that can converge to
+    /// different local optima - a single deterministic seed removes that
+    /// whole risk class rather than trying a third ordering.
+    ///
+    /// Returns false (leaving `nOut` unspecified) if the LP itself reports
+    /// infeasibility, hits its iteration cap, or - checked internally as a
+    /// self-verification before ever trusting the simplex's own output -
+    /// the returned point doesn't actually satisfy A*n=b (within tolerance)
+    /// and n>=0. The caller is expected to fall back to a simpler seed in
+    /// that case, not trust a partial/unverified result.
+    ///
+    /// Deliberately NOT redistribution-aware on its own: a plain min-sum LP
+    /// vertex concentrates mass in as few species as possible (the same
+    /// mechanism that made AutoInitialApproximation()'s own LP-simplex seed
+    /// starve the aqueous phase in the original solvent-collapse trap,
+    /// GEMS3K's CLAUDE.md 2026-08-23/24) - the caller is expected to run
+    /// the LP output through DetectSolventCollapseAndReseed()/
+    /// DetectPhaseCollapseAndReseed() afterward, same as this method's own
+    /// call site in CalculateEquilibriumStateOptima() does.
+    bool LPFeasibilitySeed( std::vector<double>& nOut );
+
+    /// Phase-assemblage stability scan for the Optima path - refreshes
+    /// pm.YF/pm.YFA from pm.Y, calls StabilityIndexes(), and reports the
+    /// single worst disagreement between "is this phase in the assemblage"
+    /// and "does its stability index say it should be", using native's own
+    /// PhaseSelect() thresholds (pa_p->DF / pa_p->DFM, ipm_chemical.cpp).
+    ///
+    /// Factored out of CalculateEquilibriumStateOptima()'s final
+    /// trustworthiness check so that the phase-selection retry tier and that
+    /// check share ONE definition of "violation". They must agree exactly:
+    /// a retry chasing a violation the final check would not report loops
+    /// pointlessly, and a retry blind to one the check does report cannot
+    /// fix it. Exemptions (kinetically restricted phases; phases the
+    /// caller has already deactivated) live here for the same reason.
+    ///
+    /// \param presenceThreshold  phase total at/below which a phase counts
+    ///        as absent - NOT bare pm.DSM, see the call site.
+    /// \param exemptSpecies  optional, size >= pm.L when non-null: species
+    ///        the caller has deliberately fixed and whose phase must be
+    ///        skipped entirely (the interchangeable-twin case).
+    /// \param violOut  size of the worst violation, in logSI units past
+    ///        the threshold; 0 when none.
+    /// \param wasAbsentOut  true if the worst violation is "absent but
+    ///        stable", false if "present but unstable".
+    /// \return index of the worst violating phase, or -1 if the assemblage
+    ///         is self-consistent.
+    long int WorstPhaseStabilityViolation( double presenceThreshold,
+                                           const char* exemptSpecies,
+                                           double& violOut, bool& wasAbsentOut );
 #endif
 
     // acces for node class
@@ -718,6 +1165,41 @@ protected:
     /// value and read G0[]/T lazily, at actual call time).
     std::vector<EqControlCondition> optima_control_conditions;
 #endif
+
+    /// When true, SmoothingFactor() returns exactly 1.0 regardless of
+    /// pm.FitVar[3]/[4], disabling the IPM-2 chemical-potential smoothing
+    /// (ipm_chemical.cpp, DC_PrimalChemicalPotentialUpdate()'s
+    /// "F0 = Fold + dF0 * SmoothingFactor()") for the duration of one
+    /// CalculateEquilibriumStateOptima() call.
+    ///
+    /// Why this exists (see CLAUDE.md, 2026-08-25, plan-v5 Phase A / A.1):
+    /// that smoothing blends the current chemical potential with `Fold =
+    /// pm.F0[j]` - the value left by the PREVIOUS call - so pm.F0[] is a
+    /// persistent accumulator across objective evaluations. Optima's
+    /// objective callback invokes CalculateActivityCoefficients(LINK_UX_MODE)
+    /// every Newton iteration, whose first statement is SetSmoothingFactor(),
+    /// and whose result reaches Optima's gradient via
+    /// pm.G[j] = G0[j] + fDQF[j] + pm.F0[j]. With a smoothing factor s < 1
+    /// the minimised objective is therefore an exponentially-weighted moving
+    /// average over the HISTORY of x evaluated, not a function of x alone -
+    /// and no Newton method converges against a moving objective. With s == 1
+    /// the blend is an exact algebraic no-op (F0 = Fold + (F0-Fold)*1 = F0).
+    ///
+    /// Set/cleared ONLY by CalculateEquilibriumStateOptima(). Native
+    /// AIA/SIA never touches it, so native behaviour is bit-identical by
+    /// construction - deliberately not #ifdef USE_OPTIMA_SOLVER-gated, so
+    /// that SmoothingFactor() itself stays free of conditional compilation;
+    /// in a non-Optima build this is simply always false.
+    ///
+    /// Measured scope, before assuming this changes much: across the whole
+    /// Resources/gems3k suite only j_CASHNK (s = 0.875..0.123), j_GEOTHERM
+    /// (s ~ 0.99998) and tools/Cu-Pourbaix (s = 0.989..0.404) have s != 1 at
+    /// all; the other nine projects already evaluate s == 1.0 exactly for
+    /// any pm.IT, so for them this flag is provably inert and their results
+    /// must stay byte-identical.
+    bool optima_disable_smoothing = false;
+
+
 
     MULTI pm;
     MULTI *pmp;
@@ -981,7 +1463,9 @@ typedef enum {  // Field index into outField structure
     //new
     f_kMod, f_LsKin, f_LsUpt, f_xICuC, f_PfFact,
     f_LsESmo, f_LsISmo, f_SorMc, f_LsMdc2, f_LsPhl,
-    f_pa_PSTALL
+    f_pa_PSTALL, f_pa_OptimaTol, f_pa_LogBarrierTau, f_pa_OptimaMaxStepRatio,
+    f_pa_PhaseHessianFloor, f_pa_OptimaStallWindow, f_pa_OptimaMaxSeconds,
+    f_pa_OptimaFDHessian, f_pa_OptimaMoleFracHessian, f_pa_OptimaPhaseCompaction
 
 } MULTI_DYNAMIC_FIELDS;
 
