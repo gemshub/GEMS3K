@@ -796,13 +796,86 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
        MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C);
        // Testing mass balance residuals
        Z = pm.N - pm.E;
-       if( !pa_p->DT )
+       if( pa_p->MbClassRule > 0. )
+       {
+           // PER-IC-CLASS rule, opt-in, default OFF (pa_MbClassRule == 0 takes the
+           // pre-existing branches below, byte for byte).
+           //
+           // This is what Kulik 2013 App. 2.2 actually prescribes: a RELATIVE
+           // threshold for minor/trace ICs and an ABSOLUTE one for major ICs. The
+           // branches below apply BOTH tests to EVERY IC when pa_DT != 0, which is
+           // strictly stricter and never a per-class selection - see the field's
+           // own comment in ms_multi.h for the measured consequences.
+           //
+           // Classification is by RATIO to the largest IC, not by an absolute
+           // amount: pm.B[] is internally rescaled to pa_DG total moles, so an
+           // absolute classification would not be scale-invariant.
+           double maxB = 0.;
+           for( I=0; I<Z; I++ )
+               if( pm.B[I] > maxB ) maxB = pm.B[I];
+           double AbsMbCutoff_cls;
+           {
+               const double e = fabs( (double)pa_p->DT );
+               // |DT| >= 2 names the major absolute cutoff explicitly and is the
+               // recommended usage; otherwise fall back so the switch works alone.
+               AbsMbCutoff_cls = ( e >= 2. ) ? pow( 10., -e ) : pm.DHBM * 1e5;
+               if( e >= 2. ) AbsMbCutoff_stall = AbsMbCutoff_cls;
+           }
+           const double traceB = pa_p->MbClassRule * maxB;
+           for( I=0; I<Z; I++ )
+           {
+               const bool isTrace = ( pm.B[I] < traceB );
+               if( isTrace ? ( fabs(pm.C[I]) > pm.B[I] * pm.DHBM )
+                           : ( fabs(pm.C[I]) > AbsMbCutoff_cls ) )
+                   break;
+           }
+       }
+       else if( !pa_p->DT )
        {   // relative balance accuracy for all ICs
            for( I=0;I<Z;I++ )
              if( fabs(pm.C[I]) > pm.B[I] * pm.DHBM )
                break;
        }
-       else { // combined balance accuracy - absolute for major and relative for trace ICs
+       else { // combined balance accuracy - an absolute FLOOR under the relative test
+           // Each IC must exceed BOTH thresholds to count as not converged, i.e.
+           // the effective bar is max(absolute, relative) per IC. That makes the
+           // absolute cutoff a FLOOR: a trace IC, whose relative bar B[I]*DHBM is
+           // vanishingly small, is judged on the absolute one instead, while a
+           // major IC keeps its relative bar because that is already the larger
+           // of the two. This is the per-IC-class behaviour pa_DT has always
+           // documented and never had.
+           //
+           // CHANGED 2026-09-02 from `||` to `&&`. With `||` an IC failed if
+           // EITHER threshold was exceeded, so pa_DT != 0 was strictly STRICTER
+           // than pa_DT == 0 and could never relax anything - confirmed
+           // empirically before the change (pa_DT = -9 on scratch copies of
+           // Al-species, FeNaCl_FyGt_Precip and 07PSIna_G_iron changed nothing at
+           // all, because their relative test was already the binding one).
+           //
+           // WHY IT MATTERS, measured with tools/trace_ladder on
+           // Resources/gems3k-fail/07PSIna_G_iron (scale bIC[Fe] across a ladder,
+           // everything else bit-identical, fresh TNode per rung): native's own
+           // SIA cannot re-solve its own converged answer at any Fe below 3e-7,
+           // and EVERY failing rung has an absolute residual between 1e-14 and
+           // 1e-8 mol - 0.5 picomole at Fe = 3e-10, 35 femtomoles at 3e-12. No
+           // physical criterion would reject those; they fail only because the
+           // test is relative and Fe's own total is tiny.
+           //
+           // AND IT DOES NOT MAKE THE SYSTEM DETERMINATE - record it that way.
+           // The same ladder, reporting SIGNED H and O residuals, shows the error
+           // lying along the WATER direction (H/O ~ 2.0, same sign, in five of
+           // eight rungs) - the same near-rank-1 H2O H:O = 2:1 dependence already
+           // diagnosed for MBR's own Schur-complement matrix - and the worst rung
+           // (Fe = 3e-9) is exactly where the redox constraint evaporates
+           // (H2(aq) collapses to 8.7e-27 with O2(aq) still 0, neither couple
+           // present). So this makes the TEST physical; it does not resolve the
+           // degeneracy the test is detecting.
+           //
+           // Corpus-wide no-op at the time of the change: all 52 projects in
+           // Resources/{gems3k,gems3k-fail,gems3k-psina} either set pa_DT = 0 or
+           // omit it, so none of them takes this branch at all. A project must
+           // opt in by setting pa_DT (|DT| >= 2 names the absolute cutoff as
+           // 10^-|DT|, which is the recommended usage).
            double AbsMbAccExp, AbsMbCutoff;
            AbsMbAccExp = abs( pa_p->DT );
            if( AbsMbAccExp < 2. )  // If DT is set to 1 or -1 then DHBM is used also as the absolute cutoff
@@ -813,7 +886,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
                AbsMbCutoff_stall = pow( 10., -AbsMbAccExp );
            }
            for( I=0;I<Z;I++ )
-              if( fabs( pm.C[I]) > AbsMbCutoff || fabs(pm.C[I]) > pm.B[I] * pm.DHBM )
+              if( fabs( pm.C[I]) > AbsMbCutoff && fabs(pm.C[I]) > pm.B[I] * pm.DHBM )
                   break;
        }
        if( I == Z ) // balance residuals OK

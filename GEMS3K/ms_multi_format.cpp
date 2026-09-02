@@ -174,7 +174,14 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaMaxSeconds", 0 , 0, 0, "# pa_OptimaMaxSeconds: wall-clock budget in seconds for one Optima (AOP/SOP/ROP) solve including retries; 0 disables it. Per-project guard only - a time limit is not reproducible across machines { 0 }" },
     { "pa_OptimaFDHessian", 0 , 0, 0, "# pa_OptimaFDHessian: 1 = compute the finite-difference PartiallyExact Hessian columns in the Optima solver, 0 = skip them (much cheaper; measured equivalent accuracy) { 1 }" },
     { "pa_OptimaMoleFracHessian", 0 , 0, 0, "# pa_OptimaMoleFracHessian: ideal-mixing Hessian form for non-aqueous solution phases in the Optima solver: 0 = diag(1/X), 1 = full mole-fraction Jacobian (Leal et al. 2017 Eq. 80) { 0 }" },
-    { "pa_OptimaPhaseCompaction", 0 , 0, 0, "# pa_OptimaPhaseCompaction: Newton iterations for the Optima path's phase-classification probe pass; absent phases are then pinned at the floor for the real solve. 0 = off { 0 }" }
+    { "pa_OptimaPhaseCompaction", 0 , 0, 0, "# pa_OptimaPhaseCompaction: Newton iterations for the Optima path's phase-classification probe pass; absent phases are then pinned at the floor for the real solve. 0 = off { 0 }" },
+    { "pa_OptimaFDHessianDelay", 0 , 0, 0, "# pa_OptimaFDHessianDelay: Optima iterations to run with the cheap Hessian before switching the finite-difference PartiallyExact columns on. 0 = no delay { 0 }" },
+    { "pa_OptimaDcFloor", 0 , 0, 0, "# pa_OptimaDcFloor: lower bound on species amounts in the Optima path; 0 = derive it from pa_DHB as before { 0 }" },
+    { "pa_MbClassRule", 0 , 0, 0, "# pa_MbClassRule: per-IC-class mass-balance rule (Kulik 2013 App.2.2): trace/major ratio threshold; 0 = OFF, existing rule unchanged { 0 }" },
+    { "pa_MbTrendPhaseDecay", 0 , 0, 0, "# pa_MbTrendPhaseDecay: trend-based vanishing-phase detection (Leal 2014 s2.3.3): consecutive-decrease count; 0 = OFF { 0 }" },
+    { "pa_OptimaEarlyStabilityAt", 0 , 0, 0, "# pa_OptimaEarlyStabilityAt: iteration cap on the FIRST Optima attempt so the phase-selection repair runs early; 0 = OFF { 0 }" },
+    { "pa_OptimaDimReduce", 0 , 0, 0, "# pa_OptimaDimReduce: species-level dimension reduction for the Optima path; max readmission passes, 0 = OFF { 0 }" },
+    { "pa_OptimaDimReduceTol", 0 , 0, 0, "# pa_OptimaDimReduceTol: RT-unit threshold on the LP-Gibbs-priced reduced gradient for pa_OptimaDimReduce's initial active set { 10 }" }
 };
 
 
@@ -193,7 +200,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 90, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 97, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -375,6 +382,13 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_OptimaFDHessian, pa_p->OptimaFDHessian, _comment, false  );
         prar.writeField(f_pa_OptimaMoleFracHessian, pa_p->OptimaMoleFracHessian, _comment, false  );
         prar.writeField(f_pa_OptimaPhaseCompaction, pa_p->OptimaPhaseCompaction, _comment, false  );
+        prar.writeField(f_pa_OptimaFDHessianDelay, pa_p->OptimaFDHessianDelay, _comment, false  );
+        prar.writeField(f_pa_OptimaDcFloor, pa_p->OptimaDcFloor, _comment, false  );
+        prar.writeField(f_pa_MbClassRule, pa_p->MbClassRule, _comment, false  );
+        prar.writeField(f_pa_MbTrendPhaseDecay, pa_p->MbTrendPhaseDecay, _comment, false  );
+        prar.writeField(f_pa_OptimaEarlyStabilityAt, pa_p->OptimaEarlyStabilityAt, _comment, false  );
+        prar.writeField(f_pa_OptimaDimReduce, pa_p->OptimaDimReduce, _comment, false  );
+        prar.writeField(f_pa_OptimaDimReduceTol, pa_p->OptimaDimReduceTol, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -780,7 +794,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 90, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 97, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1209,6 +1223,20 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_OptimaMoleFracHessian: rddar.readArray("pa_OptimaMoleFracHessian" , &pa_p->OptimaMoleFracHessian, 1);
                 break;
         case f_pa_OptimaPhaseCompaction: rddar.readArray("pa_OptimaPhaseCompaction" , &pa_p->OptimaPhaseCompaction, 1);
+                break;
+        case f_pa_OptimaFDHessianDelay: rddar.readArray("pa_OptimaFDHessianDelay" , &pa_p->OptimaFDHessianDelay, 1);
+                break;
+        case f_pa_OptimaDcFloor: rddar.readArray("pa_OptimaDcFloor" , &pa_p->OptimaDcFloor, 1);
+                break;
+        case f_pa_MbClassRule: rddar.readArray("pa_MbClassRule" , &pa_p->MbClassRule, 1);
+                break;
+        case f_pa_OptimaEarlyStabilityAt: rddar.readArray("pa_OptimaEarlyStabilityAt" , &pa_p->OptimaEarlyStabilityAt, 1);
+                break;
+        case f_pa_OptimaDimReduceTol: rddar.readArray("pa_OptimaDimReduceTol" , &pa_p->OptimaDimReduceTol, 1);
+                    break;
+        case f_pa_OptimaDimReduce: rddar.readArray("pa_OptimaDimReduce" , &pa_p->OptimaDimReduce, 1);
+                break;
+        case f_pa_MbTrendPhaseDecay: rddar.readArray("pa_MbTrendPhaseDecay" , &pa_p->MbTrendPhaseDecay, 1);
                 break;
         case f_tMin: rddar.readArray("tMin" , &pm.tMin, 1);
             break;

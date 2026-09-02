@@ -383,6 +383,306 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// was meant to save.
     long int OptimaPhaseCompaction = 0;
 
+    /// Iterations of the CHEAP Hessian to attempt in the Optima path before
+    /// falling back to the finite-difference PartiallyExact columns.
+    /// GEMS3K-only, keyword ipm-dat I/O.  0 (default) = off, i.e.
+    /// pa_OptimaFDHessian decides from the very first iteration, which is the
+    /// behaviour shipped before this field existed.
+    ///
+    /// N > 0 makes ONE attempt of up to N iterations with the FD loop
+    /// suppressed.  If it converges, its state is adopted and the primary
+    /// solve re-runs from it STILL CHEAP, confirming an already-converged
+    /// point in a handful of iterations.  If it does not, that trajectory is
+    /// DISCARDED and the primary solve restarts from the original seed with
+    /// the FD columns on.  Every retry after the primary solve uses FD
+    /// regardless - reaching a retry is itself an escalation trigger.
+    ///
+    /// This is Reaktoro's own published arrangement: Leal, Kulik, Smith & Saar
+    /// (2017) state that the exact-Newton method "is only used if the
+    /// quasi-Newton method ... fails or takes more than a certain number of
+    /// iterations to converge".  We otherwise run the exact columns always.
+    ///
+    /// TWO SHAPES THAT LOOK RIGHT AND ARE MEASURABLY WRONG - do not "simplify"
+    /// back to either (plan v5 section 30.3 has the numbers):
+    ///   * Switching FD on IN PLACE at iteration N, carrying straight on,
+    ///     fails the 301-point solvus sweep at T = 560 C - a point that needs
+    ///     556 FD iterations from the start and hits the 7001 cap under the
+    ///     cheap Hessian - at EVERY delay tried (300/1000/1500/3000).  The
+    ///     early cheap iterates land somewhere the exact columns cannot
+    ///     recover from, so the trajectory must be discarded, not corrected.
+    ///   * Re-running the primary solve with FD ON after a SUCCESSFUL cheap
+    ///     attempt, to make every reported result FD-validated, returns
+    ///     BAD_GEM_AOP on 142 of 301 solvus points with a KKT residual of ~0.5
+    ///     at H+, at phase amounts identical to the passing run's to six
+    ///     figures.  The FD columns evaluated AT a converged point are
+    ///     near-singular.
+    ///
+    /// The trigger MUST be iteration count, never convergence: the cheap
+    /// Hessian alone CONVERGES on the Solvus family, so a success-gated
+    /// escalation would never fire.  (It converges to the RIGHT answer there
+    /// because pa_PhaseHessianFloor's exact per-phase block is a separate
+    /// mechanism that always runs - that block, not this loop, is what
+    /// supplies the unmixing curvature.)
+    ///
+    /// Why it pays: with pa_OptimaFDHessian = 0 the corpus is 1.5-7.4x faster
+    /// and bit-identical in G, and exactly two projects break (f_CASHNK,
+    /// j_TiQ_PRSV - see pa_OptimaFDHessian).  A delay large enough to cover
+    /// the slowest cheap-Hessian convergence (f_/j_GEOTHERM need ~1100) keeps
+    /// that speed for everything that converges cheaply while still reaching
+    /// the exact columns for the two that need them.  Measured at N = 1500:
+    /// 11x total wall time on the 17-project subset and 2.4x on the 301-point
+    /// solvus sweep, every G identical and the limb accuracy unchanged.
+    ///
+    /// MEASURED PER-PROJECT, NOT A DEFAULT (full 25-project sweep, 2026-08-28):
+    /// enable on f_/j_GEOTHERM (8.5-10.5x), j_10TH_G_seawater (FAIL -> OK, 10000
+    /// it -> 229, at native's G bit-for-bit), the Solvus family and j_PitzerTHE
+    /// (2-4x).  Do NOT enable on f_/j_CASHNK, j_TiQ_PRSV or f_/j_TestPNTDB.
+    /// f_CASHNK regresses 16x (643 -> 11504 it) and corpus total wall time is
+    /// unchanged, so a blanket default buys nothing on average.
+    ///
+    /// That regression is NOT just the wasted attempt, and it is the thing to fix
+    /// before reconsidering a default: discarding the attempt resets Optima::State
+    /// but NOT the MULTI scratch state this objective mutates (pm.X, pm.F,
+    /// pm.Gamma, ...), so the restarted solve is not on the trajectory the
+    /// undelayed run takes - on f_CASHNK it misses the stall-detector hand-off at
+    /// ~642 iterations and runs to its 10000-iteration maxiters cap instead.
+    ///
+    /// KNOWN INTERACTION, check it before raising this much further: the stall
+    /// detector (pa_OptimaStallWindow, default 500) can fire during the cheap
+    /// attempt, which is treated as a non-convergence and so restarts with FD
+    /// - the safe direction, but it makes a very large N wasteful.
+    long int OptimaFDHessianDelay = 0;
+
+    /// Lower bound on species amounts in the Optima path ("dcFloor"), in the
+    /// same internally rescaled units as pm.X.  GEMS3K-only, keyword ipm-dat
+    /// I/O.  0 (default) = derive it from pa_DHB, exactly as before this field
+    /// existed; > 0 = use this value instead.
+    ///
+    /// WHY IT EXISTS - pa_DHB is overloaded, and that was measured rather than
+    /// argued.  It is simultaneously (a) native's RELATIVE mass-balance
+    /// tolerance in MassBalanceRefinement(), (b) this solver's box lower bound,
+    /// and (c) via dcFloor*10, the phase presence threshold.  So lowering it to
+    /// get a smaller species floor necessarily tightens native's convergence
+    /// test as well: on 07PSIna_G_simple_0_0_0_150, pa_DHB = 1e-20 and below
+    /// makes NATIVE fail outright (inside MBR, it=30/FIA=30/IPM=0) while the
+    /// Optima path still returns a state.  There was no way to test a low floor
+    /// without breaking the reference.
+    ///
+    /// Leal, Kulik, Smith & Saar (2017) publish tau = the species floor at
+    /// <= 1e-25, twelve orders below our 1e-13..1e-15, and call 1e-8 known-bad
+    /// "for trace elements or redox reactions with very low amounts of species"
+    /// - which is exactly the O2(aq)/H2(aq) pair this branch has chased since
+    /// the first Tier A session.  This field is what makes that testable.
+    ///
+    /// Measured so far (07PSIna_G_simple_0_0_0_150, whose Eh is wrong by 0.52 V
+    /// purely because its only redox species sit at the floor): lowering the
+    /// floor moves AOP's Eh 0.4968 -> 0.0395 and then stops, while native's own
+    /// Eh moves the other way (-0.0261 -> -0.2104) when pa_DHB is lowered.  The
+    /// two do not meet, which is consistent with that system's Eh being
+    /// genuinely underdetermined rather than merely floor-limited.  So this is
+    /// an instrument for the question, not a known fix.
+    double OptimaDcFloor = 0.;
+
+    /// Per-IC-class mass-balance convergence rule in MassBalanceRefinement().
+    /// DEFAULT 0 = OFF, and off means the existing code path is taken unchanged.
+    ///
+    /// Kulik et al. 2013 (GEM IPM3), Appendix 2.2 prescribes a per-IC-CLASS test:
+    /// a RELATIVE threshold for minor/trace independent components and an ABSOLUTE
+    /// threshold for major ones ("for instance, H and O in aquatic systems").
+    /// The implementation has never done that - with pa_DT != 0 it applies BOTH
+    /// tests to EVERY IC (`||`), which is strictly stricter than either and is
+    /// never a per-class selection, under a comment stating the paper's intent.
+    ///
+    /// When > 0, this value is the TRACE/MAJOR ratio threshold: IC i is treated as
+    /// trace when B[i] < MbClassRule * max_k B[k], major otherwise. A ratio rather
+    /// than an absolute amount, because pm.B[] is internally rescaled to pa_DG total
+    /// moles, so an absolute classification would not be scale-invariant.
+    /// Trace ICs then get the relative test, major ICs the absolute test.
+    ///
+    /// The major absolute cutoff is 10^-|DT| when |DT| >= 2 (pa_DT is the field that
+    /// already encodes it, and naming it explicitly is the recommended usage);
+    /// otherwise it falls back to DHBM*1e5, so the switch is usable standalone.
+    /// DHBM-scaled cutoffs are an existing idiom here - cf. min(DHBM*1e10, 1e-2)
+    /// in CheckMassBalanceResiduals().
+    ///
+    /// MEASURED 2026-08-29 over all 50 loadable benchmark projects with
+    /// gems-benchmark's tools/mb_class_probe: 7 projects would flip FAIL -> PASS
+    /// (07PSIna_G_ironsi, 10TH, Al-species, CSHSnplus, FeNaCl_FyGt_{Precip,
+    /// Precip_HighpH, TransitionZone}) and 0 would flip PASS -> FAIL. Those 7 are
+    /// seven of the eight projects whose native SIA cannot re-solve its own
+    /// converged answer. The mechanism is NOT trace ICs held to a relative bar -
+    /// it is MAJOR ICs (H, O, K) held to a relative bar where the paper says
+    /// absolute: a major IC at ~111 mol against DHB = 1e-13 demands ~1e-11 mol
+    /// absolute accuracy, near the arithmetic floor.
+    ///
+    /// DEFAULT OFF because this RELAXES a native convergence test on a path every
+    /// GEM_run() takes. Turn it on per project to test; do not make it a default
+    /// without its own full-suite gate.
+    double MbClassRule = 0.;
+
+    /// Trend-based vanishing-phase detection in the Optima path's phase-extinction
+    /// retry. DEFAULT 0 = OFF; off takes the pre-existing twin-only path unchanged.
+    ///
+    /// Leal 2014 §2.3.3 defines an unstable phase with TWO clauses: below a threshold
+    /// **and decreasing since the last iterate**. The extinction tier here uses an
+    /// exactness argument instead (two phases with identical stoichiometry and G0 are
+    /// interchangeable) precisely because both magnitude-only detectors fail on
+    /// f_CASHNK - the redundant phase is at ~1e-5 and still falling when the solver
+    /// gives up, and its logSI is ~0 because it shares a tangent plane with its twin.
+    /// A trend test is the third option neither considers, and unlike the twin proof
+    /// it does not require a twin to exist at all.
+    ///
+    /// When > 0, a phase is deactivated if its total fell monotonically for at least
+    /// `MbTrendPhaseDecay` consecutive objective evaluations AND is now below 1e-2 of
+    /// its own peak. Tracking lives in the objective callback, the only place that
+    /// sees every iterate.
+    ///
+    /// MEASURED 2026-08-29: on j_CASHNK the trend criterion ALONE reproduces the twin
+    /// criterion's answer exactly (G = -6.028481770e+03), i.e. it SUBSUMES it on the
+    /// only case we have. Zero false positives on Solvus (both), Flowline, CASH+ and
+    /// TiQ_PRSV; CTest 7/7 green with it enabled. Safety is partly structural - the
+    /// tier only runs after a solve has already failed, so a converging project never
+    /// reaches it.
+    ///
+    /// DEFAULT OFF for two honest reasons. (1) It reintroduces TUNED CONSTANTS (the
+    /// consecutive-decrease count, the 1e-2 peak ratio) where the twin criterion was
+    /// exact and project-derived - and this codebase already carries more hand-tuned
+    /// thresholds than is healthy. (2) Its general case - a decaying phase with no
+    /// twin - has NO test system yet; that is T3 in
+    /// Docs/literature/PROPOSED-TEST-SYSTEMS.md. Until T3 exists its value cannot be
+    /// properly assessed, only its harmlessness.
+    long int MbTrendPhaseDecay = 0;
+
+    /// Iteration budget for the FIRST Optima attempt only, so the existing
+    /// phase-selection repair loop gets its turn EARLY instead of after the
+    /// primary solve has run to convergence. 0 = off (unchanged behaviour).
+    ///
+    /// Motivation, measured on Resources/gems3k/f_Solvus_G_Test1_0_0_1000_400_0
+    /// (2026-09-02): warm-restarting with Al,Na,K scaled by 0.998 makes
+    /// Plagioclase dissolve slowly - ~6958 consecutive monotone decreases - and
+    /// costs 7007 Optima iterations, against 71 at a 0.995 scale.  The repair
+    /// loop DOES diagnose it correctly ("present but unstable, logSI gap 0.63")
+    /// and removing the phase up front costs only 58 iterations - a 121x
+    /// oracle win - but the check runs only after the primary solve has already
+    /// spent ~6180 of them.  So the criterion is right and only its TIMING is
+    /// wrong; this caps the first attempt so it fires sooner.
+    /// NOT the same as pa_OptimaPhaseCompaction, which pins phases below a
+    /// PRESENCE threshold - measured harmful here (7059/14168/21377 iterations
+    /// at probe 50/100/200), because this phase is present-but-dissolving.
+    ///
+    /// MEASURED AND NOT USABLE AS IMPLEMENTED - default 0, do not enable.
+    /// The cap applies to the first attempt of EVERY call, including calls whose
+    /// assemblage is already correct and which simply need their budget: the same
+    /// project's own cold solve needs 823 iterations, so at a cap of 500 it fails
+    /// outright (status=13) and the repair loop does not rescue it - there is no
+    /// stability violation to repair, only a budget shortfall. Kept default-off as
+    /// re-runnable infrastructure, on the same footing as OptimaMaxStepRatio.
+    ///
+    /// What a working version needs: treat the capped attempt as a PROBE - if the
+    /// repair loop finds a violation, act on it and continue; if it finds none,
+    /// re-solve with the full budget and charge only the wasted probe. That is the
+    /// pa_OptimaFDHessianDelay pattern and it is the next thing to try here.
+    long int OptimaEarlyStabilityAt = 0;
+
+    /// Species-level dimension reduction for the Optima path (AOP/SOP only).
+    /// 0 = OFF (unchanged behaviour); > 0 = ON, and the value is the maximum
+    /// number of readmission ("pricing") passes the reduced pre-solve may make.
+    ///
+    /// WHY. Native's linear system is N x N over independent components; the
+    /// Optima path hands Optima dims.x = L + R - species PLUS components. On
+    /// f_/j_TestSUP98 that is ~1005 x 1005 against native's 82 x 82, and the
+    /// factorisation cost measured on this corpus scales as ~n^2.32, so the
+    /// size wall is a DIMENSION problem: pinning an absent species with a
+    /// degenerate box (pa_OptimaPhaseCompaction) leaves the system exactly as
+    /// large and cannot help, whereas OMITTING it can. Measured with
+    /// tools/dimension_ceiling: a median 59% of species are absent at native's
+    /// own converged answer, 68% on the TestPNTDB/TestSUP98 pair (13-14x per
+    /// iteration) and 84-92% on the Resources/gems3k-psina giants (71-322x).
+    /// The absent species are mostly AQUEOUS (359 of f_TestPNTDB's 471), which
+    /// is why this is species-level and not phase-level.
+    ///
+    /// HOW. A pre-solve, before the ordinary full-dimension solve:
+    ///   - start from the LP-feasibility seed's own support WIDENED by pricing
+    ///     every species against the linearised-Gibbs LP's dual, keeping those
+    ///     below OptimaDimReduceTol (see that field - the widening is what makes
+    ///     this work at all on a large system). Both halves are LPs over
+    ///     pm.A/pm.B alone and so are INDEPENDENT of any solver state, which is
+    ///     required: deriving the set from a failing solver's own iterate is
+    ///     measured-unsafe, since on j_10TH_G_seawater 4 of the 60 floor-pinned
+    ///     species are genuinely present, dolomite among them at 1.0e-2 mol, so
+    ///     that set would omit dolomite and turn an honest failure into a silent
+    ///     wrong answer;
+    ///   - solve over the active species only, with every omitted species held
+    ///     at its own lower bound and its contribution moved into the RHS
+    ///     (be[i] -= sum over omitted j of A[i,j]*xlower[j]);
+    ///   - PRICE the omitted columns on the resulting dual - readmit every one
+    ///     whose reduced gradient s_j = F[j] - sum_i U[i]*A[i,j] is negative,
+    ///     i.e. exactly Optima's own is_lower_unstable test - and repeat.
+    /// Readmission is MONOTONE (a species is never dropped again), which is
+    /// what bounds the loop and keeps it free of the active-set cycling this
+    /// solver has repeatedly shown when a set is allowed to shrink again.
+    /// At a fixed point every omitted species is at its lower bound with a
+    /// non-negative reduced gradient, which is the full problem's own KKT
+    /// condition - so the reduced answer is a solution of the FULL problem,
+    /// not an approximation to it.
+    ///
+    /// SAFETY. The pre-solve never returns an answer on its own: it writes its
+    /// primal into pm.Y[] and its dual into pm.U[], and the ordinary
+    /// full-dimension solve then runs warm-started from both. Warm-starting a
+    /// correct (x,y) pair costs O(1) Optima iterations (measured: 3 on
+    /// f_TestPNTDB, section 27), so the full solve becomes a cheap verification
+    /// that also keeps every existing retry, KKT, mass-balance and
+    /// phase-stability check running at full dimension and full index. If the
+    /// pre-solve fails or gains nothing, it is discarded and the full solve
+    /// runs exactly as it would have.
+    ///
+    /// NOT applied when control conditions are active (R > 0) or in ROP
+    /// (reaktoroMode), which is a faithful port of Reaktoro's own mechanism.
+    long int OptimaDimReduce = 0;
+
+    /// Threshold (in RT units) for OptimaDimReduce's INITIAL active set, and
+    /// the whole reason that feature works on a large system at all. Used only
+    /// when OptimaDimReduce > 0.
+    ///
+    /// The initial set was originally the LP-FEASIBILITY seed's own support -
+    /// safe (independent of any solve, feasible by construction) but a VERTEX,
+    /// so only N species. Measured 2026-09-02, that sparsity is what broke the
+    /// feature on the two largest projects: 07PSIna_G_complex_1's 69-species
+    /// pass 0 was itself unsolvable, and f_TestPNTDB's 49-species pass 0 priced
+    /// 427 of its 641 omitted columns back in one step.
+    ///
+    /// Instead, price EVERY species against the dual of the LINEARISED-GIBBS LP
+    /// (LPGibbsDual(), min sum G0[j]*n_j s.t. A n = b, n >= 0 - the same simplex,
+    /// so still wholly independent of any solve) and activate every species with
+    ///     s_j = G0[j] - sum_i y_i A[i,j]  <  OptimaDimReduceTol.
+    /// s_j is how far species j is from being stable under a first-order model,
+    /// in RT units, so the threshold is a physical quantity rather than a tuning
+    /// index: a solution species can lower its own chemical potential by at most
+    /// the mixing-entropy bonus -ln(x_j), i.e. ~35 RT at x_j ~ 1e-15, and native's
+    /// own converged dual puts the largest s among genuinely PRESENT species at
+    /// 32.5-34.1 on all three projects measured. A tolerance well below that is
+    /// deliberately NOT trying to capture every present species - anything missed
+    /// simply prices back in on the next pass, which is why the initial set can
+    /// affect cost without ever affecting correctness.
+    ///
+    /// Measured (total pre-solve + verification iterations / wall):
+    ///   07PSIna_G_mid_1   (265 sp): 2455 it / 3.85 s at the old support rule;
+    ///                               261 it / 0.36 s at 5; 269 it / 0.45 s at 10;
+    ///                               978 it / 2.05 s at 20; 5396 it / 27.2 s at 50
+    ///   f_TestPNTDB       (690 sp): pre-solve discarded at the old rule (~500 s);
+    ///                               discarded at 5; 501 it / 2.2 s at 10;
+    ///                               747 it / 5.2 s at 20
+    ///   07PSIna_G_complex_1 (1392): pass 0 unsolvable at the old rule, and the
+    ///                               project has never converged at all;
+    ///                               1602 it / 206 s at 10, native's G to 9 s.f.
+    /// Hence the default 10. Too small and pass 0's dual is poor enough that the
+    /// readmitted set is unsolvable (f_TestPNTDB at 5); too large and the single
+    /// big pass costs more than the reduction saves (mid_1 at 50). The resulting
+    /// initial sets sat at 3.4-4.6 x N on all three, which suggests a
+    /// dimensionless "smallest-s until |set| ~ 4N" rule as an alternative worth
+    /// trying - not measured.
+    double OptimaDimReduceTol = 10.;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -962,6 +1262,25 @@ public:
     // conditions registered via SetControlCondition_pH()/_Eh() (or a
     // custom EqControlCondition appended directly to
     // optima_control_conditions) are folded into the same joint Newton
+
+    /// Request dn/db sensitivity derivatives from the Optima solver.
+    /// Off by default: computing them costs an extra solve of the already-
+    /// factorised KKT system per bulk-composition column, and nothing in the
+    /// ordinary AOP/SOP/ROP paths needs them.
+    ///
+    /// This is the plumbing step of the ODML predictor described in
+    /// Docs/literature/FINDINGS-Leal2020-ODML-prediction.md - NOT a predictor.
+    /// Optima carries the machinery already: Problem::c are sensitivity
+    /// parameters and Problem::bec is d(be)/dc, so mapping c to the bulk
+    /// composition means bec = I and Sensitivity::xc is exactly dn/db. No
+    /// restructuring of the objective or the constraints is involved.
+    bool optima_want_sensitivity = false;
+
+    /// dn/db from the last solve when optima_want_sensitivity was set, row-major
+    /// [ (L+R) x N ]. Empty if it was not requested or the solve did not reach
+    /// the sensitivity step.
+    std::vector<double> optima_dndb;
+    long int optima_dndb_rows = 0, optima_dndb_cols = 0;
     // solve; with none registered this is a plain equilibrium solve,
     // architecturally equivalent to AIA/SIA but solved via Optima instead
     // of GEMS3K's own IPM/MBR.
@@ -1046,6 +1365,10 @@ public:
     /// aqueous-specific `Y[pm.LO]<=pm.XwMinM` check sits alongside the
     /// generic one, so aqueous remains a strictly stricter case of the
     /// same trap, not a separate mechanism).
+    /// True when the system genuinely contains an aqueous phase.
+    /// Tests the phase classifier, NOT pm.LO - see the definition for why.
+    bool HasAqueousPhase() const;
+
     bool DetectSolventCollapseAndReseed( const double* x, double upperBound, double& waterSeedOut );
 
     /// Generalizes DetectSolventCollapseAndReseed() (see its own
@@ -1112,6 +1435,17 @@ public:
     /// call site in CalculateEquilibriumStateOptima() does.
     bool LPFeasibilitySeed( std::vector<double>& nOut );
 
+    /// Dual of the LINEARISED-Gibbs LP (min sum_j G0[j]*n_j s.t. A n = b,
+    /// n >= 0), computed with the same simplex as LPFeasibilitySeed() and
+    /// therefore just as independent of any solver state. Its value is that
+    /// pricing a species against it, s_j = G0[j] - sum_i y_i A[i,j], is a
+    /// meaningful measure of how far that species is from being stable -
+    /// which the feasibility LP's own dual is not, being an artefact of
+    /// "minimise total moles". Used by OptimaReducedPreSolve() to choose a
+    /// generous initial active set. Returns false (leaving yOut untouched)
+    /// if the LP fails or its dual does not verify against LP optimality.
+    bool LPGibbsDual( std::vector<double>& yOut );
+
     /// Phase-assemblage stability scan for the Optima path - refreshes
     /// pm.YF/pm.YFA from pm.Y, calls StabilityIndexes(), and reports the
     /// single worst disagreement between "is this phase in the assemblage"
@@ -1140,6 +1474,22 @@ public:
     long int WorstPhaseStabilityViolation( double presenceThreshold,
                                            const char* exemptSpecies,
                                            double& violOut, bool& wasAbsentOut );
+
+    /// Species-level dimension-reduction pre-solve - see
+    /// BASE_PARAM::OptimaDimReduce (above) for what it does and why.
+    /// Solves the equilibrium over a reduced set of species, growing that set
+    /// by pricing the omitted columns on the reduced dual, and leaves its
+    /// answer in pm.Y[] (primal) and pm.U[] (dual) for the ordinary
+    /// full-dimension solve to warm-start from and verify.
+    /// \param maxPasses  readmission passes allowed (pa_OptimaDimReduce).
+    /// \param dcFloor    the same species floor the full path uses.
+    /// \param iterationsOut  Optima iterations spent here, for pm.ITG.
+    /// \param activeOut  size of the final active set, for logging.
+    /// \return true if pm.Y[]/pm.U[] now carry a state worth warm-starting
+    ///         from; false if the pre-solve was skipped or discarded, in which
+    ///         case neither array was modified in a way the caller must undo.
+    bool OptimaReducedPreSolve( long int maxPasses, double dcFloor,
+                                long int& iterationsOut, long int& activeOut );
 #endif
 
     // acces for node class
@@ -1465,7 +1815,10 @@ typedef enum {  // Field index into outField structure
     f_LsESmo, f_LsISmo, f_SorMc, f_LsMdc2, f_LsPhl,
     f_pa_PSTALL, f_pa_OptimaTol, f_pa_LogBarrierTau, f_pa_OptimaMaxStepRatio,
     f_pa_PhaseHessianFloor, f_pa_OptimaStallWindow, f_pa_OptimaMaxSeconds,
-    f_pa_OptimaFDHessian, f_pa_OptimaMoleFracHessian, f_pa_OptimaPhaseCompaction
+    f_pa_OptimaFDHessian, f_pa_OptimaMoleFracHessian, f_pa_OptimaPhaseCompaction,
+    f_pa_OptimaFDHessianDelay, f_pa_OptimaDcFloor, f_pa_MbClassRule,
+    f_pa_MbTrendPhaseDecay, f_pa_OptimaEarlyStabilityAt, f_pa_OptimaDimReduce,
+    f_pa_OptimaDimReduceTol
 
 } MULTI_DYNAMIC_FIELDS;
 

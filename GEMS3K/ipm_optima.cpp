@@ -54,6 +54,7 @@
 
 #include "node.h"
 #include <Optima/Optima.hpp>
+#include <Optima/Sensitivity.hpp>
 #include <algorithm>
 #include <cmath>
 #include <ctime>
@@ -159,9 +160,17 @@ const double kLnFmol = std::log(1000.0 / 18.01528);
 // numerical failure (the two are not distinguished; either way the caller
 // falls back to a simpler seed rather than trust a partial result) - and
 // true with xOut sized nCols on success.
+//
+// `cost` (optional, null = all ones) supplies the objective; `yOut` (optional,
+// null = not wanted) receives the optimal DUAL of the equality rows, i.e. the
+// y for which c_j - sum_i y_i a_ij >= 0 holds for every column at the optimum.
+// With cost = pm.G0 that dual is a genuine first-order estimate of pm.U[], and
+// pricing every species against it is what OptimaReducedPreSolve() uses to pick
+// a generous-but-solve-independent initial active set (see there).
 bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
                              const std::function<double(long int,long int)>& a,
-                             const double* b, std::vector<double>& xOut )
+                             const double* b, std::vector<double>& xOut,
+                             const double* cost = nullptr, double* yOut = nullptr )
 {
     if( nRows <= 0 || nCols <= 0 )
         return false;
@@ -173,6 +182,7 @@ bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
     std::vector<double> T( (size_t)nCon * (size_t)(nVar+1), 0. );
     auto Tref = [&]( long int i, long int j ) -> double& { return T[ (size_t)i*(size_t)(nVar+1) + (size_t)j ]; };
     std::vector<long int> basis( nCon );
+    std::vector<double> rowSgn( (size_t)nCon, 1. );   // per-row flip, to un-flip the dual
 
     double bScale = 1.;
     for( long int i = 0; i < nCon; i++ )
@@ -184,6 +194,7 @@ bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
     for( long int i = 0; i < nCon; i++ )
     {
         const double sgn = ( b[i] < 0. ) ? -1. : 1.;
+        rowSgn[(size_t)i] = sgn;
         for( long int j = 0; j < nCols; j++ )
             Tref(i,j) = sgn * a(i,j);
         Tref(i, nCols + i) = 1.;
@@ -233,13 +244,13 @@ bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
 
     // limitCol: only columns [0,limitCol) may enter - phase 2 passes
     // nCols to permanently exclude artificials from re-entering.
-    auto runSimplex = [&]( long int limitCol, long int maxIter ) -> bool
+    auto runSimplex = [&]( long int limitCol, long int maxIter, double entEps ) -> bool
     {
         for( long int iter = 0; iter < maxIter; iter++ )
         {
             long int q = -1;
             for( long int j = 0; j < limitCol; j++ ) // Bland's rule: smallest negative-reduced-cost index
-                if( row0[j] < -eps ) { q = j; break; }
+                if( row0[j] < -entEps ) { q = j; break; }
             if( q < 0 )
                 return true; // optimal for this phase
             long int prow = -1; double bestRatio = 0.;
@@ -260,7 +271,7 @@ bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
     };
 
     const long int maxIter = std::max( (long int)2000, 20*nVar );
-    if( !runSimplex( nVar, maxIter ) )
+    if( !runSimplex( nVar, maxIter, eps ) )
         return false;
     if( -row0[nVar] > feasTol ) // phase-1 optimum not ~0: genuinely infeasible
         return false;
@@ -282,21 +293,58 @@ bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
     // Phase 2: minimize sum of REAL variables only; artificial columns
     // permanently excluded from entering (limitCol=nCols below), so any
     // still basic-at-zero from the step above just sit inert.
+    double cMax = 1.;
+    if( cost )
+        for( long int j = 0; j < nCols; j++ ) cMax = std::max( cMax, std::fabs( cost[j] ) );
     std::fill( row0.begin(), row0.end(), 0. );
-    for( long int j = 0; j < nCols; j++ ) row0[j] = 1.;
+    for( long int j = 0; j < nCols; j++ ) row0[j] = cost ? cost[j] : 1.;
     for( long int i = 0; i < nCon; i++ )
     {
         if( basis[i] >= nCols ) continue; // degenerate artificial: cost 0, no canonicalization needed
+        const double cB = cost ? cost[ basis[i] ] : 1.;
+        if( cB == 0. ) continue;
         for( long int j = 0; j <= nVar; j++ )
-            row0[j] -= Tref(i,j); // cB[i]=1 for this basic real variable
+            row0[j] -= cB * Tref(i,j);
     }
-    if( !runSimplex( nCols, maxIter ) )
+    if( !runSimplex( nCols, maxIter, eps * cMax ) )
         return false;
 
     xOut.assign( (size_t)nCols, 0. );
     for( long int i = 0; i < nCon; i++ )
         if( basis[i] < nCols )
             xOut[ (size_t)basis[i] ] = std::max( 0., Tref(i,nVar) );
+
+    // Dual of the equality rows. Artificial column i is e_i in the FLIPPED
+    // system and costs 0, so its reduced cost is c-z = -y'_i; un-flip with the
+    // row's own sign. A row whose artificial is still basic (a redundant row)
+    // keeps reduced cost 0 and so gets y_i = 0, which is correct for it.
+    // The sign convention is then VERIFIED rather than assumed: the LP optimum
+    // must satisfy c_j - y.A_j >= 0 for every column, so if it does not, try the
+    // opposite sign, and if that fails too report failure rather than hand back
+    // a dual nothing downstream could trust.
+    if( yOut )
+    {
+        std::vector<double> y( (size_t)nCon );
+        for( long int i = 0; i < nCon; i++ )
+            y[(size_t)i] = -rowSgn[(size_t)i] * row0[nCols + i];
+        const double dualTol = 1e-6 * cMax;
+        bool ok = false;
+        for( int attempt = 0; attempt < 2 && !ok; attempt++ )
+        {
+            if( attempt == 1 )
+                for( long int i = 0; i < nCon; i++ ) y[(size_t)i] = -y[(size_t)i];
+            ok = true;
+            for( long int j = 0; j < nCols && ok; j++ )
+            {
+                double z = 0.;
+                for( long int i = 0; i < nCon; i++ ) z += y[(size_t)i] * a(i,j);
+                if( ( cost ? cost[j] : 1. ) - z < -dualTol ) ok = false;
+            }
+        }
+        if( !ok )
+            return false;
+        for( long int i = 0; i < nCon; i++ ) yOut[i] = y[(size_t)i];
+    }
     return true;
 }
 } // namespace
@@ -399,9 +447,35 @@ double TMultiBase::OptimaMaxMassBalanceResidual()
     return maxres;
 }
 
+/// Does this system actually have an aqueous phase?
+///
+/// `pm.LO` (index of the water solvent) is initialised to **0** in
+/// ms_multi_file.cpp and only reassigned when some phase carries `ccPH == 'a'`
+/// (ms_multi_format.cpp). On an aqueous-free system it therefore STAYS 0 - which
+/// is a perfectly valid DC index - so a range test like `pm.LO >= 0 && pm.LO < pm.L`
+/// or `pm.LO >= j0 && pm.LO < j1` **cannot distinguish "there is no solvent" from
+/// "the solvent is DC 0"**. Every guard here used to make exactly that mistake.
+///
+/// Measured consequence (2026-08-29, `LBE-6`, the one aqueous-free project we have,
+/// `gssss` = a 12-species gas phase plus four single-species solids): the adapter
+/// treated **gas species 0 as the aqueous solvent**, applying the solvent-coupling
+/// Hessian block to the gas phase and pointing the solvent-collapse detector at the
+/// wrong species. It still converged, which is why one project hid this.
+///
+/// The phase classifier is the correct test. Aqueous systems are unaffected: for them
+/// `PH_AQUEL` is present and `pm.LO` is genuinely the solvent, so every guard behaves
+/// exactly as before.
+bool TMultiBase::HasAqueousPhase() const
+{
+    for( long int k = 0; k < pm.FIs; k++ )
+        if( pm.PHC[k] == PH_AQUEL )
+            return true;
+    return false;
+}
+
 bool TMultiBase::DetectSolventCollapseAndReseed( const double* x, double upperBound, double& waterSeedOut )
 {
-    if( pm.LO < 0 || pm.LO >= pm.L )
+    if( !HasAqueousPhase() || pm.LO < 0 || pm.LO >= pm.L )
         return false;
     long int j0 = 0;
     for( long int k = 0; k < pm.FIs; k++ )
@@ -574,6 +648,36 @@ bool TMultiBase::LPFeasibilitySeed( std::vector<double>& nOut )
     return true;
 }
 
+// Dual of the LINEARISED-Gibbs LP:  min sum_j G0[j]*n_j  s.t.  A n = b, n >= 0.
+//
+// Same simplex, same rows and same feasibility guarantee as LPFeasibilitySeed()
+// - only the objective differs, and that difference is the point. The
+// feasibility LP's dual is an artefact of "minimise total moles" and says
+// nothing about chemistry; this one is the exact dual of a first-order model of
+// the real objective, so pricing a species against it
+// (s_j = G0[j] - sum_i y_i A[i,j]) is a meaningful "how far from stable is this
+// species". Measured on three projects (2026-09-02): |y - U_converged| is
+// within 6-12% of the converged dual's own magnitude.
+//
+// Returns false without touching yOut if the LP or its dual is not trustworthy.
+bool TMultiBase::LPGibbsDual( std::vector<double>& yOut )
+{
+    const long int N = pm.N;
+    const long int L = pm.L;
+    if( N <= 0 || L <= 0 || pm.G0 == nullptr )
+        return false;
+    auto aFn = [this,N]( long int i, long int j ) { return pm.A[ i + j*N ]; };
+    std::vector<double> nDummy;
+    std::vector<double> y( (size_t)N, 0. );
+    if( !TwoPhaseSimplexMinSum( N, L, aFn, pm.B, nDummy, pm.G0, y.data() ) )
+        return false;
+    for( long int i = 0; i < N; i++ )
+        if( !std::isfinite( y[(size_t)i] ) )
+            return false;
+    yOut.swap( y );
+    return true;
+}
+
 long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold,
                                                    const char* exemptSpecies,
                                                    double& violOut, bool& wasAbsentOut )
@@ -702,6 +806,509 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold,
 }
 
 
+// ---------------------------------------------------------------------------
+// Species-level dimension-reduction pre-solve  (pa_OptimaDimReduce, default 0)
+// ---------------------------------------------------------------------------
+//
+// See BASE_PARAM::OptimaDimReduce (ms_multi.h) for the motivation, the measured
+// prize, and why this must omit species rather than pin them. The short form:
+// native's linear system is N x N over independent components while the Optima
+// path's is (L + R) x (L + R) over species PLUS components, and on the corpus's
+// large systems 68-92% of those species are absent at the answer. Pinning them
+// (pa_OptimaPhaseCompaction) leaves the factorisation exactly as large - which
+// is why that field, measured, does nothing for the size wall. Omitting them is
+// the only thing that can.
+//
+// The mathematics is an ordinary active-set method and is exact at its fixed
+// point, not an approximation:
+//
+//   Hold every omitted species j at its own lower bound l_j. The remaining
+//   mass-balance rows are then
+//       sum_{s in S} A[i, s] * x_s  =  b_i - sum_{j not in S} A[i, j] * l_j
+//   and the reduced problem is minimise G over x_S subject to those rows and
+//   the surviving boxes. Its dual y is a full N-vector, because every IC row
+//   survives - only columns are dropped - so the omitted columns can be PRICED
+//   on it exactly as a simplex prices non-basic columns:
+//       s_j = dG/dn_j - sum_i y_i A[i,j] = F[j] - sum_i U[i] A[i,j].
+//   s_j >= 0 means "at its lower bound and wanting to stay there", which is the
+//   full problem's own KKT condition for a bound-active variable, and is
+//   literally the test Optima itself uses (Stability.cpp's is_lower_unstable).
+//   So when a pass prices nothing back in, the reduced answer satisfies the
+//   FULL problem's KKT conditions - it is a solution, not an approximation.
+//
+// Two deliberate design choices, both from measured failures on this branch:
+//
+//  1. THE INITIAL SET COMES FROM TWO LPs, NOT FROM A SOLVER STATE. The tempting
+//     alternative - run a short probe and drop whatever sits at the floor - is
+//     measured-unsafe: on Resources/gems3k/j_10TH_G_seawater, 4 of the 60
+//     species pinned at the floor in the failing run are genuinely present in
+//     the answer, dolomite among them at 1.0e-2 mol. A set derived that way
+//     omits dolomite and converts an honest failure into a silent wrong answer.
+//     So the set is the union of (a) the LP-FEASIBILITY seed's own support,
+//     which is feasible by construction (A*Y = b exactly on it), and (b) every
+//     species priced below OptimaDimReduceTol against the LP-GIBBS dual (see
+//     BASE_PARAM::OptimaDimReduceTol and the call site below). Both are LPs
+//     over pm.A/pm.B alone, so both are wholly independent of any solve.
+//     (b) exists because (a) on its own is a VERTEX - N species - and that
+//     sparsity, measured 2026-09-02, is what broke this feature on the two
+//     largest projects in the corpus.
+//
+//  2. READMISSION IS MONOTONE - a species that has been activated is never
+//     dropped again. That is what bounds the loop, and it keeps this free of
+//     the active-set cycling that has repeatedly bitten this solver whenever a
+//     set was allowed to shrink again (see CLAUDE.md's retry-ordering history).
+//     Removal is already covered, after the fact, by the phase-selection repair
+//     loop and the phase-extinction tier in CalculateEquilibriumStateOptima().
+//
+// This never returns an answer on its own. It leaves its primal in pm.Y[] and
+// its dual in pm.U[], and the ordinary full-dimension solve runs warm-started
+// from both - which costs O(1) Optima iterations for a correct (x,y) pair
+// (measured: 3 on f_TestPNTDB, plan-v5 section 27) and keeps every existing
+// retry, KKT, mass-balance and phase-stability check running at full dimension
+// and full index. A pre-solve that fails, or that cannot omit anything, is
+// simply discarded.
+bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor,
+                                        long int& iterationsOut, long int& activeOut )
+{
+    iterationsOut = 0;
+    activeOut = 0;
+    const long int N = pm.N;
+    const long int L = pm.L;
+    if( L <= 0 || N <= 0 || maxPasses <= 0 )
+        return false;
+
+    const BASE_PARAM* pa_p = base_param();
+    const bool kMoleFracHessian = ( pa_p->OptimaMoleFracHessian != 0 );
+    const bool kFDHessian       = ( pa_p->OptimaFDHessian != 0 );
+    const double kLogBarrierTau = pa_p->LogBarrierTau;
+    const double kPhaseHessianFloor = pa_p->PhaseHessianFloor;
+    const bool hasAq = HasAqueousPhase();
+
+    // Box bounds, built exactly as the full path builds them - including the
+    // "pm.DUL[j] < 1e6 without a `> 0.` guard" convention, so a DUL of exactly
+    // zero stays the hard exclusion GEMS3K means it to be.
+    std::vector<double> xlo( (size_t)L ), xhi( (size_t)L );
+    for( long int j = 0; j < L; j++ )
+    {
+        xlo[(size_t)j] = std::max( pm.DLL[j], dcFloor );
+        xhi[(size_t)j] = ( pm.DUL[j] < 1e6 )
+                          ? std::max( pm.DUL[j], dcFloor ) : std::max( pm.SMols, 1.0 ) * 10.;
+    }
+
+    // Initial active set: the seed's own support. A species whose box is
+    // degenerate (xhi <= xlo - a hard kinetic exclusion) is never active:
+    // omitting it and holding it at its bound is exactly equivalent, and it
+    // cannot be priced back in either.
+    std::vector<char> act( (size_t)L, 0 );
+    for( long int j = 0; j < L; j++ )
+    {
+        if( xhi[(size_t)j] <= xlo[(size_t)j] * ( 1. + 1e-9 ) ) continue;
+        if( pm.Y[j] > xlo[(size_t)j] * ( 1. + 1e-6 ) ) act[(size_t)j] = 1;
+    }
+    // The solvent is never omitted, whatever the seed says about it - the
+    // solvent-collapse trap this file documents at length is exactly a
+    // transient state reporting water as absent.
+    if( hasAq && pm.LO >= 0 && pm.LO < L && xhi[(size_t)pm.LO] > xlo[(size_t)pm.LO] )
+        act[(size_t)pm.LO] = 1;
+
+    // ... and then widen that set by PRICING every species against the dual of
+    // the linearised-Gibbs LP (see BASE_PARAM::OptimaDimReduceTol for the
+    // measurements and the physical reading of the threshold). The seed's own
+    // support is a VERTEX - N species - and on 2026-09-02 that sparsity, not
+    // the pricing loop, was measured to be what broke this feature on the two
+    // largest projects: pass 0 was either unsolvable (07PSIna_G_complex_1, 69
+    // species of 1392) or produced a dual so poor that 427 of 641 omitted
+    // columns priced back in one step (f_TestPNTDB, 49 of 690). The LP-Gibbs
+    // dual is just as independent of any solver state - same simplex, same
+    // rows, only the objective differs - and is within 6-12% of the converged
+    // dual's own magnitude on all three projects measured.
+    //
+    // NOT ADOPTED, measured the same day: additionally seeding pass 0's dual
+    // from this same LP dual. It helped at one threshold (261 -> 198 iterations
+    // on 07PSIna_G_mid_1 at 5) and hurt at the next (269 -> 410 at 10) - not
+    // monotone in its own parameter, this solver's familiar signature for a
+    // knob that should not be tuned. Pass 0 therefore still starts from a zero
+    // dual, and only later passes inherit their predecessor's.
+    {
+        const double dimTol = pa_p->OptimaDimReduceTol;
+        std::vector<double> lpDual;
+        if( dimTol > 0. && pm.G0 != nullptr && LPGibbsDual( lpDual ) )
+        {
+            long int added = 0;
+            for( long int j = 0; j < L; j++ )
+            {
+                if( act[(size_t)j] ) continue;
+                if( xhi[(size_t)j] <= xlo[(size_t)j] * ( 1. + 1e-9 ) ) continue;
+                double z = 0.;
+                for( long int i = 0; i < N; i++ ) z += lpDual[(size_t)i] * pm.A[ i + j*N ];
+                if( pm.G0[j] - z < dimTol ) { act[(size_t)j] = 1; added++; }
+            }
+            ipm_logger->info( "OptimaReducedPreSolve: LP-Gibbs pricing admitted {} extra species "
+                               "(tol={} RT)", added, dimTol );
+        }
+    }
+
+    std::vector<long int> nxToJ, jToNx( (size_t)L, -1 );
+    std::vector<double>   Fbase( (size_t)L, 0. );
+
+    // ONLY A FIXED POINT IS EVER HANDED OVER. An intermediate pass's answer is
+    // the solution of a DIFFERENT (smaller) problem, so its dual is confidently
+    // wrong about every species not yet active - and this branch has measured
+    // twice that a confidently wrong or internally inconsistent dual costs more
+    // than no dual at all (the cold-start dual estimate: 4184 it -> 60000; the
+    // partial warm dual: 3 it -> 837). Measured here too, before this guard
+    // existed: on f_TestPNTDB pass 1 failed to converge and pass 0's 49-species
+    // answer was handed over anyway, taking the full solve from 2736 iterations
+    // to 4048 and the project from 330 s to 498 s. So on any exit other than
+    // "priced nothing back in", restore what the caller had.
+    std::vector<double> Y0( pm.Y, pm.Y + L );
+    std::vector<double> U0( pm.U, pm.U + N );
+    auto discard = [&]() -> bool {
+        for( long int j = 0; j < L; j++ ) pm.Y[j] = Y0[(size_t)j];
+        for( long int i = 0; i < N; i++ ) pm.U[i] = U0[(size_t)i];
+        activeOut = 0;
+        return false;
+    };
+
+    Optima::Options options;
+    options.maxiters = (unsigned)std::max( 2000L, (long int)pa_p->IIM );
+    options.convergence.tolerance = pa_p->OptimaTol;
+
+    bool haveAnswer = false;
+    for( long int pass = 0; pass < maxPasses; pass++ )
+    {
+        nxToJ.clear();
+        std::fill( jToNx.begin(), jToNx.end(), -1 );
+        for( long int j = 0; j < L; j++ )
+            if( act[(size_t)j] ) { jToNx[(size_t)j] = (long int)nxToJ.size(); nxToJ.push_back( j ); }
+        const long int nS = (long int)nxToJ.size();
+        if( nS <= 0 )
+            return false;
+        if( nS >= L )
+        {
+            // Nothing left to omit - the reduced problem IS the full one, so
+            // there is no point paying for it twice. Whatever the previous
+            // pass produced (if any) still stands as a warm start.
+            ipm_logger->info( "OptimaReducedPreSolve: active set reached the full species "
+                               "count ({}) at pass {} - no reduction available", L, pass );
+            return discard();
+        }
+
+        Optima::Dims dims;
+        dims.x  = nS;
+        dims.be = N;
+        Optima::Problem problem( dims );
+
+        for( long int i = 0; i < N; i++ )
+        {
+            for( long int s = 0; s < nS; s++ )
+                problem.Aex(i, s) = pm.A[ i + nxToJ[(size_t)s]*N ];
+            // Omitted species are held at their lower bound; their (constant)
+            // contribution to each IC row moves to the right-hand side.
+            double rhs = pm.B[i];
+            for( long int j = 0; j < L; j++ )
+                if( !act[(size_t)j] )
+                    rhs -= pm.A[ i + j*N ] * xlo[(size_t)j];
+            problem.be[i] = rhs;
+        }
+        for( long int s = 0; s < nS; s++ )
+        {
+            const long int j = nxToJ[(size_t)s];
+            problem.xlower[s] = xlo[(size_t)j];
+            problem.xupper[s] = xhi[(size_t)j];
+        }
+
+        // Objective. Same physics as the full path's - the gradient of the
+        // FULL Gibbs energy with respect to an active species is still just
+        // that species' chemical potential (the mu-dependence terms cancel by
+        // Gibbs-Duhem), so no reduction-specific correction is needed. The
+        // only differences are index mapping and that the phase-decay counters
+        // (pa_MbTrendPhaseDecay, default off) are not maintained here; the
+        // full solve that follows maintains its own.
+        problem.f = [this, L, nS, dcFloor, kLogBarrierTau, kPhaseHessianFloor,
+                     kFDHessian, kMoleFracHessian, hasAq, &nxToJ, &jToNx, &xlo, &act, &Fbase]
+                    ( Optima::ObjectiveResultRef res, Optima::VectorView x,
+                      Optima::VectorView /*p*/, Optima::VectorView /*c*/,
+                      Optima::ObjectiveOptions opts )
+        {
+            for( long int j = 0; j < L; j++ )
+                pm.X[j] = act[(size_t)j] ? x[ jToNx[(size_t)j] ] : xlo[(size_t)j];
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );
+            PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
+
+            // f is the FULL Gibbs energy (omitted species included) so the
+            // reported value stays comparable with the full path's; the
+            // omitted terms are a constant shift as far as the optimiser is
+            // concerned.
+            double fval = 0.;
+            for( long int j = 0; j < L; j++ )
+                fval += pm.X[j] * pm.F[j];
+            for( long int j = pm.Ls; j < L; j++ )
+                fval -= kLogBarrierTau * std::log( std::max( pm.X[j], dcFloor ) );
+            for( long int s = 0; s < nS; s++ )
+            {
+                const long int j = nxToJ[(size_t)s];
+                res.fx[s] = pm.F[j];
+                if( j >= pm.Ls )
+                    res.fx[s] -= kLogBarrierTau / std::max( pm.X[j], dcFloor );
+            }
+            res.f = fval;
+
+            if( opts.eval.fxx )
+            {
+                res.fxx.setZero();
+                res.diagfxx = false;
+                // Per-multicomponent-phase ideal-mixing curvature, gathered
+                // into the reduced slots. Identical expressions to the full
+                // path's - see the long derivation comments there, especially
+                // the aqueous solvent ROW, which uses the ideal water-activity
+                // convention and is NOT d ln x_w/d n (do not "fix" it).
+                long int j0 = 0;
+                for( long int k = 0; k < pm.FIs; k++ )
+                {
+                    const long int j1 = j0 + pm.L1[k];
+                    const bool isAqueousLike = ( hasAq && pm.LO >= j0 && pm.LO < j1 );
+                    double Xf = 0.;
+                    for( long int j = j0; j < j1; j++ )
+                        Xf += std::max( pm.X[j], dcFloor );
+                    if( isAqueousLike )
+                    {
+                        const long int w = pm.LO;
+                        const long int sw = jToNx[(size_t)w];
+                        const double Xw = std::max( pm.X[w], dcFloor );
+                        for( long int j = j0; j < j1; j++ )
+                        {
+                            if( j == w ) continue;
+                            const long int sj = jToNx[(size_t)j];
+                            if( sj < 0 ) continue;
+                            const double Xj = std::max( pm.X[j], dcFloor );
+                            res.fxx(sj,sj) = 1.0 / Xj;
+                            if( sw >= 0 )
+                            {
+                                res.fxx(sj,sw) = -1.0 / Xw;
+                                res.fxx(sw,sj) = -1.0 / Xw;
+                            }
+                        }
+                        if( sw >= 0 )
+                            res.fxx(sw,sw) = ( Xf - Xw ) / ( Xw * Xw );
+                    }
+                    else
+                    {
+                        for( long int j = j0; j < j1; j++ )
+                        {
+                            const long int sj = jToNx[(size_t)j];
+                            if( sj < 0 ) continue;
+                            const double Xj = std::max( pm.X[j], dcFloor );
+                            if( kMoleFracHessian )
+                            {
+                                for( long int i = j0; i < j1; i++ )
+                                {
+                                    const long int si = jToNx[(size_t)i];
+                                    if( si >= 0 ) res.fxx(sj,si) = -1.0 / Xf;
+                                }
+                                res.fxx(sj,sj) = 1.0 / Xj - 1.0 / Xf;
+                            }
+                            else
+                                res.fxx(sj,sj) = 1.0 / Xj;
+                        }
+                    }
+                    j0 = j1;
+                }
+                for( long int j = pm.Ls; j < L; j++ )
+                {
+                    const long int sj = jToNx[(size_t)j];
+                    if( sj < 0 ) continue;
+                    const double Xj = std::max( pm.X[j], dcFloor );
+                    res.fxx(sj,sj) += kLogBarrierTau / ( Xj * Xj );
+                }
+
+                for( long int j = 0; j < L; j++ ) Fbase[(size_t)j] = pm.F[j];
+
+                // pa_OptimaFDHessian: exact columns for Optima's own basic
+                // variables. opts.ibasicvars indexes the REDUCED space.
+                for( Optima::Index bk = 0; kFDHessian && bk < opts.ibasicvars.size(); bk++ )
+                {
+                    const long int si = (long int)opts.ibasicvars[bk];
+                    if( si < 0 || si >= nS ) continue;
+                    const long int i = nxToJ[(size_t)si];
+                    const double Xi = pm.X[i];
+                    const double h = std::max( std::fabs(Xi) * 1e-7, dcFloor * 10. );
+                    pm.X[i] = Xi + h;
+                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
+                    for( long int sr = 0; sr < nS; sr++ )
+                    {
+                        const long int r = nxToJ[(size_t)sr];
+                        res.fxx(sr,si) = ( pm.F[r] - Fbase[(size_t)r] ) / h;
+                    }
+                    pm.X[i] = Xi;
+                }
+
+                // pa_PhaseHessianFloor: exact, eigenvalue-floored curvature for
+                // the non-aqueous multicomponent phases. Only end-members that
+                // are both PRESENT and ACTIVE take part.
+                const double regRatio = kPhaseHessianFloor;
+                if( regRatio > 0. )
+                {
+                    long int p0 = 0;
+                    for( long int k = 0; k < pm.FIs; k++ )
+                    {
+                        const long int p1 = p0 + pm.L1[k];
+                        const long int nEnd = p1 - p0;
+                        const bool isAq = ( pm.LO >= p0 && pm.LO < p1 );
+                        if( !isAq && nEnd > 1 && p1 <= L )
+                        {
+                            double phTot = 0.;
+                            for( long int j = p0; j < p1; j++ ) phTot += std::max( pm.X[j], 0. );
+                            std::vector<long int> pres;   // reduced indices
+                            for( long int j = p0; j < p1; j++ )
+                                if( jToNx[(size_t)j] >= 0
+                                    && pm.X[j] > std::max( dcFloor * 1e3, phTot * 1e-6 ) )
+                                    pres.push_back( jToNx[(size_t)j] );
+                            const int nP = (int)pres.size();
+                            if( nP > 1 )
+                            {
+                                for( int c = 0; c < nP; c++ )
+                                {
+                                    const long int i = nxToJ[(size_t)pres[(size_t)c]];
+                                    const double Xi = pm.X[i];
+                                    const double h = std::fabs(Xi) * 1e-7;
+                                    if( !( h > 0. ) ) continue;
+                                    pm.X[i] = Xi + h;
+                                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                                    CalculateActivityCoefficients( LINK_UX_MODE );
+                                    PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
+                                    for( int r = 0; r < nP; r++ )
+                                    {
+                                        const long int rj = nxToJ[(size_t)pres[(size_t)r]];
+                                        res.fxx(pres[(size_t)r],pres[(size_t)c])
+                                            = ( pm.F[rj] - Fbase[(size_t)rj] ) / h;
+                                    }
+                                    pm.X[i] = Xi;
+                                }
+                                std::vector<double> blk( (size_t)nP*nP );
+                                for( int a = 0; a < nP; a++ )
+                                    for( int b = 0; b < nP; b++ )
+                                        blk[(size_t)a*nP+b] = 0.5 * ( res.fxx(pres[(size_t)a],pres[(size_t)b])
+                                                                    + res.fxx(pres[(size_t)b],pres[(size_t)a]) );
+                                if( SymEigFloorInPlace( blk, nP, regRatio ) )
+                                    for( int a = 0; a < nP; a++ )
+                                        for( int b = 0; b < nP; b++ )
+                                            res.fxx(pres[(size_t)a],pres[(size_t)b]) = blk[(size_t)a*nP+b];
+                            }
+                        }
+                        p0 = p1;
+                    }
+                }
+
+                // Restore the base state the gradient above was computed from.
+                TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                CalculateActivityCoefficients( LINK_UX_MODE );
+                for( long int j = 0; j < L; j++ )
+                    pm.F[j] = Fbase[(size_t)j];
+            }
+            res.succeeded = true;
+        };
+
+        Optima::State state( dims );
+        for( long int s = 0; s < nS; s++ )
+        {
+            const long int j = nxToJ[(size_t)s];
+            state.x[s] = std::min( std::max( pm.Y[j], problem.xlower[s] ), problem.xupper[s] );
+        }
+        // Seed the dual from the previous pass's own answer. ALL OR NOTHING,
+        // per the measurement recorded at the full path's own dual seed: a
+        // partial dual is worse than no dual at all. Every IC row survives the
+        // reduction, so this dual is complete by construction.
+        if( haveAnswer )
+        {
+            bool duals_usable = true;
+            for( long int i = 0; i < N; i++ )
+                if( !std::isfinite( pm.U[i] ) ) { duals_usable = false; break; }
+            if( duals_usable )
+                for( long int i = 0; i < N; i++ )
+                    state.ye[i] = -pm.U[i];
+        }
+
+
+        Optima::Solver solver;
+        solver.setOptions( options );
+        Optima::Result result = solver.solve( problem, state );
+        iterationsOut += (long int)result.iterations;
+
+        if( !result.succeeded )
+        {
+            ipm_logger->info( "OptimaReducedPreSolve: pass {} did not converge on {} of {} "
+                               "species - discarding the reduced pre-solve", pass, nS, L );
+            return discard();
+        }
+
+        // Scatter back to the full state and commit primal + dual.
+        for( long int j = 0; j < L; j++ )
+        {
+            const double v = act[(size_t)j] ? state.x[ jToNx[(size_t)j] ] : xlo[(size_t)j];
+            pm.X[j] = v;
+            pm.Y[j] = v;
+        }
+        for( long int i = 0; i < N; i++ )
+            pm.U[i] = -state.ye[i];
+        haveAnswer = true;
+        activeOut = nS;
+
+        // Price the omitted columns on this dual.
+        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+        CalculateActivityCoefficients( LINK_UX_MODE );
+        PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
+
+        // Price the omitted columns on this dual and readmit every one whose
+        // reduced gradient is negative - the full problem's own KKT test for a
+        // variable sitting at its lower bound, and literally Optima's own
+        // is_lower_unstable condition.
+        //
+        // Readmitted species stay AT their lower bound rather than being seeded
+        // strictly inside the box. Both alternatives to this plain rule were
+        // implemented and measured on 2026-09-02, and both were WORSE - see
+        // plan-v5 for the numbers:
+        //   - partial pricing (readmit only the max(nS,N) most negative per
+        //     pass, so an early inaccurate dual cannot overshoot): the smaller
+        //     intermediate sets are themselves harder to solve - on
+        //     07PSIna_G_mid_1 a 52-species pass failed where the 93-species one
+        //     it replaced converged in 303 iterations;
+        //   - interior seeding of readmitted species at their own
+        //     bulk-composition bound x 1e-6, which is what ORCHESTRA's
+        //     insertion pass does (activate at 1e-3, never at a floor): on the
+        //     same project pass 1 went 303 -> 2263 iterations and pass 2 then
+        //     failed.
+        // Neither response was monotone in its own parameter, which is this
+        // solver's now-familiar signature for a knob that should not be tuned.
+        // Do not re-try either without a genuinely new hypothesis.
+        long int readmitted = 0;
+        for( long int j = 0; j < L; j++ )
+        {
+            if( act[(size_t)j] ) continue;
+            if( xhi[(size_t)j] <= xlo[(size_t)j] * ( 1. + 1e-9 ) ) continue;  // fixed by its box
+            double dual = 0.;
+            for( long int i = 0; i < N; i++ )
+                dual += pm.U[i] * pm.A[ i + j*N ];
+            if( pm.F[j] - dual < 0. ) { act[(size_t)j] = 1; readmitted++; }
+        }
+
+        ipm_logger->info( "OptimaReducedPreSolve: pass {} - {} of {} species active, "
+                           "{} Optima iterations, {} readmitted",
+                           pass, nS, L, result.iterations, readmitted );
+
+        if( readmitted == 0 )
+            return true;   // fixed point: the reduced answer satisfies the full KKT conditions
+    }
+
+    ipm_logger->warn( "OptimaReducedPreSolve: readmission did not settle within {} passes - "
+                       "discarding (an unsettled active set is not a fixed point, and its dual is "
+                       "wrong about everything still omitted)", maxPasses );
+    return discard();
+}
+
 double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool reaktoroMode )
 {
     // Disable the IPM-2 chemical-potential smoothing for the whole of this
@@ -733,7 +1340,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     // Optima-specific BASE_PARAM fields: DHB is the numerical DC-amount
     // floor, IIM/DK are the "max iterations"/"convergence tolerance"
     // knobs (below), DW gates hard-error vs. soft-BAD on non-convergence.
-    const double dcFloor = std::max( pa_p->DHB, 1e-300 );
+    // pa_OptimaDcFloor > 0 decouples this from pa_DHB - see that field for why
+    // reusing pa_DHB made a low floor untestable (it is also native's
+    // mass-balance tolerance, so lowering it breaks the reference first).
+    const double dcFloor = pa_p->OptimaDcFloor > 0. ? pa_p->OptimaDcFloor
+                                                    : std::max( pa_p->DHB, 1e-300 );
 
     InitalizeGEM_IPM_Data();
 
@@ -777,7 +1388,57 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // Paired with the now-unconditional FD Hessian below it removed all four
         // "OK at a worse G" Solvus rows AND cut total iterations 47862 -> 43389.
         // SOP's warm start (pNP!=0, reuse the incoming pm.Y) is untouched.
-        if( pm.pNP == 0 )
+        //
+        // ...EXCEPT when there is nothing to warm-start FROM. Added 2026-08-28
+        // after NEED_GEM_SOP on a FRESH node was found to be a silent foot-gun,
+        // strictly worse than either real mode. TNode::GEM_run() sets pm.pNP=1
+        // for NEED_GEM_SOP unconditionally (node.cpp), so on a node that has
+        // never solved anything this branch was skipped and the solve started
+        // from whatever speciation the project's .dbr file happened to ship -
+        // frozen at that file's own state point, with an all-zero dual, and no
+        // LP-feasibility seed. That is not a warm start; it is a cold start
+        // from stale data. It is what made solvus_sweep_test --modes sop look
+        // catastrophic (104 of 301 temperatures failing, Tc reported 105 C too
+        // low) - a harness that builds a fresh TNode per temperature BY DESIGN,
+        // so no state can carry over and the .dbr speciation gets progressively
+        // more wrong as T walks away from where it was saved. That result was
+        // originally misread as warm-start hysteresis; there was no carry-over
+        // for hysteresis to happen in. See GEMS3K/CLAUDE.md, 2026-08-27/28.
+        //
+        // Detector: pm.U[] identically zero. It is the dual - IC chemical
+        // potentials over RT - so after ANY real solve by ANY solver on this
+        // instance at least one entry is nonzero and large; all-zero means no
+        // solver has ever run here. Deliberately NOT "has this Optima path run
+        // before": native AIA/SIA writes pm.U[] too (ipm_main.cpp), and handing
+        // a converged NATIVE state to SOP is a legitimate, useful warm start
+        // that must keep working (it is the cheapest leg of the CTest guard in
+        // gems-benchmark's optima_regression.h). Non-finite is treated the same
+        // way, for the same reason the dual seed below refuses it.
+        //
+        // On detection: log loudly AND fall back to the cold path, which is
+        // strictly better than what happened before (an LP-feasible seed with a
+        // self-consistent zero dual, rather than stale data with a zero dual).
+        // Note the two halves must agree - the dual seed below is gated on the
+        // same flag, because seeding a dual for a primal we just replaced would
+        // be exactly the inconsistent-start case measured as worse than either
+        // consistent one (see that block's own comment).
+        bool warmStateUsable = false;
+        if( pm.pNP != 0 )
+        {
+            for( long int i = 0; i < pm.N; i++ )
+            {
+                if( !std::isfinite( pm.U[i] ) ) { warmStateUsable = false; break; }
+                if( pm.U[i] != 0. ) warmStateUsable = true;
+            }
+            if( !warmStateUsable )
+                ipm_logger->warn( "CalculateEquilibriumStateOptima: warm start (SOP) requested but "
+                                  "this node carries no previous solution (pm.U[] is all zero) - "
+                                  "the .dbr file's stored speciation is NOT a warm start. Falling "
+                                  "back to the cold (LP-feasibility) seed. Use AOP for a first "
+                                  "solve, or SOP only on a node that has already solved." );
+        }
+
+        if( pm.pNP == 0 || !warmStateUsable )
         {
             // ROP's own initial guess - superseded, same day, 2026-08-24:
             // a plain uniform-tiny seed (Reaktoro's own ChemicalState
@@ -822,7 +1483,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             {
                 for( long int j = 0; j < pm.L; j++ )
                     pm.Y[j] = lpSeed[j];
-                if( pm.LO >= 0 && pm.LO < pm.L )
+                if( HasAqueousPhase() && pm.LO >= 0 && pm.LO < pm.L )
                 {
                     // pm.DUL[j] < 1e6 is GEMS3K's own established convention for
                     // "this DC carries a real (possibly zero) kinetic/metastability
@@ -874,6 +1535,40 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         std::vector<EqControlCondition>& conditions = optima_control_conditions;
         const long int R = (long int)conditions.size();
 
+        // ---- Species-level dimension-reduction pre-solve (pa_OptimaDimReduce) ----
+        // Off by default. When on, this solves the equilibrium over a reduced
+        // set of species first and leaves its primal in pm.Y[] and its dual in
+        // pm.U[]; the ordinary full-dimension solve below then warm-starts from
+        // both and, because a correct (x,y) pair costs O(1) Optima iterations,
+        // becomes a cheap verification that keeps every existing retry and
+        // post-solve check running at full dimension and full index. Skipped
+        // with control conditions active (their virtual slots are a separate
+        // mechanism) and in ROP, which is a faithful port of Reaktoro's own.
+        // See BASE_PARAM::OptimaDimReduce and OptimaReducedPreSolve() above.
+        long int dimReduceIters = 0;
+        bool dimReduceDone = false;
+        if( !reaktoroMode && R == 0 && pa_p->OptimaDimReduce > 0 )
+        {
+            long int nActive = 0;
+            dimReduceDone = OptimaReducedPreSolve( pa_p->OptimaDimReduce, dcFloor,
+                                                   dimReduceIters, nActive );
+            if( dimReduceDone )
+                ipm_logger->info( "CalculateEquilibriumStateOptima: dimension-reduction pre-solve "
+                                   "produced a warm start over {} of {} species in {} iterations",
+                                   nActive, L, dimReduceIters );
+            // Re-establish the same consistent (Y, X, XF/XFA, activity
+            // coefficients) state the seed block above leaves behind. The
+            // pre-solve's own objective callback mutated all of those while it
+            // ran, and on the discard path pm.Y[] is still the seed - so this
+            // is correct whether it succeeded or not, and makes "discarded"
+            // mean genuinely discarded.
+            TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+            for( long int j = 0; j < L; j++ )
+                pm.X[j] = pm.Y[j];
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );
+        }
+
         // Resolve each active condition's fixed objective-gradient value
         // once, up front (needs this call's G0[]/T, only valid now that
         // InitalizeGEM_IPM_Data() has run) - assign its unknown slot.
@@ -887,12 +1582,32 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         Optima::Dims dims;
         dims.x  = L + R;
         dims.be = N;
+        // Sensitivity parameters c := the bulk composition b, so that
+        // Sensitivity::xc is dn/db directly (see optima_want_sensitivity).
+        // Declared only on request - dims.c = 0 keeps the problem exactly as
+        // it was, and Optima skips the sensitivity solve entirely.
+        const bool wantSens = optima_want_sensitivity;
+        if( wantSens ) dims.c = N;
 
         Optima::Problem problem( dims );
 
         for( long int i = 0; i < N; i++ )
             for( long int j = 0; j < L; j++ )
                 problem.Aex(i, j) = pm.A[ i + j*N ];
+
+        if( wantSens )
+        {
+            // be[i] IS b[i], so d(be)/dc is the identity and c carries the
+            // current bulk composition. Both are set before the solve; Optima
+            // needs bec to form the sensitivity system, and c only so the
+            // parameters have a meaningful value.
+            for( long int i = 0; i < N; i++ )
+            {
+                problem.c[i] = pm.B[i];
+                for( long int k = 0; k < N; k++ )
+                    problem.bec(i, k) = ( i == k ) ? 1. : 0.;
+            }
+        }
         for( long int k = 0; k < R; k++ )
         {
             for( long int i = 0; i < N; i++ )
@@ -1014,8 +1729,43 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const double kPhaseHessianFloor = pa_p->PhaseHessianFloor;
         // Captured by value like the constants above - pa_p is not in scope inside the lambda.
         const bool kFDHessian = ( pa_p->OptimaFDHessian != 0 );
+        const bool hasAq = HasAqueousPhase();
+
+        // Leal 2014 §2.3.3's
+        // two-clause unstable-phase test - below threshold AND DECREASING since
+        // the last iterate. The phase-extinction tier below uses an exactness
+        // argument (interchangeable twins) precisely because both magnitude-only
+        // detectors fail on f_CASHNK; a trend test is the third option neither
+        // considered. Tracked here because only the objective sees every iterate.
+        auto phLast = std::make_shared<std::vector<double>>( pm.FIs, -1. );
+        auto phDec  = std::make_shared<std::vector<long int>>( pm.FIs, 0 );
+        auto phMax  = std::make_shared<std::vector<double>>( pm.FIs, 0. );
+        // Tiered Hessian (pa_OptimaFDHessianDelay, default 0 = off). Set while the
+        // short cheap-Hessian ATTEMPT below is running; the objective then behaves
+        // exactly as pa_OptimaFDHessian = 0. shared_ptr because the objective lambda
+        // outlives this scope inside Optima.
+        //
+        // It is an attempt-and-restart, NOT an in-place switch, and that is a
+        // measured requirement rather than a style choice. An in-place version -
+        // count iterations in the convergence hook, flip the FD loop on at N and
+        // carry straight on - was implemented first and FAILS on the 301-point
+        // solvus sweep at T = 560 C: with FD from the start that point converges in
+        // 556 iterations, with the cheap Hessian alone it runs to the 7001 cap, and
+        // switching FD on mid-trajectory does not rescue it at ANY delay tried
+        // (300, 1000, 1500, 3000 all hit the cap). The first cheap iterations move
+        // the iterate somewhere the exact columns cannot recover from, so the
+        // trajectory has to be discarded rather than corrected.
+        auto fdSuppress = std::make_shared<bool>(false);
+        // AOP/SOP only. ROP is a deliberately faithful port of Reaktoro's own
+        // arrangement and leaves Optima::Options untouched, so its budget is the
+        // library default 200 per attempt; any delay comparable to the ~1100
+        // iterations the cheap Hessian needs on f_/j_GEOTHERM would simply prevent
+        // ROP from ever reaching the exact columns. Measured: with the delay applied
+        // to ROP as well, j_TiQ_PRSV ROP goes OK 20 it -> FAIL 402.
+        const long int kFDDelay = ( !reaktoroMode && pa_p->OptimaFDHessianDelay > 0 )
+                                  ? pa_p->OptimaFDHessianDelay : 0;
         const bool kMoleFracHessian = ( pa_p->OptimaMoleFracHessian != 0 );
-        problem.f = [this, L, R, dcFloor, &fixedGrad, kLogBarrierTau, kPhaseHessianFloor, kFDHessian, kMoleFracHessian]
+        problem.f = [this, L, R, dcFloor, &fixedGrad, kLogBarrierTau, kPhaseHessianFloor, kFDHessian, kMoleFracHessian, fdSuppress, hasAq, phLast, phDec, phMax]
                     ( Optima::ObjectiveResultRef res, Optima::VectorView x,
                       Optima::VectorView /*p*/, Optima::VectorView /*c*/,
                       Optima::ObjectiveOptions opts )
@@ -1174,10 +1924,22 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 for( long int k = 0; k < pm.FIs; k++ )
                 {
                     const long int j1 = j0 + pm.L1[k];
-                    const bool isAqueousLike = ( pm.LO >= j0 && pm.LO < j1 );
+                    const bool isAqueousLike =
+                        ( hasAq && pm.LO >= j0 && pm.LO < j1 );
                     double Xf = 0.;
                     for( long int j = j0; j < j1; j++ )
                         Xf += std::max( pm.X[j], dcFloor );
+                    // Consecutive-decrease counter per phase (pa_MbTrendPhaseDecay)
+                    {
+                        double& prev = (*phLast)[k];
+                        if( Xf > (*phMax)[k] ) (*phMax)[k] = Xf;
+                        if( prev >= 0. )
+                        {
+                            if( Xf < prev * 0.999999 ) (*phDec)[k]++;
+                            else if( Xf > prev * 1.000001 ) (*phDec)[k] = 0;
+                        }
+                        prev = Xf;
+                    }
                     if( isAqueousLike )
                     {
                         const long int w = pm.LO;
@@ -1271,7 +2033,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     // pa_OptimaFDHessian = 0 skips this loop entirely - see that
                     // field's declaration comment (ms_multi.h) for what it costs
                     // and the measurement suggesting it may be redundant.
-                    const bool skipFD = !kFDHessian;
+                    // pa_OptimaFDHessianDelay suppresses this loop for the
+                    // duration of the short cheap-Hessian attempt made just
+                    // before the primary solve - see fdSuppress's declaration.
+                    const bool skipFD = !kFDHessian || *fdSuppress;
                     std::vector<double> Fbase( L );
                     for( long int j = 0; j < L; j++ ) Fbase[j] = pm.F[j];
                     for( Optima::Index bk = 0; !skipFD && bk < opts.ibasicvars.size(); bk++ )
@@ -1429,7 +2194,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // WARM PATH ONLY (pm.pNP != 0). On a cold AOP call pm.U[] is whatever
         // some earlier, unrelated calculation left behind - seeding from it
         // would be worse than zero, which is a defensible neutral start.
-        if( pm.pNP != 0 )
+        // `warmStateUsable` (above) is false when SOP was requested on a node
+        // that has never solved - the primal was then replaced by the cold LP
+        // seed, so seeding a dual here would pair a fresh primal with a stale
+        // (all-zero, hence meaningless) dual. Both halves of the start must
+        // come from the same place; see that block's own comment.
+        // dimReduceDone: the reduced pre-solve just wrote BOTH pm.Y[] and
+        // pm.U[], so this is a warm start in every sense even on a cold call -
+        // and seeding the primal without the dual is exactly the 493-iteration
+        // failure the paragraph above documents.
+        if( ( pm.pNP != 0 && warmStateUsable ) || dimReduceDone )
         {
             bool duals_usable = true;
             for( long int i = 0; i < N; i++ )
@@ -1485,6 +2259,15 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // into a converged result, never make a converging system diverge,
             // so it needs no opt-in flag.
             options.maxiters = (unsigned)std::max( 2000L, (long int)pa_p->IIM );
+            // pa_OptimaEarlyStabilityAt: cap the FIRST attempt only, so the
+            // phase-selection repair loop below gets its turn before the primary
+            // solve has converged on an assemblage it will then have to correct.
+            // Restored to the full budget immediately after that first solve, so
+            // every retry keeps the budget it had. See the field's comment in
+            // ms_multi.h for the measurement that motivates it.
+            if( pa_p->OptimaEarlyStabilityAt > 0 )
+                options.maxiters = (unsigned)std::min( (long int)options.maxiters,
+                                                       pa_p->OptimaEarlyStabilityAt );
             options.convergence.tolerance = pa_p->OptimaTol;
             // Trust region on per-variable Newton-step growth - a field this
             // branch added to its local Optima checkout. Default 0.0 = off;
@@ -1747,9 +2530,123 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                probeResult.iterations, nPinnedPh, pm.FI, nPinnedSp, L );
         }
 
+        // ---- Tiered Hessian: a short attempt with the cheap Hessian first ----
+        // pa_OptimaFDHessianDelay = N runs up to N iterations with the FD
+        // PartiallyExact loop suppressed. If that converges, its state is adopted
+        // and the primary solve below re-runs from it STILL CHEAP, confirming an
+        // already-converged point in a handful of iterations (see the *fdSuppress
+        // assignment at the end of this block for why it is not re-confirmed with
+        // the exact Hessian). If it does NOT converge the state is left untouched
+        // and the primary solve starts from the original seed with FD on - the N
+        // iterations are spent and that trajectory is discarded, which is required
+        // rather than tidy: see fdSuppress's declaration.
+        //
+        // Worth it because the FD loop costs a full activity evaluation per basic
+        // variable per iteration and most of the corpus does not need it: measured
+        // at N = 1500, 11x total wall time on the 17-project subset and 2.4x on the
+        // 301-point solvus sweep, every G identical and the limb accuracy unchanged.
+        // N must exceed the slowest cheap-Hessian convergence in the corpus
+        // (f_/j_GEOTHERM, ~1100) or those projects restart and lose the win.
+        long int fdCheapIterations = 0;
+        bool cheapAttemptWon = false;
+        // STRUCTURAL SKIP: some phase models are known to need the exact columns,
+        // and for those the attempt is not merely wasted - see the f_CASHNK
+        // measurement below. Decide it from the phase models rather than from the
+        // iteration count, once, before spending anything.
+        //
+        // Two families, both established by section 21's independent FD-on/FD-off
+        // A/B over all three corpora and reproduced exactly by this field's own
+        // 25-project sweep:
+        //   * multisite / reciprocal solid solutions (Berman, CEF, Modified
+        //     Bragg-Williams). pa_PhaseHessianFloor's exact block only covers
+        //     end-members above a presence threshold, but in a multisite model an
+        //     end-member at low amount still carries real curvature through its
+        //     SITE fractions - so that filter discards exactly the columns that
+        //     matter and the FD loop is the only place the curvature exists.
+        //   * fluid EoS phases (PR78, PRSV, CG, SRK, CORK, ...).
+        // Note it is NOT "non-ideal": Van Laar is non-ideal and is one of the
+        // biggest winners here (f_/j_Solvus 145/108 -> 68 iterations).
+        //
+        // Across gems3k + gems3k-fail + gems3k-psina exactly six projects match
+        // (f_/j_CASHNK, j_TiQ_PRSV, CASH+CsSr, CASH+_G_csh_sol, CSHSnplus) and
+        // they are precisely the FD-sensitive set section 21 identified - no
+        // over-trigger, and no project outside it regressed under the delay.
+        bool fdRequiredByModel = false;
+        for( long int k = 0; k < pm.FIs && !fdRequiredByModel; k++ )
+        {
+            const char mc = pm.sMod[k][SPHAS_TYP];
+            if( mc == SM_BERMAN || mc == SM_CEF || mc == SM_MBW ||
+                mc == SM_CGFLUID || mc == SM_PRFLUID || mc == SM_PCFLUID ||
+                mc == SM_STFLUID || mc == SM_PR78FL || mc == SM_CORKFL ||
+                mc == SM_REFLUID || mc == SM_SRFLUID )
+                fdRequiredByModel = true;
+        }
+        if( kFDDelay > 0 && kFDHessian && fdRequiredByModel )
+            ipm_logger->warn( "CalculateEquilibriumStateOptima: pa_OptimaFDHessianDelay ignored - "
+                              "this system has a multisite or fluid-EoS phase, which needs the "
+                              "finite-difference Hessian columns from the first iteration" );
+        if( kFDDelay > 0 && kFDHessian && !fdRequiredByModel )
+        {
+            Optima::Options cheapOpts = options;
+            cheapOpts.maxiters = kFDDelay;
+            Optima::Solver cheapSolver;
+            cheapSolver.setOptions( cheapOpts );
+            Optima::State cheapState = state;
+            *fdSuppress = true;
+            stallWatch->reset();
+            Optima::Result cheapResult = cheapSolver.solve( problem, cheapState );
+            *fdSuppress = false;
+            fdCheapIterations = cheapResult.iterations;
+            cheapAttemptWon = ( cheapResult.succeeded && !stallWatch->stalled && !stallWatch->timedOut );
+            if( cheapAttemptWon )
+                state = cheapState;
+            else
+                ipm_logger->warn( "CalculateEquilibriumStateOptima: cheap-Hessian attempt did not "
+                                  "converge in {} iterations - discarding it and restarting with the "
+                                  "finite-difference Hessian (pa_OptimaFDHessianDelay = {})",
+                                  cheapResult.iterations, kFDDelay );
+            // If the cheap attempt WON, the primary solve below re-runs from its
+            // state with the FD loop STILL suppressed - it only has to confirm a
+            // point that is already converged, in a handful of iterations.
+            // Deliberately not "confirm it with the exact Hessian": that was tried
+            // and it FAILS. On the 301-point solvus sweep, 142 of 301 points came
+            // back BAD_GEM_AOP with a KKT stationarity residual of ~0.5 at H+, at
+            // phase amounts identical to the passing run's to six figures - the FD
+            // columns evaluated AT a converged point are near-singular, and the few
+            // steps Optima then takes leave a state its own masked error test still
+            // accepts while our unmasked KKT check correctly rejects it. Matches
+            // Reaktoro's published rule exactly: the exact Hessian is for when the
+            // quasi-Newton method FAILS, not for double-checking when it succeeds.
+            *fdSuppress = cheapAttemptWon;
+        }
+
         std::vector<char> extinctFixed( (size_t)std::max(L,1L), 0 );
         stallWatch->reset();
-        Optima::Result result = solver.solve( problem, state );
+        Optima::Sensitivity sensitivity( dims );
+        Optima::Result result = wantSens ? solver.solve( problem, state, sensitivity )
+                                         : solver.solve( problem, state );
+        if( pa_p->OptimaEarlyStabilityAt > 0 )
+        {
+            // First attempt is over - give everything downstream the real budget.
+            options.maxiters = (unsigned)std::max( 2000L, (long int)pa_p->IIM );
+            solver.setOptions( options );
+        }
+        if( wantSens )
+        {
+            // Captured from the PRIMARY solve only. A retry re-solves a
+            // different problem (reseeded, or with phases pinned), so its
+            // derivatives would not describe the state finally returned unless
+            // the retry itself succeeded - out of scope for this plumbing step.
+            optima_dndb_rows = L + R;
+            optima_dndb_cols = N;
+            optima_dndb.assign( (size_t)(( L + R ) * N), 0. );
+            for( long int j = 0; j < L + R; j++ )
+                for( long int i = 0; i < N; i++ )
+                    optima_dndb[ (size_t)( j * N + i ) ] = sensitivity.xc( j, i );
+        }
+        // Every retry below runs with the exact columns, whatever the first
+        // attempt used: reaching a retry is itself the escalation trigger.
+        *fdSuppress = false;
         applyStall( result );
         // Optima's own iteration count is otherwise invisible to any
         // caller (native's GEM_CalcTime()/GEM_Iterations() convention is
@@ -1758,7 +2655,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // retry), into pm.ITG below, since Optima's whole Newton loop is
         // architecturally one phase, unlike native's separate FIA(MBR)/IPM
         // split (pm.ITF is left at 0 for this reason, not left unset).
-        long int optimaIterTotal = result.iterations + probeIterations;
+        long int optimaIterTotal = result.iterations + probeIterations + fdCheapIterations + dimReduceIters;
 
         if( reaktoroMode )
         {
@@ -2189,6 +3086,25 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         j0 = j1;
                     }
                 }
+                // Leal 2014 §2.3.3's two-clause unstable-phase test: below threshold
+                // AND decreasing. Opt-in via pa_MbTrendPhaseDecay (default 0 = off);
+                // see that field's comment in ms_multi.h for the measurement and for
+                // why it is not on by default. Applies IN ADDITION to the twin
+                // criterion below - it does not replace it, even though it was
+                // measured to subsume it on j_CASHNK, because one case is not enough
+                // to retire an exact criterion in favour of a tuned one.
+                const long int trendDecayN = pa_p->MbTrendPhaseDecay;
+                auto decaying = [&]( long int k ) -> bool
+                {
+                    if( trendDecayN <= 0 ) return false;
+                    if( k < 0 || k >= (long int)phDec->size() ) return false;
+                    const double tot = (k < (long int)phTot.size()) ? phTot[k] : 0.;
+                    const double pk  = (*phMax)[k];
+                    // Leal's two clauses: small, AND monotonically falling for a
+                    // sustained run. The 100x drop from its own peak is what
+                    // separates "heading for extinction" from "settled small".
+                    return (*phDec)[k] >= trendDecayN && pk > 0. && tot < pk * 1.0e-2;
+                };
                 auto interchangeable = [&]( long int ka, long int kb ) -> bool
                 {
                     if( pm.L1[ka] != pm.L1[kb] ) return false;
@@ -2210,6 +3126,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     for( long int j = ph0[(size_t)ka]; j < ph1[(size_t)ka]; j++ )
                         if( problem.xupper[j] > problem.xlower[j] ) { alreadyFixed = false; break; }
                     if( alreadyFixed ) continue;
+                    if( decaying( ka ) )
+                    {
+                        for( long int j = ph0[(size_t)ka]; j < ph1[(size_t)ka]; j++ )
+                            deactivated.push_back( j );
+                        ipm_logger->warn( "CalculateEquilibriumStateOptima: phase {} "
+                                          "deactivated by trend (consecutive decreases={}, "
+                                          "total={:.3e}, peak={:.3e})",
+                                          ka, (*phDec)[ka], phTot[(size_t)ka], (*phMax)[ka] );
+                        continue;
+                    }
                     for( long int kb = 0; kb < pm.FIs; kb++ )
                     {
                         if( kb == ka || kb == aqueousPhaseIdx || pm.L1[kb] <= 1 ) continue;

@@ -602,7 +602,19 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         pmm->T = pmm->Tc = TK;
         pmm->TC = pmm->TCc = TK-C_to_K;
         // new API
-        double funT = TK, funP=P*bar_to_Pa;   // T in K, P in Pa
+        double funT = TK;
+        // ThermoFun's property-cache key is std::tuple<double,double,double&,std::string>
+        // (ThermoEngine.cpp's *Function typedefs take `double& P`, and OptimizationUtils.h's
+        // memoize/memoizeN key a std::map on std::tuple<Args...>), so EVERY cached key holds
+        // a reference to the P lvalue we pass here. A plain local would leave those keys
+        // dangling the moment this function returns; the map's ordering then depends on dead
+        // stack memory and a later lookup can return a DIFFERENT substance's properties.
+        // Static storage keeps the referent alive and at one address for the process, so all
+        // keys compare equal on that element and the ordering falls back to (T, P_by_value,
+        // symbol) - which is correct, since P is also passed by value as the second argument.
+        // See GEMS3K/CLAUDE.md, 2026-08-28, for the diagnosis and the upstream report.
+        static thread_local double funP;
+        funP = P*bar_to_Pa;   // T in K, P in Pa
 
         DATACH  *dCH = pCSD();
 
