@@ -204,9 +204,30 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     // OptimaTol/LogBarrierTau/OptimaMaxStepRatio unreadable until 2026-08-26.
     double PhaseHessianFloor = 0.01;
 
-    /// Stall/freeze limit for the Optima solver (AOP/SOP/ROP): abandon a
-    /// solve after this many consecutive Newton iterations in which the
-    /// best-so-far optimality error has not improved AT ALL. 0 disables it.
+    /// Stall/freeze limit for the Optima solver (AOP/SOP/ROP): abandon a solve
+    /// when, over a WINDOW of this many Newton iterations, the best-so-far
+    /// optimality error has not fallen by a meaningful relative amount
+    /// (1e-8, pa_OptimaTol's own default). 0 disables it.
+    ///
+    /// The test is CUMULATIVE over a window, not per-step. It was per-step
+    /// ("this many CONSECUTIVE iterations with no improvement at all") until
+    /// 2026-09-03, and that had a measured false positive which is the whole
+    /// reason the compiled default below is 0 - see the paragraph on 588 C.
+    /// With the cumulative test that specific false positive is gone: the same
+    /// point now converges at 1075 with the window armed at 500, where the
+    /// per-step rule killed it at 705. Plan v5 section 54 has the measurement.
+    ///
+    /// NOTE this is NOT the same rule as the pre-solve stall watch in
+    /// OptimaReducedPreSolve(), which shares this one field but adds a second
+    /// clause ("has the live error even MOVED within the window"). The two
+    /// watches genuinely need different rules and the projects that decide it
+    /// pull in opposite directions: f_TestSUP98's reduced pre-solve converges
+    /// through a 661-iteration excursion with best-so-far exactly frozen and
+    /// the live error swinging, so only the range clause saves it; f_/j_CASHNK's
+    /// full solve has best-so-far exactly frozen for 19 consecutive windows
+    /// while the live error runs a perfect limit cycle, so a range clause there
+    /// would read the oscillation as movement and cost them their rescue. Both
+    /// measured. Do not "unify" the two tests without re-measuring both.
     ///
     /// TRIAGE, NOT A FIX. It converts a hang into a fast, honest failure and
     /// lets the existing retry tiers start sooner; the underlying step-length
@@ -223,11 +244,32 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// progresses) as well as on complex_1 (which does not), and complex_1's
     /// iterate actually moves MORE per window than f_CASHNK's.
     ///
-    /// DEFAULT OFF, per user direction 2026-08-27: "for cases known to have
-    /// converged don't add limit of iterations or time". A guard belongs only on
-    /// a system already known to be pathological; a project that converges today
-    /// must not acquire a new way to fail. Enable it per project, in that
-    /// project's own -ipm.json, alongside pa_OptimaMaxSeconds below.
+    /// DEFAULT 500 since 2026-09-03. It was OFF from 2026-08-27, per user
+    /// direction ("for cases known to have converged don't add limit of
+    /// iterations or time"), on the reasoning that a project which converges
+    /// today must not acquire a new way to fail. That direction was then
+    /// refined: add the limit if it converges AND takes fewer iterations AND is
+    /// faster, provided that holds for all cases OR a smart fallback is
+    /// possible. Both halves are now answered:
+    ///
+    ///   - Where the watch fires it IS a strict improvement, by 10x:
+    ///     f_/j_CASHNK converge in 1001 iterations / ~0.5 s with it and 10001 /
+    ///     ~5 s without, same G/pH/Vs to every digit.
+    ///   - It does NOT hold for all cases - it is a measured no-op on every
+    ///     other project in all three corpora (Resources/gems3k 0 of 81 rows
+    ///     changed, gems3k-fail 0 of 48, gems3k-psina never fires, the 301-point
+    ///     solvus sweep identical). The watch simply never fires on a project
+    ///     that is not deadlocked.
+    ///   - So the fallback is what decides it, and it exists:
+    ///     CalculateEquilibriumStateOptima()'s last retry tier re-solves once
+    ///     with this window disarmed when the watch fired AND every other tier
+    ///     failed. The worst arming can now do is spend one extra solve on a run
+    ///     that was already failing. See plan v5 section 56.
+    ///
+    /// Set it to 0 to disable, or to a smaller value per project - but note
+    /// three independent measurements say do not go below 500 (plan v5 41.2c,
+    /// 49.5, 54.5), and that a window short enough to false-positive is now
+    /// recoverable rather than fatal, not harmless.
     ///
     /// That principle was reached the hard way. A default of 500 looked safe:
     /// the longest no-improvement run among converging projects appeared to be
@@ -235,10 +277,20 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// solvus temperature sweep - which the 5-degree-sampled `solvus.aop` CTest
     /// does NOT cover - has a point at 588 C that stagnates for 500-705
     /// iterations and then RECOVERS, converging at 1075. At 500 it regressed
-    /// from converged to failed. The lesson is that the window would have to
-    /// clear the worst *recovering* stagnation anywhere in the corpus, which is
-    /// not a quantity anyone can bound in advance - so do not try to; switch it
-    /// on only where it has been shown to help.
+    /// from converged to failed.
+    ///
+    /// UPDATE 2026-09-03: that specific false positive is REMOVED by the
+    /// cumulative test described above, and measured to be so - at 588 C the
+    /// per-step rule fails at 705 while the cumulative one converges at 1075,
+    /// and the whole 301-point sweep is byte-identical with the field armed at
+    /// 500 or left at 0. The lesson that motivated the reversal - that a
+    /// per-step rule needs the window to clear the worst RECOVERING stagnation
+    /// anywhere in the corpus, which nobody can bound in advance - is what the
+    /// cumulative test dissolves: it asks whether the window made PROGRESS,
+    /// which is scale-free, rather than how long a plateau lasted. The default
+    /// nevertheless stays 0, because flipping it changes behaviour on every
+    /// project and that is a decision for the project owner, not a measurement.
+    /// See plan v5 section 54 for the gates run at the flipped default.
     ///
     /// Currently enabled (500) in: f_/j_CASHNK, where the no-improvement run is
     /// 9781 and the limit hands control to the phase-extinction retry early
@@ -246,7 +298,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// f_/j_TestPNTDB, where it is what makes them converge at all - the primary
     /// solve is frozen from iteration 0, and cutting it off reaches a retry that
     /// was previously unreachable.
-    long int OptimaStallWindow = 0;
+    long int OptimaStallWindow = 500;
 
     /// Wall-clock budget in SECONDS for one Optima (AOP/SOP/ROP) solve,
     /// including its retries. 0 (the default) disables it.
@@ -259,12 +311,21 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// system already known to be pathological, as a guard rather than a
     /// tolerance.
     ///
-    /// Set for f_/j_TestSUP98 at ~2x their native solve time, per user
-    /// direction 2026-08-27: those two are the only projects in the corpus
-    /// where AOP neither converges nor stalls - it progresses slowly and
+    /// Was set for f_/j_TestSUP98 at ~2x their native solve time, per user
+    /// direction 2026-08-27: those two were the only projects in the corpus
+    /// where AOP neither converged nor stalled - it progressed slowly and
     /// indefinitely (>30 min against native's ~0.1 s), so the iteration-based
-    /// stall detector cannot catch them. Remove the setting once the underlying
-    /// cause is fixed; it is a stop-gap, not a finding.
+    /// stall detector could not catch them. That setting carried its own
+    /// instruction to remove it once the underlying cause was fixed, because it
+    /// was a stop-gap rather than a finding.
+    ///
+    /// REMOVED FROM BOTH FIXTURES 2026-09-02, and the instruction is discharged:
+    /// pa_OptimaDimReduce's size gate (section 35) solves both projects on the
+    /// compiled default, 2103 it / 80 s and 1695 it / 68 s, so there is no
+    /// longer an indefinite run for the budget to guard against. NO PROJECT IN
+    /// ANY CORPUS SETS THIS FIELD NOW. It stays as a general per-project guard
+    /// for a future pathological system - do NOT enable it globally, for the
+    /// determinism reason above.
     ///
     /// Granularity is one Newton iteration - the check runs in the same
     /// per-iteration convergence hook as the stall detector, so a single
@@ -448,7 +509,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// ~642 iterations and runs to its 10000-iteration maxiters cap instead.
     ///
     /// KNOWN INTERACTION, check it before raising this much further: the stall
-    /// detector (pa_OptimaStallWindow, default 500) can fire during the cheap
+    /// detector (pa_OptimaStallWindow; default 0 = off, see that field) can fire during the cheap
     /// attempt, which is treated as a non-convergence and so restarts with FD
     /// - the safe direction, but it makes a very large N wasteful.
     long int OptimaFDHessianDelay = 0;
@@ -570,18 +631,78 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// PRESENCE threshold - measured harmful here (7059/14168/21377 iterations
     /// at probe 50/100/200), because this phase is present-but-dissolving.
     ///
-    /// MEASURED AND NOT USABLE AS IMPLEMENTED - default 0, do not enable.
-    /// The cap applies to the first attempt of EVERY call, including calls whose
-    /// assemblage is already correct and which simply need their budget: the same
-    /// project's own cold solve needs 823 iterations, so at a cap of 500 it fails
-    /// outright (status=13) and the repair loop does not rescue it - there is no
-    /// stability violation to repair, only a budget shortfall. Kept default-off as
-    /// re-runnable infrastructure, on the same footing as OptimaMaxStepRatio.
+    /// NOW USABLE - the probe-then-full-budget safety net this comment used to
+    /// prescribe was implemented 2026-09-03 (plan v5 section 58) and measured.
+    /// Before it this field was unusable, and for the reason recorded here: the cap
+    /// applies to the first attempt of EVERY call, including calls whose assemblage
+    /// is already correct and which simply need their budget, so the same project's
+    /// own cold solve (823 iterations) FAILED outright at a cap of 500 - status=13,
+    /// and a G wrong in the 7th digit - because the repair loop had no stability
+    /// violation to repair, only a budget shortfall. Re-confirmed on the current
+    /// tree, by disabling the net, before it was adopted.
     ///
-    /// What a working version needs: treat the capped attempt as a PROBE - if the
-    /// repair loop finds a violation, act on it and continue; if it finds none,
-    /// re-solve with the full budget and charge only the wasted probe. That is the
-    /// pa_OptimaFDHessianDelay pattern and it is the next thing to try here.
+    /// The net treats the capped attempt as a PROBE: if the cap is what stopped it
+    /// and nothing downstream recovered, re-solve ONCE from the original state at
+    /// the full budget. So the only cost of a probe that finds nothing is the probe
+    /// itself, and the worst case of setting this field is one wasted solve on a run
+    /// that was otherwise fine - never a lost answer. Same one-way-bet argument, and
+    /// the same shape, as pa_OptimaStallWindow's own net.
+    ///
+    /// MEASURED on Resources/gems3k/f_Solvus_G_Test1_0_0_1000_400_0 (2026-09-03):
+    ///
+    ///                       cap=0      cap=200      cap=500
+    ///   decay case (warm)   7005 it    209 it       509 it     <- 33.5x at 200
+    ///   plain cold solve     823 it   1024 it      1324 it     <- = cap + 824
+    ///
+    /// G, pH and Vs are identical to every digit in all six runs, and the decay
+    /// case's Plagioclase lands on 5.355388e-16 in all three. The win is the repair
+    /// loop firing at iteration 200 ("deactivating phase 1 - present but unstable,
+    /// logSI gap 0.833") instead of after the primary solve has already spent ~6180
+    /// iterations converging on an assemblage it then has to correct.
+    ///
+    /// NEGATIVE VALUES select a TREND trigger instead of a fixed cap: -N ends the
+    /// first attempt as soon as some NON-SOLVENT multicomponent phase has fallen
+    /// monotonically for N consecutive objective evaluations. Built 2026-09-03
+    /// (plan v5 section 59) to make the probe FREE - it is spent only on a run that
+    /// shows the signature, where an ordinary cold solve pays the positive form's
+    /// cap on every call. It reuses pa_MbTrendPhaseDecay's own counters, and it is
+    /// that criterion's first consumer a CONVERGING run can reach (its other one
+    /// sits inside `if( !result.succeeded )`).
+    ///
+    /// It IS free, and where it acts it beats the cap:
+    ///   f_Solvus_G_Test1 decay case  7005 -> 95 it  (73.7x; the cap gives 209)
+    ///   f_Solvus_G_Test1 cold solve   823 -> 823 it (UNCHANGED; the cap gives 1024)
+    ///   j_CASHNK                     1001 -> 56 it  (17.9x, G/pH/Vs identical)
+    /// and 40 of the 43 projects in Resources/gems3k + gems3k-fail are untouched.
+    ///
+    /// *** BUT IT CAN RETURN A WRONG ANSWER, AND THE SAFETY NET DOES NOT CATCH IT.
+    /// Measured on gems3k-fail/CSHSnplus_G_CSH1_5_bufs: OK 1298 it -> BAD 197 it
+    /// with G worse by 0.8 RT and pH off by 0.15. The net only fires when the early
+    /// look found NOTHING to repair; here it found something and acted on it, using
+    /// a dual that was not yet accurate enough for the stability index to be right.
+    /// So the "worst case is one wasted probe" argument covers the CAP form and NOT
+    /// this one - looking early means acting on an inaccurate dual, and the repair
+    /// loop's criterion is exact only to the extent that dual is.
+    /// (Also measured: CASH+CsSr 106 -> 168 it at an identical answer - a true decay
+    /// signature on a phase the repair loop then correctly declined to act on, so a
+    /// magnitude clause would not have prevented it either.)
+    ///
+    /// A DEFAULT OF -50 WAS TRIED AND REJECTED on exactly that: `ctest` goes 8/8 ->
+    /// 7/8, `fail_CSHSnplus` reporting "absent but stable - should be present".
+    /// Note a 43-project corpus sweep did NOT catch it and the CTest suite did -
+    /// the sweep silently skipped the two projects whose -dat.lst basename differs
+    /// from their directory name.
+    ///
+    /// STILL DEFAULT 0, therefore, for BOTH forms. The cap form is safe but costs
+    /// ~1.24x on an ordinary cold solve; the trend form is free but can be wrong.
+    /// Against the refined decision rule (add it if it converges AND takes fewer
+    /// iterations AND is faster, for all cases or with a smart fallback) neither
+    /// form passes: one fails the strict-improvement clause, the other fails the
+    /// fallback clause.
+    ///
+    /// What a defaultable version needs is a way to tell a trustworthy stability
+    /// verdict from a premature one - e.g. require the dual to have settled before
+    /// the early look is allowed to ACT, rather than gating only when it is taken.
     long int OptimaEarlyStabilityAt = 0;
 
     /// Species-level dimension reduction for the Optima path (AOP/SOP only).
@@ -638,11 +759,29 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     ///
     /// NOT applied when control conditions are active (R > 0) or in ROP
     /// (reaktoroMode), which is a faithful port of Reaktoro's own mechanism.
+    ///
+    /// THREE-VALUED, and 0 is AUTO rather than off (changed 2026-09-02, see
+    /// section 35 of Docs/gems3k-optima-plan-v5.md):
+    ///   > 0  ON, and the value is the readmission-pass limit;
+    ///   = 0  AUTO - on with kDimReduceAutoPasses passes when the system has at
+    ///        least kDimReduceAutoMinDC species, off below that
+    ///        (both in ipm_optima.cpp, at the call site);
+    ///   < 0  explicitly OFF whatever the size.
+    /// The size gate is there because the corpus sweep in section 33.1 measured
+    /// the payoff as tracking the fraction of species the reduction can OMIT,
+    /// which is strongly size-dependent: 85-96 % of species stay active below
+    /// ~35 species (nothing to omit, so the pre-solve is pure overhead) against
+    /// 49-56 % from 122 species up. Every measured loss is below the gate and
+    /// every large win above it - see the plan section for the table, and for
+    /// the honest caveat that nothing in the corpus sits between 154 and 265
+    /// species, so the gate's exact value is interpolated rather than measured.
     long int OptimaDimReduce = 0;
 
     /// Threshold (in RT units) for OptimaDimReduce's INITIAL active set, and
-    /// the whole reason that feature works on a large system at all. Used only
-    /// when OptimaDimReduce > 0.
+    /// the whole reason that feature works on a large system at all. Read
+    /// whenever the reduction actually runs, which since the size gate means
+    /// OptimaDimReduce > 0 OR OptimaDimReduce == 0 (AUTO) on a system at/above
+    /// kDimReduceAutoMinDC species - NOT only when the field is positive.
     ///
     /// The initial set was originally the LP-FEASIBILITY seed's own support -
     /// safe (independent of any solve, feasible by construction) but a VERTEX,
@@ -678,10 +817,106 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// Hence the default 10. Too small and pass 0's dual is poor enough that the
     /// readmitted set is unsolvable (f_TestPNTDB at 5); too large and the single
     /// big pass costs more than the reduction saves (mid_1 at 50). The resulting
-    /// initial sets sat at 3.4-4.6 x N on all three, which suggests a
-    /// dimensionless "smallest-s until |set| ~ 4N" rule as an alternative worth
-    /// trying - not measured.
+    /// initial sets sat at 3.4-4.6 x N on all three, which suggested a
+    /// dimensionless rank rule as an alternative - now implemented and measured,
+    /// see the sign overload below.
+    ///
+    /// SIGN OVERLOAD (section 33.3): a POSITIVE value is the RT threshold
+    /// described above; a NEGATIVE value -m is the dimensionless RANK rule
+    /// "admit the cheapest-priced species until the active set reaches m x N".
+    /// Same LP, same prices, only the selection differs, so it inherits the
+    /// independence argument unchanged.
+    ///
+    /// MEASURED ON ALL ELEVEN 200+ SPECIES PROJECTS, 2026-09-02 (section 39) -
+    /// total iterations, identical G/pH/Vs in every converging arm:
+    ///
+    ///   project              sp     N   tol 10   -2      -2.5   -3     -4
+    ///   07PSIna_G_mid_1      265   19     269    119     184    168     -
+    ///   f_TestPNTDB          690   42     501    396     433    491     -
+    ///   j_TestPNTDB          690   42     495   FAIL     425    448     -
+    ///   f_TestSUP98          923   82    2103   1494    FAIL   1690     -
+    ///   j_TestSUP98          923   82    1695   1476      -      -      -
+    ///   complex_1 (25 C)    1392   59    1601   1216      -    2031     -
+    ///   complex_1 (80 C)    1392   59    FAIL   FAIL      -    FAIL     -
+    ///   edt_2               1566   61    FAIL    936    1224    788    982
+    ///   vcomplex  (25 C)    1566   61    3492    667      -      -      -
+    ///
+    /// TWO CONCLUSIONS, and the second is why the default did not move:
+    ///
+    /// 1. The rank rule is worth setting PER PROJECT. It is the only thing that
+    ///    solves 07PSIna_G_edt_2 at all (the default's pass 0 settles on 218
+    ///    species, readmits 249, and the resulting 467-species pass never
+    ///    finishes), and it cuts 07PSIna_G_vcomplex 5.2x. Both reach native's G
+    ///    to 8-9 significant figures.
+    ///
+    /// 2. Its response is NOT monotone, so no value is adoptable as a default:
+    ///    j_TestPNTDB FAILS at -2 and works at -2.5/-3, while f_TestSUP98 works
+    ///    at -2, FAILS at -2.5, and works at -3. f_TestSUP98's failure is
+    ///    LOGGED ("pass 1 did not converge on 529 of 923 species"), reproduces
+    ///    uncontended with a bit-identical pass 0, and shows that SET SIZE DOES
+    ///    NOT PREDICT SOLVABILITY on that project: 164 works, 205 fails, 246
+    ///    works. It is which species, not how many. This corrects section
+    ///    33.3's "single sharp optimum at 2 N ... monotone-with-a-cliff, almost
+    ///    unique among this branch's knobs" - true on the two projects it was
+    ///    measured on, false on eight.
+    ///
+    /// Note j_TestPNTDB's -2 failure is a COST regression only (9798 iterations
+    /// / ~400 s against 495 / 3.3 s) - the pre-solve is discarded and the full
+    /// solve reaches the same G - and that its f_ twin is FASTEST at the same
+    /// setting. The two exports differ only in thermodynamic data, and here
+    /// that difference decides whether an 84-species reduced problem is
+    /// solvable at all; never pool an f_/j_ pair.
+    ///
+    /// The way to make the rank rule safe is NOT a better m: it is to retry the
+    /// pre-solve once with a different initial set when it is discarded (the
+    /// two rules fail on DISJOINT projects, so "rank first, shipped threshold
+    /// as fallback" would have solved all eleven). Not built - it is a change
+    /// to the retry chain, which this branch has repeatedly found reshuffles
+    /// outcomes chaotically, and it needs the full corpus gate.
     double OptimaDimReduceTol = 10.;
+
+    /// Appendix A of Leal et al. (2017), Eqs. 130-136 - a pivot/non-pivot
+    /// SPLIT of native MBR's Schur-complement reduction. 0 = off (the naive
+    /// reduction, unchanged), non-zero = on. NATIVE path only; nothing in the
+    /// Optima path reads it.
+    ///
+    /// MakeAndSolveSystemOfLinearEquations()'s initAppr branch assembles
+    ///     A[i,k] = sum_j a(j,i) a(j,k) W[j]
+    /// which is the paper's own Eq. 82/83 reduction A D^-1 A^T with
+    /// D_jj = 1/W[j] - the same equation, not an analogy. The paper warns that
+    /// this reduction "often fails because of round-off errors ... since no
+    /// pivoting was performed to avoid division by small numbers in the
+    /// evaluation of D^-1".
+    ///
+    /// Eq. 133 splits the species by comparing each |D_jj| against the
+    /// infinity-norm of the matching column of C (here C_(i,j) = a(j,i)):
+    ///     non-pivot  <=>  1/W[j] < max_i |a(j,i)|  <=>  W[j]*max_i|a(j,i)| > 1
+    /// Under MBR's QUADRATIC weight W[j] = (Y[j]-DLL[j])^2 the non-pivot set is
+    /// therefore the ABUNDANT species - water and the major solutes - so this
+    /// keeps water in the joint solve rather than eliminating it through a
+    /// division, which is at least adjacent to the water H:O = 2:1 near-
+    /// dependence traced on 2026-08-21. Eqs. 135/136 eliminate only the pivot
+    /// block and solve the non-pivot unknowns jointly with the duals, giving a
+    /// system of dimension N + |I_n|; when I_n is empty it degenerates exactly
+    /// to today's assembly, and the implementation falls through to it.
+    ///
+    /// DISTINCT from the Jacobi preconditioner in the same function (ported
+    /// 2026-09-02): Jacobi RESCALES A D^-1 A^T after assembly, Appendix A
+    /// refuses to FORM part of it. Both are applied when this is on - comparing
+    /// an unpreconditioned Appendix A against a preconditioned baseline would
+    /// measure the loss of the preconditioner, not the gain of the split.
+    ///
+    /// HONEST BOUND: it stops amplification THROUGH D^-1; it cannot repair the
+    /// genuine near-singularity of A D^-1 A^T itself, which is what water's
+    /// fixed H:O = 2:1 stoichiometry produces. Plausible partial help, not a
+    /// claimed cure - and the gate for it is "no regression", since native
+    /// already solves essentially the whole corpus.
+    ///
+    /// The augmented system is symmetric but INDEFINITE (a saddle point: the
+    /// non-pivot diagonal block is -1/W[j]), so it is solved by LU directly
+    /// rather than attempting Cholesky first as the naive path does.
+
+    long int MbPivotSplit = 0;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -1462,6 +1697,16 @@ public:
     ///
     /// \param presenceThreshold  phase total at/below which a phase counts
     ///        as absent - NOT bare pm.DSM, see the call site.
+    /// \param dcFloor  the species lower-bound floor the Optima path built its
+    ///        boxes from. A phase every one of whose species sits AT its own
+    ///        lower bound was pinned out by the solver and is absent however
+    ///        large its total happens to be; without this test the magnitude
+    ///        rule scales with the phase's species COUNT while the threshold
+    ///        does not, so a wide phase held entirely at the floor is reported
+    ///        present. Measured on 07PSIna_G_complex_1: pa_DS = 1e-20 collapses
+    ///        presenceThreshold onto dcFloor*10 = 1e-12, and gas_gen's ten
+    ///        species at exactly dcFloor = 1e-13 sum to exactly 1e-12 - the
+    ///        single reason that project reports BAD rather than OK.
     /// \param exemptSpecies  optional, size >= pm.L when non-null: species
     ///        the caller has deliberately fixed and whose phase must be
     ///        skipped entirely (the interchangeable-twin case).
@@ -1471,7 +1716,7 @@ public:
     ///        stable", false if "present but unstable".
     /// \return index of the worst violating phase, or -1 if the assemblage
     ///         is self-consistent.
-    long int WorstPhaseStabilityViolation( double presenceThreshold,
+    long int WorstPhaseStabilityViolation( double presenceThreshold, double dcFloor,
                                            const char* exemptSpecies,
                                            double& violOut, bool& wasAbsentOut );
 
@@ -1483,12 +1728,17 @@ public:
     /// full-dimension solve to warm-start from and verify.
     /// \param maxPasses  readmission passes allowed (pa_OptimaDimReduce).
     /// \param dcFloor    the same species floor the full path uses.
+    /// \param dimTol     the initial-set rule, with pa_OptimaDimReduceTol's own
+    ///        sign convention (> 0 an absolute RT threshold, < 0 the rank rule
+    ///        -|dimTol| x N, 0 the seed's own support only). Passed rather than
+    ///        read from BASE_PARAM so the caller can retry a discarded
+    ///        pre-solve under the OTHER rule - see the call site.
     /// \param iterationsOut  Optima iterations spent here, for pm.ITG.
     /// \param activeOut  size of the final active set, for logging.
     /// \return true if pm.Y[]/pm.U[] now carry a state worth warm-starting
     ///         from; false if the pre-solve was skipped or discarded, in which
     ///         case neither array was modified in a way the caller must undo.
-    bool OptimaReducedPreSolve( long int maxPasses, double dcFloor,
+    bool OptimaReducedPreSolve( long int maxPasses, double dcFloor, double dimTol,
                                 long int& iterationsOut, long int& activeOut );
 #endif
 
@@ -1818,7 +2068,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaFDHessian, f_pa_OptimaMoleFracHessian, f_pa_OptimaPhaseCompaction,
     f_pa_OptimaFDHessianDelay, f_pa_OptimaDcFloor, f_pa_MbClassRule,
     f_pa_MbTrendPhaseDecay, f_pa_OptimaEarlyStabilityAt, f_pa_OptimaDimReduce,
-    f_pa_OptimaDimReduceTol
+    f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit
 
 } MULTI_DYNAMIC_FIELDS;
 

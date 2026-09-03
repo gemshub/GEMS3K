@@ -783,6 +783,60 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     // Track previous max residual to detect oscillation
     double prev_maxResidual = std::numeric_limits<double>::max();
     long int stalledIter = 0;
+
+    // Best-residual tracking. PORTED 2026-09-02 from branch ipm_contraints
+    // commit d3ae685 (implemented and validated there 2026-08-21), which had
+    // never been merged onto develop_optima - the same cross-branch gap as the
+    // MBR Jacobi preconditioner, found by the same survey. The Tier A titrant
+    // terms that version snapshots alongside Y do not exist on this branch, so
+    // the metric below is written directly on pm.C[] - which is exactly what
+    // that version's own helper reduces to when Tier A is inactive.
+    //
+    // WHY. Every early-exit path below - the LM-too-small break, the
+    // stall-detector break, and simply exhausting pa_p->DP iterations - returns
+    // whatever pm.Y happens to hold at that moment, which is the state AFTER
+    // the last update was applied. Nothing guarantees that is the best state
+    // MBR actually visited; in the oscillating case it is routinely worse than
+    // an earlier iteration already reached. bestY snapshots pm.Y at whichever
+    // iteration has the smallest ResidualMetric() seen so far, taken right
+    // where the residual is measured and BEFORE that iteration's own update.
+    //
+    // UNCONDITIONAL, not behind a new BASE_PARAM flag. It runs only on paths
+    // that are already non-ideal exits - the clean "balance residuals OK"
+    // branch returns before reaching the restore - and it can only substitute
+    // a state with a strictly SMALLER ResidualMetric() for the one about to be
+    // returned, on the same metric the convergence and stall checks already
+    // use. So it cannot make a converging run worse, and a toggle would only
+    // add a way to keep returning a known-worse state. Unlike stall detection
+    // itself - a heuristic that changes WHEN MBR gives up, and so needs its own
+    // A/B - this changes only WHICH already-computed state is reported once MBR
+    // has independently decided to give up.
+    std::vector<double> bestY( pm.L );
+    double bestResidual = std::numeric_limits<double>::max();
+    bool haveBest = false;
+
+    // Worst normalized mass-balance residual across all N ICs (>1 means at
+    // least one IC is outside its tolerance) - the same relative/absolute
+    // combined tolerance logic as the per-IC convergence checks below, but
+    // scanned over the FULL [0,N) range every time rather than from the
+    // first-failing index onward, so that states from different iterations -
+    // which can have different first-failing indices - stay comparable on one
+    // consistent scale.
+    auto ResidualMetric = [&]() -> double
+    {
+        double worst = 0.;
+        for( long int ii=0; ii<pm.N; ii++ )
+        {
+            double denom = pm.B[ii] * pm.DHBM;
+            if( pa_p->DT )
+                denom = std::max( denom, AbsMbCutoff_stall );
+            if( denom <= 0. )
+                denom = ( pm.DHBM > 0. ? pm.DHBM : 1e-16 );
+            worst = std::max( worst, fabs(pm.C[ii]) / denom );
+        }
+        return worst;
+    };
+
     for( IT1=0; IT1 < pa_p->DP; IT1++, pm.ITF++ )
     {
         // get size of task
@@ -889,6 +943,21 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
               if( fabs( pm.C[I]) > AbsMbCutoff && fabs(pm.C[I]) > pm.B[I] * pm.DHBM )
                   break;
        }
+       // Best-residual snapshot. Taken here because pm.C[] is this iteration's
+       // freshly measured residual for the PRE-update pm.Y (the LM-scaled
+       // update below has not been applied yet) and AbsMbCutoff_stall has just
+       // been set by the residual test above - see the declaration for why.
+       {
+           double curResidual = ResidualMetric();
+           if( curResidual < bestResidual )
+           {
+               bestResidual = curResidual;
+               for( j=0; j<pm.L; j++ )
+                   bestY[j] = pm.Y[j];
+               haveBest = true;
+           }
+       }
+
        if( I == Z ) // balance residuals OK
        { // very experimental - updating activity coefficients
            for( j=0; j< pm.L; j++ )
@@ -1036,6 +1105,28 @@ STEP_POINT("FIA Iteration");
 
 }  /* End loop on IT1 */
 //----------------------------------------------------------------------------
+
+    // Best-residual restore. Every path that reaches this point is a non-ideal
+    // exit - the LM-too-small break, the stall-detector break, or exhausting
+    // pa_p->DP iterations - and each returns whatever pm.Y was left at, with no
+    // guarantee it is the best state MBR actually visited. Recompute the
+    // residual of the state about to be returned and put back the in-loop
+    // snapshot if it is strictly better. See the bestY/ResidualMetric
+    // declarations above for why this is unconditional.
+    if( haveBest )
+    {
+        MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
+        double curResidualFinal = ResidualMetric();
+        if( bestResidual < curResidualFinal )
+        {
+            gems_logger->warn("MBR({}): restoring best-residual state (best={:.3e} vs current={:.3e})",
+                               WhereCalledFrom, bestResidual, curResidualFinal);
+            for( j=0; j<pm.L; j++ )
+                pm.Y[j] = bestY[j];
+            MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
+        }
+    }
+
     //  Prescribed mass balance precision cannot be reached
                     // Temporary workaround for pathological systems 06.05.2010 DK
    if( pa_p->DW && ( WhereCalledFrom == 0L || pm.pNP ) )  // Now controlled by DW flag
@@ -1652,7 +1743,156 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
 #endif
 
     long int ii, i, jj, kk, k, Na = pm.N;
+
+    // ------------------------------------------------------------------
+    // Appendix A of Leal et al. (2017), Eqs. 130-136: a pivot/non-pivot
+    // SPLIT of this reduction, gated on pa_MbPivotSplit (default 0 = off).
+    // See BASE_PARAM::MbPivotSplit (ms_multi.h) for the derivation, the
+    // classification rule and the honest bound on what it can achieve.
+    //
+    // Implemented as a self-contained early branch rather than by widening
+    // AA/BB, so that with the field off this function is byte-identical to
+    // what it was before - AA's stride is N everywhere below, and changing
+    // it would touch every indexing site in the naive path.
+    //
+    // Falls through to that naive path when the split is empty (Eq. 136
+    // then degenerates to Eq. 132 exactly, so there is nothing to gain and
+    // the existing diagnostics are worth keeping) or when the non-pivot set
+    // is larger than N (the augmented solve would then be more than twice
+    // the size of the thing it replaces, against the paper's own claim that
+    // |I_n| is "typically small and not greater than the number of
+    // elements" - a system that violates that is not the case Appendix A
+    // was written for).
+    // ------------------------------------------------------------------
+    if( initAppr && base_param()->MbPivotSplit )
+    {
+        // Eq. 133b, with D_jj = 1/W[j] and C_(i,j) = a(j,i):
+        //     non-pivot  <=>  1/W[j] < max_i |a(j,i)|
+        std::vector<long int> np;              // I_n, in species order
+        std::vector<char> isNP( (size_t)pm.L, 0 );
+        for( jj = 0; jj < pm.L; jj++ )
+        {
+            if( pm.Y[jj] <= min( pm.lowPosNum, pm.DcMinM ) )
+                continue;                      // same filter as the assembly
+            if( !( pm.W[jj] > 0. ) )
+                continue;
+            double colmax = 0.;
+            for( i = arrL[jj]; i < arrL[jj+1]; i++ )
+            {   ii = arrAN[i];
+                if( ii >= N )
+                    continue;
+                double v = fabs( a(jj,ii) );
+                if( v > colmax ) colmax = v;
+            }
+            if( colmax > 0. && pm.W[jj] * colmax > 1. )
+            {   np.push_back( jj );  isNP[(size_t)jj] = 1;  }
+        }
+
+        const long int nn = (long int)np.size();
+        if( nn > 0 && nn <= N )
+        {
+            const long int M = N + nn;
+            std::vector<double> AM( (size_t)M * (size_t)M, 0. );
+            std::vector<double> BM( (size_t)M, 0. );
+            // AM is row-major: AM[r*M + c] is row r, column c. The matrix is
+            // symmetric, so this agrees with the naive path's own (column-
+            // major) convention regardless.
+
+            // Top-left N x N: the same Gram matrix, over PIVOT species only.
+            for( jj = 0; jj < pm.L; jj++ )
+            {
+                if( pm.Y[jj] <= min( pm.lowPosNum, pm.DcMinM ) )
+                    continue;
+                if( isNP[(size_t)jj] )
+                    continue;
+                for( k = arrL[jj]; k < arrL[jj+1]; k++)
+                    for( i = arrL[jj]; i < arrL[jj+1]; i++ )
+                    {   ii = arrAN[i];
+                        kk = arrAN[k];
+                        if( ii >= N || kk >= N )
+                            continue;
+                        AM[(size_t)ii*(size_t)M + (size_t)kk] += a(jj,ii) * a(jj,kk) * pm.W[jj];
+                    }
+            }
+
+            // Coupling blocks C_n / B_n and the non-pivot diagonal D_n.
+            // Row N+t is the retained equation  sum_k a(j,k) y_k - x_t/W[j] = 0
+            // (negated from Eq. 134's own row so the whole matrix stays
+            // symmetric; the right-hand side is zero either way).
+            for( long int t = 0; t < nn; t++ )
+            {
+                const long int j = np[(size_t)t];
+                const long int r = N + t;
+                for( i = arrL[j]; i < arrL[j+1]; i++ )
+                {   ii = arrAN[i];
+                    if( ii >= N )
+                        continue;
+                    const double v = a(j,ii);
+                    AM[(size_t)ii*(size_t)M + (size_t)r] = v;
+                    AM[(size_t)r *(size_t)M + (size_t)ii] = v;
+                }
+                AM[(size_t)r*(size_t)M + (size_t)r] = -1. / pm.W[j];
+            }
+
+            for( ii = 0; ii < N; ii++ )
+                BM[(size_t)ii] = pm.C[ii];     // BM[N..M) stay 0
+
+            // Same symmetric Jacobi scaling as the naive path - see the block
+            // below. Applied here too on purpose: comparing an unpreconditioned
+            // Appendix A against a preconditioned baseline would measure the
+            // loss of the preconditioner rather than the gain of the split.
+            std::vector<double> Ds( (size_t)M, 1. );
+            for( long int r = 0; r < M; r++ )
+            {
+                double d = fabs( AM[(size_t)r*(size_t)M + (size_t)r] );
+                if( d > 1e-300 )
+                    Ds[(size_t)r] = 1. / sqrt( d );
+            }
+            for( long int r = 0; r < M; r++ )
+            {
+                for( long int c = 0; c < M; c++ )
+                    AM[(size_t)r*(size_t)M + (size_t)c] *= Ds[(size_t)r] * Ds[(size_t)c];
+                BM[(size_t)r] *= Ds[(size_t)r];
+            }
+
+            // The augmented matrix is symmetric but INDEFINITE (the non-pivot
+            // diagonal block is -1/W[j] < 0), so Cholesky cannot apply and is
+            // not attempted; LU with partial pivoting is the whole point of
+            // Appendix A in the first place.
+            Array2D<double> AAm( M, M, AM.data() );
+            Array1D<double> BBm( M, BM.data() );
+            JAMA::LU<double> lum( AAm );
+            if( !lum.isNonsingular() )
+            {
+                ipm_logger->warn("MakeAndSolveSystemOfLinearEquations (Appendix A "
+                                 "pivot split, |I_n|={}): augmented matrix singular", nn);
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+                pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
+                                      std::chrono::high_resolution_clock::now() - solve_t0 ).count();
+                pm.CondNumTimeMs += diag_ms;
+#endif
+                return 1;
+            }
+            BBm = lum.solve( BBm );
+            for( ii = 0; ii < N; ii++ )
+                pm.Uefd[ii] = BBm[(int)ii] * Ds[(size_t)ii];
+            ipm_logger->trace("Appendix A pivot split: |I_n|={} of {} active species, "
+                              "augmented system {} x {}", nn, pm.L, M, M);
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+            pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
+                                  std::chrono::high_resolution_clock::now() - solve_t0 ).count();
+            pm.CondNumTimeMs += diag_ms;
+#endif
+            return 0;
+        }
+    }
+
     Alloc_A_B( N );
+    // Diagonal (Jacobi) preconditioning scale factors for the initAppr (MBR)
+    // branch only - see the scaling block below the assembly for the rationale.
+    // Left empty in the main-IPM (initAppr=false) branch, which is not
+    // preconditioned.
+    std::vector<double> Dscale;
 
     // Making the matrix of IPM linear equations
     for( kk = 0; kk < N; kk++)
@@ -1688,6 +1928,51 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
                         continue;
                     BB[ii] += pm.F[jj] * a(jj,ii) * pm.W[jj];
                 }
+    }
+
+    // Diagonal (Jacobi) preconditioning of the initAppr (MBR) Schur-complement
+    // matrix. PORTED 2026-09-02 from branch ipm_contraints commit 26d9d57a,
+    // where it was implemented and validated on 2026-08-21 - it had never been
+    // merged onto develop_optima, which branched from master, so this branch's
+    // native MBR ran unpreconditioned for the whole of the Optima work. Same
+    // cross-branch trap already on record twice (PSTALL, and
+    // ENABLE_BENCHMARK_DIAGNOSTICS).
+    //
+    // On at least one real project (Cu-Pourbaix) AA's diagonal spans up to ~17
+    // orders of magnitude - diagMax stays flat ~4.4e5 while diagMin collapses
+    // ~10x per iteration toward ~1e-12 - which is a SCALING problem, not rank
+    // deficiency. Symmetric scaling A' = D*A*D, B' = D*B with
+    // D = diag(1/sqrt(|A_ii|)) preserves symmetry and positive-definiteness
+    // (A is a Gram matrix, a(j,i)*a(j,k)*W[j] summed over j, so A' is one too)
+    // while normalising every nonzero diagonal entry to exactly 1. The solved
+    // dual is unscaled back (U = D*U') at the unpack site below.
+    //
+    // Rows/columns with a structurally-zero diagonal (no species touches that
+    // IC) get Dscale = 1 rather than dividing by zero - such a row already
+    // makes the matrix singular regardless of preconditioning, and the existing
+    // singular-matrix path handles it unchanged.
+    //
+    // Measured when first adopted: the real eigenvalue-based condition number
+    // drops ~7 orders (~3.4e17 implied -> ~3.06e10 measured) with zero
+    // regression across all 25 gems-benchmark Resources/gems3k projects. It
+    // does NOT touch the remaining ~10 orders of NON-diagonal ill-conditioning,
+    // which was traced to water's fixed H:O = 2:1 stoichiometry making the H
+    // and O rows of the assembled matrix near-linearly-dependent - a genuine
+    // near-singularity of A D^-1 A^T, which no rescaling can repair.
+    if( initAppr )
+    {
+        Dscale.assign( N, 1. );
+        for( ii = 0; ii < N; ii++ )
+        {
+            double d = fabs( *(AA+(ii)+(ii)*N) );
+            if( d > 1e-300 )
+                Dscale[ii] = 1. / sqrt( d );
+        }
+        for( kk = 0; kk < N; kk++ )
+            for( ii = 0; ii < N; ii++ )
+                (*(AA+(ii)+(kk)*N)) *= Dscale[ii] * Dscale[kk];
+        for( ii = 0; ii < N; ii++ )
+            BB[ii] *= Dscale[ii];
     }
 
 #ifndef PGf90
@@ -1791,8 +2076,10 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
 
     if( initAppr )
     {
+        // Unscale: the system just solved was A'U' = B' with A' = D*A*D (the
+        // preconditioned matrix assembled above), so the true dual is U = D*U'.
         for( ii = 0; ii < N; ii++ )
-            pm.Uefd[ii] = B[(int)ii];
+            pm.Uefd[ii] = B[(int)ii] * Dscale[ii];
     }
     else {
         for( ii = 0; ii < N; ii++ )

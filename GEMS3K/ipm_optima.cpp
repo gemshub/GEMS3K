@@ -58,6 +58,7 @@
 #include <algorithm>
 #include <cmath>
 #include <ctime>
+#include <cstdio>
 #include <cstdlib>
 #include <functional>
 #include <sstream>
@@ -678,7 +679,7 @@ bool TMultiBase::LPGibbsDual( std::vector<double>& yOut )
     return true;
 }
 
-long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold,
+long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, double dcFloor,
                                                    const char* exemptSpecies,
                                                    double& violOut, bool& wasAbsentOut )
 {
@@ -781,7 +782,100 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold,
         if( kinConstrPh ) continue;
 
         const double logSI = pm.Falp[k];
-        const bool present = ( pm.YF[k] >= presenceThreshold );
+        // "Present" is decided STRUCTURALLY as well as by magnitude: a phase
+        // every one of whose species sits at its own lower bound was pinned out
+        // by the solver and is absent, whatever its total adds up to. The
+        // magnitude rule alone scales with the phase's species COUNT while the
+        // threshold does not, so a wide phase held entirely at the floor reads
+        // as present. Measured on 07PSIna_G_complex_1 (pa_DS = 1e-20, so
+        // presenceThreshold collapses onto dcFloor*10 = 1e-12): gas_gen's ten
+        // species at exactly dcFloor = 1e-13 sum to exactly 1e-12 and were
+        // reported "present but unstable" - the single reason the project
+        // returned BAD rather than OK once the dimension reduction let it
+        // converge at all. The same signature is on record for
+        // 07PSIna_G_simple_0_0_0_150.
+        //
+        // The test is the one OptimaReducedPreSolve() already uses to read a
+        // seed's own support, and it can only move a phase from present to
+        // absent, never the other way - so it cannot manufacture a
+        // "present but unstable" verdict, only retire one that the magnitude
+        // rule invented.
+        bool anyOffFloor = false;
+        for( long int j = j1stab - pm.L1[k]; j < j1stab && j < L; j++ )
+        {
+            const double lo = std::max( pm.DLL[j], dcFloor );
+            if( pm.Y[j] > lo * ( 1. + 1e-6 ) ) { anyOffFloor = true; break; }
+        }
+        // ... and a third, PHYSICAL rule, OR-ed with the two above: a phase
+        // every one of whose species holds a negligible FRACTION of the most
+        // of that species the bulk composition could possibly support is
+        // absent, whatever its absolute amount.
+        //
+        // Why this is needed even with the two rules above. presenceThreshold
+        // is max(pm.DSM, dcFloor*10), i.e. an ABSOLUTE amount, and on a project
+        // that sets pa_DS = 1e-20 it collapses onto the numerical floor - so a
+        // species three orders of magnitude OFF its floor (hence structurally
+        // present) but at 1e-16 mol still reads present. Measured case,
+        // plan v5 section 44.1: 07PSIna_G_simple_0_0_0_150 at
+        // pa_OptimaDcFloor = 1e-20 reports AlOOH(cr) "present but unstable" at
+        // YF = 9.64e-17 against a threshold of 1e-19. Its ceiling is set by
+        // aluminium (bIC[Al] = 0.098 mol), so x/n_max = 9.8e-16 - negligible by
+        // fifteen orders of magnitude, and absent under any eps in the whole
+        // usable band.
+        //
+        // The ceiling: n_max(j) = min over ICs i with a(j,i) > 0 of B[i]/a(j,i)
+        // - a pure stoichiometric BOUND (it ignores competition between species
+        // for the same element), which is why the threshold sits so far below 1.
+        // It is scale-invariant: pm.B[] and pm.Y[] are both in the same
+        // internally rescaled frame, so the ratio does not depend on pa_DG.
+        //
+        // Two traps, both real, both handled (plan v5 section 44.2):
+        //  (a) the CHARGE IC must be excluded. On a charge-balanced system
+        //      B[Zz] = 0, so every cation would get a ceiling of 0 and
+        //      "x < eps*0" would never be true - nothing would ever be absent.
+        //      Note DetectPhaseCollapseAndReseed()'s own ceiling loop above does
+        //      NOT exclude it; that is a different consumer with a different
+        //      guard (b <= 0 skips the end-member), deliberately left alone.
+        //  (b) a species whose only positive-coefficient ICs genuinely have
+        //      B[i] = 0 has a real ceiling of 0 and must SHORT-CIRCUIT to
+        //      absent, since "x < eps*0" is false for any positive x. Not
+        //      exercised by any project in the corpus - written anyway.
+        //
+        // MEASURED on six projects spanning 23-265 species (section 44.3): the
+        // smallest ratio among genuinely present species is 1.2e-6 to 3.6e-6 -
+        // remarkably constant across utterly different chemistry, which is the
+        // scale invariance this rule was proposed for showing up in data - and
+        // the largest among numerically negligible ones is <= 7.3e-19. Any eps
+        // between about 1e-18 and 1e-7 classifies all six correctly. 1e-12 is
+        // the log-centre of that band, roughly six decades clear on each side.
+        //
+        // OR, not AND, and that is a fact about this consumer rather than a
+        // preference (section 44.4): in the AlOOH(cr) case the absolute rule
+        // says "present" and only the relative one can overrule it, so an AND
+        // would leave the false violation exactly as it is. The DIAGNOSTIC
+        // consumer (tools/dimension_ceiling) wants the opposite; the two must
+        // not share one predicate.
+        //
+        // Gateable for the same reason section 33.5's structural rule was: this
+        // can only move a phase present -> absent, so it can only RETIRE a
+        // "present but unstable" violation, never manufacture one.
+        static const double kRelPresenceEps = 1e-12;
+        bool anySignificant = false;
+        for( long int j = j1stab - pm.L1[k]; j < j1stab && j < L; j++ )
+        {
+            double nMax = -1.;
+            for( long int i = 0; i < pm.N; i++ )
+            {
+                if( pm.ICC != nullptr && pm.ICC[i] == IC_CHARGE ) continue;
+                const double coef = pm.A[ i + j*pm.N ];
+                if( coef <= 0. ) continue;
+                const double icBound = pm.B[i] / coef;
+                if( nMax < 0. || icBound < nMax ) nMax = icBound;
+            }
+            if( nMax <= 0. ) continue;      // trap (b): genuine zero ceiling -> absent
+            if( pm.Y[j] >= kRelPresenceEps * nMax ) { anySignificant = true; break; }
+        }
+        const bool present = anyOffFloor && ( pm.YF[k] >= presenceThreshold ) && anySignificant;
         // Same thresholds/logic as native's own PhaseSelect()
         // (ipm_chemical.cpp): a stable phase (logSI > DF) not
         // currently in the assemblage, or an unstable one
@@ -867,7 +961,7 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold,
 // retry, KKT, mass-balance and phase-stability check running at full dimension
 // and full index. A pre-solve that fails, or that cannot omit anything, is
 // simply discarded.
-bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor,
+bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, double dimTol,
                                         long int& iterationsOut, long int& activeOut )
 {
     iterationsOut = 0;
@@ -930,21 +1024,47 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor,
     // knob that should not be tuned. Pass 0 therefore still starts from a zero
     // dual, and only later passes inherit their predecessor's.
     {
-        const double dimTol = pa_p->OptimaDimReduceTol;
         std::vector<double> lpDual;
-        if( dimTol > 0. && pm.G0 != nullptr && LPGibbsDual( lpDual ) )
+        if( dimTol != 0. && pm.G0 != nullptr && LPGibbsDual( lpDual ) )
         {
-            long int added = 0;
+            // Price every candidate once; the sign of OptimaDimReduceTol then
+            // selects how the prices are turned into a set. A POSITIVE value is
+            // an absolute threshold in RT (the physical reading documented at
+            // that field). A NEGATIVE value is the dimensionless RANK rule
+            // -|tol| x N: admit the cheapest-priced species until the active set
+            // reaches that multiple of the IC count. The rank rule exists
+            // because the three projects the threshold was calibrated on landed
+            // at 3.4-4.6 x N regardless of their size, which would make the set
+            // size, not the RT cut, the quantity that actually matters.
+            std::vector<std::pair<double,long int>> priced;
             for( long int j = 0; j < L; j++ )
             {
                 if( act[(size_t)j] ) continue;
                 if( xhi[(size_t)j] <= xlo[(size_t)j] * ( 1. + 1e-9 ) ) continue;
                 double z = 0.;
                 for( long int i = 0; i < N; i++ ) z += lpDual[(size_t)i] * pm.A[ i + j*N ];
-                if( pm.G0[j] - z < dimTol ) { act[(size_t)j] = 1; added++; }
+                priced.push_back( std::make_pair( pm.G0[j] - z, j ) );
             }
-            ipm_logger->info( "OptimaReducedPreSolve: LP-Gibbs pricing admitted {} extra species "
-                               "(tol={} RT)", added, dimTol );
+            long int added = 0;
+            if( dimTol > 0. )
+            {
+                for( size_t k = 0; k < priced.size(); k++ )
+                    if( priced[k].first < dimTol ) { act[(size_t)priced[k].second] = 1; added++; }
+                ipm_logger->info( "OptimaReducedPreSolve: LP-Gibbs pricing admitted {} extra species "
+                                   "(tol={} RT)", added, dimTol );
+            }
+            else
+            {
+                long int already = 0;
+                for( long int j = 0; j < L; j++ ) if( act[(size_t)j] ) already++;
+                const long int target = (long int)( -dimTol * (double)N + 0.5 );
+                std::sort( priced.begin(), priced.end() );
+                for( size_t k = 0; k < priced.size() && already + added < target; k++ )
+                    { act[(size_t)priced[k].second] = 1; added++; }
+                ipm_logger->info( "OptimaReducedPreSolve: LP-Gibbs rank rule admitted {} extra species "
+                                   "(target {} = {} x N, seed support {})",
+                                   added, target, -dimTol, already );
+            }
         }
     }
 
@@ -973,6 +1093,179 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor,
     Optima::Options options;
     options.maxiters = (unsigned)std::max( 2000L, (long int)pa_p->IIM );
     options.convergence.tolerance = pa_p->OptimaTol;
+
+    // ---- Stall / wall-clock guard for the pre-solve itself ----
+    // The full solve in CalculateEquilibriumStateOptima() has carried a stall
+    // watch and a pa_OptimaMaxSeconds budget since 2026-08; this pre-solve had
+    // neither, and on 2026-09-02 that was measured to be the whole of its worst
+    // regression. On f_CASHNK the reduction does not settle: pass 1 runs a
+    // 28-of-35-species problem to the full pa_IIM budget and is then discarded,
+    // so the project pays ~10060 wasted iterations on top of its ordinary 643
+    // (which the full path reaches only via its own stall rescue). 643 -> 10703
+    // iterations, 343 ms -> 7464 ms, for an answer that is discarded anyway.
+    // Capping a pass that has stopped improving costs nothing - the pass is
+    // thrown away in either case - and it bounds what a non-settling reduction
+    // can cost. The budget is deliberately SHARED across all passes: a project
+    // whose passes each stall should pay one window, not maxPasses windows.
+    //
+    // Same two non-obvious points as the full path's watch, for the same
+    // reasons: `check` returning true means CONVERGED to Optima, so the flag is
+    // folded back by forcing succeeded=false (here that lands on the existing
+    // `if( !result.succeeded ) return discard()`, which is the correct
+    // response); and the test is deliberately conservative about what counts as
+    // a stall - it asks whether the pass is DEADLOCKED (best-so-far has not
+    // moved AND the live iterate has not moved either, over a whole window),
+    // not whether it is converging fast enough. See the test body for the
+    // measurement that forced that distinction: a per-step "did best-so-far
+    // improve" question kills f_TestSUP98's own converging pre-solve pass,
+    // which reaches its answer through a 661-iteration excursion.
+    struct PreStallWatch {
+        long int window = 0;
+        double bestErr = 0., bestComp = 0.;
+        // Best-so-far as it stood one whole WINDOW ago, plus the live error's
+        // range within the current window - see the test itself for why both
+        // are needed and what each one protects against.
+        double refErr = 0., refComp = 0., winLo = 0., winHi = 0.;
+        long int run = 0;              // iterations elapsed in the current window
+        bool stalled = false, timedOut = false;
+        double maxSeconds = 0.;
+        std::chrono::steady_clock::time_point started;
+        void reset() {
+            bestErr = bestComp = std::numeric_limits<double>::infinity();
+            refErr  = refComp  = std::numeric_limits<double>::infinity();
+            winLo = std::numeric_limits<double>::infinity(); winHi = 0.;
+            run = 0; stalled = false;
+        }
+        bool overBudget() const {
+            if( maxSeconds <= 0. ) return false;
+            return std::chrono::duration<double>(
+                       std::chrono::steady_clock::now() - started ).count() > maxSeconds;
+        }
+    };
+    auto preWatch = std::make_shared<PreStallWatch>();
+    preWatch->window     = pa_p->OptimaStallWindow;
+    preWatch->maxSeconds = pa_p->OptimaMaxSeconds;
+    preWatch->started    = std::chrono::steady_clock::now();
+    preWatch->reset();
+    if( preWatch->window > 0 || preWatch->maxSeconds > 0. )
+        options.convergence.check =
+            [preWatch]( Optima::ConvergenceCheckArgs const& args ) -> bool
+            {
+                if( preWatch->overBudget() ) { preWatch->timedOut = true; return true; }
+                if( preWatch->window <= 0 ) return false;
+                const double e = args.E.errorx();
+                double comp = 0.;
+                const auto ex = args.E.ex();
+                const auto xv = args.u.x;
+                const Optima::Index nx = ex.size() < xv.size() ? ex.size() : xv.size();
+                for( Optima::Index j = 0; j < nx; ++j )
+                {
+                    const double c = std::fabs( ex[j] ) * std::fabs( xv[j] );
+                    if( c > comp ) comp = c;
+                }
+                // The question this asks is "is this pass DEADLOCKED", and it is
+                // deliberately not "is it converging fast enough". Over one whole
+                // window it declares a stall only when BOTH
+                //   (a) best-so-far has not fallen by a meaningful relative amount
+                //       against its value at the window's start, AND
+                //   (b) the live error has not even MOVED - its range within the
+                //       window is below the same relative amount.
+                // Either one alone is measurably wrong; the pair is not.
+                //
+                // WHY (a) ALONE IS WRONG - this is a real false positive, found
+                // 2026-09-03 and the reason this test was rewritten. The previous
+                // version asked only "did best-so-far improve meaningfully on this
+                // STEP", with the same window. On f_TestSUP98 (923 species) the
+                // reduced pre-solve's pass 0 CONVERGES, in 1868 iterations, from
+                // e=2.60e+03 to 1.06e-08 - but it does so through a 661-iteration
+                // excursion (iterations 918-1579) in which best-so-far is EXACTLY
+                // frozen at 9.671475 while the live error wanders up to 4.5e+04 and
+                // back. A step-based rule at a 500 window fires at iteration 1418,
+                // i.e. kills a converging pass three-quarters of the way through.
+                // The cumulative-only variant fires at 1500 - same fate. That
+                // project does not set pa_OptimaStallWindow today, so nothing
+                // regressed; what it blocked was arming the field by default.
+                //
+                // WHY (b) ALONE IS WRONG: a genuinely slow but SMOOTH converger
+                // descending even 0.5 % per iteration traverses a factor of ~12
+                // over 500 iterations, so a per-step movement test would call it
+                // static and kill it. Measuring the RANGE over the whole window
+                // instead of the per-step change is what removes that risk: a run
+                // that is going anywhere at all cannot look static over 500 steps.
+                //
+                // WHAT IT CATCHES, and it is exactly one thing: a pass whose
+                // ITERATE HAS STOPPED MOVING. On j_TestPNTDB at
+                // pa_OptimaDimReduceTol = -2 - whose pass 0 is discarded after 7001
+                // iterations - the live error is frozen to 1.2e-13 relative for
+                // 6500 consecutive iterations, so both clauses hold from the second
+                // window on and it fires at 1000 (against 7001 unbounded).
+                //
+                // THE THRESHOLD IS NOT A TUNING PARAMETER. Measured per window
+                // across nine passes of five projects, the two quantities are
+                // bimodal with a NINE-order gap: a deadlocked window scores 1.2e-13
+                // on both clauses, and the smallest score any live window produces
+                // is 7.3e-4. Every value from 1e-12 to 1e-4 gives the identical
+                // answer on every pass. 1e-8 is used because pa_OptimaTol's own
+                // default already is - no new number enters the file.
+                //
+                // WHAT IT DELIBERATELY DOES NOT CATCH, and why that is correct:
+                // 07PSIna_G_vcomplex at 80 C was on record as a third "crawling"
+                // regime - real gains, uselessly small, bounded only by pa_IIM. The
+                // per-window measurement does not support that reading: its
+                // best-so-far falls by 7.3e-4, then 5.1e-2, then 3.7e-1 over three
+                // consecutive windows, i.e. the rate is ACCELERATING and the pass
+                // is converging - it simply needs more iterations than its budget
+                // allows. Firing on it would be a false positive, not a catch. A
+                // pass that is genuinely converging too slowly for its budget is a
+                // BUDGET question (pa_IIM, pa_OptimaMaxSeconds), not a stall one,
+                // and no stall watch should be asked to answer it.
+                // 07PSIna_G_edt_2's discarded pass 1 is likewise not caught: its
+                // best-so-far is frozen at 1.2e-13 per window, but its live error
+                // ranges over a factor of 27, i.e. it carries the same signature as
+                // f_TestSUP98's excursion, which recovered. Whether it would
+                // recover given budget is unknown, so it is treated as unproven
+                // rather than as dead. That costs the bound this watch used to put
+                // on that project (1241 iterations); the safety is worth more.
+                //
+                // `best` is updated on every genuine fall, even a fall too small to
+                // count, so the reference the next window is measured against never
+                // drifts upward on accumulated noise.
+                //
+                // Deliberately NOT applied to the full solve's own stall watch
+                // below, which has the same shape: that watch is what rescues
+                // f_/j_CASHNK (plan v5 section 30.5 - they converge only via it, at
+                // ~642 iterations), so changing when it fires changes those
+                // projects' results. Different question, bigger blast radius.
+                static const double kPreStallRelProgress = 1e-8;
+                if( e < preWatch->bestErr )  preWatch->bestErr  = e;
+                if( comp < preWatch->bestComp ) preWatch->bestComp = comp;
+                if( e < preWatch->winLo ) preWatch->winLo = e;
+                if( e > preWatch->winHi ) preWatch->winHi = e;
+                if( ++preWatch->run < preWatch->window ) return false;
+
+                const bool firstWindow = !std::isfinite( preWatch->refErr )
+                                      && !std::isfinite( preWatch->refComp );
+                const bool dropped =
+                    ( std::isfinite( preWatch->refErr )
+                      && preWatch->bestErr  < preWatch->refErr  * ( 1. - kPreStallRelProgress ) )
+                 || ( std::isfinite( preWatch->refComp )
+                      && preWatch->bestComp < preWatch->refComp * ( 1. - kPreStallRelProgress ) );
+                const double lo = preWatch->winLo;
+                const bool moved = ( preWatch->winHi - lo )
+                                   > kPreStallRelProgress * std::max( lo, 1e-300 );
+                if( !firstWindow && !dropped && !moved )
+                {
+                    preWatch->stalled = true;
+                    return true;
+                }
+                // Window survived: roll the reference forward and start a new one.
+                preWatch->refErr  = preWatch->bestErr;
+                preWatch->refComp = preWatch->bestComp;
+                preWatch->winLo   = std::numeric_limits<double>::infinity();
+                preWatch->winHi   = 0.;
+                preWatch->run     = 0;
+                return false;
+            };
 
     bool haveAnswer = false;
     for( long int pass = 0; pass < maxPasses; pass++ )
@@ -1235,13 +1528,79 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor,
 
         Optima::Solver solver;
         solver.setOptions( options );
+        preWatch->reset();          // per-pass stall state; the wall-clock budget is not reset
         Optima::Result result = solver.solve( problem, state );
         iterationsOut += (long int)result.iterations;
+        if( preWatch->stalled || preWatch->timedOut ) result.succeeded = false;
 
         if( !result.succeeded )
         {
+            // GEMS3K_PRESOLVE_RESID_PROBE=<file>: on a failing pass, append the
+            // reduced-gradient ranking of the state Optima gave up at. Kept as
+            // zero-cost-when-off infrastructure (one getenv on a path already
+            // discarding thousands of iterations), on the same footing as the
+            // local Optima checkout's betamin probe, because it answers "WHICH
+            // species is this pass stuck on" in a single run and nothing else
+            // does. Recomputes exactly the residual the post-solve KKT check
+            // computes, so the ranking is the solver's own, not an approximation.
+            //
+            // What it found (plan v5 section 57): on
+            // Resources/gems3k-psina/07PSIna_G_complex_1_0_1_80_0 ONE species -
+            // H2O(g), INTERIOR at 18.93 internal units, five orders from either
+            // bound - holds 99.0% of the residual, and its value 7.647793e-01 is
+            // that species' own driving force out of existence at native's
+            // converged dual (7.645308e-01, three significant figures). Not the
+            // absent-species/inaccurate-dual shape that had been assumed: the
+            // dual is essentially right and the solver simply cannot shrink a
+            // phase it should never have carried.
+            if( const char* rp = std::getenv( "GEMS3K_PRESOLVE_RESID_PROBE" ) )
+            {
+                std::vector<double> Fsave( pm.F, pm.F + L ), Xsave( pm.X, pm.X + L );
+                for( long int j = 0; j < L; j++ )
+                    pm.X[j] = act[(size_t)j] ? state.x[ jToNx[(size_t)j] ] : xlo[(size_t)j];
+                TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                CalculateActivityCoefficients( LINK_UX_MODE );
+                PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
+                std::vector<std::pair<double,long int>> rk;
+                double tot = 0.;
+                for( long int j = 0; j < L; j++ )
+                {
+                    if( !act[(size_t)j] ) continue;
+                    double g = pm.F[j];
+                    for( long int i = 0; i < N; i++ ) g -= ( -state.ye[i] ) * pm.A[ i + j*N ];
+                    const long int s2 = jToNx[(size_t)j];
+                    double r;
+                    if( problem.xupper[s2] <= problem.xlower[s2] * ( 1. + 1e-12 ) ) r = 0.;
+                    else if( state.x[s2] <= problem.xlower[s2] * ( 1. + 1e-12 ) )   r = std::max( -g, 0. );
+                    else if( state.x[s2] >= problem.xupper[s2] * ( 1. - 1e-12 ) )   r = std::max(  g, 0. );
+                    else                                                            r = std::fabs( g );
+                    rk.push_back( { r, j } );
+                    tot += r;
+                }
+                std::sort( rk.begin(), rk.end(), []( const std::pair<double,long int>& a,
+                                                     const std::pair<double,long int>& b )
+                                                  { return a.first > b.first; } );
+                FILE* fp = fopen( rp, "a" );
+                if( fp )
+                {
+                    fprintf( fp, "# PASS %ld  nS=%ld L=%ld iters=%ld sum=%.8e top1frac=%.6f\n",
+                             (long)pass, (long)nS, (long)L, (long)result.iterations, tot,
+                             tot > 0. ? rk[0].first/tot : 0. );
+                    for( size_t k = 0; k < rk.size() && k < 25; k++ )
+                    {
+                        const long int j = rk[k].second, s2 = jToNx[(size_t)j];
+                        fprintf( fp, "%3zu %-22s resid=%.6e x=%.6e xlo=%.6e xhi=%.6e\n",
+                                 k, char_array_to_string(pm.SM[j],MAXDCNAME).c_str(),
+                                 rk[k].first, state.x[s2], problem.xlower[s2], problem.xupper[s2] );
+                    }
+                    fclose( fp );
+                }
+                for( long int j = 0; j < L; j++ ) { pm.F[j] = Fsave[(size_t)j]; pm.X[j] = Xsave[(size_t)j]; }
+            }
             ipm_logger->info( "OptimaReducedPreSolve: pass {} did not converge on {} of {} "
-                               "species - discarding the reduced pre-solve", pass, nS, L );
+                               "species{} - discarding the reduced pre-solve", pass, nS, L,
+                               preWatch->timedOut ? " (wall-clock budget)"
+                                                  : ( preWatch->stalled ? " (stalled)" : "" ) );
             return discard();
         }
 
@@ -1545,28 +1904,117 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // with control conditions active (their virtual slots are a separate
         // mechanism) and in ROP, which is a faithful port of Reaktoro's own.
         // See BASE_PARAM::OptimaDimReduce and OptimaReducedPreSolve() above.
+        // COLD STARTS ONLY (pm.pNP == 0). A warm start already carries the very
+        // thing this pre-solve exists to manufacture - a consistent (primal,
+        // dual) pair - and costs O(1) Optima iterations because of it (3 on
+        // f_TestPNTDB, section 27). Running a reduction in front of that is
+        // pure waste when it discards, and actively destructive when it
+        // settles, since it would overwrite a perfect warm start with the
+        // reduced problem's own answer. Without this gate, setting
+        // pa_OptimaDimReduce on a project would silently degrade every SOP call
+        // on it - which is exactly what the suite's own warm-restart case for
+        // f_TestPNTDB guards, and that project is the first one the field is
+        // enabled on.
+        //
+        // pa_OptimaDimReduce is THREE-VALUED: > 0 is an explicit pass count,
+        // < 0 is explicitly off, and 0 - the compiled default, and what every
+        // project that has never heard of this field carries - is AUTO: on
+        // above a species-count gate, off below it. The gate exists because
+        // section 33.1's corpus sweep found the payoff to be entirely a
+        // function of how much the reduction can OMIT, which tracks size:
+        // 85-96 % of species stay active below ~35 species, so the pre-solve
+        // there prices and re-solves almost the whole list and the ordinary
+        // solve then repeats the work; from 122 species up only 49-56 % stay
+        // active. kDimReduceAutoMinDC sits above every measured loss
+        // (j_GEOTHERM, 154 species, 2.7x) and below every large win (mid_1,
+        // 265 species, 60x; f_TestPNTDB, 690, 140x; f_/j_TestSUP98, 923, from
+        // never-finished to under a minute). Nothing in the corpus lies
+        // between 154 and 265 species, so its exact value is interpolated
+        // rather than measured - which is also why it is a named constant with
+        // an explicit off switch rather than a silent hardcode.
+        static const long int kDimReduceAutoMinDC  = 200;
+        static const long int kDimReduceAutoPasses = 8;
+
+        // Fallback initial-set rule, used ONCE if the configured rule's
+        // pre-solve is discarded. See BASE_PARAM::OptimaDimReduceTol for the
+        // measurement this implements: the threshold rule and the rank rule
+        // fail on DISJOINT projects, and no single value of either is safe
+        // across the corpus, so the way to make them both usable is to retry
+        // under the other rule rather than to keep tuning one of them.
+        // A discarded pre-solve has already restored pm.Y/pm.U, so a second
+        // attempt costs only the wasted pass - the same probe-then-commit
+        // pattern pa_OptimaFDHessianDelay already uses.
+        //
+        // WHAT THE WASTED PASS ACTUALLY COSTS, measured rather than assumed:
+        // one FULL pre-solve budget, max(2000, pa_IIM). It is NOT bounded by
+        // the stall watch in general - on j_TestPNTDB, which does set
+        // pa_OptimaStallWindow = 500, the discarded pass still ran to 7001
+        // iterations because it was still improving by the watch's two-signal
+        // test while not converging. The trade is still strongly favourable
+        // there (7496 iterations / 18.3 s with the fallback, against 9798 /
+        // ~400 s without it, same G), but size the expectation from the budget,
+        // not from the watch.
+        static const double kDimReduceDefaultTol  =  10.;   // the shipped threshold
+        static const double kDimReduceFallbackRank = -3.;   // 3 x N: of the rank values
+                                                            // measured, the only one that never
+                                                            // fails where another rank value
+                                                            // succeeds (2 N fails j_TestPNTDB,
+                                                            // 2.5 N fails f_TestSUP98). It does
+                                                            // not rescue 07PSIna_G_complex_1 at
+                                                            // 80 C, but nothing does.
+
+        long int dimReducePasses = pa_p->OptimaDimReduce;
+        if( dimReducePasses == 0 && L >= kDimReduceAutoMinDC )
+            dimReducePasses = kDimReduceAutoPasses;
+
         long int dimReduceIters = 0;
         bool dimReduceDone = false;
-        if( !reaktoroMode && R == 0 && pa_p->OptimaDimReduce > 0 )
+        if( !reaktoroMode && R == 0 && pm.pNP == 0 && dimReducePasses > 0 )
         {
+            // Re-establish the same consistent (Y, X, XF/XFA, activity
+            // coefficients) state the seed block above leaves behind. The
+            // pre-solve's own objective callback mutates all of those while it
+            // runs, and on the discard path pm.Y[] is still the seed - so this
+            // is correct whether it succeeded or not, and makes "discarded"
+            // mean genuinely discarded. It also has to run BETWEEN the two
+            // attempts, so the fallback starts from exactly the state the first
+            // attempt did.
+            auto reestablish = [&]() {
+                TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+                for( long int j = 0; j < L; j++ )
+                    pm.X[j] = pm.Y[j];
+                TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                CalculateActivityCoefficients( LINK_UX_MODE );
+            };
+
+            const double configuredTol = pa_p->OptimaDimReduceTol;
             long int nActive = 0;
-            dimReduceDone = OptimaReducedPreSolve( pa_p->OptimaDimReduce, dcFloor,
+            dimReduceDone = OptimaReducedPreSolve( dimReducePasses, dcFloor, configuredTol,
                                                    dimReduceIters, nActive );
+            reestablish();
+
+            if( !dimReduceDone )
+            {
+                // The configured rule was discarded - try the other one once.
+                // A negative configured value is the rank rule, so its fallback
+                // is the shipped threshold; anything else (the threshold rule,
+                // or 0 = seed support only) falls back to the rank rule.
+                const double fallbackTol = ( configuredTol < 0. )
+                                            ? kDimReduceDefaultTol : kDimReduceFallbackRank;
+                long int fallbackIters = 0;
+                ipm_logger->info( "CalculateEquilibriumStateOptima: dimension-reduction pre-solve "
+                                   "discarded at tol={} after {} iterations - retrying once at "
+                                   "tol={}", configuredTol, dimReduceIters, fallbackTol );
+                dimReduceDone = OptimaReducedPreSolve( dimReducePasses, dcFloor, fallbackTol,
+                                                       fallbackIters, nActive );
+                dimReduceIters += fallbackIters;
+                reestablish();
+            }
+
             if( dimReduceDone )
                 ipm_logger->info( "CalculateEquilibriumStateOptima: dimension-reduction pre-solve "
                                    "produced a warm start over {} of {} species in {} iterations",
                                    nActive, L, dimReduceIters );
-            // Re-establish the same consistent (Y, X, XF/XFA, activity
-            // coefficients) state the seed block above leaves behind. The
-            // pre-solve's own objective callback mutated all of those while it
-            // ran, and on the discard path pm.Y[] is still the seed - so this
-            // is correct whether it succeeded or not, and makes "discarded"
-            // mean genuinely discarded.
-            TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
-            for( long int j = 0; j < L; j++ )
-                pm.X[j] = pm.Y[j];
-            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-            CalculateActivityCoefficients( LINK_UX_MODE );
         }
 
         // Resolve each active condition's fixed objective-gradient value
@@ -2307,7 +2755,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 options.output.ynames.push_back( char_array_to_string(pm.SB[i],3) );
         }
 
-        // ---- Stall/freeze limit (pa_OptimaStallWindow, default 500; 0 = off) ----
+        // ---- Stall/freeze limit (pa_OptimaStallWindow; 0 = off, the default) ----
         // TRIAGE, not a fix. Every remaining AOP failure in the benchmark
         // corpus is a FROZEN iterate - f/j_TestPNTDB, f/j_TestSUP98 and the two
         // largest gems3k-psina projects all have f and Error bit-identical from
@@ -2341,7 +2789,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             long int window = 0;
             double bestErr = 0.;    // best-so-far ||ex||inf (Optima's own criterion)
             double bestComp = 0.;   // best-so-far max_j |ex_j| * x_j (complementarity)
-            long int run = 0;
+            // Best-so-far as it stood one whole WINDOW ago. The test is
+            // cumulative over a window rather than per-step - see the test body.
+            double refErr = 0., refComp = 0.;
+            long int run = 0;       // iterations elapsed in the current window
             bool stalled = false;
             // Wall-clock budget (pa_OptimaMaxSeconds). Deliberately NOT cleared by
             // reset(): the budget covers the whole call - primary solve plus every
@@ -2351,6 +2802,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             bool timedOut = false;
             void reset() {
                 bestErr = bestComp = std::numeric_limits<double>::infinity();
+                refErr  = refComp  = std::numeric_limits<double>::infinity();
                 run = 0; stalled = false;
             }
             bool overBudget() const {
@@ -2364,10 +2816,100 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         stallWatch->maxSeconds = pa_p->OptimaMaxSeconds;
         stallWatch->started = std::chrono::steady_clock::now();
         stallWatch->reset();
-        if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. )
+
+        // pa_OptimaEarlyStabilityAt < 0 selects a TREND trigger instead of a
+        // fixed iteration cap: -N means "end the first attempt as soon as some
+        // multicomponent phase has fallen monotonically for N consecutive
+        // objective evaluations", so the phase-selection repair loop gets its
+        // look while that phase is still dissolving rather than after the
+        // primary solve has spent its whole budget reaching an assemblage it
+        // then has to correct.
+        //
+        // WHY A TREND AND NOT A COUNT. A fixed cap is spent on EVERY call,
+        // including the great majority whose assemblage is fine and which simply
+        // need their budget - measured at ~1.24x on an ordinary cold solve
+        // (plan v5 section 58.2), which is exactly why that field stays default
+        // 0 despite being worth 33.5x where it acts. A trend trigger is spent
+        // only on a run that shows the signature, so an ordinary cold solve -
+        // where phases GROW into place from the LP seed and no sustained fall
+        // exists - never pays for it at all.
+        //
+        // Same sign-overload convention as pa_OptimaDimReduceTol, and the same
+        // reason: it is a different RULE for one decision, not a second knob.
+        //
+        // The counters are the ones pa_MbTrendPhaseDecay already maintains in
+        // the objective callback (the only place that sees every iterate). This
+        // is that field's criterion reaching a gate a CONVERGING run can open -
+        // its own consumer sits inside `if( !result.succeeded )`, a failure-only
+        // tier, which is why plan v5 section 45.1 found it could never fire on
+        // the decay case it was built for.
+        //
+        // A false trigger costs the abandoned attempt and nothing else: the
+        // safety net below re-solves once at the full budget when the early
+        // attempt found nothing to repair. That is what makes a liberal trigger
+        // safe, and it is why this could not have been built before the net.
+        const long int earlyTrendN = pa_p->OptimaEarlyStabilityAt < 0
+                                   ? -pa_p->OptimaEarlyStabilityAt : 0;
+        // Only a guard that the phase really is below its own running peak, NOT
+        // a magnitude test - measured, and the measurement is the point. On the
+        // decay case the dissolving phase is still at 14% of its peak 6638
+        // consecutive falls in, so any 10x-or-more clause becomes true only near
+        // the very end of the run and the "early" look is not early at all. That
+        // is the opposite of the phase-extinction tier's own `decaying`, which
+        // wants 100x precisely because it is deciding EXTINCTION rather than
+        // asking for a look.
+        //
+        // The consecutive-decrease count is what discriminates, and it does so
+        // cleanly: on the same run the aqueous phase's longest monotone fall is
+        // 30 evaluations against the dissolving phase's 6638.
+        const double kEarlyTrendDropRatio = 0.999;
+        auto earlyTrend      = std::make_shared<bool>( false );
+        auto earlyTrendArmed = std::make_shared<bool>( earlyTrendN > 0 );
+        // The SOLVENT phase is excluded, and not as a tuning choice: the
+        // phase-selection repair loop refuses to act on it by construction
+        // ("never remove or reseed the solvent phase here"), so a trigger on it
+        // can only ever spend a probe for nothing. Measured before this
+        // exclusion: f_GEOTHERM fired on the aqueous phase settling by 7% -
+        // 332.9 -> 308.8 over 50 evaluations, ordinary convergence, not
+        // dissolution - and LOST its answer (OK 1765 -> ERR 3039).
+        long int aqPhaseIdxTrend = -1;
+        {
+            long int j0aq = 0;
+            for( long int k = 0; k < pm.FIs; k++ )
+            {
+                if( hasAq && pm.LO >= j0aq && pm.LO < j0aq + pm.L1[k] ) { aqPhaseIdxTrend = k; break; }
+                j0aq += pm.L1[k];
+            }
+        }
+        if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. || earlyTrendN > 0 )
             options.convergence.check =
-                [stallWatch]( Optima::ConvergenceCheckArgs const& args ) -> bool
+                [stallWatch, earlyTrendN, kEarlyTrendDropRatio, earlyTrend, earlyTrendArmed,
+                 aqPhaseIdxTrend, phDec, phMax, phLast]
+                ( Optima::ConvergenceCheckArgs const& args ) -> bool
                 {
+                    // Trend trigger first: it is cheap, independent of the stall
+                    // signals, and armed only for the first attempt.
+                    if( *earlyTrendArmed && !*earlyTrend )
+                    {
+                        for( size_t k = 0; k < phDec->size(); ++k )
+                            if( (long int)k != aqPhaseIdxTrend
+                                && (*phDec)[k] >= earlyTrendN
+                                && (*phMax)[k] > 0.
+                                && (*phLast)[k] >= 0.
+                                && (*phLast)[k] < (*phMax)[k] * kEarlyTrendDropRatio )
+                            {
+                                *earlyTrend = true;
+                                ipm_logger->info( "CalculateEquilibriumStateOptima: phase {} has "
+                                                  "fallen for {} consecutive evaluations to {:.3e} "
+                                                  "from a peak of {:.3e} - ending the first attempt "
+                                                  "so the phase-selection loop can look "
+                                                  "(pa_OptimaEarlyStabilityAt = -{})",
+                                                  k, (*phDec)[k], (*phLast)[k], (*phMax)[k],
+                                                  earlyTrendN );
+                                break;
+                            }
+                        if( *earlyTrend ) return true;   // folded back to a failure below
+                    }
                     // Two signals, and BOTH must stagnate. Each alone gives a
                     // false stall on a project that genuinely converges:
                     //  - ||ex||inf alone flags f_CASHNK, whose best-so-far error
@@ -2403,17 +2945,104 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         const double c = std::fabs( ex[j] ) * std::fabs( xv[j] );
                         if( c > comp ) comp = c;
                     }
-                    bool improved = false;
-                    if( e    < stallWatch->bestErr  ) { stallWatch->bestErr  = e;    improved = true; }
-                    if( comp < stallWatch->bestComp ) { stallWatch->bestComp = comp; improved = true; }
-                    if( improved ) { stallWatch->run = 0; return false; }
+                    // The test is CUMULATIVE over a whole window, not per-step:
+                    // fire only when best-so-far has failed to fall by a
+                    // meaningful RELATIVE amount against its value one whole
+                    // window ago. Rewritten 2026-09-03; the previous version
+                    // counted consecutive iterations in which best-so-far did not
+                    // improve AT ALL, and that had a measured false positive that
+                    // is the entire reason pa_OptimaStallWindow's compiled default
+                    // was reverted from 500 to 0 (see that field in ms_multi.h).
+                    //
+                    // WHY THE PER-STEP VERSION WAS WRONG. On the 301-point solvus
+                    // temperature sweep the point at 588 C converges in 1074
+                    // iterations, but reaches its answer through a plateau in which
+                    // best-so-far improves only microscopically: over the window
+                    // [500,1000) it falls by 0.21 % (0.012713 -> 0.012686), which
+                    // is real progress but never a large enough single step to
+                    // reset a per-step counter. The per-step rule at a 500 window
+                    // fires at iteration 701 and turns a converging point into a
+                    // failed one - measured directly, and it reproduces the
+                    // reversal exactly. The cumulative test sees the 0.21 % and
+                    // survives, with five orders of margin over the threshold.
+                    //
+                    // WHY THERE IS NO RANGE CLAUSE HERE, unlike the pre-solve
+                    // watch in OptimaReducedPreSolve() which uses the same window
+                    // machinery with an extra "has the live error even MOVED"
+                    // clause. That clause is load-bearing there and would be
+                    // actively harmful here, and the two projects that decide it
+                    // pull in opposite directions:
+                    //  - f_TestSUP98's reduced pre-solve converges through a
+                    //    661-iteration excursion in which best-so-far is EXACTLY
+                    //    frozen while the live error swings by 2.4e+02. Only the
+                    //    range clause saves it, so the pre-solve needs it.
+                    //  - f_/j_CASHNK's full solve is the one place in the corpus
+                    //    where this watch does real work: best-so-far is exactly
+                    //    frozen (6.936 / 0.0007399) for 19 consecutive windows
+                    //    while the live error runs a perfect limit cycle
+                    //    (lo/hi bit-identical every window, range/lo = 108 / 5e+04).
+                    //    A range clause would read that oscillation as movement and
+                    //    never fire, costing those two projects their rescue -
+                    //    they converge either way, but at 10001 iterations instead
+                    //    of ~1000. Measured, not reasoned.
+                    // So the discriminator that works HERE is best-so-far alone:
+                    // 588 C drops 2.1e-3 per window and survives; CASHNK drops
+                    // EXACTLY 0 and fires.
+                    //
+                    // COST, stated plainly: CASHNK now fires at 999 rather than
+                    // 641 / 561, so its hand-off to the phase-extinction retry is
+                    // ~360-440 iterations later. That is the price of removing a
+                    // false positive on a converging project, and it is paid on
+                    // the two projects that were already the corpus's cheapest
+                    // beneficiaries of this watch.
+                    //
+                    // The threshold is pa_OptimaTol's own default and no new
+                    // number enters the file; `best` is updated on every genuine
+                    // fall, even one too small to count, so the reference the next
+                    // window is measured against never drifts upward on noise.
+                    static const double kStallRelProgress = 1e-8;
+                    if( e    < stallWatch->bestErr  ) stallWatch->bestErr  = e;
+                    if( comp < stallWatch->bestComp ) stallWatch->bestComp = comp;
                     if( ++stallWatch->run < stallWatch->window ) return false;
-                    stallWatch->stalled = true;
-                    return true;   // stop now; folded back to a failure below
+
+                    const bool firstWindow = !std::isfinite( stallWatch->refErr )
+                                          && !std::isfinite( stallWatch->refComp );
+                    const bool dropped =
+                        ( std::isfinite( stallWatch->refErr )
+                          && stallWatch->bestErr  < stallWatch->refErr  * ( 1. - kStallRelProgress ) )
+                     || ( std::isfinite( stallWatch->refComp )
+                          && stallWatch->bestComp < stallWatch->refComp * ( 1. - kStallRelProgress ) );
+                    if( !firstWindow && !dropped )
+                    {
+                        stallWatch->stalled = true;
+                        return true;   // stop now; folded back to a failure below
+                    }
+                    // Window survived: roll the reference forward, start a new one.
+                    stallWatch->refErr  = stallWatch->bestErr;
+                    stallWatch->refComp = stallWatch->bestComp;
+                    stallWatch->run     = 0;
+                    return false;
                 };
         // Applied after each solve() - see point 1 above.
+        // Logged, not silent: this watch changes a solve's OUTCOME (it forces a
+        // failure so the retry tiers can start), and until 2026-09-03 the only
+        // way to tell whether it had fired was to A/B the whole run against a
+        // build with the field off. The pre-solve watch has always said so in
+        // its own discard message; this one now does too. info level, once per
+        // solve that actually stalls - reset() clears the flag before each.
         auto applyStall = [stallWatch]( Optima::Result& r ) {
-            if( stallWatch->stalled || stallWatch->timedOut ) r.succeeded = false;
+            // Deliberately does NOT fold the early-trend stop: that is done once,
+            // at the primary solve's own call site, and folding it here would
+            // mark every RETRY as failed too, since the flag stays set.
+            if( stallWatch->stalled || stallWatch->timedOut )
+            {
+                ipm_logger->info( "CalculateEquilibriumStateOptima: full solve abandoned after {}"
+                                  " - pa_OptimaStallWindow={}",
+                                  stallWatch->timedOut ? "the wall-clock budget"
+                                                       : "a window with no meaningful progress",
+                                  stallWatch->window );
+                r.succeeded = false;
+            }
         };
 
         Optima::Solver solver;
@@ -2594,7 +3223,20 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             Optima::State cheapState = state;
             *fdSuppress = true;
             stallWatch->reset();
+            // The early-trend trigger must NOT fire inside this attempt, and
+            // getting that wrong is silent and expensive. cheapOpts is a COPY of
+            // options, so it carries the same convergence.check hook; a trend
+            // stop here would set the flag, and the fold at the primary solve
+            // below would then mark THAT solve failed however well it went.
+            // Measured before this guard: j_10TH_G_seawater went OK 229 -> ERR
+            // 1226 for exactly this reason. The cheap attempt is itself already
+            // a discarded probe - there is nothing for the repair loop to look
+            // at until the real trajectory has run.
+            const bool trendWasArmed = *earlyTrendArmed;
+            *earlyTrendArmed = false;
             Optima::Result cheapResult = cheapSolver.solve( problem, cheapState );
+            *earlyTrendArmed = trendWasArmed;
+            *earlyTrend = false;
             *fdSuppress = false;
             fdCheapIterations = cheapResult.iterations;
             cheapAttemptWon = ( cheapResult.succeeded && !stallWatch->stalled && !stallWatch->timedOut );
@@ -2625,6 +3267,27 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         Optima::Sensitivity sensitivity( dims );
         Optima::Result result = wantSens ? solver.solve( problem, state, sensitivity )
                                          : solver.solve( problem, state );
+        // Returning true from convergence.check means "stop", and Optima reports
+        // that as SUCCESS - so an early-trend stop has to be folded back to a
+        // failure HERE, before anything reads result.succeeded. Getting this
+        // wrong is silent: earlyCapHit below tests !result.succeeded, so folding
+        // it later (in applyStall, where the stall watch does its own fold)
+        // leaves the flag false and the safety net never fires.
+        if( *earlyTrend ) result.succeeded = false;
+        // Did pa_OptimaEarlyStabilityAt - rather than the problem itself - stop
+        // the first attempt? Recorded here, before the budget is restored, and
+        // consumed by the early-probe safety net further down. Covers both
+        // rules: the positive form's iteration cap, and the negative form's
+        // phase-decay trend trigger.
+        const bool earlyCapHit = !result.succeeded
+                              && ( ( pa_p->OptimaEarlyStabilityAt > 0
+                                     && (long int)result.iterations
+                                            >= pa_p->OptimaEarlyStabilityAt )
+                                   || *earlyTrend );
+        // Disarm for every retry: the trigger exists to give the repair loop an
+        // early look ONCE. Left armed, a phase that keeps dissolving would end
+        // every attempt in turn and the run could never finish.
+        *earlyTrendArmed = false;
         if( pa_p->OptimaEarlyStabilityAt > 0 )
         {
             // First attempt is over - give everything downstream the real budget.
@@ -3259,7 +3922,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     double psViol = 0.;
                     bool psAbsent = false;
                     const long int kBad = WorstPhaseStabilityViolation(
-                                presenceThreshold,
+                                presenceThreshold, dcFloor,
                                 extinctFixed.empty() ? nullptr : extinctFixed.data(),
                                 psViol, psAbsent );
                     if( kBad < 0 )
@@ -3369,6 +4032,103 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
         }
         } // else (!reaktoroMode) - AOP/SOP's own solvent-collapse retry
+
+        // ---- LAST RESORT: the stall watch's own safety net ------------------
+        // pa_OptimaStallWindow exists to hand control to the retry tiers above
+        // SOONER, not to decide the verdict. If it fired and none of them
+        // recovered, the one thing left worth knowing is whether the watch was
+        // simply WRONG - so re-solve once with it disarmed, from the same
+        // starting state the primary solve used.
+        //
+        // WHY THIS MAKES ARMING THE WATCH A ONE-WAY BET, which is the point.
+        // Without it, switching the field on can only be justified per project,
+        // because a watch that fires on a run that WOULD have converged costs an
+        // answer - and that is precisely what happened at 588 C and is why the
+        // compiled default was reverted to 0 (see ms_multi.h, and plan v5
+        // section 54 for the rule change that removed that particular case).
+        // With it, the worst the watch can do is spend one extra solve on a run
+        // that was already failing, while the best it can do is large and
+        // measured: f_/j_CASHNK converge in ~1001 iterations with the watch and
+        // 10001 without, same G/pH/Vs to every digit.
+        //
+        // Cost is bounded by one ordinary solve and is paid ONLY when the watch
+        // fired AND every retry tier failed - so it is free on every project
+        // that converges today, and free on the projects the watch actually
+        // helps (on CASHNK a retry succeeds, so this never runs).
+        //
+        // Deliberately gated on `stalled` and NOT on `timedOut`:
+        // pa_OptimaMaxSeconds is a wall-clock budget the caller set on purpose,
+        // and silently spending another solve after it expires would defeat it.
+        //
+        // NOT gated to AOP/SOP, and that is deliberate rather than an oversight
+        // of the standing "should this be ROP-gated?" question: the watch itself
+        // is not mode-gated, so ROP needs the same net. In practice ROP cannot
+        // reach this at a window of 500 or more, because it leaves
+        // Optima::Options at library defaults (maxiters = 200) and a window
+        // longer than the budget can never complete - so this only becomes live
+        // for ROP if someone sets a small window explicitly, which is exactly
+        // when they would want the net.
+        if( !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
+        {
+            ipm_logger->info( "CalculateEquilibriumStateOptima: every retry failed after a stall"
+                               " - re-solving once with pa_OptimaStallWindow disarmed" );
+            const long int savedWindow = stallWatch->window;
+            stallWatch->window = 0;      // the check lambda reads this on every call
+            stallWatch->reset();
+            Optima::Solver solverNS;     // fresh instance, per the retry-ordering note above
+            solverNS.setOptions( options );
+            Optima::State  nsState  = initialState;
+            Optima::Result nsResult = solverNS.solve( problem, nsState );
+            optimaIterTotal += nsResult.iterations;
+            stallWatch->window = savedWindow;
+            if( nsResult.succeeded )
+            {
+                state  = nsState;
+                result = nsResult;
+                ipm_logger->info( "CalculateEquilibriumStateOptima: the disarmed re-solve converged"
+                                   " in {} iterations - the stall was a false positive",
+                                   nsResult.iterations );
+            }
+        }
+
+        // ---- LAST RESORT: pa_OptimaEarlyStabilityAt's own safety net --------
+        // Exactly the same shape, and the same argument, as the stall net above.
+        // That field caps the FIRST attempt so the phase-selection repair loop
+        // gets its turn before the primary solve has converged on an assemblage
+        // it will then have to correct - worth 121x on
+        // Resources/gems3k/f_Solvus_G_Test1 (58 iterations if the doomed phase
+        // is pinned out up front, against 7007 if the loop only sees it after
+        // the fact). But the cap applies to EVERY call, including calls whose
+        // assemblage is fine and which simply need their budget: that project's
+        // own cold solve needs 823 iterations, so at a cap of 500 it failed
+        // outright and the repair loop could not rescue it - there was no
+        // violation to repair, only a budget shortfall. That is what kept the
+        // field default-off and unusable (plan v5 section 45).
+        //
+        // Treating the capped attempt as a PROBE removes that: if the cap is
+        // what stopped it and nothing downstream recovered, re-solve once from
+        // the original state at the full budget, so the only cost of a probe
+        // that found nothing is the probe itself. Bounded by one ordinary
+        // solve, paid only on a run that is already failing.
+        if( !result.succeeded && earlyCapHit )
+        {
+            ipm_logger->info( "CalculateEquilibriumStateOptima: the pa_OptimaEarlyStabilityAt probe"
+                               " found nothing to repair - re-solving once at the full budget" );
+            Optima::Solver solverEP;     // fresh instance, per the retry-ordering note above
+            solverEP.setOptions( options );   // already restored to the real maxiters
+            stallWatch->reset();
+            Optima::State  epState  = initialState;
+            Optima::Result epResult = solverEP.solve( problem, epState );
+            optimaIterTotal += epResult.iterations;
+            if( stallWatch->stalled || stallWatch->timedOut ) epResult.succeeded = false;
+            if( epResult.succeeded )
+            {
+                state  = epState;
+                result = epResult;
+                ipm_logger->info( "CalculateEquilibriumStateOptima: the full-budget re-solve"
+                                   " converged in {} iterations", epResult.iterations );
+            }
+        }
 
         ipm_logger->info( "CalculateEquilibriumStateOptima: pNP={} reaktoroMode={} succeeded={} iterations={} nConditions={}",
                            pm.pNP, reaktoroMode, result.succeeded, result.iterations, R );
@@ -3494,7 +4254,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         double worstStabilityViol = 0.;
         bool worstStabilityWasAbsent = false;
         long int worstStabilityPhase = WorstPhaseStabilityViolation(
-                    presenceThreshold,
+                    presenceThreshold, dcFloor,
                     extinctFixed.empty() ? nullptr : extinctFixed.data(),
                     worstStabilityViol, worstStabilityWasAbsent );
         const bool stabilityOk = ( worstStabilityPhase < 0 );
