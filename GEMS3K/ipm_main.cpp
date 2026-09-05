@@ -1417,6 +1417,20 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     bool StatusDivg;
     long int N, IT1,J,Z,iRet,i,  nDivIC;
     double LM=0., LM1=1., FX1,    DivTol;
+    // Noise-stall accept, gated on pa_IpmStallWindow (default 0 = off). See the
+    // field's own comment in ms_multi.h for the mechanism and the measurement.
+    // kIpmStallRelImp  - what counts as pm.PCI "improving" at all.
+    // kIpmStallNearFactor - how close to pm.DXM the best pm.PCI must already be
+    //   before a stall may be accepted. This clause is what makes the rule safe:
+    //   replayed on 14 projects, the four genuine noise-tail stalls sit at 0.5-8x
+    //   pm.DXM while the two false positives an unguarded version produces
+    //   (f_GEOTHERM, o_Solvus) sit at 484x and 42628x - a gap of ~50x, with 30
+    //   inside it. At 100 the rule fires on f_GEOTHERM with the energy still
+    //   1.5e-3 from its final value; at 30 the worst error over all 14 is 1.55e-12.
+    const double kIpmStallRelImp = 1.e-2;
+    const double kIpmStallNearFactor = 30.;
+    double bestPCI = 1.e300;
+    long int bestPCIit = 0;
     const BASE_PARAM *pa_p = base_param();
 
     status = 0;
@@ -1581,6 +1595,19 @@ STEP_POINT( "IPM Iteration" );
 
         if( pm.PCI <= pm.DXM )  // Dikin criterion satisfied - converged!
             goto CONVERGED;
+        if( pa_p->IpmStallWindow > 0 )
+        {   // The criterion has stopped carrying signal: it is already near its
+            // own threshold and has not improved for a whole window, so further
+            // iterations are waiting on rounding noise rather than converging.
+            // Accept the CURRENT state - measured indistinguishable from the
+            // best-seen one here (|FX-FXfinal|/|FX| agrees to a factor of 1.1),
+            // so no snapshot is kept.
+            if( pm.PCI < bestPCI * ( 1. - kIpmStallRelImp ) )
+            {   bestPCI = pm.PCI;  bestPCIit = IT1;  }
+            else if( IT1 - bestPCIit >= (long int)pa_p->IpmStallWindow
+                     && bestPCI <= kIpmStallNearFactor * pm.DXM )
+                goto CONVERGED;
+        }
         if( nCNud > 0L && (IT1 >= cnr-2 && IT1 >= 2 ) )  // finish here because u vector diverges at further IPM iterations
             goto CONDITIONALLY_CONVERGED;
         // Restoring vectors Y and YF from X and XF for the next IPM iteration

@@ -1110,6 +1110,33 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// with control conditions active.
     double OptimaReadmitSeed = 0.;
 
+    /// Window (in IPM iterations) for the noise-stall test on the Dikin criterion.
+    /// 0 = off (the shipped default), > 0 = accept convergence when pm.PCI has not
+    /// improved by more than kIpmStallRelImp over this many iterations AND the best
+    /// pm.PCI seen is already within kIpmStallNearFactor of pm.DXM.
+    ///
+    /// WHY. On part of this corpus the IPM loop terminates on a criterion that has
+    /// stopped carrying signal: once the composition has settled, pm.PCI is computed
+    /// from differences of nearly-equal numbers and wanders in a band whose median
+    /// sits ABOVE pm.DXM with only its lower tail below, so termination becomes a
+    /// waiting time for a lucky draw. Measured on f_Kaolinite (plan v5 section 74):
+    /// the answer is final to 1e-11 by iteration 25 of 62-363, pm.PCI thereafter
+    /// rises on 49 % of steps with no trend, and P(PCI <= DXM) = 0.0063 per
+    /// iteration - predicting a mean of 184.8 against an observed 183.8.
+    ///
+    /// The extra iterations are not merely wasted: they DEGRADE the answer. Letting
+    /// three such projects stop instead improves the mass-balance residual 8-36x and
+    /// takes native's own SIA warm restart from FAIL to OK at zero iterations
+    /// (section 74.6).
+    ///
+    /// Replayed offline on 14 projects at W = 30: fires on exactly the four
+    /// noise-tail ones (f_Kaolinite 273->72, Al-species 187->94,
+    /// FeNaCl_FyGt_TransitionZone 601->82, CASH+_G_csh_sol 215->128), never on a
+    /// project still descending, and the worst |FX - FXfinal|/|FX| at the accept
+    /// point is 1.55e-12 - i.e. the answer does not move. DEFAULT OFF because it
+    /// relaxes native's stated convergence test, which is a project-owner call.
+    short IpmStallWindow = 0;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -2383,7 +2410,8 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaFDHessianDelay, f_pa_OptimaDcFloor, f_pa_MbClassRule,
     f_pa_MbTrendPhaseDecay, f_pa_OptimaEarlyStabilityAt, f_pa_OptimaDimReduce,
     f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit, f_pa_OptimaZeroAbsent,
-    f_pa_OptimaReadmitSeed
+    f_pa_OptimaReadmitSeed,
+    f_pa_IpmStallWindow
 
 } MULTI_DYNAMIC_FIELDS;
 
