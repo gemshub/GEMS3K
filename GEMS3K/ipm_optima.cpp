@@ -61,6 +61,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <functional>
+#include <limits>
 #include <sstream>
 
 namespace {
@@ -977,6 +978,11 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     const double kLogBarrierTau = pa_p->LogBarrierTau;
     const double kPhaseHessianFloor = pa_p->PhaseHessianFloor;
     const bool hasAq = HasAqueousPhase();
+    // pa_OptimaReadmitSeed: 0 = readmit at the floor (the behaviour this has
+    // always had); > 0 = seed at White 1958's Eq. 12a predicted amount, with
+    // this value capping the growth exponent in RT units. See
+    // BASE_PARAM::OptimaReadmitSeed (ms_multi.h).
+    const double kReadmitSeed = pa_p->OptimaReadmitSeed;
 
     // Box bounds, built exactly as the full path builds them - including the
     // "pm.DUL[j] < 1e6 without a `> 0.` guard" convention, so a DUL of exactly
@@ -1643,7 +1649,14 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
         // Neither response was monotone in its own parameter, which is this
         // solver's now-familiar signature for a knob that should not be tuned.
         // Do not re-try either without a genuinely new hypothesis.
-        long int readmitted = 0;
+        //
+        // THE ONE EXCEPTION, and it is the hypothesis that comment asked for:
+        // pa_OptimaReadmitSeed (default 0 = off, so the paragraph above still
+        // describes the shipped behaviour) seeds at White 1958 Eq. 12a's
+        // PREDICTED amount rather than at an arbitrary fraction of the bulk
+        // bound. The 1e-6 measurement above is evidence against an arbitrary
+        // seed; it says nothing about the thermodynamically predicted one.
+        long int readmitted = 0, seeded = 0;
         for( long int j = 0; j < L; j++ )
         {
             if( act[(size_t)j] ) continue;
@@ -1651,12 +1664,49 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             double dual = 0.;
             for( long int i = 0; i < N; i++ )
                 dual += pm.U[i] * pm.A[ i + j*N ];
-            if( pm.F[j] - dual < 0. ) { act[(size_t)j] = 1; readmitted++; }
+            const double sj = pm.F[j] - dual;
+            if( sj >= 0. ) continue;
+            act[(size_t)j] = 1; readmitted++;
+
+            // pa_OptimaReadmitSeed (default 0 = off): start the readmitted
+            // species at the amount its own chemical potential predicts,
+            // instead of at the floor. White, Johnson & Dantzig (1958) Eq. 12a;
+            // the derivation, the species-class restriction and the reason the
+            // knob is the exponent are all at BASE_PARAM::OptimaReadmitSeed.
+            //
+            // pm.Y[j] is what the next pass's Optima::State is built from (the
+            // clamp into [xlower, xupper] happens there), so writing it here is
+            // the whole mechanism - nothing else in this function changes.
+            if( kReadmitSeed > 0.
+                && ( pm.DCCW[j] == DC_SYMMETRIC || pm.DCCW[j] == DC_ASYM_SPECIES ) )
+            {
+                const double xcur = pm.X[j];             // == xlo[j] for an omitted species
+                if( xcur > 0. )
+                {
+                    // Stoichiometric ceiling: the most of this species the bulk
+                    // composition could support. Same bound
+                    // DetectPhaseCollapseAndReseed() computes, and the only one
+                    // of the three clamps that is a statement about the system
+                    // rather than about arithmetic.
+                    double nmax = std::numeric_limits<double>::infinity();
+                    for( long int i = 0; i < N; i++ )
+                    {
+                        const double aij = pm.A[ i + j*N ];
+                        if( aij > 0. )
+                            nmax = std::min( nmax, pm.B[i] / aij );
+                    }
+                    const double grow = std::min( -sj, kReadmitSeed );   // sj < 0 here
+                    double xpred = xcur * std::exp( grow );
+                    if( nmax > 0. && xpred > nmax ) xpred = nmax;
+                    xpred = std::min( std::max( xpred, xlo[(size_t)j] ), xhi[(size_t)j] );
+                    if( xpred > pm.Y[j] ) { pm.Y[j] = xpred; seeded++; }
+                }
+            }
         }
 
         ipm_logger->info( "OptimaReducedPreSolve: pass {} - {} of {} species active, "
-                           "{} Optima iterations, {} readmitted",
-                           pass, nS, L, result.iterations, readmitted );
+                           "{} Optima iterations, {} readmitted ({} seeded above the floor)",
+                           pass, nS, L, result.iterations, readmitted, seeded );
 
         if( readmitted == 0 )
             return true;   // fixed point: the reduced answer satisfies the full KKT conditions
@@ -1916,6 +1966,20 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // f_TestPNTDB guards, and that project is the first one the field is
         // enabled on.
         //
+        // ...WITH ONE EXCEPTION: the HOP leg (optima_hop_leg, ms_multi.h,
+        // where the reasoning is written out in full). There the incoming
+        // warm pair is NATIVE's, not an Optima fixed point, and native decides
+        // absence twenty orders of magnitude below Optima's box floor - so
+        // every species native calls absent arrives sitting AT that floor with
+        // a reduced gradient Optima has never tested, and on a large system
+        // those are exactly what its max-norm residual is made of. The
+        // pre-solve there is not manufacturing a (primal, dual) pair that
+        // already exists; it is re-expressing native's own assemblage at a
+        // dimension where the residual is not dominated by species that are
+        // not present. It needs no new selection rule to do it:
+        // OptimaReducedPreSolve() builds its initial active set from pm.Y[],
+        // which on this path is native's converged answer.
+        //
         // pa_OptimaDimReduce is THREE-VALUED: > 0 is an explicit pass count,
         // < 0 is explicitly off, and 0 - the compiled default, and what every
         // project that has never heard of this field carries - is AUTO: on
@@ -1967,9 +2031,30 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         if( dimReducePasses == 0 && L >= kDimReduceAutoMinDC )
             dimReducePasses = kDimReduceAutoPasses;
 
+        // On the HOP leg the reduction is EXPLICIT OPT-IN ONLY - AUTO does not
+        // reach it. Measured 2026-09-04 on 07PSIna_G_mid_1 (265 species, so
+        // above the AUTO gate), same binary, native's own answer handed over
+        // either way:
+        //     warm verification at full dimension :  2 Optima iterations,  6 ms
+        //     reduction first, then verification  : 35 Optima iterations, 85 ms
+        // i.e. exactly the "waste when it discards, destructive when it
+        // settles" the cold-start-only rule above predicts - HOP's warm
+        // verification there is ALREADY O(1), so there is nothing for a
+        // reduction to buy and it charges 14x on the Optima leg for the same
+        // answer. The reduction pays on the HOP leg only where that
+        // verification does NOT work, and section 39.4 established that no
+        // static property of a project predicts which of those it is (set size
+        // least of all: 164 species solvable, 205 not, 246 solvable). So this
+        // is per-project, like every other knob on this path whose response is
+        // not uniformly favourable - and it reuses pa_OptimaDimReduce's own
+        // three-valued convention rather than adding a field: > 0 means "yes,
+        // on this project, including its HOP leg", 0 (AUTO) stays cold-start
+        // only. Default HOP behaviour is therefore byte-identical to before.
+        const bool hopReduce = optima_hop_leg && pa_p->OptimaDimReduce > 0;
+
         long int dimReduceIters = 0;
         bool dimReduceDone = false;
-        if( !reaktoroMode && R == 0 && pm.pNP == 0 && dimReducePasses > 0 )
+        if( !reaktoroMode && R == 0 && ( pm.pNP == 0 || hopReduce ) && dimReducePasses > 0 )
         {
             // Re-establish the same consistent (Y, X, XF/XFA, activity
             // coefficients) state the seed block above leaves behind. The
@@ -4200,6 +4285,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
         double maxKKTResidual = 0.;
         long int worstKKTSpecies = -1;
+        std::vector<double> gradSaved( (size_t)L, 0. );   // for pa_OptimaZeroAbsent below
         const double kktTol = std::max( pa_p->GAS, 1e-300 );
         for( long int j = 0; j < L; j++ )
         {
@@ -4218,6 +4304,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 gradJ -= kLogBarrierTau / std::max( pm.X[j], dcFloor );
             for( long int i = 0; i < N; i++ )
                 gradJ -= pm.U[i] * pm.A[ i + j*N ];
+            gradSaved[(size_t)j] = gradJ;
             double resid;
             // A KINETICALLY FIXED species (xlower==xupper by construction,
             // from a DUL<1e6 restriction pinning it to a single value - see
@@ -4320,6 +4407,86 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // solver has no such separate phase - pm.ITG carries the total.
         pm.ITG = optimaIterTotal;
 
+        // ---- pa_OptimaZeroAbsent: report a correctly absent species as EXACTLY
+        // ZERO rather than at the box's numerical floor (0 = off, the default).
+        //
+        // Placed HERE, after every trustworthiness check above has already run
+        // and produced its verdict on the un-zeroed state, and gated on that
+        // verdict being clean - so this can never turn an accepted answer into
+        // a rejected one, and never fires on a solve already headed for BAD.
+        //
+        // See BASE_PARAM::OptimaZeroAbsent (ms_multi.h) for why the twenty
+        // orders of magnitude between native's pa_DcMin truncation inside GX()
+        // and this path's dcFloor are worth closing at all, and for what this
+        // does NOT do (native's species leave the PROBLEM; these leave only the
+        // ANSWER).
+        if( pa_p->OptimaZeroAbsent != 0 && result.succeeded && allTargetsMet
+            && massBalanceBadIC < 0 && kktOk && stabilityOk )
+        {
+            std::vector<double> Ysave( pm.Y, pm.Y + L );
+            long int nZeroed = 0;
+            for( long int j = 0; j < L; j++ )
+            {
+                // (a) not kinetically REQUIRED to be present. DLL > 0 is a
+                //     caller's deliberate retention floor - the gibbsite case
+                //     in optima_regression's metastability suite - and zeroing
+                //     it would silently discard the constraint.
+                if( pm.DLL[j] > 0. ) continue;
+                // (b) the bound it sits on must be the NUMERICAL floor, not a
+                //     real constraint.
+                const double lo = problem.xlower[j];
+                if( lo > dcFloor * ( 1. + 1e-9 ) ) continue;
+                // (c) actually sitting on it - same expression the KKT check
+                //     above uses to classify a variable as bound-active.
+                if( pm.Y[j] > lo + std::max( dcFloor, lo * 1e-6 ) ) continue;
+                // (d) correctly there. For an ordinary box, that is the
+                //     solver's own test for a variable at its lower bound:
+                //     a non-negative reduced gradient. For a DEGENERATE box
+                //     (xupper <= xlower, i.e. a DUL of exactly 0 - a hard
+                //     kinetic exclusion) no sign test applies, and the box
+                //     itself is the statement that the species is excluded -
+                //     which is precisely the o_/t_Kaolinite quartz case, where
+                //     the species carries a strong driving force to grow and
+                //     is nevertheless, deliberately, absent.
+                const bool degenerateBox =
+                    ( problem.xupper[j] <= lo + std::max( dcFloor, lo * 1e-6 ) );
+                if( !degenerateBox && gradSaved[(size_t)j] < 0. ) continue;
+                if( pm.Y[j] == 0. ) continue;
+                pm.Y[j] = 0.;
+                nZeroed++;
+            }
+
+            if( nZeroed > 0 )
+            {
+                // SELF-GATE. Dropping ~dcFloor from each of several hundred
+                // species is utterly negligible against a major IC and NOT
+                // negligible against a trace one - the trace-IC sensitivity
+                // this branch has measured repeatedly. So the zeroed state is
+                // put back through the SAME per-IC test the un-zeroed state
+                // just passed, and is kept only if it also passes.
+                if( CheckMassBalanceResiduals( pm.Y ) >= 0 )
+                {
+                    for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];
+                    CheckMassBalanceResiduals( pm.Y );   // restore pm.C[] to the accepted state
+                    ipm_logger->info( "CalculateEquilibriumStateOptima: pa_OptimaZeroAbsent - "
+                                       "reverted, zeroing {} absent species would break the mass "
+                                       "balance", nZeroed );
+                }
+                else
+                {
+                    // Commit, and recompute everything derived from the primal
+                    // so the reported phase amounts, volume and concentrations
+                    // describe the state actually being returned.
+                    for( long int j = 0; j < L; j++ ) pm.X[j] = pm.Y[j];
+                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+                    ipm_logger->info( "CalculateEquilibriumStateOptima: pa_OptimaZeroAbsent - "
+                                       "{} of {} species reported as exactly zero", nZeroed, L );
+                }
+            }
+        }
+
         if( !result.succeeded && pa_p->DW )
         {
             // DW already gates exactly this decision for the native
@@ -4377,6 +4544,234 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     pm.t_end = clock();
     pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
     return pm.t_elap_sec;
+}
+
+// HYBRID: native selects the species (its own cold IPM/MBR/PSSC pipeline),
+// then Optima finishes, warm-started from native's converged primal AND
+// dual. Dispatched from TNode::GEM_run() (node.cpp) for NEED_GEM_HOP - see
+// NODECODECH's own comment in databr.h for why this is a separate
+// caller-selected mode rather than something AOP does internally (the
+// user's explicit "switch between gems native and optima solvers, not use
+// them together" direction, 2026-08-23 - a caller asking for HOP asks for
+// both, by name, and gets both).
+//
+// Formerly this two-leg orchestration lived inline in node.cpp, with only
+// the NATIVE call wrapped in a try/catch - a thrown TError from the OPTIMA
+// leg propagated straight past that (there was no catch around it) to
+// GEM_run()'s own OUTER catch(TError&), which never calls packDataBr(), so
+// a converged native answer was silently discarded whenever the warm
+// Optima leg on top of it could not finish (confirmed: native solves
+// 07PSIna_G_vcomplex @ 80 C in 693 iterations; the full-dimension warm
+// Optima leg on top of it does not finish in any reasonable time, and the
+// mode reported nothing at all). Moved here, with the Optima leg's own
+// try/catch, so that case degrades to a soft BAD_GEM_HOP carrying native's
+// own answer instead - the guarantee this method's own header comment
+// states: HOP is never worse than a plain native solve. See
+// GEMS3K/CLAUDE.md and Docs/gems3k-optima-plan-v5.md, section 64.6.
+double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int& NumIterIPM,
+                                                 bool warmNative )
+{
+    long int fiaN = 0, ipmN = 0;
+    bool nativeOk = true;
+    double calcTime = 0.;
+    std::vector<double> Ysave, Usave;
+
+    // SHP (warmNative) starts the NATIVE leg warm instead of cold. HOP as
+    // built runs it cold at EVERY call, which is right for a single
+    // equilibrium and wasteful in a sweep, where the previous point's
+    // converged state is already on this node: measured over a 301-point
+    // temperature sweep of one TNode (j_Solvus_G_series1, 400-700 C,
+    // debug-optima-vs-reaktoro/hop_sweep.cpp), stepping it through native's
+    // cold path costs 81743 iterations / 1171 ms and through its warm path
+    // 14301 / 241 ms - 5.7x fewer iterations, 4.9x less wall time, same G
+    // to every digit. HOP pays the first of those at every step.
+    //
+    // Same detector as the Optima leg's own warm-start guard above: pm.U[]
+    // identically zero (or non-finite) means no solver has ever run on this
+    // instance, so there is nothing to warm-start FROM and the .dbr file's
+    // stored speciation is NOT a warm start - it is a cold start from data
+    // frozen at that file's own state point. Reused verbatim rather than
+    // reinvented, and deliberately not "has HOP run before": native AIA/SIA
+    // and the Optima path both write pm.U[], and handing any of their
+    // converged states to a warm native leg is legitimate.
+    bool wantWarmNative = warmNative;
+    if( wantWarmNative )
+    {
+        bool usable = false;
+        for( long int i = 0; i < pm.N; i++ )
+        {
+            if( !std::isfinite( pm.U[i] ) ) { usable = false; break; }
+            if( pm.U[i] != 0. ) usable = true;
+        }
+        if( !usable )
+        {
+            wantWarmNative = false;
+            ipm_logger->warn( "CalculateEquilibriumStateHOP: a warm native leg (SHP) was requested "
+                              "but this node carries no previous solution (pm.U[] is all zero) - "
+                              "running the native leg cold for this call. Use HOP for a first "
+                              "solve, or SHP only on a node that has already solved." );
+        }
+    }
+
+    try
+    {
+        // pm.pNP = 1 is native's ordinary warm (SIA) start. NOT -1, which is
+        // native's own documented "warm, but first raise every zeroed-off
+        // species back to a trace amount" convention (DC_RaiseZeroedOff, the
+        // pm.pNP <= -1 branch of InitalizeGEM_IPM_Data). That was tried,
+        // because pa_OptimaZeroAbsent commits EXACT zeros into pm.Y[] and
+        // hence into xDC, so the state a previous SHP call leaves behind can
+        // carry more zeros than native's own answer would - and native's SIA
+        // then has to re-insert every marginal species by hand. It is a real
+        // effect and it is project-specific, not general: over a 301-point
+        // temperature sweep of j_Solvus_G_series1, raising cut SHP from 77068
+        // iterations (and one failure) to 38239 (and none), while over an
+        // 81-point sweep of j_10TH_G_seawater it did the opposite, 3903 ->
+        // 8722. Same non-monotone-across-projects signature as every other
+        // knob on this branch, so it is not shipped and no field was added
+        // for it; the measurement is here so it is not re-derived.
+        pm.pNP = wantWarmNative ? 1 : 0;
+        calcTime = CalculateEquilibriumState( fiaN, ipmN );
+        // Snapshot the converged state BEFORE the Optima leg can touch it.
+        // pm.Y[]/pm.U[] are exactly what the Optima leg's warm start reads
+        // and what its objective callback then mutates in place every
+        // iteration, so this is the only point at which they still
+        // describe native's own answer.
+        Ysave.assign( pm.Y, pm.Y + pm.L );
+        Usave.assign( pm.U, pm.U + pm.N );
+    }
+    catch( TError& werr )
+    {
+        // COLD FALLBACK for the warm native leg, and the reason SHP is safe
+        // to offer at all. Native's own SIA is documented to REFUSE states
+        // its cold path returns - on ten projects the cold path returns an
+        // answer failing native's own mass-balance test, and SIA is the only
+        // path that checks it (plan-v5 sections 29.2 and 60.5). On such a
+        // project a warm native leg fails at essentially every step, so
+        // without this SHP would be strictly worse than HOP there. With it,
+        // the leg is simply retried cold and the mode degrades to exactly
+        // HOP; the price is one wasted native attempt, which the same
+        // measurements put at tens to low hundreds of iterations.
+        if( wantWarmNative )
+        {
+            ipm_logger->warn( "CalculateEquilibriumStateHOP: the warm native leg failed ({}: {}); "
+                              "retrying it cold for this node", werr.title, werr.mess );
+            wantWarmNative = false;
+            fiaN = ipmN = 0;
+            try
+            {
+                pm.pNP = 0;
+                calcTime = CalculateEquilibriumState( fiaN, ipmN );
+                Ysave.assign( pm.Y, pm.Y + pm.L );
+                Usave.assign( pm.U, pm.U + pm.N );
+            }
+            catch( TError& nerr2 )
+            {
+                nativeOk = false;
+                ipm_logger->warn( "CalculateEquilibriumStateHOP: the native leg failed cold too "
+                                   "({}: {}); falling back to a cold Optima solve for this node",
+                                   nerr2.title, nerr2.mess );
+                fiaN = ipmN = 0;
+                calcTime = 0.;
+            }
+        }
+        else
+        {
+            // No assemblage to hand over. Degrade to a plain cold Optima solve
+            // rather than failing outright - the same "a caller shouldn't have
+            // to know" reasoning as the USE_OPTIMA_SOLVER fallback in
+            // node.cpp - and say so, because the result is then an AOP result
+            // wearing a HOP status.
+            nativeOk = false;
+            ipm_logger->warn( "CalculateEquilibriumStateHOP: the native leg failed ({}: {}); falling "
+                               "back to a cold Optima solve for this node", werr.title, werr.mess );
+            fiaN = ipmN = 0;
+            calcTime = 0.;
+        }
+    }
+
+    // Warm-start Optima from native's converged primal AND dual. Warm, not
+    // cold, is the whole point: measured native -> warm Optima 7/7 where
+    // native -> native SIA fails (plan-v5 section 29.2), and the seeded
+    // dual is what makes a correct (x,y) pair cost O(1) iterations rather
+    // than several hundred (section 27).
+    pm.pNP = nativeOk ? 1 : 0;
+    long int fiaO = 0, ipmO = 0;
+
+    // Tell the Optima leg it is running on top of native's own assemblage,
+    // which is what lets the dimension reduction - otherwise cold-start-only
+    // - run in front of it WHEN THE PROJECT ASKS FOR IT (pa_OptimaDimReduce
+    // > 0; AUTO does not reach it, because on a project whose warm
+    // verification already costs 2 iterations a reduction is a 14x loss -
+    // measured, see the gate's own comment and ms_multi.h). Set only when
+    // native actually produced an assemblage: with nativeOk == false this
+    // degenerates to a plain cold AOP call, which reaches the reduction
+    // through pm.pNP == 0 on its own. RAII because
+    // CalculateEquilibriumStateOptima() has many exits including thrown
+    // Error(...), and this flag must not leak into a later call.
+    struct HopLegGuard {
+        TMultiBase* m;
+        bool prev;
+        HopLegGuard( TMultiBase* mm, bool on ) : m(mm), prev(mm->optima_hop_leg)
+            { m->optima_hop_leg = on; }
+        ~HopLegGuard() { m->optima_hop_leg = prev; }
+    } hopLegGuard( this, nativeOk );
+
+    if( !nativeOk )
+    {
+        // Nothing to fall back to - let a failure here propagate exactly
+        // as a plain cold AOP call's would (there is no "worse than
+        // native" floor to defend when native itself never produced one).
+        calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false );
+    }
+    else
+    {
+        try
+        {
+            calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false );
+        }
+        catch( TError& oerr )
+        {
+            // Restore native's converged primal and dual, and re-establish
+            // every quantity derived from the primal - the Optima leg's own
+            // objective callback may have mutated pm.X[]/pm.XF[]/pm.XFA[]/
+            // activity coefficients/concentrations in place before it
+            // failed, so restoring Y alone would leave those stale. Same
+            // recompute sequence pa_OptimaZeroAbsent's own commit path
+            // already uses, above.
+            for( long int j = 0; j < pm.L; j++ ) pm.Y[j] = pm.X[j] = Ysave[(size_t)j];
+            for( long int i = 0; i < pm.N; i++ ) pm.U[i] = Usave[(size_t)i];
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );
+            CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+            // Soft failure, mirroring CalculateEquilibriumStateOptima()'s
+            // own BAD_GEM_* convention (testMulti() reads pm.MK below, via
+            // TNode::GEM_run()) - the Optima leg could not finish, but
+            // native's own answer is real and is what gets reported here,
+            // not lost.
+            pm.MK = 2;
+            std::string buf = std::string("Optima leg failed after a successful native solve (")
+                             + oerr.title + oerr.mess
+                             + "); reporting native's own converged state instead";
+            setErrorMessage( 21, "W21IPM: HOP: ", buf.c_str() );
+            // fiaO/ipmO were already set by CalculateEquilibriumStateOptima()'s
+            // OWN catch(TError&) block before it re-threw - real iterations
+            // spent on the discarded attempt, not zero. Left as they are:
+            // only the STATE that attempt produced is discarded, not the
+            // reported cost of having made it.
+            ipm_logger->warn( "CalculateEquilibriumStateHOP: Optima leg failed after a successful "
+                               "native solve ({}: {}) - restoring and reporting native's own answer "
+                               "as BAD_GEM_HOP", oerr.title, oerr.mess );
+        }
+    }
+
+    // Report the TRUE total cost of both legs (or, on the restore path, the
+    // cost actually incurred - the discarded Optima attempt's iterations
+    // are real work spent, so they are still counted; only its STATE is
+    // discarded).
+    NumIterFIA = fiaN + fiaO;
+    NumIterIPM = ipmN + ipmO;
+    return calcTime;
 }
 
 #endif // USE_OPTIMA_SOLVER

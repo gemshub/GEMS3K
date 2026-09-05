@@ -127,7 +127,18 @@ struct SolutionData {
     double *arCTermt=nullptr; ///< new: Coulombic terms adding to overall activity coefficients [Ls_]
 
     double *arVol=nullptr;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
-    double *aphVOL=nullptr;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
+    double *aphVOL=nullptr;     ///< phase volume slot in MULTI (pm.FVOL[k]), cm3 TOTAL for the phase.
+                                ///< NOTE the historic "cm3/mol" comment was wrong about the units a
+                                ///< model must write here: every consumer in GEMS3K (pm.VXc,
+                                ///< CNode->vPS[], MXV in ipm_chemical.cpp, the kinetics vPh_) reads it
+                                ///< as an EXTENSIVE total. A model computing a molar volume must
+                                ///< multiply by aphXF[0] before storing - see aphXF.
+    double *aphXF=nullptr;      ///< phase total amount slot in MULTI (pm.XF[k]), moles. Provided so a
+                                ///< model whose EoS yields a MOLAR volume can convert it to the total
+                                ///< that aphVOL expects. Also keeps the stored volume EXTENSIVE, which
+                                ///< matters because ScaleSystemToInternal()/RescaleSystemFromInternal()
+                                ///< multiply and divide pm.FVOL[k] by ScFact = pa_DG/sum(bIC): an
+                                ///< intensive value stored here comes back out scaled by 1/ScFact.
     double T_k;         ///< Temperature, K (initial)
     double P_bar;       ///< Pressure, bar (initial)
 };
@@ -182,7 +193,8 @@ class TSolMod
 
         double *x;      ///< Pointer to mole fractions of end members (provided)
         double *aVol;   ///< molar volumes of species (end members)
-        double *phVOL;  ///< phase volume, cm3/mol (now obsolete) !!!!!!!!!!!! Check usage!
+        double *phVOL;  ///< phase volume slot in MULTI, cm3 TOTAL (see SolutionData::aphVOL)
+        double *phXF;   ///< phase total amount, moles (see SolutionData::aphXF); may be nullptr
 
         // Results
         // double Gam;   	///< work cell for activity coefficient of end member
@@ -212,6 +224,49 @@ class TSolMod
         double ideal_conf_entropy();
         void return_sitefr();
         void retrieve_sitefr();
+
+        /// DECIDED 2026-09-05: GEMS3K reports the phase volumes that SUM TO THE SYSTEM TOTAL,
+        /// i.e. the ideal-mixing volumes CalculateConcentrations() has already put in pm.FVOL[k],
+        /// and a cubic-EoS model does NOT overwrite them with its own mixture volume.
+        ///
+        /// The choice, and what it costs. pm.VXc - and hence CNode->Vs, the reported system
+        /// volume - is the ideal sum Sum_j Vol[j]*X[j] over tabulated pure-species V0.
+        /// A cubic EoS instead returns the MIXTURE volume from its selected root, which differs
+        /// by the excess volume of mixing (6.3e-5 relative on the T12 CO2-H2O fluid; exactly 0
+        /// on j_TiQ_PRSV). Native computes VXc first and only then runs the activity-coefficient
+        /// pass, so a model that writes phVOL here silently breaks the identity
+        /// Sum_k Ph_Volume(k) == cVs() that CNode->vPS[] and CNode->Vs are packed from - an
+        /// identity the Optima path satisfies by construction, since it ENDS its refresh with
+        /// CalculateConcentrations(). Keeping the EoS value would therefore have traded an
+        /// intra-mode inconsistency for a cross-mode one (native's Vs would differ from AOP's).
+        /// The price of the decision, stated plainly: for a real fluid GEMS3K reports an
+        /// ideal-mixing phase volume, and MXV (= pm.FVOL[k]/pm.XF[k], ipm_chemical.cpp, the
+        /// phase molar volume that converts volume-coded kinetic restrictions into moles) is the
+        /// ideal molar volume rather than the EoS one. External evidence does not settle which
+        /// is better: NIST gives 63.5 cm3/mol for CO2 at 70 bar/25 C against T12's own tabulated
+        /// V0 of 65.6, so the tabulated data is itself ~3 % off.
+        ///
+        /// NOT dead code, and one line to reverse: flip kReportEosMixtureVolume to reinstate the
+        /// EoS mixture volume everywhere it is computed. The units conversion below is the fix
+        /// from 2026-09-04 (plan v5 section 68) and must stay whichever way this is set - the
+        /// models hand over a MOLAR volume (cm3/mol) and phVOL is read as the phase EXTENSIVE
+        /// total (cm3), so without phXF it is also silently scaled by pa_DG through
+        /// RescaleSystemFromInternal().
+        ///
+        /// SCOPE, deliberately: this governs only the three cubic-EoS models that call it
+        /// (TPRSVcalc, TSRKcalc, TPR78calc). TCGFcalc writes phVOL directly, and correctly, as
+        /// an extensive quantity (phWGT[0]/roro) - it is left alone because no project in any
+        /// corpus uses SM_CGFLUID, so changing it would be an untested edit; if one ever does,
+        /// it will report an EoS volume where these three report an ideal one, and that
+        /// inconsistency should be resolved the same way as this.
+        static constexpr bool kReportEosMixtureVolume = false;
+
+        void set_phVOL_from_molar( double Vmolar_cm3 )
+        {
+            if( !phVOL || !kReportEosMixtureVolume )
+                return;
+            phVOL[0] = phXF ? Vmolar_cm3 * phXF[0] : Vmolar_cm3;
+        }
 
 
         public:

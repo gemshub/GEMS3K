@@ -643,6 +643,7 @@ void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int
     sd.arCTermt = pm.CTerms+jb; // End member coulombic terms
 
     sd.aphVOL = pm.FVOL+k;
+    sd.aphXF = pm.XF+k;   // lets an EoS model turn its molar volume into the total aphVOL expects
     sd.DC_Codes = pm.DCC+jb;  // pointer to Dcomp class codes (added 02.05.2010 TW)
     sd.arMoiSN = pm.MoiSN+jmb;  // Pointer to sublattice-moiety multiplicity array
     sd.arSitFr = pm.SitFr+jsb;  // Pointer to sublattice-moiety multiplicity array

@@ -78,6 +78,7 @@ TSolMod::TSolMod( SolutionData *sd ):
     DC_Codes = sd->DC_Codes;
     x = sd->arWx;
     phVOL = sd->aphVOL;
+    phXF = sd->aphXF;
     aVol = sd->arVol;
     lnGamma = sd->arlnGam;
     lnGamConf = sd->arlnCnft;  // new double[NComp];
@@ -124,6 +125,7 @@ TSolMod::TSolMod( long int NSpecies, char Mod_Code,  double T_k, double P_bar ):
     DC_Codes = 0;
     x = 0;
     phVOL = 0;
+    phXF = 0;
     aVol = 0;
     lnGamma = 0;
     lnGamConf = 0;

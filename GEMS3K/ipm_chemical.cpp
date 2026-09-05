@@ -757,6 +757,25 @@ double TMultiBase::GX( double LM  )
         {  // gradient vector pm.MU - the direction of descent!
             pm.X[i]=pm.Y[i]+LM*pm.MU[i];
 //            if( pm.X[i] <  pm.lowPosNum )   // this is the Ls set cutoff !!!!!!!!!!
+            // THIS IS WHERE NATIVE'S EXACT ZEROS COME FROM. Observed 2026-09-03
+            // with GEMS3K_NATIVE_TRACE_FILE (see ms_multi.h): on
+            // Resources/gems3k-psina/07PSIna_G_complex_1_0_1_80_0 the initial
+            // approximation carries ZERO exact zeros, and 609 of the 542 that
+            // survive into the answer are already present at the FIRST exit from
+            // InteriorPointsMethod(), i.e. before PhaseSelectionSpeciationCleanup()
+            // has run once. A temporary counter put the number of truncations in
+            // that single solve at 1 113 007 - GX() is the golden-section line
+            // search's objective and is re-evaluated many times per iteration.
+            //
+            // WHY IT MATTERS BEYOND BOOKKEEPING: a hard truncation to exact zero
+            // is not available to a box-constrained interior-point method, whose
+            // variables live above a positive lower bound (dcFloor = pa_DHB, 1e-13
+            // on this project) and can only approach it asymptotically. So the
+            // standing reading of the psina failures - "native deletes the phase
+            // via PSSC, AOP cannot" - names the wrong mechanism: PSSC INSERTS and
+            // eliminates a handful of phases per pass (4/1, 0/3, 0/1 here) as an
+            // assemblage correction, while the bulk removal happens here, twenty
+            // orders of magnitude below AOP's floor.
             if( pm.X[i] <  pm.DcMinM )
                 pm.X[i]=0.;
         }
@@ -1361,6 +1380,46 @@ long int TMultiBase::SpeciationCleanup( double AmountCorrectionThreshold, double
    return NeedToImproveMassBalance;
 }
 
+// Largest amount of a single-species phase the bulk composition can actually
+// supply: min over the ICs it consumes of b_i / a(j,i). Charge rows are skipped
+// (b[Zz] is normally 0, which would give a meaningless ceiling of 0 for a charged
+// species; single-component phases are neutral, so this is defensive only).
+//
+// WHY THIS EXISTS. PSSC inserts a lost pure phase at pm.DFYsM = pa_DFYs, a FIXED
+// 1e-6 mol that does not look at the composition, and sets MassBalanceViolation
+// in the same branch. On a project whose elements are seeded at 1e-9 mol - the
+// psina/T8 families do exactly that - every such insertion asks for 1000-2000x
+// more of its limiting element than exists, so it is INFEASIBLE rather than
+// merely aggressive: the following MBR pass must undo it, PSSC re-proposes it,
+// and the assemblage never settles. Measured 2026-09-05 (plan v5 section 76) on
+// 07PSIna_G_vcomplex_2 @ 80 C (all 12 insertions 1000-2000x over) and T8_aq801
+// (both cycling phases 1000x over, ZrO2(cr) re-inserted at a bit-identical
+// stability index on passes 4 and 6). Both exhausted PSSC's pass budget, set
+// pm.PZ = 2 and reported BAD_GEM_AIA - on a state whose IPM loop had already
+// converged with mass balance passing, and whose G was right to 11 digits.
+//
+// Clamping to exactly this ceiling (no safety fraction) is SUFFICIENT: measured,
+// both projects go BAD -> OK with G unchanged. The same quantity, bounded per
+// end-member, is what ipm_optima.cpp's DetectPhaseCollapseAndReseed() already
+// uses for the analogous job on the Optima path - for a single end-member its
+// "/nEnd" divisor is 1, so the two conventions agree exactly here.
+double TMultiBase::PhaseInsertionCeiling( long int j )
+{
+    const long int Zlim = pm.N - pm.E;   // ordinary ICs only, as MBR's own loops scan
+    double cap = -1.;
+    for( long int i = 0; i < Zlim; i++ )
+    {
+        const double coef = pm.A[ i + j*pm.N ];
+        if( coef > 0. )
+        {
+            const double icBound = pm.B[i] / coef;
+            if( cap < 0. || icBound < cap )
+                cap = icBound;
+        }
+    }
+    return cap;   // negative if the species consumes no ordinary IC - caller falls back
+}
+
 //====================================================================================
 /// New simplified PSSC() algorithm   DK 01.05.2010.
 /// PhaseSelection() part only looks for phases to be inserted, also checks if some
@@ -1405,10 +1464,32 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     StabilityIndexes( ); // Calculation of phase stability criteria
     (pm.K2)++;
 
+    // Native event trace (GEMS3K_NATIVE_TRACE_FILE) - see the declaration in
+    // ms_multi.h. This function IS the phase-selection decision procedure an
+    // AOP/SOP equivalent has to reproduce, and it has only ever been studied
+    // through its OUTPUT (the exact zeros left in the converged answer). What
+    // follows logs the decision itself: per pass, per phase, the stability
+    // index, the threshold it was compared against, the amount, and the branch
+    // taken - with names rather than bare indices, since a trace of indices on
+    // a 1392-species system is not worth writing.
+    FILE* ntf = native_trace_file();
+    const long int trPass = pm.K2;   // pass index, 1-based; native bails out after 5
+    if( ntf )
+        fprintf( ntf, "PSSC  pass=%ld enter FI=%ld cleanup=%ld DF=%.6e DFM=%.6e"
+                      " DSM=%.6e DcMinM=%.6e AmountThreshold=%.6e MjuDiffCutoff=%.6e\n",
+                 (long)trPass, (long)pm.FI, (long)CleanupStatus, pa_p->DF, pa_p->DFM,
+                 pm.DSM, pm.DcMinM, AmountThreshold, MjuDiffCutoff );
+
     for(k=0;k<pm.FI;k++)
     {
        L1k = pm.L1[k]; // Number of components in the phase
        KinConstrPh = false;
+       // Trace state for this phase. Read independently of PhaseAmount/logSI
+       // below, which are only assigned AFTER the kinetic-constraint check and
+       // would otherwise be the previous phase's values on the skip path.
+       const char* trAction = "KEEP";
+       double trLogSI = pm.Falp[k], trAmount = pm.XF[k], trYbefore = 0.;
+       if( ntf ) for(j=jb; j<jb+L1k; j++) trYbefore += pm.Y[j];
   /*
        if( pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL )
        {
@@ -1457,7 +1538,10 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
  //      }
        if( pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL
                || KinConstrPh == true )
+       {
+           trAction = KinConstrPh ? "SKIP_KINCONSTR" : "SKIP_SORPTION";
            goto NextPhase;  // Temporary workaround
+       }
 
        PhaseAmount = pm.XF[k];
        logSI = pm.Falp[k];
@@ -1474,6 +1558,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
           }
           if( RemFlagDC == true )
              PHremoved++;
+          trAction = "ZERO_NEGLIGIBLE";   // stable, but present below DSM
           goto NextPhase;
        }
        if( logSI >= pa_p->DF )  // 2 - INSERTION CASE
@@ -1483,12 +1568,18 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                if( L1k > 1 )
                   DC_RaiseZeroedOff( jb, jb+L1k, k );
                else
-                  pm.Y[jb] = pm.DFYsM; // Spec. value for pure phase insertion
+               {  // Spec. value for pure phase insertion, clamped by what the bulk
+                  // composition can supply - see PhaseInsertionCeiling() above.
+                  const double cap = PhaseInsertionCeiling( jb );
+                  pm.Y[jb] = ( cap > 0. && cap < pm.DFYsM ) ? cap : pm.DFYsM;
+               }
                DCinserted += L1k;
                PHinserted++;
                kfr = k;
                MassBalanceViolation = true;
+               trAction = "INSERT";
            } // otherwise (if present), the phase is cleaned up
+           else trAction = "STABLE_PRESENT";
            goto NextPhase;
        }
        if( logSI <= -pa_p->DFM )  // 3 - ELIMINATION CASE
@@ -1516,10 +1607,25 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                 }
              }
              PHremoved++;
+             trAction = ( PhaseAmount <= AmountThreshold ) ? "ELIMINATE" : "ELIMINATE_MBVIOL";
           }
+          else trAction = "UNSTABLE_ABSENT";
           goto NextPhase;
        }
-     NextPhase: jb+=pm.L1[k];
+     NextPhase:
+       if( ntf )
+       {
+           double trYafter = 0.; long int trNzero = 0;
+           for(j=jb; j<jb+L1k; j++)
+           {   trYafter += pm.Y[j];
+               if( pm.Y[j] == 0. ) trNzero++;
+           }
+           fprintf( ntf, "PSSC  pass=%ld phase k=%ld %-20s L1=%ld logSI=%+.6e"
+                         " amount=%.6e Ybefore=%.6e Yafter=%.6e nzeroDC=%ld action=%s\n",
+                    (long)trPass, (long)k, char_array_to_string(pm.SF[k],MAXPHNAME+MAXSYMB).c_str(),
+                    (long)L1k, trLogSI, trAmount, trYbefore, trYafter, (long)trNzero, trAction );
+       }
+       jb+=pm.L1[k];
    } // k
    // First loop over phases finished
 
@@ -1532,6 +1638,11 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
        L1k = pm.L1[k]; // Number of components in the phase
        KinConstrPh = false;
        YFcleaned = 0.0;
+       double trYbeforeC = 0.; long int trNzeroBeforeC = 0;
+       if( ntf ) for(j=jb; j<jb+L1k; j++)
+       {   trYbeforeC += pm.Y[j];
+           if( pm.Y[j] == 0. ) trNzeroBeforeC++;
+       }
        for(j=jb; j<jb+L1k; j++)
        {  // Checking if a DC in phase is under kinetic control
           Yj = pm.Y[j];
@@ -1663,7 +1774,27 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
         }
 //        goto NextPhaseC;
      }
-     NextPhaseC: jb+=pm.L1[k];
+     NextPhaseC:
+       // Speciation cleanup is a per-DC correction, not a phase decision, so
+       // only phases it actually CHANGED are logged - otherwise this adds one
+       // line per phase per pass (320+ on the psina giants) saying nothing.
+       if( ntf )
+       {
+           double trYafterC = 0.; long int trNzeroAfterC = 0;
+           for(j=jb; j<jb+L1k; j++)
+           {   trYafterC += pm.Y[j];
+               if( pm.Y[j] == 0. ) trNzeroAfterC++;
+           }
+           if( trNzeroAfterC != trNzeroBeforeC || trYafterC != trYbeforeC )
+           {
+               fprintf( ntf, "PSSCC pass=%ld phase k=%ld %-20s L1=%ld logSI=%+.6e"
+                             " Ybefore=%.6e Yafter=%.6e newZeroDC=%ld\n",
+                        (long)trPass, (long)k, char_array_to_string(pm.SF[k],MAXPHNAME+MAXSYMB).c_str(),
+                        (long)L1k, pm.Falp[k], trYbeforeC, trYafterC,
+                        (long)(trNzeroAfterC - trNzeroBeforeC) );
+           }
+       }
+       jb+=pm.L1[k];
    } // k
 }
 
@@ -1710,6 +1841,24 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
           pm.Y[j]=pm.XY[j];
     }
     ipm_logger->debug("CleanupStatus= {}", CleanupStatus);
+    if( ntf )
+    {
+        // status: 1 = final and consistent; 0 = phases changed, another IPM loop;
+        // -1 = still inconsistent after 5 loops, and the Y changes are DISCARDED
+        // (restored from pm.XY) - which is why a -1 line reports the counters of
+        // a pass whose effect was then thrown away.
+        long int trNzeroTotal = 0;
+        for( long int jj = 0; jj < pm.L; jj++ )
+            if( pm.Y[jj] == 0. ) trNzeroTotal++;
+        fprintf( ntf, "PSSC  pass=%ld exit status=%ld cleanupStatus=%ld PHins=%ld PHrem=%ld"
+                      " DCins=%ld DCrem=%ld kfr=%ld kur=%ld MBviol=%d needMB=%d"
+                      " zeroDCnow=%ld of %ld reverted=%d\n",
+                 (long)trPass, (long)status, (long)CleanupStatus, (long)PHinserted,
+                 (long)PHremoved, (long)DCinserted, (long)DCremoved, (long)kfr, (long)kur,
+                 (int)MassBalanceViolation, (int)NeedToImproveMassBalance,
+                 (long)trNzeroTotal, (long)pm.L, (int)( status == -1L ) );
+        fflush( ntf );
+    }
     return status;
 }
 

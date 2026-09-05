@@ -208,10 +208,19 @@ long int TNode::GEM_run( bool uPrimalSol )
             unpackDataBr( uPrimalSol );
         }
         else if( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_AOP
-                 || CNode->NodeStatusCH == NEED_GEM_ROP )
+                 || CNode->NodeStatusCH == NEED_GEM_ROP || CNode->NodeStatusCH == NEED_GEM_HOP
+                 || CNode->NodeStatusCH == NEED_GEM_SHP )
         {
-            pmm->pNP = 0; // As default setting AIA/AOP/ROP mode - ROP is a single mode
-                          // (no warm-start pair), see NODECODECH's own comment in databr.h
+            pmm->pNP = 0; // As default setting AIA/AOP/ROP/HOP/SHP mode - ROP is a single mode
+                          // (no warm-start pair), and HOP's own first leg is the NATIVE
+                          // solve, which starts cold; the warm start it hands to Optima is
+                          // set below, not here. SHP is listed here too, and deliberately:
+                          // unpackDataBr() never reads pmm->pNP, so resetting it to 0 here
+                          // costs nothing and guarantees no stale warm flag can leak in,
+                          // while SHP's own warm native leg sets pmm->pNP = 1 itself inside
+                          // CalculateEquilibriumStateHOP() - the same place, and for the
+                          // same reason, that HOP already sets it for the Optima leg.
+                          // See NODECODECH's comment in databr.h
             if (CNode->dt > 0.)
                 uPrimalSol = true;
             unpackDataBr( uPrimalSol );
@@ -246,7 +255,32 @@ long int TNode::GEM_run( bool uPrimalSol )
         // not, fall back to the equivalent native AIA/SIA solve rather than
         // failing outright - a caller requesting AOP/SOP shouldn't have to
         // know in advance whether this particular GEMS3K build has Optima.
-        if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP
+        if( CNode->NodeStatusCH == NEED_GEM_HOP || CNode->NodeStatusCH == NEED_GEM_SHP )
+        {
+#ifdef USE_OPTIMA_SOLVER
+            // HYBRID, in series: native selects the species, Optima finishes.
+            // See NODECODECH's own comment in databr.h for why this is a
+            // separate caller-selected mode rather than something AOP does.
+            // The two-leg orchestration (native, then a warm Optima leg that
+            // degrades to a restored native answer - BAD_GEM_HOP, never a
+            // lost one - if it fails) lives entirely in
+            // TMultiBase::CalculateEquilibriumStateHOP() (ipm_optima.cpp),
+            // which needs pm.* access this layer doesn't have.
+            // SHP is HOP with a WARM native leg (and a cold fallback inside) -
+            // for sequential work, where HOP as built throws away the previous
+            // point's converged state at every call. See databr.h.
+            CalcTime = multi_ptr()->CalculateEquilibriumStateHOP( NumIterFIA, NumIterIPM,
+                                       CNode->NodeStatusCH == NEED_GEM_SHP );
+#else
+            node_logger->warn("GEM_run(): NEED_GEM_HOP/SHP requested but GEMS3K was not built with "
+                               "USE_OPTIMA_SOLVER - falling back to the equivalent native {} solve",
+                               CNode->NodeStatusCH == NEED_GEM_SHP ? "SIA" : "AIA");
+            CNode->NodeStatusCH = ( CNode->NodeStatusCH == NEED_GEM_SHP ) ? NEED_GEM_SIA : NEED_GEM_AIA;
+            pmm->pNP = ( CNode->NodeStatusCH == NEED_GEM_SIA ) ? 1 : 0;
+            CalcTime = multi_ptr()->CalculateEquilibriumState( NumIterFIA, NumIterIPM );
+#endif
+        }
+        else if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP
             || CNode->NodeStatusCH == NEED_GEM_ROP )
         {
 #ifdef USE_OPTIMA_SOLVER
@@ -285,6 +319,10 @@ long int TNode::GEM_run( bool uPrimalSol )
                 CNode->NodeStatusCH = BAD_GEM_SOP;
             else if( CNode->NodeStatusCH == NEED_GEM_ROP )
                 CNode->NodeStatusCH = BAD_GEM_ROP;
+            else if( CNode->NodeStatusCH == NEED_GEM_HOP )
+                CNode->NodeStatusCH = BAD_GEM_HOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_SHP )
+                CNode->NodeStatusCH = BAD_GEM_SHP;
             else
                 CNode->NodeStatusCH = BAD_GEM_SIA;
 
@@ -301,6 +339,10 @@ long int TNode::GEM_run( bool uPrimalSol )
                 CNode->NodeStatusCH = OK_GEM_SOP;
             else if( CNode->NodeStatusCH == NEED_GEM_ROP )
                 CNode->NodeStatusCH = OK_GEM_ROP;
+            else if( CNode->NodeStatusCH == NEED_GEM_HOP )
+                CNode->NodeStatusCH = OK_GEM_HOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_SHP )
+                CNode->NodeStatusCH = OK_GEM_SHP;
             else
                 CNode->NodeStatusCH = OK_GEM_SIA;
         }
@@ -318,6 +360,10 @@ long int TNode::GEM_run( bool uPrimalSol )
             CNode->NodeStatusCH = ERR_GEM_SOP;
         else if( CNode->NodeStatusCH == NEED_GEM_ROP )
             CNode->NodeStatusCH = ERR_GEM_ROP;
+        else if( CNode->NodeStatusCH == NEED_GEM_HOP )
+            CNode->NodeStatusCH = ERR_GEM_HOP;
+        else if( CNode->NodeStatusCH == NEED_GEM_SHP )
+            CNode->NodeStatusCH = ERR_GEM_SHP;
         else
             CNode->NodeStatusCH = ERR_GEM_SIA;
     }
@@ -376,9 +422,17 @@ void TNode::packDataBr()
     // pmm->pNP (0=cold,1=warm) selects AIA/SIA vs. AOP/SOP; AOP/SOP share
     // pNP's convention with AIA/SIA, so which pair to reset to is read
     // from the still-unmodified NodeStatusCH before this overwrites it.
-    if( CNode->NodeStatusCH == NEED_GEM_ROP )
+    if( CNode->NodeStatusCH == NEED_GEM_ROP || CNode->NodeStatusCH == NEED_GEM_HOP
+        || CNode->NodeStatusCH == NEED_GEM_SHP )
     {
-        ; // ROP is a single mode, no pNP-driven cold/warm pair - nothing to preserve/derive
+        ; // Nothing here is a pNP-driven cold/warm pair that this function can
+          // re-derive: ROP is a single mode, and HOP/SHP ARE such a pair but the
+          // caller - not pmm->pNP - is what distinguishes them (both legs of both
+          // set pmm->pNP themselves, so by the time packDataBr() runs it reads 1
+          // for either). They MUST be listed here: the generic branch below would
+          // silently rewrite the node to NEED_GEM_SIA and the caller would never
+          // see a HOP/SHP status at all. Same trap as the one that hid AOP/SOP
+          // when those were added.
     }
     else if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP )
     {

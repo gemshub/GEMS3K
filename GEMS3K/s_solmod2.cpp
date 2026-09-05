@@ -189,7 +189,11 @@ long int TPRSVcalc::MixMod()
 
     iRet = FugacitySpec( aPparc );
 
-    phVOL[0] = PhVol * 10.;
+    // PhVol is the MOLAR volume of the mixture from the cubic EoS (J/bar); *10 makes it cm3/mol.
+    // phVOL holds the phase TOTAL, so multiply by the phase amount - storing the molar value here
+    // both mis-reports Ph_Volume()/vPS[] and makes the result scale with pa_DG, because
+    // RescaleSystemFromInternal() divides pm.FVOL[k] by ScFact.
+    set_phVOL_from_molar( PhVol * 10. );
 
     for(j=0; j<NComp; j++)
     {
@@ -1073,7 +1077,9 @@ long int TCGFcalc::MixMod()
             Error( "E71IPM IPMgamma: ", std::string("CG fluid: bad calculation of density ro= ")+std::to_string(roro));
 		}
 
-		// Phase volume of the fluid in cm3 (not needed any more?)
+		// Phase volume of the fluid in cm3. Correct as written and deliberately NOT routed
+		// through set_phVOL_from_molar(): phWGT[0] is pm.FWGT[k], the phase TOTAL weight, so
+		// weight/density is already the extensive total the phVOL slot expects.
 		phVOL[0] = phWGT[0] / roro;
 
 	}
@@ -2593,7 +2599,8 @@ long int TSRKcalc::MixMod()
 	long int j, iRet;
 
 	iRet = FugacitySpec( Pparc );
-	phVOL[0] = PhVol * 10.;
+	// molar volume from the cubic EoS -> phase total; see TPRSVcalc::MixMod()
+	set_phVOL_from_molar( PhVol * 10. );
 
     for(j=0; j<NComp; j++)
     {
@@ -3382,7 +3389,8 @@ long int TPR78calc::MixMod()
 	long int j, iRet;
 
 	iRet = FugacitySpec( Pparc );
-	phVOL[0] = PhVol * 10.;
+	// molar volume from the cubic EoS -> phase total; see TPRSVcalc::MixMod()
+	set_phVOL_from_molar( PhVol * 10. );
 
     for(j=0; j<NComp; j++)
     {

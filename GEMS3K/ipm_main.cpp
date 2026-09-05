@@ -42,6 +42,146 @@ std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = spdlog::stdout_color_mt
 
 #define uDDtrace false
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/// Native-solver event trace - see the declaration in ms_multi.h for what it is
+/// for and why it is env-gated rather than NDEBUG-gated.
+///
+/// Thread note: the open is a function-local static, so its initialisation is
+/// thread-safe (C++11 magic statics); concurrent fprintf() calls on one FILE*
+/// are individually locked by glibc, which is sufficient for a line-oriented
+/// diagnostic. Interleaving between threads is possible and would show as
+/// out-of-order events, not as corrupted lines.
+FILE* native_trace_file()
+{
+    static FILE* fp = []() -> FILE*
+    {
+        const char* fn = std::getenv( "GEMS3K_NATIVE_TRACE_FILE" );
+        return fn ? fopen( fn, "a" ) : nullptr;
+    }();
+    return fp;
+}
+
+/// Companion to native_trace_file() for the one thing an event-level trace
+/// cannot show: the shape of the IPM descent, one line per iteration. See the
+/// call site in InteriorPointsMethod() for what it measured and why.
+FILE* ipm_probe_file()
+{
+    static FILE* fp = []() -> FILE*
+    {
+        const char* fn = std::getenv( "GEMS3K_IPM_PROBE" );
+        return fn ? fopen( fn, "a" ) : nullptr;
+    }();
+    return fp;
+}
+
+/// Worst per-IC mass-balance residual of the CURRENT primal pm.Y, recomputed
+/// locally rather than read out of pm.C[] - that array is MBR's own scratch and
+/// is one update stale by the time MBR returns. Reports the same quantities
+/// MBR's own convergence test compares (ipm_main.cpp, the pa_DT branches):
+/// worst RELATIVE |C[i]|/(B[i]*DHBM) and worst ABSOLUTE |C[i]|, each with the
+/// IC that carries it, so the "which test was binding" question the pa_DT /
+/// `||`-vs-`&&` item turns on is answered at no extra instrumentation cost.
+/// Scans the same [0, N - E) range MBR does, i.e. excluding the charge row.
+/// Worst relative and worst absolute mass-balance residual of the amount vector `amt`,
+/// over the ordinary IC range [0, Z) - the charge-balance IC in [Z, pm.N) is excluded,
+/// exactly as MBR's own convergence loops exclude it. `rel` is normalised so that
+/// rel > 1 means "this state fails the relative test MBR applies".
+static void native_trace_mb_of( const MULTI& pm, const double* amt,
+                                long int& iRelOut, double& relOut,
+                                long int& iAbsOut, double& absOut )
+{
+    const long int Z = pm.N - pm.E;
+    iRelOut = iAbsOut = -1; relOut = absOut = 0.;
+    for( long int i = 0; i < Z; i++ )
+    {
+        double c = pm.B[i];
+        for( long int j = 0; j < pm.L; j++ )
+            c -= pm.A[i + j*pm.N] * amt[j];
+        const double a = fabs( c );
+        if( a > absOut ) { absOut = a; iAbsOut = i; }
+        const double bar = pm.B[i] * pm.DHBM;
+        const double r = bar > 0. ? a / bar : ( a > 0. ? 1e300 : 0. );
+        if( r > relOut ) { relOut = r; iRelOut = i; }
+    }
+}
+static void native_trace_mb( const MULTI& pm, long int& iRelOut, double& relOut,
+                                              long int& iAbsOut, double& absOut )
+{
+    native_trace_mb_of( pm, pm.Y, iRelOut, relOut, iAbsOut, absOut );
+}
+
+/// One STAGE line for MBR/IPM entry and exit. `what` is "enter" or "exit";
+/// eRet < 0 omits the return-code field. The residual pair is only meaningful
+/// once a primal exists, hence `withResidual`.
+///
+/// `binding` names which of MBR's two tests would reject this state, using the
+/// project's own pa_DT exactly as the convergence branches do: with DT == 0
+/// only the relative test exists; with DT != 0 an IC must exceed BOTH (the
+/// absolute cutoff is a floor under the relative bar - see the long comment at
+/// that branch). "ok" means the state passes, i.e. MBR would call it converged.
+static void native_trace_stage( const MULTI& pm, const BASE_PARAM* pa_p,
+                                const char* stage, const char* what,
+                                long int eRet, bool withResidual )
+{
+    FILE* fp = native_trace_file();
+    if( !fp ) return;
+    long int nz = 0;
+    for( long int j = 0; j < pm.L; j++ )
+        if( pm.Y[j] == 0. ) nz++;
+    fprintf( fp, "STAGE %-3s %-5s K2=%ld ITF=%ld ITG=%ld IT=%ld zeroDC=%ld",
+             stage, what, (long)pm.K2, (long)pm.ITF, (long)pm.ITG, (long)pm.IT, (long)nz );
+    if( eRet >= 0 )
+        fprintf( fp, " eRet=%ld", (long)eRet );
+    if( withResidual )
+    {
+        long int ir, ia; double r, a;
+        native_trace_mb( pm, ir, r, ia, a );
+        const double e = fabs( (double)pa_p->DT );
+        const double absCut = ( e < 2. ) ? pm.DHBM : pow( 10., -e );
+        const bool relFail = ( r > 1. );
+        const bool absFail = ( a > absCut );
+        const char* binding = !pa_p->DT ? ( relFail ? "rel" : "ok" )
+                                        : ( ( relFail && absFail ) ? "rel+abs" : "ok" );
+        fprintf( fp, " worstRelIC=%s rel=%.6e worstAbsIC=%s abs=%.6e absCut=%.3e DT=%d binding=%s",
+                 ir >= 0 ? char_array_to_string( pm.SB[ir], MAXICNAME ).c_str() : "-", r,
+                 ia >= 0 ? char_array_to_string( pm.SB[ia], MAXICNAME ).c_str() : "-", a,
+                 absCut, (int)pa_p->DT, binding );
+    }
+    fprintf( fp, "\n" );
+    fflush( fp );
+}
+
+/// One MBRX line naming the exit path MassBalanceRefinement() actually took.
+///
+/// WHY THIS AND NOT JUST eRet. The return code does not distinguish "every IC
+/// passed the test" from "gave up, and the strict check that would have reported
+/// that did not apply". The latter is reached whenever the post-loop guard
+///
+///     if( pa_p->DW && ( WhereCalledFrom == 0L || pm.pNP ) )
+///
+/// is false - so a COLD call's second MBR (WhereCalledFrom = pm.K2 >= 1,
+/// pm.pNP = 0) skips it whatever pa_DW is set to, and returns iRet = 0 on a
+/// state its own per-IC test rejects. That is the mechanism behind native
+/// returning an answer whose relative mass-balance residual exceeds pa_DHB, and
+/// hence behind the eight projects whose own SIA cannot re-solve their own
+/// converged answer: a cold call never re-checks what it returns, and a warm one
+/// does. Observed directly on Resources/gems3k-fail/Al-species_G_sys_2_0_0_101,
+/// where the cold call exits "lenient" at rel = 2.61x tolerance and the warm
+/// call then correctly refuses the same state.
+static void native_trace_mbr_exit( const MULTI& pm, const BASE_PARAM* pa_p,
+                                   const char* reason, long int whereFrom,
+                                   long int it1, long int iRet, bool restored )
+{
+    FILE* fp = native_trace_file();
+    if( !fp ) return;
+    const bool strictApplies = ( pa_p->DW && ( whereFrom == 0L || pm.pNP ) );
+    fprintf( fp, "MBRX  reason=%s from=%ld IT1=%ld DP=%d iRet=%ld restoredBest=%d"
+                 " DW=%d pNP=%ld strictCheckApplies=%d\n",
+             reason, (long)whereFrom, (long)it1, (int)pa_p->DP, (long)iRet,
+             (int)restored, (int)pa_p->DW, (long)pm.pNP, (int)strictApplies );
+    fflush( fp );
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Call to GEM IPM calculation of equilibrium state in MULTI
 /// (with already scaled GEM problem)
@@ -57,6 +197,21 @@ void TMultiBase::GibbsEnergyMinimization()
                             // from a single run, instead of differencing two separate builds
 
   TNode::ipmlog_file->debug(" GEMIPM TC={}", pm.TCc);
+
+  // One CALL header per equilibrium calculation, so a trace file holding several
+  // calls can be split, and so the thresholds every later PSSC line is compared
+  // against are recorded once rather than repeated per phase.
+  if( FILE* ntf = native_trace_file() )
+  {
+      const BASE_PARAM* pa0 = base_param();
+      fprintf( ntf, "CALL  pNP=%ld N=%ld L=%ld Ls=%ld FI=%ld TK=%.4f Pbar=%.6e"
+                    " PC=%d DF=%.3e DFM=%.3e PRD=%d DSM=%.3e DcMinM=%.3e DHBM=%.3e"
+                    " DT=%d IIM=%d DP=%d\n",
+               (long)pm.pNP, (long)pm.N, (long)pm.L, (long)pm.Ls, (long)pm.FI,
+               pm.T, pm.P, (int)pa0->PC, pa0->DF, pa0->DFM, (int)pa0->PRD,
+               pm.DSM, pm.DcMinM, pm.DHBM, (int)pa0->DT, (int)pa0->IIM, (int)pa0->DP );
+      fflush( ntf );
+  }
 
 #ifndef NDEBUG
   // DATABR values as received, before any internal processing -- lets a caller-side
@@ -84,6 +239,15 @@ FORCED_AIA:
    }
 
    IAstatus = GEM_IPM_InitialApproximation( );
+   if( FILE* ntf = native_trace_file() )
+   {
+       long int nz = 0;
+       for( long int j = 0; j < pm.L; j++ )
+           if( pm.Y[j] == 0. ) nz++;
+       fprintf( ntf, "INIT  pNP=%ld IAstatus=%d zeroDC=%ld of %ld\n",
+                (long)pm.pNP, (int)IAstatus, (long)nz, (long)pm.L );
+       fflush( ntf );
+   }
    if( IAstatus == false )
    {
       //Wrapper call for the IPM iteration sequence
@@ -117,6 +281,79 @@ FORCED_AIA:
        }
    }
    pm.FitVar[0] = bfc_mass();  // getting total mass of solid phases in the system
+
+   // Exact-zero census of the answer this call returns. Pairs with the PSSC
+   // lines above: an interior-point method on a box with a positive lower bound
+   // cannot produce a single exact zero, so every zero counted here was written
+   // by an explicit removal step, and the PSSC lines say which phase and why.
+   // This is the observation behind the "native deletes the phase, it does not
+   // solve it" reading of the psina failures.
+   if( FILE* ntf = native_trace_file() )
+   {
+       long int nzX = 0, nzY = 0, nzPh = 0;
+       for( long int j = 0; j < pm.L; j++ )
+       {
+           if( pm.X[j] == 0. ) nzX++;
+           if( pm.Y[j] == 0. ) nzY++;
+       }
+       for( long int k = 0; k < pm.FI; k++ )
+           if( pm.XF[k] == 0. ) nzPh++;
+       fprintf( ntf, "ANSWER MK=%ld PZ=%ld K2=%ld ITF=%ld ITG=%ld zeroDC_X=%ld zeroDC_Y=%ld"
+                     " of %ld zeroPH=%ld of %ld\n",
+                (long)pm.MK, (long)pm.PZ, (long)pm.K2, (long)pm.ITF, (long)pm.ITG,
+                (long)nzX, (long)nzY, (long)pm.L, (long)nzPh, (long)pm.FI );
+       fflush( ntf );
+   }
+
+   // ---- Mass-balance verdict on the ANSWER this call returns.
+   //
+   // WARN ONLY - deliberately, and this is a project-owner decision (2026-09-05),
+   // not an oversight. Native's COLD path structurally never checks the state it
+   // hands back: MBR's strict guard is gated on ( WhereCalledFrom == 0L || pm.pNP ),
+   // so a cold call's SECOND MBR (K2 >= 1, pNP == 0) is exempt whatever pa_DW is and
+   // returns iRet = 0 on a state its own per-IC test rejects. A warm call's FIRST MBR
+   // has WhereCalledFrom == 0, the guard applies, and the same state is refused -
+   // which is the whole mechanism behind the ten projects whose native SIA cannot
+   // re-solve their own converged answer (plan v5 section 60.5).
+   //
+   // Dropping that clause was measured: it turns cold OK into FAIL on exactly the six
+   // projects whose warm restart already fails. That is a user-facing behaviour change
+   // on real projects, so the verdict is left alone and the FACT is surfaced instead.
+   // A caller that wants to act on it has the message; one that does not is unaffected.
+   // This is also the free signal an outcome-driven solver chooser needs (plan v5,
+   // handoff item 8: "build the signal first").
+   //
+   // Unconditional, not NDEBUG-gated, for the same reason as the clamp warnings in
+   // ipm_chemical.cpp: the event is rare and its whole point is to make a silently
+   // accepted state visible in a production build. Suppressed when pm.MK/pm.PZ already
+   // say the solution is bad, since testMulti() reports that case - the signal worth
+   // having is the one on a run that would otherwise read as clean.
+   //
+   // Cost when it does not fire: one O(N*L) pass, against a solve that has just done
+   // hundreds of them.
+   if( !pm.MK && !pm.PZ )
+   {
+       long int iRel = -1, iAbs = -1; double rel = 0., absr = 0.;
+       native_trace_mb_of( pm, pm.X, iRel, rel, iAbs, absr );
+       const double dtExp  = fabs( (double)base_param()->DT );
+       const double absCut = ( dtExp < 2. ) ? pm.DHBM : pow( 10., -dtExp );
+       // Same per-IC rule the convergence branches apply: with DT == 0 only the
+       // relative test exists; with DT != 0 an IC must exceed BOTH.
+       const bool fails = !base_param()->DT ? ( rel > 1. )
+                                            : ( rel > 1. && absr > absCut );
+       if( fails && iRel >= 0 )
+           gems_logger->warn(
+               "GEM answer accepted with an unsatisfied mass balance: IC {} is {:.3e}x its own "
+               "tolerance (|residual| {:.3e} mol against pa_DHB*b = {:.3e}); worst absolute "
+               "|residual| {:.3e} mol at IC {}. Returned unchanged - native's cold path does "
+               "not gate on this - but a warm (SIA) re-solve of the same state will reject it. "
+               "Consider pa_DT (an absolute floor) or a tighter pa_DHB for this project.",
+               char_array_to_string( pm.SB[iRel], MAXICNAME ),
+               rel, fabs( pm.B[iRel] * pm.DHBM * rel ), pm.B[iRel] * pm.DHBM,
+               absr, iAbs >= 0 ? char_array_to_string( pm.SB[iAbs], MAXICNAME )
+                               : std::string( "-" ) );
+   }
+
    if( pm.MK || pm.PZ ) // no good solution
        /*TProfil::pm->*/testMulti();
 }
@@ -150,7 +387,9 @@ void TMultiBase::GEM_IPM( long int /*rLoop*/ )
 //          Set_DC_limits( false );
 
 mEFD:  // Mass balance refinement (formerly EnterFeasibleDomain())
+     native_trace_stage( pm, pa_p, "MBR", "enter", -1, true );
      eRet = MassBalanceRefinement( pm.K2 ); // Here the MBR() algorithm is called
+     native_trace_stage( pm, pa_p, "MBR", "exit", eRet, true );
 
 #ifndef NDEBUG
    if(gems_logger->should_log(spdlog::level::debug)) {
@@ -188,7 +427,9 @@ STEP_POINT("After FIA");
     }
 
    // calling the MainIPMDescent() minimization algorithm
+   native_trace_stage( pm, pa_p, "IPM", "enter", -1, true );
    eRet = InteriorPointsMethod( status/*, pm.K2*/ );
+   native_trace_stage( pm, pa_p, "IPM", "exit", eRet, true );
 
 #ifndef NDEBUG
    if(gems_logger->should_log(spdlog::level::debug)) {
@@ -467,7 +708,9 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
                    gems_logger->debug("  j={} Y={:.6e} W={:.6e} F={:.6e}", j, pm.Y[j], pm.W[j], pm.F[j]);
        }
 #endif
+    native_trace_stage( pm, pa_p, "MBR", "enter", -1, true );
     eRet = MassBalanceRefinement( pm.K2 ); // Mass balance improvement in all normal cases
+    native_trace_stage( pm, pa_p, "MBR", "exit", eRet, true );
     switch( eRet )
     {
       case 0:  // OK - refinement of concentrations and activity coefficients
@@ -771,6 +1014,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
                     buf += ")) Invalid initial Lagrange multiplier for metastability-constrained DC ";
                     buf += char_array_to_string( pm.SM[jK], MAXDCNAME);
         setErrorMessage( 17, "E17IPM: Mass Balance Refinement: ", buf.c_str());
+        native_trace_mbr_exit( pm, pa_p, "metastability", WhereCalledFrom, -1, 5, false );
         return 5;
     }
 
@@ -813,7 +1057,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     // has independently decided to give up.
     std::vector<double> bestY( pm.L );
     double bestResidual = std::numeric_limits<double>::max();
-    bool haveBest = false;
+    bool haveBest = false, trRestored = false;
 
     // Worst normalized mass-balance residual across all N ICs (>1 means at
     // least one IC is outside its tolerance) - the same relative/absolute
@@ -973,6 +1217,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
            if(iRet==1) {
                iRet=0;  // no SLE solution on internal iterations SD 02/2026
            }
+           native_trace_mbr_exit( pm, pa_p, "converged", WhereCalledFrom, IT1, iRet, trRestored );
            return iRet;       // mass balance refinement finished OK
        }
 
@@ -1124,6 +1369,7 @@ STEP_POINT("FIA Iteration");
             for( j=0; j<pm.L; j++ )
                 pm.Y[j] = bestY[j];
             MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
+            trRestored = true;
         }
     }
 
@@ -1136,6 +1382,7 @@ STEP_POINT("FIA Iteration");
                    buf += ")) Maximum allowed number of MBR iterations (";
                    buf += std::to_string(pa_p->DP) +") exceeded! ";
        setErrorMessage( 4, "E04IPM: Mass Balance Refinement: ", buf.c_str());
+       native_trace_mbr_exit( pm, pa_p, "budget_strict", WhereCalledFrom, IT1, iRet, trRestored );
        return iRet; // no MBR() solution
    }
    // very experimental - updating activity coefficients after MBR()
@@ -1149,6 +1396,7 @@ STEP_POINT("FIA Iteration");
    //        CalculateConcentrations( pm.X, pm.XF, pm.XFA );
          CalculateActivityCoefficients( LINK_UX_MODE);
    }
+   native_trace_mbr_exit( pm, pa_p, "nonideal_lenient", WhereCalledFrom, pa_p->DP, iRet, trRestored );
    return iRet;   // inaccurate MBR() solution
 }
 
@@ -1293,6 +1541,43 @@ if( pm.pNP && status ) // && rLoop < 0  )
 
 // STEPWISE (6)  Stop point at IPM() main iteration
 STEP_POINT( "IPM Iteration" );
+
+        // Per-iteration descent record, env-gated (GEMS3K_IPM_PROBE=<path>).
+        //
+        // WHY IT EXISTS. The IPM loop terminates on pm.PCI <= pm.DXM, and on part
+        // of this corpus PCI stops carrying signal long before that test is met:
+        // once the composition has settled, PCI is computed from differences of
+        // nearly-equal numbers and becomes noise, wandering in a band whose median
+        // sits ABOVE DXM with only its lower tail below. Termination is then a
+        // waiting time for a lucky draw, which is what makes the iteration count
+        // irreproducible under a 1e-15 bIC nudge while the answer is not. That is
+        // only visible per iteration - the event-level trace above cannot show it -
+        // and it is measured from this record's PCI/FX columns:
+        //
+        //   f_Kaolinite, 9 nudges: energy final to 1e-11 by iteration 25 on EVERY
+        //   run; PCI thereafter median 6.6e-6 against DXM 1e-6, rising on 49 % of
+        //   steps (no trend), P(PCI <= DXM) = 0.0063 per iteration. Predicted mean
+        //   25 + 1/0.0063 = 184.8 against an observed 183.8 over 62-363.
+        //
+        // Cost when unset: one null test on an already-resolved static pointer,
+        // the same shape as native_trace_file(). L is small on the projects this
+        // diagnoses; do not use it on the 1392-species giants without redirecting
+        // to scratch.
+        if( FILE* ipf = ipm_probe_file() )
+        {
+            double sumX = 0., minX = 1e300, maxX = 0.;
+            for( long int jj = 0; jj < pm.L; jj++ )
+            {
+                sumX += pm.X[jj];
+                if( pm.X[jj] > maxX ) maxX = pm.X[jj];
+                if( pm.X[jj] > 0. && pm.X[jj] < minX ) minX = pm.X[jj];
+            }
+            fprintf( ipf, "IPMIT %ld PCI=%.10e DXM=%.6e LM=%.10e LM1=%.10e FX=%.14e"
+                          " NR=%ld sumX=%.10e minX=%.6e maxX=%.10e\n",
+                     (long)IT1, pm.PCI, pm.DXM, LM, LM1, pm.FX,
+                     (long)N, sumX, minX, maxX );
+            fflush( ipf );
+        }
 
         if( pm.PCI <= pm.DXM )  // Dikin criterion satisfied - converged!
             goto CONVERGED;

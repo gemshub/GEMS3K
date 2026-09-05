@@ -42,6 +42,8 @@
 #include "gems3k_impex.h"
 #include "ipm_optima.h"
 
+#include <cstdio>
+
 class GemDataStream;
 class TProfil;
 class TNode;
@@ -918,6 +920,196 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
 
     long int MbPivotSplit = 0;
 
+    /// Report a species that is correctly ABSENT as EXACTLY ZERO instead of at
+    /// the Optima box's numerical lower bound. 0 = off (the default), 1 = on.
+    ///
+    /// WHY. Native and the Optima path disagree about what "absent" looks like
+    /// in the answer, and the gap is twenty orders of magnitude. Native's
+    /// line-search objective GX() truncates any trial amount below pa_DcMin
+    /// (1e-33 on the psina projects) to exactly 0 - measured 1 113 007 times in
+    /// one solve of 07PSIna_G_complex_1_0_1_80_0, and responsible for 609 of the
+    /// 542 zeros in that answer BEFORE PhaseSelectionSpeciationCleanup() runs
+    /// once (see the comment at that truncation, and plan-v5 section 60). A
+    /// box-constrained method cannot do that: every species is held above
+    /// dcFloor (pa_DHB, 1e-13 there) and can only approach it. So an absent
+    /// species is reported at 1e-13 where native reports 0, and - the part that
+    /// costs something - it remains a live unknown, with a chemical potential,
+    /// a share of the convergence test, and the ability to throttle the shared
+    /// step length (measured: 96-97% of all step throttling on two systems came
+    /// from species sitting a hair above their floor).
+    ///
+    /// WHAT THIS DOES. Purely a post-solve reporting step: after every existing
+    /// trustworthiness check has run and PASSED at full dimension, each species
+    /// that is (a) not kinetically required to be present (DLL <= 0), (b) still
+    /// sitting on the numerical floor rather than on a real constraint, and
+    /// (c) correctly there by the solver's own KKT test (non-negative reduced
+    /// gradient) - or forcibly excluded by a degenerate box - is set to exactly
+    /// 0, and the derived output is recomputed from that state.
+    ///
+    /// SELF-GATING, which is what makes it safe: the zeroed state is put back
+    /// through CheckMassBalanceResiduals() and is KEPT ONLY IF IT PASSES the
+    /// same per-IC test the un-zeroed state just passed. It therefore cannot
+    /// turn an accepted answer into a rejected one, and it cannot fire at all on
+    /// a solve that was already going to be reported as BAD. The check is not a
+    /// formality: dropping ~1e-13 from each of several hundred species perturbs
+    /// the balance by an amount that is utterly negligible against a major IC
+    /// and NOT negligible against a trace one - which is exactly the trace-IC
+    /// sensitivity this branch has documented repeatedly.
+    ///
+    /// This does NOT reproduce native's mechanism, only its reported semantics.
+    /// Native's species genuinely leave the problem mid-solve and stop
+    /// obstructing it; these leave only the answer. Closing that half is the
+    /// dimension reduction (pa_OptimaDimReduce), which omits species from the
+    /// vector outright - but its final full-dimension verification pass puts
+    /// them all back on the floor before the answer is written, which is the
+    /// gap this field closes from the other end.
+    ///
+    /// DEFAULT 1 (on), set 2026-09-03 on the project owner's decision: matching
+    /// native's reported semantics is worth having, and an absent species read
+    /// as 0 rather than as 1e-13 is the more useful answer. Measured before the
+    /// flip across Resources/gems3k + gems3k-fail, both arms per project:
+    /// 43 projects, ZERO rows differing in status, iterations, G, pH, Eh, Vs or
+    /// Ms; it fires on 41 of them (3 to 561 species); the mass-balance
+    /// self-gate never once had to revert it; and the 301-point solvus sweep -
+    /// which scores end-member MOLE FRACTIONS through a critical point, not a
+    /// status - reproduces its record exactly while firing at every one of the
+    /// 301 points. See plan-v5 section 61.
+    ///
+    /// One consequence to know when reading output: a consumer that divides by
+    /// a species amount now meets 0 where it previously met 1e-13. Native has
+    /// always written exact zeros, so anything reading native's output already
+    /// copes; something written against this path's output specifically may
+    /// not. Set to 0 to restore the floor-valued reporting.
+    long int OptimaZeroAbsent = 1;
+
+    /// SEED A READMITTED SPECIES AT ITS PREDICTED AMOUNT instead of at the
+    /// numerical floor, in OptimaReducedPreSolve()'s pricing loop. GEMS3K-only,
+    /// keyword ipm-dat I/O. 0 (default) = off, readmission at the floor exactly
+    /// as before. A POSITIVE value is a cap on the growth exponent, in RT units
+    /// - see "the cap" below for why the knob is the exponent and not the
+    /// amount.
+    ///
+    /// THE FORMULA IS White, Johnson & Dantzig (1958) Eq. 12a, the original RAND
+    /// paper (Docs/literature/, and FINDINGS-White1958-RAND-vs-GEMS3K.md section 3).
+    /// White derives it to compute trace species that were left out of the
+    /// problem entirely, from the converged multipliers alone - his own example
+    /// recovers NH3 at 2e-5 from a 10-species calculation that never contained
+    /// it. In his notation x_i = xbar * exp[-c_i + sum_j a_ij pi_j]; here the
+    /// multipliers are pm.U[] and the same statement is one line, because for a
+    /// species whose chemical potential carries ln(x_j) with unit coefficient
+    /// (DC_SYMMETRIC and DC_ASYM_SPECIES - see DC_PrimalChemicalPotential())
+    /// the reduced gradient s_j = F[j] - sum_i U[i]*a(j,i) is the ONLY term
+    /// that moves when x_j does, so setting s_j to zero gives
+    ///
+    ///     x_j^predicted = x_j^current * exp( -s_j ).
+    ///
+    /// Both inputs are already computed by the readmission loop, which prices
+    /// exactly this s_j and readmits on its sign. So this is a use of a number
+    /// the loop has in hand, not a new evaluation.
+    ///
+    /// WHY THIS IS NOT THE VARIANT ALREADY MEASURED AND REJECTED. That loop's
+    /// own comment records interior seeding at "bulk-composition bound x 1e-6"
+    /// costing 07PSIna_G_mid_1's pass 1 303 -> 2263 iterations with pass 2 then
+    /// failing, and instructs that it not be re-tried "without a genuinely new
+    /// hypothesis". 1e-6 is an arbitrary fraction; this is the amount the
+    /// thermodynamics predicts. The recorded failure is evidence against
+    /// arbitrary seeding, and does not bear on seeding at the predicted value.
+    ///
+    /// RESTRICTED BY SPECIES CLASS, and the exclusion is not fussiness.
+    /// DC_SINGLE (a pure phase) has F = G with no x-dependence at all, so
+    /// exp(-s_j) is not a prediction of anything - a pure phase's amount is set
+    /// by the mass balance, not by its own potential, and s_j merely says
+    /// whether it wants to exist. DC_ASYM_CARRIER (the solvent) carries logYF,
+    /// which is itself a function of x_j, so the unit-coefficient argument does
+    /// not hold for it either; it is in practice never omitted, since it is
+    /// always in the LP seed's support. Both are left at the floor.
+    ///
+    /// THE CAP, and why the knob is the exponent. s_j is a difference of two
+    /// potentials and on a large formula unit both are of order 1e3 (the
+    /// standing seawater/Loeweite case: G0/RT = -7915.88 against sum(U*a) =
+    /// -8107.22), so exp(-s_j) can overflow outright. Capping the exponent
+    /// bounds the growth per pass in the units the quantity is actually
+    /// expressed in - pa_OptimaReadmitSeed = 20 permits at most e^20 = 4.9e8 x
+    /// the floor, i.e. ~5e-5 mol from a 1e-13 floor. Two further clamps apply
+    /// unconditionally: the species' own box, and its stoichiometric ceiling
+    /// min_i b_i/a(j,i) over the ICs it consumes - the same bound
+    /// DetectPhaseCollapseAndReseed() already computes, and the only one of the
+    /// three that is a statement about the system rather than about numerics.
+    ///
+    /// WHAT IT CAN AND CANNOT AFFECT. A readmitted species becomes a free
+    /// variable inside its own box; this sets only where inside that box the
+    /// NEXT pass starts from. It cannot change the reduced problem's solution,
+    /// only the path to it - and the pre-solve's guarantee is unchanged either
+    /// way, since a pass is handed over only at a fixed point and discarded
+    /// otherwise. The risk it does carry is that a large seed leaves the
+    /// starting point further from satisfying Aex*x = be than the floor did,
+    /// which is the mechanism behind the 1e-6 failure above; that is what the
+    /// cap is for, and why this ships off.
+    ///
+    /// MEASURED 2026-09-04, cold AOP, every 200+ species project in the corpus
+    /// that the reduction is reachable on (both arms run in full; the six
+    /// baselines all reproduce their recorded values exactly, so the A/B is
+    /// clean). The answer is IDENTICAL in every row - same G to ten digits,
+    /// same pH and Vs - so this only ever changes cost:
+    ///
+    ///   project            species   off   cap 20    change
+    ///   07PSIna_G_mid_1       265     269    261      -3%
+    ///   f_TestPNTDB           690     501    496      -1%
+    ///   j_TestPNTDB           690     495    471      -5%
+    ///   f_TestSUP98           923    2103   2008      -4.5%
+    ///   j_TestSUP98           923    1695  10221     +503%   <- pass 1 discarded
+    ///   07PSIna_G_complex_1  1392    1601   1671      +4.4%
+    ///   07PSIna_G_edt_2      1566   11215    808     -93%   <- 13.9x, pass 1 no
+    ///                                                       longer discarded
+    ///
+    /// THE MECHANISM WORKS EXACTLY AS THE FORMULA PREDICTS, which is worth
+    /// separating from the verdict. On 07PSIna_G_mid_1 all 56 readmitted
+    /// species are seeded and the passes that consume them get cheaper - pass 1
+    /// 20 -> 15 iterations, pass 2 4 -> 1, i.e. the readmitted species start
+    /// essentially AT the answer, which is precisely Eq. 12a's claim. On
+    /// f_TestSUP98 pass 1 settles immediately (0 readmitted). The predicted
+    /// amount is right.
+    ///
+    /// WHAT IT DOES NOT CONTROL is whether the next pass converges at all, and
+    /// that dominates. j_TestSUP98's pass 1 is discarded WITH seeding and
+    /// converges without it; 07PSIna_G_edt_2's is discarded WITHOUT seeding and
+    /// converges with it. Same mechanism, opposite outcomes, and nothing
+    /// observed predicts which - note in particular that f_TestSUP98 and
+    /// j_TestSUP98 are the SAME chemistry differing only in the thermodynamic-
+    /// data path, and they move in opposite directions (-4.5% against +503%).
+    ///
+    /// AND THE RESPONSE IS NON-MONOTONE IN THE CAP, this solver's now-familiar
+    /// signature for a knob that should not be tuned. 07PSIna_G_mid_1 over
+    /// caps 5/10/15/20/30/40/60 gives 276/275/262/261/268/268/268 against 269
+    /// off - amplitude +-3%, no trend, settling once the cap stops binding and
+    /// the stoichiometric ceiling takes over. Worse, f_TestPNTDB is 501 off,
+    /// 7874 at cap 10 (pass 1 discarded) and 496 at cap 20: a SMALLER seed is
+    /// the one that breaks it. That is the right way round for this mechanism -
+    /// a truncated exponent is itself an arbitrary value, which is the very
+    /// thing the 1e-6 variant failed for - so if this is used at all, use a cap
+    /// large enough that the stoichiometric ceiling binds instead (>= 20 on
+    /// this corpus), never a small one.
+    ///
+    /// THE DOWNSIDE IS BOUNDED BUT NOT SMALL. Both cliff cases were rescued by
+    /// the pre-solve's own initial-set fallback (section 41) - no answer is
+    /// lost, and G is unchanged - but the rescue costs a whole wasted pass.
+    /// Under the standing decision rule that is a fallback without a strict
+    /// improvement, so DEFAULT 0. The knob is BIMODAL rather than marginal -
+    /// one 13.9x win, one 6x loss, five moves of +-5% - and both extremes are
+    /// the same event in opposite directions. Per project: SET IT (= 20) on
+    /// 07PSIna_G_edt_2, where it is the largest single-project win this field
+    /// offers; do NOT set it on j_TestSUP98 or 07PSIna_G_complex_1; elsewhere
+    /// do not set it blind, because given the f_/j_TestSUP98 split,
+    /// establishing that it helps a project costs as much as it saves.
+    /// See plan-v5 section 63 and
+    /// Docs/literature/FINDINGS-White1958-RAND-vs-GEMS3K.md section 3.
+    ///
+    /// Blast radius, by construction: OptimaReducedPreSolve() runs only on a
+    /// COLD AOP/SOP solve, only at or above the dimension-reduction size gate,
+    /// never in ROP, never on a warm start (so never in HOP or SOP), and never
+    /// with control conditions active.
+    double OptimaReadmitSeed = 0.;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -1547,6 +1739,44 @@ public:
     // prior state, so there is no warm-start ROP variant.
     double CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool reaktoroMode = false );
 
+    /// HYBRID: native selects the species (its own IPM/MBR/PSSC pipeline,
+    /// cold), then Optima finishes, warm-started from native's converged
+    /// primal AND dual - see NODECODECH's own comment in databr.h for why
+    /// this is a separate caller-selected mode (dispatched for NEED_GEM_HOP)
+    /// rather than something AOP does internally.
+    ///
+    /// Guarantees the result is never worse than a plain native solve: if
+    /// native converges but the Optima leg then fails (throws, for any
+    /// reason including pa_DW's hard-error gate), native's own
+    /// already-converged state is restored and reported as a soft
+    /// BAD_GEM_HOP instead of being lost - before this, the Optima leg's
+    /// thrown TError propagated straight to TNode::GEM_run()'s OUTER catch,
+    /// which never calls packDataBr(), so a converged native answer (e.g.
+    /// 693 iterations on 07PSIna_G_vcomplex @ 80 C) was silently discarded
+    /// whenever the warm Optima leg on top of it could not finish. See
+    /// GEMS3K/CLAUDE.md and Docs/gems3k-optima-plan-v5.md, section 64.6.
+    ///
+    /// `warmNative` selects the SHP variant (NEED_GEM_SHP): the native leg
+    /// starts warm (pm.pNP = 1) from whatever this node already holds,
+    /// instead of cold. It is for sequential work - a sweep or a transport
+    /// loop, where the previous point's converged state is sitting right
+    /// there and HOP as built throws it away at every call. It is exactly
+    /// HOP with native's SIA in place of native's AIA. Its headline result
+    /// is not the sweep saving it was built for: on the projects whose
+    /// native SIA cannot re-solve their own converged state (plan-v5 29.2
+    /// and 60.5) SHP converges anyway, at ~4x fewer iterations than HOP,
+    /// because the state it hands native is the OPTIMA leg's rather than
+    /// native's own. On a sweep the saving is project-dependent - 2.4x less
+    /// wall time than HOP on j_10TH_G_seawater, ~nothing on
+    /// j_Solvus_G_series1, a 2.3x LOSS on j_Kaolinite_G_pHtitr, whose
+    /// native warm start is itself more expensive than its cold one. Full
+    /// tables in NODECODECH's comment (databr.h). Carries a COLD FALLBACK, so a
+    /// project whose native SIA refuses its own converged state (ten of
+    /// them, plan-v5 section 60.5) degrades to exactly HOP at the cost of
+    /// one cheap wasted attempt. See NODECODECH's comment in databr.h.
+    double CalculateEquilibriumStateHOP( long int& NumIterFIA, long int& NumIterIPM,
+                                         bool warmNative = false );
+
     /// Registers (or replaces, by name) a pH control condition for the
     /// next CalculateEquilibriumStateOptima() call. Persists across calls
     /// until ClearControlConditions() - not single-shot. `tolerance < 0`
@@ -1799,6 +2029,50 @@ protected:
     /// must stay byte-identical.
     bool optima_disable_smoothing = false;
 
+    /// True only while CalculateEquilibriumStateHOP()'s Optima leg is running
+    /// on top of a SUCCESSFUL native solve. Read at exactly one place: the
+    /// dimension-reduction gate in CalculateEquilibriumStateOptima(), which is
+    /// otherwise cold-start-only (pm.pNP == 0).
+    ///
+    /// Why the cold-start-only rule does not apply here, which is the whole
+    /// content of this flag. That rule reasons that a warm start already
+    /// carries the consistent (primal, dual) pair the pre-solve exists to
+    /// manufacture, so a reduction in front of it is waste when it discards
+    /// and destructive when it settles. True of SOP - an ordinary warm restart
+    /// at a nearby composition, where the incoming pair IS an Optima fixed
+    /// point. NOT true of HOP: the incoming pair is NATIVE's, and native
+    /// decides absence by truncating below pa_DcMin (1e-33) and dropping the
+    /// species from its own linear system entirely, while Optima's box floor
+    /// is pa_DHB (1e-13, twenty orders higher). So every species native calls
+    /// absent arrives sitting AT Optima's floor, carrying a reduced gradient
+    /// that need not satisfy Optima's own complementarity test - and on a
+    /// large system those absent species are what the max-norm KKT residual
+    /// is made of (section 57: one absent gas phase holding 99 % of it). That
+    /// is the difference between a warm start Optima can verify in O(1)
+    /// iterations and one it cannot verify at all.
+    ///
+    /// So on the HOP path the pre-solve is not manufacturing a pair - it is
+    /// re-expressing native's own assemblage in Optima's terms, at a
+    /// dimension where the residual is not dominated by species that are not
+    /// there. The initial active set needs no new selection rule for that:
+    /// OptimaReducedPreSolve() builds it from whatever pm.Y[] holds on entry,
+    /// which on this path is native's converged answer. Section 62.6 measured
+    /// that a native-derived assemblage errs only by INCLUDING too much,
+    /// which the pre-solve's own pricing repairs at the cost of iterations
+    /// rather than correctness. See Docs/gems3k-optima-plan-v5.md section 64.7
+    /// / handoff item 8b.
+    ///
+    /// EXPLICIT OPT-IN ONLY: this flag lets the reduction run on the HOP leg
+    /// when pa_OptimaDimReduce > 0, and AUTO (0) does NOT reach it. Measured on
+    /// 07PSIna_G_mid_1, which is above the AUTO size gate and does not need the
+    /// help: warm verification alone is 2 Optima iterations / 6 ms, and putting
+    /// a reduction in front of it costs 35 / 85 ms for the same answer. The
+    /// reduction pays here only where the warm verification does not work, and
+    /// nothing static predicts which projects those are (section 39.4) - so it
+    /// is per-project, like every other knob on this path whose response is not
+    /// uniformly favourable. Default HOP behaviour is unchanged by this flag.
+    bool optima_hop_leg = false;
+
 
 
     MULTI pm;
@@ -1976,6 +2250,11 @@ protected:
     double OptimizeStepSize( double LM );
     void DC_ZeroOff( long int jStart, long int jEnd, long int k=-1L );
     void DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k=-1L );
+    /// Largest amount of a single-species phase the bulk composition can supply,
+    /// min_i b_i/a(j,i) over the ordinary IC rows. Used to clamp PSSC's fixed
+    /// pure-phase insertion amount (pa_DFYs) so an insertion cannot be infeasible
+    /// by construction - see the long comment at the definition in ipm_chemical.cpp.
+    double PhaseInsertionCeiling( long int j );
     double RaiseDC_Value( const long int j );
     long int MetastabilityLagrangeMultiplier();
     void WeightMultipliers( bool square );
@@ -2016,6 +2295,41 @@ protected:
     virtual void load_all_thermodynamic_from_grid(TNode *aNa, double TK, double P);
 
 };
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/// Env-gated event trace of the NATIVE (IPM/MBR/PSSC) solver.
+///
+/// Returns the open trace stream when GEMS3K_NATIVE_TRACE_FILE=<path> is set in
+/// the environment, and nullptr otherwise - so every call site costs one null
+/// test on an already-computed pointer. The stream is opened once, in append
+/// mode, on first use and deliberately never closed (process lifetime).
+///
+/// DELIBERATELY NOT #ifndef NDEBUG. GEMS3K's existing staged-snapshot and PSSC
+/// logging (added 2026-07-31, ipm_main.cpp) is NDEBUG-gated, and every installed
+/// build - gems-benchmark's included - is Release, so that code does not exist
+/// in the binary anyone actually runs and has never once been used in this
+/// work. Env gating follows GEMS3K_OPTIMA_TRACE_FILE instead, which is usable
+/// against a shipped library with no rebuild.
+///
+/// WHY IT EXISTS. Every statement this branch makes about native is an
+/// INFERENCE from outcomes - iteration counts, exact zeros in the answer,
+/// residuals - never an observation. The single largest open item is porting a
+/// PSSC equivalent to the Optima path, and a decision procedure cannot be
+/// ported from its output alone. What this logs is exactly that decision: which
+/// phase, which stability index, against which threshold, and what was done.
+///
+/// Format: one line per EVENT (never per iteration - the psina giants carry
+/// 1392 species and a per-iteration dump would be tens of MB), tagged in the
+/// first field and otherwise KEY=value so it is greppable and parses on
+/// whitespace. Names, not bare indices: the packed arrays pm.SM[]/pm.SF[]/
+/// pm.SB[] are reachable from this layer via char_array_to_string(), which is
+/// what ipm_optima.cpp already does for its own messages.
+FILE* native_trace_file();
+
+/// Per-iteration IPM descent record, gated on GEMS3K_IPM_PROBE=<path>. Same
+/// zero-cost-when-unset shape as native_trace_file(); see the call site in
+/// InteriorPointsMethod() for the measurement it exists to support.
+FILE* ipm_probe_file();
 
 // ???? syp->PGmax
 typedef enum {  // Symbols of thermodynamic potential to minimize
@@ -2068,7 +2382,8 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaFDHessian, f_pa_OptimaMoleFracHessian, f_pa_OptimaPhaseCompaction,
     f_pa_OptimaFDHessianDelay, f_pa_OptimaDcFloor, f_pa_MbClassRule,
     f_pa_MbTrendPhaseDecay, f_pa_OptimaEarlyStabilityAt, f_pa_OptimaDimReduce,
-    f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit
+    f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit, f_pa_OptimaZeroAbsent,
+    f_pa_OptimaReadmitSeed
 
 } MULTI_DYNAMIC_FIELDS;
 

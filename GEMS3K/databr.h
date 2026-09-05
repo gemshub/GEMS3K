@@ -173,7 +173,113 @@ typedef DATABR*  DATABRPTR;
  NEED_GEM_ROP = 18,  ///< Need GEM calculation via Optima, using Reaktoro's own mechanism (uniform seed, PartiallyExact Hessian, untouched Optima defaults)
  OK_GEM_ROP   = 19,  ///< OK after GEM calculation via the ROP mechanism
  BAD_GEM_ROP  = 20,  ///< Bad (not fully trustful) result after GEM calculation via the ROP mechanism
- ERR_GEM_ROP  = 21   ///< Failure (no result) in GEM calculation via the ROP mechanism
+ ERR_GEM_ROP  = 21,  ///< Failure (no result) in GEM calculation via the ROP mechanism
+ // "HOP" mode: HYBRID - native GEMS3K IPM/MBR first, then Optima warm-started
+ // from its result. In series: native does what it is uniquely good at, which
+ // is SELECTING THE SPECIES (its line-search objective GX() truncates any
+ // amount below pa_DcMin to exactly 0, so it produces a genuine phase
+ // assemblage - see the comment at that truncation in ipm_chemical.cpp and
+ // plan-v5 section 60), and Optima then finishes from that assemblage, which
+ // is what it is good at.
+ //
+ // WHY THIS IS A SEPARATE, CALLER-SELECTED MODE and not something AOP does
+ // internally: an earlier design had AOP call native itself, and that was
+ // reverted 2026-08-23 on explicit direction - AOP/SOP must remain a genuinely
+ // switchable, standalone alternative to native, not a combination wearing
+ // native's name. A caller asking for HOP is asking for both, by name.
+ //
+ // WHAT IT BUYS, measured: 07PSIna_G_complex_1_0_1_80_0 (1392 species) -
+ // the largest project in the corpus and one that NO Optima mode has ever
+ // solved, running out its whole budget - converges here in 28 Optima
+ // iterations on top of native's 449, at a G agreeing with native's to 7
+ // significant figures.
+ //
+ // If native fails on the system, there is no assemblage to hand over, and
+ // this degrades to a plain cold Optima solve (AOP-equivalent) with a logged
+ // warning rather than failing outright. Only meaningful if built with
+ // USE_OPTIMA_SOLVER; otherwise it falls back to native AIA alone, as AOP/SOP
+ // and ROP do.
+ NEED_GEM_HOP = 22,  ///< Need GEM calculation via native IPM/MBR first, then Optima warm-started from its result
+ OK_GEM_HOP   = 23,  ///< OK after the hybrid native-then-Optima calculation
+ BAD_GEM_HOP  = 24,  ///< Bad (not fully trustful) result after the hybrid native-then-Optima calculation
+ ERR_GEM_HOP  = 25,  ///< Failure (no result) in the hybrid native-then-Optima calculation
+
+ // SHP - the WARM (SIA-equivalent) counterpart of HOP, and the pair completes
+ // the same cold/warm convention every other solver here already has:
+ // AIA/SIA, AOP/SOP. "S" is this API's established marker for a smart (warm)
+ // initial approximation; HOP starts with no "A" to swap, so the warm member
+ // of the pair carries the S in front instead.
+ //
+ // WHAT IT IS FOR. HOP as built runs its NATIVE leg cold at EVERY call, which
+ // is fine for a single equilibrium and plainly wasteful in a sweep or a
+ // transport loop, where the previous point's converged state is sitting right
+ // there. SHP starts the native leg warm (pm.pNP = 1, native's own SIA path)
+ // and hands its result to the same warm Optima leg HOP already uses, so a
+ // sequential step costs a warm native solve plus O(1)-O(10) Optima iterations
+ // instead of a full cold native solve plus the same.
+ //
+ // WHAT IT IS NOT: a new heuristic. SHP is exactly HOP with native's SIA in
+ // place of native's AIA, so the caller faces here precisely the choice they
+ // already face between AIA and SIA, and between AOP and SOP.
+ //
+ // THE HEADLINE RESULT is not the sweep saving it was built for. Native's own
+ // SIA cannot re-solve its own converged state on a documented set of projects
+ // - the cold path returns an answer failing native's own mass-balance test,
+ // and SIA is the only path that checks it (plan-v5 sections 29.2 and 60.5).
+ // SHP converges on those anyway, at ~4x fewer iterations than HOP, because
+ // the state it hands native is the OPTIMA leg's, not native's own, and that
+ // state satisfies mass balance to machine precision. Measured at zero
+ // distance (re-solve the same composition four times on one node,
+ // debug-optima-vs-reaktoro/hop_sweep.cpp --bic 4 0.0), warm-step failures and
+ // total iterations, G identical to every printed digit in every row:
+ //
+ //                              native SIA      HOP          SHP
+ //   07PSIna_G_iron             3 fails/ 254    0/ 260       0/  80
+ //   07PSIna_G_ironsi           3 fails/ 310    0/ 384       0/ 108
+ //   10TH_G_00001               3 fails/4141    0/4128       0/1063
+ //   Al-species                 3 fails/ 858    0/ 836       0/ 221
+ //   FeNaCl_FyGt_Precip_HighpH  3 fails/ 518    0/ 496       0/ 130
+ //   FeNaCl_FyGt_TransitionZone 3 fails/2498    0/2476       0/ 625
+ //   CSHSnplus                  0 fails/ 104    0/3316       0/ 841
+ //
+ // and the cold fallback below fires on NONE of them: the warm native leg
+ // genuinely succeeds where plain native SIA on native's own answer fails.
+ //
+ // ON A SWEEP the saving is real but project-dependent, because there SHP can
+ // be no better than the native leg it is built on. One TNode stepped through
+ // a temperature sweep, iterations and wall time for the whole sweep:
+ //
+ //   j_10TH_G_seawater      0-80 C,   81 pts   HOP 14490/3500ms  SHP  3903/1467ms
+ //   j_Solvus_G_series1   400-700 C, 301 pts   HOP 84125/1113ms  SHP 77068/1083ms
+ //   j_Kaolinite_G_pHtitr  25-125 C,  21 pts   HOP  2961/  19ms  SHP  6485/  45ms
+ //
+ // i.e. 2.4x less wall time where native's warm start is a win (seawater),
+ // near-nothing where a second effect eats it (Solvus - see the pm.pNP note in
+ // CalculateEquilibriumStateHOP()), and a LOSS where native's own warm start
+ // is itself a loss (Kaolinite, whose native_warm costs 5694 iterations on
+ // that sweep against native_cold's 2067 - warm is not always cheaper).
+ //
+ // WHY IT IS SAFE. Native's SIA is documented to REFUSE states its own cold
+ // path returns (plan-v5 section 29.2/60.5: on ten projects the cold path
+ // returns a state failing its own mass-balance test, and SIA is the only
+ // path that checks). So the warm native leg here carries a COLD FALLBACK:
+ // if it throws, the leg is retried cold on the same node, and the mode
+ // degrades to exactly HOP. Combined with HOP's own floor (if the Optima leg
+ // fails, native's answer is restored and reported as BAD), the chain is
+ // SHP >= HOP >= native on every project - the worst case is one wasted, and
+ // cheap, warm native attempt.
+ //
+ // On a node that has never solved, there is nothing to warm-start FROM:
+ // detected the same way the Optima path detects it (pm.U[] identically zero -
+ // it is the dual, so any real solve by any solver leaves it nonzero) and the
+ // native leg then runs cold with a logged warning, rather than starting from
+ // the .dbr file's stored speciation, which is not a warm start but a cold
+ // start from stale data. Same foot-gun, same detector, same reason - see the
+ // corresponding block in ipm_optima.cpp.
+ NEED_GEM_SHP = 26,  ///< Need the hybrid native-then-Optima calculation with a WARM (SIA) native leg
+ OK_GEM_SHP   = 27,  ///< OK after the hybrid calculation with a warm native leg
+ BAD_GEM_SHP  = 28,  ///< Bad (not fully trustful) result after the hybrid calculation with a warm native leg
+ ERR_GEM_SHP  = 29   ///< Failure (no result) in the hybrid calculation with a warm native leg
 } /*NODECODECH*/;
 
 
