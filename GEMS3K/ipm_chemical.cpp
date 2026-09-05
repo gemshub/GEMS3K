@@ -1564,15 +1564,27 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
        if( logSI >= pa_p->DF )  // 2 - INSERTION CASE
        {  // this phase is stable or over-stable
            if( PhaseAmount < pm.DSM ) // pm.DFYsM )
-           {  // phase appears to be lost - insertion of all components of the phase
+           {  // phase appears to be lost - insertion of all components of the phase.
+              // FEASIBILITY CHECK FIRST: pm.DFYsM (= pa_DFYs, default 1e-6) is a fixed
+              // amount that does not look at the composition, so for a phase whose
+              // limiting IC the system barely contains the insertion is INFEASIBLE -
+              // it demands more of that element than exists, the following MBR pass
+              // must undo it, and PSSC re-proposes it until the pass budget runs out.
+              // See PhaseInsertionCeiling() above for the measurement.
+              // Both quantities are in the internally rescaled frame (pm.B[] is scaled
+              // by ScFact = pa_DG/sum(bIC), and pm.DFYsM is used directly as a pm.Y[]
+              // amount), so they are directly comparable - do NOT compare either against
+              // the caller's raw bIC.
+               const double insCap = ( L1k > 1 ) ? -1. : PhaseInsertionCeiling( jb );
+               if( insCap >= 0. && insCap < pm.DFYsM )
+               {   // the bulk composition cannot support even a trace of this phase
+                   trAction = "SKIP_INFEASIBLE";
+                   goto NextPhase;
+               }
                if( L1k > 1 )
                   DC_RaiseZeroedOff( jb, jb+L1k, k );
                else
-               {  // Spec. value for pure phase insertion, clamped by what the bulk
-                  // composition can supply - see PhaseInsertionCeiling() above.
-                  const double cap = PhaseInsertionCeiling( jb );
-                  pm.Y[jb] = ( cap > 0. && cap < pm.DFYsM ) ? cap : pm.DFYsM;
-               }
+                  pm.Y[jb] = pm.DFYsM; // Spec. value for pure phase insertion
                DCinserted += L1k;
                PHinserted++;
                kfr = k;
