@@ -1394,17 +1394,22 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                     }
                     else
                     {
+                        // Same present-only restriction as the main objective -
+                        // see the long comment there for the measurement.
+                        double phTot = 0.;
+                        for( long int j = j0; j < j1; j++ ) phTot += std::max( pm.X[j], 0. );
+                        const double presThr = std::max( dcFloor * 1e3, phTot * 1e-6 );
                         for( long int j = j0; j < j1; j++ )
                         {
                             const long int sj = jToNx[(size_t)j];
                             if( sj < 0 ) continue;
                             const double Xj = std::max( pm.X[j], dcFloor );
-                            if( kMoleFracHessian )
+                            if( kMoleFracHessian && pm.X[j] > presThr )
                             {
                                 for( long int i = j0; i < j1; i++ )
                                 {
                                     const long int si = jToNx[(size_t)i];
-                                    if( si >= 0 ) res.fxx(sj,si) = -1.0 / Xf;
+                                    if( si >= 0 && pm.X[i] > presThr ) res.fxx(sj,si) = -1.0 / Xf;
                                 }
                                 res.fxx(sj,sj) = 1.0 / Xj - 1.0 / Xf;
                             }
@@ -2496,13 +2501,47 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     }
                     else
                     {
+                        // The rank-1 -(1/Xf) coupling is applied ONLY over the
+                        // end-members that are PRESENT, by exactly the criterion
+                        // pa_PhaseHessianFloor's block below uses to decide which
+                        // columns deserve an exact (FD) curvature. An absent
+                        // end-member keeps the plain diag(1/X_j).
+                        //
+                        // MEASURED 2026-09-06, and this is a defect fix, not a
+                        // tuning choice. Applying the coupling to an end-member
+                        // sitting at the numerical floor asserts curvature the
+                        // physical model does not have (its X_j is a clamp, not
+                        // an amount), and it opens a self-reinforcing trap:
+                        //   - the coupling lets a whole phase be driven to the
+                        //     floor, so nPresent falls to 0 or 1;
+                        //   - the eigenvalue regularisation below requires
+                        //     nP > 1 and is therefore SKIPPED exactly there;
+                        //   - what Optima then sees is the raw analytic block,
+                        //     which is exactly singular by construction (its
+                        //     null vector is the phase's own amounts: scaling a
+                        //     phase at fixed composition changes no ln x), mixed
+                        //     with whatever FD columns landed on it - i.e.
+                        //     indefinite - so the phase cannot recover.
+                        // On the j_Solvus 61-point sweep at pa_OptimaMoleFracHessian
+                        // = 1, T = 540 C: 2332 objective evaluations in the
+                        // unregularised nPresent<=1 regime against 43 with the
+                        // field off (54x), and lmin < 0 in 1015 of them (44%).
+                        // Where the regularisation does run (nPresent >= 2) lmin
+                        // was never negative in either arm, 13847 evaluations.
+                        // Restricting the coupling to the present set closes the
+                        // trap by construction: with nPresent <= 1 the coupled
+                        // sub-block is at most 1x1, so the phase block is
+                        // diag(1/X_j) and positive definite.
+                        double phTot = 0.;
+                        for( long int j = j0; j < j1; j++ ) phTot += std::max( pm.X[j], 0. );
+                        const double presThr = std::max( dcFloor * 1e3, phTot * 1e-6 );
                         for( long int j = j0; j < j1; j++ )
                         {
                             const double Xj = std::max( pm.X[j], dcFloor );
-                            if( kMoleFracHessian )
+                            if( kMoleFracHessian && pm.X[j] > presThr )
                             {
                                 for( long int i = j0; i < j1; i++ )
-                                    res.fxx(j,i) = -1.0 / Xf;
+                                    if( pm.X[i] > presThr ) res.fxx(j,i) = -1.0 / Xf;
                                 res.fxx(j,j) = 1.0 / Xj - 1.0 / Xf;
                             }
                             else

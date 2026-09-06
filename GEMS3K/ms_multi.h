@@ -409,6 +409,25 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     ///   j_CASHNK                563 -> 1600 it ; f_/j_CalcDolo ~+10%
     /// Enable per project for phase-extinction-limited cases (a vestigial phase
     /// decaying slowly toward its floor); leave off otherwise.
+    ///
+    /// 2026-09-06 - THE COUPLING IS NOW APPLIED ONLY OVER THE END-MEMBERS THAT
+    /// ARE PRESENT (ipm_optima.cpp, both objectives; see the long comment at the
+    /// main one). The failures above were a hole in pa_PhaseHessianFloor's
+    /// regularisation, which requires two present end-members and is therefore
+    /// skipped exactly when a phase has been driven to its floor - which this
+    /// term is what does. Measured after the fix, same corpus:
+    ///   61-point solvus sweep    4 lost temperatures -> 0, worst limb error
+    ///                            unchanged at 2.009e-4, Tc unchanged at 655
+    ///   f_CASHNK                 1001 it, unchanged (the 10x win is preserved)
+    ///   large_f_TestPNTDB        7916 -> 501 it ; mb_10TH_THEREDA 1051 -> 102
+    ///   ctest at the flipped default   3 tests failing -> 1
+    /// So the field no longer loses an answer anywhere in the corpus (freeze at
+    /// the flipped default: 0 status changes and 0 G changes over 258 rows, all
+    /// six modes). It is still default-off because the flip is a COST wash
+    /// (+2.2 % corpus iterations) and it destabilises one project: t_Solvus640
+    /// AOP goes from a 1.3x jitter spread (88-113) to 17.9x (88-1572) - which it
+    /// already did before this fix (8.1x, 124-1001), so that is the field's
+    /// doing, not the fix's. plan v5 section 85.
     long int OptimaMoleFracHessian = 0;
 
     /// PSSC-EQUIVALENT PHASE COMPACTION for the Optima path: number of Newton
