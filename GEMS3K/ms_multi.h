@@ -2440,7 +2440,9 @@ protected:
     /// Returns true only if it applied a correction that left every species
     /// non-negative AND strictly reduced the worst relative residual; otherwise it
     /// restores pm.X untouched and returns false.
-    bool MassBalanceReproject();
+    /// `amt` is the amount vector to repair - pm.X on the final answer, pm.Y at the
+    /// post-PSSC call site (PSSC works on pm.Y). Both are re-synchronised on success.
+    bool MassBalanceReproject( double* amt );
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
     void AutoInitialApproximation( );
 

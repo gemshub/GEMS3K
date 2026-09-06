@@ -200,20 +200,20 @@ static void native_trace_mbr_exit( const MULTI& pm, const BASE_PARAM* pa_p,
 //
 // All N rows take part, the charge row included, so the correction cannot introduce
 // a charge imbalance while removing an element one.
-bool TMultiBase::MassBalanceReproject()
+bool TMultiBase::MassBalanceReproject( double* amt )
 {
     const long int N = pm.N, L = pm.L;
-    if( N < 1 || L < N || !pm.A || !pm.B || !pm.X ) return false;
+    if( N < 1 || L < N || !pm.A || !pm.B || !amt ) return false;
 
     long int i1 = -1, i2 = -1; double relOld = 0., absOld = 0.;
-    native_trace_mb_of( pm, pm.X, i1, relOld, i2, absOld );
+    native_trace_mb_of( pm, amt, i1, relOld, i2, absOld );
     if( !( relOld > 0. ) ) return false;
 
     std::vector<double> C( (size_t)N );
     for( long int i = 0; i < N; i++ )
     {
         double c = pm.B[i];
-        for( long int j = 0; j < L; j++ ) c -= pm.A[i + j*N] * pm.X[j];
+        for( long int j = 0; j < L; j++ ) c -= pm.A[i + j*N] * amt[j];
         C[(size_t)i] = c;
     }
 
@@ -223,7 +223,7 @@ bool TMultiBase::MassBalanceReproject()
     std::vector<long int> ord( (size_t)L );
     for( long int j = 0; j < L; j++ ) ord[(size_t)j] = j;
     std::sort( ord.begin(), ord.end(),
-               [this]( long int a, long int b ) { return pm.X[a] > pm.X[b]; } );
+               [amt]( long int a, long int b ) { return amt[a] > amt[b]; } );
 
     std::vector<long int> piv;
     std::vector<double> Q, r( (size_t)N );
@@ -295,24 +295,26 @@ bool TMultiBase::MassBalanceReproject()
     // Refusing outright there left a repairable state unrepaired.
     for( long int c = 0; c < N; c++ )
     {
-        const double x = pm.X[piv[(size_t)c]];
+        const double x = amt[piv[(size_t)c]];
         if( x + dy[(size_t)c] < 0. ) dy[(size_t)c] = -x;
     }
 
-    std::vector<double> Xold( pm.X, pm.X + L );
-    for( long int c = 0; c < N; c++ ) pm.X[piv[(size_t)c]] += dy[(size_t)c];
+    std::vector<double> Xold( amt, amt + L );
+    for( long int c = 0; c < N; c++ ) amt[piv[(size_t)c]] += dy[(size_t)c];
 
     double relNew = 0., absNew = 0.;
-    native_trace_mb_of( pm, pm.X, i1, relNew, i2, absNew );
+    native_trace_mb_of( pm, amt, i1, relNew, i2, absNew );
     if( !( relNew < relOld ) )                       // no strict improvement - undo
     {
-        for( long int j = 0; j < L; j++ ) pm.X[j] = Xold[(size_t)j];
+        for( long int j = 0; j < L; j++ ) amt[j] = Xold[(size_t)j];
         return false;
     }
 
-    // Keep the working vector and everything derived from X consistent with the
-    // repaired state - pm.pH, FVOL, IC and the rest come from CalculateConcentrations.
-    for( long int j = 0; j < L; j++ ) pm.Y[j] = pm.X[j];
+    // Keep both amount vectors and everything derived from them consistent with
+    // the repaired state - pm.pH, FVOL, IC and the rest come from
+    // CalculateConcentrations. Whichever array was repaired, the other follows it.
+    for( long int j = 0; j < L; j++ ) { pm.X[j] = amt[j]; pm.Y[j] = amt[j]; }
+    TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
     CalculateConcentrations( pm.X, pm.XF, pm.XFA );
 
@@ -484,7 +486,7 @@ FORCED_AIA:
        // pm.X untouched unless it strictly improves the worst relative residual.
        if( fails && iRel >= 0 && base_param()->MbReproject )
        {
-           if( MassBalanceReproject() )
+           if( MassBalanceReproject( pm.X ) )
            {
                native_trace_mb_of( pm, pm.X, iRel, rel, iAbs, absr );
                fails = !base_param()->DT ? ( rel > 1. )
@@ -667,6 +669,41 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
        }
 #endif
        ps_rcode = PhaseSelectionSpeciationCleanup( k_miss, k_unst, cleanupStatus );
+
+       // pa_MbReproject, SECOND call site (plan v5 section 88). PSSC's speciation
+       // CLEANUP is a per-DC correction that does not look at the mass balance -
+       // it can zero a DC that has fallen below pm.DcMinM, or raise one back from
+       // zero - and it then reports NeedToImproveMassBalance and leaves the repair
+       // to the MBR that follows. On a WARM call that MBR carries the strict guard
+       // (pNP = 1), so an unrepairable perturbation is fatal rather than merely
+       // untidy - which is exactly why two projects still failed their warm restart
+       // with their FINAL answer already repaired (section 86.10):
+       //     07PSIna_G_iron   worst relative residual 1.26e-05 -> 1.88e+11
+       //     f_Solvus_G_test3                         3.43e-03 -> 2.29e+04
+       // in both cases across a PSSC pass that inserted nothing.
+       //
+       // Gated on k_miss < 0 - no phase was INSERTED - deliberately, and NOT on
+       // ps_rcode. When PSSC has inserted a phase the state changed structurally and
+       // MBR must re-equilibrate it; a linear projection over N species would be
+       // papering over a real change. But ps_rcode is the wrong test for that:
+       // status 0 means "mass balance violated, do another IPM loop", which the
+       // speciation cleanup also raises when it makes a bounded correction of its
+       // own with nothing inserted or removed. Measured - on f_Solvus_G_test3's warm
+       // call PSSC reports status=0 with PHins = PHrem = DCins = DCrem = 0 and
+       // kfr = -1, and gating on ps_rcode == 1 declined exactly the case this
+       // exists for.
+       //
+       // A phase ELIMINATION is not separately gated because PSSC does not expose
+       // its removal counters here; it is covered by the method's own acceptance
+       // test instead - a correction large enough to put a removed phase's mass back
+       // is clamped at the feasibility bound and then fails to improve the worst
+       // relative residual, so it is reverted.
+       //
+       // PSSC works on pm.Y, so that is what is repaired; the method
+       // re-synchronises pm.X and everything derived from it on success, and
+       // restores pm.Y untouched unless the worst relative residual strictly falls.
+       if( k_miss < 0 && base_param()->MbReproject )
+           MassBalanceReproject( pm.Y );
 
 #ifndef NDEBUG
        if(gems_logger->should_log(spdlog::level::debug)) {
