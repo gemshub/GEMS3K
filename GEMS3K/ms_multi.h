@@ -743,6 +743,29 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// What a defaultable version needs is a way to tell a trustworthy stability
     /// verdict from a premature one - e.g. require the dual to have settled before
     /// the early look is allowed to ACT, rather than gating only when it is taken.
+    /// 2026-09-06 - THE TREND FORM IS NOW GATED ON THE DUAL HAVING SETTLED
+    /// (ipm_optima.cpp, kEarlyTrendDualSettled; plan v5 section 87). The repair
+    /// loop's verdict is a stability index computed from the dual, so acting on a
+    /// dual that is still moving is how the trend form went wrong. Measured at the
+    /// moment the trigger fires: max|dw|/max|w| = 2.97e-15 where acting is RIGHT
+    /// (j_CASHNK) against 1.33e-04 where it is WRONG (CSHSnplus) - eleven orders
+    /// apart, so the threshold (pa_OptimaTol) is not a tuned knob.
+    /// With it, CSHSnplus goes BAD 197 -> OK 2119 at the un-armed answer to every
+    /// digit, j_CASHNK keeps 1001 -> 56, and ctest passes 11/11 at the CHANGED
+    /// default - which section 59.6's flip did not.
+    ///
+    /// The flip is STILL rejected, on a regression only the benchmark freeze sees:
+    /// j_CASHNK's HOP row goes OK 4587 -> FAIL 5227. That is this field's own,
+    /// pre-existing (the gate can only delay a trigger, never create one) and was
+    /// simply never measured, because section 59.6 stopped at ctest. Cause: on the
+    /// WARM leg the trigger fires on a phase that fell 0.09% - 2.212 to 2.210 over
+    /// 342 evaluations - i.e. SETTLING, not decaying. The dual is accurate from
+    /// iteration 1 on a warm start, so this gate is a no-op exactly there.
+    /// The obvious fix - a magnitude clause - is blocked by the measurement
+    /// recorded at kEarlyTrendDropRatio: on the decay case the dissolving phase is
+    /// still at 14% of its peak when the look should happen, so any 10x clause
+    /// makes the "early" look not early. The separation is 14% / 91% / 99.91%,
+    /// which is a tuned constant with ~2x margin, not the 11 orders above.
     long int OptimaEarlyStabilityAt = 0;
 
     /// Species-level dimension reduction for the Optima path (AOP/SOP only).

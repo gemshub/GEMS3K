@@ -2994,6 +2994,26 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // cleanly: on the same run the aqueous phase's longest monotone fall is
         // 30 evaluations against the dissolving phase's 6638.
         const double kEarlyTrendDropRatio = 0.999;
+        // THE DUAL-SETTLED GATE (plan v5 section 87). The trend trigger asks the
+        // phase-selection repair loop to look early, and that loop's verdict is a
+        // stability index computed from the DUAL - so it is only as trustworthy as
+        // the dual is. Acting on a dual that is still moving is exactly how the
+        // trend form went wrong: CSHSnplus OK 1298 -> BAD 197 with G worse by
+        // 0.8 RT (section 59.3), and section 58's safety net cannot catch it,
+        // because the net only re-solves when the look found NOTHING.
+        //
+        // Optima's convergence hook receives BOTH iterates of u = (x, p, w), and w
+        // is the dual - so the dual's own relative movement is free here and needs
+        // no new plumbing. Measured at the moment the trigger fires, on the two
+        // projects that decide this field:
+        //     j_CASHNK   acting is RIGHT   max|dw|/max|w| = 2.97e-15
+        //     CSHSnplus  acting is WRONG   max|dw|/max|w| = 1.33e-04
+        // Eleven orders of magnitude apart - "settled to machine precision" against
+        // "still moving" - so the threshold is not a tuned knob. It is
+        // pa_OptimaTol, which is not an arbitrary pick either: it says the dual has
+        // stopped moving at the scale the solve is trying to converge to, and it
+        // sits ~7 decades above the RIGHT case and ~4 below the WRONG one.
+        const double kEarlyTrendDualSettled = pa_p->OptimaTol;
         auto earlyTrend      = std::make_shared<bool>( false );
         auto earlyTrendArmed = std::make_shared<bool>( earlyTrendN > 0 );
         // The SOLVENT phase is excluded, and not as a tuning choice: the
@@ -3014,7 +3034,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         }
         if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. || earlyTrendN > 0 )
             options.convergence.check =
-                [stallWatch, earlyTrendN, kEarlyTrendDropRatio, earlyTrend, earlyTrendArmed,
+                [stallWatch, earlyTrendN, kEarlyTrendDropRatio, kEarlyTrendDualSettled,
+                 earlyTrend, earlyTrendArmed,
                  aqPhaseIdxTrend, phDec, phMax, phLast]
                 ( Optima::ConvergenceCheckArgs const& args ) -> bool
                 {
@@ -3022,6 +3043,20 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     // signals, and armed only for the first attempt.
                     if( *earlyTrendArmed && !*earlyTrend )
                     {
+                        // Is the dual settled enough for the repair loop's stability
+                        // index to be worth acting on? If not, do not fire - the phase
+                        // is still decaying, so the trigger will be re-tested next
+                        // evaluation and fires as soon as the dual does settle.
+                        double dwAbs = 0., wAbs = 0.;
+                        for( long int iw = 0; iw < (long int)args.u.w.size(); iw++ )
+                        {
+                            const double d = std::fabs( args.u.w[iw] - args.uo.w[iw] );
+                            if( d > dwAbs ) dwAbs = d;
+                            const double a = std::fabs( args.u.w[iw] );
+                            if( a > wAbs ) wAbs = a;
+                        }
+                        const double dwRel = ( wAbs > 0. ? dwAbs / wAbs : 0. );
+                        if( dwRel <= kEarlyTrendDualSettled )
                         for( size_t k = 0; k < phDec->size(); ++k )
                             if( (long int)k != aqPhaseIdxTrend
                                 && (*phDec)[k] >= earlyTrendN
@@ -3034,9 +3069,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                                   "fallen for {} consecutive evaluations to {:.3e} "
                                                   "from a peak of {:.3e} - ending the first attempt "
                                                   "so the phase-selection loop can look "
-                                                  "(pa_OptimaEarlyStabilityAt = -{})",
+                                                  "(pa_OptimaEarlyStabilityAt = -{}; dual settled, "
+                                                  "max|dw|/max|w| = {:.3e} <= {:.3e})",
                                                   k, (*phDec)[k], (*phLast)[k], (*phMax)[k],
-                                                  earlyTrendN );
+                                                  earlyTrendN, dwRel, kEarlyTrendDualSettled );
                                 break;
                             }
                         if( *earlyTrend ) return true;   // folded back to a failure below
