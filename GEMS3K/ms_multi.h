@@ -514,6 +514,25 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// detector (pa_OptimaStallWindow; default 0 = off, see that field) can fire during the cheap
     /// attempt, which is treated as a non-convergence and so restarts with FD
     /// - the safe direction, but it makes a very large N wasteful.
+
+    /// RE-GATED 2026-09-06 to COLD STARTS ONLY (pm.pNP == 0), for the same reason
+    /// OptimaReducedPreSolve() is: a warm call already carries the consistent
+    /// (primal, dual) pair this probe exists to manufacture, so there it is pure
+    /// waste. Measured on a corpus freeze with the delay on before gating it - the
+    /// warm modes were taxed systematically, about twenty SOP/SHP rows going from 1
+    /// iteration to 2, for SHP +42 % and SOP +2 % overall, while AOP (the cold mode
+    /// it is for) was -5 % and HOP, whose Optima leg is warm, was +7 %.
+    ///
+    /// THE DEFAULT FLIP WAS RE-TESTED 2026-09-06 UNDER THE NEW DECISION RULE AND
+    /// REJECTED AGAIN - but for a sharper reason than the cost ratchets it trips.
+    /// On the 121-step Cu-Pourbaix titration AOP loses 8 converged steps where native
+    /// keeps all 121: that is LOSING ANSWERS on a sweep, which is the workflow AOP is
+    /// kept for, not merely being slower on some projects. The corpus freeze is
+    /// otherwise a wash - ZERO status changes in any of the six modes, AOP -5 % - with
+    /// the wins concentrated on the Solvus family and f_GEOTHERM (1.6-2.3x) and one
+    /// large loss, 10TH_G_00001 AOP 107 -> 1107. Set it per project on
+    /// f_/j_GEOTHERM, j_10TH_G_seawater, the Solvus family and j_PitzerTHE; do NOT
+    /// set it on f_/j_TestPNTDB, 10TH_G_00001 or Cu-Pourbaix_G_pHtitr.
     long int OptimaFDHessianDelay = 0;
 
     /// Lower bound on species amounts in the Optima path ("dcFloor"), in the

@@ -2295,7 +2295,14 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // iterations the cheap Hessian needs on f_/j_GEOTHERM would simply prevent
         // ROP from ever reaching the exact columns. Measured: with the delay applied
         // to ROP as well, j_TiQ_PRSV ROP goes OK 20 it -> FAIL 402.
-        const long int kFDDelay = ( !reaktoroMode && pa_p->OptimaFDHessianDelay > 0 )
+        // COLD START ONLY, for the same reason OptimaReducedPreSolve() is (section 65.4):
+        // a warm call already carries a consistent (primal, dual) pair, which is what the
+        // cheap-Hessian probe exists to manufacture, so on a warm call the probe is pure
+        // waste. Measured before gating it: a corpus freeze with the delay on taxed the
+        // warm modes systematically - about twenty SOP/SHP rows went from 1 iteration to
+        // 2, taking SHP +42 % and SOP +2 % overall - while AOP, the cold mode it is
+        // actually for, went -5 %. HOP's Optima leg is warm (pm.pNP = 1) and was +7 %.
+        const long int kFDDelay = ( !reaktoroMode && pm.pNP == 0 && pa_p->OptimaFDHessianDelay > 0 )
                                   ? pa_p->OptimaFDHessianDelay : 0;
         const bool kMoleFracHessian = ( pa_p->OptimaMoleFracHessian != 0 );
         problem.f = [this, L, R, dcFloor, &fixedGrad, kLogBarrierTau, kPhaseHessianFloor, kFDHessian, kMoleFracHessian, fdSuppress, hasAq, phLast, phDec, phMax]
