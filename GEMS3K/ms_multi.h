@@ -1193,7 +1193,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// what this branch elsewhere calls a tuned knob - unlike the window and the
     /// bounce band, whose envelopes are flat - so do not raise it without re-running
     /// the full suite at the changed default.
-    short IpmStallWindow = 0;
+    short IpmStallWindow = 30;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
