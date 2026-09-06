@@ -1233,6 +1233,49 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// the full suite at the changed default.
     short IpmStallWindow = 30;
 
+    /// Repair an unsatisfied mass balance on the answer native is about to return,
+    /// instead of adjusting what residual is acceptable. NATIVE path only.
+    /// 0 = off (default), 1 = on.
+    ///
+    /// White, Johnson & Dantzig (1958), the note under their Table III: project Y
+    /// back onto A.Y = b with one m x m solve over a chosen set of m species,
+    /// dy_p = {(a_pj)^-1}(db_j). This is a third remedy for the ten projects whose
+    /// native SIA cannot re-solve their own converged answer, and it differs in kind
+    /// from the two already tracked - pa_DT (an absolute floor) and pa_MbClassRule
+    /// both change the TEST; this changes the STATE.
+    ///
+    /// WHITE'S OWN PIVOT RULE - "the m most abundant species" - IS SINGULAR ON
+    /// AQUEOUS CHEMISTRY AND IS NOT WHAT THIS IMPLEMENTS. Measured 2026-09-06 on the
+    /// three projects whose mass-balance warning fires on every run: det(Ap) is
+    /// EXACTLY zero on all three, because the most abundant species in an aqueous
+    /// system are precisely the ones most likely to be exact stoichiometric sums of
+    /// each other. The null combinations, named by the measurement:
+    ///     H2O(l) - OH- - H+          (07PSIna_G_iron, Al-species)
+    ///     Cl- + Na+ - NaCl@          (Al-species)
+    ///     Na+ + OH- - NaOH(aq)       (FeNaCl_FyGt_Precip)
+    /// White's own test case was a 10-species ideal gas mixture over 3 elements,
+    /// where this does not arise.
+    ///
+    /// So the pivot set here is RANK-REVEALING: take species in decreasing amount and
+    /// keep one only if it raises the rank. Measured against the two alternatives on
+    /// the same three projects (cond / residual after / max |dy|/X):
+    ///     minimum-norm, weight X     2e16-5e22 / 1e-11..9e-11 (INCOMPLETE) / 1e-8..9e-3
+    ///     minimum-norm, weight sqrt(X) 3e10-6e12 / 1.4e-14      / 1e-3..0.40
+    ///     rank-revealing pivot        8-48      / 0..1.4e-14    / 1e-3..0.14
+    /// The rank-revealing basis is four orders better conditioned, removes the
+    /// residual exactly, and touches only N species instead of 15-20. Note the
+    /// minimum-norm variant weighted by amount - the physically appealing one, since
+    /// it spreads the correction in proportion to what is there - fails: A.diag(X^2).A^T
+    /// is the same near-singular matrix MBR assembles (water's H:O = 2:1), so the
+    /// solve is too inaccurate to remove the residual it was computed for.
+    ///
+    /// Honest cost: an IC whose residual sits on a trace element can only be repaired
+    /// by a trace species, so the largest RELATIVE move lands there - 14 % of Fe+2 on
+    /// 07PSIna_G_iron, 3.9 % of H2@ on Al-species. In absolute terms those are ~1e-10
+    /// mol and the energy change is ~1e-12 relative, but a speciation report will show
+    /// them. That is why this is default-off rather than unconditional.
+    short MbReproject = 0;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -2364,6 +2407,17 @@ protected:
     void GibbsEnergyMinimization();
     void GEM_IPM( long int rLoop );
     long int MassBalanceRefinement( long int WhereCalledFrom );
+
+    /// pa_MbReproject: project pm.X back onto A.X = b with one N x N solve over a
+    /// RANK-REVEALING set of the most abundant species (White 1958's Table III note,
+    /// with his own "m most abundant" pivot rule corrected - it is exactly singular
+    /// on aqueous chemistry; see BASE_PARAM::MbReproject). Native path only, called
+    /// once at the end of GibbsEnergyMinimization() and only when the answer has
+    /// already failed its own per-IC mass-balance test.
+    /// Returns true only if it applied a correction that left every species
+    /// non-negative AND strictly reduced the worst relative residual; otherwise it
+    /// restores pm.X untouched and returns false.
+    bool MassBalanceReproject();
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
     void AutoInitialApproximation( );
 
@@ -2507,7 +2561,7 @@ typedef enum {  // Field index into outField structure
     f_pa_MbTrendPhaseDecay, f_pa_OptimaEarlyStabilityAt, f_pa_OptimaDimReduce,
     f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit, f_pa_OptimaZeroAbsent,
     f_pa_OptimaReadmitSeed,
-    f_pa_IpmStallWindow
+    f_pa_IpmStallWindow, f_pa_MbReproject
 
 } MULTI_DYNAMIC_FIELDS;
 

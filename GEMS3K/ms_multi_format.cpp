@@ -185,7 +185,8 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_MbPivotSplit", 0 , 0, 0, "# pa_MbPivotSplit: native MBR pivot/non-pivot split of the Schur-complement reduction (Leal et al. 2017 Appendix A); 0 = off { 0 }" },
     { "pa_OptimaZeroAbsent", 0 , 0, 0, "# pa_OptimaZeroAbsent: report a correctly absent species as exactly 0 instead of at the Optima box floor; 0 = off { 0 }" },
     { "pa_OptimaReadmitSeed", 0 , 0, 0, "# pa_OptimaReadmitSeed: seed a species readmitted by the dimension-reduction pre-solve at its predicted amount (White 1958 Eq. 12a) rather than at the floor; value caps the growth exponent in RT units; 0 = off { 0 }" },
-    { "pa_IpmStallWindow", 0 , 0, 0, "# pa_IpmStallWindow: accept IPM convergence when the Dikin criterion has stopped improving over this many iterations and is already near pm.DXM (it measures rounding noise once the composition has settled); 0 = off { 0 }" }
+    { "pa_IpmStallWindow", 0 , 0, 0, "# pa_IpmStallWindow: accept IPM convergence when the Dikin criterion has stopped improving over this many iterations and is already near pm.DXM (it measures rounding noise once the composition has settled); 0 = off { 0 }" },
+    { "pa_MbReproject", 0 , 0, 0, "# pa_MbReproject: repair an unsatisfied mass balance on the returned answer by projecting X back onto A.X = b over a rank-revealing set of the most abundant species (White 1958); native path; 0 = off { 0 }" }
 };
 
 
@@ -204,7 +205,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 101, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 102, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -397,6 +398,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_OptimaZeroAbsent, pa_p->OptimaZeroAbsent, _comment, false  );
         prar.writeField(f_pa_OptimaReadmitSeed, pa_p->OptimaReadmitSeed, _comment, false  );
         prar.writeField(f_pa_IpmStallWindow, pa_p->IpmStallWindow, _comment, false  );
+        prar.writeField(f_pa_MbReproject, pa_p->MbReproject, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -802,7 +804,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 101, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 102, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1247,6 +1249,8 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_OptimaReadmitSeed: rddar.readArray("pa_OptimaReadmitSeed" , &pa_p->OptimaReadmitSeed, 1);
                 break;
         case f_pa_IpmStallWindow: rddar.readArray("pa_IpmStallWindow" , &pa_p->IpmStallWindow, 1);
+                break;
+        case f_pa_MbReproject: rddar.readArray("pa_MbReproject" , &pa_p->MbReproject, 1);
                 break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;

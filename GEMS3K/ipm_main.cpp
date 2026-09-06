@@ -185,6 +185,144 @@ static void native_trace_mbr_exit( const MULTI& pm, const BASE_PARAM* pa_p,
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Call to GEM IPM calculation of equilibrium state in MULTI
 /// (with already scaled GEM problem)
+// pa_MbReproject: repair an unsatisfied mass balance on the answer, instead of
+// adjusting what residual is acceptable. White, Johnson & Dantzig (1958), the note
+// under their Table III - one m x m solve projecting Y back onto A.Y = b.
+//
+// White's own pivot rule ("the m most abundant species") is EXACTLY SINGULAR on
+// aqueous chemistry and is deliberately not what this uses: the most abundant
+// species are precisely the ones most likely to be exact stoichiometric sums of one
+// another (H2O = H+ + OH-, NaCl@ = Na+ + Cl-, NaOH(aq) = Na+ + OH-). Measured on the
+// three projects whose warning fires on every run, det(Ap) was exactly 0 on all
+// three. His own test case was a 10-species ideal gas mixture over 3 elements.
+// So the set here is RANK-REVEALING: species in decreasing amount, kept only if the
+// column raises the rank. See BASE_PARAM::MbReproject for the alternatives measured.
+//
+// All N rows take part, the charge row included, so the correction cannot introduce
+// a charge imbalance while removing an element one.
+bool TMultiBase::MassBalanceReproject()
+{
+    const long int N = pm.N, L = pm.L;
+    if( N < 1 || L < N || !pm.A || !pm.B || !pm.X ) return false;
+
+    long int i1 = -1, i2 = -1; double relOld = 0., absOld = 0.;
+    native_trace_mb_of( pm, pm.X, i1, relOld, i2, absOld );
+    if( !( relOld > 0. ) ) return false;
+
+    std::vector<double> C( (size_t)N );
+    for( long int i = 0; i < N; i++ )
+    {
+        double c = pm.B[i];
+        for( long int j = 0; j < L; j++ ) c -= pm.A[i + j*N] * pm.X[j];
+        C[(size_t)i] = c;
+    }
+
+    // Rank-revealing pivot by modified Gram-Schmidt against an orthonormal basis of
+    // the columns accepted so far. O(L*N^2), and only reached on a run that has
+    // already failed its own mass-balance test.
+    std::vector<long int> ord( (size_t)L );
+    for( long int j = 0; j < L; j++ ) ord[(size_t)j] = j;
+    std::sort( ord.begin(), ord.end(),
+               [this]( long int a, long int b ) { return pm.X[a] > pm.X[b]; } );
+
+    std::vector<long int> piv;
+    std::vector<double> Q, r( (size_t)N );
+    for( size_t t = 0; t < ord.size() && (long int)piv.size() < N; t++ )
+    {
+        const long int j = ord[t];
+        double nrm0 = 0.;
+        for( long int i = 0; i < N; i++ )
+        { r[(size_t)i] = pm.A[i + j*N]; nrm0 += r[(size_t)i]*r[(size_t)i]; }
+        nrm0 = sqrt( nrm0 );
+        if( !( nrm0 > 0. ) ) continue;
+        const long int k = (long int)piv.size();
+        for( long int c = 0; c < k; c++ )
+        {
+            double d = 0.;
+            for( long int i = 0; i < N; i++ ) d += Q[(size_t)(c*N + i)] * r[(size_t)i];
+            for( long int i = 0; i < N; i++ ) r[(size_t)i] -= d * Q[(size_t)(c*N + i)];
+        }
+        double nrm = 0.;
+        for( long int i = 0; i < N; i++ ) nrm += r[(size_t)i]*r[(size_t)i];
+        nrm = sqrt( nrm );
+        if( nrm < 1e-8 * nrm0 ) continue;            // dependent on the set so far
+        Q.resize( (size_t)((k+1)*N) );
+        for( long int i = 0; i < N; i++ ) Q[(size_t)(k*N + i)] = r[(size_t)i] / nrm;
+        piv.push_back( j );
+    }
+    if( (long int)piv.size() < N ) return false;     // rank(A) < N - nothing to do
+
+    // Ap * dy = C, Gaussian elimination with partial pivoting (row-major).
+    std::vector<double> M( (size_t)N*N ), rhs( C ), dy( (size_t)N, 0. );
+    for( long int i = 0; i < N; i++ )
+        for( long int c = 0; c < N; c++ )
+            M[(size_t)(i*N + c)] = pm.A[i + piv[(size_t)c]*N];
+    for( long int k = 0; k < N; k++ )
+    {
+        long int pk = k; double best = fabs( M[(size_t)(k*N + k)] );
+        for( long int i = k+1; i < N; i++ )
+        { const double v = fabs( M[(size_t)(i*N + k)] ); if( v > best ) { best = v; pk = i; } }
+        if( !( best > 1e-300 ) ) return false;
+        if( pk != k )
+        {
+            for( long int c = k; c < N; c++ )
+                std::swap( M[(size_t)(k*N + c)], M[(size_t)(pk*N + c)] );
+            std::swap( rhs[(size_t)k], rhs[(size_t)pk] );
+        }
+        for( long int i = k+1; i < N; i++ )
+        {
+            const double f = M[(size_t)(i*N + k)] / M[(size_t)(k*N + k)];
+            if( f == 0. ) continue;
+            for( long int c = k; c < N; c++ )
+                M[(size_t)(i*N + c)] -= f * M[(size_t)(k*N + c)];
+            rhs[(size_t)i] -= f * rhs[(size_t)k];
+        }
+    }
+    for( long int k = N-1; k >= 0; k-- )
+    {
+        double sum = rhs[(size_t)k];
+        for( long int c = k+1; c < N; c++ ) sum -= M[(size_t)(k*N + c)] * dy[(size_t)c];
+        dy[(size_t)k] = sum / M[(size_t)(k*N + k)];
+    }
+
+    // Feasibility: a repair that drives a species negative is not a repair. Rather
+    // than abandoning the whole projection, CLAMP the offending component and let the
+    // acceptance test below decide - a clamped step no longer satisfies Ap.dy = C
+    // exactly, so it is kept only if it still strictly improves the worst relative
+    // residual, and reverted otherwise. Measured on 10TH_G_00001, where the
+    // unclamped step asks to remove 2.6585e-09 mol of H2@ from the 2.6584e-09 mol
+    // that exists - it overshoots the only carrier of that IC's residual by 1.5e-13.
+    // Refusing outright there left a repairable state unrepaired.
+    for( long int c = 0; c < N; c++ )
+    {
+        const double x = pm.X[piv[(size_t)c]];
+        if( x + dy[(size_t)c] < 0. ) dy[(size_t)c] = -x;
+    }
+
+    std::vector<double> Xold( pm.X, pm.X + L );
+    for( long int c = 0; c < N; c++ ) pm.X[piv[(size_t)c]] += dy[(size_t)c];
+
+    double relNew = 0., absNew = 0.;
+    native_trace_mb_of( pm, pm.X, i1, relNew, i2, absNew );
+    if( !( relNew < relOld ) )                       // no strict improvement - undo
+    {
+        for( long int j = 0; j < L; j++ ) pm.X[j] = Xold[(size_t)j];
+        return false;
+    }
+
+    // Keep the working vector and everything derived from X consistent with the
+    // repaired state - pm.pH, FVOL, IC and the rest come from CalculateConcentrations.
+    for( long int j = 0; j < L; j++ ) pm.Y[j] = pm.X[j];
+    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+
+    gems_logger->info( "pa_MbReproject: mass balance repaired over {} species - worst "
+                       "relative residual {:.3e}x -> {:.3e}x its own tolerance, worst "
+                       "absolute {:.3e} -> {:.3e} mol",
+                       N, relOld, relNew, absOld, absNew );
+    return true;
+}
+
 void TMultiBase::GibbsEnergyMinimization()
 {
   bool IAstatus;
@@ -339,8 +477,21 @@ FORCED_AIA:
        const double absCut = ( dtExp < 2. ) ? pm.DHBM : pow( 10., -dtExp );
        // Same per-IC rule the convergence branches apply: with DT == 0 only the
        // relative test exists; with DT != 0 an IC must exceed BOTH.
-       const bool fails = !base_param()->DT ? ( rel > 1. )
-                                            : ( rel > 1. && absr > absCut );
+       bool fails = !base_param()->DT ? ( rel > 1. )
+                                      : ( rel > 1. && absr > absCut );
+       // pa_MbReproject: try to REPAIR the state before reporting it. Only reached
+       // when the answer has already failed its own per-IC test, and it restores
+       // pm.X untouched unless it strictly improves the worst relative residual.
+       if( fails && iRel >= 0 && base_param()->MbReproject )
+       {
+           if( MassBalanceReproject() )
+           {
+               native_trace_mb_of( pm, pm.X, iRel, rel, iAbs, absr );
+               fails = !base_param()->DT ? ( rel > 1. )
+                                         : ( rel > 1. && absr > absCut );
+           }
+       }
+
        if( fails && iRel >= 0 )
            gems_logger->warn(
                "GEM answer accepted with an unsatisfied mass balance: IC {} is {:.3e}x its own "
