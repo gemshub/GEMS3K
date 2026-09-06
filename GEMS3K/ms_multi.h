@@ -1110,31 +1110,51 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// with control conditions active.
     double OptimaReadmitSeed = 0.;
 
-    /// Window (in IPM iterations) for the noise-stall test on the Dikin criterion.
-    /// 0 = off (the shipped default), > 0 = accept convergence when pm.PCI has not
-    /// improved by more than kIpmStallRelImp over this many iterations AND the best
-    /// pm.PCI seen is already within kIpmStallNearFactor of pm.DXM.
+    /// Window (in IPM iterations) for the noise-stall test. 0 = off (the shipped
+    /// default). When > 0, IPM convergence is accepted once, over a whole window,
+    /// ALL FOUR of these hold:
+    ///   - the energy pm.FX is flat to kIpmStallFXTol,
+    ///   - the total amount sum(X) is flat to kIpmStallCompTol,
+    ///   - the largest amount max(X) is flat to kIpmStallCompTol,
+    ///   - pm.PCI increased on kIpmStallIncLo..kIpmStallIncHi of the steps, i.e. it
+    ///     is BOUNCING rather than moving.
     ///
-    /// WHY. On part of this corpus the IPM loop terminates on a criterion that has
-    /// stopped carrying signal: once the composition has settled, pm.PCI is computed
-    /// from differences of nearly-equal numbers and wanders in a band whose median
-    /// sits ABOVE pm.DXM with only its lower tail below, so termination becomes a
-    /// waiting time for a lucky draw. Measured on f_Kaolinite (plan v5 section 74):
-    /// the answer is final to 1e-11 by iteration 25 of 62-363, pm.PCI thereafter
-    /// rises on 49 % of steps with no trend, and P(PCI <= DXM) = 0.0063 per
-    /// iteration - predicting a mean of 184.8 against an observed 183.8.
+    /// WHY FOUR, AND WHY NONE OF THEM IS pa_DK. The IPM loop terminates on
+    /// pm.PCI <= pm.DXM, and on part of this corpus that criterion stops carrying
+    /// signal long before it is met: once the composition settles, pm.PCI is a
+    /// difference of nearly-equal numbers and wanders in a band whose median sits
+    /// ABOVE pm.DXM, so termination becomes a waiting time for a lucky draw. On
+    /// f_Kaolinite the answer is final to 1e-11 by iteration 25 of 62-363 and
+    /// P(PCI <= DXM) = 0.0063/iteration, predicting a mean of 184.8 against an
+    /// observed 183.8 (plan v5 section 74).
     ///
-    /// The extra iterations are not merely wasted: they DEGRADE the answer. Letting
-    /// three such projects stop instead improves the mass-balance residual 8-36x and
-    /// takes native's own SIA warm restart from FAIL to OK at zero iterations
-    /// (section 74.6).
+    /// Every single signal was measured UNSAFE on its own:
+    ///   energy flat alone     -> 115 % energy error on f_/j_TestSUP98   (74.9)
+    ///   criterion flat alone  -> 2.9e-05 error on f_GEOTHERM            (80.2)
+    ///   criterion bouncing    -> 11 % error, fires on 25 of 42          (80.2)
+    ///   mass balance          -> UNUSABLE inside this loop: MBR establishes it and
+    ///                            IPM then drifts from it monotonically by design,
+    ///                            so it is never satisfied here          (80.5)
+    /// An earlier version instead guarded on "pm.PCI is within 30x of pm.DXM",
+    /// which works but ties the accepted accuracy to the tolerance being replaced -
+    /// and flipping its default broke proposed.aop's "native G is
+    /// settings-independent" assertion. The conjunction above removes that
+    /// reference entirely, and that assertion now passes.
     ///
-    /// Replayed offline on 14 projects at W = 30: fires on exactly the four
-    /// noise-tail ones (f_Kaolinite 273->72, Al-species 187->94,
-    /// FeNaCl_FyGt_TransitionZone 601->82, CASH+_G_csh_sol 215->128), never on a
-    /// project still descending, and the worst |FX - FXfinal|/|FX| at the accept
-    /// point is 1.55e-12 - i.e. the answer does not move. DEFAULT OFF because it
-    /// relaxes native's stated convergence test, which is a project-owner call.
+    /// Replayed on all 42 gems3k + gems3k-fail traces: 82.8 % of native's IPM
+    /// iterations saved, worst |FX - FXfinal|/|FX| = 5.1e-10, firing on exactly the
+    /// 9 noise-tail projects. The envelope is FLAT - window 15..60, comp tolerance
+    /// 1e-6..1e-4 and bounce band 0.25..0.75 all give the same result - with one
+    /// sharp cliff: an energy tolerance of 1e-7 costs 2e-03, so 1e-9 carries 100x
+    /// margin. That flatness is what distinguishes this from the tuned knobs on
+    /// this branch, whose responses are non-monotone.
+    ///
+    /// STILL DEFAULT OFF. Flipping it fails solvus.critical and proposed.aop's
+    /// crossing_T11 - both PHASE-BOUNDARY cases. The composition test uses the
+    /// aggregate scalars sum(X) and max(X), which are blind to a REDISTRIBUTION
+    /// between phases at nearly constant total - exactly what a closing miscibility
+    /// gap or an appearing phase is. A per-phase test (pm.XF[k] flat for every k)
+    /// is the obvious next step and is untried.
     short IpmStallWindow = 0;
 
     void write(GemDataStream& oss);

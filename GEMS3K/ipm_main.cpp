@@ -1419,18 +1419,25 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     double LM=0., LM1=1., FX1,    DivTol;
     // Noise-stall accept, gated on pa_IpmStallWindow (default 0 = off). See the
     // field's own comment in ms_multi.h for the mechanism and the measurement.
-    // kIpmStallRelImp  - what counts as pm.PCI "improving" at all.
-    // kIpmStallNearFactor - how close to pm.DXM the best pm.PCI must already be
-    //   before a stall may be accepted. This clause is what makes the rule safe:
-    //   replayed on 14 projects, the four genuine noise-tail stalls sit at 0.5-8x
-    //   pm.DXM while the two false positives an unguarded version produces
-    //   (f_GEOTHERM, o_Solvus) sit at 484x and 42628x - a gap of ~50x, with 30
-    //   inside it. At 100 the rule fires on f_GEOTHERM with the energy still
-    //   1.5e-3 from its final value; at 30 the worst error over all 14 is 1.55e-12.
-    const double kIpmStallRelImp = 1.e-2;
-    const double kIpmStallNearFactor = 30.;
-    double bestPCI = 1.e300;
-    long int bestPCIit = 0;
+    //
+    // FOUR SIGNALS, ALL REQUIRED, AND NONE OF THEM REFERENCES pa_DK. That is the
+    // whole point: an earlier version guarded on "pm.PCI is already within 30x of
+    // pm.DXM", which works but ties the accepted ACCURACY to the tolerance the
+    // rule is meant to replace - and flipping its default then broke
+    // proposed.aop's "native G is settings-independent" assertion. Each signal
+    // below is individually insufficient and was individually measured unsafe:
+    //   energy alone      -> 115 % error on f_/j_TestSUP98 (plan v5 74.9)
+    //   criterion alone   -> 11 % error, fires on 25 of 42 (80.2)
+    //   mass balance      -> unusable here: it is established by MBR and then
+    //                        DEGRADES monotonically inside the IPM loop by design
+    // Together they are safe, because a transient plateau in one is not a
+    // simultaneous plateau in all.
+    const long int kIpmStallMaxW = 200;
+    const double kIpmStallFXTol   = 1.e-9;  // energy flat over the window
+    const double kIpmStallCompTol = 1.e-6;  // sumX and maxX flat over the window
+    const double kIpmStallIncLo   = 0.35;   // PCI increases on 35-65 % of steps,
+    const double kIpmStallIncHi   = 0.65;   //   i.e. it is bouncing, not moving
+    std::vector<double> stW_pci, stW_fx, stW_sum, stW_max;
     const BASE_PARAM *pa_p = base_param();
 
     status = 0;
@@ -1586,27 +1593,52 @@ STEP_POINT( "IPM Iteration" );
                 if( pm.X[jj] > maxX ) maxX = pm.X[jj];
                 if( pm.X[jj] > 0. && pm.X[jj] < minX ) minX = pm.X[jj];
             }
+            // Mass-balance residual of the CURRENT primal pm.X, normalised so that
+            // mbRel > 1 means "this state fails the per-IC test MBR applies". It is
+            // measured against pa_DHB - a PHYSICAL tolerance - which is what makes it
+            // usable as an independent second signal alongside PCI (a numerical one).
+            // O(N*L) per iteration, so this probe is for diagnosis, not for the giants.
+            long int iRel, iAbs; double mbRel, mbAbs;
+            native_trace_mb_of( pm, pm.X, iRel, mbRel, iAbs, mbAbs );
             fprintf( ipf, "IPMIT %ld PCI=%.10e DXM=%.6e LM=%.10e LM1=%.10e FX=%.14e"
-                          " NR=%ld sumX=%.10e minX=%.6e maxX=%.10e\n",
+                          " NR=%ld sumX=%.10e minX=%.6e maxX=%.10e mbRel=%.6e\n",
                      (long)IT1, pm.PCI, pm.DXM, LM, LM1, pm.FX,
-                     (long)N, sumX, minX, maxX );
+                     (long)N, sumX, minX, maxX, mbRel );
             fflush( ipf );
         }
 
         if( pm.PCI <= pm.DXM )  // Dikin criterion satisfied - converged!
             goto CONVERGED;
         if( pa_p->IpmStallWindow > 0 )
-        {   // The criterion has stopped carrying signal: it is already near its
-            // own threshold and has not improved for a whole window, so further
-            // iterations are waiting on rounding noise rather than converging.
-            // Accept the CURRENT state - measured indistinguishable from the
-            // best-seen one here (|FX-FXfinal|/|FX| agrees to a factor of 1.1),
-            // so no snapshot is kept.
-            if( pm.PCI < bestPCI * ( 1. - kIpmStallRelImp ) )
-            {   bestPCI = pm.PCI;  bestPCIit = IT1;  }
-            else if( IT1 - bestPCIit >= (long int)pa_p->IpmStallWindow
-                     && bestPCI <= kIpmStallNearFactor * pm.DXM )
-                goto CONVERGED;
+        {
+            const long int W = std::min( (long int)pa_p->IpmStallWindow, kIpmStallMaxW );
+            double sX = 0., xX = 0.;
+            for( long int jj = 0; jj < pm.L; jj++ )
+            {   sX += pm.X[jj];  if( pm.X[jj] > xX ) xX = pm.X[jj];  }
+            stW_pci.push_back( pm.PCI ); stW_fx.push_back( pm.FX );
+            stW_sum.push_back( sX );     stW_max.push_back( xX );
+            if( (long int)stW_pci.size() > W + 1 )
+            {   stW_pci.erase( stW_pci.begin() ); stW_fx.erase( stW_fx.begin() );
+                stW_sum.erase( stW_sum.begin() ); stW_max.erase( stW_max.begin() ); }
+            if( (long int)stW_pci.size() == W + 1 )
+            {
+                auto spreadOK = []( const std::vector<double>& v, double tol ) -> bool
+                {   double lo = v[0], hi = v[0];
+                    for( size_t q = 1; q < v.size(); q++ )
+                    {   if( v[q] < lo ) lo = v[q];  if( v[q] > hi ) hi = v[q]; }
+                    const double ref = fabs( v.back() );
+                    return ref > 0. ? ( hi - lo ) <= tol * ref : ( hi - lo ) == 0.;
+                };
+                long int up = 0;
+                for( size_t q = 1; q < stW_pci.size(); q++ )
+                    if( stW_pci[q] > stW_pci[q-1] ) up++;
+                const double inc = (double)up / (double)( stW_pci.size() - 1 );
+                if( spreadOK( stW_fx,  kIpmStallFXTol )
+                 && spreadOK( stW_sum, kIpmStallCompTol )
+                 && spreadOK( stW_max, kIpmStallCompTol )
+                 && inc >= kIpmStallIncLo && inc <= kIpmStallIncHi )
+                    goto CONVERGED;   // the criterion is noise; the state is not moving
+            }
         }
         if( nCNud > 0L && (IT1 >= cnr-2 && IT1 >= 2 ) )  // finish here because u vector diverges at further IPM iterations
             goto CONDITIONALLY_CONVERGED;
