@@ -1435,9 +1435,16 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     const long int kIpmStallMaxW = 200;
     const double kIpmStallFXTol   = 1.e-9;  // energy flat over the window
     const double kIpmStallCompTol = 1.e-6;  // sumX and maxX flat over the window
+    const double kIpmStallSpRel   = 1.e-3;  // every species flat RELATIVE TO ITSELF,
+    const double kIpmStallSpNegl  = 1.e-9;  //   unless it is this small a share of the total
     const double kIpmStallIncLo   = 0.35;   // PCI increases on 35-65 % of steps,
     const double kIpmStallIncHi   = 0.65;   //   i.e. it is bouncing, not moving
     std::vector<double> stW_pci, stW_fx, stW_sum, stW_max;
+    // One row of pm.X[] per iteration, held in a RING rather than the erase(begin())
+    // the scalars above use: the species rows make the array L times larger, and an
+    // O(L*W) memmove every iteration is not free on a 1392-species project.
+    std::vector<double> stW_xf;
+    long int stW_n = 0, stW_head = 0;
     const BASE_PARAM *pa_p = base_param();
 
     status = 0;
@@ -1620,6 +1627,14 @@ STEP_POINT( "IPM Iteration" );
             if( (long int)stW_pci.size() > W + 1 )
             {   stW_pci.erase( stW_pci.begin() ); stW_fx.erase( stW_fx.begin() );
                 stW_sum.erase( stW_sum.begin() ); stW_max.erase( stW_max.begin() ); }
+            // Per-species history, from the same pm.X the scalars above are taken from.
+            const size_t nR = (size_t)W + 1, nSp = (size_t)pm.L;
+            if( stW_xf.size() != nR * nSp )
+            {   stW_xf.assign( nR * nSp, 0. );  stW_n = 0;  stW_head = 0; }
+            for( size_t k = 0; k < nSp; k++ )
+                stW_xf[ (size_t)stW_head * nSp + k ] = pm.X[k];
+            stW_head = (long int)( ( (size_t)stW_head + 1 ) % nR );
+            if( (size_t)stW_n < nR ) stW_n++;
             if( (long int)stW_pci.size() == W + 1 )
             {
                 auto spreadOK = []( const std::vector<double>& v, double tol ) -> bool
@@ -1633,7 +1648,58 @@ STEP_POINT( "IPM Iteration" );
                 for( size_t q = 1; q < stW_pci.size(); q++ )
                     if( stW_pci[q] > stW_pci[q-1] ) up++;
                 const double inc = (double)up / (double)( stW_pci.size() - 1 );
-                if( spreadOK( stW_fx,  kIpmStallFXTol )
+                // EVERY SPECIES amount flat, under BOTH normalisers. The aggregate
+                // sumX/maxX pair above is blind to any REDISTRIBUTION at nearly constant
+                // total - between phases, or between the end-members of one solid
+                // solution - and those are exactly the cases that blocked this check's
+                // default (a closing miscibility gap, an appearing phase). Measured
+                // while fixing it, plan v5 section 82:
+                //
+                //   per-PHASE on pm.XF[] fixes the BETWEEN-phase half only, taking the
+                //     301-point solvus sweep from 5 non-convergences and 7 out-of-
+                //     tolerance points to 0 and 1. Motion WITHIN a phase is invisible
+                //     to it - hence per species, not per phase.
+                //   TOTAL-relative alone passes both solvus tests and fails T11's phase
+                //     crossing: that vestigial gas phase is 1.5e-6 OF THE TOTAL while
+                //     moving 75 % of ITSELF, so no total-relative threshold separates
+                //     it from settled rounding noise (1e-6 misses the boundary, 1e-8
+                //     saves 0.4 % of iterations instead of 79.7 %).
+                //   SPECIES-relative alone passes T11 and fails solvus.native.
+                //
+                // So both are required: one catches large ABSOLUTE motion in a big
+                // species, the other large RELATIVE motion in a small one. With both,
+                // the suite is 11/11 at the changed default for the first time.
+                //
+                // Cost is O(L) per iteration amortised, not O(L*W): the scan is
+                // species-major and bails on the first species still moving, which
+                // during ordinary descent is the first one looked at. Only a genuinely
+                // settled state pays the full L*W scan.
+                bool xFlat = ( (size_t)stW_n == nR );
+                if( xFlat )
+                {
+                    const size_t nw = ( (size_t)stW_head + nR - 1 ) % nR;  // newest row
+                    double tot = 0.;
+                    for( size_t k = 0; k < nSp; k++ ) tot += stW_xf[ nw * nSp + k ];
+                    xFlat = ( tot > 0. );
+                    const double negl = kIpmStallSpNegl * tot;
+                    for( size_t k = 0; k < nSp && xFlat; k++ )
+                    {
+                        double lo = stW_xf[k], hi = stW_xf[k];
+                        for( size_t q = 1; q < nR; q++ )
+                        {   const double v = stW_xf[ q * nSp + k ];
+                            if( v < lo ) lo = v;   if( v > hi ) hi = v; }
+                        // Second clause: relative to the species' OWN largest amount
+                        // over the window. Take hi rather than the newest value, or a
+                        // species on its way OUT exempts itself as it vanishes. The
+                        // negligibility test is what makes this clause usable at all -
+                        // without it a species resting at the numerical floor wiggles
+                        // by 100 % of itself and blocks acceptance for ever.
+                        if( ( hi - lo ) > kIpmStallCompTol * tot ) xFlat = false;
+                        else if( hi > negl && ( hi - lo ) > kIpmStallSpRel * hi ) xFlat = false;
+                    }
+                }
+                if( xFlat
+                 && spreadOK( stW_fx,  kIpmStallFXTol )
                  && spreadOK( stW_sum, kIpmStallCompTol )
                  && spreadOK( stW_max, kIpmStallCompTol )
                  && inc >= kIpmStallIncLo && inc <= kIpmStallIncHi )

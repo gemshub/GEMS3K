@@ -1114,8 +1114,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// default). When > 0, IPM convergence is accepted once, over a whole window,
     /// ALL FOUR of these hold:
     ///   - the energy pm.FX is flat to kIpmStallFXTol,
-    ///   - the total amount sum(X) is flat to kIpmStallCompTol,
-    ///   - the largest amount max(X) is flat to kIpmStallCompTol,
+    ///   - the composition is flat: sum(X) and max(X) to kIpmStallCompTol, AND
+    ///     every species BOTH to kIpmStallCompTol of the system total AND to
+    ///     kIpmStallSpRel of its own largest amount over the window (a species
+    ///     below kIpmStallSpNegl of the total is exempt from the second clause),
     ///   - pm.PCI increased on kIpmStallIncLo..kIpmStallIncHi of the steps, i.e. it
     ///     is BOUNCING rather than moving.
     ///
@@ -1149,12 +1151,48 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// margin. That flatness is what distinguishes this from the tuned knobs on
     /// this branch, whose responses are non-monotone.
     ///
-    /// STILL DEFAULT OFF. Flipping it fails solvus.critical and proposed.aop's
-    /// crossing_T11 - both PHASE-BOUNDARY cases. The composition test uses the
-    /// aggregate scalars sum(X) and max(X), which are blind to a REDISTRIBUTION
-    /// between phases at nearly constant total - exactly what a closing miscibility
-    /// gap or an appearing phase is. A per-phase test (pm.XF[k] flat for every k)
-    /// is the obvious next step and is untried.
+    /// THE COMPOSITION TEST IS PER SPECIES, AND IT NEEDS BOTH NORMALISERS. An
+    /// earlier version used only the aggregate sum(X)/max(X), which are blind to a
+    /// REDISTRIBUTION at nearly constant total - a closing miscibility gap or an
+    /// appearing phase - and flipping the default then failed solvus.critical and
+    /// proposed.aop's crossing_T11. Measured while fixing it (plan v5 section 82):
+    ///   per-PHASE on pm.XF[k]  -> fixes the BETWEEN-phase half only. The 301-point
+    ///     solvus sweep goes from 5 non-convergences and 7 out-of-tolerance points
+    ///     to 0 and 1. Motion WITHIN a phase (a solid solution's end-member
+    ///     fractions) is invisible to it, so it is per species and not per phase.
+    ///   total-relative alone   -> passes both solvus tests, fails crossing_T11.
+    ///     T11's vestigial gas phase is 1.5e-6 OF THE TOTAL while moving 75 % of
+    ///     ITSELF, so no total-relative threshold separates it from settled
+    ///     rounding noise: at 1e-6 it misses the boundary, at 1e-8 it stops firing
+    ///     at all (0.4 % of iterations saved against 79.7 %).
+    ///   species-relative alone -> passes crossing_T11, fails solvus.native.
+    /// The two clauses catch different things - large ABSOLUTE motion in a big
+    /// species, and large RELATIVE motion in a small one - so both are required.
+    /// The negligibility exemption is what makes the relative clause usable at all:
+    /// without it a species resting at the 1e-13 floor wiggles by 100 % of itself
+    /// and blocks acceptance for ever. Normalise on the window's MAXIMUM, not its
+    /// newest value, or a species on its way OUT exempts itself as it vanishes.
+    ///
+    /// STILL DEFAULT OFF, but no longer because it fails. At the changed default the
+    /// suite is 11/11 - the first time this field has passed its own gate - saving
+    /// 79.2 % of native's IPM iterations at kIpmStallSpRel = 1e-2, and 78.3 % at the
+    /// shipped 1e-3. Flipping it is an owner decision because it moves every recorded
+    /// native iteration count in the benchmark corpus, not because it is unsafe.
+    ///
+    /// WHY 1e-3 AND NOT 1e-2. Measured envelope, combined test, 42 projects:
+    ///   1e-4  passes, 0.0 % broad benefit (fires on 1 project)
+    ///   1e-3  passes, 6.3 % broad         (fires on 3)   <- shipped, 30x margin
+    ///   1e-2  passes, 9.9 % broad         (fires on 6, 3 become deterministic)
+    ///   3e-2  FAILS
+    /// (broad = excluding FeNaCl_FyGt_Precip_HighpH, which alone is 77 % of the
+    /// corpus's native iterations because it sits at its 25000 cap; it goes to 111.)
+    /// Benefit is monotone in this constant right up to a cliff, so 1e-2 sits 3x
+    /// below a failure and 1e-3 sits 30x below one. The failure above the cliff is a
+    /// wrong ANSWER at a phase boundary and the cost below it is only lost savings,
+    /// so the asymmetry says err low. That one-decade-to-a-cliff shape is exactly
+    /// what this branch elsewhere calls a tuned knob - unlike the window and the
+    /// bounce band, whose envelopes are flat - so do not raise it without re-running
+    /// the full suite at the changed default.
     short IpmStallWindow = 0;
 
     void write(GemDataStream& oss);
