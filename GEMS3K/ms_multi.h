@@ -1297,7 +1297,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// 07PSIna_G_iron, 3.9 % of H2@ on Al-species. In absolute terms those are ~1e-10
     /// mol and the energy change is ~1e-12 relative, but a speciation report will show
     /// them. That is why this is default-off rather than unconditional.
-    short MbReproject = 0;
+    short MbReproject = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
