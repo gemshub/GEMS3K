@@ -43,6 +43,7 @@
 #include "ipm_optima.h"
 
 #include <cstdio>
+#include <vector>
 
 class GemDataStream;
 class TProfil;
@@ -434,13 +435,44 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// iterations to spend on a cheap CLASSIFICATION pass before the real
     /// solve. 0 (default) = off, behaviour unchanged.
     ///
+    /// *** READ THIS FIRST - 2026-09-07c, plan v5 section 95.4-95.5. ***
+    /// EVERY MEASUREMENT BELOW WAS TAKEN AT pa_OptimaDimReduce = -1, i.e. with
+    /// the species-level dimension-reduction pre-solve explicitly DISABLED, and
+    /// that is not a configuration this solver ships any more.
+    ///
+    /// pa_OptimaDimReduce is THREE-VALUED and 0 means AUTO, engaging 8 passes at
+    /// or above kDimReduceAutoMinDC = 200 species (ipm_optima.cpp). Every project
+    /// large enough to have an interesting absent-phase count is therefore already
+    /// running it, and it removes the same species this field would pin - earlier,
+    /// and from the whole solve rather than from one classification pass. So AT
+    /// SHIPPED SETTINGS THIS FIELD IS A STRICT +1-ITERATION NO-OP. Measured on
+    /// 07PSIna_G_mid_1, the very project sized below:
+    ///
+    ///                              probe=0    probe=50   probe=100
+    ///   pa_OptimaDimReduce = -1      4184        1243        1846
+    ///   pa_OptimaDimReduce = 0/AUTO   269         270         270
+    ///
+    /// The classification itself is not what fails - the probe pins 117 of 122
+    /// phases, the full correct set, and 120 of 141 on T14_ball120. It simply has
+    /// nothing left to remove. The same +1 no-op holds on all five T14_ball* rungs
+    /// at probe 20/50/100/200, with G identical to nine digits.
+    ///
+    /// So the 3.4x win below is REAL and REPRODUCIBLE, and it is 4.6x WORSE than
+    /// doing nothing at today's defaults. Before reviving this field, check
+    /// whether pa_OptimaDimReduce still auto-engages on your project; if it does,
+    /// this field cannot help you. gems-benchmark's tools/recheck.py pins the 269
+    /// as `veto-compaction-subsumed` so that a change to that gate resurfaces here
+    /// rather than silently making this comment true again.
+    ///
     /// WHY A CLASSIFICATION PASS AT ALL. Native drops absent phases from the
     /// active set on every call (PhaseSelectionSpeciationCleanup(), pa_PC=2);
     /// the Optima path has always carried every absent phase as a live
     /// box-constrained unknown for the whole solve. Measured (plan-v5 section
-    /// 20): the ABSOLUTE COUNT of absent phases tracks this solver's cost far
-    /// better than problem size - 07PSIna_G_mid_1 has 117 of 122 phases absent
-    /// and runs 4184 iterations / 49.5 s against native's 124 / 19.6 ms.
+    /// 20, and see the precondition above - these figures are at
+    /// pa_OptimaDimReduce = -1): the ABSOLUTE COUNT of absent phases tracks this
+    /// solver's cost far better than problem size - 07PSIna_G_mid_1 has 117 of
+    /// 122 phases absent and runs 4184 iterations / 49.5 s against native's
+    /// 124 / 19.6 ms.
     /// Dropping them would cut the unknown count from 265 to ~84, and at the
     /// measured ~n^2.32 per-iteration scaling that alone is ~10x.
     ///
@@ -1303,6 +1335,53 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     void read(GemDataStream& iss);
 };
 
+// ---------------------------------------------------------------------------
+// EFFECTIVE values of AUTO-gated settings
+// ---------------------------------------------------------------------------
+//
+// Some pa_* fields are three-valued: a configured 0 does not mean "off", it
+// means "decide from the problem". For those, the value in the project file,
+// in the calculation trace's SET line and in a benchmark freeze's `# set` line
+// is NOT the value the solver ran at, and no settings audit can see the
+// difference. That cost a full measurement (plan v5 section 95.4): the whole
+// T14 ballast ladder was measured against pa_OptimaPhaseCompaction while every
+// rung silently ran 8 dimension-reduction passes, which is what made that field
+// look like a no-op - correctly, but for a reason nothing in the record showed.
+//
+// So the resolution rule lives HERE, in one place, and both the solver and
+// native_trace_run_header()'s EFF line call it. They cannot disagree about what
+// ran, and a change to the gate shows up in the trace on the next run.
+//
+// RULE FOR ANY NEW AUTO-GATED FIELD (owner, 2026-09-07c): put its resolution in
+// a function like this one, call it from the solver rather than inlining the
+// constants, and add it to the EFF line. A knob whose effective value is not in
+// the trace is a knob that cannot be measured.
+
+/// Species-count gate above which pa_OptimaDimReduce = 0 (AUTO) turns the
+/// dimension-reduction pre-solve ON. Interpolated, not measured - nothing in the
+/// corpus lies between j_GEOTHERM (154 species, a 2.7x loss) and 07PSIna_G_mid_1
+/// (265 species, a 60x win) - which is why it is a named constant with an
+/// explicit off switch rather than a silent hardcode. See BASE_PARAM::OptimaDimReduce.
+constexpr long int kOptimaDimReduceAutoMinDC  = 200;
+/// Pass count AUTO selects when the gate opens.
+constexpr long int kOptimaDimReduceAutoPasses = 8;
+
+/// Resolves pa_OptimaDimReduce's three-valued setting to the pass count the
+/// solver will actually attempt: > 0 is an explicit count, < 0 is explicitly
+/// off, 0 is AUTO. `nDC` is the species count (pm.L).
+///
+/// NOTE this is the pass count only. Whether the pre-solve is REACHED also
+/// depends on the call: it runs on a cold Optima leg (pm.pNP == 0), and on a
+/// HOP leg only under an EXPLICIT positive setting - AUTO deliberately does not
+/// reach HOP's warm verification, which is already O(1) there. See the call site
+/// in ipm_optima.cpp.
+inline long int optima_dimreduce_passes( long int configured, long int nDC )
+{
+    if( configured == 0 && nDC >= kOptimaDimReduceAutoMinDC )
+        return kOptimaDimReduceAutoPasses;
+    return configured;
+}
+
 
 typedef struct
 {  // MULTI is base structure to Project (local values)
@@ -1732,6 +1811,39 @@ enum IndexationSATX {
     XL_ST = 0, XL_EM = 1, XL_SI = 2, XL_SP = 3
 };
 
+/// One phase-assemblage stability violation, as ranked by
+/// TMultiBase::WorstPhaseStabilityViolation(). See that method's own doc
+/// comment for what a violation is and which thresholds define it.
+struct PhStabViolation
+{
+    long int k = -1;            ///< phase index
+    double   viol = 0.;         ///< size past native's threshold, in log10 units
+    bool     wasAbsent = false; ///< true: absent but stable; false: present but unstable
+    /// The phase's logSI is SATURATED at StabilityIndexes()' own overflow
+    /// guard (ipm_chemical.cpp clamps ln_ax_dual to +609 / -608), i.e. it is
+    /// a guard value and not a measured driving force. Rank ordering among
+    /// clamped entries is therefore arbitrary - see PhStabCensus.
+    bool     clamped = false;
+};
+
+/// What one phase-assemblage stability scan actually looked at. Exists
+/// because WorstPhaseStabilityViolation() otherwise reports only an
+/// EXTREMUM, and "the assemblage is consistent" and "every violation found
+/// is one the caller may not act on" are the same observable from outside
+/// (plan v5 section 91). The clamped count is the load-bearing one: on an
+/// UNCONVERGED state most of the corpus's large systems saturate the
+/// overflow guard, and a ranking built out of guard values is not a
+/// measurement - it orders phases by nothing.
+struct PhStabCensus
+{
+    long int phases = 0;          ///< pm.FI
+    long int exempt = 0;          ///< kinetically restricted or twin-exempt, not classified
+    long int scanned = 0;         ///< phases actually classified
+    long int clamped = 0;         ///< of those, with a saturated logSI
+    long int absentStable = 0;    ///< violations of the "should be present" kind
+    long int presentUnstable = 0; ///< violations of the "should be absent" kind
+};
+
 extern const BASE_PARAM pa_p_;
 
 // Data of MULTI
@@ -1897,6 +2009,24 @@ public:
     /// the sensitivity step.
     std::vector<double> optima_dndb;
     long int optima_dndb_rows = 0, optima_dndb_cols = 0;
+
+    /// One flag per phase: has PhaseSelect() already re-inserted this phase at its
+    /// COMPOSITION CEILING rather than at the fixed pa_DFYs during this solve?
+    /// Sized pm.FI and cleared in GEM_IPM(), so it spans the phase-selection
+    /// passes of one solve and nothing more.
+    ///
+    /// WHY A ONE-SHOT RULE. Inserting min(pa_DFYs, ceiling) instead of skipping is
+    /// what stops a trace phase reading ABSENT when it belongs in the assemblage
+    /// (plan v5 section 93.3: T14_ball120 loses five, Chromite at logSI +6.39).
+    /// But the ceiling consumes the whole element budget, so an unbounded clamp
+    /// re-creates the thrash the 2026-09-05c skip was written to stop - measured:
+    /// clamping alone left both rescued projects at status 3 (section 77.1), and a
+    /// safety FRACTION was swept and came out chaotic and non-monotone, the two
+    /// projects disagreeing about which value works (section 77.3). So the phase
+    /// gets exactly one budget-sized attempt; if it comes back lost, it is skipped
+    /// from then on. That bounds the wasted work at one pass per phase without a
+    /// tuned number anywhere.
+    std::vector<char> insBudgetTried;
     // solve; with none registered this is a plain equilibrium solve,
     // architecturally equivalent to AIA/SIA but solved via Optima instead
     // of GEMS3K's own IPM/MBR.
@@ -2133,11 +2263,29 @@ public:
     ///        the threshold; 0 when none.
     /// \param wasAbsentOut  true if the worst violation is "absent but
     ///        stable", false if "present but unstable".
+    /// \param rankedOut  optional: EVERY violation found, ordered by size
+    ///        (descending, ties broken by phase index so the order is
+    ///        reproducible). A caller that may not act on the worst one can
+    ///        walk down this list instead of stopping, which is the whole
+    ///        reason it exists - the aqueous phase and any phase in the wrong
+    ///        phSelState are unactionable, and before this the loop could not
+    ///        tell that apart from "no violation at all".
+    ///        NOTE the ordering is only meaningful where the entries are not
+    ///        `clamped`: see PhStabCensus.
+    /// \param censusOut  optional: what the scan looked at, including how many
+    ///        of the scanned phases had a logSI saturated at StabilityIndexes()'
+    ///        overflow guard. ANY consumer of this ranking on an unconverged
+    ///        state must read that count - measured on 07PSIna_G_complex_1
+    ///        @ 80 C, 289 of 314 phases were pegged at the guard, so the
+    ///        "worst" violation was picked out of a set that carries no
+    ///        ordering information at all (plan v5 section 91).
     /// \return index of the worst violating phase, or -1 if the assemblage
     ///         is self-consistent.
     long int WorstPhaseStabilityViolation( double presenceThreshold, double dcFloor,
                                            const char* exemptSpecies,
-                                           double& violOut, bool& wasAbsentOut );
+                                           double& violOut, bool& wasAbsentOut,
+                                           std::vector<PhStabViolation>* rankedOut = nullptr,
+                                           PhStabCensus* censusOut = nullptr );
 
     /// Species-level dimension-reduction pre-solve - see
     /// BASE_PARAM::OptimaDimReduce (above) for what it does and why.
@@ -2532,6 +2680,50 @@ FILE* native_trace_file();
 /// zero-cost-when-unset shape as native_trace_file(); see the call site in
 /// InteriorPointsMethod() for the measurement it exists to support.
 FILE* ipm_probe_file();
+
+/// Complete run configuration - requested mode, T, P, bulk composition with IC
+/// names, and every BASE_PARAM field in force - written into the same file as
+/// native_trace_file(), once per GEM_run() call, for EVERY solver mode. Emitted
+/// from TNode::GEM_run() rather than from a solver, so the record is uniform
+/// across native/AOP/SOP/ROP/HOP/SHP and appears exactly once per call. See the
+/// definition in ipm_main.cpp for the format and for why the whole parameter set
+/// is dumped rather than the handful the CALL record carries.
+void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mode );
+
+/// One DECIDE record: a choice the solver MADE during a call, as opposed to what
+/// it was configured with (the SET/EFF lines) or what it returned (ANSWER/KEY).
+///
+/// WHY THIS EXISTS. Two silent wrong-answer channels were found on 2026-09-07c
+/// and both had the same shape - the record described something other than what
+/// ran (plan v5 sections 95.4 and 96.2). A freeze that carries the configuration
+/// and the answer still cannot say WHICH MECHANISMS FIRED, and that is where both
+/// bugs were visible: "dimension-reduction pre-solve produced a warm start over
+/// 330 of 1287 species in 1117 iterations" was in the log the whole time, and no
+/// artefact anyone diffs contained it.
+///
+/// These went into the trace rather than being scraped from the spdlog stream
+/// because the trace is already mode-attributed by position - every DECIDE
+/// follows the RUN line of the call that produced it - while log text carries no
+/// mode and would have to be re-attributed by a parser that can drift.
+///
+/// Format: `DECIDE <what> <key>=<value> ...`, key=value so it stays greppable and
+/// diffable. NO TIMESTAMPS and no wall time: this is frozen and diffed, and
+/// anything that changes between two identical runs makes every diff noise.
+/// Zero cost when GEMS3K_NATIVE_TRACE_FILE is unset.
+void native_trace_decide( const char* fmt, ... );
+
+/// The OUTCOME KEY of a completed solve, into the same trace file: the present
+/// phase assemblage (names, amounts and molar volumes, plus an order-independent
+/// hash of the name set), pH, pe and ionic strength. Emitted once per
+/// TNode::GEM_run() call, after the dispatch, so a trace carries both the
+/// configuration a result was produced at (RUN/BULK/SET) and the regime it
+/// reached. Exists for work item 7 / plan v5 section 81.5: a setting cannot be
+/// predicted from the INPUT, but may be looked up on the regime the input LEADS
+/// TO - which makes the key an output and the lookup memoisation. The fluid-root
+/// axis that design also names is deliberately NOT classified here; the per-phase
+/// molar volume it would be built from is emitted instead. See the definition
+/// (ipm_main.cpp) for why.
+void native_trace_run_result( const MULTI& pm, long int mode, long int status );
 
 // ???? syp->PGmax
 typedef enum {  // Symbols of thermodynamic potential to minimize

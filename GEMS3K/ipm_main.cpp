@@ -29,6 +29,7 @@
 //-------------------------------------------------------------------
 //
 
+#include <cstdarg>
 #include "ms_multi.h"
 #include "jama_lu.h"
 #include "jama_cholesky.h"
@@ -72,6 +73,267 @@ FILE* ipm_probe_file()
         return fn ? fopen( fn, "a" ) : nullptr;
     }();
     return fp;
+}
+
+/// One DECIDE record - see the declaration in ms_multi.h for why the solver's own
+/// choices belong in the trace and not only in the log.
+void native_trace_decide( const char* fmt, ... )
+{
+    FILE* ntf = native_trace_file();
+    if( !ntf )
+        return;                       // zero cost when the trace is not enabled
+    fputs( "DECIDE ", ntf );
+    va_list ap;
+    va_start( ap, fmt );
+    vfprintf( ntf, fmt, ap );
+    va_end( ap );
+    fputc( '\n', ntf );
+    fflush( ntf );
+}
+
+/// Complete run configuration, once per GEM_run() call, for EVERY solver mode.
+///
+/// Three lines: RUN (what was asked for - mode, T, P, system shape), BULK (the
+/// bulk composition asked for, with IC names) and SET (the complete BASE_PARAM
+/// set actually in force). Written into the same file as the native event trace
+/// (GEMS3K_NATIVE_TRACE_FILE); the env var keeps its historical name, but this
+/// header is emitted from TNode::GEM_run() and so covers AOP/SOP/ROP/HOP/SHP
+/// as well as native - a trace of any mode now carries its own configuration.
+///
+/// Why the WHOLE parameter set rather than the handful the CALL record below
+/// already carried: the standing question on this branch is which COMBINATION
+/// of settings solves every case at a low iteration count, and a trace that
+/// records the answer without the configuration that produced it cannot be used
+/// to search for one. Most projects pin most of these fields in their own
+/// -ipm.json, so the compiled defaults say nothing about what a given run used.
+///
+/// pm.B[] is read here in CALLER units - GEM_run() emits this straight after
+/// unpackDataBr() and before CalculateEquilibriumState()'s internal rescaling to
+/// pa_DG total moles - so BULK is the vector the caller supplied, not the
+/// rescaled one a mid-solve dump would show.
+void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mode )
+{
+    FILE* ntf = native_trace_file();
+    if( !ntf || !pa )
+        return;
+
+    const char* mname;
+    switch( mode )
+    {
+      case 1:  mname = "AIA";  break;
+      case 5:  mname = "SIA";  break;
+      case 10: mname = "AOP";  break;
+      case 14: mname = "SOP";  break;
+      case 18: mname = "ROP";  break;
+      case 22: mname = "HOP";  break;
+      case 26: mname = "SHP";  break;
+      default: mname = "?";    break;
+    }
+
+    fprintf( ntf, "RUN   mode=%s(%ld) pNP=%ld TK=%.4f Pbar=%.6e"
+                  " N=%ld L=%ld Ls=%ld FI=%ld FIs=%ld LO=%ld\n",
+             mname, (long)mode, (long)pm.pNP, pm.T, pm.P,
+             (long)pm.N, (long)pm.L, (long)pm.Ls,
+             (long)pm.FI, (long)pm.FIs, (long)pm.LO );
+
+    fprintf( ntf, "BULK " );
+    for( long int i = 0; i < pm.N; i++ )
+    {
+        // pm.SB[] is a fixed-width packed char array, so the name comes back
+        // blank-padded; trim it or the line stops parsing on whitespace.
+        std::string icn = char_array_to_string( pm.SB[i], MAXICNAME );
+        while( !icn.empty() && icn.back() == ' ' ) icn.pop_back();
+        fprintf( ntf, " %s=%.10e", icn.c_str(), pm.B[i] );
+    }
+    fprintf( ntf, "\n" );
+
+    // One line, key=value, every field of BASE_PARAM in declaration order. Long,
+    // but greppable and diffable - two runs' configurations differ exactly where
+    // this line differs. Keep this list in step with BASE_PARAM (ms_multi.h): a
+    // field added there and not added here is invisible to every settings search
+    // that uses this trace.
+    fprintf( ntf, "SET  "
+             " pa_PC=%d pa_PD=%d pa_PRD=%d pa_PSM=%d pa_DP=%d pa_DW=%d pa_DT=%d"
+             " pa_PLLG=%d pa_PE=%d pa_IIM=%d"
+             " pa_DG=%.6e pa_DHB=%.6e pa_DS=%.6e pa_DK=%.6e pa_DF=%.6e pa_DFM=%.6e"
+             " pa_DFYw=%.6e pa_DFYaq=%.6e pa_DFYid=%.6e pa_DFYr=%.6e pa_DFYh=%.6e"
+             " pa_DFYc=%.6e pa_DFYs=%.6e pa_DB=%.6e pa_AG=%.6e pa_DGC=%.6e"
+             " pa_GAR=%.6e pa_GAH=%.6e pa_GAS=%.6e pa_DNS=%.6e pa_XwMin=%.6e"
+             " pa_ScMin=%.6e pa_DcMin=%.6e pa_PhMin=%.6e pa_ICmin=%.6e"
+             " pa_EPS=%.6e pa_IEPS=%.6e pa_DKIN=%.6e"
+             " pa_PSTALL=%d pa_OptimaTol=%.6e pa_LogBarrierTau=%.6e"
+             " pa_OptimaMaxStepRatio=%.6e pa_PhaseHessianFloor=%.6e"
+             " pa_OptimaStallWindow=%ld pa_OptimaMaxSeconds=%.6e"
+             " pa_OptimaFDHessian=%ld pa_OptimaMoleFracHessian=%ld"
+             " pa_OptimaPhaseCompaction=%ld pa_OptimaFDHessianDelay=%ld"
+             " pa_OptimaDcFloor=%.6e pa_MbClassRule=%.6e pa_MbTrendPhaseDecay=%ld"
+             " pa_OptimaEarlyStabilityAt=%ld pa_OptimaDimReduce=%ld"
+             " pa_OptimaDimReduceTol=%.6e pa_MbPivotSplit=%ld pa_OptimaZeroAbsent=%ld"
+             " pa_OptimaReadmitSeed=%.6e pa_IpmStallWindow=%d pa_MbReproject=%d\n",
+             (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
+             (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
+             pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
+             pa->DFYw, pa->DFYaq, pa->DFYid, pa->DFYr, pa->DFYh,
+             pa->DFYc, pa->DFYs, pa->DB, pa->AG, pa->DGC,
+             pa->GAR, pa->GAH, pa->GAS, pa->DNS, pa->XwMin,
+             pa->ScMin, pa->DcMin, pa->PhMin, pa->ICmin,
+             pa->EPS, pa->IEPS, pa->DKIN,
+             (int)pa->PSTALL, pa->OptimaTol, pa->LogBarrierTau,
+             pa->OptimaMaxStepRatio, pa->PhaseHessianFloor,
+             (long)pa->OptimaStallWindow, pa->OptimaMaxSeconds,
+             (long)pa->OptimaFDHessian, (long)pa->OptimaMoleFracHessian,
+             (long)pa->OptimaPhaseCompaction, (long)pa->OptimaFDHessianDelay,
+             pa->OptimaDcFloor, pa->MbClassRule, (long)pa->MbTrendPhaseDecay,
+             (long)pa->OptimaEarlyStabilityAt, (long)pa->OptimaDimReduce,
+             pa->OptimaDimReduceTol, (long)pa->MbPivotSplit,
+             (long)pa->OptimaZeroAbsent, pa->OptimaReadmitSeed,
+             (int)pa->IpmStallWindow, (int)pa->MbReproject );
+
+    // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
+    //
+    // The SET line above is literal - it prints what the project file carries.
+    // For a THREE-VALUED field that is not what ran: a configured 0 means "decide
+    // from the problem", and every settings audit we have (this trace, the
+    // benchmark freeze's `# set` line, the project file itself) then names a
+    // configuration no row was produced at. Plan v5 section 95.4 is the worked
+    // example and it cost a whole measurement: the T14 ballast ladder was scored
+    // against pa_OptimaPhaseCompaction while all five rungs silently ran 8
+    // dimension-reduction passes.
+    //
+    // So every auto-gated knob is resolved here, through the SAME function the
+    // solver calls (optima_dimreduce_passes, ms_multi.h), and printed alongside
+    // the inputs its gate read. `_cfg` is what the file said, `_eff` is what the
+    // solver will attempt, and the gate inputs are printed so a reader can see
+    // WHY without knowing the constant.
+    //
+    // ADD ANY NEW AUTO-GATED FIELD HERE. A knob whose effective value is not in
+    // the trace cannot be measured, and its absence is silent.
+    //
+    // One honest limit, stated rather than papered over: this header is written
+    // once per GEM_run() call, before the solve, so it reports the PASS COUNT the
+    // gate resolves to and not whether the pre-solve is reached. Reaching it also
+    // needs a cold Optima leg (pm.pNP == 0), or a HOP leg under an explicit
+    // positive setting - AUTO does not reach HOP. pNP is printed on the RUN line
+    // above, so the two together say it; `reached=` records what can be decided
+    // here.
+    {
+        const long int drCfg = (long)pa->OptimaDimReduce;
+        const long int drEff = optima_dimreduce_passes( drCfg, (long)pm.L );
+        const char* drGate = ( drCfg > 0 ) ? "EXPLICIT"
+                           : ( drCfg < 0 ) ? "OFF" : "AUTO";
+        // Decidable here: a warm leg never takes the cold-start path, and ROP
+        // (reaktoroMode) skips the pre-solve entirely.
+        const char* drReached = ( drEff <= 0 )      ? "no(off)"
+                              : ( mode == 18 )      ? "no(ROP)"
+                              : ( pm.pNP != 0 && drCfg <= 0 ) ? "no(warm,AUTO)"
+                              : "maybe";
+        fprintf( ntf, "EFF  "
+                 " pa_OptimaDimReduce_cfg=%ld pa_OptimaDimReduce_eff=%ld"
+                 " dimreduce_gate=%s dimreduce_L=%ld dimreduce_minDC=%ld"
+                 " dimreduce_reached=%s\n",
+                 drCfg, drEff, drGate, (long)pm.L,
+                 (long)kOptimaDimReduceAutoMinDC, drReached );
+    }
+    fflush( ntf );
+}
+
+// ---------------------------------------------------------------------------
+// The OUTCOME KEY - what regime the solve actually landed in
+// ---------------------------------------------------------------------------
+//
+// Work item 7 and plan v5 section 81.5 reach the same architecture from
+// independent evidence: a setting cannot be PREDICTED from the input (every
+// candidate property is null at n = 9, and two projects with the same species
+// count, ICs, pa_DHB, bIC range and scaling have floors differing 375x), but it
+// CAN be looked up, keyed on the regime the composition LEADS TO. That key is
+// an output, which is why the lookup is memoisation and never prediction, and
+// why a cold start with nothing stored has to bootstrap by solving once.
+//
+// Section 81.5 names three axes. Two are emitted here as measured quantities:
+//
+//   * WHICH PHASES ARE PRESENT - the pH 3.5->12 step and the FeNaCl 386x step
+//     are both speciation changes. Emitted as the present-phase name list AND
+//     as an order-independent 64-bit hash of it, so a consumer can group by
+//     assemblage without parsing names.
+//   * A COARSE pH BUCKET - within-branch variation is only 1.1-1.9x, so one
+//     bucket per branch suffices. Emitted as the raw pH; bucketing is the
+//     consumer's, because the right width is a property of the store and not
+//     of the solve.
+//
+// The third - THE FLUID ROOT, where a cubic-EoS phase exists (the 1.85x step at
+// 63.9 bar is nothing else) - is NOT classified here, deliberately: this branch
+// has no root classifier, and inventing one inside a trace writer would put a
+// guess into the data. What is emitted instead is each present phase's own
+// molar volume, which is the quantity a root classifier would be built on and
+// which distinguishes a liquid-like from a gas-like root at one composition.
+// Say plainly what that means for a consumer: the key as emitted is the
+// assemblage and the pH, and anything wanting the root axis has to derive it.
+//
+// Emitted once per GEM_run() call, after the dispatch, from the same one place
+// the RUN/BULK/SET header comes from - so a trace carries the configuration a
+// result was produced at AND the regime it reached, and the two cannot drift
+// apart. No new MULTI or BASE_PARAM member, so the ABI is unchanged.
+void native_trace_run_result( const MULTI& pm, long int mode, long int status )
+{
+    FILE* ntf = native_trace_file();
+    if( !ntf )
+        return;
+
+    // The REQUESTED mode, captured by the caller before the dispatch - the
+    // status code alone would do (each mode owns its own OK/BAD/ERR triple) but
+    // decoding it here would duplicate that mapping in a second place.
+    const char* mname;
+    switch( mode )
+    {
+      case 1:  mname = "AIA";  break;
+      case 5:  mname = "SIA";  break;
+      case 10: mname = "AOP";  break;
+      case 14: mname = "SOP";  break;
+      case 18: mname = "ROP";  break;
+      case 22: mname = "HOP";  break;
+      case 26: mname = "SHP";  break;
+      default: mname = "?";    break;
+    }
+
+    // FNV-1a over the present-phase names, order-independent by XOR-folding
+    // each phase's own hash: the assemblage is a SET, and two solves that
+    // reached it in a different phase order are the same regime.
+    unsigned long long akey = 0ull;
+    long int nPresent = 0;
+    fprintf( ntf, "KEY   mode=%s status=%ld pH=%.6f pe=%.6f IS=%.6e phases=",
+             mname, (long)status, pm.pH, pm.pe, pm.IC );
+    for( long int k = 0; k < pm.FI; k++ )
+    {
+        if( pm.XF[k] <= pm.DSM )
+            continue;
+        // pm.SF[k] is the phase-class character followed by the blank-padded
+        // name, so it comes back as "a   aq_gen" - collapse the internal run of
+        // blanks to one underscore and trim the trailing padding, or the phase
+        // list stops being one whitespace-separated token per phase and every
+        // consumer of this line has to guess where a name ends.
+        std::string pn = char_array_to_string( pm.SF[k], MAXPHNAME );
+        while( !pn.empty() && pn.back() == ' ' ) pn.pop_back();
+        {
+            std::string t; bool sp = false;
+            for( char c : pn )
+            {
+                if( c == ' ' || c == '\t' ) { sp = true; continue; }
+                if( sp && !t.empty() ) t += '_';
+                sp = false; t += c;
+            }
+            pn.swap( t );
+        }
+        unsigned long long h = 1469598103934665603ull;
+        for( char c : pn ) { h ^= (unsigned char)c; h *= 1099511628211ull; }
+        akey ^= h;
+        // amount and molar volume: the second is the raw material for the fluid-root
+        // axis this deliberately does not classify (see above). FVOL is cm3.
+        const double vmol = ( pm.XF[k] > 0. && pm.FVOL != nullptr ? pm.FVOL[k] / pm.XF[k] : 0. );
+        fprintf( ntf, "%s%s:%.6e:%.6e", ( nPresent ? "," : "" ), pn.c_str(), pm.XF[k], vmol );
+        nPresent++;
+    }
+    fprintf( ntf, " nph=%ld akey=%016llx\n", (long)nPresent, akey );
+    fflush( ntf );
 }
 
 /// Worst per-IC mass-balance residual of the CURRENT primal pm.Y, recomputed
@@ -322,6 +584,12 @@ bool TMultiBase::MassBalanceReproject( double* amt )
                        "relative residual {:.3e}x -> {:.3e}x its own tolerance, worst "
                        "absolute {:.3e} -> {:.3e} mol",
                        N, relOld, relNew, absOld, absNew );
+    // A repair that FIRES is a decision, and on 11 of 56 projects native returns an
+    // answer failing its own mass-balance test - so which rows needed repairing is
+    // part of what a freeze should carry, not a log-only detail.
+    native_trace_decide( "mbreproject species=%ld relbefore=%.3e relafter=%.3e "
+                         "absbefore=%.3e absafter=%.3e",
+                         (long)N, relOld, relNew, absOld, absNew );
     return true;
 }
 
@@ -530,6 +798,9 @@ void TMultiBase::GEM_IPM( long int /*rLoop*/ )
 
     pm.W1=0; pm.K2=0;         // internal counters and indicators
     pm.Ec = pm.MK = pm.PZ = 0;    // Return codes
+    // Per-SOLVE, spanning this call's phase-selection passes: see the member's own
+    // comment in ms_multi.h for why the budget-sized re-insertion is one-shot.
+    insBudgetTried.assign( static_cast<size_t>( pm.FI ), 0 );
     if(!nCNud && !cnr )
         setErrorMessage( 0, "" , "");  // empty error info
  //   if( TProfil::pm->pa.p.PLLG == 0 )  // Disabled by DK 11.05.2011

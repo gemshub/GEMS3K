@@ -228,6 +228,19 @@ long int TNode::GEM_run( bool uPrimalSol )
         else
             return CNode->NodeStatusCH;
 
+        // Complete run configuration into the calculation trace, once per call and
+        // for EVERY mode: what was asked for (mode, T, P, system shape), the bulk
+        // composition asked for, and every BASE_PARAM field in force. Placed here
+        // deliberately - after unpackDataBr(), so pmm->B[] holds the caller's own
+        // bulk vector, and before the mode dispatch, so NodeStatusCH is still the
+        // REQUEST rather than the OK/BAD/ERR result packDataBr() will overwrite it
+        // with. No-op unless GEMS3K_NATIVE_TRACE_FILE is set; see the definition
+        // in ipm_main.cpp for the format.
+        native_trace_run_header( *pmm, multi_ptr()->base_param(), CNode->NodeStatusCH );
+        // The mode as REQUESTED, kept for the result record below: the dispatch
+        // and packDataBr() both overwrite NodeStatusCH with the outcome.
+        const long int traceRequestedMode = CNode->NodeStatusCH;
+
         // added 18.12.14 DK : setting chemical kinetics time counter and variables
         node_logger->debug("GEM_run dTime:{}, TimeStep: {} Time: {}", CNode->dt, CNode->NodeStatusFMT, CNode->Tm);
         if( CNode->dt <= 0. )
@@ -346,6 +359,15 @@ long int TNode::GEM_run( bool uPrimalSol )
             else
                 CNode->NodeStatusCH = OK_GEM_SIA;
         }
+
+        // The regime this call actually reached, into the same trace as the
+        // RUN/BULK/SET header above - emitted here, after the status has
+        // settled, so a FAIL row is labelled as one. Nothing is emitted from
+        // the catch blocks below on purpose: GEM_run()'s catch never calls
+        // packDataBr(), so every reported value on a thrown call is stale and
+        // an outcome key built from it would be a fabrication. No-op unless
+        // GEMS3K_NATIVE_TRACE_FILE is set.
+        native_trace_run_result( *pmm, traceRequestedMode, CNode->NodeStatusCH );
 
         return CNode->NodeStatusCH;
     }

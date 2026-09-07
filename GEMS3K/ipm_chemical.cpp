@@ -1398,8 +1398,16 @@ long int TMultiBase::SpeciationCleanup( double AmountCorrectionThreshold, double
 // pm.PZ = 2 and reported BAD_GEM_AIA - on a state whose IPM loop had already
 // converged with mass balance passing, and whose G was right to 11 digits.
 //
-// Clamping to exactly this ceiling (no safety fraction) is SUFFICIENT: measured,
-// both projects go BAD -> OK with G unchanged. The same quantity, bounded per
+// STALE CLAIM CORRECTED 2026-09-07. This comment used to say "clamping to exactly
+// this ceiling (no safety fraction) is SUFFICIENT: measured, both projects go
+// BAD -> OK". That was section 76.3, which section 77.2 then retracted as a UNITS
+// error - pm.B[] and pm.DFYsM are both in the internally rescaled frame, so the
+// parameter test that appeared to confirm it was really running at 0.18x the
+// ceiling, not 1.0x. Clamping at the true ceiling was implemented and left BOTH
+// projects at status 3 (section 77.1). What flipped them was the SKIP (section
+// 77.4); what the clamp is good for is not erasing a supersaturated trace phase,
+// which is why PhaseSelect() now does both - one budget-sized attempt, then skip.
+// The same quantity, bounded per
 // end-member, is what ipm_optima.cpp's DetectPhaseCollapseAndReseed() already
 // uses for the analogous job on the Optima path - for a single end-member its
 // "/nEnd" divisor is 1, so the two conventions agree exactly here.
@@ -1576,20 +1584,42 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
               // amount), so they are directly comparable - do NOT compare either against
               // the caller's raw bIC.
                const double insCap = ( L1k > 1 ) ? -1. : PhaseInsertionCeiling( jb );
+               double insAmt      = pm.DFYsM;   // MAJOR phase: the fixed pa_DFYs, unchanged
+               bool   budgetSized = false;
                if( insCap >= 0. && insCap < pm.DFYsM )
-               {   // the bulk composition cannot support even a trace of this phase
-                   trAction = "SKIP_INFEASIBLE";
-                   goto NextPhase;
+               {   // TRACE phase: the bulk composition cannot supply the fixed pa_DFYs.
+                   // Insert what the element budget DOES allow, once. Before
+                   // 2026-09-07 this branch skipped outright, which is why a phase
+                   // controlled by a 1e-9 mol element read ABSENT rather than trace
+                   // even when strongly supersaturated - five of them on T14_ball120,
+                   // Chromite at logSI +6.39 (plan v5 section 93.3).
+                   //
+                   // ONE attempt, not unlimited: the ceiling consumes the whole
+                   // element budget, so re-proposing it every pass is the thrash the
+                   // 2026-09-05c skip existed to stop. Clamping WITHOUT this bound was
+                   // measured and left both rescued projects at status 3 (section 77.1),
+                   // and a safety fraction was swept and came out chaotic (section 77.3).
+                   // A one-shot rule bounds the cost at one pass per phase and needs no
+                   // tuned constant.
+                   const size_t kk = static_cast<size_t>( k );
+                   if( insCap <= 0. || kk >= insBudgetTried.size() || insBudgetTried[kk] )
+                   {   // nothing at all to give it, or it has already had its attempt
+                       trAction = "SKIP_INFEASIBLE";
+                       goto NextPhase;
+                   }
+                   insBudgetTried[kk] = 1;
+                   insAmt      = insCap;
+                   budgetSized = true;
                }
                if( L1k > 1 )
                   DC_RaiseZeroedOff( jb, jb+L1k, k );
                else
-                  pm.Y[jb] = pm.DFYsM; // Spec. value for pure phase insertion
+                  pm.Y[jb] = insAmt; // pa_DFYs for a major phase, the composition ceiling for a trace one
                DCinserted += L1k;
                PHinserted++;
                kfr = k;
                MassBalanceViolation = true;
-               trAction = "INSERT";
+               trAction = budgetSized ? "INSERT_BUDGET" : "INSERT";
            } // otherwise (if present), the phase is cleaned up
            else trAction = "STABLE_PRESENT";
            goto NextPhase;

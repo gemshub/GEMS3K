@@ -370,7 +370,7 @@ double TNode::DC_G0(const long int xCH, const double P, const double TK,  bool n
         G0 = CSD->G0[ jj + xTP ];
     else
         G0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->G0+jj,
-                           P, TK, CSD->nTp, CSD->nPp, 6 );
+                           grid_P( P ), TK, CSD->nTp, CSD->nPp, 6 );
 
     if( norm )
         return G0/(R_CONSTANT * (TK));
@@ -396,7 +396,7 @@ double TNode::DC_V0(const long int xCH, const double P, const double TK) const
         V0 = CSD->V0[ jj + xTP ];
     else
         V0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->V0+jj,
-                           P, TK, CSD->nTp, CSD->nPp, 5 );
+                           grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
     return V0;
 }
 
@@ -419,7 +419,7 @@ double TNode::DC_H0(const long int xCH, const double P, const double TK) const
         H0 = CSD->H0[ jj + xTP ];
     else
         H0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->H0+jj,
-                           P, TK, CSD->nTp, CSD->nPp, 5 );
+                           grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
     return H0;
 }
 
@@ -441,7 +441,7 @@ double TNode::DC_S0(const long int xCH, const double P, const double TK) const
         s0 = CSD->S0[ jj + xTP ];
     else
         s0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->S0+jj,
-                           P, TK, CSD->nTp, CSD->nPp, 4 );
+                           grid_P( P ), TK, CSD->nTp, CSD->nPp, 4 );
     return s0;
 }
 
@@ -463,7 +463,7 @@ double TNode::DC_Cp0(const long int xCH, const double P, const double TK) const
         cp0 = CSD->Cp0[ jj + xTP ];
     else
         cp0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->Cp0+jj,
-                            P, TK, CSD->nTp, CSD->nPp, 3 );
+                            grid_P( P ), TK, CSD->nTp, CSD->nPp, 3 );
     return cp0;
 }
 
@@ -485,7 +485,7 @@ double TNode::DC_A0(const long int xCH, const double P, const double TK) const
         a0 = CSD->A0[ jj + xTP ];
     else
         a0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->A0+jj,
-                           P, TK, CSD->nTp, CSD->nPp, 5 );
+                           grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
     return a0;
 }
 
@@ -507,7 +507,7 @@ double TNode::DC_U0(const long int xCH, const double P, const double TK) const
         u0 = CSD->U0[ jj + xTP ];
     else
         u0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->U0+jj,
-                           P, TK, CSD->nTp, CSD->nPp, 5 );
+                           grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
     return u0;
 }
 
@@ -535,15 +535,15 @@ void TNode::EpsArrayH2Ow( const double P, const double TK, std::vector<double>& 
     else
     {
         EpsAW[0] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+0*nTP,
-                                 P, TK, CSD->nTp, CSD->nPp, 5 );
+                                 grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
         EpsAW[1] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+1*nTP,
-                                 P, TK, CSD->nTp, CSD->nPp, 5 );
+                                 grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
         EpsAW[2] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+2*nTP,
-                                 P, TK, CSD->nTp, CSD->nPp, 5 );
+                                 grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
         EpsAW[3] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+3*nTP,
-                                 P, TK, CSD->nTp, CSD->nPp, 5 );
+                                 grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
         EpsAW[4] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+4*nTP,
-                                 P, TK, CSD->nTp, CSD->nPp, 5 );
+                                 grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
     }
 
 }
@@ -579,15 +579,15 @@ void TNode::DensArrayH2Ow( const double P, const double TK, std::vector<double>&
     else
     {
         DensAW[0] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+0*nTP,
-                                  P, TK, CSD->nTp, CSD->nPp, 5 );
+                                  grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
         DensAW[1] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+1*nTP,
-                                  P, TK, CSD->nTp, CSD->nPp, 5 );
+                                  grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
         DensAW[2] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+2*nTP,
-                                  P, TK, CSD->nTp, CSD->nPp, 5 );
+                                  grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
         DensAW[3] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+3*nTP,
-                                  P, TK, CSD->nTp, CSD->nPp, 5 );
+                                  grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
         DensAW[4] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+4*nTP,
-                                  P, TK, CSD->nTp, CSD->nPp, 5 );
+                                  grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
     }
 }
 
@@ -609,7 +609,7 @@ double TNode::EpsH2Ow(const double P, const double TK)
         epsW = CSD->epsW[ jj + xTP ];
     else
         epsW = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+jj,
-                             P, TK, CSD->nTp, CSD->nPp, 5 );
+                             grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
     return epsW;
 }
 
@@ -630,7 +630,7 @@ double TNode::DenH2Ow(const double P, const double TK)
         denW = CSD->denW[ jj + xTP ];
     else
         denW = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+jj,
-                             P, TK, CSD->nTp, CSD->nPp, 5 );
+                             grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
     return denW;
 }
 
@@ -651,7 +651,7 @@ double TNode::EpsH2Og(const double P, const double TK)
         epsWg = CSD->epsWg[ jj + xTP ];
     else
         epsWg = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsWg+jj,
-                              P, TK, CSD->nTp, CSD->nPp, 5 );
+                              grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
     return epsWg;
 }
 
@@ -672,7 +672,7 @@ double TNode::DenH2Og(const double P, const double TK)
         denWg = CSD->denWg[ jj + xTP ];
     else
         denWg = LagranInterp( CSD->Pval, CSD->TKval, CSD->denWg+jj,
-                              P, TK, CSD->nTp, CSD->nPp, 5 );
+                              grid_P( P ), TK, CSD->nTp, CSD->nPp, 5 );
     return denWg;
 }
 

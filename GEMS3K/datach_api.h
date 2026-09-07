@@ -136,6 +136,19 @@ void databr_from_file(const DATACH* CSD, DATABR* CNode, GemDataStream& ff);
 
 /// Returns number of temperature and pressure grid points for one dependent component
 long int gridTP(const DATACH* pCSD);
+
+/// True when the DATACH pressure axis is the degenerate "saturated vapour pressure" grid,
+/// i.e. a single Pval[] entry of 0. GEMS writes P = 0 to mean "at Psat(T)"; the exporter keeps
+/// that literal 0 in the lookup grid, but writes the RESOLVED pressure into the node (104991.5 Pa
+/// at 374.15 K, i.e. Psat(101 C)). A node pressure therefore cannot be compared numerically
+/// against such an axis - see grid_P().
+bool is_Psat_grid(const DATACH* CSD);
+/// Maps a node pressure onto the DATACH pressure-axis coordinate: 0 on a saturated-vapour-pressure
+/// grid (where pressure is not a free coordinate and the node value is Psat(T)), otherwise P
+/// unchanged. Must be applied to any P that is range-tested, index-matched or interpolated against
+/// Pval[], or a Psat-grid project above ~100 C is rejected as out of range: every DC_*() lookup then
+/// returns 0.0 silently, which is how Boehmite-H vanished from Ph_Volume() on Al-species.
+double grid_P(const DATACH* CSD, double P);
 /// Checks if given temperature TK and pressure P fit within the interpolation
 /// intervals of the DATACH lookup arrays (returns empty message) or not (returns error message)
 std::string check_TP(const DATACH* CSD, double TK, double P);

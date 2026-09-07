@@ -682,10 +682,15 @@ bool TMultiBase::LPGibbsDual( std::vector<double>& yOut )
 
 long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, double dcFloor,
                                                    const char* exemptSpecies,
-                                                   double& violOut, bool& wasAbsentOut )
+                                                   double& violOut, bool& wasAbsentOut,
+                                                   std::vector<PhStabViolation>* rankedOut,
+                                                   PhStabCensus* censusOut )
 {
     const BASE_PARAM *pa_p = base_param();
     const long int L = pm.L;
+    std::vector<PhStabViolation> ranked;
+    PhStabCensus census;
+    census.phases = pm.FI;
 
     // Phase-assemblage stability check - a second, structurally
     // different correctness signal from the per-species KKT check run
@@ -780,9 +785,31 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
             for( long int j = j0stab; j < j1stab && j < L; j++ )
                 if( exemptSpecies[(size_t)j] ) { kinConstrPh = true; break; }
         j0stab = j1stab;
-        if( kinConstrPh ) continue;
+        if( kinConstrPh ) { census.exempt++; continue; }
+        census.scanned++;
 
         const double logSI = pm.Falp[k];
+        // Is this phase's stability index a MEASUREMENT or a guard value?
+        // StabilityIndexes() clamps each species' dual activity to
+        // [-608, +609] before exponentiating (ipm_chemical.cpp, and it warns
+        // on the gems3k channel each time), so a phase whose sum is dominated
+        // by a clamped species carries a logSI of ~609/ln10 that says only
+        // "overflowed", not "this far from stable". Reconstructed here rather
+        // than counted at the source, because a MULTI member would change the
+        // ABI: pm.NMU[j] is log(exp(ln_ax_dual)/gamma), and on this path
+        // pm.K2 is always 0, so the effective gamma is pm.Gamma[j] (replaced
+        // by 1 outside [1e-33, 1e33], exactly as StabilityIndexes() does).
+        bool clampedPh = false;
+        for( long int j = j1stab - pm.L1[k]; j < j1stab && j < L; j++ )
+        {
+            double g = pm.Gamma[j];
+            if( g < 1e-33 || g > 1e33 ) g = 1.;
+            if( g <= 0. || !std::isfinite( g ) ) continue;
+            const double lnAxDual = pm.NMU[j] + std::log( g );
+            if( lnAxDual >= 609. - 1e-6 || lnAxDual <= -608. + 1e-6 )
+            { clampedPh = true; break; }
+        }
+        if( clampedPh ) census.clamped++;
         // "Present" is decided STRUCTURALLY as well as by magnitude: a phase
         // every one of whose species sits at its own lower bound was pinned out
         // by the solver and is absent, whatever its total adds up to. The
@@ -877,6 +904,34 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
             if( pm.Y[j] >= kRelPresenceEps * nMax ) { anySignificant = true; break; }
         }
         const bool present = anyOffFloor && ( pm.YF[k] >= presenceThreshold ) && anySignificant;
+        // GEMS3K_PHSTAB_PROBE=<path>: one line per phase per evaluation - amount,
+        // stability index, the three presence clauses and the verdict this check
+        // would return. Zero-cost when unset (one getenv in a static initialiser,
+        // then a null test), same shape and same footing as OPTIMA_BETA_PROBE.
+        //
+        // KEPT because it answered a question nothing else could (plan v5 section
+        // 91): this function returns only the WORST violation, so from outside it
+        // is impossible to tell "no violation" from "a violation the repair loop
+        // is not allowed to act on, with actionable ones ranked behind it". On
+        // 07PSIna_G_complex_1 @ 80 C it showed 289 of 314 phases saturated at
+        // StabilityIndexes()' own overflow clamp (609/ln10 - DF = 264.4753),
+        // ZERO present-but-unstable, and the gas phase the project's whole
+        // failure is about reading present-and-stable at logSI = +60 where
+        // native's converged value is -0.332. Reach for it whenever a
+        // phase-assemblage verdict needs explaining rather than just observing.
+        {
+            static FILE* dbg = []() -> FILE* {
+                const char* fn = std::getenv( "GEMS3K_PHSTAB_PROBE" );
+                return fn ? fopen( fn, "a" ) : nullptr; }();
+            if( dbg )
+                fprintf( dbg, "PH k=%ld %-16s YF=%.6e logSI=%+.6e present=%d offFloor=%d "
+                              "signif=%d  DF=%.2e DFM=%.2e  verdict=%s\n",
+                         (long)k, char_array_to_string( pm.SF[k], MAXPHNAME ).c_str(),
+                         pm.YF[k], logSI, (int)present, (int)anyOffFloor, (int)anySignificant,
+                         pa_p->DF, pa_p->DFM,
+                         ( !present && logSI > pa_p->DF ) ? "ABSENT-BUT-STABLE"
+                       : (  present && logSI < -pa_p->DFM ) ? "PRESENT-BUT-UNSTABLE" : "ok" );
+        }
         // Same thresholds/logic as native's own PhaseSelect()
         // (ipm_chemical.cpp): a stable phase (logSI > DF) not
         // currently in the assemblage, or an unstable one
@@ -885,16 +940,39 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
         if( !present && logSI > pa_p->DF )
         {
             const double viol = logSI - pa_p->DF;
+            census.absentStable++;
+            ranked.push_back( PhStabViolation{ k, viol, true, clampedPh } );
             if( viol > worstStabilityViol )
             { worstStabilityViol = viol; worstStabilityPhase = k; worstStabilityWasAbsent = true; }
         }
         else if( present && logSI < -pa_p->DFM )
         {
             const double viol = -pa_p->DFM - logSI;
+            census.presentUnstable++;
+            ranked.push_back( PhStabViolation{ k, viol, false, clampedPh } );
             if( viol > worstStabilityViol )
             { worstStabilityViol = viol; worstStabilityPhase = k; worstStabilityWasAbsent = false; }
         }
     }
+    // Descending by size, ties broken by phase index - a stable, reproducible
+    // order, which matters more than usual here because clamped entries all
+    // carry the SAME viol and would otherwise be ordered by nothing.
+    std::sort( ranked.begin(), ranked.end(),
+               []( const PhStabViolation& a, const PhStabViolation& b )
+               { return a.viol != b.viol ? a.viol > b.viol : a.k < b.k; } );
+    {
+        static FILE* dbg = []() -> FILE* {
+            const char* fn = std::getenv( "GEMS3K_PHSTAB_PROBE" );
+            return fn ? fopen( fn, "a" ) : nullptr; }();
+        if( dbg )
+            fprintf( dbg, "CENSUS phases=%ld exempt=%ld scanned=%ld clamped=%ld "
+                          "absent-but-stable=%ld present-but-unstable=%ld worst=%ld\n",
+                     (long)census.phases, (long)census.exempt, (long)census.scanned,
+                     (long)census.clamped, (long)census.absentStable,
+                     (long)census.presentUnstable, (long)worstStabilityPhase );
+    }
+    if( rankedOut != nullptr ) rankedOut->swap( ranked );
+    if( censusOut != nullptr ) *censusOut = census;
     violOut = worstStabilityViol;
     wasAbsentOut = worstStabilityWasAbsent;
     return worstStabilityPhase;
@@ -2001,8 +2079,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // between 154 and 265 species, so its exact value is interpolated
         // rather than measured - which is also why it is a named constant with
         // an explicit off switch rather than a silent hardcode.
-        static const long int kDimReduceAutoMinDC  = 200;
-        static const long int kDimReduceAutoPasses = 8;
+        // The gate itself now lives in ms_multi.h (optima_dimreduce_passes) so
+        // that native_trace_run_header()'s EFF line resolves it exactly as this
+        // call site does. Before that they could not disagree only by luck - and
+        // nothing in the trace said which value had run. Plan v5 section 95.4.
 
         // Fallback initial-set rule, used ONCE if the configured rule's
         // pre-solve is discarded. See BASE_PARAM::OptimaDimReduceTol for the
@@ -2032,9 +2112,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                                             // not rescue 07PSIna_G_complex_1 at
                                                             // 80 C, but nothing does.
 
-        long int dimReducePasses = pa_p->OptimaDimReduce;
-        if( dimReducePasses == 0 && L >= kDimReduceAutoMinDC )
-            dimReducePasses = kDimReduceAutoPasses;
+        const long int dimReducePasses = optima_dimreduce_passes( pa_p->OptimaDimReduce, L );
 
         // On the HOP leg the reduction is EXPLICIT OPT-IN ONLY - AUTO does not
         // reach it. Measured 2026-09-04 on 07PSIna_G_mid_1 (265 species, so
@@ -2105,6 +2183,12 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 ipm_logger->info( "CalculateEquilibriumStateOptima: dimension-reduction pre-solve "
                                    "produced a warm start over {} of {} species in {} iterations",
                                    nActive, L, dimReduceIters );
+            // This is the record whose absence cost plan v5 section 95.4: the whole
+            // T14 ladder was measured against pa_OptimaPhaseCompaction while this ran
+            // on every rung, and nothing anyone diffs said so.
+            native_trace_decide( "dimreduce done=%d active=%ld of=%ld iters=%ld passes=%ld",
+                                 dimReduceDone ? 1 : 0, (long)nActive, (long)L,
+                                 (long)dimReduceIters, (long)dimReducePasses );
         }
 
         // Resolve each active condition's fixed objective-gradient value
@@ -3014,8 +3098,84 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // stopped moving at the scale the solve is trying to converge to, and it
         // sits ~7 decades above the RIGHT case and ~4 below the WRONG one.
         const double kEarlyTrendDualSettled = pa_p->OptimaTol;
+        // THE RATE CLAUSE (plan v5 section 92) - the discriminator the dual gate
+        // cannot be. Section 87.4 left one false positive standing: on a WARM leg
+        // the trigger fires on a phase that has fallen 0.09 % over 342
+        // evaluations - settling, not dissolving - and the dual gate is a no-op
+        // exactly there, because a warm start inherits an accurate dual. Section
+        // 87.5 showed the obvious LEVEL clause ("the phase must be below some
+        // fraction of its peak") is blocked: the usable window is 0.14 to 0.91, a
+        // tuned constant with ~2x margin.
+        //
+        // A RATE is scale-free in the length of the fall where a level is not.
+        // Measured with GEMS3K_EARLYTREND_PROBE on the three cases that decide
+        // this field (all three reproduce their recorded figures exactly - the
+        // dual movements below are section 87.2's 2.97e-15 and 1.33e-04 to three
+        // digits, from a different instrument):
+        //
+        //   case                 falls  frac of peak   rate/eval   dual     acting
+        //   j_CASHNK  AOP cold      50      1.5e-12      2.0e-02   settled  RIGHT
+        //   j_CASHNK  HOP warm     342      0.99900      2.9e-06   settled  WRONG
+        //   CSHSnplus AOP cold      50      0.92401      1.5e-03   moving   WRONG
+        //
+        // The rate only has to separate what the dual gate LETS THROUGH, and
+        // there it separates right from wrong by 6800x. 1e-4 sits ~200x below the
+        // right case and ~34x above the wrong one - three decades of margin,
+        // against the level clause's two-fold.
+        //
+        // Two things to be honest about. (1) rate = (1 - frac)/falls collapses to
+        // 1/falls once a phase has essentially vanished, so on the RIGHT case the
+        // number is set by how long the fall has run, not by how deep it is -
+        // which is the intent ("has this phase lost a fraction of itself
+        // comparable to the time it has been falling"), but it means the clause is
+        // not independent of the trigger's own N. (2) Section 87.5's fourth case -
+        // the f_Solvus decay run, "still at 14 % of peak 6638 consecutive falls
+        // in", which is what BLOCKED the level clause - does not reproduce at
+        // anything like that LENGTH: surveyed across the 61-point solvus AOP
+        // sweep, the longest monotone fall of a non-solvent phase is between 40
+        // and 45 evaluations (2 phases fire at N = 40, none at N = 45), not 6638.
+        //
+        // But the SIGNATURE is there, and it tests this clause rather than being
+        // absent: those two reach 40 falls at 0.77 % and 11.7 % of their own peak
+        // - the second is essentially 87.5's 14 % case - and their rates are
+        // 2.5e-02 and 2.2e-02. Across all 56 non-solvent firings at N = 20 the
+        // rate runs 2.1e-03 to 5.0e-02, so the SMALLEST genuine dissolution on
+        // this corpus sits 21x above kEarlyTrendMinRate and 730x above the warm
+        // false positive's 2.9e-06. On everything now measurable the clause fires
+        // where it should and not where it should not.
+        //
+        // Both clauses separate the cases that remain; the rate's margin is 730x
+        // against the level's ~8x, and 87.5's specific objection (a level clause
+        // only becomes true near the end of a 6638-evaluation fall) has no case
+        // left to stand on at these lengths. Section 92.4, corrected in 94.2.
+        const double kEarlyTrendMinRate = 1e-4;
         auto earlyTrend      = std::make_shared<bool>( false );
         auto earlyTrendArmed = std::make_shared<bool>( earlyTrendN > 0 );
+        // GEMS3K_EARLYTREND_PROBE=<path>: one line the FIRST time each phase
+        // satisfies the trend trigger's own count-and-drop clause, WHETHER OR
+        // NOT the field is armed and whether or not the dual gate would let it
+        // fire. It exists because the trigger's log line prints only when the
+        // trigger actually fires, so from outside there is no way to see the
+        // cases where it would have fired and was gated - which is exactly the
+        // population a discriminator has to be measured against (plan v5
+        // section 87.5's rate clause is on record as measured on TWO points).
+        //
+        // Prints the two quantities that separate the four known cases: the
+        // phase's fraction of its own peak, and the average fractional fall per
+        // evaluation over the monotone run - plus the dual's own movement, so
+        // the existing gate and any candidate successor can be scored from one
+        // file. Zero-cost when unset. GEMS3K_EARLYTREND_PROBE_N sets the
+        // consecutive-fall count to survey at when the field itself is off
+        // (default 200); when it is armed, the field's own -N is used, because
+        // the question is what the trigger would see.
+        static FILE* earlyTrendDbg = []() -> FILE* {
+            const char* fn = std::getenv( "GEMS3K_EARLYTREND_PROBE" );
+            return fn ? fopen( fn, "a" ) : nullptr; }();
+        static const long int kEarlyTrendProbeN = []() -> long int {
+            const char* v = std::getenv( "GEMS3K_EARLYTREND_PROBE_N" );
+            return v ? std::atol( v ) : 200; }();
+        const long int earlyTrendProbeN = earlyTrendN > 0 ? earlyTrendN : kEarlyTrendProbeN;
+        auto earlyTrendSeen = std::make_shared<std::vector<char>>( pm.FIs, (char)0 );
         // The SOLVENT phase is excluded, and not as a tuning choice: the
         // phase-selection repair loop refuses to act on it by construction
         // ("never remove or reseed the solvent phase here"), so a trigger on it
@@ -3035,10 +3195,41 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. || earlyTrendN > 0 )
             options.convergence.check =
                 [stallWatch, earlyTrendN, kEarlyTrendDropRatio, kEarlyTrendDualSettled,
-                 earlyTrend, earlyTrendArmed,
+                 kEarlyTrendMinRate,
+                 earlyTrend, earlyTrendArmed, earlyTrendProbeN, earlyTrendSeen,
                  aqPhaseIdxTrend, phDec, phMax, phLast]
                 ( Optima::ConvergenceCheckArgs const& args ) -> bool
                 {
+                    // The probe (above): record what the trigger WOULD see, once
+                    // per phase, independently of arming and of the gate.
+                    if( earlyTrendDbg != nullptr )
+                        for( size_t k = 0; k < phDec->size(); ++k )
+                            if( !(*earlyTrendSeen)[k]
+                                && (*phDec)[k] >= earlyTrendProbeN
+                                && (*phMax)[k] > 0.
+                                && (*phLast)[k] >= 0.
+                                && (*phLast)[k] < (*phMax)[k] * kEarlyTrendDropRatio )
+                            {
+                                (*earlyTrendSeen)[k] = 1;
+                                double dwA = 0., wA = 0.;
+                                for( long int iw = 0; iw < (long int)args.u.w.size(); iw++ )
+                                {
+                                    const double d = std::fabs( args.u.w[iw] - args.uo.w[iw] );
+                                    if( d > dwA ) dwA = d;
+                                    const double a = std::fabs( args.u.w[iw] );
+                                    if( a > wA ) wA = a;
+                                }
+                                const double frac = (*phLast)[k] / (*phMax)[k];
+                                fprintf( earlyTrendDbg,
+                                         "TREND k=%ld falls=%ld last=%.6e peak=%.6e frac=%.6e "
+                                         "rate=%.6e dwRel=%.6e aq=%d armed=%d\n",
+                                         (long)k, (*phDec)[k], (*phLast)[k], (*phMax)[k], frac,
+                                         ( 1. - frac ) / (double)(*phDec)[k],
+                                         ( wA > 0. ? dwA / wA : 0. ),
+                                         (int)( (long int)k == aqPhaseIdxTrend ),
+                                         (int)( earlyTrendN > 0 ) );
+                                fflush( earlyTrendDbg );
+                            }
                     // Trend trigger first: it is cheap, independent of the stall
                     // signals, and armed only for the first attempt.
                     if( *earlyTrendArmed && !*earlyTrend )
@@ -3062,7 +3253,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                 && (*phDec)[k] >= earlyTrendN
                                 && (*phMax)[k] > 0.
                                 && (*phLast)[k] >= 0.
-                                && (*phLast)[k] < (*phMax)[k] * kEarlyTrendDropRatio )
+                                && (*phLast)[k] < (*phMax)[k] * kEarlyTrendDropRatio
+                                && ( 1. - (*phLast)[k] / (*phMax)[k] )
+                                       / (double)(*phDec)[k] >= kEarlyTrendMinRate )
                             {
                                 *earlyTrend = true;
                                 ipm_logger->info( "CalculateEquilibriumStateOptima: phase {} has "
@@ -3070,9 +3263,12 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                                   "from a peak of {:.3e} - ending the first attempt "
                                                   "so the phase-selection loop can look "
                                                   "(pa_OptimaEarlyStabilityAt = -{}; dual settled, "
-                                                  "max|dw|/max|w| = {:.3e} <= {:.3e})",
+                                                  "max|dw|/max|w| = {:.3e} <= {:.3e}; fall rate "
+                                                  "{:.3e}/eval >= {:.3e})",
                                                   k, (*phDec)[k], (*phLast)[k], (*phMax)[k],
-                                                  earlyTrendN, dwRel, kEarlyTrendDualSettled );
+                                                  earlyTrendN, dwRel, kEarlyTrendDualSettled,
+                                                  ( 1. - (*phLast)[k] / (*phMax)[k] )
+                                                      / (double)(*phDec)[k], kEarlyTrendMinRate );
                                 break;
                             }
                         if( *earlyTrend ) return true;   // folded back to a failure below
@@ -3324,6 +3520,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             ipm_logger->warn( "CalculateEquilibriumStateOptima: phase compaction probe ({} iterations) "
                                "pinned {} of {} phases ({} of {} species) as absent",
                                probeResult.iterations, nPinnedPh, pm.FI, nPinnedSp, L );
+            native_trace_decide( "compaction probeiters=%ld pinnedph=%ld ofph=%ld "
+                                 "pinnedsp=%ld ofsp=%ld",
+                                 (long)probeResult.iterations, (long)nPinnedPh,
+                                 (long)pm.FI, (long)nPinnedSp, (long)L );
         }
 
         // ---- Tiered Hessian: a short attempt with the cheap Hessian first ----
@@ -3981,6 +4181,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-extinction retry - "
                                        "fixing {} species of a vanishing interchangeable phase at the floor",
                                        deactivated.size() );
+                    // The kTwinRatio clause actually firing - plan v5 section 95.2
+                    // measured its margin at 9.5x and nothing recorded when it acts.
+                    native_trace_decide( "extinction fixedsp=%ld",
+                                         (long)deactivated.size() );
                     Optima::State retryState = state;
                     for( long int j : deactivated )
                     {
@@ -4088,102 +4292,161 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
                     double psViol = 0.;
                     bool psAbsent = false;
-                    const long int kBad = WorstPhaseStabilityViolation(
+                    std::vector<PhStabViolation> psRanked;
+                    PhStabCensus psCensus;
+                    WorstPhaseStabilityViolation(
                                 presenceThreshold, dcFloor,
                                 extinctFixed.empty() ? nullptr : extinctFixed.data(),
-                                psViol, psAbsent );
-                    if( kBad < 0 )
+                                psViol, psAbsent, &psRanked, &psCensus );
+                    if( psRanked.empty() )
                         break;                       // assemblage is self-consistent
-                    if( kBad == aqueousPhaseIdx )
-                        break;                       // never remove or reseed the solvent phase here
 
-                    long int jb = 0;
-                    for( long int k = 0; k < kBad; k++ )
-                        jb += pm.L1[k];
-                    const long int je = jb + pm.L1[kBad];
-                    if( je > L )
-                        break;
+                    // Walk the ranking rather than stopping at its head. An
+                    // unactionable violation - the solvent phase, or one in a
+                    // phSelState this tier may not touch - says nothing about
+                    // the violations RANKED BEHIND IT, and stopping there made
+                    // "nothing to repair" and "nothing repairable at the top of
+                    // the list" indistinguishable from outside (plan v5 section
+                    // 91, where the loop broke on the first of 289 entries it
+                    // could not act on). Costs one scan of an already-computed
+                    // vector; the state is not re-evaluated between entries,
+                    // because acting on ANY of them invalidates it and the loop
+                    // re-solves and re-evaluates from the top.
+                    //
+                    // What the ranking is worth is bounded by psCensus.clamped:
+                    // a logSI saturated at StabilityIndexes()' overflow guard is
+                    // not a driving force, and on an unconverged state most
+                    // large systems saturate. Reported below, once, when it
+                    // dominates - the loop still acts, because a clamped
+                    // "absent but stable" is still a phase this tier removed
+                    // and can put back.
+                    if( psCensus.clamped * 2 > psCensus.scanned && psCensus.scanned > 0 )
+                        ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
+                                           "{} of {} scanned phases have a SATURATED stability index "
+                                           "(overflow guard, not a measured driving force); the "
+                                           "ranking of {} violation(s) is not ordered by anything",
+                                           psLoop, psCensus.clamped, psCensus.scanned,
+                                           (long)psRanked.size() );
 
                     bool acted = false;
-                    if( !psAbsent && phSelState[(size_t)kBad] == 0 )
+                    long int psSkipped = 0;
+                    for( size_t psIdx = 0; psIdx < psRanked.size() && !acted; psIdx++ )
                     {
-                        // PRESENT but UNSTABLE -> drop it from the assemblage.
-                        for( long int j = jb; j < je; j++ )
+                        const long int kBad = psRanked[psIdx].k;
+                        psAbsent = psRanked[psIdx].wasAbsent;
+                        psViol = psRanked[psIdx].viol;
+                        if( kBad == aqueousPhaseIdx )
+                        { psSkipped++; continue; }       // never remove or reseed the solvent phase here
+
+                        long int jb = 0;
+                        for( long int k = 0; k < kBad; k++ )
+                            jb += pm.L1[k];
+                        const long int je = jb + pm.L1[kBad];
+                        if( je > L )
+                        { psSkipped++; continue; }
+
+                        if( !psAbsent && phSelState[(size_t)kBad] == 0 )
                         {
-                            savedLo[(size_t)j] = problem.xlower[j];
-                            savedHi[(size_t)j] = problem.xupper[j];
-                            problem.xlower[j] = dcFloor;
-                            problem.xupper[j] = dcFloor;
-                            state.x[j] = dcFloor;
-                        }
-                        phSelState[(size_t)kBad] = 1;
-                        acted = true;
-                        ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
-                                           "deactivating phase {} (present but unstable, logSI gap {})",
-                                           psLoop, kBad, psViol );
-                    }
-                    else if( psAbsent && phSelState[(size_t)kBad] == 1 )
-                    {
-                        // ABSENT but STABLE, and it was deactivated by the
-                        // compaction probe or by this loop -> that removal was
-                        // wrong. Restore the original box and seed the phase off
-                        // the floor, bounding each end-member by its OWN limiting
-                        // IC (the same per-end-member formula as
-                        // DetectPhaseCollapseAndReseed() above, which exists
-                        // because a single phase-wide min lets one trace IC cap
-                        // the whole phase straight back onto the phase-absence
-                        // cliff this is trying to lift it off).
-                        //
-                        // Readmits EVERY phase that now looks wrongly removed,
-                        // not just the worst one. With compaction enabled a single
-                        // probe can pin dozens of phases at once, and readmitting
-                        // one per loop against a bound of kMaxPhaseSelectLoops
-                        // could not undo that. pm.Falp[]/pm.YF[] were just
-                        // refreshed by WorstPhaseStabilityViolation(), so this
-                        // costs nothing beyond the scan. Deactivation stays
-                        // one-at-a-time deliberately - removing a phase is the
-                        // side that can be wrong in a way the solver cannot see.
-                        long int nReadmit = 0, jbR = 0;
-                        for( long int k = 0; k < pm.FI; k++ )
-                        {
-                            const long int jeR = jbR + pm.L1[k];
-                            if( phSelState[(size_t)k] == 1 && jeR <= L
-                                && pm.YF[k] < presenceThreshold && pm.Falp[k] > pa_p->DF )
+                            // PRESENT but UNSTABLE -> drop it from the assemblage.
+                            for( long int j = jb; j < je; j++ )
                             {
-                                const double nEnd = (double)( jeR - jbR );
-                                for( long int jj = jbR; jj < jeR; jj++ )
-                                {
-                                    problem.xlower[jj] = savedLo[(size_t)jj];
-                                    problem.xupper[jj] = savedHi[(size_t)jj];
-                                    double b = -1.;
-                                    for( long int i = 0; i < N; i++ )
-                                    {
-                                        const double coef = pm.A[ i + jj*N ];
-                                        if( coef > 0. )
-                                        {
-                                            const double icBound = pm.B[i] / coef;
-                                            if( b < 0. || icBound < b ) b = icBound;
-                                        }
-                                    }
-                                    const double seed = ( b > 0. ? b : presenceThreshold * 10. ) / nEnd;
-                                    state.x[jj] = std::min( std::max( seed, problem.xlower[jj] ), problem.xupper[jj] );
-                                }
-                                phSelState[(size_t)k] = 2;   // terminal - never dropped again
-                                nReadmit++;
+                                savedLo[(size_t)j] = problem.xlower[j];
+                                savedHi[(size_t)j] = problem.xupper[j];
+                                problem.xlower[j] = dcFloor;
+                                problem.xupper[j] = dcFloor;
+                                state.x[j] = dcFloor;
                             }
-                            jbR = jeR;
-                        }
-                        if( nReadmit > 0 )
-                        {
+                            phSelState[(size_t)kBad] = 1;
                             acted = true;
                             ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
-                                               "READMITTING {} wrongly removed phase(s) (worst: phase {}, "
-                                               "absent but stable, logSI gap {})",
-                                               psLoop, nReadmit, kBad, psViol );
+                                               "deactivating phase {} (present but unstable, logSI gap {})",
+                                               psLoop, kBad, psViol );
+                            // T5's "164x cliff" was this firing after the primary solve
+                            // had spent its whole budget - plan v5 section 95.1.
+                            native_trace_decide( "phasesel loop=%ld deactivate=%ld logsigap=%.6e",
+                                                 (long)psLoop, (long)kBad, psViol );
                         }
-                    }
+                        else if( psAbsent && phSelState[(size_t)kBad] == 1 )
+                        {
+                            // ABSENT but STABLE, and it was deactivated by the
+                            // compaction probe or by this loop -> that removal was
+                            // wrong. Restore the original box and seed the phase off
+                            // the floor, bounding each end-member by its OWN limiting
+                            // IC (the same per-end-member formula as
+                            // DetectPhaseCollapseAndReseed() above, which exists
+                            // because a single phase-wide min lets one trace IC cap
+                            // the whole phase straight back onto the phase-absence
+                            // cliff this is trying to lift it off).
+                            //
+                            // Readmits EVERY phase that now looks wrongly removed,
+                            // not just the worst one. With compaction enabled a single
+                            // probe can pin dozens of phases at once, and readmitting
+                            // one per loop against a bound of kMaxPhaseSelectLoops
+                            // could not undo that. pm.Falp[]/pm.YF[] were just
+                            // refreshed by WorstPhaseStabilityViolation(), so this
+                            // costs nothing beyond the scan. Deactivation stays
+                            // one-at-a-time deliberately - removing a phase is the
+                            // side that can be wrong in a way the solver cannot see.
+                            long int nReadmit = 0, jbR = 0;
+                            for( long int k = 0; k < pm.FI; k++ )
+                            {
+                                const long int jeR = jbR + pm.L1[k];
+                                if( phSelState[(size_t)k] == 1 && jeR <= L
+                                    && pm.YF[k] < presenceThreshold && pm.Falp[k] > pa_p->DF )
+                                {
+                                    const double nEnd = (double)( jeR - jbR );
+                                    for( long int jj = jbR; jj < jeR; jj++ )
+                                    {
+                                        problem.xlower[jj] = savedLo[(size_t)jj];
+                                        problem.xupper[jj] = savedHi[(size_t)jj];
+                                        double b = -1.;
+                                        for( long int i = 0; i < N; i++ )
+                                        {
+                                            const double coef = pm.A[ i + jj*N ];
+                                            if( coef > 0. )
+                                            {
+                                                const double icBound = pm.B[i] / coef;
+                                                if( b < 0. || icBound < b ) b = icBound;
+                                            }
+                                        }
+                                        const double seed = ( b > 0. ? b : presenceThreshold * 10. ) / nEnd;
+                                        state.x[jj] = std::min( std::max( seed, problem.xlower[jj] ), problem.xupper[jj] );
+                                    }
+                                    phSelState[(size_t)k] = 2;   // terminal - never dropped again
+                                    nReadmit++;
+                                }
+                                jbR = jeR;
+                            }
+                            if( nReadmit > 0 )
+                            {
+                                acted = true;
+                                ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
+                                                   "READMITTING {} wrongly removed phase(s) (worst: phase {}, "
+                                                   "absent but stable, logSI gap {})",
+                                                   psLoop, nReadmit, kBad, psViol );
+                            }
+                        }
+                        if( !acted )
+                            psSkipped++;
+                    }   // for psIdx - fall through to the next-worst violation
+                    if( acted && psSkipped > 0 )
+                        ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
+                                           "skipped {} unactionable violation(s) ranked ahead of the one "
+                                           "acted on (worst was phase {}, gap {})",
+                                           psLoop, psSkipped, psRanked[0].k, psRanked[0].viol );
                     if( !acted )
+                    {
+                        // Nothing in the WHOLE ranking is actionable - which is
+                        // now a measured statement about every violation found,
+                        // where before it was a statement about the first one.
+                        ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
+                                           "none of {} violation(s) is actionable ({} saturated at the "
+                                           "overflow guard); worst is phase {}, gap {} - leaving it to "
+                                           "the final check",
+                                           psLoop, (long)psRanked.size(), psCensus.clamped,
+                                           psRanked[0].k, psRanked[0].viol );
                         break;   // nothing this loop is allowed to do - let the final check report it
+                    }
 
                     Optima::Solver solverPS; // fresh instance, per the retry-ordering note above
                     solverPS.setOptions( options );

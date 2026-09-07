@@ -805,6 +805,13 @@ public:
         return dbr_dch_api::check_grid_P(CSD, P);
     }
 
+    /// Maps a node pressure onto the DATACH pressure-axis coordinate: 0 on a saturated-vapour-
+    /// pressure grid, otherwise P unchanged. Apply to any P interpolated against Pval[].
+    double grid_P( double P ) const
+    {
+        return dbr_dch_api::grid_P(CSD, P);
+    }
+
     /// Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using DATACH
     /// lookup arrays. \return -1L if interpolation is needed, or 1D index of the lookup array element
     /// if TK and P fit within the respective tolerances.
@@ -852,6 +859,33 @@ public:
     /// \param norm defines in wnich units the value is returned: false - in J/mol; true (default) - in mol/mol
     /// \return G0(P,TK) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
     double DC_G0(const long int xCH, const double P, const double TK,  bool norm=true) const;
+
+    /// The standard molar Gibbs energies the SOLVER actually minimised with -
+    /// pm.G0[], indexed over the MULTI species list - or nullptr before any run.
+    ///
+    /// THIS IS NOT DC_G0(). DC_G0() reads CSD->G0[], the DATACH lookup grid that
+    /// was exported with the project. The two are the same array's content only
+    /// when the grid is the source. On a ThermoFun project they are NOT:
+    /// load_all_thermodynamic_from_thermo() (node_copy.cpp) writes pm.G0[]
+    /// straight from ThermoEngine and never touches CSD->G0[], so DC_G0() there
+    /// returns the stale exported table while the solve used something else.
+    ///
+    /// That gap is not hypothetical and it is silent. Measured 2026-09-07c on
+    /// f_/j_CASHNK: identical DATACH G0 to eleven digits, and answers 0.14 J
+    /// apart - about a thousand times any solver-to-solver difference on the same
+    /// pair. A probe reading DC_G0() alone concluded the thermodynamic data were
+    /// identical. Use this accessor to ask what was minimised; use DC_G0() to ask
+    /// what the export shipped.
+    ///
+    /// UNITS: the internal uniform standard state (see
+    /// ConvertGj_toUniformStandardState), not J/mol. Compare it against another
+    /// run of the same project, never against DC_G0()'s J/mol.
+    const double* Get_solver_G0() const
+    { return multi_ptr()->GetPM()->G0; }
+
+    /// Species count of the array Get_solver_G0() returns (pm.L).
+    long int Get_solver_L() const
+    { return multi_ptr()->GetPM()->L; }
 
     /// Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa)
     /// from the DATACH structure.
