@@ -1754,8 +1754,54 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                   YjCleaned = Yj / exp( MjuDiff ); // also applies to a DC in a solution phase
                   if( L1k == 1 )
                   {  // Pure phase
-                      if( logSI <= -0.4343*MjuDiffCutoff && YjCleaned < AmountThreshold )
+                      // NOT APPLIED TO A COMPOSITION-LIMITED PHASE, 2026-09-08.
+                      //
+                      // Third site with the same defect shape as the insertion and the
+                      // floor below: a FIXED ABSOLUTE AMOUNT used as a TEST on a system
+                      // whose whole budget for the limiting element is under it.
+                      // AmountThreshold is 10^-|pa_PRD| - 1e-4 on 46 corpus projects,
+                      // 1e-5 on 22 - and a trace phase is permanently below either, so
+                      // the second clause carries no information and the decision rests
+                      // entirely on the first. That first clause is -0.4343*MjuDiffCutoff
+                      // = -4.343e-04 at the shipped pa_GAS, i.e. 23x TIGHTER than the
+                      // -pa_DFM = -1e-2 at which phase selection would genuinely
+                      // eliminate the phase. So a noise-level dip erases it outright.
+                      //
+                      // Measured on 07PSIna_G_iron @25 C (whole Fe inventory 3.0e-09 mol),
+                      // warm SIA leg: phase selection reads Fe3O4(cr) at logSI
+                      // -3.407403e-03 and KEEPS it (correctly - that is well inside
+                      // -pa_DFM), and this line then zeroes 4.174715e-09 mol to exactly 0.
+                      // The COLD leg of the same run reads +1.144578e-02, keeps the phase
+                      // and cleans it UP to 4.127876e-09. AOP puts it at 4.15e-09. So
+                      // every other path on that project agrees the phase is present, at
+                      // an amount they agree on to two figures, and only the warm cleanup
+                      // erases it - which is why that row returned nPh=1 against AOP's 2.
+                      //
+                      // What this branch is FOR is snapping a vanishing pure phase to an
+                      // exact zero instead of leaving a numerical crumb, and "vanishing"
+                      // is meant in absolute terms. In a system that cannot supply
+                      // AmountThreshold of the phase in the first place there is no such
+                      // absolute amount: every attainable value is "small", the test is a
+                      // tautology, and the dual-derived YjCleaned is the best estimate
+                      // available. So the test is SKIPPED when the phase's own composition
+                      // ceiling is below the threshold it would be judged against. No
+                      // tuned constant - the bound is structural, exactly as for the twin
+                      // sites (section 77.1's unbounded clamp and section 77.3's swept
+                      // safety fraction both needed one and both failed).
+                      //
+                      // A phase the system CAN supply AmountThreshold of keeps the
+                      // original behaviour untouched. L1k == 1 here, so j == jb.
+                      const double clnCap = PhaseInsertionCeiling( j );
+                      const bool compLimited = ( clnCap >= 0. && clnCap < AmountThreshold );
+                      if( logSI <= -0.4343*MjuDiffCutoff && YjCleaned < AmountThreshold
+                          && !compLimited )
                           YjCleaned = 0.;
+                      else if( compLimited && logSI <= -0.4343*MjuDiffCutoff
+                               && YjCleaned < AmountThreshold )
+                          native_trace_decide( "cleanupzero skipped phase=%s logSI=%.6e"
+                                               " amount=%.6e cap=%.6e threshold=%.6e",
+                                               char_array_to_string( pm.SF[k], MAXPHNAME+MAXSYMB ).c_str(),
+                                               logSI, YjCleaned, clnCap, AmountThreshold );
                       if( logSI >= pa_p->DF && YjCleaned < pm.DFYsM )
                       {   // over-stable phase in too small amount - insertion and next IPM loop (experimental)
                           //
