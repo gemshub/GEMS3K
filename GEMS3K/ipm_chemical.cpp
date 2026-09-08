@@ -1758,9 +1758,51 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                           YjCleaned = 0.;
                       if( logSI >= pa_p->DF && YjCleaned < pm.DFYsM )
                       {   // over-stable phase in too small amount - insertion and next IPM loop (experimental)
-                          YjCleaned = pm.DFYsM;
-                          kfr = k;
-                          MassBalanceViolation = true;
+                          //
+                          // NOT APPLIED TO A COMPOSITION-LIMITED PHASE, 2026-09-07.
+                          //
+                          // This floor is the TWIN of the budget-sized insertion in
+                          // PhaseSelect() above, and until now shared its defect: a fixed
+                          // pm.DFYsM that never looks at what the bulk composition can supply.
+                          // Bounding the INSERTION alone is not enough - the two undo each
+                          // other inside one solve. Measured on 07PSIna_G_iron @25 C, whose
+                          // entire Fe inventory is 3.0e-09 mol:
+                          //
+                          //   PhaseSelect() inserts Fe3O4(cr) at its 6.00e-09 ceiling (all of
+                          //   the Fe, in the rescaled frame); MBR cannot absorb that, the
+                          //   solve cold-restarts and lands Fe3O4 at 4.02e-09 - essentially
+                          //   the converged value, AOP puts it at 4.15e-09. THIS line then
+                          //   rewrote it to 1e-6, i.e. 333x the whole Fe budget.
+                          //
+                          // Merely CLAMPING the floor to the ceiling does not fix it, and the
+                          // reason is worth keeping: the "is it too small?" TEST uses the same
+                          // fixed pm.DFYsM as the value did. A composition-limited phase is
+                          // permanently below 1e-6, so the test is always true and the floor
+                          // fires on every pass - kicking a phase already at 67% of its own
+                          // ceiling up to 100% of it, until a pass reads it marginally
+                          // undersaturated (logSI -4.6e-03) and the zeroing branch above
+                          // erases it. Measured: the clamped version still loses the phase and
+                          // still returns FAIL. Nor is a one-shot flag the answer - the cold
+                          // restart re-enters GEM_IPM() and clears it.
+                          //
+                          // So the floor is SKIPPED for a composition-limited phase, with no
+                          // tuned constant anywhere. What the floor is for is keeping a
+                          // present phase above a negligible ABSOLUTE amount; in a system
+                          // whose whole budget for the limiting element is under pa_DFYs there
+                          // is no such amount, every attainable value is "small", and the
+                          // dual-derived YjCleaned is the best estimate available. Rescuing a
+                          // LOST trace phase is the insertion branch's job, not this one's;
+                          // this branch was only ever undoing it. A MAJOR phase, whose ceiling
+                          // is at or above pm.DFYsM, keeps the original behaviour untouched.
+                          //
+                          // L1k == 1 here, so j == jb and the pure-phase ceiling applies.
+                          const double clnCap = PhaseInsertionCeiling( j );
+                          if( !( clnCap >= 0. && clnCap < pm.DFYsM ) )
+                          {
+                              YjCleaned = pm.DFYsM;
+                              kfr = k;
+                              MassBalanceViolation = true;
+                          }
                       }
                   }
                }
