@@ -179,7 +179,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaDcFloor", 0 , 0, 0, "# pa_OptimaDcFloor: lower bound on species amounts in the Optima path; 0 = derive it from pa_DHB as before { 0 }" },
     { "pa_MbClassRule", 0 , 0, 0, "# pa_MbClassRule: per-IC-class mass-balance rule (Kulik 2013 App.2.2): trace/major ratio threshold; 0 = OFF, existing rule unchanged { 0 }" },
     { "pa_MbTrendPhaseDecay", 0 , 0, 0, "# pa_MbTrendPhaseDecay: trend-based vanishing-phase detection (Leal 2014 s2.3.3): consecutive-decrease count; 0 = OFF { 0 }" },
-    { "pa_OptimaEarlyStabilityAt", 0 , 0, 0, "# pa_OptimaEarlyStabilityAt: iteration cap on the FIRST Optima attempt so the phase-selection repair runs early; 0 = OFF { 0 }" },
+    { "pa_OptimaEarlyStabilityAt", 0 , 0, 0, "# pa_OptimaEarlyStabilityAt: end the FIRST Optima attempt early so the phase-selection repair runs before it, once the dual has settled; >0 = at that iteration, <0 = after -N consecutive falls of a phase; 0 = OFF { 0 }" },
     { "pa_OptimaDimReduce", 0 , 0, 0, "# pa_OptimaDimReduce: species-level dimension reduction for the Optima path; >0 = max readmission passes, 0 = AUTO (on at/above 200 species), <0 = OFF { 0 }" },
     { "pa_OptimaDimReduceTol", 0 , 0, 0, "# pa_OptimaDimReduceTol: RT-unit threshold on the LP-Gibbs-priced reduced gradient for pa_OptimaDimReduce's initial active set { 10 }" },
     { "pa_MbPivotSplit", 0 , 0, 0, "# pa_MbPivotSplit: native MBR pivot/non-pivot split of the Schur-complement reduction (Leal et al. 2017 Appendix A); 0 = off { 0 }" },

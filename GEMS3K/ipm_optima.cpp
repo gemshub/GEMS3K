@@ -2922,15 +2922,21 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // into a converged result, never make a converging system diverge,
             // so it needs no opt-in flag.
             options.maxiters = (unsigned)std::max( 2000L, (long int)pa_p->IIM );
-            // pa_OptimaEarlyStabilityAt: cap the FIRST attempt only, so the
-            // phase-selection repair loop below gets its turn before the primary
-            // solve has converged on an assemblage it will then have to correct.
-            // Restored to the full budget immediately after that first solve, so
-            // every retry keeps the budget it had. See the field's comment in
-            // ms_multi.h for the measurement that motivates it.
-            if( pa_p->OptimaEarlyStabilityAt > 0 )
-                options.maxiters = (unsigned)std::min( (long int)options.maxiters,
-                                                       pa_p->OptimaEarlyStabilityAt );
+            // pa_OptimaEarlyStabilityAt's POSITIVE (cap) form is deliberately
+            // NOT a maxiters clamp any more (2026-09-09, plan v5 section 102).
+            // It was one until then, and that is precisely what made it
+            // ungateable: a budget cannot be conditional. The solver runs out of
+            // iterations inside its own stepping() loop, so the capped form never
+            // entered the convergence hook and could not consult the dual-settled
+            // test that the NEGATIVE (trend) form has had since section 87 - the
+            // one thing that tells a trustworthy early stability verdict from a
+            // premature one.
+            //
+            // The cap is now enforced in that same hook ("stop once iteration >=
+            // N AND the dual has settled"), so both forms of this field are one
+            // rule evaluated in one place. maxiters therefore stays at the full
+            // budget here, and there is nothing to restore after the first
+            // attempt - arming is what scopes the cap to it now.
             options.convergence.tolerance = pa_p->OptimaTol;
             // Trust region on per-variable Newton-step growth - a field this
             // branch added to its local Optima checkout. Default 0.0 = off;
@@ -3151,6 +3157,62 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const double kEarlyTrendMinRate = 1e-4;
         auto earlyTrend      = std::make_shared<bool>( false );
         auto earlyTrendArmed = std::make_shared<bool>( earlyTrendN > 0 );
+        // THE POSITIVE (cap) FORM, evaluated in the same hook and gated on the
+        // same dual-settled test (plan v5 section 102). "Stop the first attempt
+        // once iteration >= N, PROVIDED the dual has settled" - not "give the
+        // first attempt N iterations of budget", which is what it was until
+        // 2026-09-09 and why it could not be gated at all.
+        //
+        // WHY THE GATE BELONGS ON THIS FORM TOO, and it is the same argument
+        // section 87 makes for the trend form: the early look's verdict is a
+        // stability index computed FROM the dual, so it is worth exactly what the
+        // dual is worth. Measured 2026-09-09 on the one row the cap form loses,
+        // gems3k-fail/CSHSnplus_G_CSH1_5_bufs AOP, with the cap armed so every
+        // sample is necessarily from an evaluation <= 200:
+        //
+        //   consecutive falls surveyed   1        5        20
+        //   smallest max|dw|/max|w|      1.45e-01 5.25e-02 1.18e-03
+        //
+        // The smallest dual movement anywhere inside the capped window is 1.18e-03
+        // against a 1e-8 threshold - five orders above it - and at the earliest
+        // sample the dual is still moving by 100 % of its own magnitude. So the
+        // gate blocks here by a wide margin rather than a close one.
+        //
+        // What that costs the row when it is NOT gated, measured the same day and
+        // correcting a claim made confidently before it: the cap's loss on
+        // CSHSnplus is NOT a budget shortfall that the safety net below should
+        // have absorbed. The net fires, the full-budget re-solve converges in 727
+        // iterations, and the row still fails - on the ASSEMBLAGE. At iteration
+        // 200 the early look sees CASH+Sn at a logSI gap of 0.044 and deactivates
+        // it (DECIDE phasesel loop=0 deactivate=2 logsigap=4.378700e-02); the
+        // converged state contradicts that by two orders of magnitude (9.01) and
+        // the phase is reported "absent but stable - should be present". G lands
+        // 0.79 J high. A wrong decision on noise, not a truncated solve.
+        //
+        // The threshold is pa_OptimaTol for the same reason as the trend form's -
+        // it says the dual has stopped moving at the scale the solve is trying to
+        // converge to - and the two forms share kEarlyTrendDualSettled rather than
+        // each carrying their own constant, because they are one rule.
+        const long int earlyCapN = pa_p->OptimaEarlyStabilityAt > 0
+                                 ? pa_p->OptimaEarlyStabilityAt : 0;
+        auto earlyCap      = std::make_shared<bool>( false );
+        // Armed IMMEDIATELY BEFORE the primary solve, not here, and that is not
+        // cosmetic. `options` carries this hook, and every solve() before the
+        // primary one copies `options`: the phase-compaction probe and the
+        // cheap-Hessian attempt both do. A cap firing inside either would set the
+        // flag, and the fold-back after the primary solve would then mark THAT
+        // solve failed however well it went - the exact silent failure the trend
+        // form's own guard around the cheap attempt was added for
+        // (j_10TH_G_seawater, OK 229 -> ERR 1226). Arming late makes the cap
+        // unreachable from any earlier solve by construction rather than by
+        // remembering to disarm at each one, and it reproduces the old maxiters
+        // clamp's scope exactly: both of those probes overrode maxiters, so the
+        // clamp never applied to them either.
+        auto earlyCapArmed = std::make_shared<bool>( false );
+        // The dual movement at the moment either form fired, for the DECIDE
+        // record after the primary solve - the trace is what makes this decision
+        // recoverable from the data rather than asserted (GEMS3K/CLAUDE.md s4).
+        auto earlyStopDwRel = std::make_shared<double>( -1. );
         // GEMS3K_EARLYTREND_PROBE=<path>: one line the FIRST time each phase
         // satisfies the trend trigger's own count-and-drop clause, WHETHER OR
         // NOT the field is armed and whether or not the dual gate would let it
@@ -3192,14 +3254,36 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 j0aq += pm.L1[k];
             }
         }
-        if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. || earlyTrendN > 0 )
+        if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. || earlyTrendN > 0
+            || earlyCapN > 0 )
             options.convergence.check =
                 [stallWatch, earlyTrendN, kEarlyTrendDropRatio, kEarlyTrendDualSettled,
                  kEarlyTrendMinRate,
                  earlyTrend, earlyTrendArmed, earlyTrendProbeN, earlyTrendSeen,
+                 earlyCapN, earlyCap, earlyCapArmed, earlyStopDwRel,
                  aqPhaseIdxTrend, phDec, phMax, phLast]
                 ( Optima::ConvergenceCheckArgs const& args ) -> bool
                 {
+                    // The dual's own relative movement over the last step -
+                    // max|dw|/max|w| on u = (x, p, w). Optima's convergence hook
+                    // receives BOTH iterates, so this is free and needs no new
+                    // plumbing. Defined once and used by all three consumers (the
+                    // probe below, the trend trigger, the cap): the whole argument
+                    // for gating the cap on section 87's measurements only holds
+                    // if the cap gates on the SAME quantity those measurements
+                    // were taken of, and one definition is how that stays true.
+                    auto dualRelMove = [&args]() -> double
+                    {
+                        double dwAbs = 0., wAbs = 0.;
+                        for( long int iw = 0; iw < (long int)args.u.w.size(); iw++ )
+                        {
+                            const double d = std::fabs( args.u.w[iw] - args.uo.w[iw] );
+                            if( d > dwAbs ) dwAbs = d;
+                            const double a = std::fabs( args.u.w[iw] );
+                            if( a > wAbs ) wAbs = a;
+                        }
+                        return ( wAbs > 0. ? dwAbs / wAbs : 0. );
+                    };
                     // The probe (above): record what the trigger WOULD see, once
                     // per phase, independently of arming and of the gate.
                     if( earlyTrendDbg != nullptr )
@@ -3211,21 +3295,14 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                 && (*phLast)[k] < (*phMax)[k] * kEarlyTrendDropRatio )
                             {
                                 (*earlyTrendSeen)[k] = 1;
-                                double dwA = 0., wA = 0.;
-                                for( long int iw = 0; iw < (long int)args.u.w.size(); iw++ )
-                                {
-                                    const double d = std::fabs( args.u.w[iw] - args.uo.w[iw] );
-                                    if( d > dwA ) dwA = d;
-                                    const double a = std::fabs( args.u.w[iw] );
-                                    if( a > wA ) wA = a;
-                                }
+                                const double dwRelProbe = dualRelMove();
                                 const double frac = (*phLast)[k] / (*phMax)[k];
                                 fprintf( earlyTrendDbg,
                                          "TREND k=%ld falls=%ld last=%.6e peak=%.6e frac=%.6e "
                                          "rate=%.6e dwRel=%.6e aq=%d armed=%d\n",
                                          (long)k, (*phDec)[k], (*phLast)[k], (*phMax)[k], frac,
                                          ( 1. - frac ) / (double)(*phDec)[k],
-                                         ( wA > 0. ? dwA / wA : 0. ),
+                                         dwRelProbe,
                                          (int)( (long int)k == aqPhaseIdxTrend ),
                                          (int)( earlyTrendN > 0 ) );
                                 fflush( earlyTrendDbg );
@@ -3238,15 +3315,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         // index to be worth acting on? If not, do not fire - the phase
                         // is still decaying, so the trigger will be re-tested next
                         // evaluation and fires as soon as the dual does settle.
-                        double dwAbs = 0., wAbs = 0.;
-                        for( long int iw = 0; iw < (long int)args.u.w.size(); iw++ )
-                        {
-                            const double d = std::fabs( args.u.w[iw] - args.uo.w[iw] );
-                            if( d > dwAbs ) dwAbs = d;
-                            const double a = std::fabs( args.u.w[iw] );
-                            if( a > wAbs ) wAbs = a;
-                        }
-                        const double dwRel = ( wAbs > 0. ? dwAbs / wAbs : 0. );
+                        const double dwRel = dualRelMove();
                         if( dwRel <= kEarlyTrendDualSettled )
                         for( size_t k = 0; k < phDec->size(); ++k )
                             if( (long int)k != aqPhaseIdxTrend
@@ -3258,6 +3327,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                        / (double)(*phDec)[k] >= kEarlyTrendMinRate )
                             {
                                 *earlyTrend = true;
+                                *earlyStopDwRel = dwRel;
                                 ipm_logger->info( "CalculateEquilibriumStateOptima: phase {} has "
                                                   "fallen for {} consecutive evaluations to {:.3e} "
                                                   "from a peak of {:.3e} - ending the first attempt "
@@ -3272,6 +3342,78 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                 break;
                             }
                         if( *earlyTrend ) return true;   // folded back to a failure below
+                    }
+                    // THE CAP FORM (pa_OptimaEarlyStabilityAt > 0), same fold-back
+                    // and same safety net. Two conditions, and the second is the
+                    // whole point of moving this rule in here: the first attempt
+                    // has reached iteration N, AND the dual has settled, so the
+                    // stability index the repair loop is about to compute from it
+                    // is worth acting on.
+                    //
+                    // args.result.iterations is the solver's own count and is
+                    // current at this point - Optima checks convergence before its
+                    // budget test (MasterSolver::stepping), so the hook sees every
+                    // iteration.
+                    //
+                    // ONE SHOT, AT N - the gate is asked once and the cap is then
+                    // disarmed whatever it answered. NOT "wait at N until the dual
+                    // settles", which is what this was first built as on
+                    // 2026-09-09 and which MEASURES WORSE THAN DOING NOTHING:
+                    //
+                    //   f_Solvus_G_Test1 AOP   baseline 823   deferred 1530
+                    //   CSHSnplus        AOP   baseline 1298  deferred 2119
+                    //
+                    // The reason is structural rather than particular to those two,
+                    // which is why it decides the shape here. On a CONVERGING run
+                    // the dual settles when the run is nearly over - f_Solvus's
+                    // settles at iteration 707 of 823, at 9.65e-09 against the 1e-08
+                    // threshold - so a look deferred until then is not an early look
+                    // at all, and the probe it spends is very nearly a whole solve.
+                    // Deferring converts the cap's honest, bounded cost ("waste N
+                    // iterations") into an unbounded one ("waste however long
+                    // convergence takes"), and it does so on exactly the ordinary
+                    // well-behaved runs that have nothing to repair.
+                    //
+                    // Asking once at N keeps the bound: the look happens where the
+                    // dual is ALREADY settled at N - a warm leg, or a run whose dual
+                    // is determined early, which is precisely j_CASHNK HOP's 2.97e-15
+                    // and where the cap's wins live - and otherwise the call is left
+                    // alone at its baseline cost and baseline answer. Both of the
+                    // rows above return to their baselines exactly.
+                    //
+                    // The latch is a `>=` test that disarms rather than an `==` one
+                    // so that a hook the solver happens not to call at exactly
+                    // iteration N cannot silently turn the field off.
+                    if( *earlyCapArmed
+                        && (long int)args.result.iterations >= earlyCapN )
+                    {
+                        *earlyCapArmed = false;   // asked and answered, either way
+                        const double dwRelCap = dualRelMove();
+                        // Recorded whichever way the gate answers, so the DECIDE
+                        // record after the primary solve can report a BLOCKED cap
+                        // as well as a fired one. A gate that declines is the
+                        // interesting half of this mechanism and is otherwise
+                        // invisible from outside.
+                        *earlyStopDwRel = dwRelCap;
+                        if( dwRelCap <= kEarlyTrendDualSettled )
+                        {
+                            *earlyCap = true;
+                            ipm_logger->info( "CalculateEquilibriumStateOptima: reached iteration {} "
+                                              "with the dual settled - ending the first attempt so "
+                                              "the phase-selection loop can look "
+                                              "(pa_OptimaEarlyStabilityAt = {}; max|dw|/max|w| = "
+                                              "{:.3e} <= {:.3e})",
+                                              (long)args.result.iterations, earlyCapN,
+                                              dwRelCap, kEarlyTrendDualSettled );
+                            return true;   // folded back to a failure below
+                        }
+                        ipm_logger->info( "CalculateEquilibriumStateOptima: reached iteration {} but "
+                                          "the dual is still moving (max|dw|/max|w| = {:.3e} > "
+                                          "{:.3e}) - NOT ending the first attempt; a stability "
+                                          "verdict taken here would be read off noise "
+                                          "(pa_OptimaEarlyStabilityAt = {})",
+                                          (long)args.result.iterations, dwRelCap,
+                                          kEarlyTrendDualSettled, earlyCapN );
                     }
                     // Two signals, and BOTH must stagnate. Each alone gives a
                     // false stall on a project that genuinely converges:
@@ -3632,6 +3774,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         std::vector<char> extinctFixed( (size_t)std::max(L,1L), 0 );
         stallWatch->reset();
         Optima::Sensitivity sensitivity( dims );
+        // Arm the cap here and nowhere earlier - see earlyCapArmed's declaration
+        // for why late arming is what scopes it to the first attempt.
+        *earlyCapArmed = ( earlyCapN > 0 );
         Optima::Result result = wantSens ? solver.solve( problem, state, sensitivity )
                                          : solver.solve( problem, state );
         // Returning true from convergence.check means "stop", and Optima reports
@@ -3640,27 +3785,87 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // wrong is silent: earlyCapHit below tests !result.succeeded, so folding
         // it later (in applyStall, where the stall watch does its own fold)
         // leaves the flag false and the safety net never fires.
-        if( *earlyTrend ) result.succeeded = false;
+        if( *earlyTrend || *earlyCap ) result.succeeded = false;
         // Did pa_OptimaEarlyStabilityAt - rather than the problem itself - stop
-        // the first attempt? Recorded here, before the budget is restored, and
-        // consumed by the early-probe safety net further down. Covers both
-        // rules: the positive form's iteration cap, and the negative form's
-        // phase-decay trend trigger.
-        const bool earlyCapHit = !result.succeeded
-                              && ( ( pa_p->OptimaEarlyStabilityAt > 0
-                                     && (long int)result.iterations
-                                            >= pa_p->OptimaEarlyStabilityAt )
-                                   || *earlyTrend );
-        // Disarm for every retry: the trigger exists to give the repair loop an
-        // early look ONCE. Left armed, a phase that keeps dissolving would end
-        // every attempt in turn and the run could never finish.
+        // the first attempt? Consumed by the early-probe safety net further down.
+        // Covers both rules: the positive form's iteration cap and the negative
+        // form's phase-decay trend trigger, each of which now sets its own flag in
+        // the convergence hook. The cap arm used to be inferred instead, from
+        // "the solve failed AND it ran at least N iterations" - which was the only
+        // thing available while the cap was a maxiters budget, and which could not
+        // distinguish the cap stopping the attempt from the attempt exhausting a
+        // budget that happened to be larger.
+        const bool earlyCapHit = !result.succeeded && ( *earlyCap || *earlyTrend );
+        // DID THE PROBLEM FAIL, or did WE stop the attempt? Every failure-only
+        // retry tier below is gated on `!result.succeeded`, and the fold-back above
+        // makes that true even though the solve was progressing perfectly well -
+        // so without this distinction the early stop hands a deliberately truncated
+        // state to repair machinery whose entire premise is that the solve failed.
+        //
+        // MEASURED, and it is what made the 2026-09-09 default flip red where the
+        // freeze could not see it (`solvus.aop` 7 of 61 points lost, plus
+        // `solvus.stallwatch`'s control). At 588 C on the solvus sweep the cap fires
+        // at iteration 200 with the dual settled to 1.476e-15 - a textbook correct
+        // early look - and then:
+        //
+        //   reached iteration 200 with the dual settled ... (max|dw|/max|w| = 1.476e-15)
+        //   phase-extinction retry - fixing 3 species of a vanishing interchangeable phase
+        //   pNP=0 succeeded=true iterations=3            <- and the point is LOST
+        //
+        // The phase-extinction tier is built for a genuinely stalled twin-phase
+        // system, where a redundant phase is heading for extinction and the solver
+        // has given up. Handed a state stopped at 200, it reads a phase that is
+        // merely still SHRINKING as vanishing, pins three species at the floor, and
+        // "converges" in 3 iterations to an answer the stability check rejects.
+        // Worse, it sets result.succeeded = true, so pa_OptimaEarlyStabilityAt's own
+        // safety net - the one thing that could have restored the answer - is
+        // skipped. A false failure propagating into a tier that then reports a false
+        // success is precisely how a lost answer gets past every net.
+        //
+        // So when WE stopped the attempt, only the phase-selection repair loop may
+        // act: it is the tier this field exists to reach, it is not gated on
+        // `!result.succeeded` (it runs on every call), and its own verdict is
+        // recomputed from the current state rather than assuming a failure. If it
+        // finds nothing, the net re-solves at the full budget exactly as designed.
+        //
+        // A LAMBDA AND NOT A bool, and that distinction is not stylistic: `result` is
+        // REASSIGNED by every retry tier as the ladder proceeds, so each
+        // `!result.succeeded` test below is deliberately a question about the state
+        // reached by the tiers ABOVE it, not about the primary solve. Snapshotting
+        // this into a bool here was tried first and silently changed behaviour at the
+        // SHIPPED default, where the whole mechanism is supposed to be unreachable:
+        // j_CASHNK went AOP OK 1001 -> FAIL and HOP OK 4586 -> FAIL with
+        // pa_OptimaEarlyStabilityAt = 0, because a tier that an earlier retry had
+        // already fixed still saw "failed" and ran anyway. earlyCapHit IS a snapshot,
+        // correctly - it is a statement about how the primary attempt ended and
+        // nothing below changes that.
+        auto genuineFailure = [&]() -> bool { return !result.succeeded && !earlyCapHit; };
+        // Disarm both for every retry: the trigger exists to give the repair loop
+        // an early look ONCE. Left armed, a phase that keeps dissolving - or a
+        // dual that stays settled past N - would end every attempt in turn and the
+        // run could never finish.
         *earlyTrendArmed = false;
-        if( pa_p->OptimaEarlyStabilityAt > 0 )
-        {
-            // First attempt is over - give everything downstream the real budget.
-            options.maxiters = (unsigned)std::max( 2000L, (long int)pa_p->IIM );
-            solver.setOptions( options );
-        }
+        *earlyCapArmed   = false;
+        // A DECIDE record for the trace, so which form fired, when, and on what
+        // dual movement is recoverable from the data rather than from the log
+        // (GEMS3K/CLAUDE.md s4: the trace is mode-attributed by position, the log
+        // is not). Emitted for the cap and the trend alike, and only when one of
+        // them actually acted - it is a decision that changes both the answer and
+        // the cost, which is the bar for a DECIDE site.
+        if( earlyCapHit )
+            native_trace_decide( "earlystop form=%s fired=1 at=%ld dwrel=%.6e",
+                                 ( *earlyCap ? "cap" : "trend" ),
+                                 (long int)result.iterations, *earlyStopDwRel );
+        else if( earlyCapN > 0 && *earlyStopDwRel >= 0. )
+            // The cap reached N and the dual gate refused - the case that keeps
+            // f_Solvus and CSHSnplus at their baselines. Traced because "the
+            // mechanism did not fire" and "the mechanism was never reached" are
+            // otherwise the same observable, and they are not the same thing.
+            native_trace_decide( "earlystop form=cap fired=0 at=%ld dwrel=%.6e",
+                                 earlyCapN, *earlyStopDwRel );
+        // NOTE: no maxiters restore here any more. The cap stopped being a budget
+        // clamp on 2026-09-09 (see its arming site above), so `options` has
+        // carried the full budget all along and every retry below already has it.
         if( wantSens )
         {
             // Captured from the PRIMARY solve only. A retry re-solves a
@@ -3825,12 +4030,18 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 return false;
             };
 
-            if( !result.succeeded )
+            if( genuineFailure() )
                 tryToggleRetry();
             // Matches the exact condition validated across the full
             // 25-project sweep: trigger on EITHER `!result.succeeded` OR
             // the trap signature (not the trap signature alone).
-            if( !result.succeeded || solventTrapped() )
+            // The trap-signature arm keeps running after an early stop: unlike the
+            // tiers gated on failure alone it is a POSITIVE observation about the
+            // state in hand (the solvent collapsed), not an inference from "the
+            // solve failed", so a truncated trajectory does not make it a false
+            // positive - and a collapsed solvent at iteration N is real whatever
+            // stopped the attempt.
+            if( genuineFailure() || solventTrapped() )
                 tryWaterRetry();
 
             // Generalization added 2026-08-24 (GEMS3K's CLAUDE.md, "Why a
@@ -4069,7 +4280,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // that genuinely should be present, that check reports "absent but
             // stable - should be present" and the result is rejected rather
             // than silently returned.
-            if( !result.succeeded )
+            //
+            // This tier RUNS after an early stop - unlike the toggle and water tiers,
+            // which do not (see genuineFailure's declaration) - but its twin test
+            // gains a clause when it does. See kTwinStillFalling below.
+            if( genuineFailure() || earlyCapHit )
             {
                 // Detection is deliberately STRUCTURAL, not a magnitude
                 // threshold, because both obvious magnitude-based detectors
@@ -4171,6 +4386,57 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         if( kb == ka || kb == aqueousPhaseIdx || pm.L1[kb] <= 1 ) continue;
                         if( phTot[(size_t)kb] <= phTot[(size_t)ka] * kTwinRatio ) continue;
                         if( !interchangeable( ka, kb ) ) continue;
+                        // THE "STILL FALLING" CLAUSE - the second half of the test
+                        // this tier's own comment above states and the code never
+                        // made ("a redundant twin is orders of magnitude down AND
+                        // STILL FALLING"). The ratio clause is the first half; until
+                        // 2026-09-09 it was the whole test, and that was sound only
+                        // because of the invariant the same comment relies on -
+                        // "Solvus never reaches this code in any case, since the tier
+                        // is gated on the solve having failed".
+                        //
+                        // pa_OptimaEarlyStabilityAt BREAKS that invariant: its
+                        // fold-back makes a perfectly healthy attempt look failed, so
+                        // a converging Solvus point does reach here, and the ratio -
+                        // a magnitude judgement on a deliberately truncated state -
+                        // is then read at a moment when it means nothing.
+                        //
+                        // MEASURED on the three cases that exercise this, all at a
+                        // cap of 200, printing the twin's own counters at the instant
+                        // the tier chose to act:
+                        //
+                        //   case                 total     peak      ratio     falls
+                        //   j_CASHNK AOP  RIGHT  4.27e-12  2.832     5.18e+11  70
+                        //   j_CASHNK HOP  wrong  3.50e-04  3.50e-04  6.32e+03   0
+                        //   Solvus 588 C  WRONG  2.74e-10  4.544e+01 1.59e+11   0
+                        //
+                        // The RATIO does not separate them - Solvus's 1.59e+11 is
+                        // within a factor of 3 of the right case's 5.18e+11, both
+                        // enormous. The consecutive-fall count separates them
+                        // completely: 70 against 0 and 0. Solvus's twin HAS collapsed
+                        // from a peak of 45.4, so "it has not grown yet" is NOT the
+                        // story - it is REBOUNDING at iteration 200, the two limbs
+                        // still sorting themselves out, which is exactly the "genuine
+                        // two-limb split" the comment above says this tier must never
+                        // break. j_CASHNK's redundant twin has fallen monotonically
+                        // for 70 straight evaluations and is not coming back.
+                        //
+                        // No threshold is needed at a 70-versus-0 separation, so the
+                        // clause is the minimal one - "it went down last evaluation" -
+                        // and carries no tuned constant. It is applied ONLY on the
+                        // early-stop path: on a genuine failure the state is the
+                        // solver's own final word and the ratio means what it always
+                        // meant, so that path is left exactly as it was.
+                        if( earlyCapHit && (*phDec)[(size_t)ka] <= 0 )
+                        {
+                            ipm_logger->info( "CalculateEquilibriumStateOptima: phase {} looks like a "
+                                              "vanishing twin of {} (total {:.3e} against {:.3e}) but "
+                                              "is NOT falling - declining to deactivate it on a state "
+                                              "the early-stability probe truncated (peak {:.3e})",
+                                              ka, kb, phTot[(size_t)ka], phTot[(size_t)kb],
+                                              (*phMax)[(size_t)ka] );
+                            continue;
+                        }
                         for( long int j = ph0[(size_t)ka]; j < ph1[(size_t)ka]; j++ )
                             deactivated.push_back( j );
                         break;
@@ -4545,7 +4811,19 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             ipm_logger->info( "CalculateEquilibriumStateOptima: the pa_OptimaEarlyStabilityAt probe"
                                " found nothing to repair - re-solving once at the full budget" );
             Optima::Solver solverEP;     // fresh instance, per the retry-ordering note above
-            solverEP.setOptions( options );   // already restored to the real maxiters
+            solverEP.setOptions( options );   // the full budget; the cap is disarmed by now
+            // NOT disarmed, unlike the stall net's own re-solve above - tried on
+            // 2026-09-09 and REVERTED the same hour, on a misreading worth recording
+            // because the instrument invites it. Instrumenting this re-solve on
+            // j_CASHNK HOP printed `it=4500 ok=1 stalled=1`, which reads as "it
+            // converged and we threw the answer away". It is not: returning true from
+            // convergence.check means STOP, and Optima reports a hook-stop as SUCCESS
+            // (see the fold-back note at the primary solve). So ok=1 meant the watch
+            // stopped it, the existing fold was right, and the answer was never in
+            // hand. Disarming and re-measuring settled it - the re-solve then runs
+            // 10200 iterations and still does not converge, twice the cost for the
+            // same FAIL. `succeeded` on a solve carrying a convergence hook is not a
+            // statement about convergence unless the hook is known not to have fired.
             stallWatch->reset();
             Optima::State  epState  = initialState;
             Optima::Result epResult = solverEP.solve( problem, epState );

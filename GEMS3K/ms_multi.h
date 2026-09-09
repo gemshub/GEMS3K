@@ -798,6 +798,63 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// still at 14% of its peak when the look should happen, so any 10x clause
     /// makes the "early" look not early. The separation is 14% / 91% / 99.91%,
     /// which is a tuned constant with ~2x margin, not the 11 orders above.
+    ///
+    /// 2026-09-09 - BOTH FORMS FLIPPED CORPUS-WIDE AND SCORED (plan v5 section
+    /// 101), 412 rows x 3 corpora x 6 modes each against the frozen standard.
+    /// Both exit 1, AND THEY FAIL ON OPPOSITE ROWS - each form fixes exactly the
+    /// row the other breaks:
+    ///
+    ///   row                baseline      cap = 200      trend = -50
+    ///   CSHSnplus  AOP     OK 1298       FAIL           OK 2119
+    ///   j_CASHNK   HOP     OK 4586       OK 293         FAIL 5810
+    ///
+    /// Cost: cap 0.884x overall (SHP 0.610x), trend 1.061x (SHP +29.6 %). Native
+    /// and SIA are untouched by either, so this field cannot affect the
+    /// native-only beta. Note the cap form REMOVES the j_CASHNK HOP regression
+    /// that had kept the trend form unflipped for a month - so that blocker was
+    /// the TRIGGER's, not the field's.
+    ///
+    /// 2026-09-09 - THE CAP FORM IS NOW GATED ON THE DUAL TOO, and is no longer a
+    /// maxiters budget at all (plan v5 section 102; ipm_optima.cpp, alongside the
+    /// trend form's kEarlyTrendDualSettled). The two forms had asymmetric gates
+    /// for a structural reason and not a deliberate one: a budget is spent inside
+    /// Optima's own stepping loop, so the capped attempt never entered the
+    /// convergence hook where both iterates of u = (x, p, w) - and hence the
+    /// dual's movement - are available. A budget cannot be conditional. The cap
+    /// is therefore evaluated in that hook now, ONCE, at iteration N: "if the dual
+    /// has settled (max|dw|/max|w| <= pa_OptimaTol) end the first attempt here;
+    /// otherwise leave this call alone". N stops being a budget and becomes the
+    /// single point at which the early look is offered.
+    ///
+    /// ASKED ONCE, NOT WAITED FOR - and that is a measured decision, not a
+    /// simplification. The first version deferred instead ("stop at the first
+    /// iteration >= N with the dual settled") and MEASURED WORSE THAN DOING
+    /// NOTHING: f_Solvus_G_Test1 AOP 823 -> 1530, CSHSnplus AOP 1298 -> 2119.
+    /// The reason is structural. On a converging run the dual settles when the run
+    /// is nearly over - f_Solvus's settles at iteration 707 of 823 - so a deferred
+    /// look is not early, and the probe it spends is very nearly a whole solve.
+    /// Deferring turns the cap's honest bounded cost ("waste N iterations") into
+    /// an unbounded one, on exactly the ordinary runs that have nothing to repair.
+    /// Asking once at N keeps the bound: the look happens where the dual is
+    /// ALREADY settled at N - a warm leg, or a run whose dual is determined early,
+    /// which is where every one of the cap's wins lives - and both rows above
+    /// return to their baselines exactly.
+    ///
+    /// Measured with the cap armed, so every sample is from an evaluation <= 200:
+    /// the smallest dual movement anywhere inside CSHSnplus's capped window is
+    /// 1.18e-03 against the 1e-8 threshold - five orders above it - and at the
+    /// earliest sample the dual is moving by 100 % of its own magnitude. The gate
+    /// blocks there by a wide margin, not a close one. On j_CASHNK it is 2.97e-15,
+    /// twelve orders below, so the gate is a no-op and the HOP win is untouched.
+    ///
+    /// Also corrected the same day, against what section 101.4 and the -08d
+    /// handoff both asserted: the cap's loss on CSHSnplus is NOT a budget
+    /// shortfall the safety net should have absorbed. The net fires, the
+    /// full-budget re-solve converges in 727 iterations, and the row still fails
+    /// on the ASSEMBLAGE - the early look deactivated CASH+Sn on a logSI gap of
+    /// 0.044 that the converged state contradicts by two orders (9.01). It is a
+    /// wrong decision taken on noise, which is exactly what a dual gate is for and
+    /// exactly what a bigger budget is not.
     long int OptimaEarlyStabilityAt = 0;
 
     /// Species-level dimension reduction for the Optima path (AOP/SOP only).
