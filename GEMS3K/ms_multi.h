@@ -2010,6 +2010,23 @@ public:
     std::vector<double> optima_dndb;
     long int optima_dndb_rows = 0, optima_dndb_cols = 0;
 
+#endif   // USE_OPTIMA_SOLVER
+    // ---- NATIVE-PATH MEMBER, deliberately outside the Optima block ----------
+    // It was inside it until 2026-09-08, pasted in the middle of
+    // CalculateEquilibriumStateOptima()'s own doc comment (which resumes right
+    // after this declaration - "// solve; with none registered ..."), which is
+    // how it went unnoticed: nothing here reads as belonging to Optima.
+    //
+    // But PhaseSelectionSpeciationCleanup() uses it on the NATIVE path -
+    // ipm_chemical.cpp:1605,1610, assigned in ipm_main.cpp:803 - so with
+    // USE_OPTIMA_SOLVER=OFF, which is this project's DEFAULT
+    // (GEMS3K/CMakeLists.txt), the library did not compile at all.
+    //
+    // The block is CLOSED and REOPENED around the declaration rather than the
+    // declaration being moved up, so the member keeps its exact position in the
+    // class and an Optima build's layout is byte-for-byte unchanged. Moving it
+    // would be an ABI change, and gems-benchmark/CLAUDE.md s5 records what those
+    // cost: any binary predating one is stale and will not say so.
     /// One flag per phase: has PhaseSelect() already re-inserted this phase at its
     /// COMPOSITION CEILING rather than at the fixed pa_DFYs during this solve?
     /// Sized pm.FI and cleared in GEM_IPM(), so it spans the phase-selection
@@ -2027,6 +2044,7 @@ public:
     /// from then on. That bounds the wasted work at one pass per phase without a
     /// tuned number anywhere.
     std::vector<char> insBudgetTried;
+#ifdef USE_OPTIMA_SOLVER
     // solve; with none registered this is a plain equilibrium solve,
     // architecturally equivalent to AIA/SIA but solved via Optima instead
     // of GEMS3K's own IPM/MBR.
