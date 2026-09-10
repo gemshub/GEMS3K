@@ -64,6 +64,23 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
                  ///< Modes: 0-invoke, 1-at MBR only, 2-every MBR it, every IPM it. 3-not MBR, every IPM it.
                  ///< if PD < 0 then use test qd_real accuracy mode
            PRD,  ///< Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }
+                 ///< TWO EFFECTS, and only the first is what this line used to say (corrected 2026-09-09c,
+                 ///< plan v5 s100.5/s103.4 - the earlier note that PRD=0 "disables nothing" was itself wrong):
+                 ///<  1. It gates PSSC's speciation-cleanup loop, `if( CleanupStatus && pa_p->PRD )`
+                 ///<     (ipm_chemical.cpp) - so 0 really does disable that half, as stated. CleanupStatus
+                 ///<     itself comes from pa_PC (1 at PC==2, 0 at PC>2, ipm_main.cpp), so BOTH must be set.
+                 ///<  2. UNDOCUMENTED UNTIL NOW: it also sets PSSC's AmountThreshold = 10^-|PRD|, and the
+                 ///<     "at least 4 decades" floor beside it is guarded by noZero(), so it does NOT apply
+                 ///<     at PRD = 0. AmountThreshold is then 1.0 MOL rather than 1e-4 or 1e-5.
+                 ///<     With the cleanup loop off, that threshold's one remaining reachable use is the
+                 ///<     ELIMINATE / ELIMINATE_MBVIOL split: both branches delete the phase, and the
+                 ///<     threshold decides only whether MassBalanceViolation is raised. So at PRD = 0 a
+                 ///<     phase carrying up to a WHOLE MOLE is removed without flagging the mass balance,
+                 ///<     i.e. without forcing the further IPM loop that would repair it; at -5 the same
+                 ///<     removal above 1e-5 mol is flagged. Two corpus projects ship PRD = 0 (both CASHNK),
+                 ///<     where it is latent - no ELIMINATE record fires on their one state point.
+                 ///<     Clamping the threshold at PRD = 0 would move those projects' answers, so it is a
+                 ///<     gated change and not a comment fix; this comment is the part that is free.
            PSM,  ///< Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace { 1 }
            DP,   ///< Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }
            DW,   ///< Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }
@@ -1436,6 +1453,103 @@ inline long int optima_dimreduce_passes( long int configured, long int nDC )
 {
     if( configured == 0 && nDC >= kOptimaDimReduceAutoMinDC )
         return kOptimaDimReduceAutoPasses;
+    return configured;
+}
+
+
+/// Cap that pa_OptimaEarlyStabilityAt = 0 (AUTO) resolves to when the system
+/// carries a MULTISITE (sublattice) solid-solution model. 200, and it is not
+/// interpolated: it is the value the whole field was gated at on 2026-09-09c
+/// (412 rows, 3 corpora, freeze_diff exit 0), and every measurement of this
+/// field since section 101 has been taken at it.
+constexpr long int kOptimaEarlyStabilityAutoCap = 200;
+
+/// Cap AUTO resolves to on a WARM Optima leg (pm.pNP != 0), where the cold value is
+/// pure waste. Measured, plan v5 section 105.4 / 106: on a warm leg the dual gate is
+/// INERT - the dual is bit-exactly unchanged at the cap because a warm start inherits
+/// a consistent one and nothing has happened yet - so the cap always fires, and a probe
+/// that finds nothing costs EXACTLY N. N is therefore the loss, and the warm legs that
+/// WIN win at every N tried (f_CASHNK SOP 1001 unarmed -> 201 at N=200 -> 26 at N=25).
+constexpr long int kOptimaEarlyStabilityAutoWarmCap = 25;
+
+/// Is this phase's built-in mixing model a MULTISITE (sublattice) solid solution?
+/// Exactly three codes, from m_const_base.h's own comments - Berman/Brown,
+/// CALPHAD CEF, and the Modified Bragg-Williams model of Vinograd et al. 2018.
+/// Everything else (Van Laar 'V', Guggenheim 'K', Redlich-Kister 'G', Margules,
+/// the fluid EoS set, every aqueous model) is single-site or not a solid solution.
+inline bool optima_smod_is_multisite( char code )
+{
+    return code == SM_BERMAN || code == SM_CEF || code == SM_MBW;
+}
+
+/// Number of multicomponent phases in the system using a multisite model.
+/// `sMod` is MULTI::sMod (char[8] per phase, code in position 0) over FIs.
+inline long int optima_multisite_phase_count( char (*sMod)[8], long int FIs )
+{
+    long int n = 0;
+    if( !sMod ) return 0;
+    for( long int k = 0; k < FIs; k++ )
+        if( optima_smod_is_multisite( sMod[k][0] ) ) n++;
+    return n;
+}
+
+/// Resolves pa_OptimaEarlyStabilityAt's three-valued setting to the value the
+/// solver will actually arm: > 0 is an explicit cap at that iteration, < 0 is
+/// the trend form with |value| consecutive falls, and 0 is AUTO - the cap at
+/// kOptimaEarlyStabilityAutoCap when the system carries a multisite solid
+/// solution, and off otherwise.
+///
+/// WHY MULTISITE IS THE GATE (owner's proposal, 2026-09-10; plan v5 section 104).
+/// The cap's wins are not distributed over the corpus - they are one mechanism.
+/// A sublattice model generates end-member sets in which two solution phases can
+/// be built from identical stoichiometry at identical G0, i.e. thermodynamically
+/// interchangeable, and an interior-point method can only approach the vanishing
+/// twin's bound asymptotically (section 102.9(c)). Stopping early is what lets the
+/// phase-selection and extinction tiers see that before the budget is spent.
+/// MEASURED on the 2026-09-09c freeze, splitting its 19 moved rows by this exact
+/// predicate: the 9 rows in multisite projects are net -2198 iterations with a
+/// WORST SINGLE ROW of +200 (the probe, which is its bound by construction),
+/// while the 10 rows elsewhere are net +1338 and contain every bad row the
+/// corpus-wide flip had - a warm restart going 1 -> 570, and a project that fails
+/// in both arms moving +9200. The gate keeps the mechanism and drops the noise.
+///
+/// WHAT IT FORFEITS, stated rather than hidden: 07PSIna_G_simple_0_0_0_150_0 AOP
+/// 1032 -> 201, a real win on a project with NO solid solution at all (SIT
+/// aqueous + ideal). Its DECIDE record shows a different mechanism - the
+/// phase-selection repair loop on a marginal phase, not an interchangeable twin -
+/// so it is a second use for the field, not evidence against this gate. That
+/// project can still pin the cap explicitly.
+///
+/// NOTE the evidence base is 5 projects of 68, three of them CASH-family. The
+/// predicate is chosen because it names the MECHANISM, not because five points
+/// determine a rule.
+///
+/// WHY AUTO IS ALSO LEG-DEPENDENT (owner decision 2026-09-10, plan v5 section 106).
+/// The multisite gate alone makes 4 of its 30 rows cheaper and 5 DEARER by exactly
+/// +200, and all five of those are WARM legs paying the probe and finding nothing.
+/// The cause is structural: the dual-settled gate is a real test on a cold leg and
+/// INERT on a warm one (the dual is bit-exactly unchanged at the cap, because a warm
+/// start inherits a consistent dual and nothing has happened yet), so on a warm leg
+/// the cap always fires and a losing probe costs exactly N. Making AUTO answer 25
+/// there turns four of those +200 into +25 and the fifth (CSHSnplus HOP) into 0,
+/// while the warm WINS are untouched because a warm winner wins at every N.
+/// This is what AUTO is FOR - "decide from the problem" - and it needs no new
+/// BASE_PARAM field and no fourth meaning on this one, which is why it was preferred
+/// over both (see DECISIONS 2026-09-10, decision 3).
+///
+/// There is deliberately no "explicitly off" encoding: < 0 is the trend form and
+/// 0 is now AUTO. A caller who wants no early stop on a multisite system sets a
+/// cap larger than the iteration budget (pa_IIM), which is self-describing and
+/// needs no magic value.
+/// `warmLeg` is pm.pNP != 0 - a call whose Optima leg starts from a consistent
+/// (primal, dual) pair rather than from a cold LP seed. AUTO returns the short cap
+/// there; an EXPLICIT setting is left flat on both legs, because explicit means
+/// explicit and a caller who writes 200 is entitled to get 200.
+inline long int optima_earlystability_at( long int configured, long int nMultisitePhases,
+                                          bool warmLeg )
+{
+    if( configured == 0 && nMultisitePhases > 0 )
+        return warmLeg ? kOptimaEarlyStabilityAutoWarmCap : kOptimaEarlyStabilityAutoCap;
     return configured;
 }
 

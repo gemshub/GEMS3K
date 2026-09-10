@@ -227,12 +227,50 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
                               : ( mode == 18 )      ? "no(ROP)"
                               : ( pm.pNP != 0 && drCfg <= 0 ) ? "no(warm,AUTO)"
                               : "maybe";
+        // pa_OptimaEarlyStabilityAt, AUTO-gated on the presence of a MULTISITE
+        // (sublattice) solid-solution model since 2026-09-10 - see
+        // optima_earlystability_at() in ms_multi.h for the gate and the
+        // measurement behind it. The gate INPUT printed here is the multisite
+        // phase count, so a reader can see why AUTO answered as it did without
+        // knowing which mixing-model codes count.
+        const long int esCfg  = (long)pa->OptimaEarlyStabilityAt;
+        const long int esMulti = optima_multisite_phase_count( pm.sMod, pm.FIs );
+        // AUTO is leg-dependent since 2026-09-10 (plan v5 s106), so the EFF line has to
+        // carry the leg as well - it is a gate INPUT here, exactly like the multisite
+        // count, and a reader cannot reconstruct the answer without it.
+        //
+        // DERIVED FROM THE MODE, NOT FROM pm.pNP, and that is not a shortcut - pm.pNP is
+        // WRONG here for two of the four Optima modes. This header is written once at the
+        // top of GEM_run(), and on HOP/SHP the NATIVE leg runs first and the Optima leg is
+        // warm-started from it, so pm.pNP is still 0 when this executes and only becomes 1
+        // later. Read off pm.pNP, the EFF line said AUTO-COLD/eff=200 on a HOP call the
+        // solver had actually resolved to the warm cap - caught on the first run of this
+        // code, by the row coming back 4611 (the warm-25 value) under a line claiming 200.
+        // The mode determines the leg exactly and is known here: SOP warm-starts, HOP and
+        // SHP warm their Optima leg from native's answer, AOP and ROP are cold.
+        const bool esWarm = ( mode == 14 || mode == 22 || mode == 26 );
+        const long int esEff  = optima_earlystability_at( esCfg, esMulti, esWarm );
+        const char* esGate = ( esCfg > 0 ) ? "EXPLICIT-CAP"
+                           : ( esCfg < 0 ) ? "EXPLICIT-TREND"
+                           : esWarm        ? "AUTO-WARM" : "AUTO-COLD";
+        // Decidable here: the field is read only on an Optima leg, so a native
+        // AIA/SIA call never reaches either form whatever it resolves to.
+        const char* esReached = ( esEff == 0 ) ? "no(off)"
+                              : ( mode == 1 || mode == 5 ) ? "no(native)"
+                              : "maybe";
         fprintf( ntf, "EFF  "
                  " pa_OptimaDimReduce_cfg=%ld pa_OptimaDimReduce_eff=%ld"
                  " dimreduce_gate=%s dimreduce_L=%ld dimreduce_minDC=%ld"
-                 " dimreduce_reached=%s\n",
+                 " dimreduce_reached=%s"
+                 " pa_OptimaEarlyStabilityAt_cfg=%ld pa_OptimaEarlyStabilityAt_eff=%ld"
+                 " earlystability_gate=%s earlystability_multisitePh=%ld"
+                 " earlystability_autoCap=%ld earlystability_autoWarmCap=%ld"
+                 " earlystability_warmLeg=%d earlystability_reached=%s\n",
                  drCfg, drEff, drGate, (long)pm.L,
-                 (long)kOptimaDimReduceAutoMinDC, drReached );
+                 (long)kOptimaDimReduceAutoMinDC, drReached,
+                 esCfg, esEff, esGate, esMulti,
+                 (long)kOptimaEarlyStabilityAutoCap,
+                 (long)kOptimaEarlyStabilityAutoWarmCap, (int)esWarm, esReached );
     }
     fflush( ntf );
 }

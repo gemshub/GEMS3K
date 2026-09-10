@@ -3069,8 +3069,18 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // safety net below re-solves once at the full budget when the early
         // attempt found nothing to repair. That is what makes a liberal trigger
         // safe, and it is why this could not have been built before the net.
-        const long int earlyTrendN = pa_p->OptimaEarlyStabilityAt < 0
-                                   ? -pa_p->OptimaEarlyStabilityAt : 0;
+        // THREE-VALUED, and 0 is AUTO rather than off since 2026-09-10 - both
+        // forms therefore read the RESOLVED value, never pa_p directly, so the
+        // solver and native_trace_run_header()'s EFF line cannot disagree about
+        // what ran (ms_multi.h, optima_earlystability_at). AUTO can only ever
+        // resolve to a positive cap, so the trend form is unaffected by it; it is
+        // read through the same call anyway, because a second reader of a
+        // three-valued field is exactly how one of them drifts.
+        const long int earlyStabilityAt =
+            optima_earlystability_at( pa_p->OptimaEarlyStabilityAt,
+                                      optima_multisite_phase_count( pm.sMod, pm.FIs ),
+                                      pm.pNP != 0 );
+        const long int earlyTrendN = earlyStabilityAt < 0 ? -earlyStabilityAt : 0;
         // Only a guard that the phase really is below its own running peak, NOT
         // a magnitude test - measured, and the measurement is the point. On the
         // decay case the dissolving phase is still at 14% of its peak 6638
@@ -3193,8 +3203,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // it says the dual has stopped moving at the scale the solve is trying to
         // converge to - and the two forms share kEarlyTrendDualSettled rather than
         // each carrying their own constant, because they are one rule.
-        const long int earlyCapN = pa_p->OptimaEarlyStabilityAt > 0
-                                 ? pa_p->OptimaEarlyStabilityAt : 0;
+        const long int earlyCapN = earlyStabilityAt > 0 ? earlyStabilityAt : 0;
         auto earlyCap      = std::make_shared<bool>( false );
         // Armed IMMEDIATELY BEFORE the primary solve, not here, and that is not
         // cosmetic. `options` carries this hook, and every solve() before the
@@ -3771,6 +3780,93 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             *fdSuppress = cheapAttemptWon;
         }
 
+        // ---- WORK ITEM 22: is there anything for the repair loop to find? ----
+        // GEMS3K_PRESOLVE_PHSTAB_PROBE=<path>: run the phase-assemblage stability
+        // check ONCE on the state this call is about to start from, before the
+        // primary solve, and print what it would have said. Pure instrumentation -
+        // nothing here feeds the solve, and it is not reached at all when the
+        // variable is unset.
+        //
+        // The question it exists to answer (plan v5 section 104.6, work item 22):
+        // pa_OptimaEarlyStabilityAt buys its win by spending N iterations to get a
+        // dual good enough for the phase-selection repair loop to act on. Across
+        // every row the corpus-wide flip moved, ONE predicate separates the wins
+        // from the losses - did that loop then find anything? Where it did, the cap
+        // paid for itself; where it did not, the cap cost exactly the probe. So the
+        // switch worth having is a cheaper way to ask the same question, and the
+        // obvious candidate is to ask it of the state we already hold.
+        //
+        // WHY THAT IS NOT CIRCULAR ON A WARM LEG, which is where the losses are.
+        // A warm call starts from a previous converged answer, so pm.U[], pm.Y_la[]
+        // and pm.Gamma[] already describe a real solved state and the scan costs one
+        // activity-coefficient refresh rather than N iterations. Contrast the dual
+        // gate (section 104.6(a)): on a warm leg dwrel is bit-exactly ZERO, because
+        // nothing has moved yet - the least informative run produces the most
+        // confident "settled". This scan has the opposite property, since a warm
+        // start's dual is informative precisely because it came from a solve.
+        //
+        // WHAT TO READ OFF IT. `pre` is what the scan says at entry, `warm` says
+        // whether the dual it read was a previous answer or a cold seed. The
+        // predicate is confirmed if `pre` finds a violation exactly on the rows
+        // where the post-solve `phasesel` DECIDE record deactivates something, and
+        // finds none on 07PSIna_G_simple_0_0_0_150_0 SOP and j_CASHNK SOP - the two
+        // rows where the cap costs the probe and buys nothing.
+        //
+        // NOT SUFFICIENT ON ITS OWN, and section 104.6 says why: section 101.6 has
+        // this same loop deactivating CASH+Sn at a 0.044 gap and being WRONG where
+        // 0.00796 here is RIGHT, so a scan that merely finds a candidate does not
+        // establish that acting on it is safe. The gap column is printed so that
+        // question can be asked of the whole corpus rather than of two points.
+        {
+            static FILE* preDbg = []() -> FILE* {
+                const char* fn = std::getenv( "GEMS3K_PRESOLVE_PHSTAB_PROBE" );
+                return fn ? fopen( fn, "a" ) : nullptr; }();
+            if( preDbg && L > 0 )
+            {
+                // The scan reads derived arrays, not `state` - refresh them from
+                // the seed this call will actually start from, or it scores
+                // whatever the previous call happened to leave behind. Both are
+                // recomputed after the solve on every path, so this cannot leak
+                // into the reported answer.
+                for( long int j = 0; j < L; j++ )
+                { pm.Y[j] = state.x[j]; pm.X[j] = state.x[j]; }
+                for( long int i = 0; i < N; i++ )
+                    pm.U[i] = -state.ye[i];
+                TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                CalculateActivityCoefficients( LINK_UX_MODE );
+                CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+                double preViol = 0.;
+                bool preAbsent = false;
+                std::vector<PhStabViolation> preRanked;
+                PhStabCensus preCensus;
+                const long int preWorst = WorstPhaseStabilityViolation(
+                            presenceThreshold, dcFloor, nullptr,
+                            preViol, preAbsent, &preRanked, &preCensus );
+                fprintf( preDbg,
+                         "PRESOLVE pNP=%ld warm=%d capN=%ld trendN=%ld "
+                         "worst=%ld viol=%.6e absent=%d "
+                         "absent-but-stable=%ld present-but-unstable=%ld "
+                         "scanned=%ld clamped=%ld ranked=%ld\n",
+                         (long)pm.pNP, (int)warmStateUsable, (long)earlyCapN,
+                         (long)earlyTrendN, (long)preWorst, preViol, (int)preAbsent,
+                         (long)preCensus.absentStable, (long)preCensus.presentUnstable,
+                         (long)preCensus.scanned, (long)preCensus.clamped,
+                         (long)preRanked.size() );
+                for( size_t r = 0; r < preRanked.size() && r < 8; r++ )
+                    fprintf( preDbg, "PRESOLVE-RANK %zu k=%ld %-16s viol=%.6e absent=%d clamped=%d\n",
+                             r, (long)preRanked[r].k,
+                             char_array_to_string( pm.SF[preRanked[r].k], MAXPHNAME ).c_str(),
+                             preRanked[r].viol, (int)preRanked[r].wasAbsent,
+                             (int)preRanked[r].clamped );
+                fflush( preDbg );
+                native_trace_decide( "presolvephstab warm=%d worst=%ld viol=%.6e "
+                                     "absentstable=%ld presentunstable=%ld",
+                                     (int)warmStateUsable, (long)preWorst, preViol,
+                                     (long)preCensus.absentStable,
+                                     (long)preCensus.presentUnstable );
+            }
+        }
+
         std::vector<char> extinctFixed( (size_t)std::max(L,1L), 0 );
         stallWatch->reset();
         Optima::Sensitivity sensitivity( dims );
@@ -3891,6 +3987,27 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // architecturally one phase, unlike native's separate FIA(MBR)/IPM
         // split (pm.ITF is left at 0 for this reason, not left unset).
         long int optimaIterTotal = result.iterations + probeIterations + fdCheapIterations + dimReduceIters;
+
+        // The phase-extinction tier, as a re-runnable unit rather than a block.
+        // It is ASSEMBLED at its own site below (AOP/SOP only - ROP never
+        // reaches it) and is left empty for ROP, so an empty check is a mode
+        // test and not a defensive one.
+        //
+        // WHY IT HAS TO BE CALLABLE TWICE, measured on j_CASHNK HOP at a cap of
+        // 200. An unarmed call rescues that project through
+        //   primary solve stalls at 4500 -> phase-extinction tier -> OK at 4501.
+        // pa_OptimaEarlyStabilityAt's own safety net re-solves at the full budget
+        // when the probe finds nothing, and that re-solve reproduces the unarmed
+        // primary solve EXACTLY - including its stall at 4500. What it did not
+        // reproduce is the ladder that follows a stall, because the net is the
+        // last rung: the tiers all sit above it and have already had their turn,
+        // on the truncated state. So the row was lost at 4700 iterations (200 +
+        // 4500) where the unarmed call returns OK at 4501 - not because the
+        // re-solve differed from an unarmed solve, but because nothing was left
+        // to rescue it. Handing the tier the full-budget state closes that, and
+        // the state it then judges is the solver's own final word, so it is
+        // judged on the ordinary (non-early-stop) path.
+        std::function<void(bool)> runExtinctionTier;
 
         if( reaktoroMode )
         {
@@ -4284,8 +4401,21 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // This tier RUNS after an early stop - unlike the toggle and water tiers,
             // which do not (see genuineFailure's declaration) - but its twin test
             // gains a clause when it does. See kTwinStillFalling below.
-            if( genuineFailure() || earlyCapHit )
+            runExtinctionTier = [&]( bool onEarlyStopPath )
             {
+                // The aqueous phase index is recomputed here rather than
+                // captured: the enclosing block's own aqueousPhaseIdx dies
+                // before the safety net that calls this a second time, and a
+                // [&] capture of it would dangle.
+                long int aqueousPhaseIdx = -1;
+                {
+                    long int j0aq = 0;
+                    for( long int k = 0; k < pm.FIs; k++ )
+                    {
+                        if( pm.LO >= j0aq && pm.LO < j0aq + pm.L1[k] ) { aqueousPhaseIdx = k; break; }
+                        j0aq += pm.L1[k];
+                    }
+                }
                 // Detection is deliberately STRUCTURAL, not a magnitude
                 // threshold, because both obvious magnitude-based detectors
                 // were tried on f_CASHNK and are wrong for this case:
@@ -4427,7 +4557,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         // early-stop path: on a genuine failure the state is the
                         // solver's own final word and the ratio means what it always
                         // meant, so that path is left exactly as it was.
-                        if( earlyCapHit && (*phDec)[(size_t)ka] <= 0 )
+                        if( onEarlyStopPath && (*phDec)[(size_t)ka] <= 0 )
                         {
                             ipm_logger->info( "CalculateEquilibriumStateOptima: phase {} looks like a "
                                               "vanishing twin of {} (total {:.3e} against {:.3e}) but "
@@ -4468,7 +4598,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     state = retryState;
                     result = retryResult;
                 }
-            }
+            };
+            if( genuineFailure() || earlyCapHit )
+                runExtinctionTier( earlyCapHit );
             // Fifth tier, added 2026-08-27: PSSC-EQUIVALENT PHASE-SELECTION
             // LOOP - an ACTION attached to the phase-assemblage stability
             // detector, which until now could only ever REPORT a wrong
@@ -4729,6 +4861,74 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         }
         } // else (!reaktoroMode) - AOP/SOP's own solvent-collapse retry
 
+        // ---- A NET MUST RESTORE THE PROBLEM, NOT ONLY THE STATE -------------
+        // Both safety nets below re-solve from `initialState` so the re-solve
+        // reproduces what an unarmed call would have done. That assignment
+        // restores the STATE; it does not restore the PROBLEM. Any phase the
+        // compaction probe or the phase-selection loop pinned at the floor
+        // stayed pinned through the "full budget" re-solve, so the re-solve
+        // inherited an assemblage decision taken on a deliberately truncated
+        // state instead of starting from the original box - which is the one
+        // thing the net exists to undo. Latent until 2026-09-10, when
+        // pa_OptimaEarlyStabilityAt = 0 became AUTO and armed the early net on
+        // every multisite system (see optima_earlystability_at, ms_multi.h);
+        // it is reachable there now.
+        //
+        // Only phSelState == 1 is un-pinned, and that is the whole scope:
+        //   0  never touched - nothing to restore;
+        //   1  pinned by the compaction probe or by the phase-selection loop,
+        //      originals in savedLo/savedHi - this is the artefact;
+        //   2  already readmitted by the loop itself, boxes restored there;
+        //   the phase-extinction tier saves nothing BY DESIGN - its pin is the
+        //   rescue the net is trying to give the re-solve, not an artefact of
+        //   a truncated look, so un-pinning it would undo the fix.
+        //
+        // RE-PINNED IF THE NET DOES NOT WIN, because the boxes are read again
+        // after the nets: the KKT check treats a degenerate box as an equality
+        // constraint and exempts the species from the one-sided sign test. Left
+        // un-pinned while the pre-net state still holds that phase at the floor,
+        // it would manufacture a "at lower bound with a driving force to grow"
+        // residual on a result that was reported OK before the net ran - a net
+        // that can only ever spend one solve would have started losing answers.
+        // Same discipline as the extinction rescue just below: restore unless it
+        // converges.
+        std::vector<long int> netUnpinned;
+        auto unpinForNet = [&]() -> long int
+        {
+            netUnpinned.clear();
+            long int j0u = 0;
+            for( long int k = 0; k < pm.FI; k++ )
+            {
+                const long int j1u = j0u + pm.L1[k];
+                if( phSelState[(size_t)k] == 1 && j1u <= L )
+                    for( long int j = j0u; j < j1u; j++ )
+                    {
+                        problem.xlower[j] = savedLo[(size_t)j];
+                        problem.xupper[j] = savedHi[(size_t)j];
+                        netUnpinned.push_back( j );
+                    }
+                j0u = j1u;
+            }
+            if( !netUnpinned.empty() )
+            {
+                ipm_logger->info( "CalculateEquilibriumStateOptima: safety net - restoring the "
+                                   "original box of {} species pinned out by a probe-length look",
+                                   netUnpinned.size() );
+                native_trace_decide( "netunpin sp=%ld", (long)netUnpinned.size() );
+            }
+            return (long int)netUnpinned.size();
+        };
+        auto repinAfterNet = [&]()
+        {
+            for( long int j : netUnpinned )
+            {
+                problem.xlower[j] = dcFloor;
+                problem.xupper[j] = dcFloor;
+            }
+            netUnpinned.clear();
+        };
+
+
         // ---- LAST RESORT: the stall watch's own safety net ------------------
         // pa_OptimaStallWindow exists to hand control to the retry tiers above
         // SOONER, not to decide the verdict. If it fired and none of them
@@ -4771,14 +4971,18 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             const long int savedWindow = stallWatch->window;
             stallWatch->window = 0;      // the check lambda reads this on every call
             stallWatch->reset();
+            unpinForNet();               // the PROBLEM too, not only the state - see above
             Optima::Solver solverNS;     // fresh instance, per the retry-ordering note above
             solverNS.setOptions( options );
             Optima::State  nsState  = initialState;
             Optima::Result nsResult = solverNS.solve( problem, nsState );
             optimaIterTotal += nsResult.iterations;
             stallWatch->window = savedWindow;
+            if( !nsResult.succeeded )
+                repinAfterNet();         // the net did not win - leave the boxes as they were
             if( nsResult.succeeded )
             {
+                netUnpinned.clear();     // this state was solved on the restored boxes; keep them
                 state  = nsState;
                 result = nsResult;
                 ipm_logger->info( "CalculateEquilibriumStateOptima: the disarmed re-solve converged"
@@ -4825,17 +5029,61 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // same FAIL. `succeeded` on a solve carrying a convergence hook is not a
             // statement about convergence unless the hook is known not to have fired.
             stallWatch->reset();
+            unpinForNet();               // the PROBLEM too, not only the state - see above
             Optima::State  epState  = initialState;
             Optima::Result epResult = solverEP.solve( problem, epState );
             optimaIterTotal += epResult.iterations;
             if( stallWatch->stalled || stallWatch->timedOut ) epResult.succeeded = false;
             if( epResult.succeeded )
             {
+                netUnpinned.clear();     // this state was solved on the restored boxes; keep them
                 state  = epState;
                 result = epResult;
                 ipm_logger->info( "CalculateEquilibriumStateOptima: the full-budget re-solve"
                                    " converged in {} iterations", epResult.iterations );
             }
+            else if( runExtinctionTier )
+            {
+                // THE RE-SOLVE REPRODUCED THE UNARMED PRIMARY SOLVE, INCLUDING
+                // ITS FAILURE - so it is owed the rescue an unarmed call gets.
+                // See runExtinctionTier's own declaration for the measurement:
+                // on j_CASHNK HOP the unarmed call stalls at 4500 and the
+                // phase-extinction tier converges it in one more iteration,
+                // while the armed call spent 200 iterations on the probe, ran
+                // every tier on the truncated state (where the tier correctly
+                // DECLINES - the twin has not started falling yet), and then had
+                // nothing left below the net. The re-solve was never the defect.
+                //
+                // Judged on the ordinary path (onEarlyStopPath = false), not the
+                // early-stop one, and that is the whole point: this state is the
+                // solver's own final word at the full budget, so the "still
+                // falling" clause the truncated state needs does not apply and
+                // the ratio test means what it has always meant.
+                //
+                // Bounded: one tier attempt on a run that has already failed
+                // twice, and it cannot make the outcome worse - the pre-net
+                // state and result are restored unless the tier converges.
+                const Optima::State  savedState  = state;
+                const Optima::Result savedResult = result;
+                state  = epState;
+                result = epResult;
+                runExtinctionTier( false );
+                if( result.succeeded )
+                    ipm_logger->info( "CalculateEquilibriumStateOptima: the full-budget re-solve"
+                                       " stalled at {} iterations and the phase-extinction tier"
+                                       " converged it - the probe cost {} iterations and nothing else",
+                                       epResult.iterations, earlyCapN > 0 ? earlyCapN : 0 );
+                else
+                {
+                    state  = savedState;
+                    result = savedResult;
+                    repinAfterNet();     // nothing won - the boxes go back with the state
+                }
+                if( result.succeeded )
+                    netUnpinned.clear();
+            }
+            else
+                repinAfterNet();         // no rescue available and the re-solve failed
         }
 
         ipm_logger->info( "CalculateEquilibriumStateOptima: pNP={} reaktoroMode={} succeeded={} iterations={} nConditions={}",
