@@ -62,6 +62,7 @@
 #include <cstdlib>
 #include <functional>
 #include <limits>
+#include <memory>
 #include <sstream>
 
 namespace {
@@ -1615,6 +1616,43 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
         }
 
 
+        // Per-pass Optima trace for the REDUCED problem, same env var and the
+        // same append-mode file as the full path's block in
+        // CalculateEquilibriumStateOptima(). Off by default; one getenv per
+        // pass on a path that already builds an N x nS matrix.
+        //
+        // WHY THIS EXISTS (plan v5 section 109.2, work item 21). The full path
+        // carried options.output and this one did not, so every trace taken on
+        // a project where pa_OptimaDimReduce engages recorded only the tail:
+        // ew_exact_fraction.py read `traced = 2` against an ITG of 112-11215 on
+        // 13 of 28 gems3k-psina projects, and the correlation with dimension
+        // reduction was 28 of 28 with no exception in either direction. AUTO
+        // engages at >= 200 species, which is precisely the set the size wall
+        // lives on - so the instrument was blind on exactly the projects it was
+        // built to measure. A row whose `traced` is far below its `ITG` is that
+        // blindness, not a short solve.
+        //
+        // The names are the ACTIVE SET's, so they change from pass to pass and
+        // must be rebuilt here rather than once beside options.maxiters. The
+        // Outputter opens with std::ios_base::app (Optima/Outputter.cpp), so
+        // each pass appends its own '=' rule and 'Iteration' header and
+        // ew_exact_fraction.py splits on those - a reduced block and a full
+        // block differ only in their x[..] columns, and the six columns that
+        // tool reads (Iteration, f, Error, ||ex||max, ||ep||max, ||ew||max) are
+        // in the same places in both.
+        if( const char* preTraceFn = std::getenv("GEMS3K_OPTIMA_TRACE_FILE") )
+        {
+            options.output.active = true;
+            options.output.filename = preTraceFn;
+            options.output.xnames.clear();
+            options.output.ynames.clear();
+            for( long int s = 0; s < nS; s++ )
+                options.output.xnames.push_back(
+                    char_array_to_string( pm.SM[ nxToJ[(size_t)s] ], MAXDCNAME ) );
+            for( long int i = 0; i < N; i++ )
+                options.output.ynames.push_back( char_array_to_string(pm.SB[i],3) );
+        }
+
         Optima::Solver solver;
         solver.setOptions( options );
         preWatch->reset();          // per-pass stall state; the wall-clock budget is not reset
@@ -2161,6 +2199,14 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                                    dimReduceIters, nActive );
             reestablish();
 
+            // WASTED work, tracked separately from total. A discarded attempt's
+            // iterations are still paid and still land in `iters`, so a total
+            // alone cannot distinguish "this problem is hard" from "the first
+            // admission rule did not converge and everything it spent was thrown
+            // away". See the DECIDE records below - plan v5 section 115.
+            long int dimReduceWasted = 0;
+            long int dimReduceAttempts = 1;
+
             if( !dimReduceDone )
             {
                 // The configured rule was discarded - try the other one once.
@@ -2173,10 +2219,35 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 ipm_logger->info( "CalculateEquilibriumStateOptima: dimension-reduction pre-solve "
                                    "discarded at tol={} after {} iterations - retrying once at "
                                    "tol={}", configuredTol, dimReduceIters, fallbackTol );
+                // THE RECORD THIS SITE WAS MISSING, and it is the single most
+                // expensive decision the solver makes on a large system.
+                // Measured on T14_ball000 (plan v5 section 115): the project's AOP
+                // cost is BIMODAL under a 1e-15 bIC nudge - 405 iterations on six
+                // draws of nine and ~10748 on two - and the entire difference is
+                // whether THIS branch is taken. On the expensive draw pass 1 fails
+                // to converge on 299 of 1167 species, the whole attempt is
+                // discarded after 10353 iterations, and the retry then produces
+                // the SAME answer in ~394. So ~96 % of that run is work thrown
+                // away, `G` is bit-identical either way, and until now the only
+                // trace of it was an spdlog INFO line - absent from the trace,
+                // absent from the freeze's `# dec` column, and therefore invisible
+                // to anything scoring a benchmark. Both draws printed an
+                // IDENTICAL-looking `dimreduce done=1 active=299 of=1167 passes=8`
+                // and differed only in `iters`, which reads as "this run was
+                // harder" rather than "this run wasted 10353 iterations".
+                native_trace_decide( "dimreducediscard tol=%.6g iters=%ld active=%ld of=%ld "
+                                     "fallbacktol=%.6g",
+                                     configuredTol, (long)dimReduceIters, (long)nActive,
+                                     (long)L, fallbackTol );
+                dimReduceWasted = dimReduceIters;
+                dimReduceAttempts = 2;
                 dimReduceDone = OptimaReducedPreSolve( dimReducePasses, dcFloor, fallbackTol,
                                                        fallbackIters, nActive );
                 dimReduceIters += fallbackIters;
                 reestablish();
+                native_trace_decide( "dimreduceretry tol=%.6g done=%d iters=%ld active=%ld of=%ld",
+                                     fallbackTol, dimReduceDone ? 1 : 0, (long)fallbackIters,
+                                     (long)nActive, (long)L );
             }
 
             if( dimReduceDone )
@@ -2186,9 +2257,27 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // This is the record whose absence cost plan v5 section 95.4: the whole
             // T14 ladder was measured against pa_OptimaPhaseCompaction while this ran
             // on every rung, and nothing anyone diffs said so.
-            native_trace_decide( "dimreduce done=%d active=%ld of=%ld iters=%ld passes=%ld",
+            // `attempts` and `wasted` added 2026-09-11 (section 115) so the total is
+            // DECOMPOSABLE: iters = wasted + productive. A row whose `wasted` is most
+            // of its `iters` is not a hard problem, it is a discarded attempt, and the
+            // two were indistinguishable in this record for as long as it has existed.
+            //
+            // AND IF THE RETRY FAILED TOO, ALL OF IT IS WASTE. Measured on T-cement
+            // the next day (section 119): both attempts run to the 10000-iteration cap
+            // and end at `active=0 of=207 done=0`, so the pre-solve hands over nothing
+            // and 20000 of that call's 33000 iterations buy nothing at all - while the
+            // field as first written reported `wasted=10000`, counting attempt 1 only.
+            // A decomposition that under-reports waste on exactly the runs where the
+            // waste is total is the same defect this record was added to fix, one level
+            // down: `done=0` is what makes the remainder unproductive, so read it here
+            // rather than leaving the reader to multiply.
+            if( !dimReduceDone )
+                dimReduceWasted = dimReduceIters;
+            native_trace_decide( "dimreduce done=%d active=%ld of=%ld iters=%ld passes=%ld "
+                                 "attempts=%ld wasted=%ld",
                                  dimReduceDone ? 1 : 0, (long)nActive, (long)L,
-                                 (long)dimReduceIters, (long)dimReducePasses );
+                                 (long)dimReduceIters, (long)dimReducePasses,
+                                 (long)dimReduceAttempts, (long)dimReduceWasted );
         }
 
         // Resolve each active condition's fixed objective-gradient value
@@ -3892,6 +3981,69 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // distinguish the cap stopping the attempt from the attempt exhausting a
         // budget that happened to be larger.
         const bool earlyCapHit = !result.succeeded && ( *earlyCap || *earlyTrend );
+        // ---- ITEM 24: CAN THE PROBE'S COST BE RECOVERED, NOT ONLY SHORTENED? -
+        // The early-probe safety net far below re-solves from `initialState`, so a
+        // probe that finds nothing costs exactly N - measured at N = 200/100/50/25
+        // with no exception (plan v5 section 105.3) - and the run total is
+        // `N + full`. Those N iterations are not WRONG, they are THROWN AWAY:
+        // section 103.1's finding that the re-solve reproduces the unarmed solve
+        // exactly is the same statement said approvingly. Resuming the net from the
+        // probe's own end state instead would make the total `~full`, i.e. the
+        // probe free rather than merely short. Item 23 took the warm probe from 200
+        // to 25; this asks for 0.
+        //
+        // CAPTURED HERE, from the primary solve, and deliberately NOT read off
+        // `state` at the net: every retry tier between the two reassigns `state`,
+        // and some of them pin species at the floor - which is the artefact
+        // unpinForNet() exists to undo. The state captured here was produced on the
+        // ORIGINAL box, so it is consistent with the problem the net restores, and
+        // no species sits at a pin the net has just lifted.
+        //
+        // NOT THE DEFAULT WHILE IT IS UNMEASURED, and section 83 is why this is a
+        // measurement and not an obvious fix: switching an Optima trajectory
+        // mid-flight has failed before - "the first cheap iterations move the
+        // iterate somewhere the exact columns cannot recover from, so the
+        // trajectory has to be discarded rather than corrected". A resumed re-solve
+        // may not simply subtract N; it may cost more than the restart does, or
+        // converge somewhere the restart would not have. GEMS3K_OPTIMA_NET_RESUME=1
+        // selects the resume; unset or 0 is the shipped restart. One getenv in a
+        // static initialiser, and the State is copied only on a call where the
+        // probe actually fired.
+        //
+        // MODE 2 IS THE RESUME WITH A FALLBACK, and it exists because mode 1 LOSES
+        // ANSWERS. Measured 2026-09-10 on f_Solvus_G_test3 armed at -5, AOP, nine
+        // nudges at 1e-15: the restart converges on 8 of 9 draws, the bare resume on
+        // only 5 of 9 - the resumed iterate lands somewhere the solver cannot always
+        // recover from, which is section 83's failure mode arriving in a milder form
+        // than a corrupted trajectory. A lost answer outranks any iteration saving
+        // (CLAUDE.md s2), so the bare resume is not defaultable at any measured win.
+        // Mode 2 tries the resume and, if it does NOT converge, re-solves once more
+        // from `initialState` exactly as mode 0 would have - so its worst case is
+        // BOUNDED at one extra solve on a run that was already failing, and its best
+        // case is every win mode 1 has. That is the same shape as the guard that made
+        // pa_OptimaStallWindow defaultable.
+        //
+        // MODE 3 DEFERS THAT FALLBACK UNTIL THE WHOLE LADDER HAS FAILED, and it exists
+        // because mode 2 pays for the guard on rows that never needed it. A re-solve
+        // that STALLS is not the same event as a run that LOSES ITS ANSWER: on
+        // f_CASHNK the resumed re-solve stalls and the phase-extinction tier converges
+        // it anyway, so mode 2's extra solve buys nothing and costs 1000 iterations;
+        // on f_Solvus_G_test3 the resumed re-solve also stalls and the tier does NOT
+        // rescue it, and there the extra solve is the answer. Both are
+        // `netresolve outcome=stalled`, so the outcome cannot tell them apart - but
+        // the END OF THE LADDER can, because by then the tier has had its turn. So
+        // mode 3 asks the question once, at the only point where it is answerable:
+        // did this call, with every rescue it has, still fail? Same bounded worst case
+        // as mode 2 - one extra solve on a run that has already failed - paid on
+        // strictly fewer rows.
+        static const int netResumeMode = []() -> int {
+            const char* e = std::getenv( "GEMS3K_OPTIMA_NET_RESUME" );
+            return ( e && *e ) ? std::atoi( e ) : 0;
+        }();
+        const long int earlyProbeIters = earlyCapHit ? (long int)result.iterations : 0;
+        std::unique_ptr<Optima::State> earlyProbeState;
+        if( earlyCapHit && netResumeMode >= 1 && netResumeMode <= 3 )
+            earlyProbeState.reset( new Optima::State( state ) );
         // DID THE PROBLEM FAIL, or did WE stop the attempt? Every failure-only
         // retry tier below is gated on `!result.succeeded`, and the fold-back above
         // makes that true even though the solve was progressing perfectly well -
@@ -5030,17 +5182,81 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // statement about convergence unless the hook is known not to have fired.
             stallWatch->reset();
             unpinForNet();               // the PROBLEM too, not only the state - see above
-            Optima::State  epState  = initialState;
+            // ITEM 24: `initialState` is the shipped restart, which pays N + full;
+            // `*earlyProbeState` resumes the same problem from where the probe
+            // stopped and should pay ~full. See the capture site for why the choice
+            // is armed there rather than here, and for section 83's counter-
+            // precedent. Which one ran is a decision that changes the cost and can
+            // change the answer, so it goes in the TRACE, not only in the log.
+            const bool epResumed = (bool)earlyProbeState;
+            Optima::State  epState  = epResumed ? *earlyProbeState : initialState;
+            // dx is the distance the probe moved the iterate, max|x_probe - x_0|
+            // over the primal. It is in the record because "the resume is a no-op"
+            // and "the resume never happened" are otherwise the same observable -
+            // a dx of 0 would mean the start point never changed, which is a
+            // plumbing failure and not a measurement (GEMS3K/CLAUDE.md s5).
+            double epStartDx = 0.;
+            for( long int j = 0; j < L; j++ )
+                epStartDx = std::max( epStartDx, std::fabs( epState.x[j] - initialState.x[j] ) );
+            native_trace_decide( "netresume from=%s probeat=%ld dx=%.6e",
+                                 epResumed ? "probe" : "initial", earlyProbeIters, epStartDx );
             Optima::Result epResult = solverEP.solve( problem, epState );
             optimaIterTotal += epResult.iterations;
-            if( stallWatch->stalled || stallWatch->timedOut ) epResult.succeeded = false;
+            const bool epStalled = ( stallWatch->stalled || stallWatch->timedOut );
+            if( epStalled ) epResult.succeeded = false;
+            // WHAT STOPPED THE RE-SOLVE decides whether the probe's cost is
+            // RECOVERABLE at all (item 24). A re-solve that CONVERGED spent a
+            // convergence time, and starting it further along the same trajectory
+            // can subtract from that; a re-solve that STALLED spent a BUDGET - the
+            // stall window - and where it started cannot change what a budget
+            // costs. Traced rather than logged so the census is recoverable from
+            // the freeze's own `# dec` lines over the whole corpus instead of from
+            // a scrape of 43 log files (GEMS3K/CLAUDE.md s4).
+            native_trace_decide( "netresolve outcome=%s it=%ld",
+                                 epResult.succeeded ? "converged"
+                                                    : ( epStalled ? "stalled" : "failed" ),
+                                 (long int)epResult.iterations );
+            // THE FALLBACK (mode 2). A resume that did not converge has cost the run
+            // its own iterations and bought nothing, so hand the net the start point
+            // it would have used unarmed and let it have its ordinary attempt. Fresh
+            // solver instance, per the retry-ordering note above; the stall watch is
+            // reset so the second attempt is judged on its own progress and not on
+            // the first one's. Bounded: one extra solve, only on a run that has
+            // already failed twice, and only where the resume was tried at all.
+            if( netResumeMode == 2 && epResumed && !epResult.succeeded )
+            {
+                ipm_logger->info( "CalculateEquilibriumStateOptima: the resumed re-solve did not"
+                                   " converge in {} iterations - falling back to the restart",
+                                   epResult.iterations );
+                Optima::Solver solverFB;
+                solverFB.setOptions( options );
+                stallWatch->reset();
+                Optima::State  fbState  = initialState;
+                Optima::Result fbResult = solverFB.solve( problem, fbState );
+                optimaIterTotal += fbResult.iterations;
+                const bool fbStalled = ( stallWatch->stalled || stallWatch->timedOut );
+                if( fbStalled ) fbResult.succeeded = false;
+                native_trace_decide( "netfallback outcome=%s it=%ld",
+                                     fbResult.succeeded ? "converged"
+                                                        : ( fbStalled ? "stalled" : "failed" ),
+                                     (long int)fbResult.iterations );
+                // Taken UNCONDITIONALLY, not only when it converged: mode 0's own
+                // state is what everything below this point is written against - the
+                // extinction tier's "this is the solver's final word at the full
+                // budget" argument included - and a failed resume is not that word.
+                epState  = fbState;
+                epResult = fbResult;
+            }
             if( epResult.succeeded )
             {
                 netUnpinned.clear();     // this state was solved on the restored boxes; keep them
                 state  = epState;
                 result = epResult;
                 ipm_logger->info( "CalculateEquilibriumStateOptima: the full-budget re-solve"
-                                   " converged in {} iterations", epResult.iterations );
+                                   " converged in {} iterations ({} the probe's {} iterations)",
+                                   epResult.iterations,
+                                   epResumed ? "resumed from" : "restarted, discarding",
+                                   earlyProbeIters );
             }
             else if( runExtinctionTier )
             {
@@ -5084,6 +5300,62 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
             else
                 repinAfterNet();         // no rescue available and the re-solve failed
+
+            // ---- MODE 3: THE DEFERRED FALLBACK ---------------------------
+            // Asked here and nowhere earlier, because here is the only place the
+            // question is answerable: the resumed re-solve AND every rescue below
+            // it have now had their turn, so `!result.succeeded` means this call
+            // has genuinely lost its answer rather than merely stalled on the way
+            // to being rescued. See the capture site for the pair of projects that
+            // makes the distinction necessary. Structure deliberately mirrors the
+            // block above rather than factoring it: this ladder's ordering carries
+            // several separately-argued invariants and a refactor of it would put
+            // them all at risk to save twenty lines.
+            if( netResumeMode == 3 && epResumed && !result.succeeded )
+            {
+                ipm_logger->info( "CalculateEquilibriumStateOptima: the resumed re-solve and its"
+                                   " rescue both failed - falling back to the restart the unarmed"
+                                   " call would have used" );
+                unpinForNet();           // repinAfterNet() may have put the boxes back
+                stallWatch->reset();
+                Optima::Solver solverFB;
+                solverFB.setOptions( options );
+                Optima::State  fbState  = initialState;
+                Optima::Result fbResult = solverFB.solve( problem, fbState );
+                optimaIterTotal += fbResult.iterations;
+                const bool fbStalled = ( stallWatch->stalled || stallWatch->timedOut );
+                if( fbStalled ) fbResult.succeeded = false;
+                native_trace_decide( "netfallback outcome=%s it=%ld",
+                                     fbResult.succeeded ? "converged"
+                                                        : ( fbStalled ? "stalled" : "failed" ),
+                                     (long int)fbResult.iterations );
+                if( fbResult.succeeded )
+                {
+                    netUnpinned.clear();
+                    state  = fbState;
+                    result = fbResult;
+                    ipm_logger->info( "CalculateEquilibriumStateOptima: the restart converged in {}"
+                                       " iterations where the resume did not", fbResult.iterations );
+                }
+                else if( runExtinctionTier )
+                {
+                    const Optima::State  savedState2  = state;
+                    const Optima::Result savedResult2 = result;
+                    state  = fbState;
+                    result = fbResult;
+                    runExtinctionTier( false );
+                    if( result.succeeded )
+                        netUnpinned.clear();
+                    else
+                    {
+                        state  = savedState2;
+                        result = savedResult2;
+                        repinAfterNet();
+                    }
+                }
+                else
+                    repinAfterNet();
+            }
         }
 
         ipm_logger->info( "CalculateEquilibriumStateOptima: pNP={} reaktoroMode={} succeeded={} iterations={} nConditions={}",
