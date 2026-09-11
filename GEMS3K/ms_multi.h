@@ -42,6 +42,7 @@
 #include "gems3k_impex.h"
 #include "ipm_optima.h"
 
+#include <cstdlib>
 #include <cstdio>
 #include <vector>
 
@@ -1471,6 +1472,44 @@ constexpr long int kOptimaEarlyStabilityAutoCap = 200;
 /// that finds nothing costs EXACTLY N. N is therefore the loss, and the warm legs that
 /// WIN win at every N tried (f_CASHNK SOP 1001 unarmed -> 201 at N=200 -> 26 at N=25).
 constexpr long int kOptimaEarlyStabilityAutoWarmCap = 25;
+
+/// DEFAULT for the early-probe safety net's re-solve strategy, and the single
+/// place it is resolved - the solver and the trace both call this, so a knob
+/// whose effective value is not in the trace cannot exist here (CLAUDE.md s4,
+/// the rule pa_OptimaDimReduce's AUTO gate cost a whole ladder measurement).
+///
+/// 0  re-solve the net from `initialState` - the behaviour shipped before
+///    2026-09-11, so a probe that finds nothing costs exactly N and the run
+///    total is `N + full` (plan v5 s105.3).
+/// 1  resume from the probe's own end state. LOSES ANSWERS - f_Solvus_G_test3
+///    armed at -5, AOP, 9 nudges: 5 of 9 draws against the restart's 8 (s108.4).
+/// 2  resume, and if the resumed re-solve does not converge, re-solve once from
+///    `initialState` exactly as 0 would have. Bounded worst case, one extra
+///    solve on a run that was already failing.
+/// 3  as 2, but the fallback is deferred to the END of the retry ladder, where
+///    the question "did this call, with every rescue it has, still fail?" is
+///    answerable - so the same bounded worst case is paid on strictly fewer
+///    rows. On f_CASHNK the phase-extinction tier converges a run whose resumed
+///    re-solve stalled, and mode 2 pays 1000 iterations for a guard that buys
+///    nothing there; on f_Solvus_G_test3 the tier does NOT rescue it and the
+///    extra solve is the answer. Both are `netresolve outcome=stalled`, so the
+///    outcome cannot separate them and only the end of the ladder can (s108.6).
+///
+/// DEFAULT 3 since 2026-09-11, on an owner decision under CLAUDE.md s2's
+/// "measured improvements ship ON", bracketed by a freeze either side.
+/// GEMS3K_OPTIMA_NET_RESUME overrides it, and 0 restores the old behaviour.
+constexpr int kOptimaNetResumeDefault = 3;
+
+/// Effective resume mode for this process. Reads the env override ONCE - the
+/// value cannot change within a run, and both callers want the same answer.
+inline int optima_net_resume_mode()
+{
+    static const int mode = []() -> int {
+        const char* e = std::getenv( "GEMS3K_OPTIMA_NET_RESUME" );
+        return ( e && *e ) ? std::atoi( e ) : kOptimaNetResumeDefault;
+    }();
+    return mode;
+}
 
 /// Is this phase's built-in mixing model a MULTISITE (sublattice) solid solution?
 /// Exactly three codes, from m_const_base.h's own comments - Berman/Brown,

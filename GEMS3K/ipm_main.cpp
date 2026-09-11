@@ -29,6 +29,7 @@
 //-------------------------------------------------------------------
 //
 
+#include <cstdlib>
 #include <cstdarg>
 #include "ms_multi.h"
 #include "jama_lu.h"
@@ -265,12 +266,15 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
                  " pa_OptimaEarlyStabilityAt_cfg=%ld pa_OptimaEarlyStabilityAt_eff=%ld"
                  " earlystability_gate=%s earlystability_multisitePh=%ld"
                  " earlystability_autoCap=%ld earlystability_autoWarmCap=%ld"
-                 " earlystability_warmLeg=%d earlystability_reached=%s\n",
+                 " earlystability_warmLeg=%d earlystability_reached=%s"
+                 " optima_netresume_eff=%d optima_netresume_src=%s\n",
                  drCfg, drEff, drGate, (long)pm.L,
                  (long)kOptimaDimReduceAutoMinDC, drReached,
                  esCfg, esEff, esGate, esMulti,
                  (long)kOptimaEarlyStabilityAutoCap,
-                 (long)kOptimaEarlyStabilityAutoWarmCap, (int)esWarm, esReached );
+                 (long)kOptimaEarlyStabilityAutoWarmCap, (int)esWarm, esReached,
+                 optima_net_resume_mode(),
+                 std::getenv( "GEMS3K_OPTIMA_NET_RESUME" ) ? "env" : "default" );
     }
     fflush( ntf );
 }

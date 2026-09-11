@@ -4036,10 +4036,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // did this call, with every rescue it has, still fail? Same bounded worst case
         // as mode 2 - one extra solve on a run that has already failed - paid on
         // strictly fewer rows.
-        static const int netResumeMode = []() -> int {
-            const char* e = std::getenv( "GEMS3K_OPTIMA_NET_RESUME" );
-            return ( e && *e ) ? std::atoi( e ) : 0;
-        }();
+        // Resolved in optima_net_resume_mode() (ms_multi.h) so the trace's EFF
+        // line and this call site cannot disagree - the failure mode s95.4 cost
+        // a ladder measurement to, applied before it can happen again.
+        const int netResumeMode = optima_net_resume_mode();
         const long int earlyProbeIters = earlyCapHit ? (long int)result.iterations : 0;
         std::unique_ptr<Optima::State> earlyProbeState;
         if( earlyCapHit && netResumeMode >= 1 && netResumeMode <= 3 )
