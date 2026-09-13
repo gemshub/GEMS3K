@@ -170,7 +170,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaDcFloor=%.6e pa_MbClassRule=%.6e pa_MbTrendPhaseDecay=%ld"
              " pa_OptimaEarlyStabilityAt=%ld pa_OptimaDimReduce=%ld"
              " pa_OptimaDimReduceTol=%.6e pa_MbPivotSplit=%ld pa_OptimaZeroAbsent=%ld"
-             " pa_OptimaReadmitSeed=%.6e pa_IpmStallWindow=%d pa_MbReproject=%d\n",
+             " pa_OptimaReadmitSeed=%.6e pa_IpmStallWindow=%d pa_MbReproject=%d"
+             " pa_DeterminacyWarn=%.6e\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -188,7 +189,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaEarlyStabilityAt, (long)pa->OptimaDimReduce,
              pa->OptimaDimReduceTol, (long)pa->MbPivotSplit,
              (long)pa->OptimaZeroAbsent, pa->OptimaReadmitSeed,
-             (int)pa->IpmStallWindow, (int)pa->MbReproject );
+             (int)pa->IpmStallWindow, (int)pa->MbReproject, pa->DeterminacyWarn );
 
     // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
     //
@@ -710,7 +711,8 @@ bool TMultiBase::MassBalanceReproject( double* amt )
 // 1e-15 bIC jitter does NOT reveal it (spread 1.7e-4): the solver lands reproducibly at a
 // point fixed by its TRAJECTORY inside a flat valley. Jitter measures reproducibility, not
 // determinacy; only a trajectory change exposes the valley. This measures the valley itself,
-// from one solve, and warns when a present phase's amount is not fixed to kDeterminacyWarnRel.
+// from one solve, and warns when a present phase's amount is not fixed to pa_DeterminacyWarn
+// (0 = the check is skipped entirely, at zero cost).
 //
 // Model. Moving present phase k by t mol while keeping A.x = b costs, at the least,
 //     E(t) = (1/2) t^2 / c_k,
@@ -743,13 +745,13 @@ bool TMultiBase::MassBalanceReproject( double* amt )
 //
 // Species pinned at a kinetic bound (DLL/DUL) are excluded: a constraint fixes their amount.
 // Read-only: nothing here writes solver state.
-static const double kDeterminacyWarnRel = 1e-2;
-
 void TMultiBase::EnergyDeterminacyCheck()
 {
     const long int N = pm.N, L = pm.L, FI = pm.FI, FIs = pm.FIs;
     if( N < 1 || L < 1 || FI < 1 || !pm.A || !pm.X || !pm.U || !pm.L1 ) return;
     const bool probe = getenv( "GEMS3K_DETERMINACY_PROBE" ) != nullptr;
+    const double warnRel = (double)base_param()->DeterminacyWarn;
+    if( !( warnRel > 0. ) && !probe ) return;       // off: costs nothing
 
     std::vector<long int> phaseOf( (size_t)L, -1 );
     for( long int k = 0, jb = 0; k < FI; jb += pm.L1[k], k++ )
@@ -860,7 +862,7 @@ void TMultiBase::EnergyDeterminacyCheck()
         if( probe )
             fprintf( stderr, "DETPROBE phase=%s class=%c pure=%d n=%.6e rel=%.3e c=%.3e epsG=%.3e\n",
                      name.c_str(), pm.PHC ? pm.PHC[k] : '?', (int)( k >= FIs ), nk, rel, ck, epsG );
-        if( rel >= kDeterminacyWarnRel )
+        if( warnRel > 0. && rel >= warnRel )
         {
             // rel >= 1: the amount is inside its own energy resolution, i.e. the energy cannot
             // even say whether the phase is PRESENT - a percentage there (1e15 % was observed,
@@ -884,10 +886,10 @@ void TMultiBase::EnergyDeterminacyCheck()
             "{}. Answers differing in these amounts are EQUALLY valid (same G to rounding), so do not "
             "rely on them more precisely than that; a different start, setting or solver version may "
             "legitimately return a different value. Phases: {}",
-            nWarn, 100. * kDeterminacyWarnRel,
+            nWarn, 100. * warnRel,
             kWorst >= 0 ? trimmedPhaseName( kWorst ) : std::string( "-" ), worstTxt, listed );
         native_trace_decide( "undetermined phases=%ld threshold=%.0e worst=%.2e list=%s",
-                             (long)nWarn, kDeterminacyWarnRel, worstRel, listed.c_str() );
+                             (long)nWarn, warnRel, worstRel, listed.c_str() );
     }
 }
 

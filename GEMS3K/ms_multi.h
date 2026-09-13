@@ -1406,6 +1406,22 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// them. That is why this is default-off rather than unconditional.
     short MbReproject = 1;
 
+    /// pa_DeterminacyWarn: relative-uncertainty threshold for the "answer not fully
+    /// determined by the energy" warning (TMultiBase::EnergyDeterminacyCheck(), native
+    /// path, converged calls only). A present phase whose amount the minimised Gibbs
+    /// energy fixes only to worse than this - sqrt(2 eps_G c_k)/n_k, eps_G the rounding
+    /// floor of G, c_k the phase's least-energy compliance under A dn = 0 - is listed in
+    /// one spdlog warning and a DECIDE `undetermined` trace record. 0 (or negative)
+    /// switches the check off entirely, at zero cost. Read-only either way: it never
+    /// changes the answer (identical on 71/71 runnable corpus projects, 2026-09-13).
+    ///
+    /// Default 1e-2. At that value it fires on 24 of 72 corpus projects, always on trace
+    /// solids of 1e-9..1e-18 mol; validated against observed movement on
+    /// 07PSIna_G_vcomplex_2_0_1_80_0 (predicted TiO2(am_hyd) +-20 % vs a 14 % trajectory
+    /// move; CaSiO3(cr) +-2.6e-6 vs a 2.2e-6 jitter spread). Trailing member: GEMSGUI
+    /// serialises BASE_PARAM positionally.
+    double DeterminacyWarn = 1e-2;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -3011,7 +3027,7 @@ typedef enum {  // Field index into outField structure
     f_pa_MbTrendPhaseDecay, f_pa_OptimaEarlyStabilityAt, f_pa_OptimaDimReduce,
     f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit, f_pa_OptimaZeroAbsent,
     f_pa_OptimaReadmitSeed,
-    f_pa_IpmStallWindow, f_pa_MbReproject
+    f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn
 
 } MULTI_DYNAMIC_FIELDS;
 
