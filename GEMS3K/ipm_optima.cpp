@@ -1728,6 +1728,21 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                                "species{} - discarding the reduced pre-solve", pass, nS, L,
                                preWatch->timedOut ? " (wall-clock budget)"
                                                   : ( preWatch->stalled ? " (stalled)" : "" ) );
+            // PER-PASS cost, the decomposition the caller's `dimreduce` record
+            // cannot carry. `iters` there is a TOTAL over all passes of both
+            // attempts, so plan v5 section 120.7's proposed first-attempt budget
+            // could not be sized from it: "111-2101 iterations" over 8 passes is
+            // compatible with a flat 14-262 per pass and with one 2000-iteration
+            // pass among seven cheap ones, and the two imply completely different
+            // budgets. `tol` identifies WHICH attempt this pass belongs to
+            // (configured rule vs the fallback the caller retries at) without
+            // relying on position in the trace.
+            native_trace_decide( "dimreducepass pass=%ld tol=%.6g ns=%ld of=%ld iters=%ld ok=0 "
+                                 "readmit=-1 stop=%s",
+                                 (long)pass, dimTol, (long)nS, (long)L,
+                                 (long)result.iterations,
+                                 preWatch->timedOut ? "timeout"
+                                                    : ( preWatch->stalled ? "stall" : "nonconv" ) );
             return discard();
         }
 
@@ -1828,6 +1843,14 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
         ipm_logger->info( "OptimaReducedPreSolve: pass {} - {} of {} species active, "
                            "{} Optima iterations, {} readmitted ({} seeded above the floor)",
                            pass, nS, L, result.iterations, readmitted, seeded );
+        // The converged half of the same decomposition. `readmit=0` marks the
+        // fixed point that ends the loop, so a reader can tell a pre-solve that
+        // SETTLED from one that merely ran out of passes without consulting the
+        // caller's record.
+        native_trace_decide( "dimreducepass pass=%ld tol=%.6g ns=%ld of=%ld iters=%ld ok=1 "
+                             "readmit=%ld seeded=%ld",
+                             (long)pass, dimTol, (long)nS, (long)L, (long)result.iterations,
+                             (long)readmitted, (long)seeded );
 
         if( readmitted == 0 )
             return true;   // fixed point: the reduced answer satisfies the full KKT conditions
@@ -2278,6 +2301,57 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                  dimReduceDone ? 1 : 0, (long)nActive, (long)L,
                                  (long)dimReduceIters, (long)dimReducePasses,
                                  (long)dimReduceAttempts, (long)dimReduceWasted );
+        }
+
+        // GEMS3K_PRESOLVE_HANDOVER_PROBE=<path>: dump EVERY piece of state the main
+        // solve is about to start from, so the pre-solve-on and pre-solve-off arms
+        // can be diffed directly.
+        //
+        // THE QUESTION IT EXISTS FOR (plan v5 s120.5, handoff 2026-09-11c item 3):
+        // a DISCARDED pre-solve still changes the primary solve - on T-cement at
+        // k=+2 the run converges in the AUTO arm and not with the reduction off,
+        // although discard() restores pm.Y and pm.U element for element. So
+        // something OTHER than the primal and dual is carried across, and the
+        // available evidence could not say what. Reasoning about it from the source
+        // has already produced two wrong candidates (the IPM-2 smoothing blend,
+        // which SmoothingFactor() makes an algebraic no-op on this path; and pm.X,
+        // which reestablish() rewrites from pm.Y) - so dump the state and diff it
+        // rather than arguing about it. Placed OUTSIDE the pre-solve block on
+        // purpose: in the off arm the block does not run, and the whole point is to
+        // compare the two arms at the same instant.
+        //
+        // Deliberately NOT a checksum. A checksum answers "did anything move",
+        // which is already known; the open question is WHICH array, and a
+        // per-element dump lets an ordinary diff localise it and name the species.
+        if( const char* hp = std::getenv( "GEMS3K_PRESOLVE_HANDOVER_PROBE" ) )
+        {
+            if( FILE* fh = fopen( hp, "a" ) )
+            {
+                // The header has to say WHICH CALL this is. The probe fires on
+                // every Optima call that reaches this point - AOP, SOP, HOP and
+                // SHP all do - so a run of rop_compare appends four blocks, and
+                // without pNP/hop/reaktoro to separate them a diff would be
+                // comparing a cold arm against a warm one and reporting the mode
+                // difference as the finding.
+                fprintf( fh, "# HANDOVER L=%ld N=%ld FI=%ld pNP=%ld hop=%d reaktoro=%d "
+                             "IT=%ld ITG=%ld ITF=%ld K2=%ld FitVar3=%.17g FitVar4=%.17g\n",
+                         (long)L, (long)N, (long)pm.FI, (long)pm.pNP,
+                         optima_hop_leg ? 1 : 0, reaktoroMode ? 1 : 0, (long)pm.IT,
+                         (long)pm.ITG, (long)pm.ITF, (long)pm.K2,
+                         pm.FitVar[3], pm.FitVar[4] );
+                for( long int j = 0; j < L; j++ )
+                    fprintf( fh, "DC %5ld %-22s Y=%.17g X=%.17g lnGam=%.17g Gamma=%.17g "
+                                 "F=%.17g F0=%.17g DUL=%.17g DLL=%.17g\n",
+                             (long)j, char_array_to_string(pm.SM[j],MAXDCNAME).c_str(),
+                             pm.Y[j], pm.X[j], pm.lnGam[j], pm.Gamma[j],
+                             pm.F[j], pm.F0[j], pm.DUL[j], pm.DLL[j] );
+                for( long int i = 0; i < N; i++ )
+                    fprintf( fh, "IC %5ld U=%.17g B=%.17g\n", (long)i, pm.U[i], pm.B[i] );
+                for( long int k = 0; k < pm.FI; k++ )
+                    fprintf( fh, "PH %5ld XF=%.17g XFA=%.17g YF=%.17g\n",
+                             (long)k, pm.XF[k], pm.XFA[k], pm.YF[k] );
+                fclose( fh );
+            }
         }
 
         // Resolve each active condition's fixed objective-gradient value
