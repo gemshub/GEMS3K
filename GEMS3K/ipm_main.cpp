@@ -513,6 +513,39 @@ bool TMultiBase::MassBalanceReproject( double* amt )
     native_trace_mb_of( pm, amt, i1, relOld, i2, absOld );
     if( !( relOld > 0. ) ) return false;
 
+    // The state on entry, for a full revert if the whole attempt fails to improve.
+    std::vector<double> Xorig( amt, amt + L );
+
+    // ITERATE the projection rather than taking one shot at it. Measured on the
+    // Cu-Pourbaix pH titration, 401 repair events over a full-diagram sweep: when no
+    // component has to be clamped the one-shot projection is essentially exact
+    // (median leftover 4.3e-14 mol) and clears the test 20 times out of 20; when even
+    // ONE component clamps it clears it 0 times out of 200, leftover 3.8e-07 mol.
+    // The separation is total, so the clamp IS the failure mode - and it is
+    // self-correcting under iteration: a clamped component is driven to exactly zero,
+    // so on the next pass it sorts last and the rank-revealing selection is forced to
+    // pick a DIFFERENT carrier for that direction, working against the residual the
+    // clamped step has already taken out. Each pass must strictly improve the worst
+    // relative residual or it is undone and the loop stops, so this can only ever do
+    // better than the single pass it replaces.
+    // BOUNDED: the extra passes are kept only if they carry the answer all the way
+    // under its own tolerance. Anything short of that is reverted to what the single
+    // pass produced, so on every state this mechanism cannot fully repair, behaviour
+    // is byte-for-byte what it was before. That matters because a partial repair still
+    // MOVES the answer, and a moved answer re-enters the warm path differently: the
+    // unbounded form lost one of T-cement's 50 SIA answers and took its warm re-solve
+    // from 75 iterations to 479, for a residual that was never going to clear anyway.
+    // Buying the win only where it is complete costs nothing and bounds the worst case.
+    const long int maxPass = 8;
+    long int nClamped = 0, nPass = 0;
+    double relCur = relOld, absCur = absOld;
+    bool improved = false;
+    std::vector<double> Xsingle; double relSingle = 0., absSingle = 0.;
+
+    for( long int pass = 0; pass < maxPass; pass++ )
+    {
+    std::vector<double> Xpass( amt, amt + L );      // undo target for THIS pass alone
+
     std::vector<double> C( (size_t)N );
     for( long int i = 0; i < N; i++ )
     {
@@ -554,9 +587,10 @@ bool TMultiBase::MassBalanceReproject( double* amt )
         for( long int i = 0; i < N; i++ ) Q[(size_t)(k*N + i)] = r[(size_t)i] / nrm;
         piv.push_back( j );
     }
-    if( (long int)piv.size() < N ) return false;     // rank(A) < N - nothing to do
+    if( (long int)piv.size() < N ) break;            // rank(A) < N - nothing to do
 
     // Ap * dy = C, Gaussian elimination with partial pivoting (row-major).
+    bool singular = false;
     std::vector<double> M( (size_t)N*N ), rhs( C ), dy( (size_t)N, 0. );
     for( long int i = 0; i < N; i++ )
         for( long int c = 0; c < N; c++ )
@@ -566,7 +600,7 @@ bool TMultiBase::MassBalanceReproject( double* amt )
         long int pk = k; double best = fabs( M[(size_t)(k*N + k)] );
         for( long int i = k+1; i < N; i++ )
         { const double v = fabs( M[(size_t)(i*N + k)] ); if( v > best ) { best = v; pk = i; } }
-        if( !( best > 1e-300 ) ) return false;
+        if( !( best > 1e-300 ) ) { singular = true; break; }
         if( pk != k )
         {
             for( long int c = k; c < N; c++ )
@@ -582,6 +616,7 @@ bool TMultiBase::MassBalanceReproject( double* amt )
             rhs[(size_t)i] -= f * rhs[(size_t)k];
         }
     }
+    if( singular ) break;
     for( long int k = N-1; k >= 0; k-- )
     {
         double sum = rhs[(size_t)k];
@@ -597,22 +632,54 @@ bool TMultiBase::MassBalanceReproject( double* amt )
     // unclamped step asks to remove 2.6585e-09 mol of H2@ from the 2.6584e-09 mol
     // that exists - it overshoots the only carrier of that IC's residual by 1.5e-13.
     // Refusing outright there left a repairable state unrepaired.
+    // How many components had to be clamped is the diagnostic that separates
+    // "the projection was solved and is simply ill-conditioned" from "a carrier
+    // ran out of material and the step could not be taken" - two failure modes
+    // whose leftover residuals look alike from outside but need opposite fixes.
+    long int nClampedPass = 0;
     for( long int c = 0; c < N; c++ )
     {
         const double x = amt[piv[(size_t)c]];
-        if( x + dy[(size_t)c] < 0. ) dy[(size_t)c] = -x;
+        if( x + dy[(size_t)c] < 0. ) { dy[(size_t)c] = -x; nClampedPass++; }
     }
 
-    std::vector<double> Xold( amt, amt + L );
     for( long int c = 0; c < N; c++ ) amt[piv[(size_t)c]] += dy[(size_t)c];
 
     double relNew = 0., absNew = 0.;
     native_trace_mb_of( pm, amt, i1, relNew, i2, absNew );
-    if( !( relNew < relOld ) )                       // no strict improvement - undo
+    if( !( relNew < relCur ) )               // this PASS did not help - undo this pass
     {
-        for( long int j = 0; j < L; j++ ) amt[j] = Xold[(size_t)j];
+        for( long int j = 0; j < L; j++ ) amt[j] = Xpass[(size_t)j];
+        break;
+    }
+    relCur = relNew; absCur = absNew;
+    nClamped += nClampedPass; nPass++; improved = true;
+    if( pass == 0 )                  // remember exactly what the old single pass gave
+    { Xsingle.assign( amt, amt + L ); relSingle = relNew; absSingle = absNew; }
+
+    if( nClampedPass == 0 ) break;   // a clean solve leaves nothing for a further pass
+    if( relCur < 1. ) break;         // the answer now passes its own mass-balance test
+    }   // pass loop
+
+    // Short of a full repair, fall back to the single-pass result - see BOUNDED above.
+    if( improved && !( relCur < 1. ) && !Xsingle.empty() )
+    {
+        for( long int j = 0; j < L; j++ ) amt[j] = Xsingle[(size_t)j];
+        relCur = relSingle; absCur = absSingle; nPass = 1;
+    }
+
+    if( !improved )
+    {
+        for( long int j = 0; j < L; j++ ) amt[j] = Xorig[(size_t)j];
+        // A repair that is computed and then THROWN AWAY is as much a decision as one
+        // that is kept, and it was previously invisible: the trace recorded only the
+        // successful branch, so a project whose every repair was reverted read
+        // identically to one where the mechanism never ran at all.
+        native_trace_decide( "mbreproject-reverted species=%ld clamped=%ld relbefore=%.3e "
+                             "absbefore=%.3e", (long)N, (long)nClamped, relOld, absOld );
         return false;
     }
+    const double relNew = relCur, absNew = absCur;
 
     // Keep both amount vectors and everything derived from them consistent with
     // the repaired state - pm.pH, FVOL, IC and the rest come from
@@ -629,10 +696,199 @@ bool TMultiBase::MassBalanceReproject( double* amt )
     // A repair that FIRES is a decision, and on 11 of 56 projects native returns an
     // answer failing its own mass-balance test - so which rows needed repairing is
     // part of what a freeze should carry, not a log-only detail.
-    native_trace_decide( "mbreproject species=%ld relbefore=%.3e relafter=%.3e "
-                         "absbefore=%.3e absafter=%.3e",
-                         (long)N, relOld, relNew, absOld, absNew );
+    native_trace_decide( "mbreproject species=%ld passes=%ld clamped=%ld relbefore=%.3e "
+                         "relafter=%.3e absbefore=%.3e absafter=%.3e",
+                         (long)N, (long)nPass, (long)nClamped, relOld, relNew, absOld, absNew );
     return true;
+}
+
+// EnergyDeterminacyCheck: is each present phase's AMOUNT actually fixed by the energy?
+//
+// Motivation, 07PSIna_G_vcomplex_2_0_1_80_0 (2026-09-13): a change to the MBR reprojection
+// moved TiO2(am_hyd) by +14 % (800x its own 21-nudge spread) while G agreed to 11 digits in
+// both arms. Neither answer is "more converged" - the energy cannot tell them apart - and a
+// 1e-15 bIC jitter does NOT reveal it (spread 1.7e-4): the solver lands reproducibly at a
+// point fixed by its TRAJECTORY inside a flat valley. Jitter measures reproducibility, not
+// determinacy; only a trajectory change exposes the valley. This measures the valley itself,
+// from one solve, and warns when a present phase's amount is not fixed to kDeterminacyWarnRel.
+//
+// Model. Moving present phase k by t mol while keeping A.x = b costs, at the least,
+//     E(t) = (1/2) t^2 / c_k,
+// c_k the phase's COMPLIANCE - the cheapest way to move k with every other species free to
+// compensate under A dn = 0. Answers whose energies differ by less than the energy resolution
+// eps_G are indistinguishable, so k's amount is fixed only to  dn_k = sqrt( 2 eps_G c_k ).
+//
+// Curvature. A species of a MULTI-component phase has ideal curvature 1/x_j. A PURE phase has
+// NONE of its own - constant chemical potential - and moves only by pushing material into or
+// out of solution species sharing its elements, so pure phases are FREE variables. A first
+// version instead gave them the IPM barrier's 1/x_j; on vcomplex that fictitious term alone
+// put TiO2(am_hyd) at 6900 % (observed 14 %) and 11 trace solids above 100 %.
+//
+// With S the active multi-component species (weights X_S), P the active pure phases,
+//     K0 = [ A_S X_S A_S'   A_P ]        v_k = [ A_S X_S g_S ]      w_k = g_S' X_S g_S
+//          [ A_P'           0   ]              [ g_P         ]
+// for phase k's indicator g = (g_S, g_P), eliminating the border of the least-energy KKT
+// system gives   c_k = w_k - v_k' K0^-1 v_k   (>= 0). One factorisation of K0, size N + |P|
+// with |P| <= N by the phase rule, then one solve per present phase. c_k == 0 means k is
+// pinned by mass balance alone (e.g. the only carrier of an IC) - fully determined.
+// A SINGULAR K0 means pure phases whose stoichiometries compensate one another exactly: some
+// amounts are then not determined at ALL, but which ones is not resolved here, so it is
+// reported as its own event rather than attributed to a phase.
+//
+// Energy resolution:  eps_G = DBL_EPSILON * sum_j |x_j mu_j|  (RT units), the rounding floor of
+// G itself, mu_j = sum_i a_ij u_i the dual potential. MEASURED, not assumed: on vcomplex it
+// predicts TiO2(am_hyd) +-20 % (observed trajectory move 14 %) and CaSiO3(cr) +-2.6e-6
+// (observed jitter spread 2.2e-6, move 1.1e-6). The alternative, the first-order stationarity
+// slack sum_j |x_j (F_j - mu_j)|, overstated both by ~750x and was dropped.
+//
+// Species pinned at a kinetic bound (DLL/DUL) are excluded: a constraint fixes their amount.
+// Read-only: nothing here writes solver state.
+static const double kDeterminacyWarnRel = 1e-2;
+
+void TMultiBase::EnergyDeterminacyCheck()
+{
+    const long int N = pm.N, L = pm.L, FI = pm.FI, FIs = pm.FIs;
+    if( N < 1 || L < 1 || FI < 1 || !pm.A || !pm.X || !pm.U || !pm.L1 ) return;
+    const bool probe = getenv( "GEMS3K_DETERMINACY_PROBE" ) != nullptr;
+
+    std::vector<long int> phaseOf( (size_t)L, -1 );
+    for( long int k = 0, jb = 0; k < FI; jb += pm.L1[k], k++ )
+        for( long int j = jb; j < jb + pm.L1[k] && j < L; j++ ) phaseOf[(size_t)j] = k;
+
+    std::vector<char> act( (size_t)L, 0 );
+    double gabs = 0.;
+    for( long int j = 0; j < L; j++ )
+    {
+        const double x = pm.X[j];
+        if( !( x > 0. ) || phaseOf[(size_t)j] < 0 ) continue;
+        if( pm.DUL && pm.DUL[j] < 1e6 && x >= pm.DUL[j] * ( 1. - 1e-9 ) ) continue;
+        if( pm.DLL && pm.DLL[j] > 0. && x <= pm.DLL[j] * ( 1. + 1e-9 ) ) continue;
+        act[(size_t)j] = 1;
+        gabs += fabs( x * DC_DualChemicalPotential( pm.U, pm.A + j*N, pm.NR, j ) );
+    }
+    const double epsG = std::numeric_limits<double>::epsilon() * gabs;
+    if( !( epsG > 0. ) ) return;
+
+    std::vector<long int> P, rows;
+    for( long int j = 0; j < L; j++ )
+        if( act[(size_t)j] && phaseOf[(size_t)j] >= FIs ) P.push_back( j );
+    for( long int r = 0; r < N; r++ )
+        for( long int j = 0; j < L; j++ )
+            if( act[(size_t)j] && pm.A[r + j*N] != 0. ) { rows.push_back( r ); break; }
+    const long int n = (long int)rows.size(), p = (long int)P.size(), m = n + p;
+    if( n < 1 ) return;
+    auto A = [&]( long int r, long int j ) { return pm.A[rows[(size_t)r] + j*N]; };
+    auto trimmedPhaseName = [&]( long int k ) {
+        std::string s = char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME );
+        s.erase( s.find_last_not_of( " \t" ) + 1 );
+        return s;
+    };
+
+    std::vector<double> K( (size_t)(m*m), 0. );
+    for( long int j = 0; j < L; j++ )
+    {
+        if( !act[(size_t)j] || phaseOf[(size_t)j] >= FIs ) continue;
+        for( long int r = 0; r < n; r++ )
+        {
+            const double ar = A( r, j );
+            if( ar != 0. ) for( long int c = 0; c < n; c++ ) K[(size_t)(r*m + c)] += pm.X[j] * ar * A( c, j );
+        }
+    }
+    for( long int q = 0; q < p; q++ )
+        for( long int r = 0; r < n; r++ )
+            K[(size_t)(r*m + n+q)] = K[(size_t)((n+q)*m + r)] = A( r, P[(size_t)q] );
+
+    // LU with partial pivoting; a pivot below 1e-13 of its column's scale is singular.
+    std::vector<long int> perm( (size_t)m );
+    for( long int i = 0; i < m; i++ ) perm[(size_t)i] = i;
+    for( long int c = 0; c < m; c++ )
+    {
+        long int pc = c; double best = 0., scale = 0.;
+        for( long int i = c; i < m; i++ )
+        { const double v = fabs( K[(size_t)(i*m + c)] ); scale = std::max( scale, v ); if( v > best ) { best = v; pc = i; } }
+        if( !( best > 1e-300 ) || !( best > 1e-13 * scale ) )
+        {
+            native_trace_decide( "determinacy-singular species=%ld purephases=%ld", (long)(m - p), (long)p );
+            if( probe ) fprintf( stderr, "DETPROBE singular=1 n=%ld p=%ld\n", (long)n, (long)p );
+            return;
+        }
+        if( pc != c )
+        {
+            for( long int cc = 0; cc < m; cc++ ) std::swap( K[(size_t)(c*m + cc)], K[(size_t)(pc*m + cc)] );
+            std::swap( perm[(size_t)c], perm[(size_t)pc] );
+        }
+        for( long int i = c+1; i < m; i++ )
+        {
+            const double f = ( K[(size_t)(i*m + c)] /= K[(size_t)(c*m + c)] );
+            if( f != 0. ) for( long int cc = c+1; cc < m; cc++ ) K[(size_t)(i*m + cc)] -= f * K[(size_t)(c*m + cc)];
+        }
+    }
+
+    long int nWarn = 0; double worstRel = 0.; long int kWorst = -1;
+    std::string listed;
+    std::vector<double> v( (size_t)m ), z( (size_t)m );
+    for( long int k = 0, jb = 0; k < FI; jb += pm.L1[k], k++ )
+    {
+        const long int je = std::min( jb + pm.L1[k], L );
+        double w = 0., nk = 0.; bool present = false;
+        std::fill( v.begin(), v.end(), 0. );
+        for( long int j = jb; j < je; j++ )
+        {
+            if( !act[(size_t)j] ) continue;
+            present = true; nk += pm.X[j];
+            if( k < FIs )
+            { w += pm.X[j]; for( long int r = 0; r < n; r++ ) v[(size_t)r] += pm.X[j] * A( r, j ); }
+        }
+        if( !present ) continue;
+        if( k >= FIs )
+            for( long int q = 0; q < p; q++ ) if( phaseOf[(size_t)P[(size_t)q]] == k ) v[(size_t)(n+q)] = 1.;
+
+        for( long int i = 0; i < m; i++ ) z[(size_t)i] = v[(size_t)perm[(size_t)i]];
+        for( long int i = 0; i < m; i++ )
+            for( long int c = 0; c < i; c++ ) z[(size_t)i] -= K[(size_t)(i*m + c)] * z[(size_t)c];
+        for( long int i = m-1; i >= 0; i-- )
+        {
+            for( long int c = i+1; c < m; c++ ) z[(size_t)i] -= K[(size_t)(i*m + c)] * z[(size_t)c];
+            z[(size_t)i] /= K[(size_t)(i*m + i)];
+        }
+        double vKv = 0.;
+        for( long int i = 0; i < m; i++ ) vKv += v[(size_t)i] * z[(size_t)i];
+        const double ck  = std::max( w - vKv, 0. );
+        const double rel = sqrt( 2. * epsG * ck ) / nk;
+        const std::string name = trimmedPhaseName( k );
+
+        if( probe )
+            fprintf( stderr, "DETPROBE phase=%s class=%c pure=%d n=%.6e rel=%.3e c=%.3e epsG=%.3e\n",
+                     name.c_str(), pm.PHC ? pm.PHC[k] : '?', (int)( k >= FIs ), nk, rel, ck, epsG );
+        if( rel >= kDeterminacyWarnRel )
+        {
+            // rel >= 1: the amount is inside its own energy resolution, i.e. the energy cannot
+            // even say whether the phase is PRESENT - a percentage there (1e15 % was observed,
+            // Gibbsite at 4.6e-18 mol) is true but unreadable, so it is named as such.
+            if( nWarn < 8 )
+                listed += ( nWarn ? ", " : "" ) + name
+                        + ( rel >= 1. ? std::string( " (presence)" ) : fmt::format( " ({:.2g} %)", 100. * rel ) );
+            nWarn++;
+            if( rel > worstRel ) { worstRel = rel; kWorst = k; }
+        }
+    }
+
+    if( nWarn > 0 )
+    {
+        const std::string worstTxt = worstRel >= 1.
+            ? std::string( "whose amount lies inside its own energy resolution, so even its PRESENCE is undetermined" )
+            : fmt::format( "fixed only to +-{:.2g} %", 100. * worstRel );
+        gems_logger->warn(
+            "GEM answer not fully determined by the energy: {} present phase(s) have amounts the "
+            "minimised Gibbs energy fixes only to worse than {:.0f} % at its own resolution - worst {}, "
+            "{}. Answers differing in these amounts are EQUALLY valid (same G to rounding), so do not "
+            "rely on them more precisely than that; a different start, setting or solver version may "
+            "legitimately return a different value. Phases: {}",
+            nWarn, 100. * kDeterminacyWarnRel,
+            kWorst >= 0 ? trimmedPhaseName( kWorst ) : std::string( "-" ), worstTxt, listed );
+        native_trace_decide( "undetermined phases=%ld threshold=%.0e worst=%.2e list=%s",
+                             (long)nWarn, kDeterminacyWarnRel, worstRel, listed.c_str() );
+    }
 }
 
 void TMultiBase::GibbsEnergyMinimization()
@@ -816,6 +1072,9 @@ FORCED_AIA:
                absr, iAbs >= 0 ? char_array_to_string( pm.SB[iAbs], MAXICNAME )
                                : std::string( "-" ) );
    }
+
+   if( !pm.MK && !pm.PZ )
+       EnergyDeterminacyCheck();
 
    if( pm.MK || pm.PZ ) // no good solution
        /*TProfil::pm->*/testMulti();

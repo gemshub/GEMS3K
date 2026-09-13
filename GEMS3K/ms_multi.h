@@ -2819,6 +2819,11 @@ protected:
     /// `amt` is the amount vector to repair - pm.X on the final answer, pm.Y at the
     /// post-PSSC call site (PSSC works on pm.Y). Both are re-synchronised on success.
     bool MassBalanceReproject( double* amt );
+    /// Warn when a present phase's AMOUNT is not determined by the minimised energy:
+    /// the Gibbs energy is flat enough along a mass-balance-preserving direction that
+    /// answers differing in that phase's amount cannot be told apart at the solver's own
+    /// energy resolution. Read-only - never changes the answer. See ipm_main.cpp.
+    void EnergyDeterminacyCheck();
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
     void AutoInitialApproximation( );
 
