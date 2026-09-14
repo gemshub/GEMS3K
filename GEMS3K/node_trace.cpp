@@ -14,8 +14,6 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
 {
     std::vector<TraceRegime> out;
     const long int nIC = CSD->nICb, nPH = CSD->nPHb, nICch = CSD->nIC;
-    // no explicit list: the elements marked of interest on this node, if any
-    const std::vector<std::string>& interest = ofInterest.empty() ? multi_base->elementsOfInterest : ofInterest;
     if( nIC < 1 || nPH < 1 ) return out;
 
     // ---- which ICs are trace (or of interest)
@@ -29,8 +27,8 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
         if( isCharge( i ) || !( b0[(size_t)i] > 0. ) ) continue;
         const std::string name = CSD->ICNL[ IC_xDB_to_xCH( i ) ];
         std::string trimmed = name; trimmed.erase( trimmed.find_last_not_of( " \t" ) + 1 );
-        if( !interest.empty() )
-        { if( std::find( interest.begin(), interest.end(), trimmed ) != interest.end() ) trace.push_back( i ); }
+        if( !ofInterest.empty() )
+        { if( std::find( ofInterest.begin(), ofInterest.end(), trimmed ) != ofInterest.end() ) trace.push_back( i ); }
         else if( b0[(size_t)i] <= traceRel * total )
             trace.push_back( i );
     }
@@ -179,32 +177,4 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
     // ---- restore the node exactly (DATABR and MULTI)
     restoreNode();
     return out;
-}
-
-long int TNode::GEM_set_elements_of_interest( const std::vector<std::string>& names )
-{
-    std::vector<std::string> kept;
-    for( std::string n : names )
-    {
-        n.erase( 0, n.find_first_not_of( " \t" ) );
-        n.erase( n.find_last_not_of( " \t" ) + 1 );
-        bool found = false;
-        for( long int i = 0; i < CSD->nIC && !found; i++ )
-        {
-            std::string ic = CSD->ICNL[i];
-            ic.erase( ic.find_last_not_of( " \t" ) + 1 );
-            found = ( ic == n );
-        }
-        if( !found )
-            node_logger->warn( "GEM_set_elements_of_interest: '{}' is not an independent component of this system - skipped", n );
-        else if( std::find( kept.begin(), kept.end(), n ) == kept.end() )
-            kept.push_back( n );
-    }
-    multi_base->elementsOfInterest = kept;
-    return (long int)kept.size();
-}
-
-const std::vector<std::string>& TNode::GEM_elements_of_interest() const
-{
-    return multi_base->elementsOfInterest;
 }
