@@ -497,6 +497,41 @@ public:
     ///  \return NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
     long int  GEM_run( bool uPrimalSol );   // calls GEM for a work node
 
+    /// One trace element's verdict from GEM_trace_regimes().
+    struct TraceRegime
+    {
+        long int xIC = -1;           ///< DBR index of the independent component
+        std::string name;            ///< IC name
+        double amount = 0.;          ///< bulk amount as given, mol
+        /// LINEAR    - phase fractions unchanged (within tol) at every factor: the result is valid at the given amount
+        /// SATURATED - a single-species phase carrying it is present and its dissolved amount (in multi-species
+        ///             phases) stays within 1.5x over >= 10x of total: solubility-controlled
+        /// BOUNDARY  - a single-species phase carrying it appears or disappears across the factors: the given
+        ///             amount sits at a solubility limit
+        /// NONLINEAR - anything else (site saturation, ionic-strength feedback, or a numerical floor)
+        /// STRANDED  - every carrier is in ONE multi-species phase that is <= 1e-6 of the system at the given
+        ///             amount: the element holds that phase open (may be combined, e.g. "STRANDED+NONLINEAR")
+        /// FAILED    - a re-solve did not return OK or BAD
+        std::string verdict;
+        double maxFractionChange = 0.; ///< largest |fraction in a phase - given-amount fraction| over the factors
+        std::vector<std::pair<std::string,double>> phases;  ///< partitioning at the given amount (fraction > 1e-4)
+        std::vector<std::string> boundaryPhases;            ///< phases that appear/disappear (BOUNDARY)
+    };
+    /// DILUTE-REGIME CHECK for trace elements (owner decision 2026-09-14b: never change a trace amount
+    /// silently; offer a check). Re-solves this node with every trace IC's bulk amount scaled by each factor
+    /// (all together - they share the solutions' activity models), cold (NodeStatusCH = mode), and classifies
+    /// each trace IC (see TraceRegime::verdict). A trace IC has bIC <= traceRel x the total non-charge bulk;
+    /// ofInterest (IC names), when given, restricts the check to those elements - the hook for marking
+    /// elements of interest, every other trace element being a default seed (xGEMS Material: 1e-15; GEMSGUI:
+    /// often 1e-9). The node's DATABR (inputs AND results) is restored exactly afterwards; MULTI's work arrays
+    /// hold the last check solve, as after any GEM_run(). Costs 1 + factors.size() solves.
+    /// Measured (gems-benchmark tools/trace_linearity.py, same logic): CASH+CsSr 7/7 LINEAR 1e-12..1e-6 mol;
+    /// T8_aq101 35 LINEAR / 5 SATURATED / 4 BOUNDARY (P, Pd, Pu, Zr); T-cement Cs, Sr STRANDED.
+    std::vector<TraceRegime> GEM_trace_regimes( const std::vector<double>& factors = { 0.1, 10. },
+                                               double traceRel = 1e-6, double tol = 1e-3,
+                                               long int mode = NEED_GEM_AIA,
+                                               const std::vector<std::string>& ofInterest = {} );
+
 #ifdef USE_OPTIMA_SOLVER
     /// Convenience dispatch combining ROP's speed with native AIA's
     /// robustness (see GEMS3K's CLAUDE.md, 2026-08-24, "Combining
