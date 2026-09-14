@@ -65,6 +65,17 @@ FILE* native_trace_file()
     return fp;
 }
 
+/// Nesting depth of native_trace_quiet(). While > 0, native_trace_run_header() and
+/// native_trace_run_result() write nothing; DECIDE and event records are unaffected. For solves that
+/// belong to ONE GEM_run() call (TNode's cold-call recovery, pa_ColdRetryNudges): the freeze attributes
+/// RUN/KEY records to solver modes by position, so an inner solve writing its own would shift every
+/// later row.
+static thread_local int native_trace_quiet_depth = 0;
+void native_trace_quiet( bool on )
+{
+    native_trace_quiet_depth += on ? 1 : -1;
+}
+
 /// Companion to native_trace_file() for the one thing an event-level trace
 /// cannot show: the shape of the IPM descent, one line per iteration. See the
 /// call site in InteriorPointsMethod() for what it measured and why.
@@ -117,7 +128,7 @@ void native_trace_decide( const char* fmt, ... )
 void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mode )
 {
     FILE* ntf = native_trace_file();
-    if( !ntf || !pa )
+    if( !ntf || !pa || native_trace_quiet_depth > 0 )
         return;
 
     const char* mname;
@@ -173,7 +184,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaEarlyStabilityAt=%ld pa_OptimaDimReduce=%ld"
              " pa_OptimaDimReduceTol=%.6e pa_MbPivotSplit=%ld pa_OptimaZeroAbsent=%ld"
              " pa_OptimaReadmitSeed=%.6e pa_IpmStallWindow=%d pa_MbReproject=%d"
-             " pa_DeterminacyWarn=%.6e\n",
+             " pa_DeterminacyWarn=%.6e pa_ColdRetryNudges=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -191,7 +202,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaEarlyStabilityAt, (long)pa->OptimaDimReduce,
              pa->OptimaDimReduceTol, (long)pa->MbPivotSplit,
              (long)pa->OptimaZeroAbsent, pa->OptimaReadmitSeed,
-             (int)pa->IpmStallWindow, (int)pa->MbReproject, pa->DeterminacyWarn );
+             (int)pa->IpmStallWindow, (int)pa->MbReproject, pa->DeterminacyWarn,
+             (long)pa->ColdRetryNudges );
 
     // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
     //
@@ -321,7 +333,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
 void native_trace_run_result( const MULTI& pm, long int mode, long int status )
 {
     FILE* ntf = native_trace_file();
-    if( !ntf )
+    if( !ntf || native_trace_quiet_depth > 0 )
         return;
 
     // The REQUESTED mode, captured by the caller before the dispatch - the

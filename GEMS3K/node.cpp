@@ -27,6 +27,7 @@
 //-------------------------------------------------------------------
 
 #include "node.h"
+#include "datach_api.h"
 #include "num_methods.h"
 #include "kinetics.h"
 #include "v_service.h"
@@ -173,6 +174,85 @@ void TNode::Get_sMod(int ndx, std::string &sMod)
 //               true  (1)  -  use speciation provided in the DATABR memory structure (e.g. after reading the DBR file)
 //  Return values:    NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
 long int TNode::GEM_run( bool uPrimalSol )
+{
+    const long int requested = CNode->NodeStatusCH;
+    const bool kinetics = CNode->dt > 0.;
+    long int status = GEM_run_single( uPrimalSol );
+    if( requested == NEED_GEM_AIA && status == ERR_GEM_AIA && !kinetics )
+    {
+        const long int nudges = multi_ptr()->base_param()->ColdRetryNudges;
+        if( nudges > 0 )
+            status = GEM_run_cold_retry( nudges );
+    }
+    return status;
+}
+
+// Recovery of a failed cold native call (pa_ColdRetryNudges; the measurement is in its BASE_PARAM comment).
+// A converged solve one 1e-15 nudge away is a warm start from which SIA reaches the equilibrium at the
+// exact composition; the failed state itself is not (a warm retry from it recovered none of T-cement's
+// four failures). Nothing about the requested composition changes: every nudge is undone before the warm
+// solve, and a call that no nudge recovers is handed back exactly as it failed.
+long int TNode::GEM_run_cold_retry( long int maxNudges )
+{
+    const long int nIC = CSD->nICb;
+    DATABR* failed = new DATABR;
+    dbr_dch_api::databr_reset( failed, 1 );
+    dbr_dch_api::databr_realloc( CSD, failed );
+    { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+    const std::string failedError = ipmlog_error;
+    const std::vector<double> b0( CNode->bIC, CNode->bIC + nIC );
+    long int itf = pmm->ITF, itg = pmm->ITG;
+    double seconds = CalcTime;
+
+    native_trace_quiet( true );
+    long int result = ERR_GEM_AIA;
+    for( long int n = 0; n < maxNudges && result == ERR_GEM_AIA; n++ )
+    {
+        const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
+        for( long int i = 0; i < nIC; i++ )
+            CNode->bIC[i] = b0[(size_t)i] * ( 1. + ( ( i % 2 ) ? -1. : 1. ) * k * 1e-15 );
+        CNode->NodeStatusCH = NEED_GEM_AIA;
+        const long int cold = GEM_run_single( false );
+        itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+        long int warm = -1;
+        if( cold == OK_GEM_AIA )
+        {
+            for( long int i = 0; i < nIC; i++ )
+                CNode->bIC[i] = b0[(size_t)i];
+            CNode->NodeStatusCH = NEED_GEM_SIA;
+            warm = GEM_run_single( false );
+            itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+            if( warm == OK_GEM_SIA || warm == OK_GEM_AIA )
+                result = OK_GEM_AIA;
+            else if( warm == BAD_GEM_SIA || warm == BAD_GEM_AIA )
+                result = BAD_GEM_AIA;
+        }
+        native_trace_decide( "coldretry attempt=%ld nudge=%+g aia=%ld sia=%ld itf=%ld itg=%ld",
+                             (long)( n + 1 ), k, (long)cold, (long)warm, (long)itf, (long)itg );
+    }
+    native_trace_quiet( false );
+
+    if( result == ERR_GEM_AIA )
+    {
+        databr_copy( failed );            // the failed call as it was, status ERR_GEM_AIA
+        ipmlog_error = failedError;
+    }
+    else
+    {
+        CNode->NodeStatusCH = result;
+        native_trace_run_result( *pmm, NEED_GEM_AIA, result );
+    }
+    databr_free( failed );
+    pmm->ITF = itf;
+    pmm->ITG = itg;
+    NumIterFIA = itf;
+    NumIterIPM = itg;
+    CNode->IterDone = itf + itg;
+    CalcTime = seconds;
+    return CNode->NodeStatusCH;
+}
+
+long int TNode::GEM_run_single( bool uPrimalSol )
 {
     CalcTime = 0.0;
     PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;

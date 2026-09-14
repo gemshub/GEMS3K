@@ -1422,6 +1422,23 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// serialises BASE_PARAM positionally.
     double DeterminacyWarn = 1e-2;
 
+    /// pa_ColdRetryNudges: recovery of a failed cold native call. When TNode::GEM_run() is asked for
+    /// NEED_GEM_AIA (no kinetics) and ends in ERR_GEM_AIA, it re-solves cold at up to this many nudged bulk
+    /// compositions, bIC[i] x (1 + s_i k 1e-15) with s_i alternating in sign over the ICs and
+    /// k = +1, -1, +2, -2, ...; the first nudge that returns OK_GEM_AIA becomes the warm start of an SIA
+    /// solve at the EXACT bIC, and that solve's outcome is returned as OK_GEM_AIA or BAD_GEM_AIA. The answer
+    /// is an equilibrium at the requested composition, not the nudged one. If no attempt recovers, the
+    /// original ERR_GEM_AIA is returned with its DATABR restored. ITF/ITG and IterDone count every attempt;
+    /// each attempt leaves a DECIDE `coldretry` record, and the inner solves write no RUN/KEY records of
+    /// their own. 0 = off.
+    ///
+    /// Basis (gems-benchmark tools/dilute_probe, HANDOFF-2026-09-14c s4): on T-cement's water sweep
+    /// (50 steps x 5 nudges, native AIA) 4 cold solves fail; an SIA at the exact bIC started from a draw
+    /// one 1e-15 nudge away that converged recovers all 4 in <= 2 iterations, a warm retry from the failed
+    /// state recovers none, and a start from a solve with the trace ICs raised to 1e-6 mol recovers 2.
+    /// Trailing member: GEMSGUI serialises BASE_PARAM positionally.
+    long int ColdRetryNudges = 4;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -2945,6 +2962,8 @@ protected:
 /// pm.SB[] are reachable from this layer via char_array_to_string(), which is
 /// what ipm_optima.cpp already does for its own messages.
 FILE* native_trace_file();
+/// Suppress (on = true) / re-enable the per-call RUN header and KEY result records; nests.
+void native_trace_quiet( bool on );
 
 /// Per-iteration IPM descent record, gated on GEMS3K_IPM_PROBE=<path>. Same
 /// zero-cost-when-unset shape as native_trace_file(); see the call site in
@@ -3048,7 +3067,7 @@ typedef enum {  // Field index into outField structure
     f_pa_MbTrendPhaseDecay, f_pa_OptimaEarlyStabilityAt, f_pa_OptimaDimReduce,
     f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit, f_pa_OptimaZeroAbsent,
     f_pa_OptimaReadmitSeed,
-    f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn
+    f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn, f_pa_ColdRetryNudges
 
 } MULTI_DYNAMIC_FIELDS;
 

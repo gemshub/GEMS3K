@@ -1384,6 +1384,10 @@ public:
     DATABR* databr_free(DATABR* data_BR_);
 
 protected:
+    /// One GEM_run() attempt, without the cold-call recovery (GEM_run() is this plus pa_ColdRetryNudges).
+    long int GEM_run_single( bool uPrimalSol );
+    /// pa_ColdRetryNudges' recovery of a failed NEED_GEM_AIA call; see BASE_PARAM::ColdRetryNudges.
+    long int GEM_run_cold_retry( long int maxNudges );
 
     void allocMemory();
     void freeMemory();
