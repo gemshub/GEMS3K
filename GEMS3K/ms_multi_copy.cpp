@@ -29,6 +29,13 @@
 
 void TMultiBase::copyMULTI( const TMultiBase& otherMulti )
 {
+    copyMULTIData( otherMulti, true );
+}
+
+// realloc = false: copy VALUES only, into this object's existing arrays (see ms_multi.h). Every
+// multi_realloc()/alloc_*() below is skipped; the copy lengths are recomputed exactly as before.
+void TMultiBase::copyMULTIData( const TMultiBase& otherMulti, bool realloc )
+{
     MULTI* otherPM = otherMulti.pmp;
     pa_standalone = otherMulti.pa_standalone;  
     //static values
@@ -47,7 +54,8 @@ void TMultiBase::copyMULTI( const TMultiBase& otherMulti )
     PSigm_ = otherMulti.PSigm_;
 
     get_PAalp_PSigm( PAalp, PSigm);
-    multi_realloc( PAalp, PSigm );
+    if( realloc )
+        multi_realloc( PAalp, PSigm );
 
     //dynamic values
 
@@ -221,15 +229,18 @@ void TMultiBase::copyMULTI( const TMultiBase& otherMulti )
         long int PhLinSum, lPhcSum;
         getLsPhlsum( PhLinSum,lPhcSum );
 
-        alloc_IPx(LsIPxSum);
-        alloc_PMc(LsModSum);
-        alloc_DMc(LsMdcSum);
-        alloc_MoiSN(LsMsnSum);
-        alloc_SitFr(LsSitSum);
-        alloc_DQFc(DQFcSum);
-        //       pm.rcpc = new double[rcpcSum];
-        alloc_PhLin(PhLinSum);
-        alloc_lPhc(lPhcSum);
+        if( realloc )
+        {
+            alloc_IPx(LsIPxSum);
+            alloc_PMc(LsModSum);
+            alloc_DMc(LsMdcSum);
+            alloc_MoiSN(LsMsnSum);
+            alloc_SitFr(LsSitSum);
+            alloc_DQFc(DQFcSum);
+            //       pm.rcpc = new double[rcpcSum];
+            alloc_PhLin(PhLinSum);
+            alloc_lPhc(lPhcSum);
+        }
 
         copyValues(pm.IPx, otherPM->IPx, LsIPxSum);
         copyValues(pm.PMc, otherPM->PMc, LsModSum);
@@ -257,12 +268,15 @@ void TMultiBase::copyMULTI( const TMultiBase& otherMulti )
         long int IsoPcSum, xSMdSum;
         getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
 
-        alloc_xSMd(xSMdSum);
-        alloc_IsoPc(IsoPcSum);
-        alloc_IsoSc(IsoScSum);
-        alloc_IsoCt(IsoCtSum);
-        alloc_EImc(EImcSum);
-        alloc_mCDc(mCDcSum);
+        if( realloc )
+        {
+            alloc_xSMd(xSMdSum);
+            alloc_IsoPc(IsoPcSum);
+            alloc_IsoSc(IsoScSum);
+            alloc_IsoCt(IsoCtSum);
+            alloc_EImc(EImcSum);
+            alloc_mCDc(mCDcSum);
+        }
 
         copyValues(  pm.xSMd, otherPM->xSMd, xSMdSum);
         copyValues(  pm.IsoPc,  otherPM->IsoPc,  IsoPcSum);
@@ -287,14 +301,17 @@ void TMultiBase::copyMULTI( const TMultiBase& otherMulti )
         long int rpConCSum, apConCSum, AscpCSum;
         getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
 
-        alloc_xSKrC(xSKrCSum);
-        alloc_ocPRkC(ocPRkC_feSArC_Sum);
-        alloc_feSArC(ocPRkC_feSArC_Sum);
-        alloc_rpConC(rpConCSum);
-        alloc_apConC(apConCSum);
-        alloc_AscpC(AscpCSum);
-        alloc_UMpcC(UMpcSum);
-        alloc_xICuC(xICuCSum);
+        if( realloc )
+        {
+            alloc_xSKrC(xSKrCSum);
+            alloc_ocPRkC(ocPRkC_feSArC_Sum);
+            alloc_feSArC(ocPRkC_feSArC_Sum);
+            alloc_rpConC(rpConCSum);
+            alloc_apConC(apConCSum);
+            alloc_AscpC(AscpCSum);
+            alloc_UMpcC(UMpcSum);
+            alloc_xICuC(xICuCSum);
+        }
 
         copyValues( pm.xSKrC, otherPM->xSKrC, xSKrCSum);
         copyValues( &pm.ocPRkC[0][0],  &otherPM->ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);

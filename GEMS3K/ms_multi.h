@@ -2148,6 +2148,12 @@ public:
     void  write_ipm_format_stream( std::iostream& stream, GEMS3KGenerator::IOModes type_f,
                                    bool addMui, bool with_comments, bool brief_mode, const std::string& test_set_name );
     virtual void copyMULTI( const TMultiBase& otherMulti );
+    /// copyMULTI()'s body. realloc = true is copyMULTI() itself. realloc = false copies VALUES into this
+    /// object's EXISTING arrays and allocates nothing: for restoring a snapshot into a live MULTI, whose
+    /// TSolMod/TSorpMod/TKinMet objects hold pointers into those arrays (TSolMod::lnGamma = sd->arlnGam),
+    /// so reallocating it would leave them dangling. Both objects must have identical dimensions - a
+    /// snapshot of this same MULTI taken with copyMULTI(). Used by TNode::GEM_trace_regimes().
+    void copyMULTIData( const TMultiBase& otherMulti, bool realloc );
     void read_multi(GemDataStream &ff, DATACH *dCH);
     /// Writing structure MULTI (GEM IPM work structure) to binary file
     void out_multi( GemDataStream& ff  );

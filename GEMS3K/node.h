@@ -523,8 +523,8 @@ public:
     /// each trace IC (see TraceRegime::verdict). A trace IC has bIC <= traceRel x the total non-charge bulk;
     /// ofInterest (IC names), when given, restricts the check to those elements - the hook for marking
     /// elements of interest, every other trace element being a default seed (xGEMS Material: 1e-15; GEMSGUI:
-    /// often 1e-9). The node's DATABR (inputs AND results) is restored exactly afterwards; MULTI's work arrays
-    /// hold the last check solve, as after any GEM_run(). Costs 1 + factors.size() solves.
+    /// often 1e-9). The node is restored exactly afterwards - DATABR (inputs AND results) and MULTI, so a warm
+    /// GEM_run(false) after the check starts from the same state as without it. Costs 1 + factors.size() solves.
     /// Measured (gems-benchmark tools/trace_linearity.py, same logic): CASH+CsSr 7/7 LINEAR 1e-12..1e-6 mol;
     /// T8_aq101 35 LINEAR / 5 SATURATED / 4 BOUNDARY (P, Pd, Pu, Zr); T-cement Cs, Sr STRANDED.
     std::vector<TraceRegime> GEM_trace_regimes( const std::vector<double>& factors = { 0.1, 10. },

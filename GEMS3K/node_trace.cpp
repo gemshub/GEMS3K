@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include "node.h"
 #include "datach_api.h"
 
@@ -38,12 +39,29 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
     dbr_dch_api::databr_reset( backup, 1 );
     dbr_dch_api::databr_realloc( CSD, backup );
     { DATABR* live = CNode; CNode = backup; databr_copy( live ); CNode = live; }
+    // ... and of MULTI. A warm GEM_run(false) starts from MULTI's RETAINED primal (unpackDataBr() does not
+    // unpack xDC when uPrimalSol is false), so restoring DATABR alone left the next warm call starting from
+    // the last CHECK solve. Measured 2026-09-14 through xGEMS, reequilibrate(true) after traceRegimes() vs
+    // without: T-cement pH 14.048 -> 13.812; CASH+CsSr 147 extra iterations and species amounts moved by up
+    // to 1.6e-3 relative. The snapshot is a fresh TMultiBase filled by copyMULTI(); the restore copies
+    // values back WITHOUT reallocating (copyMULTIData(.., false)), because this node's TSolMod objects hold
+    // pointers into the live arrays.
+    std::unique_ptr<TMultiBase> savedMulti( new TMultiBase( this ) );
+    savedMulti->set_def();
+    savedMulti->copyMULTI( *multi_base );
+    auto restoreNode = [&]() {
+        databr_copy( backup );
+        databr_free( backup );
+        backup = nullptr;
+        multi_base->copyMULTIData( *savedMulti, false );
+    };
 
     std::vector<double> runFactors{ 1. };
     runFactors.insert( runFactors.end(), factors.begin(), factors.end() );
     struct Run { bool ok = false; std::vector<double> perPhase, xPH; std::vector<char> present; };  // perPhase[k*nIC+i]
     std::vector<Run> runs( runFactors.size() );
     std::vector<double> bc( (size_t)nIC );
+    try {
     for( size_t r = 0; r < runFactors.size(); r++ )
     {
         databr_copy( backup );
@@ -62,6 +80,7 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
             runs[r].present[(size_t)k] = CNode->xPH[k] > 0.;
         }
     }
+    } catch( ... ) { restoreNode(); throw; }
     // phase amounts at the given amount (the factor-1 re-solve), for the stranded test
     double phaseTotal = 0.;
     const std::vector<double> xPH0 = runs[0].ok ? runs[0].xPH : std::vector<double>( (size_t)nPH, 0. );
@@ -155,8 +174,7 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
         out.push_back( tr );
     }
 
-    // ---- restore the node exactly
-    databr_copy( backup );
-    databr_free( backup );
+    // ---- restore the node exactly (DATABR and MULTI)
+    restoreNode();
     return out;
 }
