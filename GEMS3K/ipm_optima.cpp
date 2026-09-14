@@ -147,6 +147,27 @@ bool SymEigFloorInPlace( std::vector<double>& a, int n, double ratio )
 // single/dominant-water-solvent case (MMC = water's molar mass)
 const double kLnFmol = std::log(1000.0 / 18.01528);
 
+// The system size Optima's DEFAULT boxes are scaled by (species upper bounds with no DUL,
+// the solvent-reseed ceiling, the control-condition titrant bound). On the rescaled path
+// (pa_DG > 1e-5, ScaleSystemToInternal()) that is pm.SMols = pa_DG, the internal total IC
+// moles. With rescaling DISABLED pm.SMols is never set - it stays 0 from ms_multi_file.cpp -
+// so every default upper bound collapsed to max(0,1)*10 = 10 mol whatever the system held.
+// Measured 2026-09-14 on a scratch copy of Cu-Pourbaix_G_pHtitr with pa_DG = 0 (55.5 mol
+// H2O): plain AOP returned ERR_GEM_AOP after 13000 iterations at G = -2375.79 against
+// -5327.89 (native unaffected, same G either way), and pH/Eh targeting returned
+// ERR_GEM_AOP at every target with both titrants pinned at +-2. Unscaled, the equivalent of
+// pm.SMols is the actual total IC moles - the same sum SystemTotalMolesIC() takes - so the
+// rescaled path is bit-identical to before and the unscaled one gets the same 10x headroom.
+static double optima_default_box_moles( const MULTI& pm, double DG )
+{
+    if( DG > 1e-5 )
+        return pm.SMols;
+    double tot = 0.;
+    for( long int i = 0; i < pm.N - pm.E; i++ )
+        tot += pm.B[i];
+    return tot;
+}
+
 // Small, self-contained two-phase primal simplex (dense tableau, Bland's
 // rule throughout for BOTH entering- and leaving-variable selection - the
 // textbook anti-cycling guarantee, needed here since this runs unattended
@@ -1071,7 +1092,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     {
         xlo[(size_t)j] = std::max( pm.DLL[j], dcFloor );
         xhi[(size_t)j] = ( pm.DUL[j] < 1e6 )
-                          ? std::max( pm.DUL[j], dcFloor ) : std::max( pm.SMols, 1.0 ) * 10.;
+                          ? std::max( pm.DUL[j], dcFloor ) : std::max( optima_default_box_moles( pm, pa_p->DG ), 1.0 ) * 10.;
     }
 
     // Initial active set: the seed's own support. A species whose box is
@@ -2049,7 +2070,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     // problem.xupper[j]'s own construction below for the case this
                     // was actually caught on (o_/t_Kaolinite's Quartz, DUL=0).
                     const double loUpper = ( pm.DUL[pm.LO] < 1e6 )
-                                            ? pm.DUL[pm.LO] : std::max( pm.SMols, 1.0 ) * 10.;
+                                            ? pm.DUL[pm.LO] : std::max( optima_default_box_moles( pm, pa_p->DG ), 1.0 ) * 10.;
                     double waterSeed = 0.;
                     if( DetectSolventCollapseAndReseed( pm.Y, loUpper, waterSeed ) )
                         pm.Y[pm.LO] = waterSeed;
@@ -2427,7 +2448,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         {
             problem.xlower[j] = std::max( pm.DLL[j], dcFloor );
             problem.xupper[j] = ( pm.DUL[j] < 1e6 )
-                                 ? std::max( pm.DUL[j], dcFloor ) : std::max( pm.SMols, 1.0 ) * 10.;
+                                 ? std::max( pm.DUL[j], dcFloor ) : std::max( optima_default_box_moles( pm, pa_p->DG ), 1.0 ) * 10.;
         }
         // NOTE on an experiment that was tried here and reverted: raising
         // the solvent's (pm.LO) own lower box bound above pm.XwMinM, to
@@ -2449,7 +2470,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // Titrant unknowns are free (can be positive or negative), unlike
         // ordinary species amounts - bounded only generously, as a
         // numerical safety net, not a physical constraint.
-        const double titrantBound = std::max( pm.SMols, 1.0 ) * 2.0;
+        const double titrantBound = std::max( optima_default_box_moles( pm, pa_p->DG ), 1.0 ) * 2.0;
         for( long int k = 0; k < R; k++ )
         {
             problem.xlower[L+k] = -titrantBound;
