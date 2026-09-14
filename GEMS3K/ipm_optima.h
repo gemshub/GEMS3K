@@ -95,7 +95,13 @@ struct EqControlCondition
 
     // Outputs, filled in by CalculateEquilibriumStateOptima() after solving -
     // meaningless before that (left at their construction-time defaults).
-    double titrantAmount = 0.; ///< the solved-for titrant unknown itself, mol (or its condition-specific unit)
+    /// The solved-for titrant unknown, in REAL moles of the recipe (not pa_DG's internal
+    /// scale - see the commit loop in CalculateEquilibriumStateOptima()). Sign: the titrant
+    /// column sits on the species side, A*Y + stoich*xi = B, so the amount ADDED to the input
+    /// bulk composition is -stoich*titrantAmount - for pH (stoich H:+1, Zz:+1) that is
+    /// -xi mol of H+; for Eh (stoich Zz:-1) it is +xi on the Zz row, i.e. xi mol of electrons
+    /// REMOVED. The returned bIC already carries it: bIC_out = bIC_in - sum_k stoich_k*xi_k.
+    double titrantAmount = 0.;
     double achievedValue = 0.; ///< achievedValueFn() evaluated on the final dual solution, in the condition's own units - compare against `target`
     bool targetMet = false;    ///< |achievedValue - target| <= tolerance, evaluated after the solve
 };

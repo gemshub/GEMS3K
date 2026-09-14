@@ -270,7 +270,11 @@ public:
     { multi_ptr()->ClearControlConditions(); }
     /// Titrant amount actually solved for the given condition ("pH"/"Eh")
     /// in the last AOP/SOP GEM_run() call, or 0 if that condition was not
-    /// active. See EqControlCondition (ipm_optima.h) for the full result
+    /// active. REAL moles, and a solver unknown rather than an addition: the
+    /// input bulk composition gained -stoich*xi (pH: -xi mol H+; Eh: xi mol of
+    /// electrons removed), and the returned bIC already includes it. Before
+    /// 2026-09-14 this returned pa_DG's internally scaled value (x pa_DG/sum bIC).
+    /// See EqControlCondition (ipm_optima.h) for the full result
     /// (achieved value, whether the target was actually met).
     double Get_ControlCondition_titrant( const std::string& name ) const
     {

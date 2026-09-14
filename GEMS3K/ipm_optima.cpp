@@ -5575,11 +5575,21 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // SAME side as A*Y, not folded into the RHS) - so the effective
         // bulk composition Y actually balances against is
         // B - sum_k stoich_k*xi_k, hence subtract here, not add.
+        // Units: this runs while the system is still in pa_DG's INTERNAL scale
+        // (ScaleSystemToInternal() above: every amount multiplied by
+        // ScFact = pa_DG / sum_i B[i]), and RescaleSystemFromInternal() below
+        // brings pm.B/X/Y back but knows nothing of the titrant. So pm.B is
+        // committed with the internal value, and titrantAmount is stored in
+        // REAL moles - xi / ScFact. Measured 2026-09-14 on the xgems-jupyter
+        // Cu-DH project (pa_DG = 1000, sum B = 166.737 mol, ScFact = 5.99747):
+        // the value previously returned was the internal one, and at
+        // pH 2 / Eh 0, pH 8 / 0.2 and pH 12 / -0.4 the returned bIC moved by
+        // exactly -stoich*xi/5.99747 on both the H and the Zz row.
         for( long int k = 0; k < R; k++ )
         {
-            conditions[k].titrantAmount = state.x[L+k];
             for( const auto& rc : conditions[k].stoich )
-                pm.B[ rc.first ] -= rc.second * conditions[k].titrantAmount;
+                pm.B[ rc.first ] -= rc.second * state.x[L+k];
+            conditions[k].titrantAmount = state.x[L+k] / ScFact;
         }
 
         // Verify each active condition actually reached its target - not
