@@ -1390,6 +1390,20 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             // pass produced (if any) still stands as a warm start.
             ipm_logger->info( "OptimaReducedPreSolve: active set reached the full species "
                                "count ({}) at pass {} - no reduction available", L, pass );
+            // The previous pass CONVERGED and re-admission has brought every species back: that answer
+            // (re-admitted species at their lower bound) is the warm start for the full solve, as the
+            // comment above says. Until 2026-09-14 this branch called discard(), which restores the SEED,
+            // so a converged pass was thrown away and the full solve started from scratch. Measured on the
+            // one project where it happens, T8ax2_nIC45 (130 species, pass 0 converges on 94 and re-admits
+            // 36), AOP over 9 draws at 1e-15: 330/348 median/max iterations -> 161/169, against 183/202
+            // with the pre-solve off; unchanged on the 12 other projects of that trial
+            // (gems-benchmark Docs/presolve-trial-2026-09-14c.txt).
+            if( haveAnswer )
+            {
+                native_trace_decide( "dimreducefull pass=%ld active=%ld of=%ld", (long)pass,
+                                     (long)activeOut, (long)L );
+                return true;
+            }
             return discard();
         }
 
