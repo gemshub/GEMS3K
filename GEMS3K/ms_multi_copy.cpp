@@ -38,6 +38,7 @@ void TMultiBase::copyMULTIData( const TMultiBase& otherMulti, bool realloc )
 {
     MULTI* otherPM = otherMulti.pmp;
     pa_standalone = otherMulti.pa_standalone;  
+    elementsOfInterest = otherMulti.elementsOfInterest;
     //static values
     copyValues(pm.stkey, otherPM->stkey, sizeof(char)*(EQ_RKLEN+5));
     copyValues( &pm.N, &otherPM->N, 39);

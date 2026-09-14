@@ -2914,6 +2914,12 @@ protected:
 
     virtual void load_all_thermodynamic_from_grid(TNode *aNa, double TK, double P);
 
+public:
+    /// IC names the caller marked "of interest" (TNode::GEM_set_elements_of_interest()); every other trace IC
+    /// is a default seed. Read by StrandedElementCheck() and TNode::GEM_trace_regimes(); never by the solve.
+    /// TRAILING member on purpose: TMultiBase is allocated only inside the library (TNode::allocMemory(),
+    /// GEM_trace_regimes()), so appending here moves no offset an external binary uses. Copied by copyMULTI().
+    std::vector<std::string> elementsOfInterest;
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

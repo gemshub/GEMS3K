@@ -1355,8 +1355,13 @@ void TMultiBase::StrandedElementCheck()
         {
             // nk is in pa_DG's internal scale here (GibbsEnergyMinimization runs rescaled); report real moles
             const double nkReal = pm.SizeFactor > 0. ? nk / pm.SizeFactor : nk;
-            report += fmt::format( "{}{} in {} ({:.2g} mol, {:.0f} % of it)", report.empty() ? "" : "; ",
-                                   icName, phName, nkReal, 100. * share );
+            // with elements marked of interest, name which kind this is: the remedy differs
+            std::string tag;
+            if( !elementsOfInterest.empty() )
+                tag = std::find( elementsOfInterest.begin(), elementsOfInterest.end(), icName ) != elementsOfInterest.end()
+                      ? " [of interest]" : " [default seed]";
+            report += fmt::format( "{}{} in {} ({:.2g} mol, {:.0f} % of it){}", report.empty() ? "" : "; ",
+                                   icName, phName, nkReal, 100. * share, tag );
             nWarn++;
         }
     }
@@ -1383,7 +1388,9 @@ void TMultiBase::StrandedElementCheck()
         "answers can be lost or change under tiny input changes, and for an aqueous phase the reported pH, Eh "
         "and ionic strength are not meaningful. Remedies: add a phase that can host the element (e.g. a solid "
         "containing it), or remove the element from the system definition if it is not needed (a zero bulk "
-        "amount is not accepted). Element in phase: {}", nWarn, report );
+        "amount is not accepted).{} Element in phase: {}", nWarn,
+        elementsOfInterest.empty() ? "" : " An element tagged [default seed] was not marked of interest, so its "
+        "amount is a placeholder and removing it from the definition is the direct remedy.", report );
 }
 
 void TMultiBase::GibbsEnergyMinimization()
