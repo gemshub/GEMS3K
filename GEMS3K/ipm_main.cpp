@@ -733,9 +733,34 @@ bool TMultiBase::MassBalanceReproject( double* amt )
 // system gives   c_k = w_k - v_k' K0^-1 v_k   (>= 0). One factorisation of K0, size N + |P|
 // with |P| <= N by the phase rule, then one solve per present phase. c_k == 0 means k is
 // pinned by mass balance alone (e.g. the only carrier of an IC) - fully determined.
-// A SINGULAR K0 means pure phases whose stoichiometries compensate one another exactly: some
-// amounts are then not determined at ALL, but which ones is not resolved here, so it is
-// reported as its own event rather than attributed to a phase.
+//
+// When K0 is singular. With every active X_S > 0, K0 (y;z) = 0 forces A_S' y = 0, A_P' y = 0
+// and A_P z = 0, so there are exactly two causes, and they mean opposite things:
+//  (a) A_P z = 0 - PURE PHASES WITH DEPENDENT STOICHIOMETRIES. Moving along z keeps A.x = b
+//      and costs nothing to ANY order (pure phases have no curvature, and z' mu_P = u' A_P z
+//      = 0), so every pure phase with z_q != 0 has an amount the energy does not fix AT ALL.
+//      Measured: T-cement's water sweep, 15 of 15 singular calls - `Lime` and `lime` are the
+//      same DC twice (CaO, identical G0 and V0) and the solver split 0.244 / 3.9e-8 mol between
+//      them by trajectory. Handled STRUCTURALLY: a phase q is degenerate iff dropping q from
+//      A_P does not lower its rank; the involved phases are named as such, a maximal independent
+//      subset stays in K0, and every other phase is still checked.
+//  (b) A_S' y = A_P' y = 0 - A REDUNDANT IC ROW over the active species (e.g. the charge row
+//      being the valence sum of the element rows when no species of another oxidation state is
+//      active). The constraint is redundant and every c_k is still well defined - the system is
+//      consistent - so such rows are simply DROPPED before assembly. Measured 2026-09-14, one
+//      native call per corpus project: 4 of 76 (`07PSIna_G_simple_1`, `_2`, `10TH_G_00001`,
+//      `CASH+CsSr`), with the kept factorisation's smallest pivot 3.4e-17 .. 9e-10 of its column
+//      and c_k agreeing with an independently equilibrated factorisation to every printed digit.
+// Both selections are greedy Gram-Schmidt on the UNWEIGHTED stoichiometry at 1e-9 relative:
+// stoichiometric entries are O(1..100) exact values, so an exact dependence leaves a residual at
+// rounding level and a genuine independence one many orders larger. Where neither cause is
+// present the matrix and every result are bit-identical to the version without the selection.
+// A pivot below m*DBL_EPSILON of its ORIGINAL column scale after that is reported as
+// `determinacy-singular` and the check makes no statement (not observed on the corpus: the
+// smallest such pivot on a structurally nonsingular K0 was 2.2e-12, f_Solvus_G_test3). The
+// 2026-09-13 version compared the pivot with the running maximum of the SAME column, i.e. with
+// itself, so only an exactly zero pivot was ever caught - (a) on T-cement was caught only because
+// the duplicate columns are bit-identical, and (b) was never caught.
 //
 // Energy resolution:  eps_G = DBL_EPSILON * sum_j |x_j mu_j|  (RT units), the rounding floor of
 // G itself, mu_j = sum_i a_ij u_i the dual potential. MEASURED, not assumed: on vcomplex it
@@ -771,13 +796,64 @@ void TMultiBase::EnergyDeterminacyCheck()
     const double epsG = std::numeric_limits<double>::epsilon() * gabs;
     if( !( epsG > 0. ) ) return;
 
-    std::vector<long int> P, rows;
+    // Greedy rank-revealing selection (see the header comment): keep vecs[i] iff its Gram-Schmidt
+    // residual against the vectors already kept exceeds 1e-9 of its own norm.
+    auto independentSubset = []( const std::vector<std::vector<double>>& vecs ) {
+        std::vector<std::vector<double>> Q;
+        std::vector<char> keep( vecs.size(), 0 );
+        for( size_t i = 0; i < vecs.size(); i++ )
+        {
+            std::vector<double> r = vecs[i];
+            double n0 = 0.;
+            for( double e : r ) n0 += e*e;
+            n0 = sqrt( n0 );
+            if( !( n0 > 0. ) ) continue;
+            for( int pass = 0; pass < 2; pass++ )          // twice is enough (Kahan-Parlett)
+                for( const auto& q : Q )
+                {
+                    double d = 0.;
+                    for( size_t t = 0; t < r.size(); t++ ) d += q[t] * r[t];
+                    for( size_t t = 0; t < r.size(); t++ ) r[t] -= d * q[t];
+                }
+            double n1 = 0.;
+            for( double e : r ) n1 += e*e;
+            n1 = sqrt( n1 );
+            if( n1 > 1e-9 * n0 )
+            {
+                for( double& e : r ) e /= n1;
+                Q.push_back( std::move( r ) );
+                keep[i] = 1;
+            }
+        }
+        return keep;
+    };
+
+    std::vector<long int> actCols, Pall, rows;
     for( long int j = 0; j < L; j++ )
-        if( act[(size_t)j] && phaseOf[(size_t)j] >= FIs ) P.push_back( j );
-    for( long int r = 0; r < N; r++ )
-        for( long int j = 0; j < L; j++ )
-            if( act[(size_t)j] && pm.A[r + j*N] != 0. ) { rows.push_back( r ); break; }
-    const long int n = (long int)rows.size(), p = (long int)P.size(), m = n + p;
+        if( act[(size_t)j] )
+        {
+            actCols.push_back( j );
+            if( phaseOf[(size_t)j] >= FIs ) Pall.push_back( j );
+        }
+
+    // (b) IC rows: those touching an active species, minus any redundant over the active species.
+    {
+        std::vector<long int> cand;
+        std::vector<std::vector<double>> rv;
+        for( long int r = 0; r < N; r++ )
+        {
+            std::vector<double> row( actCols.size() );
+            bool nz = false;
+            for( size_t c = 0; c < actCols.size(); c++ )
+                if( ( row[c] = pm.A[r + actCols[c]*N] ) != 0. ) nz = true;
+            if( nz ) { cand.push_back( r ); rv.push_back( std::move( row ) ); }
+        }
+        const std::vector<char> keep = independentSubset( rv );
+        for( size_t i = 0; i < cand.size(); i++ ) if( keep[i] ) rows.push_back( cand[i] );
+        if( probe && rows.size() < cand.size() )
+            fprintf( stderr, "DETPROBE redundant-rows=%ld of %ld\n", (long)( cand.size() - rows.size() ), (long)cand.size() );
+    }
+    const long int n = (long int)rows.size();
     if( n < 1 ) return;
     auto A = [&]( long int r, long int j ) { return pm.A[rows[(size_t)r] + j*N]; };
     auto trimmedPhaseName = [&]( long int k ) {
@@ -785,6 +861,49 @@ void TMultiBase::EnergyDeterminacyCheck()
         s.erase( s.find_last_not_of( " \t" ) + 1 );
         return s;
     };
+
+    // (a) Pure phases: a maximal independent subset P goes into K0; a phase is DEGENERATE iff
+    // removing it does not lower rank(A_P), i.e. it lies on some null vector of A_P.
+    std::vector<long int> P;
+    std::vector<char> degenerate( (size_t)FI, 0 );
+    long int nDegenerate = 0;
+    {
+        auto colsOf = [&]( long int skip ) {
+            std::vector<std::vector<double>> cv;
+            for( size_t q = 0; q < Pall.size(); q++ )
+            {
+                if( (long int)q == skip ) continue;
+                std::vector<double> col( (size_t)n );
+                for( long int r = 0; r < n; r++ ) col[(size_t)r] = A( r, Pall[q] );
+                cv.push_back( std::move( col ) );
+            }
+            return cv;
+        };
+        const std::vector<char> keep = independentSubset( colsOf( -1 ) );
+        long int rank = 0;
+        for( size_t q = 0; q < Pall.size(); q++ ) if( keep[q] ) { P.push_back( Pall[q] ); rank++; }
+        if( rank < (long int)Pall.size() )
+        {
+            std::string names;
+            for( size_t q = 0; q < Pall.size(); q++ )
+            {
+                long int rq = 0;
+                for( char f : independentSubset( colsOf( (long int)q ) ) ) rq += f;
+                const long int k = phaseOf[(size_t)Pall[q]];
+                if( rq == rank && !degenerate[(size_t)k] )
+                {
+                    degenerate[(size_t)k] = 1;
+                    nDegenerate++;
+                    names += ( names.empty() ? "" : "," ) + trimmedPhaseName( k );
+                }
+            }
+            native_trace_decide( "determinacy-degenerate purephases=%ld rank=%ld phases=%s",
+                                 (long)Pall.size(), rank, names.c_str() );
+            if( probe ) fprintf( stderr, "DETPROBE degenerate purephases=%ld rank=%ld phases=%s\n",
+                                 (long)Pall.size(), rank, names.c_str() );
+        }
+    }
+    const long int p = (long int)P.size(), m = n + p;
 
     std::vector<double> K( (size_t)(m*m), 0. );
     for( long int j = 0; j < L; j++ )
@@ -800,18 +919,24 @@ void TMultiBase::EnergyDeterminacyCheck()
         for( long int r = 0; r < n; r++ )
             K[(size_t)(r*m + n+q)] = K[(size_t)((n+q)*m + r)] = A( r, P[(size_t)q] );
 
-    // LU with partial pivoting; a pivot below 1e-13 of its column's scale is singular.
+    // LU with partial pivoting; a pivot below m*DBL_EPSILON of its ORIGINAL column's scale is
+    // singular (see the header comment - both structural causes were removed above).
+    std::vector<double> colScale( (size_t)m, 0. );
+    for( long int c = 0; c < m; c++ )
+        for( long int i = 0; i < m; i++ ) colScale[(size_t)c] = std::max( colScale[(size_t)c], fabs( K[(size_t)(i*m + c)] ) );
+    const double pivTol = (double)m * std::numeric_limits<double>::epsilon();
     std::vector<long int> perm( (size_t)m );
     for( long int i = 0; i < m; i++ ) perm[(size_t)i] = i;
     for( long int c = 0; c < m; c++ )
     {
-        long int pc = c; double best = 0., scale = 0.;
+        long int pc = c; double best = 0.;
         for( long int i = c; i < m; i++ )
-        { const double v = fabs( K[(size_t)(i*m + c)] ); scale = std::max( scale, v ); if( v > best ) { best = v; pc = i; } }
-        if( !( best > 1e-300 ) || !( best > 1e-13 * scale ) )
+        { const double v = fabs( K[(size_t)(i*m + c)] ); if( v > best ) { best = v; pc = i; } }
+        if( !( best > 1e-300 ) || !( best > pivTol * colScale[(size_t)c] ) )
         {
-            native_trace_decide( "determinacy-singular species=%ld purephases=%ld", (long)(m - p), (long)p );
-            if( probe ) fprintf( stderr, "DETPROBE singular=1 n=%ld p=%ld\n", (long)n, (long)p );
+            native_trace_decide( "determinacy-singular species=%ld purephases=%ld", (long)n, (long)p );
+            if( probe ) fprintf( stderr, "DETPROBE singular=1 n=%ld p=%ld col=%ld relpivot=%.3e\n", (long)n, (long)p, (long)c,
+                                 colScale[(size_t)c] > 0. ? best / colScale[(size_t)c] : 0. );
             return;
         }
         if( pc != c )
@@ -827,7 +952,8 @@ void TMultiBase::EnergyDeterminacyCheck()
     }
 
     long int nWarn = 0; double worstRel = 0.; long int kWorst = -1;
-    std::string listed;
+    std::string listed, listedDegenerate;
+    long int nListedDegenerate = 0, nListedOther = 0;
     std::vector<double> v( (size_t)m ), z( (size_t)m );
     for( long int k = 0, jb = 0; k < FI; jb += pm.L1[k], k++ )
     {
@@ -842,6 +968,20 @@ void TMultiBase::EnergyDeterminacyCheck()
             { w += pm.X[j]; for( long int r = 0; r < n; r++ ) v[(size_t)r] += pm.X[j] * A( r, j ); }
         }
         if( !present ) continue;
+        if( degenerate[(size_t)k] )
+        {
+            // Not fixed at all (cause (a) in the header comment): no c_k is computed - with its
+            // partners' columns dropped from K0 it would describe the group's TOTAL, not this
+            // phase. Listed first, so the 8-name cap never hides the strongest statement.
+            if( warnRel > 0. )
+            {
+                if( nListedDegenerate++ < 8 )
+                    listedDegenerate += ( listedDegenerate.empty() ? "" : ", " ) + trimmedPhaseName( k )
+                                     + " (interchangeable)";
+                nWarn++;
+            }
+            continue;
+        }
         if( k >= FIs )
             for( long int q = 0; q < p; q++ ) if( phaseOf[(size_t)P[(size_t)q]] == k ) v[(size_t)(n+q)] = 1.;
 
@@ -867,8 +1007,8 @@ void TMultiBase::EnergyDeterminacyCheck()
             // rel >= 1: the amount is inside its own energy resolution, i.e. the energy cannot
             // even say whether the phase is PRESENT - a percentage there (1e15 % was observed,
             // Gibbsite at 4.6e-18 mol) is true but unreadable, so it is named as such.
-            if( nWarn < 8 )
-                listed += ( nWarn ? ", " : "" ) + name
+            if( nListedOther++ < 8 )
+                listed += ( listed.empty() ? "" : ", " ) + name
                         + ( rel >= 1. ? std::string( " (presence)" ) : fmt::format( " ({:.2g} %)", 100. * rel ) );
             nWarn++;
             if( rel > worstRel ) { worstRel = rel; kWorst = k; }
@@ -877,9 +1017,19 @@ void TMultiBase::EnergyDeterminacyCheck()
 
     if( nWarn > 0 )
     {
-        const std::string worstTxt = worstRel >= 1.
+        if( !listedDegenerate.empty() )
+        {
+            listed = listedDegenerate + ( listed.empty() ? "" : ", " ) + listed;
+            worstRel = std::numeric_limits<double>::infinity();
+        }
+        const std::string worstTxt = nDegenerate > 0
+            ? fmt::format( "whose amount is not fixed AT ALL: {} present pure phase(s) have stoichiometries that "
+                           "compensate one another exactly (e.g. the same substance entered twice), so only their "
+                           "combination is determined", nDegenerate )
+            : worstRel >= 1.
             ? std::string( "whose amount lies inside its own energy resolution, so even its PRESENCE is undetermined" )
             : fmt::format( "fixed only to +-{:.2g} %", 100. * worstRel );
+        if( nDegenerate > 0 ) kWorst = -1;
         gems_logger->warn(
             "GEM answer not fully determined by the energy: {} present phase(s) have amounts the "
             "minimised Gibbs energy fixes only to worse than {:.0f} % at its own resolution - worst {}, "
@@ -887,7 +1037,7 @@ void TMultiBase::EnergyDeterminacyCheck()
             "rely on them more precisely than that; a different start, setting or solver version may "
             "legitimately return a different value. Phases: {}",
             nWarn, 100. * warnRel,
-            kWorst >= 0 ? trimmedPhaseName( kWorst ) : std::string( "-" ), worstTxt, listed );
+            kWorst >= 0 ? trimmedPhaseName( kWorst ) : std::string( "an interchangeable phase" ), worstTxt, listed );
         native_trace_decide( "undetermined phases=%ld threshold=%.0e worst=%.2e list=%s",
                              (long)nWarn, warnRel, worstRel, listed.c_str() );
     }
