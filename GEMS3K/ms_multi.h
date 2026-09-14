@@ -2851,6 +2851,10 @@ protected:
     /// (DATABR dll/dul) is not touched. See ipm_main.cpp.
     std::vector<RedundantDCHold> ExcludeRedundantDCs();
     void RestoreRedundantDCs( const std::vector<RedundantDCHold>& held );
+    /// Warn when an element can exist only in ONE multi-component phase and that phase is a trace
+    /// amount made up largely of the element (it is held open by it) - a fragile system definition.
+    /// Read-only. See ipm_main.cpp.
+    void StrandedElementCheck();
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
     void AutoInitialApproximation( );
 

@@ -1289,6 +1289,103 @@ void TMultiBase::RestoreRedundantDCs( const std::vector<RedundantDCHold>& held )
     }
 }
 
+// StrandedElementCheck: an element that can only live in ONE multi-component phase, and holds that
+// phase open.
+//
+// Found on T-cement (2026-09-14): Cs and Sr are seeded at 1e-9 mol and every species carrying them is
+// aqueous (3 and 7 species, no solid host). Below ~34 g of water the aqueous phase holds ~3e-9 mol, so
+// the two trace elements are about two thirds of "the solution", which then sits at pH 16 and ionic
+// strength 30 - far outside its activity model - because it exists largely to hold them. Measured over
+// 5 draws (1e-15 bIC nudges) of the 50-point water sweep, native + SIA: shipped 2 lost / 2 lost /
+// 4 warm abandonments; Sr ALONE raised to 1e-6 mol gives 0 / 0 / 0, all four trace elements at 1e-6
+// likewise; suppressing the aqueous phase fails every point (the element has nowhere else to go); a
+// zero amount is rejected on input. The first T-cement export failed the same way with K and Mg
+// before their solid hosts were added (gems-benchmark CLAUDE.md s4). The effect of the seed LEVEL is
+// not monotonic (1e-8: 5 lost; 1e-7: 1 lost, 10 abandonments), so no amount is recommended here - the
+// structural remedy is a host phase or removing the element.
+//
+// Detector, read-only, on the converged answer: IC i (not charge/volume, B[i] > 0) whose carriers -
+// species with a(i,j) != 0 not excluded by DUL = 0 - all belong to one multi-component phase k. Then
+//   share_i = sum_{carriers in k} X[j] / XF[k]    (fraction of phase k's moles that carry i)
+//   trace_k = XF[k] / sum_k XF[k]                 (phase k's size relative to the system)
+// Warn when share_i >= kStrandedShareWarn and trace_k <= kStrandedTraceWarn. GEMS3K_STRANDED_PROBE
+// prints every confined element with both numbers. A pure-phase-only element is not flagged: one pure
+// phase can hold any amount at constant chemical potential.
+void TMultiBase::StrandedElementCheck()
+{
+    const long int N = pm.N, L = pm.L, FI = pm.FI;
+    if( N < 1 || L < 1 || FI < 1 || !pm.A || !pm.X || !pm.XF || !pm.L1 || !pm.B ) return;
+    const bool probe = getenv( "GEMS3K_STRANDED_PROBE" ) != nullptr;
+    static const double kStrandedShareWarn = 1e-2, kStrandedTraceWarn = 1e-6;
+
+    std::vector<long int> phaseOf( (size_t)L, -1 );
+    for( long int k = 0, jb = 0; k < FI; jb += pm.L1[k], k++ )
+        for( long int j = jb; j < jb + pm.L1[k] && j < L; j++ ) phaseOf[(size_t)j] = k;
+    double total = 0.;
+    for( long int k = 0; k < FI; k++ ) if( pm.XF[k] > 0. ) total += pm.XF[k];
+    if( !( total > 0. ) ) return;
+
+    auto trimmed = []( std::string s ) { s.erase( s.find_last_not_of( " \t" ) + 1 ); return s; };
+    std::string report;
+    long int nWarn = 0;
+    for( long int i = 0; i < N; i++ )
+    {
+        if( !( pm.B[i] > 0. ) ) continue;
+        if( pm.ICC && ( pm.ICC[i] == IC_CHARGE || pm.ICC[i] == IC_VOLUME ) ) continue;
+        long int k = -1; bool confined = true; double carried = 0.;
+        for( long int j = 0; j < L && confined; j++ )
+        {
+            if( pm.A[i + j*N] == 0. ) continue;
+            if( pm.DUL && pm.DUL[j] < 1e6 && !( pm.DUL[j] > 0. ) ) continue;    // excluded species
+            const long int kj = phaseOf[(size_t)j];
+            if( k < 0 ) k = kj; else if( kj != k ) confined = false;
+            if( pm.X[j] > 0. ) carried += pm.X[j];
+        }
+        if( !confined || k < 0 || pm.L1[k] < 2 ) continue;
+        const double nk = pm.XF[k] > 0. ? pm.XF[k] : 0.;
+        const double share = nk > 0. ? carried / nk : 1.;
+        const double trace = nk / total;
+        const std::string icName = trimmed( char_array_to_string( pm.SB[i], MAXICNAME ) );
+        const std::string phName = trimmed( char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME ) );
+        if( probe )
+            fprintf( stderr, "STRANDPROBE ic=%s phase=%s class=%c b_internal=%.3e phase_mol=%.3e share=%.3e trace=%.3e\n",
+                     icName.c_str(), phName.c_str(), pm.PHC ? pm.PHC[k] : '?', pm.B[i],
+                     pm.SizeFactor > 0. ? nk / pm.SizeFactor : nk, share, trace );
+        if( share >= kStrandedShareWarn && trace <= kStrandedTraceWarn )
+        {
+            // nk is in pa_DG's internal scale here (GibbsEnergyMinimization runs rescaled); report real moles
+            const double nkReal = pm.SizeFactor > 0. ? nk / pm.SizeFactor : nk;
+            report += fmt::format( "{}{} in {} ({:.2g} mol, {:.0f} % of it)", report.empty() ? "" : "; ",
+                                   icName, phName, nkReal, 100. * share );
+            nWarn++;
+        }
+    }
+    if( !nWarn ) return;
+    native_trace_decide( "stranded-element n=%ld list=%s", nWarn, report.c_str() );
+
+    static std::mutex warnedMutex;
+    static std::set<std::string> warned;
+    std::string key;   // element + phase names only: the amounts change along a sweep
+    for( size_t a = 0, b; a < report.size(); a = b + 2 )
+    {
+        b = report.find( "; ", a ); if( b == std::string::npos ) b = report.size();
+        const std::string item = report.substr( a, b - a );
+        key += item.substr( 0, item.find( " (" ) ) + ";";
+    }
+    {
+        std::lock_guard<std::mutex> lock( warnedMutex );
+        if( !warned.insert( key ).second ) return;
+    }
+    gems_logger->warn(
+        "Fragile system definition: {} element(s) can exist ONLY in a single solution phase, and that phase "
+        "is present here in a trace amount made up largely of the element - it is kept in existence mainly to "
+        "hold it, far from the conditions its mixing model describes. Such states are numerically fragile: "
+        "answers can be lost or change under tiny input changes, and for an aqueous phase the reported pH, Eh "
+        "and ionic strength are not meaningful. Remedies: add a phase that can host the element (e.g. a solid "
+        "containing it), or remove the element from the system definition if it is not needed (a zero bulk "
+        "amount is not accepted). Element in phase: {}", nWarn, report );
+}
+
 void TMultiBase::GibbsEnergyMinimization()
 {
   bool IAstatus;
@@ -1472,7 +1569,10 @@ FORCED_AIA:
    }
 
    if( !pm.MK && !pm.PZ )
+   {
        EnergyDeterminacyCheck();
+       StrandedElementCheck();
+   }
 
    if( pm.MK || pm.PZ ) // no good solution
        /*TProfil::pm->*/testMulti();

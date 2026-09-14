@@ -5780,6 +5780,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
             setErrorMessage( 21, "W21IPM: Optima solver: ", buf.c_str() );
         }
+        // Same read-only system-definition check as native's converged answer (ipm_main.cpp):
+        // a fragile definition is a property of the system, not of the solver that met it.
+        // Runs while still in pa_DG's internal scale; the check reports real moles itself.
+        if( result.succeeded && pm.MK == 0 )
+            StrandedElementCheck();
     }
     catch( TError& xcpt )
     {
