@@ -38,6 +38,8 @@
 #include "v_service.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <chrono>
+#include <mutex>
+#include <set>
 
 // Thread-safe logger to stdout with colors
 std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = spdlog::stdout_color_mt("ipm");
@@ -1040,6 +1042,250 @@ void TMultiBase::EnergyDeterminacyCheck()
             kWorst >= 0 ? trimmedPhaseName( kWorst ) : std::string( "an interchangeable phase" ), worstTxt, listed );
         native_trace_decide( "undetermined phases=%ld threshold=%.0e worst=%.2e list=%s",
                              (long)nWarn, warnRel, worstRel, listed.c_str() );
+    }
+}
+
+// ExcludeRedundantDCs: a species entered twice is removed from the solve.
+//
+// REDUNDANT means thermodynamically indistinguishable in the problem the solver is given:
+// identical stoichiometry (all N rows, charge included), identical DC class code, and identical
+// standard properties at the current T,P - G0 (the value minimised, DQF terms included), H0, S0,
+// Cp0 and molar volume - in one of two placements:
+//  (a) twice in the SAME multi-component phase. Two copies of one species double its share of
+//      the ideal mixing term: the pair behaves as one species with G0 lowered by RT ln 2, so the
+//      duplicate CHANGES the answer, not only its reporting. Found 2026-09-14 in the corpus
+//      data: B(OH)4- at positions 7 and 8 of aq_gen in all 11 T8_aq*/T14_ball*/T8ax2_nIC61
+//      exports.
+//  (b) as two SINGLE-species phases (pure phases, or one-species gas/fluid phases) - which copy is kept is
+//      decided by the rules at the (b) loop below (pure over solution remnant, then name, then first). Their
+//      amounts are interchangeable at zero cost and only the sum is determined: T-cement's
+//      Lime/lime (CaO, split 0.244 / 3.9e-8 mol by trajectory, EnergyDeterminacyCheck
+//      determinacy-degenerate on 15 of 50 water-sweep calls) and Amakinite/Brucite (Mg(OH)2)
+//      in 10TH_G_00001 and j_10TH_G_seawater.
+// NOT redundant, deliberately:
+//  - same formula with different properties (polymorphs; ~230 corpus groups);
+//  - two MULTI-component phases with identical member lists. That is how a miscibility gap is
+//    modelled (f_Solvus Alkali feldspar / Plagioclase, T-cement's ettringite and AFm pairs,
+//    CASHNK CSH / CSHK - 9 corpus pairs), and it is required, not duplicated;
+//  - species of a multi-site (sublattice) phase: end-members with the same formula and G0 can
+//    differ in site occupancy and hence configurational entropy (the CASHNK twins);
+//  - species of sorption / polyelectrolyte phases (site-specific parameters);
+//  - a copy whose end-member (DMc) coefficients differ, or that appears in the phase's
+//    interaction-parameter index (IPx): its activity is not that of the other copy;
+//  - the solvent.
+// A pair that is otherwise redundant but carries user metastability limits on either copy
+// (DLL > 0 or DUL < 1e6) is REPORTED but not changed: the limits may be the point.
+//
+// Removal reuses the solver's own kinetic-exclusion path, which both solvers already honour
+// (o_/t_Kaolinite ship Quartz with DLL = DUL = 0): for this call only, every copy after the
+// first gets DLL = DUL = 0 with RLC = BOTH_LIM, and any starting amount is moved onto the kept
+// copy (mass balance is unchanged - identical stoichiometry). The result reports the removed copy
+// at 0 and the kept one with the total. The caller's DATABR dll/dul are never written;
+// RestoreRedundantDCs() puts pm.DLL/DUL/RLC back at the end of the solve. Warns once per
+// distinct finding per process; a DECIDE record on every call.
+std::vector<TMultiBase::RedundantDCHold> TMultiBase::ExcludeRedundantDCs()
+{
+    std::vector<RedundantDCHold> held;
+    const long int N = pm.N, L = pm.L, FI = pm.FI, FIs = pm.FIs;
+    if( N < 1 || L < 2 || FI < 1 || !pm.A || !pm.L1 || !pm.G0 || !pm.DCC || !pm.PHC
+        || !pm.DUL || !pm.DLL || !pm.RLC )
+        return held;
+
+    auto same = []( double a, double b ) {
+        return fabs( a - b ) <= 1e-12 * std::max( { fabs( a ), fabs( b ), 1. } );
+    };
+    auto identical = [&]( long int j1, long int j2 ) {
+        if( pm.DCC[j1] != pm.DCC[j2] ) return false;
+        for( long int i = 0; i < N; i++ )
+            if( pm.A[i + j1*N] != pm.A[i + j2*N] ) return false;
+        if( !same( pm.G0[j1], pm.G0[j2] ) ) return false;
+        if( pm.H0 && !same( pm.H0[j1], pm.H0[j2] ) ) return false;
+        if( pm.S0 && !same( pm.S0[j1], pm.S0[j2] ) ) return false;
+        if( pm.Cp0 && !same( pm.Cp0[j1], pm.Cp0[j2] ) ) return false;
+        if( pm.Vol && !same( pm.Vol[j1], pm.Vol[j2] ) ) return false;
+        return true;
+    };
+    auto freeBounds = [&]( long int j ) { return !( pm.DLL[j] > 0. ) && !( pm.DUL[j] < 1e6 ); };
+    auto dcName = [&]( long int j ) {
+        std::string s = char_array_to_string( pm.SM[j], MAXDCNAME );
+        s.erase( s.find_last_not_of( " \t" ) + 1 );
+        return s;
+    };
+    auto phName = [&]( long int k ) {
+        std::string s = char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME );
+        s.erase( s.find_last_not_of( " \t" ) + 1 );
+        return s;
+    };
+
+    std::vector<long int> jb( (size_t)FI + 1, 0 );
+    for( long int k = 0; k < FI; k++ ) jb[(size_t)k+1] = jb[(size_t)k] + pm.L1[k];
+
+    std::vector<char> removed( (size_t)L, 0 );
+    std::string report, reportKept;
+    // kKeep/kDrop are the phases of keep/drop (equal for an in-phase pair); why = the keep rule that decided.
+    auto hold = [&]( long int keep, long int drop, const char* kind, long int kKeep, long int kDrop, const char* why ) {
+        if( !( freeBounds( keep ) && freeBounds( drop ) ) )
+        {
+            reportKept += fmt::format( "{}{}:{}={}({})", reportKept.empty() ? "" : ",", kind,
+                                       dcName( keep ), dcName( drop ), kKeep == kDrop ? phName( kKeep ) : phName( kKeep ) + "/" + phName( kDrop ) );
+            return;
+        }
+        removed[(size_t)drop] = 1;
+        held.push_back( { drop, pm.RLC[drop], pm.DLL[drop], pm.DUL[drop] } );
+        if( pm.X ) { pm.X[keep] += pm.X[drop]; pm.X[drop] = 0.; }
+        if( pm.Y ) { pm.Y[keep] += pm.Y[drop]; pm.Y[drop] = 0.; }
+        pm.DLL[drop] = 0.; pm.DUL[drop] = 0.; pm.RLC[drop] = BOTH_LIM;
+        report += fmt::format( "{}{}:{}>{}({}{})", report.empty() ? "" : ",", kind, dcName( drop ), dcName( keep ),
+                               kKeep == kDrop ? phName( kKeep ) : phName( kDrop ) + ">" + phName( kKeep ),
+                               why && *why ? std::string( ",kept:" ) + why : std::string() );
+    };
+    // SUSPICIOUS: same class, stoichiometry and G0 at this T,P, but another standard property differs. Not
+    // interchangeable (enthalpy, entropy, heat capacity or volume differ), so nothing is removed - but two
+    // entries agreeing on G0 to 1e-12 while differing elsewhere are rarely intended. Reported only.
+    std::string reportSuspicious;
+    auto suspicious = [&]( long int j1, long int j2 ) {
+        if( pm.DCC[j1] != pm.DCC[j2] || !same( pm.G0[j1], pm.G0[j2] ) ) return false;
+        for( long int i = 0; i < N; i++ )
+            if( pm.A[i + j1*N] != pm.A[i + j2*N] ) return false;
+        return true;   // caller has already found identical() false
+    };
+
+    // (a) within one multi-component phase. Offsets into IPx/DMc exactly as
+    // CalculateActivityCoefficients() walks them (single-species non-gas phases carry none).
+    long int ipe = 0, jde = 0;
+    for( long int k = 0; k < FIs && k < FI; k++ )
+    {
+        const long int b = jb[(size_t)k], e = jb[(size_t)k+1], n1 = pm.L1[k];
+        if( n1 == 1 && !( pm.PHC[k] == PH_GASMIX || pm.PHC[k] == PH_PLASMA || pm.PHC[k] == PH_FLUID ) )
+            continue;
+        const long int nPar = pm.LsMod ? pm.LsMod[k*3] : 0, maxOrd = pm.LsMod ? pm.LsMod[k*3+1] : 0;
+        const long int perDC = pm.LsMdc ? pm.LsMdc[k*3] : 0, nSub = pm.LsMdc ? pm.LsMdc[k*3+1] : 0;
+        const long int ipb = ipe, jdb = jde;
+        ipe += nPar * maxOrd;
+        jde += perDC * n1;
+        if( n1 < 2 || nSub > 0 || pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL )
+            continue;
+        std::vector<char> inIPx( (size_t)n1, 0 );
+        if( pm.IPx )
+            for( long int t = 0; t < nPar * maxOrd; t++ )
+            {
+                const long int m = pm.IPx[ipb + t];
+                if( m >= 0 && m < n1 ) inIPx[(size_t)m] = 1;
+            }
+        for( long int j2 = b + 1; j2 < e; j2++ )
+        {
+            if( removed[(size_t)j2] || j2 == pm.LO || inIPx[(size_t)(j2 - b)] ) continue;
+            for( long int j1 = b; j1 < j2; j1++ )
+            {
+                if( removed[(size_t)j1] || j1 == pm.LO || inIPx[(size_t)(j1 - b)] || !identical( j1, j2 ) ) continue;
+                bool sameDMc = true;
+                if( pm.DMc )
+                    for( long int c = 0; c < perDC && sameDMc; c++ )
+                        sameDMc = pm.DMc[jdb + (j1 - b)*perDC + c] == pm.DMc[jdb + (j2 - b)*perDC + c];
+                if( !sameDMc ) continue;
+                hold( j1, j2, "inphase", k, k, "" );
+                break;
+            }
+        }
+    }
+
+    // (b) single-species phases of the same class. WHICH copy to keep (owner, 2026-09-14): in GEMS a solid
+    // solution whose other elements are switched off is left with ONE end-member, which can duplicate a real
+    // pure phase - and it is the solution remnant that should go to zero. So:
+    //   1. "pure":   a pure phase (k >= FIs) is kept over a single-species SOLUTION phase (k < FIs);
+    //   2. "name":   otherwise the phase whose NAME the species symbol abbreviates is kept - its letters in
+    //                order, first letter matching, case-insensitive ("Brc" -> Brucite, not Amakinite). The
+    //                exporter writes such a remnant as an ordinary pure phase (10TH_G_00001, j_10TH_G_seawater:
+    //                Amakinite - in nature the (Fe,Mg)(OH)2 solid solution - and Brucite, both pure, both DC
+    //                "Brc"), so the phase type alone cannot see it; no corpus project exports a single-species
+    //                solution phase at all;
+    //   3. "first":  otherwise the first listed (T-cement Lime/lime, both "Lim").
+    auto abbreviates = []( const std::string& sym, const std::string& name ) {
+        if( sym.empty() || name.empty() || tolower( (unsigned char)sym[0] ) != tolower( (unsigned char)name[0] ) )
+            return false;
+        size_t q = 0;
+        for( char c : name )
+            if( q < sym.size() && tolower( (unsigned char)c ) == tolower( (unsigned char)sym[q] ) ) q++;
+        return q == sym.size();
+    };
+    for( long int k2 = 1; k2 < FI; k2++ )
+    {
+        if( pm.L1[k2] != 1 || pm.PHC[k2] == PH_SORPTION || pm.PHC[k2] == PH_POLYEL ) continue;
+        const long int j2 = jb[(size_t)k2];
+        if( removed[(size_t)j2] || ( k2 < FIs && pm.LsMdc && pm.LsMdc[k2*3] > 0 ) ) continue;
+        for( long int k1 = 0; k1 < k2; k1++ )
+        {
+            if( pm.L1[k1] != 1 || pm.PHC[k1] != pm.PHC[k2] ) continue;
+            const long int j1 = jb[(size_t)k1];
+            if( removed[(size_t)j1] || ( k1 < FIs && pm.LsMdc && pm.LsMdc[k1*3] > 0 ) ) continue;
+            if( !identical( j1, j2 ) )
+            {
+                if( suspicious( j1, j2 ) )
+                    reportSuspicious += fmt::format( "{}{}/{}({})", reportSuspicious.empty() ? "" : ",",
+                                                     phName( k1 ), phName( k2 ), dcName( j1 ) );
+                continue;
+            }
+            long int keepK = k1, dropK = k2; const char* why = "first";
+            const bool pure1 = k1 >= FIs, pure2 = k2 >= FIs;
+            const bool name1 = abbreviates( dcName( j1 ), phName( k1 ) ), name2 = abbreviates( dcName( j2 ), phName( k2 ) );
+            if( pure1 != pure2 )      { why = "pure"; if( pure2 ) { keepK = k2; dropK = k1; } }
+            else if( name1 != name2 ) { why = "name"; if( name2 ) { keepK = k2; dropK = k1; } }
+            hold( jb[(size_t)keepK], jb[(size_t)dropK], "purephase", keepK, dropK, why );
+            break;
+        }
+    }
+
+    if( !reportSuspicious.empty() )
+        native_trace_decide( "redundant-dc-suspicious list=%s", reportSuspicious.c_str() );
+    if( report.empty() && reportKept.empty() && reportSuspicious.empty() )
+        return held;
+    if( !held.empty() && pm.pNP && pm.X && pm.Y )
+    {   // warm start: the moved amounts must be reflected in the phase totals already derived
+        TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+        CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+    }
+    if( !report.empty() )
+        native_trace_decide( "redundant-dc removed=%ld list=%s", (long)held.size(), report.c_str() );
+    if( !reportKept.empty() )
+        native_trace_decide( "redundant-dc-constrained list=%s", reportKept.c_str() );
+
+    static std::mutex warnedMutex;
+    static std::set<std::string> warned;
+    const std::string key = report + "|" + reportKept + "|" + reportSuspicious;
+    {
+        std::lock_guard<std::mutex> lock( warnedMutex );
+        if( !warned.insert( key ).second ) return held;
+    }
+    if( !report.empty() )
+        gems_logger->warn(
+            "Redundant species in the system definition: {} species duplicate another with identical "
+            "stoichiometry, class and standard properties (G0, H0, S0, Cp0, V0 at this T,P), in the same "
+            "phase or as single-species phases. Each copy is REMOVED from the solve (held at zero; its "
+            "amount is reported as 0 and carried by the species kept). In one phase a duplicate would "
+            "double that species' share of mixing; as pure phases their split is arbitrary. A pure phase that "
+            "duplicates another is often the single end-member left of a solid solution whose other elements "
+            "are switched off - that remnant is the copy removed. Removed>kept (and the rule that chose): {}. "
+            "Remove the duplicates from the project to silence this.", held.size(), report );
+    if( !reportKept.empty() )
+        gems_logger->warn(
+            "Redundant species NOT removed because a copy carries metastability limits (DLL/DUL): {}. "
+            "Their amounts are not independently determined unless those limits separate them.", reportKept );
+    if( !reportSuspicious.empty() )
+        gems_logger->warn(
+            "Suspicious species pairs in the system definition (nothing removed): same stoichiometry and the same "
+            "G0 at this T,P, but other standard properties (H0, S0, Cp0 or V0) differ - the entries agree where "
+            "they are compared and nowhere else, which is rarely intended. Check the data: {}", reportSuspicious );
+    return held;
+}
+
+void TMultiBase::RestoreRedundantDCs( const std::vector<RedundantDCHold>& held )
+{
+    for( const auto& h : held )
+    {
+        pm.RLC[h.j] = h.rlc;
+        pm.DLL[h.j] = h.dll;
+        pm.DUL[h.j] = h.dul;
     }
 }
 

@@ -511,6 +511,14 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
 
   InitalizeGEM_IPM_Data();
 
+    // Redundant species are held at zero for this call only (ExcludeRedundantDCs, ipm_main.cpp);
+    // the guard restores their metastability settings on every exit, exceptions included.
+    const std::vector<RedundantDCHold> redundantHeld = ExcludeRedundantDCs();
+    struct RedundantRestore {
+        TMultiBase* self; const std::vector<RedundantDCHold>& held;
+        ~RedundantRestore() { self->RestoreRedundantDCs( held ); }
+    } redundantRestore{ this, redundantHeld };
+
   pm.t_start = clock();
   pm.t_end = pm.t_start;
   pm.t_elap_sec = 0.0;

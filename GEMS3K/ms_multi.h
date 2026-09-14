@@ -2840,6 +2840,17 @@ protected:
     /// answers differing in that phase's amount cannot be told apart at the solver's own
     /// energy resolution. Read-only - never changes the answer. See ipm_main.cpp.
     void EnergyDeterminacyCheck();
+    /// A species ExcludeRedundantDCs() holds at zero for the current call, with the
+    /// metastability settings RestoreRedundantDCs() puts back. (A nested type and two
+    /// non-virtual members: no change to the class layout.)
+    struct RedundantDCHold { long int j; char rlc; double dll, dul; };
+    /// Find REDUNDANT species - identical stoichiometry, class and standard properties at
+    /// the current T,P, either twice in one phase or as two single-species phases - warn,
+    /// and hold every copy after the first at zero for this call (internal DLL = DUL = 0,
+    /// RLC = BOTH_LIM; any starting amount moved onto the kept one). The caller's input
+    /// (DATABR dll/dul) is not touched. See ipm_main.cpp.
+    std::vector<RedundantDCHold> ExcludeRedundantDCs();
+    void RestoreRedundantDCs( const std::vector<RedundantDCHold>& held );
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
     void AutoInitialApproximation( );
 
