@@ -1508,9 +1508,11 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                if( fabs( MjuDiff ) > MjuDiffCutoff )
                {
                    if(MjuDiff < -608.) {
+                       gems_logger->warn("MjuDiff clamped for DC j={}: {:.6e} -> -608 (overflow guard in PhaseSelectionSpeciationCleanup)", j, MjuDiff);
                        MjuDiff = -608.;
                    }
                    else if(MjuDiff > 609.) {
+                       gems_logger->warn("MjuDiff clamped for DC j={}: {:.6e} -> 609 (overflow guard in PhaseSelectionSpeciationCleanup)", j, MjuDiff);
                        MjuDiff = 609.;
                    }
                   YjCleaned = Yj / exp( MjuDiff ); // also applies to a DC in a solution phase
@@ -1712,9 +1714,11 @@ else fRestore = true;
           }
 
           if( ln_ax_dual < -608.) {
+              gems_logger->warn("ln_ax_dual clamped for DC j={}: {:.6e} -> -608 (overflow guard in StabilityIndexes)", j, ln_ax_dual);
               ln_ax_dual = -608.;
           }
           else if(ln_ax_dual > 609.) {
+              gems_logger->warn("ln_ax_dual clamped for DC j={}: {:.6e} -> 609 (overflow guard in StabilityIndexes)", j, ln_ax_dual);
               ln_ax_dual = 609.;
           }
           /* For IEEE-compatible type double, overflow is guaranteed if 709.8 < arg, and underflow is guaranteed if arg < -708.4
