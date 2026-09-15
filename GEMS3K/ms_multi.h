@@ -1439,6 +1439,24 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// Trailing member: GEMSGUI serialises BASE_PARAM positionally.
     long int ColdRetryNudges = 4;
 
+    /// pa_OptimaPreSolveFirstIters: Optima iteration budget for each pass of the dimension-reduction
+    /// pre-solve's FIRST attempt (OptimaReducedPreSolve() under the configured pa_OptimaDimReduceTol rule).
+    /// A pass is otherwise allowed max(2000, pa_IIM) iterations; this lowers that to min(max(2000, pa_IIM),
+    /// value) and can never raise it. The fallback attempt keeps the full budget. A pass that reaches the
+    /// budget without converging is discarded exactly as before and the fallback attempt runs, so the worst
+    /// case is the existing discard/retry path. 0 = off. Resolved by optima_presolve_pass_budget(), which
+    /// the EFF trace line calls too; each `dimreducepass` DECIDE record carries the `budget=` it ran at.
+    ///
+    /// Basis (plan v5 s122.5, s122.7; gems-benchmark Docs/presolve-jitter-2026-09-12.tsv): over 5 projects
+    /// x 9 draws of a 1e-15 bIC nudge (110 passes) the worst CONVERGED first-attempt pass costs 3868
+    /// iterations (07PSIna_G_vcomplex_0_0_1_25_0) and every first-attempt pass that does not converge runs
+    /// to the 10000 ceiling (T-cement on all 9 draws, T14_ball000 on 3). The second attempt does not
+    /// separate (T-cement converges once in 8917), hence first attempt only. 6000 = 1.55x the worst
+    /// converged pass; 5000 (1.29x) sits inside the +37 % by which one project's worst pass moved between
+    /// its single census draw and the nine-draw ladder. Trailing member: GEMSGUI serialises BASE_PARAM
+    /// positionally.
+    long int OptimaPreSolveFirstIters = 6000;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -1488,6 +1506,15 @@ inline long int optima_dimreduce_passes( long int configured, long int nDC )
     if( configured == 0 && nDC >= kOptimaDimReduceAutoMinDC )
         return kOptimaDimReduceAutoPasses;
     return configured;
+}
+
+/// Per-pass Optima iteration budget of OptimaReducedPreSolve(): max(2000, pa_IIM),
+/// lowered to pa_OptimaPreSolveFirstIters on the FIRST attempt when that is > 0.
+/// Never raises the budget. One function for the solver and the EFF trace line.
+inline long int optima_presolve_pass_budget( long int configured, long int iim, bool firstAttempt )
+{
+    const long int full = ( iim > 2000L ) ? iim : 2000L;
+    return ( firstAttempt && configured > 0 && configured < full ) ? configured : full;
 }
 
 
@@ -2567,12 +2594,15 @@ public:
     ///        -|dimTol| x N, 0 the seed's own support only). Passed rather than
     ///        read from BASE_PARAM so the caller can retry a discarded
     ///        pre-solve under the OTHER rule - see the call site.
+    /// \param passBudget  Optima iteration budget of each pass
+    ///        (optima_presolve_pass_budget()).
     /// \param iterationsOut  Optima iterations spent here, for pm.ITG.
     /// \param activeOut  size of the final active set, for logging.
     /// \return true if pm.Y[]/pm.U[] now carry a state worth warm-starting
     ///         from; false if the pre-solve was skipped or discarded, in which
     ///         case neither array was modified in a way the caller must undo.
     bool OptimaReducedPreSolve( long int maxPasses, double dcFloor, double dimTol,
+                                long int passBudget,
                                 long int& iterationsOut, long int& activeOut );
 #endif
 
@@ -3067,7 +3097,8 @@ typedef enum {  // Field index into outField structure
     f_pa_MbTrendPhaseDecay, f_pa_OptimaEarlyStabilityAt, f_pa_OptimaDimReduce,
     f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit, f_pa_OptimaZeroAbsent,
     f_pa_OptimaReadmitSeed,
-    f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn, f_pa_ColdRetryNudges
+    f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn, f_pa_ColdRetryNudges,
+    f_pa_OptimaPreSolveFirstIters
 
 } MULTI_DYNAMIC_FIELDS;
 

@@ -184,7 +184,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaEarlyStabilityAt=%ld pa_OptimaDimReduce=%ld"
              " pa_OptimaDimReduceTol=%.6e pa_MbPivotSplit=%ld pa_OptimaZeroAbsent=%ld"
              " pa_OptimaReadmitSeed=%.6e pa_IpmStallWindow=%d pa_MbReproject=%d"
-             " pa_DeterminacyWarn=%.6e pa_ColdRetryNudges=%ld\n",
+             " pa_DeterminacyWarn=%.6e pa_ColdRetryNudges=%ld"
+             " pa_OptimaPreSolveFirstIters=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -203,7 +204,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              pa->OptimaDimReduceTol, (long)pa->MbPivotSplit,
              (long)pa->OptimaZeroAbsent, pa->OptimaReadmitSeed,
              (int)pa->IpmStallWindow, (int)pa->MbReproject, pa->DeterminacyWarn,
-             (long)pa->ColdRetryNudges );
+             (long)pa->ColdRetryNudges, (long)pa->OptimaPreSolveFirstIters );
 
     // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
     //
@@ -282,14 +283,17 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
                  " earlystability_gate=%s earlystability_multisitePh=%ld"
                  " earlystability_autoCap=%ld earlystability_autoWarmCap=%ld"
                  " earlystability_warmLeg=%d earlystability_reached=%s"
-                 " optima_netresume_eff=%d optima_netresume_src=%s\n",
+                 " optima_netresume_eff=%d optima_netresume_src=%s"
+                 " presolve_firstbudget_eff=%ld presolve_passbudget_full=%ld\n",
                  drCfg, drEff, drGate, (long)pm.L,
                  (long)kOptimaDimReduceAutoMinDC, drReached,
                  esCfg, esEff, esGate, esMulti,
                  (long)kOptimaEarlyStabilityAutoCap,
                  (long)kOptimaEarlyStabilityAutoWarmCap, (int)esWarm, esReached,
                  optima_net_resume_mode(),
-                 std::getenv( "GEMS3K_OPTIMA_NET_RESUME" ) ? "env" : "default" );
+                 std::getenv( "GEMS3K_OPTIMA_NET_RESUME" ) ? "env" : "default",
+                 optima_presolve_pass_budget( (long)pa->OptimaPreSolveFirstIters, (long)pa->IIM, true ),
+                 optima_presolve_pass_budget( (long)pa->OptimaPreSolveFirstIters, (long)pa->IIM, false ) );
     }
     fflush( ntf );
 }

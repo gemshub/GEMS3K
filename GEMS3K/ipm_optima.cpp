@@ -1063,6 +1063,7 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
 // and full index. A pre-solve that fails, or that cannot omit anything, is
 // simply discarded.
 bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, double dimTol,
+                                        long int passBudget,
                                         long int& iterationsOut, long int& activeOut )
 {
     iterationsOut = 0;
@@ -1197,7 +1198,8 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     };
 
     Optima::Options options;
-    options.maxiters = (unsigned)std::max( 2000L, (long int)pa_p->IIM );
+    // max(2000, pa_IIM), or less on the first attempt (pa_OptimaPreSolveFirstIters).
+    options.maxiters = (unsigned)passBudget;
     options.convergence.tolerance = pa_p->OptimaTol;
 
     // ---- Stall / wall-clock guard for the pre-solve itself ----
@@ -1773,11 +1775,12 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             // (configured rule vs the fallback the caller retries at) without
             // relying on position in the trace.
             native_trace_decide( "dimreducepass pass=%ld tol=%.6g ns=%ld of=%ld iters=%ld ok=0 "
-                                 "readmit=-1 stop=%s",
+                                 "readmit=-1 stop=%s budget=%ld",
                                  (long)pass, dimTol, (long)nS, (long)L,
                                  (long)result.iterations,
                                  preWatch->timedOut ? "timeout"
-                                                    : ( preWatch->stalled ? "stall" : "nonconv" ) );
+                                                    : ( preWatch->stalled ? "stall" : "nonconv" ),
+                                 (long)passBudget );
             return discard();
         }
 
@@ -1883,9 +1886,9 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
         // SETTLED from one that merely ran out of passes without consulting the
         // caller's record.
         native_trace_decide( "dimreducepass pass=%ld tol=%.6g ns=%ld of=%ld iters=%ld ok=1 "
-                             "readmit=%ld seeded=%ld",
+                             "readmit=%ld seeded=%ld budget=%ld",
                              (long)pass, dimTol, (long)nS, (long)L, (long)result.iterations,
-                             (long)readmitted, (long)seeded );
+                             (long)readmitted, (long)seeded, (long)passBudget );
 
         if( readmitted == 0 )
             return true;   // fixed point: the reduced answer satisfies the full KKT conditions
@@ -2261,7 +2264,12 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
             const double configuredTol = pa_p->OptimaDimReduceTol;
             long int nActive = 0;
+            // First attempt at the lowered per-pass budget (pa_OptimaPreSolveFirstIters,
+            // plan v5 s122.7); the fallback below keeps max(2000, pa_IIM).
             dimReduceDone = OptimaReducedPreSolve( dimReducePasses, dcFloor, configuredTol,
+                                                   optima_presolve_pass_budget(
+                                                       pa_p->OptimaPreSolveFirstIters,
+                                                       (long int)pa_p->IIM, true ),
                                                    dimReduceIters, nActive );
             reestablish();
 
@@ -2308,6 +2316,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 dimReduceWasted = dimReduceIters;
                 dimReduceAttempts = 2;
                 dimReduceDone = OptimaReducedPreSolve( dimReducePasses, dcFloor, fallbackTol,
+                                                       optima_presolve_pass_budget(
+                                                           pa_p->OptimaPreSolveFirstIters,
+                                                           (long int)pa_p->IIM, false ),
                                                        fallbackIters, nActive );
                 dimReduceIters += fallbackIters;
                 reestablish();
