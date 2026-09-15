@@ -5689,7 +5689,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         pm.ITG = optimaIterTotal;
 
         // ---- pa_OptimaZeroAbsent: report a correctly absent species as EXACTLY
-        // ZERO rather than at the box's numerical floor (0 = off, the default).
+        // ZERO rather than at the box's numerical floor (0 = off; default 1 since
+        // 2026-09-03).
         //
         // Placed HERE, after every trustworthiness check above has already run
         // and produced its verdict on the un-zeroed state, and gated on that
@@ -5745,6 +5746,14 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 // this branch has measured repeatedly. So the zeroed state is
                 // put back through the SAME per-IC test the un-zeroed state
                 // just passed, and is kept only if it also passes.
+                //
+                // MEASURED 2026-09-14e (plan v5 s123.2): that test CANNOT see a
+                // trace-IC loss. CheckMassBalanceResiduals()' cutoff is the ABSOLUTE
+                // min(DHBM*1e10, 1e-2) = 1e-3 mol at pa_DHB = 1e-13, while the zeroing
+                // removes ~1e-13 mol. On FeNaCl_FyGt_Precip AOP it takes Fe (B = 4.8e-4)
+                // from |C|/(B*DHBM) = 4.4e-3 to 6.2e3 and the charge residual from
+                // 5.1e-19 to 3.2e-13, and is kept; on 07PSIna_G_iron Fe (B = 3e-9) goes
+                // to 4.3e8. G, Vs, Ms unchanged. The CERT trace record shows it.
                 if( CheckMassBalanceResiduals( pm.Y ) >= 0 )
                 {
                     for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];

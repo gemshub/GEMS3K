@@ -394,6 +394,62 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status )
         nPresent++;
     }
     fprintf( ntf, " nph=%ld akey=%016llx\n", (long)nPresent, akey );
+
+    // CERT - the mass-balance part of the answer certificate (Docs/PLAN-defaults-and-fallbacks.md
+    // s0.1), computed on the returned amounts pm.X for EVERY mode, so a row that reports OK with a
+    // mass balance its own relative test would reject is visible per mode in the trace and in the
+    // freeze (the silent-OK class: 11 of 56 projects' native cold answers, CLAUDE.md s4).
+    //   mb_rel  worst |C_i| / (B_i * DHBM) over the ordinary ICs [0, N-E); > 1 fails the relative
+    //           test MBR applies (an IC with B_i = 0 and a non-zero residual reads 1e300)
+    //   mb_abs  worst |C_i| over the same range
+    //   chg_abs worst |C_i| over the charge row(s) [N-E, N), which no convergence test on either
+    //           path compares
+    //   mb_pass mb_rel <= 1 - the certificate's mass-balance clause as the plan defines it; pa_DT's
+    //           absolute floor is deliberately not applied, so a native row passing only through
+    //           that floor reads mb_pass=0 here
+    // Read-only. NOT yet in the record, and why: total G, the per-species reduced-gradient residual
+    // and the phase-stability fields. pm.FX and pm.Falp are refreshed by the native path only, and
+    // Optima's residual is a local of its post-solve check, so a trace writer reading them would
+    // print stale values on Optima rows - the DC_G0() shape (CLAUDE.md s4).
+    if( pm.X && pm.B && pm.A && pm.N > 0 )
+    {
+        const long int Z = pm.N - pm.E;
+        long int iRel = -1, iAbs = -1, iChg = -1;
+        double rel = 0., absr = 0., chg = 0.;
+        for( long int i = 0; i < pm.N; i++ )
+        {
+            double c = pm.B[i];
+            for( long int j = 0; j < pm.L; j++ )
+                c -= pm.A[i + j*pm.N] * pm.X[j];
+            const double a = fabs( c );
+            if( i >= Z )
+            {
+                if( a > chg ) { chg = a; iChg = i; }
+                continue;
+            }
+            if( a > absr ) { absr = a; iAbs = i; }
+            const double bar = pm.B[i] * pm.DHBM;
+            const double r = bar > 0. ? a / bar : ( a > 0. ? 1e300 : 0. );
+            if( r > rel ) { rel = r; iRel = i; }
+        }
+        auto icName = [&pm]( long int i ) {
+            if( i < 0 ) return std::string( "-" );
+            std::string s = char_array_to_string( pm.SB[i], MAXICNAME );
+            while( !s.empty() && ( s.back() == ' ' || s.back() == '\0' ) ) s.pop_back();
+            return s.empty() ? std::string( "-" ) : s;
+        };
+        // mb_rel_b: the bulk amount of the IC carrying mb_rel. Measured on the first four projects
+        // this ran on (07PSIna_G_iron_1_0_1_25, Al-species_G_sys_2_0_0_101, FeNaCl_FyGt_Precip,
+        // Cu-Pourbaix_G_pHtitr): every native row passes at mb_rel 1.4e-3..2.6e-3, and EVERY Optima
+        // row (AOP/SOP/HOP/SHP) fails at mb_rel 6.2e3..5.2e8 on a trace IC (Fe, K, Cu) while its mb_abs
+        // is 2.4e-13..9.2e-13 mol - Optima's own post-solve check (CheckMassBalanceResiduals) accepts an
+        // absolute residual up to min(DHBM*1e10, 1e-2). So the plan's relative clause, as defined,
+        // rejects the Optima path wholesale on trace ICs; which clause is right is open.
+        fprintf( ntf, "CERT  mode=%s status=%ld mb_rel=%.3e mb_rel_ic=%s mb_rel_b=%.3e mb_abs=%.3e"
+                      " mb_abs_ic=%s chg_abs=%.3e chg_ic=%s mb_pass=%d\n",
+                 mname, (long)status, rel, icName( iRel ).c_str(), iRel >= 0 ? pm.B[iRel] : 0.,
+                 absr, icName( iAbs ).c_str(), chg, icName( iChg ).c_str(), rel <= 1. ? 1 : 0 );
+    }
     fflush( ntf );
 }
 
