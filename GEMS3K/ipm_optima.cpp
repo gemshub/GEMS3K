@@ -5607,7 +5607,142 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 worstKKTSpecies = j;
             }
         }
-        const bool kktOk = maxKKTResidual <= kktTol;
+        bool kktOk = maxKKTResidual <= kktTol;
+
+        // DUAL DETERMINACY (2026-09-15, plan v5 s123.6). The sign test above reads each
+        // reduced gradient at the dual Optima returned. When the INTERIOR species (the ones
+        // whose g = 0 fixes the dual) span fewer than N directions, the dual is free along
+        // the rest, and every bound-active species' gradient depends on where along them the
+        // solver happened to stop - an arbitrary choice, not chemistry. The right question is
+        // then whether SOME dual in that free set satisfies every bound condition. Measured on
+        // 07PSIna_G_simple_1_0_1_25_0 SHP (C-Ca-H-Mg-O, no redox buffer, Eh undetermined): 15
+        // interior species span rank 5 of N = 6, the free direction is the redox one, and
+        // H2(aq) at the floor reads g = +0.240 / -0.512 / -2.895 depending only on the warm
+        // start, while a feasible interval exists in all three ([-0.66,160], [1.40,162],
+        // [7.93,168]). Optima's own ex is zeroed for any bound-pinned variable whatever the
+        // sign of s (ResidualErrors.cpp), so it calls all three converged.
+        // Runs only when the plain test failed; handles ONE free direction exactly (the redox
+        // case). More than one is recorded and left failing until its reach is measured.
+        if( !kktOk )
+        {
+            auto boxFixed = [&]( long int j ) {
+                return problem.xupper[j] <= problem.xlower[j] + std::max( dcFloor, problem.xlower[j]*1e-6 ); };
+            auto atLower = [&]( long int j ) {
+                return pm.X[j] <= problem.xlower[j] + std::max( dcFloor, problem.xlower[j]*1e-6 ); };
+            auto atUpper = [&]( long int j ) { return pm.X[j] >= problem.xupper[j] * ( 1. - 1e-6 ); };
+
+            // Orthonormal basis of span{a_j : j interior}, by modified Gram-Schmidt with the same
+            // rank tolerance MassBalanceReproject() uses.
+            std::vector<double> Q, r( (size_t)N );
+            long int rank = 0;
+            auto orthogonalize = [&]( const std::vector<double>& basis, long int nb ) {
+                for( long int c = 0; c < nb; c++ )
+                {
+                    double d = 0.;
+                    for( long int i = 0; i < N; i++ ) d += basis[(size_t)(c*N + i)] * r[(size_t)i];
+                    for( long int i = 0; i < N; i++ ) r[(size_t)i] -= d * basis[(size_t)(c*N + i)];
+                }
+                double nrm = 0.;
+                for( long int i = 0; i < N; i++ ) nrm += r[(size_t)i] * r[(size_t)i];
+                return std::sqrt( nrm );
+            };
+            for( long int j = 0; j < L && rank < N; j++ )
+            {
+                if( boxFixed( j ) || atLower( j ) || atUpper( j ) ) continue;
+                double nrm0 = 0.;
+                for( long int i = 0; i < N; i++ ) { r[(size_t)i] = pm.A[ i + j*N ]; nrm0 += r[(size_t)i]*r[(size_t)i]; }
+                nrm0 = std::sqrt( nrm0 );
+                if( !( nrm0 > 0. ) ) continue;
+                const double nrm = orthogonalize( Q, rank );
+                if( nrm < 1e-8 * nrm0 ) continue;
+                Q.resize( (size_t)((rank+1)*N) );
+                for( long int i = 0; i < N; i++ ) Q[(size_t)(rank*N + i)] = r[(size_t)i] / nrm;
+                rank++;
+            }
+            // Free directions: unit vectors orthogonalized against the span and each other.
+            std::vector<double> D; long int nDirs = 0;
+            for( long int e = 0; e < N && rank + nDirs < N; e++ )
+            {
+                std::fill( r.begin(), r.end(), 0. ); r[(size_t)e] = 1.;
+                double nrm = orthogonalize( Q, rank );
+                if( nrm < 1e-8 ) continue;
+                for( long int i = 0; i < N; i++ ) r[(size_t)i] /= nrm;
+                nrm = orthogonalize( D, nDirs );
+                if( nrm < 1e-8 ) continue;
+                D.resize( (size_t)((nDirs+1)*N) );
+                for( long int i = 0; i < N; i++ ) D[(size_t)(nDirs*N + i)] = r[(size_t)i] / nrm;
+                nDirs++;
+            }
+
+            double tLo = -std::numeric_limits<double>::infinity(), tHi = std::numeric_limits<double>::infinity();
+            // The same interval with NO tolerance slack. The point is chosen from this one when it is
+            // not empty: an end of the slack interval puts the bounding species at a residual of
+            // exactly kktTol, where rounding decides the verdict (first build: 07PSIna_G_simple_1
+            // SHP read after=1.000e-03 and resolved=0 on one warm start, resolved=1 on another).
+            double tLo0 = -std::numeric_limits<double>::infinity(), tHi0 = std::numeric_limits<double>::infinity();
+            long int jLo = -1, jHi = -1;
+            double tStar = 0., residAfter = maxKKTResidual;
+            int resolved = 0;
+            const double before = maxKKTResidual;
+            if( nDirs == 1 )
+            {
+                std::vector<double> cdir( (size_t)L, 0. );
+                bool infeasible = false;
+                for( long int j = 0; j < L; j++ )
+                {
+                    double c = 0.;
+                    for( long int i = 0; i < N; i++ ) c += pm.A[ i + j*N ] * D[(size_t)i];
+                    cdir[(size_t)j] = c;
+                    if( boxFixed( j ) ) continue;
+                    const double g = gradSaved[(size_t)j];
+                    const bool lower = atLower( j ), upper = !lower && atUpper( j );
+                    if( !lower && !upper ) continue;             // interior: c = 0 by construction
+                    // lower: g - t c >= -kktTol ; upper: g - t c <= kktTol
+                    const double rhs = lower ? ( g + kktTol ) : ( g - kktTol );
+                    if( std::fabs( c ) < 1e-12 )
+                    {
+                        if( lower ? ( g < -kktTol ) : ( g > kktTol ) ) infeasible = true;
+                        continue;
+                    }
+                    const double bound = rhs / c, bound0 = g / c;
+                    const bool isUpperOnT = ( lower == ( c > 0. ) );
+                    if( isUpperOnT ) { if( bound < tHi ) { tHi = bound; jHi = j; } tHi0 = std::min( tHi0, bound0 ); }
+                    else             { if( bound > tLo ) { tLo = bound; jLo = j; } tLo0 = std::max( tLo0, bound0 ); }
+                }
+                if( !infeasible && tLo <= tHi )
+                {
+                    tStar = ( tLo0 <= tHi0 ) ? std::min( std::max( 0., tLo0 ), tHi0 )
+                                             : std::min( std::max( 0., tLo ), tHi );
+                    residAfter = 0.; long int worstAfter = -1;
+                    for( long int j = 0; j < L; j++ )
+                    {
+                        if( boxFixed( j ) ) continue;
+                        const double g = gradSaved[(size_t)j] - tStar * cdir[(size_t)j];
+                        const double res = atLower( j ) ? std::max( -g, 0. )
+                                         : atUpper( j ) ? std::max(  g, 0. ) : std::fabs( g );
+                        if( res > residAfter ) { residAfter = res; worstAfter = j; }
+                    }
+                    if( residAfter <= kktTol )
+                    {
+                        for( long int j = 0; j < L; j++ ) gradSaved[(size_t)j] -= tStar * cdir[(size_t)j];
+                        maxKKTResidual = residAfter;
+                        worstKKTSpecies = worstAfter;
+                        kktOk = true;
+                        resolved = 1;
+                    }
+                }
+            }
+            auto dcName = [&]( long int j ) {
+                if( j < 0 ) return std::string( "-" );
+                std::string s = char_array_to_string( pm.SM[j], MAXDCNAME );
+                while( !s.empty() && ( s.back() == ' ' || s.back() == '\0' ) ) s.pop_back();
+                return s;
+            };
+            native_trace_decide( "dualfree rank=%ld of=%ld dirs=%ld tlo=%.4g thi=%.4g tstar=%.4g resolved=%d "
+                                 "before=%.3e after=%.3e lo=%s hi=%s",
+                                 (long)rank, (long)N, (long)nDirs, tLo, tHi, tStar, resolved,
+                                 before, residAfter, dcName( jLo ).c_str(), dcName( jHi ).c_str() );
+        }
 
         double worstStabilityViol = 0.;
         bool worstStabilityWasAbsent = false;
