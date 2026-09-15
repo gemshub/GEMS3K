@@ -187,14 +187,14 @@ long int TNode::GEM_run( bool uPrimalSol )
         // makes a caller-side bulk-composition bug visible without a second historical build.
         if (node_logger->should_log(spdlog::level::debug)) {
             for (long int i = 0; i < CSD->nICb; i++)
-                node_logger->debug("bIC[{}] {} = {:.6e}", i, CSD->ICNL[i], CNode->bIC[i]);
+                node_logger->debug("bIC[{}] {} = {:.6e}", i, CSD->ICNL[CSD->xic[i]], CNode->bIC[i]);
         }
         // Cheap sanity warning: an IC pinned at/below the numerical floor is exactly the
         // symptom that once took hours of manual instrumentation to spot by hand.
         for (long int i = 0; i < CSD->nICb; i++) {
             if (CNode->bIC[i] > 0. && CNode->bIC[i] <= pmm->DcMinM)
                 node_logger->warn("bIC[{}] {} = {:.6e} is at/below the numerical floor (DcMinM={:.3e})",
-                                   i, CSD->ICNL[i], CNode->bIC[i], pmm->DcMinM);
+                                   i, CSD->ICNL[CSD->xic[i]], CNode->bIC[i], pmm->DcMinM);
         }
 #endif
 
@@ -1034,6 +1034,5 @@ void TNode::GEM_from_MT(
 }
 
 //-----------------------End of node.cpp--------------------------
-
 
 

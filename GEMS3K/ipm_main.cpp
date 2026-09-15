@@ -965,8 +965,10 @@ STEP_POINT("FIA Iteration");
 //----------------------------------------------------------------------------
     //  Prescribed mass balance precision cannot be reached
                     // Temporary workaround for pathological systems 06.05.2010 DK
-   if( pa_p->DW && ( WhereCalledFrom == 0L || pm.pNP ) )  // Now controlled by DW flag
-   {  // Strict mode of mass balance control
+   const bool dpExhaustedWithoutStallDetection = !pa_p->PSTALL && IT1 == pa_p->DP;
+   if( (pa_p->DW && ( WhereCalledFrom == 0L || pm.pNP )) ||
+       dpExhaustedWithoutStallDetection )  // DW behavior plus mandatory failure on PSTALL=0 exhaustion
+   {
        iRet = 2;
        std::string buf = "(MBR("+std::to_string(WhereCalledFrom);
                    buf += ")) Maximum allowed number of MBR iterations (";
@@ -1573,7 +1575,7 @@ static double InverseIterationMinEig( Decomp& decomp, long int N, int iters )
 long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initAppr )
 {
 #ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
-    auto solve_t0 = std::chrono::high_resolution_clock::now();
+    auto solve_t0 = std::chrono::steady_clock::now();
     double diag_ms = 0.;   // condition-number-diagnostics-only time, this call
     pm.SolveCallCount++;
 #endif
@@ -1641,11 +1643,11 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
     // both the Cholesky and LU branches, whichever ends up solving the system).
     // Timed separately from the rest of the solve (diag_ms) so its cost can be
     // attributed per system instead of inferred from noisy whole-call timing.
-    auto diag_t0 = std::chrono::high_resolution_clock::now();
+    auto diag_t0 = std::chrono::steady_clock::now();
     pm.CondNumDiag = std::max( pm.CondNumDiag, DiagRatioConditionProxy( AA, N ) );
     double lambda_max = PowerIterationMaxEig( AA, N, 6 );
     diag_ms += std::chrono::duration<double, std::milli>(
-                   std::chrono::high_resolution_clock::now() - diag_t0 ).count();
+                   std::chrono::steady_clock::now() - diag_t0 ).count();
 #endif
 
     // From here on, the NIST TNT Jama/C++ linear algebra package is used
@@ -1660,10 +1662,10 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
     {
         B = chol.solve( B );
 #ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
-        auto inv_t0 = std::chrono::high_resolution_clock::now();
+        auto inv_t0 = std::chrono::steady_clock::now();
         double lambda_min = InverseIterationMinEig( chol, N, 6 );
         diag_ms += std::chrono::duration<double, std::milli>(
-                       std::chrono::high_resolution_clock::now() - inv_t0 ).count();
+                       std::chrono::steady_clock::now() - inv_t0 ).count();
         double cond = ( lambda_min > 1e-300 ) ? lambda_max / lambda_min
                                                : std::numeric_limits<double>::infinity();
         pm.CondNum = std::max( pm.CondNum, cond );
@@ -1698,7 +1700,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
             }
 #ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
             pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
-                                  std::chrono::high_resolution_clock::now() - solve_t0 ).count();
+                                  std::chrono::steady_clock::now() - solve_t0 ).count();
             pm.CondNumTimeMs += diag_ms;
 #endif
             return 1; // Singular matrix - too bad! No solution ...
@@ -1706,10 +1708,10 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
 
         B = lu.solve( B );
 #ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
-        auto inv_t0 = std::chrono::high_resolution_clock::now();
+        auto inv_t0 = std::chrono::steady_clock::now();
         double lambda_min = InverseIterationMinEig( lu, N, 6 );
         diag_ms += std::chrono::duration<double, std::milli>(
-                       std::chrono::high_resolution_clock::now() - inv_t0 ).count();
+                       std::chrono::steady_clock::now() - inv_t0 ).count();
         double cond = ( lambda_min > 1e-300 ) ? lambda_max / lambda_min
                                                : std::numeric_limits<double>::infinity();
         pm.CondNum = std::max( pm.CondNum, cond );
@@ -1727,7 +1729,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
     }
 #ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
     pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
-                          std::chrono::high_resolution_clock::now() - solve_t0 ).count();
+                          std::chrono::steady_clock::now() - solve_t0 ).count();
     pm.CondNumTimeMs += diag_ms;
 #endif
     return 0;
