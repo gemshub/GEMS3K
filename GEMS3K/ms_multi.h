@@ -2994,6 +2994,35 @@ public:
     /// TRAILING member on purpose: TMultiBase is allocated only inside the library (TNode::allocMemory(),
     /// GEM_trace_regimes()), so appending here moves no offset an external binary uses. Copied by copyMULTI().
     std::vector<std::string> elementsOfInterest;
+
+    /// ELEMENT CLASSES for decisions on the Optima path (owner 2026-09-15, DECISIONS.md; HANDOFF-2026-09-15 s4).
+    /// An ordinary IC i (not a charge row) is NUMERICALLY TRACE when one numerical-floor amount does not fit
+    /// inside its own mass-balance tolerance: B_i*pa_DHB < floor, the floor being pa_OptimaDcFloor if set, else
+    /// pa_DHB, in the solve's internal units. With pa_DG > 1e-5 the solve is rescaled to sum(B) = pa_DG, so with
+    /// the default floor the test is B_i/sum(B) < 1/pa_DG - unit-free, hence the same on internal and on real
+    /// amounts; with pa_DG <= 1e-5 it is B_i < 1 mol. Measured boundary sum(B)/pa_DG: median 0.18 mol over 57
+    /// projects; 269 of 1312 ICs major. No new parameter: the boundary moves with each project's own settings.
+    /// This is a property of the OPTIMA path's numerics - native's fixed amounts are pa_DcMin-scale and make
+    /// every corpus IC major at shipped settings. The dilute-regime check (GEM_trace_regimes) keeps its own
+    /// chemical relative rule and does not read this.
+    bool ICIsNumericalTrace( long int i ) const;
+    /// A DEFAULT SEED is a numerically trace IC the caller did NOT mark of interest, once any IC is marked.
+    /// With nothing marked there are no default seeds: every IC is conserved (owner 2026-09-14e). Consumers:
+    /// pa_OptimaZeroAbsent's rebalance/undo test (a default seed does not trigger it) and the CERT record
+    /// (default seeds reported as mb_seed_rel, not scored in mb_pass).
+    bool ICIsDefaultSeed( long int i ) const;
+    /// SUB-FLOOR ELEMENTS on the Optima path (owner 2026-09-15: "produce a warning", with information for the user).
+    /// Warns when an ordinary IC's bulk amount is smaller than the least its carriers can hold,
+    ///   need_i = sum_j a(i,j) * max(DLL_j, floor)   over species with a(i,j) > 0,
+    /// i.e. no point inside Optima's box satisfies that IC's balance. The solve still runs; the IC's residual is left
+    /// to the post-solve repair, and its dual is free along e_i. Measured on 3Bent-H2O_G_Mont_0_0_1_25_0: Nit 1e-15 mol
+    /// against a 1.67e-14 mol floor; survey_dualfree reads the live direction (Nit +1.000) on the AOP answer; under the
+    /// unconditional zeroing (2c390db) every Optima row returned mb_rel = 1e13 on Nit - the whole Nit budget missing -
+    /// and with the phase-level zeroing + rebalance (plan v5 s123.7) it passes at 1.6e-2. By the formula, not measured:
+    /// xGEMS' Material seeds elements at 1e-15 mol, which is sub-floor on this path once total bulk exceeds ~10 mol per
+    /// carrier at pa_DHB = 1e-13, pa_DG = 1000. Read-only; called once per Optima call after rescaling, so amounts are
+    /// internal and the message converts them to real moles. Native modes are unaffected (their floor is pa_DcMin-scale).
+    void SubFloorElementCheck( double dcFloor ) const;
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3075,7 +3104,7 @@ void native_trace_decide( const char* fmt, ... );
 /// axis that design also names is deliberately NOT classified here; the per-phase
 /// molar volume it would be built from is emitted instead. See the definition
 /// (ipm_main.cpp) for why.
-void native_trace_run_result( const MULTI& pm, long int mode, long int status );
+void native_trace_run_result( const MULTI& pm, long int mode, long int status, const TMultiBase* mb = nullptr );
 
 // ???? syp->PGmax
 typedef enum {  // Symbols of thermodynamic potential to minimize

@@ -334,7 +334,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
 // the RUN/BULK/SET header comes from - so a trace carries the configuration a
 // result was produced at AND the regime it reached, and the two cannot drift
 // apart. No new MULTI or BASE_PARAM member, so the ABI is unchanged.
-void native_trace_run_result( const MULTI& pm, long int mode, long int status )
+void native_trace_run_result( const MULTI& pm, long int mode, long int status, const TMultiBase* mb )
 {
     FILE* ntf = native_trace_file();
     if( !ntf || native_trace_quiet_depth > 0 )
@@ -414,8 +414,8 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status )
     if( pm.X && pm.B && pm.A && pm.N > 0 )
     {
         const long int Z = pm.N - pm.E;
-        long int iRel = -1, iAbs = -1, iChg = -1;
-        double rel = 0., absr = 0., chg = 0.;
+        long int iRel = -1, iAbs = -1, iChg = -1, iSeed = -1;
+        double rel = 0., absr = 0., chg = 0., relSeed = 0.;
         for( long int i = 0; i < pm.N; i++ )
         {
             double c = pm.B[i];
@@ -430,6 +430,13 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status )
             if( a > absr ) { absr = a; iAbs = i; }
             const double bar = pm.B[i] * pm.DHBM;
             const double r = bar > 0. ? a / bar : ( a > 0. ? 1e300 : 0. );
+            // A DEFAULT SEED (TMultiBase::ICIsDefaultSeed) is reported apart as mb_seed_rel and does not enter
+            // mb_pass: its amount is a placeholder (owner 2026-09-15). With nothing marked there are none.
+            if( mb && mb->ICIsDefaultSeed( i ) )
+            {
+                if( r > relSeed ) { relSeed = r; iSeed = i; }
+                continue;
+            }
             if( r > rel ) { rel = r; iRel = i; }
         }
         auto icName = [&pm]( long int i ) {
@@ -445,10 +452,14 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status )
         // is 2.4e-13..9.2e-13 mol - Optima's own post-solve check (CheckMassBalanceResiduals) accepts an
         // absolute residual up to min(DHBM*1e10, 1e-2). So the plan's relative clause, as defined,
         // rejects the Optima path wholesale on trace ICs; which clause is right is open.
+        // mb_seed_rel / mb_seed_ic: worst relative residual over the DEFAULT SEEDS, which mb_pass leaves out
+        // (0 and "-" when nothing is marked of interest - then every IC is scored, exactly as before 2026-09-15).
+        // Appended after mb_pass so a reader of the older fields is unaffected.
         fprintf( ntf, "CERT  mode=%s status=%ld mb_rel=%.3e mb_rel_ic=%s mb_rel_b=%.3e mb_abs=%.3e"
-                      " mb_abs_ic=%s chg_abs=%.3e chg_ic=%s mb_pass=%d\n",
+                      " mb_abs_ic=%s chg_abs=%.3e chg_ic=%s mb_pass=%d mb_seed_rel=%.3e mb_seed_ic=%s\n",
                  mname, (long)status, rel, icName( iRel ).c_str(), iRel >= 0 ? pm.B[iRel] : 0.,
-                 absr, icName( iAbs ).c_str(), chg, icName( iChg ).c_str(), rel <= 1. ? 1 : 0 );
+                 absr, icName( iAbs ).c_str(), chg, icName( iChg ).c_str(), rel <= 1. ? 1 : 0,
+                 relSeed, icName( iSeed ).c_str() );
     }
     fflush( ntf );
 }
@@ -775,6 +786,80 @@ bool TMultiBase::MassBalanceReproject( double* amt )
                          "relafter=%.3e absbefore=%.3e absafter=%.3e",
                          (long)N, (long)nPass, (long)nClamped, relOld, relNew, absOld, absNew );
     return true;
+}
+
+// Element classes - see the declarations in ms_multi.h (owner 2026-09-15). ONE place computes them, so the
+// zeroing's rebalance test and the CERT record cannot disagree about which IC is a default seed.
+bool TMultiBase::ICIsNumericalTrace( long int i ) const
+{
+    if( !pm.B || i < 0 || i >= pm.N - pm.E ) return false;      // charge rows are never trace
+    const BASE_PARAM* pa = base_param();
+    if( !pa || !( pa->DHB > 0. ) ) return false;
+    double sumB = 0.;                                            // SystemTotalMolesIC()'s sum: ordinary ICs
+    for( long int k = 0; k < pm.N - pm.E; k++ ) sumB += pm.B[k];
+    if( !( sumB > 0. ) ) return false;
+    const double floorInt = pa->OptimaDcFloor > 0. ? pa->OptimaDcFloor : pa->DHB;
+    // the IC's amount in the units the floor is expressed in; B/sum(B) is the same on internal and real amounts
+    const double bInt = pa->DG > 1e-5 ? pm.B[i] * ( pa->DG / sumB ) : pm.B[i];
+    return bInt * pa->DHB < floorInt;
+}
+
+bool TMultiBase::ICIsDefaultSeed( long int i ) const
+{
+    if( elementsOfInterest.empty() || !ICIsNumericalTrace( i ) ) return false;
+    std::string s = char_array_to_string( pm.SB[i], MAXICNAME );
+    s.erase( s.find_last_not_of( std::string( " \t\0", 3 ) ) + 1 );
+    return std::find( elementsOfInterest.begin(), elementsOfInterest.end(), s ) == elementsOfInterest.end();
+}
+
+// SubFloorElementCheck - see the declaration in ms_multi.h. One warning per call, naming every sub-floor element.
+void TMultiBase::SubFloorElementCheck( double dcFloor ) const
+{
+    const long int N = pm.N, L = pm.L;
+    if( N < 1 || L < 1 || !pm.A || !pm.B || !( dcFloor > 0. ) ) return;
+    const double toReal = pm.SizeFactor > 0. ? 1. / pm.SizeFactor : 1.;
+    std::string report;
+    long int nWarn = 0;
+    double floorHint = std::numeric_limits<double>::infinity(), bulkHint = 0.;
+    for( long int i = 0; i < N; i++ )
+    {
+        if( !( pm.B[i] > 0. ) ) continue;
+        if( pm.ICC && ( pm.ICC[i] == IC_CHARGE || pm.ICC[i] == IC_VOLUME ) ) continue;
+        double need = 0., stoich = 0.;
+        long int carriers = 0;
+        for( long int j = 0; j < L; j++ )
+        {
+            const double a = pm.A[i + j*N];
+            if( !( a > 0. ) ) continue;
+            need += a * std::max( pm.DLL ? pm.DLL[j] : 0., dcFloor );
+            stoich += a;
+            carriers++;
+        }
+        if( carriers == 0 || need <= pm.B[i] ) continue;
+        std::string name = char_array_to_string( pm.SB[i], MAXICNAME );
+        name.erase( name.find_last_not_of( std::string( " \t\0", 3 ) ) + 1 );
+        std::string tag;
+        if( !elementsOfInterest.empty() )
+            tag = ICIsDefaultSeed( i ) ? " [default seed]" : " [of interest]";
+        report += fmt::format( "{}{}{}: {:.2g} mol, but its {} species must each hold at least {:.2g} mol, "
+                               "{:.2g} mol of it in total", report.empty() ? "" : "; ", name, tag,
+                               pm.B[i] * toReal, carriers, dcFloor * toReal, need * toReal );
+        floorHint = std::min( floorHint, 0.1 * pm.B[i] / stoich );
+        bulkHint = std::max( bulkHint, 10. * need * toReal );
+        nWarn++;
+    }
+    if( !nWarn ) return;
+    gems_logger->warn(
+        "Optima solver: {} element(s) have less material than the solver's minimum amounts can hold. The Optima "
+        "modes (AOP, SOP, HOP, SHP) keep every species at or above a small floor amount (pa_OptimaDcFloor if set, "
+        "otherwise pa_DHB, scaled to the size of the system via pa_DG), so the species of such an element would "
+        "together contain more of it than the system has. The calculation still runs and can report success, but "
+        "the element's mass balance cannot be met during the solve: its species amounts, and its contribution to "
+        "pH/Eh, are fixed by a correction applied afterwards rather than by the equilibrium itself, and with some "
+        "settings the reported amounts of that element are wrong. Native modes (AIA, SIA) are not affected. "
+        "Remedies: raise the element's bulk amount to about {:.1g} mol or more; remove it from the system if it is "
+        "only a placeholder; or set pa_OptimaDcFloor to {:.1g} or lower and check the result. Elements: {}",
+        nWarn, bulkHint, floorHint, report );
 }
 
 // EnergyDeterminacyCheck: is each present phase's AMOUNT actually fixed by the energy?

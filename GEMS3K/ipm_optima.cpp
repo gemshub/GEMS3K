@@ -1959,6 +1959,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         ScFact = SystemTotalMolesIC();
         ScaleSystemToInternal( ScFact );
     }
+    // An element with less material than its species' floor amounts can hold (ms_multi.h). Once per call, after
+    // rescaling, so pm.B, pm.DLL and dcFloor are in the same internal units.
+    SubFloorElementCheck( dcFloor );
 
     try
     {
@@ -5859,6 +5862,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     }
                     if( i < Zc )
                     {
+                        // a DEFAULT SEED (ICIsDefaultSeed, ms_multi.h) neither triggers nor vetoes the repair - its
+                        // amount is a placeholder; with nothing marked there are none (the same exemption value 1's
+                        // rebalance test applies)
+                        if( ICIsDefaultSeed( i ) ) continue;
                         const double bar = pm.B[i] * pm.DHBM;
                         relOut = std::max( relOut, bar > 0. ? std::fabs( ci ) / bar : ( ci != 0. ? 1e300 : 0. ) );
                     }
@@ -5973,7 +5980,13 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // the present carriers with MassBalanceReproject() - the native repair
             // (pa_MbReproject), rank-revealing pivots, all N rows. If that still leaves an
             // IC past its limit, the zeroing is undone: the worst case is the floor values.
+            // A DEFAULT SEED (ICIsDefaultSeed: numerically trace and not marked of interest while
+            // others are) neither triggers the rebalance nor the undo - its amount is a placeholder
+            // (owner 2026-09-15). With nothing marked there are none and every IC is conserved.
             int rebalanced = 0, reverted = 0;
+            long int nSeeds = 0;
+            for( long int i = 0; i < Zc; i++ )
+                if( ICIsDefaultSeed( i ) ) nSeeds++;
             if( nZeroed > 0 )
             {
                 std::vector<double> cAfter( (size_t)N ), tolAfter( (size_t)N );
@@ -5982,7 +5995,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     residuals( cAfter, tolAfter );
                     for( long int i = 0; i < N; i++ )
                         if( std::fabs( cAfter[(size_t)i] ) >
-                            std::max( std::fabs( cBefore[(size_t)i] ), tolBefore[(size_t)i] ) )
+                            std::max( std::fabs( cBefore[(size_t)i] ), tolBefore[(size_t)i] )
+                            && !( nSeeds > 0 && ICIsDefaultSeed( i ) ) )
                             return i;
                     return -1;
                 };
@@ -6000,8 +6014,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     }
                 }
             }
-            native_trace_decide( "zeroabsent phases=%ld species=%ld rebalanced=%d reverted=%d of=%ld",
-                                 (long)nPhasesZeroed, (long)nZeroed, rebalanced, reverted, (long)L );
+            native_trace_decide( "zeroabsent phases=%ld species=%ld rebalanced=%d reverted=%d of=%ld seeds=%ld",
+                                 (long)nPhasesZeroed, (long)nZeroed, rebalanced, reverted, (long)L, (long)nSeeds );
             if( reverted ) nZeroed = 0;
 
             if( nZeroed > 0 )

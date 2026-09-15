@@ -240,7 +240,7 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
     else
     {
         CNode->NodeStatusCH = result;
-        native_trace_run_result( *pmm, NEED_GEM_AIA, result );
+        native_trace_run_result( *pmm, NEED_GEM_AIA, result, multi_base );
     }
     databr_free( failed );
     pmm->ITF = itf;
@@ -447,7 +447,7 @@ long int TNode::GEM_run_single( bool uPrimalSol )
         // packDataBr(), so every reported value on a thrown call is stale and
         // an outcome key built from it would be a fabrication. No-op unless
         // GEMS3K_NATIVE_TRACE_FILE is set.
-        native_trace_run_result( *pmm, traceRequestedMode, CNode->NodeStatusCH );
+        native_trace_run_result( *pmm, traceRequestedMode, CNode->NodeStatusCH, multi_base );
 
         return CNode->NodeStatusCH;
     }
