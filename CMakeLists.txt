@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.16..4.2)
 
 # Set the name of the project
-project(GEMS3K VERSION 4.6.0 LANGUAGES CXX C)
+project(GEMS3K VERSION 4.6.1 LANGUAGES CXX C)
 
 include(CTest)
 
