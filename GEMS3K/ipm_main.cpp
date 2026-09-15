@@ -1458,14 +1458,10 @@ void TMultiBase::WeightMultipliers( bool square )
 #define  a(j,i) ((*(pm.A+(i)+(j)*Na)))
 
 #ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
-// The following diagnostics (condition-number estimation + per-phase timing)
-// add real overhead per linear solve — up to several hundred percent of the
-// Cholesky/LU solve itself for small systems (see gems-benchmark/CLAUDE.md,
-// 2026-07-28). Gated so normal/production use of GEMS3K compiles none of
-// this in; only builds that explicitly opt in (GEMS3K's CMake option
-// ENABLE_BENCHMARK_DIAGNOSTICS, used by gems-benchmark) pay the cost. Future
-// benchmark/diagnostics-only instrumentation should reuse this same macro
-// rather than introducing a new one per feature.
+// Condition-number estimation and per-phase timing for the IPM linear solve.
+// Adds real overhead per call — up to several hundred percent of the
+// Cholesky/LU solve itself for small systems — so it only compiles in when
+// ENABLE_BENCHMARK_DIAGNOSTICS is enabled.
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Cheap proxy for conditioning: ratio of largest to smallest |diagonal|
