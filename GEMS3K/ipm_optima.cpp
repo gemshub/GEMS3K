@@ -5841,37 +5841,109 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             && massBalanceBadIC < 0 && kktOk && stabilityOk )
         {
             std::vector<double> Ysave( pm.Y, pm.Y + L );
-            long int nZeroed = 0;
-            for( long int j = 0; j < L; j++ )
+            long int nZeroed = 0, nPhasesZeroed = 0;
+
+            // ZERO ONLY IN ABSENT PHASES, THEN REBALANCE (owner decisions 2026-09-15,
+            // plan v5 s123.7). Until then this zeroed every species sitting on the floor,
+            // and most of those were DISSOLVED species of the PRESENT aqueous phase
+            // (Optima 16/7/5/21 in present phases vs 3/3/4/8 in absent ones on
+            // FeNaCl_FyGt_Precip, 07PSIna_G_iron, Al-species, Cu-Pourbaix) - whose small
+            // amounts are real information, not absence. Now a phase is zeroed as a whole,
+            // and only if EVERY member passes (a)-(d); species of a present phase are never
+            // touched. Reaktoro, for comparison, zeroes nothing (species keep its 1e-16
+            // floor and x is written back as Optima returned it).
+            const long int Zc = N - pm.E;
+            auto residuals = [&]( std::vector<double>& c, std::vector<double>& tol )
             {
-                // (a) not kinetically REQUIRED to be present. DLL > 0 is a
-                //     caller's deliberate retention floor - the gibbsite case
-                //     in optima_regression's metastability suite - and zeroing
-                //     it would silently discard the constraint.
-                if( pm.DLL[j] > 0. ) continue;
-                // (b) the bound it sits on must be the NUMERICAL floor, not a
-                //     real constraint.
-                const double lo = problem.xlower[j];
-                if( lo > dcFloor * ( 1. + 1e-9 ) ) continue;
-                // (c) actually sitting on it - same expression the KKT check
-                //     above uses to classify a variable as bound-active.
-                if( pm.Y[j] > lo + std::max( dcFloor, lo * 1e-6 ) ) continue;
-                // (d) correctly there. For an ordinary box, that is the
-                //     solver's own test for a variable at its lower bound:
-                //     a non-negative reduced gradient. For a DEGENERATE box
-                //     (xupper <= xlower, i.e. a DUL of exactly 0 - a hard
-                //     kinetic exclusion) no sign test applies, and the box
-                //     itself is the statement that the species is excluded -
-                //     which is precisely the o_/t_Kaolinite quartz case, where
-                //     the species carries a strong driving force to grow and
-                //     is nevertheless, deliberately, absent.
-                const bool degenerateBox =
-                    ( problem.xupper[j] <= lo + std::max( dcFloor, lo * 1e-6 ) );
-                if( !degenerateBox && gradSaved[(size_t)j] < 0. ) continue;
-                if( pm.Y[j] == 0. ) continue;
-                pm.Y[j] = 0.;
-                nZeroed++;
+                for( long int i = 0; i < N; i++ )
+                {
+                    double ci = pm.B[i], scale = 0.;
+                    for( long int jj = 0; jj < L; jj++ )
+                    {
+                        ci -= pm.A[ i + jj*N ] * pm.Y[jj];
+                        scale += std::fabs( pm.A[ i + jj*N ] ) * pm.Y[jj];
+                    }
+                    c[(size_t)i] = ci;
+                    // ordinary IC: B_i*DHBM, the relative test MBR applies; charge row
+                    // (B = 0): DHBM times the total charge carried
+                    tol[(size_t)i] = ( i < Zc ) ? pm.B[i] * pm.DHBM : scale * pm.DHBM;
+                }
+            };
+            std::vector<double> cBefore( (size_t)N ), tolBefore( (size_t)N );
+            residuals( cBefore, tolBefore );
+
+            for( long int k = 0, j0 = 0; k < pm.FI && j0 < L; j0 += pm.L1[k], k++ )
+            {
+                const long int j1 = std::min( j0 + pm.L1[k], L );
+                bool absent = ( j1 > j0 );
+                for( long int j = j0; j < j1 && absent; j++ )
+                {
+                    // (a) not kinetically REQUIRED to be present. DLL > 0 is a
+                    //     caller's deliberate retention floor - the gibbsite case
+                    //     in optima_regression's metastability suite - and zeroing
+                    //     it would silently discard the constraint.
+                    if( pm.DLL[j] > 0. ) { absent = false; break; }
+                    // (b) the bound it sits on must be the NUMERICAL floor, not a
+                    //     real constraint.
+                    const double lo = problem.xlower[j];
+                    if( lo > dcFloor * ( 1. + 1e-9 ) ) { absent = false; break; }
+                    // (c) actually sitting on it - same expression the KKT check
+                    //     above uses to classify a variable as bound-active.
+                    if( pm.Y[j] > lo + std::max( dcFloor, lo * 1e-6 ) ) { absent = false; break; }
+                    // (d) correctly there: a reduced gradient not below -kktTol (the
+                    //     verdict's own tolerance; gradSaved is already shifted along a
+                    //     free dual direction when the determinacy check above resolved
+                    //     one), or a DEGENERATE box (DUL of exactly 0 - a hard kinetic
+                    //     exclusion, the o_/t_Kaolinite quartz case).
+                    const bool degenerateBox =
+                        ( problem.xupper[j] <= lo + std::max( dcFloor, lo * 1e-6 ) );
+                    const double g = gradSaved[(size_t)j];
+                    if( !degenerateBox && g < -kktTol ) { absent = false; break; }
+                }
+                if( !absent ) continue;
+                long int nThis = 0;
+                for( long int j = j0; j < j1; j++ )
+                    if( pm.Y[j] != 0. ) { pm.Y[j] = 0.; nThis++; }
+                if( nThis > 0 ) { nZeroed += nThis; nPhasesZeroed++; }
             }
+
+            // REBALANCE: zeroing removes ~dcFloor per species, negligible against a major
+            // IC and not against a trace one (plan v5 s123.2: FeNaCl_FyGt_Precip AOP Fe
+            // |C|/(B*DHBM) 4.4e-3 -> 6.2e3). If any IC or the charge row ends past both its
+            // own residual before zeroing and its tolerance, put the removed amount back onto
+            // the present carriers with MassBalanceReproject() - the native repair
+            // (pa_MbReproject), rank-revealing pivots, all N rows. If that still leaves an
+            // IC past its limit, the zeroing is undone: the worst case is the floor values.
+            int rebalanced = 0, reverted = 0;
+            if( nZeroed > 0 )
+            {
+                std::vector<double> cAfter( (size_t)N ), tolAfter( (size_t)N );
+                auto brokenIC = [&]() -> long int
+                {
+                    residuals( cAfter, tolAfter );
+                    for( long int i = 0; i < N; i++ )
+                        if( std::fabs( cAfter[(size_t)i] ) >
+                            std::max( std::fabs( cBefore[(size_t)i] ), tolBefore[(size_t)i] ) )
+                            return i;
+                    return -1;
+                };
+                if( brokenIC() >= 0 )
+                {
+                    rebalanced = MassBalanceReproject( pm.Y ) ? 1 : 0;
+                    if( brokenIC() >= 0 )
+                    {
+                        for( long int j = 0; j < L; j++ ) { pm.Y[j] = Ysave[(size_t)j]; pm.X[j] = Ysave[(size_t)j]; }
+                        TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+                        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                        CalculateActivityCoefficients( LINK_UX_MODE );
+                        CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+                        reverted = 1;
+                    }
+                }
+            }
+            native_trace_decide( "zeroabsent phases=%ld species=%ld rebalanced=%d reverted=%d of=%ld",
+                                 (long)nPhasesZeroed, (long)nZeroed, rebalanced, reverted, (long)L );
+            if( reverted ) nZeroed = 0;
 
             if( nZeroed > 0 )
             {

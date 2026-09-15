@@ -1124,6 +1124,15 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// and NOT negligible against a trace one - which is exactly the trace-IC
     /// sensitivity this branch has documented repeatedly.
     ///
+    /// PHASE-LEVEL AND REBALANCED since 2026-09-15 (owner decisions, plan v5 s123.7). The self-gate above could
+    /// not see a trace IC (CheckMassBalanceResiduals()' absolute cutoff is 1e-3 mol at pa_DHB = 1e-13), and the
+    /// per-species zeroing mostly hit DISSOLVED species of the present aqueous phase, whose small amounts are
+    /// real. Now: (1) a phase is zeroed as a whole only if every member passes the tests above - species of a
+    /// present phase are never zeroed; (2) if that leaves any IC or the charge row past both its residual
+    /// before zeroing and its tolerance (B_i*DHBM; charge: DHBM times the total charge carried), the removed
+    /// amount is put back onto present carriers by MassBalanceReproject(); (3) if that fails, the zeroing is
+    /// undone. DECIDE `zeroabsent phases= species= rebalanced= reverted= of=`.
+    ///
     /// This does NOT reproduce native's mechanism, only its reported semantics.
     /// Native's species genuinely leave the problem mid-solve and stop
     /// obstructing it; these leave only the answer. Closing that half is the
