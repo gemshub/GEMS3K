@@ -1141,7 +1141,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// them all back on the floor before the answer is written, which is the
     /// gap this field closes from the other end.
     ///
-    /// DEFAULT 1 (on), set 2026-09-03 on the project owner's decision: matching
+    /// WAS DEFAULT 1 from 2026-09-03 to 2026-09-15 (now 2 - see VALUE 2 below), set on the project owner's decision: matching
     /// native's reported semantics is worth having, and an absent species read
     /// as 0 rather than as 1e-13 is the more useful answer. Measured before the
     /// flip across Resources/gems3k + gems3k-fail, both arms per project:
@@ -1157,7 +1157,25 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// always written exact zeros, so anything reading native's output already
     /// copes; something written against this path's output specifically may
     /// not. Set to 0 to restore the floor-valued reporting.
-    long int OptimaZeroAbsent = 1;
+    ///
+    /// VALUE 2 - DEFAULT since 2026-09-15 (owner: "if a tiny amount is numerically better then don't use 0, only
+    /// if 0 helps the solver"; plan v5 s123.8). Keep the amounts Optima returned - absent species stay at the
+    /// floor, as Reaktoro reports them - and repair only a FAILING mass balance. Measured before building:
+    /// (i) the zeros of value 1 never help an Optima leg, whose warm entry clamps x back to the floor, and they
+    /// cost a native warm leg (07PSIna_G_simple_1 SHP: ITG 33 re-inserting from zeros, 0 from floor values);
+    /// (ii) what value 1 bought over value 0 on 12 of 49 AOP projects was the MassBalanceReproject() its
+    /// rebalance runs, which removed residuals the SOLVE had left, on major ICs too (f_/j_TestSUP98 H 111 mol at
+    /// 18x its tolerance, f_CASHNK_G_Chen04C-3T Si 1 mol at 95x, 07PSIna_G_mid S at 280x) - not the zeros.
+    /// So value 2: no zeroing; if any ordinary IC fails |C_i| <= B_i*DHBM on the accepted answer, project it
+    /// back onto A.x = b (MassBalanceReproject) and KEEP the projection only if every ordinary IC then passes
+    /// and the charge row is no worse than max(its residual before, DHBM x total charge carried); otherwise
+    /// the answer is restored exactly as Optima returned it. DECIDE `optimarepair relbefore= relafter=
+    /// chgbefore= chgafter= kept=`, written only when the repair was attempted.
+    /// Values: 0 = floor values, nothing else (the RAW profile's value); 1 = zero absent phases + rebalance;
+    /// 2 = floor values + bounded repair. Any other non-zero value behaves as 1.
+    /// REACH: the fifteen T8/T14 exports (T8_aq*, T8ax2_nIC*, T14_ball*) pin 1 in their -ipm.json and keep
+    /// value 1 until their project files change.
+    long int OptimaZeroAbsent = 2;
 
     /// SEED A READMITTED SPECIES AT ITS PREDICTED AMOUNT instead of at the
     /// numerical floor, in OptimaReducedPreSolve()'s pricing loop. GEMS3K-only,

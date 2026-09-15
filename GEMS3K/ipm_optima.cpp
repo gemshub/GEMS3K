@@ -5837,7 +5837,66 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // and this path's dcFloor are worth closing at all, and for what this
         // does NOT do (native's species leave the PROBLEM; these leave only the
         // ANSWER).
-        if( pa_p->OptimaZeroAbsent != 0 && result.succeeded && allTargetsMet
+        if( pa_p->OptimaZeroAbsent == 2 && result.succeeded && allTargetsMet
+            && massBalanceBadIC < 0 && kktOk && stabilityOk )
+        {
+            // VALUE 2 - keep the amounts Optima returned, repair only a failing balance (owner 2026-09-15,
+            // plan v5 s123.8; BASE_PARAM::OptimaZeroAbsent). Same acceptance gate as the zeroing below, so
+            // it never touches a solve already headed for BAD.
+            const long int Zc = N - pm.E;
+            // worst relative residual over the ordinary ICs (the CERT record's mb_rel), worst absolute
+            // residual over the charge row(s), and the charge rows' tolerance DHBM x total charge carried
+            auto worstResiduals = [&]( double& relOut, double& chgOut, double& chgTolOut )
+            {
+                relOut = 0.; chgOut = 0.; chgTolOut = 0.;
+                for( long int i = 0; i < N; i++ )
+                {
+                    double ci = pm.B[i], scale = 0.;
+                    for( long int jj = 0; jj < L; jj++ )
+                    {
+                        ci -= pm.A[ i + jj*N ] * pm.Y[jj];
+                        scale += std::fabs( pm.A[ i + jj*N ] ) * pm.Y[jj];
+                    }
+                    if( i < Zc )
+                    {
+                        const double bar = pm.B[i] * pm.DHBM;
+                        relOut = std::max( relOut, bar > 0. ? std::fabs( ci ) / bar : ( ci != 0. ? 1e300 : 0. ) );
+                    }
+                    else
+                    {
+                        chgOut = std::max( chgOut, std::fabs( ci ) );
+                        chgTolOut = std::max( chgTolOut, scale * pm.DHBM );
+                    }
+                }
+            };
+            double relBefore = 0., chgBefore = 0., chgTol = 0.;
+            worstResiduals( relBefore, chgBefore, chgTol );
+            if( relBefore > 1. )
+            {
+                std::vector<double> Ysave( pm.Y, pm.Y + L );
+                const bool moved = MassBalanceReproject( pm.Y );
+                double relAfter = relBefore, chgAfter = chgBefore, chgTolAfter = 0.;
+                if( moved )
+                    worstResiduals( relAfter, chgAfter, chgTolAfter );
+                const int kept = ( moved && relAfter <= 1. && chgAfter <= std::max( chgBefore, chgTol ) ) ? 1 : 0;
+                if( moved && !kept )
+                    for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];
+                if( moved )
+                {
+                    // MassBalanceReproject() re-synchronised pm.X and the phase totals to ITS state; bring
+                    // everything derived back to the state actually returned (kept or restored).
+                    for( long int j = 0; j < L; j++ ) pm.X[j] = pm.Y[j];
+                    TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+                    CheckMassBalanceResiduals( pm.Y );   // pm.C[] describes the returned state
+                }
+                native_trace_decide( "optimarepair relbefore=%.3e relafter=%.3e chgbefore=%.3e chgafter=%.3e kept=%d",
+                                     relBefore, relAfter, chgBefore, chgAfter, kept );
+            }
+        }
+        else if( pa_p->OptimaZeroAbsent != 0 && result.succeeded && allTargetsMet
             && massBalanceBadIC < 0 && kktOk && stabilityOk )
         {
             std::vector<double> Ysave( pm.Y, pm.Y + L );
