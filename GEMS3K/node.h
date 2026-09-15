@@ -532,6 +532,18 @@ public:
                                                long int mode = NEED_GEM_AIA,
                                                const std::vector<std::string>& ofInterest = {} );
 
+    /// ELEMENTS OF INTEREST (owner decision 2026-09-14b, trace policy (4)): the independent components whose
+    /// amounts the caller NEEDS, e.g. radionuclides at 1e-9 mol. Once any are marked, every other trace IC is a
+    /// DEFAULT SEED - a placeholder amount that only keeps the element defined (xGEMS Material: 1e-15; GEMSGUI:
+    /// often 1e-9). Nothing in the solve reads it. Used as GEM_trace_regimes()' default ofInterest, and by the
+    /// stranded-element warning, which then tags each element it names [of interest] or [default seed] - the
+    /// remedy differs (a host phase for the first, removing the element for the second). Names are matched
+    /// against the IC list after trimming; unknown names are skipped with a warning. Returns the number matched;
+    /// an empty list clears the marking.
+    long int GEM_set_elements_of_interest( const std::vector<std::string>& names );
+    /// The IC names currently marked of interest (see GEM_set_elements_of_interest()).
+    const std::vector<std::string>& GEM_elements_of_interest() const;
+
 #ifdef USE_OPTIMA_SOLVER
     /// Convenience dispatch combining ROP's speed with native AIA's
     /// robustness (see GEMS3K's CLAUDE.md, 2026-08-24, "Combining
