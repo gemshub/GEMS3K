@@ -40,6 +40,8 @@
 #include <chrono>
 #include <mutex>
 #include <set>
+#include <map>
+#include <string>
 
 // Thread-safe logger to stdout with colors
 std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = spdlog::stdout_color_mt("ipm");
@@ -361,29 +363,52 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, c
     // reached it in a different phase order are the same regime.
     unsigned long long akey = 0ull;
     long int nPresent = 0;
+
+    // Phase NAMES - full, and unique within the system (names=2, 2026-09-16).
+    // pm.SF[k] is MAXSYMB (4) characters of phase-class code and padding, then the MAXPHNAME (16)
+    // character name, so it comes back as "a   aq_gen" - collapse the internal run of blanks to one
+    // underscore and trim the trailing padding, or the phase list stops being one whitespace-separated
+    // token per phase and every consumer of this line has to guess where a name ends.
+    // Until 2026-09-16 this read only the first MAXPHNAME characters of the WHOLE field, i.e. the class
+    // code plus the first 12 characters of the name ("s_Montmorillon"). Harmless while only present
+    // phases were listed; once pa_OptimaZeroAbsent = 2 left every absent phase at its floor amount, 320
+    // phases of 07PSIna_G_complex_1 collapsed to 310 names, a floor-level twin overwrote the real
+    // Montmorillonite in every name-keyed consumer, and two equal names cancelled in the XOR fold below.
+    // The full 16-character database names still collide (315 of 320 distinct there: the exporter itself
+    // truncates "Montmorillonite(...)"), so a repeated name carries its occurrence number, "~2", "~3" -
+    // counted over ALL FI phases in system order, not over the present ones, so a phase keeps the same
+    // label whichever phases happen to be present. freeze_diff.py maps names=2 back to the legacy form
+    // when it compares against a freeze written before this change.
+    std::vector<std::string> keyName( (size_t)pm.FI );
+    {
+        std::map<std::string, long int> seen;
+        for( long int k = 0; k < pm.FI; k++ )
+        {
+            std::string pn = char_array_to_string( pm.SF[k], MAXSYMB + MAXPHNAME );
+            while( !pn.empty() && pn.back() == ' ' ) pn.pop_back();
+            std::string t; bool sp = false;
+            for( char c : pn )
+            {
+                if( c == ' ' || c == '\t' ) { sp = true; continue; }
+                if( sp && !t.empty() ) t += '_';
+                sp = false;
+                // ',' ':' '=' are this line's own separators; 30 corpus phases carry a comma in their
+                // names ("PuO2(coll,hyd)", f_/j_TestPNTDB), which split the list into fragments in
+                // BOTH name forms until this substitution.
+                t += ( c == ',' || c == ':' || c == '=' ) ? '/' : c;
+            }
+            const long int occ = ++seen[t];
+            keyName[(size_t)k] = occ > 1 ? t + "~" + std::to_string( occ ) : t;
+        }
+    }
+
     fprintf( ntf, "KEY   mode=%s status=%ld pH=%.6f pe=%.6f IS=%.6e phases=",
              mname, (long)status, pm.pH, pm.pe, pm.IC );
     for( long int k = 0; k < pm.FI; k++ )
     {
         if( pm.XF[k] <= pm.DSM )
             continue;
-        // pm.SF[k] is the phase-class character followed by the blank-padded
-        // name, so it comes back as "a   aq_gen" - collapse the internal run of
-        // blanks to one underscore and trim the trailing padding, or the phase
-        // list stops being one whitespace-separated token per phase and every
-        // consumer of this line has to guess where a name ends.
-        std::string pn = char_array_to_string( pm.SF[k], MAXPHNAME );
-        while( !pn.empty() && pn.back() == ' ' ) pn.pop_back();
-        {
-            std::string t; bool sp = false;
-            for( char c : pn )
-            {
-                if( c == ' ' || c == '\t' ) { sp = true; continue; }
-                if( sp && !t.empty() ) t += '_';
-                sp = false; t += c;
-            }
-            pn.swap( t );
-        }
+        const std::string& pn = keyName[(size_t)k];
         unsigned long long h = 1469598103934665603ull;
         for( char c : pn ) { h ^= (unsigned char)c; h *= 1099511628211ull; }
         akey ^= h;
@@ -393,7 +418,7 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, c
         fprintf( ntf, "%s%s:%.6e:%.6e", ( nPresent ? "," : "" ), pn.c_str(), pm.XF[k], vmol );
         nPresent++;
     }
-    fprintf( ntf, " nph=%ld akey=%016llx\n", (long)nPresent, akey );
+    fprintf( ntf, " nph=%ld akey=%016llx names=2\n", (long)nPresent, akey );
 
     // CERT - the mass-balance part of the answer certificate (Docs/PLAN-defaults-and-fallbacks.md
     // s0.1), computed on the returned amounts pm.X for EVERY mode, so a row that reports OK with a
