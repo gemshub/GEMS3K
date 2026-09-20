@@ -524,30 +524,10 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
   pm.t_elap_sec = 0.0;
   pm.ITF = pm.ITG = 0;
 
- // New: Run of TKinMet class library
-  ipm_logger->trace("kMM: {}  ITau: {}   kTau: {}   kdT: {}", pm.pKMM, pm.ITau, pm.kTau, pm.kdT);
-  if( pm.pKMM < 2 )
-  {
-    if( pm.ITau < 0 || pm.pKMM != 1 )
-    {
-      /*  KMretCode = */ CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
-        pm.ITau = 0; pm.pKMM = 1;
-      /*  KMretCode = */ CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
-    }
-//    if( pm.ITau == 0 )
-//    {
-//        KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
-//    }
-    else if( pm.ITau >= 0 ) {
-      /*  KMretCode = */ CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
-    }
-//  switch(KMretCode)
-//  {
-//        case 0L:
-//
-//  }
-//  to_text_file( "MultiDump1.txt" );   // Debugging
-  }
+  // One kinetics/metastability time step. Moved into RunKineticsStep() (ipm_chemical4.cpp) on
+  // 2026-09-20, unchanged, so the Optima entry point can run the same step - it never did, which is
+  // why AOP/SOP could not move a kinetically controlled phase at all.
+  RunKineticsStep();
 
     if( base_param()->DG > 1e-5 )
     {

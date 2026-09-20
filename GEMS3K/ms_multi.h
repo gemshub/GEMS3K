@@ -2277,6 +2277,100 @@ public:
     /// measurement that established this.
     double TotalGibbsEnergy();
 
+    // ------------------------------------------------------------------------------------
+    // REPORT-ONLY CERTIFICATE INSTRUMENTS (Phase 3 WP1; Docs/PLAN-defaults-and-fallbacks.md
+    // s0.1 and its "Two cautions on that gate").
+    //
+    // Three numbers about the answer a mode returned, computed at exit and printed on the
+    // CERT trace record beside the mass-balance fields. They are REPORT-ONLY: none of them
+    // enters CERT's mb_pass, and freeze_diff.py's certificate gate does not read them.
+    // Caution 1 of that block is why - a field that starts being emitted AND joins the pass
+    // rule in one step makes every row the new clause rejects arrive as a `pass -> fail`
+    // regression that the scorer cannot tell from a real one. Joining `pass` is a separate,
+    // deliberate step that re-baselines inv-cert-standard-zero in the same commit.
+    //
+    // ALL THREE ARE COMPUTED ONLY WHEN native_trace_file() IS OPEN. With
+    // GEMS3K_NATIVE_TRACE_FILE unset - every production call - not one line of this runs, so
+    // a caller cannot pay for a diagnostic it never reads. The freeze, which is taken with
+    // the trace on, is therefore also the gate on them: WP1's acceptance is a standard freeze
+    // row-identical to 2026-09-17-STANDARD-promoted.txt in every scored column.
+    //
+    // WHY THEY REBUILD Gj RATHER THAN READING pm.G[] OR pm.F[]. Both are path-dependent at
+    // exit, and reading either would be the DC_G0() shape - a number that looks like the
+    // answer and is one path's private copy (CLAUDE.md s4). native's GEM_IPM() resets
+    // pm.G[i] = pm.G0[i] on the way out (ipm_main.cpp, the FORCED_AIA tail), dropping the
+    // fDQF and F0 excess terms, while CalculateEquilibriumStateOptima() leaves them in; and
+    // pm.F[] is refreshed by the native IPM loop from pm.Y BEFORE the last descent step, so
+    // on a native row it belongs to the previous iterate and on an Optima row to Optima's
+    // own post-solve refresh. CertPrimalPotentials() therefore rebuilds F from
+    // G0[]+fDQF[]+F0[] at the RETURNED pm.X[], exactly as TotalGibbsEnergy() rebuilds G, so
+    // one definition serves all six modes.
+
+    /// Primal chemical potentials at the RETURNED amounts pm.X[], into the caller's own
+    /// array - a read-only mirror of PrimalChemicalPotentials() that writes no pm.* state
+    /// and rebuilds Gj = G0+fDQF+F0 instead of reading pm.G[]. F[j] is left at 0 for a
+    /// species below pm.DcMinM or in a phase PrimalChemicalPotentials() would skip, which is
+    /// the same set that function leaves at 0. Sized to pm.L.
+    void CertPrimalPotentials( std::vector<double>& F ) const;
+
+    /// kkt_max: worst sign-aware reduced-gradient residual in RT over the species that are
+    /// present at the answer, with the dual pm.U[] the last linear solve committed.
+    /// s_j = F_j - sum_i U_i A(i,j); interior |s_j|, at a lower bound max(-s_j, 0), at an
+    /// upper bound max(s_j, 0), and 0 for a species whose box is degenerate (DUL <= DLL - a
+    /// kinetically fixed species is an EQUALITY constraint whose multiplier is unrestricted
+    /// in sign; treating it as one-sided reported a spurious 2.48 on o_/t_Kaolinite's
+    /// Quartz, ipm_optima.cpp's own KKT check). Mirrors that check's sign logic exactly with
+    /// one deliberate difference: the log-barrier term -tau/X_j Optima adds for pure-phase
+    /// species is NOT subtracted here, because it is Optima's internal objective and not the
+    /// thermodynamic one - so on an Optima row this reads up to tau/X_j higher than Optima's
+    /// own maxKKTResidual for a pure species near its floor.
+    /// \param worstJ index of the species carrying the maximum, -1 if none.
+    /// \return the maximum, or -1. if nothing could be scored.
+    double CertKktMax( const std::vector<double>& F, long int& worstJ ) const;
+
+    /// dual_free_dirs: how many directions the dual is free along at the answer. The INTERIOR
+    /// species (present, and away from both box bounds) are the ones whose s_j = 0 fixes u;
+    /// when their stoichiometry columns span rank r < N, the remaining N-r directions leave u
+    /// undetermined and every bound-active species' reduced gradient - hence kkt_max above -
+    /// depends on where along them the solver happened to stop. Measured on
+    /// 07PSIna_G_simple_1 SHP: rank 5 of N = 6, the free direction is the redox one, and
+    /// H2(aq) at the floor read s = +0.240 / -0.512 / -2.302 / -2.895 by warm start alone at
+    /// identical G (plan v5 s123.6). So dual_free_dirs > 0 is the flag that says kkt_max is
+    /// reading a lottery, and a threshold on kkt_max there is a lottery threshold.
+    /// Same modified Gram-Schmidt and the same 1e-8 relative rank tolerance as the free-dual
+    /// search in ipm_optima.cpp, so the two cannot disagree about the rank.
+    /// \return N - rank, with rank and N returned in the out parameters.
+    long int CertDualFreeDirs( const std::vector<double>& F, long int& rank, long int& nIC ) const;
+
+    /// curv_min: the smallest eigenvalue, over every PRESENT multicomponent non-aqueous
+    /// solution phase, of that phase's symmetrised finite-difference curvature block at the
+    /// answer. A negative value means the phase converged INSIDE ITS OWN SPINODAL - a point
+    /// that satisfies stationarity and mass balance and is a maximum along the unmixing
+    /// direction, which no first-order test can see (Michelsen 1982 II). Lead:
+    /// j_CASHNK's drifting limb, where native at the shipped pa_DK = 1e-6 stops 1.8e-4 above
+    /// the minimum with end-member fractions up to 0.38 away from converged (plan v5 s96.1).
+    ///
+    /// The block, the present-end-member test and the step h are taken verbatim from the
+    /// pa_PhaseHessianFloor site in ipm_optima.cpp so the two measure the same object; the
+    /// difference is that this one does NOT floor - SymEigFloorInPlace() returns the repaired
+    /// matrix, not its spectrum, so the smallest eigenvalue is computed here by a sweep-only
+    /// Jacobi that accumulates no eigenvectors. The aqueous phase is excluded for the same
+    /// reason the floor excludes it: FD columns for its many near-floor trace species are
+    /// noise.
+    ///
+    /// MUTATES AND RESTORES. Each column perturbs pm.X[i] by h and re-runs
+    /// TotalPhasesAmounts() + CalculateActivityCoefficients(LINK_UX_MODE); pm.X[i] is put
+    /// back immediately and XF/XFA/lnGam/Gamma/fDQF/F0 are refreshed at the original X on the
+    /// way out, exactly as the Optima site does. pm.G[] is saved and restored verbatim on top
+    /// of that, because the refresh would otherwise leave a native row at G0+fDQF+F0 where
+    /// GEM_IPM() had reset it to G0 - a difference a later warm call would see. Called from
+    /// native_trace_run_result(), i.e. after packDataBr() has already extracted the answer,
+    /// so an imperfect restore cannot change what THIS call returns; it could change what a
+    /// later warm call starts from, which is what the row-identity freeze gate tests.
+    /// \param worstPhase index of the phase carrying the minimum, -1 if none.
+    /// \return the minimum, or +1e300 if no phase qualified.
+    double CertCurvMin( long int& worstPhase );
+
     double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
     virtual void DC_LoadThermodynamicData( TNode* aNa = nullptr );
@@ -2377,7 +2471,11 @@ public:
     // TNode::GEM_run() for NEED_GEM_ROP) - Reaktoro's own default
     // equilibrate() always starts from the same seed regardless of any
     // prior state, so there is no warm-start ROP variant.
-    double CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool reaktoroMode = false );
+    /// \param runKinetics run the kinetics/metastability time step (RunKineticsStep()). TRUE for a
+    ///        normal AOP/SOP call; FALSE for CalculateEquilibriumStateHOP()'s Optima leg, whose native
+    ///        leg has already advanced it for this time step - running it twice would double the rate.
+    double CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool reaktoroMode = false,
+                                            bool runKinetics = true );
 
     /// HYBRID: native selects the species (its own IPM/MBR/PSSC pipeline,
     /// cold), then Optima finishes, warm-started from native's converged
@@ -2882,6 +2980,11 @@ protected:
     // ipm_chemical4.cpp
     // New stuff for TKinMet class implementation
     long int CalculateKinMet( long int LinkMode  );
+
+    /// One kinetics/metastability time step (TKinMet), for EVERY solver path. See the definition in
+    /// ipm_chemical4.cpp for why its position relative to ExcludeRedundantDCs() and
+    /// ScaleSystemToInternal() is fixed, and why HOP's Optima leg must not run it.
+    void RunKineticsStep();
     void KM_Create(long int jb, long int k, long int kc, long int kp, long int kf,
                    long int ka, long int ks, long int kd, long ku, long ki, const char *kmod,
                    long jphl, long jlphc );
@@ -3104,7 +3207,18 @@ void native_trace_decide( const char* fmt, ... );
 /// axis that design also names is deliberately NOT classified here; the per-phase
 /// molar volume it would be built from is emitted instead. See the definition
 /// (ipm_main.cpp) for why.
-void native_trace_run_result( const MULTI& pm, long int mode, long int status, const TMultiBase* mb = nullptr );
+void native_trace_run_result( const MULTI& pm, long int mode, long int status, TMultiBase* mb = nullptr );
+
+/// Optima's free-dual search result, stashed for the CERT record (Phase 3 WP1).
+/// CertDualFreeDirs() counts the free directions on any path, but only the Optima path
+/// SEARCHES them for a dual that satisfies every bound (ipm_optima.cpp, the `dualfree`
+/// DECIDE), and only when its plain sign test has already failed. So `dual_resolved` is
+/// three-valued: -1 = no search was run on this call, 0 = searched and did not resolve,
+/// 1 = searched and resolved. Reset at the run header so a value never carries over from
+/// the previous call - the stale-value trap this record exists to expose.
+void native_cert_dualfree_reset();
+void native_cert_dualfree_set( int resolved );
+int  native_cert_dualfree_get();
 
 // ???? syp->PGmax
 typedef enum {  // Symbols of thermodynamic potential to minimize

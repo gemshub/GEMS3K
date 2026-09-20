@@ -30,6 +30,45 @@
 
 /// \return status code (0 if o.k., non-zero values if there were problems
 ///     with kinetic/metastability models)
+/// ONE kinetics/metastability time step, for EVERY solver path.
+///
+/// Lifted verbatim out of CalculateEquilibriumState() (ipm_simplex.cpp) on 2026-09-20 so that the
+/// Optima entry point can run it too. Until then CalculateKinMet() was reachable ONLY from the
+/// native path, so on AOP/SOP the Additional Metastability Restrictions were never updated and a
+/// kinetically controlled phase could never change: on GEMS3K's own node-gem dolomitization example
+/// the Optima modes held calcite bit-identical for 200 time steps while native dissolved it at the
+/// computed rate. The control that identified it: with dt = 0 (kinetics off) native behaves exactly
+/// like Optima. See gems-benchmark/Docs/2026-09-20-transport-loop-calcite.txt.
+///
+/// WHERE IT MUST BE CALLED FROM, and why the position is not free. Both entry points call it after
+/// InitalizeGEM_IPM_Data() and ExcludeRedundantDCs() - so redundant species are already held at
+/// DUL = DLL = 0 when TKinMet sees them - and BEFORE ScaleSystemToInternal(), so the AMRs are
+/// computed in the caller's real units rather than in pa_DG's internal scale. Moving it across
+/// either boundary changes what TKinMet is handed.
+///
+/// ONCE PER GEM_run() CALL, NOT once per solver entry. CalculateEquilibriumStateHOP() runs a native
+/// leg and then an Optima leg for a single time step, so its Optima leg passes runKinetics = false -
+/// otherwise the rate calculation would advance twice per step. (Pre-existing and NOT changed here:
+/// SHP's cold-native retry after a failed warm leg calls CalculateEquilibriumState() a second time
+/// and so does advance it twice; no corpus project exercises that path, since none uses kinetics.)
+void TMultiBase::RunKineticsStep()
+{
+    // New: Run of TKinMet class library
+    ipm_logger->trace("kMM: {}  ITau: {}   kTau: {}   kdT: {}", pm.pKMM, pm.ITau, pm.kTau, pm.kdT);
+    if( pm.pKMM < 2 )
+    {
+        if( pm.ITau < 0 || pm.pKMM != 1 )
+        {
+            CalculateKinMet( LINK_TP_MODE );   // Re-create TKinMet class instances
+            pm.ITau = 0; pm.pKMM = 1;
+            CalculateKinMet( LINK_IN_MODE );   // Initial state calculation of rates
+        }
+        else if( pm.ITau >= 0 ) {
+            CalculateKinMet( LINK_PP_MODE );   // Rates and metast. constraints at time step
+        }
+    }
+}
+
 long int
 TMultiBase::CalculateKinMet( long int LinkMode  )
 {

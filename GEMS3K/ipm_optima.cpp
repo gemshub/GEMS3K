@@ -1900,7 +1900,8 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     return discard();
 }
 
-double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool reaktoroMode )
+double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool reaktoroMode,
+                                                    bool runKinetics )
 {
     // Disable the IPM-2 chemical-potential smoothing for the whole of this
     // call. That blend (ipm_chemical.cpp, DC_PrimalChemicalPotentialUpdate())
@@ -1953,6 +1954,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     pm.ITF = pm.ITG = 0;
     pm.Ec = pm.MK = pm.PZ = 0;
     setErrorMessage( 0, "", "" );
+
+    // One kinetics/metastability time step, at the SAME position native runs it
+    // (ipm_simplex.cpp): after InitalizeGEM_IPM_Data() and ExcludeRedundantDCs(), and BEFORE the
+    // internal rescaling, so TKinMet sees the caller's real units. Added 2026-09-20 - until then
+    // this path never called it, so the Additional Metastability Restrictions were never updated
+    // and a kinetically controlled phase could not change on AOP/SOP at all.
+    // runKinetics is false only for CalculateEquilibriumStateHOP()'s Optima leg, whose native leg
+    // has already advanced the step.
+    if( runKinetics )
+        RunKineticsStep();
 
     if( pa_p->DG > 1e-5 )
     {
@@ -5741,6 +5752,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 while( !s.empty() && ( s.back() == ' ' || s.back() == '\0' ) ) s.pop_back();
                 return s;
             };
+            // Phase 3 WP1: the same verdict onto the CERT line. CertDualFreeDirs() counts the
+            // free directions on every path, but only this block SEARCHES them, and only once
+            // the plain sign test has failed - so dual_resolved stays -1 ("not searched") on
+            // every row that passed, which is what it has to mean.
+            native_cert_dualfree_set( resolved );
             native_trace_decide( "dualfree rank=%ld of=%ld dirs=%ld tlo=%.4g thi=%.4g tstar=%.4g resolved=%d "
                                  "before=%.3e after=%.3e lo=%s hi=%s",
                                  (long)rank, (long)N, (long)nDirs, tLo, tHi, tStar, resolved,
@@ -6297,13 +6313,15 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
         // Nothing to fall back to - let a failure here propagate exactly
         // as a plain cold AOP call's would (there is no "worse than
         // native" floor to defend when native itself never produced one).
-        calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false );
+        calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false,
+                              /* runKinetics */ false );  // the native leg already advanced it
     }
     else
     {
         try
         {
-            calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false );
+            calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false,
+                              /* runKinetics */ false );  // the native leg already advanced it
         }
         catch( TError& oerr )
         {

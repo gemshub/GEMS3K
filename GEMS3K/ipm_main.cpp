@@ -129,6 +129,10 @@ void native_trace_decide( const char* fmt, ... )
 /// rescaled one a mid-solve dump would show.
 void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mode )
 {
+    // One call, one certificate: the free-dual search result must never survive into the
+    // next call's CERT line. Reset here rather than at the result, because only the header
+    // is guaranteed to run before the dispatch that may set it.
+    native_cert_dualfree_reset();
     FILE* ntf = native_trace_file();
     if( !ntf || !pa || native_trace_quiet_depth > 0 )
         return;
@@ -336,7 +340,379 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
 // the RUN/BULK/SET header comes from - so a trace carries the configuration a
 // result was produced at AND the regime it reached, and the two cannot drift
 // apart. No new MULTI or BASE_PARAM member, so the ABI is unchanged.
-void native_trace_run_result( const MULTI& pm, long int mode, long int status, const TMultiBase* mb )
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// REPORT-ONLY CERTIFICATE INSTRUMENTS (Phase 3 WP1). See the declarations in
+// ms_multi.h for what each field is, why it rebuilds Gj instead of reading
+// pm.G[] or pm.F[], and why none of them enters CERT's mb_pass.
+
+/// Optima's free-dual search result for the CERT record - see the declaration.
+static int native_cert_dualfree_resolved = -1;
+void native_cert_dualfree_reset() { native_cert_dualfree_resolved = -1; }
+void native_cert_dualfree_set( int resolved ) { native_cert_dualfree_resolved = resolved; }
+int  native_cert_dualfree_get() { return native_cert_dualfree_resolved; }
+
+/// Smallest eigenvalue of a small dense SYMMETRIC block, by cyclic Jacobi sweeps.
+///
+/// Deliberately NOT a refactor of ipm_optima.cpp's SymEigFloorInPlace(). That routine
+/// returns the FLOORED matrix rather than its spectrum and accumulates the eigenvector
+/// basis to rebuild it; this one needs only the diagonal after convergence, so it is a
+/// smaller routine and not a copy - and, more to the point, SymEigFloorInPlace() is a live
+/// mechanism on the Optima path whose arithmetic a report-only field has no business
+/// perturbing. The sweep, the convergence test and the rotation are identical, so the two
+/// diagonalise the same block the same way.
+///
+/// Returns false and leaves `lmin` untouched if the rotations do not settle.
+static bool CertSymEigMin( std::vector<double> a, int n, double& lmin )
+{
+    if( n < 1 ) return false;
+    const int maxSweeps = 60;
+    bool converged = false;
+    for( int sweep = 0; sweep < maxSweeps && !converged; sweep++ )
+    {
+        double off = 0.;
+        for( int p = 0; p < n; p++ )
+            for( int q = p+1; q < n; q++ )
+                off += a[(size_t)p*n+q]*a[(size_t)p*n+q];
+        double nrm = 0.;
+        for( int i = 0; i < n*n; i++ ) nrm += a[(size_t)i]*a[(size_t)i];
+        if( off <= 1e-24 * std::max( nrm, 1e-300 ) ) { converged = true; break; }
+        for( int p = 0; p < n; p++ )
+            for( int q = p+1; q < n; q++ )
+            {
+                const double apq = a[(size_t)p*n+q];
+                if( fabs(apq) < 1e-300 ) continue;
+                const double app = a[(size_t)p*n+p], aqq = a[(size_t)q*n+q];
+                const double theta = ( aqq - app ) / ( 2.*apq );
+                const double t = ( theta >= 0. ? 1. : -1. ) /
+                                 ( fabs(theta) + sqrt( theta*theta + 1. ) );
+                const double c = 1./sqrt( t*t + 1. ), sn = t*c;
+                for( int k = 0; k < n; k++ )
+                {
+                    const double akp = a[(size_t)k*n+p], akq = a[(size_t)k*n+q];
+                    a[(size_t)k*n+p] = c*akp - sn*akq;
+                    a[(size_t)k*n+q] = sn*akp + c*akq;
+                }
+                for( int k = 0; k < n; k++ )
+                {
+                    const double apk = a[(size_t)p*n+k], aqk = a[(size_t)q*n+k];
+                    a[(size_t)p*n+k] = c*apk - sn*aqk;
+                    a[(size_t)q*n+k] = sn*apk + c*aqk;
+                }
+            }
+    }
+    if( !converged ) return false;
+    lmin = a[0];
+    for( int i = 1; i < n; i++ ) lmin = std::min( lmin, a[(size_t)i*n+i] );
+    return true;
+}
+
+void TMultiBase::CertPrimalPotentials( std::vector<double>& F ) const
+{
+    F.assign( (size_t)pm.L, 0. );
+    if( !pm.X || !pm.XF || !pm.G0 || !pm.fDQF || !pm.F0 || !pm.DCCW || !pm.L1 )
+        return;
+
+    // The phase loop of PrimalChemicalPotentials(), with its skip tests and its
+    // NonLogTerm / logXw / logYFk bookkeeping kept as locals so no pm.* scalar moves.
+    double NonLogTerm = 0., logXw = 0., logYFk = 0.;
+    long int j = 0;
+    for( long int k = 0; k < pm.FI; k++ )
+    {
+        const long int i = j + pm.L1[k];
+        const double Yf = pm.XF[k];
+        double YFk = 0.;
+        if( pm.FIs && k < pm.FIs && pm.XFA )
+            YFk = pm.XFA[k];
+
+        if( pm.L1[k] == 1L && Yf < pm.PhMinM ) { j = i; continue; }
+        if( Yf <= pm.DSM || ( pm.PHC[k] == PH_AQUEL &&
+            ( Yf <= pm.DSM || pm.X[pm.LO] <= pm.XwMinM ) ) ) { j = i; continue; }
+        if( Yf >= 1e6 ) { j = i; continue; }   // PrimalChemicalPotentials() throws here; a
+                                               // report-only field must not, so skip the phase
+
+        NonLogTerm = 0.;
+        if( ( pm.PHC[k] == PH_AQUEL && YFk >= pm.XwMinM )
+         || ( pm.PHC[k] == PH_SORPTION && YFk >= pm.ScMinM )
+         || ( pm.PHC[k] == PH_POLYEL && YFk >= pm.ScMinM ) )
+        {
+            logXw = log( YFk );
+            if( k >= pm.FIs || pm.sMod[k][SPHAS_TYP] != SM_AQPITZ )
+                NonLogTerm = 1. - YFk / Yf;
+        }
+        if( pm.L1[k] > 1 )
+            logYFk = log( Yf );
+
+        for( ; j < i; j++ )
+        {
+            if( pm.X[j] < std::min( pm.DcMinM, pm.lowPosNum ) )
+                continue;
+            const double Gj = pm.G0[j] + pm.fDQF[j] + pm.F0[j];   // rebuilt, not pm.G[j]
+            const double lx = log( pm.X[j] );
+            switch( pm.DCCW[j] )
+            {
+              case DC_SINGLE:       F[(size_t)j] = Gj;                                       break;
+              case DC_ASYM_SPECIES: F[(size_t)j] = Gj + lx - logXw + NonLogTerm;             break;
+              case DC_ASYM_CARRIER: F[(size_t)j] = Gj + lx - logYFk + NonLogTerm + 1.0
+                                                   - 1.0/( 1.0 - NonLogTerm );               break;
+              case DC_SYMMETRIC:    F[(size_t)j] = Gj + lx - logYFk;                         break;
+              default:              F[(size_t)j] = 0.;                                       break;
+            }
+        }
+        j = i;
+    }
+}
+
+/// Is species j scorable for the reduced-gradient tests - present at the answer, and with a
+/// potential CertPrimalPotentials() actually filled in. A species left at 0 there is either
+/// below pm.DcMinM or in a skipped phase, and its F carries no information.
+static inline bool cert_species_scorable( const MULTI& pm, const std::vector<double>& F, long int j )
+{
+    return pm.X[j] > pm.DcMinM && F[(size_t)j] != 0.;
+}
+
+/// The NUMERICAL FLOOR on a species amount, the same one CalculateEquilibriumStateOptima()
+/// builds its box lower bounds from: pa_OptimaDcFloor when set, else pa_DHB. It is what
+/// "this species is at zero" means to the solver, and the certificate has to use the same
+/// definition or it reads a floor-pinned species as interior - see cert_box_state().
+static inline double cert_dc_floor( const MULTI& pm, const BASE_PARAM* pa )
+{
+    const double f = pa ? ( pa->OptimaDcFloor > 0. ? pa->OptimaDcFloor : std::max( pa->DHB, 1e-300 ) )
+                        : 1e-300;
+    return std::max( f, pm.DcMinM );
+}
+
+/// The box a species sits in, as the Optima KKT check classifies it: 0 interior,
+/// -1 at the lower bound, +1 at the upper bound, 2 degenerate (DUL <= DLL, a kinetically
+/// fixed species - an equality constraint, no sign test applies).
+///
+/// THE TOLERANCE IS THE NUMERICAL FLOOR, NOT pm.DcMinM, and that distinction is the whole
+/// field. Measured on f_CalcDolo AOP the first time this ran: CH4 sits at 1.66e-16 mol with
+/// DLL = 0, its reduced gradient is s = +327 - the correct sign for a species pinned at zero
+/// that wants to stay there - and scoring it as INTERIOR reported kkt_max = 3.27e+02 on a row
+/// Optima's own post-solve check passes at 1e-3. pm.DcMinM is 1e-30-scale and classifies
+/// every floor species as interior; the box Optima actually solved has its lower bound at
+/// max(DLL, dcFloor), so that is the bound to test against. Native has no such floor - it
+/// truncates below pa_DcMin to exact zero - but a native species below the floor is at zero
+/// in the same sense, and the sign test can only LOWER the residual it would otherwise
+/// report, never raise it.
+static inline int cert_box_state( const MULTI& pm, long int j, double dcFloor )
+{
+    const double lo = pm.DLL ? pm.DLL[j] : 0.;
+    const double hi = pm.DUL ? pm.DUL[j] : 1e6;
+    const double tol = std::max( dcFloor, fabs(lo)*1e-6 );
+    if( hi <= lo + tol )              return 2;
+    if( pm.X[j] <= lo + tol )         return -1;
+    if( pm.X[j] >= hi * ( 1.-1e-6 ) ) return 1;
+    return 0;
+}
+
+double TMultiBase::CertKktMax( const std::vector<double>& F, long int& worstJ ) const
+{
+    worstJ = -1;
+    if( !pm.X || !pm.A || !pm.U || pm.N <= 0 || (long int)F.size() != pm.L )
+        return -1.;
+
+    // pm.N, not pm.NR. NR drops the last IC row while the aqueous phase is absent, and the
+    // Optima path's own KKT check sums over all N rows - a certificate field that changed its
+    // index set with the solver path could not be compared across modes. Where NR < N the
+    // omitted row's dual is whatever the last solve that did use it left, which is a
+    // limitation of this field on a water-free native row and is why it is report-only.
+    const double dcFloor = cert_dc_floor( pm, base_param() );
+    double worst = -1.;
+    for( long int j = 0; j < pm.L; j++ )
+    {
+        if( !cert_species_scorable( pm, F, j ) )
+            continue;
+        double s = F[(size_t)j];
+        for( long int i = 0; i < pm.N; i++ )
+            s -= pm.U[i] * pm.A[ i + j*pm.N ];
+        double resid;
+        switch( cert_box_state( pm, j, dcFloor ) )
+        {
+          case 2:  resid = 0.;                  break;   // degenerate box: unrestricted sign
+          case -1: resid = std::max( -s, 0. );  break;   // at lower bound: s should be >= 0
+          case 1:  resid = std::max(  s, 0. );  break;   // at upper bound: s should be <= 0
+          default: resid = fabs( s );           break;   // interior: s should vanish
+        }
+        if( resid > worst ) { worst = resid; worstJ = j; }
+    }
+    return worst;
+}
+
+long int TMultiBase::CertDualFreeDirs( const std::vector<double>& F, long int& rank, long int& nIC ) const
+{
+    rank = 0;
+    nIC = pm.N;
+    if( !pm.X || !pm.A || pm.N <= 0 || (long int)F.size() != pm.L )
+        return -1;
+
+    const long int N = pm.N;
+    const double dcFloor = cert_dc_floor( pm, base_param() );
+    std::vector<double> Q, r( (size_t)N );
+    auto orthogonalize = [&]( const std::vector<double>& basis, long int nb ) {
+        for( long int c = 0; c < nb; c++ )
+        {
+            double d = 0.;
+            for( long int i = 0; i < N; i++ ) d += basis[(size_t)(c*N + i)] * r[(size_t)i];
+            for( long int i = 0; i < N; i++ ) r[(size_t)i] -= d * basis[(size_t)(c*N + i)];
+        }
+        double nrm = 0.;
+        for( long int i = 0; i < N; i++ ) nrm += r[(size_t)i] * r[(size_t)i];
+        return sqrt( nrm );
+    };
+    for( long int j = 0; j < pm.L && rank < N; j++ )
+    {
+        if( !cert_species_scorable( pm, F, j ) )
+            continue;
+        if( cert_box_state( pm, j, dcFloor ) != 0 )   // only the INTERIOR species fix the dual
+            continue;
+        double nrm0 = 0.;
+        for( long int i = 0; i < N; i++ ) { r[(size_t)i] = pm.A[ i + j*N ]; nrm0 += r[(size_t)i]*r[(size_t)i]; }
+        nrm0 = sqrt( nrm0 );
+        if( !( nrm0 > 0. ) ) continue;
+        const double nrm = orthogonalize( Q, rank );
+        if( nrm < 1e-8 * nrm0 ) continue;
+        Q.resize( (size_t)((rank+1)*N) );
+        for( long int i = 0; i < N; i++ ) Q[(size_t)(rank*N + i)] = r[(size_t)i] / nrm;
+        rank++;
+    }
+    return N - rank;
+}
+
+double TMultiBase::CertCurvMin( long int& worstPhase )
+{
+    worstPhase = -1;
+    const double kNone = 1e300;
+    if( !pm.X || !pm.XF || !pm.L1 || pm.FIs <= 0 )
+        return kNone;
+
+    // RESTORE BY COPY, NOT BY RECOMPUTATION - measured, not assumed.
+    // CalculateActivityCoefficients(LINK_UX_MODE) is NOT IDEMPOTENT: it writes
+    // pm.lnGmo[j] = pm.lnGam[j] + lnGamG (accumulating from the value already there) and
+    // pm.F0[j] = DC_PrimalChemicalPotentialUpdate(), which blends with the previous F0
+    // through the IPM smoothing factor pm.FitVar[3] (ipm_chemical3.cpp). So re-running it at
+    // the ORIGINAL composition does not reproduce the state it found. The first build of this
+    // routine restored that way and moved j_CASHNK's native G from -6.028481601e+03 to
+    // -6.028481556e+03 - 7.5e-12 relative, invisible in every scored freeze column except that
+    // the freeze prints G to ten digits, and exactly the class of silent drift the row-identity
+    // gate on this change exists to catch.
+    //
+    // The refresh at the original X is still run, because the TSolMod objects carry their own
+    // internal composition and must be re-seeded there; the arrays are then overwritten by the
+    // saved copies so the numeric state a later warm call reads is bit-identical.
+    struct CertSave { double* p; std::vector<double> v; };
+    std::vector<CertSave> saved;
+    auto keep = [&saved]( double* p, long int n ) {
+        if( p && n > 0 ) saved.push_back( { p, std::vector<double>( p, p + n ) } ); };
+    keep( pm.X, pm.L );      keep( pm.XF, pm.FI );     keep( pm.XFA, pm.FIs );
+    keep( pm.G, pm.L );      keep( pm.lnGam, pm.L );   keep( pm.lnGmo, pm.L );
+    keep( pm.Gamma, pm.L );  keep( pm.F0, pm.L );      keep( pm.fDQF, pm.L );
+    keep( pm.Wx, pm.L );     keep( pm.FitVar, 5 );
+    const std::vector<double> Xsave( pm.X, pm.X + pm.L );
+    auto restoreBase = [&saved]() {
+        for( const CertSave& c : saved ) std::copy( c.v.begin(), c.v.end(), c.p ); };
+
+    // EVERY FD COLUMN STARTS FROM THE SAME BASE STATE, and F at the base is computed ONCE.
+    // Both halves of that are corrections to the first build, which recomputed Fbase per phase
+    // and let each column start from the previous column's state:
+    //  - CalculateActivityCoefficients(LINK_UX_MODE) is history-dependent for the same reason
+    //    the restore is (it accumulates lnGmo and blends F0 through FitVar[3]), so a column
+    //    taken after another column's perturbation differences two states that differ by more
+    //    than h*e_i. Restoring between columns costs a handful of array copies against one
+    //    full activity evaluation and removes the dependence entirely.
+    //  - Fbase computed inside the phase loop read pm.XF and pm.F0 as the PREVIOUS phase's
+    //    last perturbation left them, so every phase after the first differenced against the
+    //    wrong base. It is now taken here, before anything moves.
+    std::vector<double> Fbase;
+    CertPrimalPotentials( Fbase );
+
+    double lmin = kNone;
+    bool perturbed = false;
+    try
+    {
+        long int p0 = 0;
+        for( long int k = 0; k < pm.FIs; k++ )
+        {
+            const long int p1 = p0 + pm.L1[k];
+            const long int nEnd = p1 - p0;
+            const bool isAq = ( pm.LO >= p0 && pm.LO < p1 );
+            // pm.XF[k] > pm.DSM is the same presence test the KEY record uses, so curv_min is
+            // scored over exactly the phases KEY calls present. Without it, pa_OptimaZeroAbsent
+            // = 2 leaves every absent phase at its floor amount and the block is built out of
+            // 1/X_j entries: f_CalcDolo AOP reported curv_min = 4.28e+08 on a gas phase holding
+            // 6.6e-16 mol the first time this ran.
+            if( isAq || nEnd <= 1 || p1 > pm.L || pm.XF[k] <= pm.DSM ) { p0 = p1; continue; }
+
+            // Present end-members only, on the same test the pa_PhaseHessianFloor site uses:
+            // an end-member at the numerical floor has 1/X_j up to 1e13 and would set the
+            // block's largest entry, and its FD column is a 10x-perturbation secant anyway.
+            const double dcFloor = cert_dc_floor( pm, base_param() );
+            double phTot = 0.;
+            for( long int j = p0; j < p1; j++ ) phTot += std::max( pm.X[j], 0. );
+            std::vector<long int> pres;
+            for( long int j = p0; j < p1; j++ )
+                if( pm.X[j] > std::max( dcFloor * 1e3, phTot * 1e-6 ) )
+                    pres.push_back( j );
+            const int nP = (int)pres.size();
+            if( nP <= 1 ) { p0 = p1; continue; }
+
+            std::vector<double> Fpert, fxx( (size_t)nP*nP, 0. );
+            for( int c = 0; c < nP; c++ )
+            {
+                const long int jc = pres[(size_t)c];
+                const double Xi = Xsave[(size_t)jc];
+                const double h = fabs(Xi) * 1e-7;
+                if( !( h > 0. ) ) continue;
+                pm.X[jc] = Xi + h;
+                perturbed = true;
+                TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                CalculateActivityCoefficients( LINK_UX_MODE );
+                CertPrimalPotentials( Fpert );
+                for( int rr = 0; rr < nP; rr++ )
+                    fxx[(size_t)rr*nP + c] = ( Fpert[(size_t)pres[(size_t)rr]]
+                                             - Fbase[(size_t)pres[(size_t)rr]] ) / h;
+                restoreBase();          // back to the exact base state before the next column
+            }
+            std::vector<double> blk( (size_t)nP*nP );
+            for( int a = 0; a < nP; a++ )
+                for( int b = 0; b < nP; b++ )
+                    blk[(size_t)a*nP+b] = 0.5 * ( fxx[(size_t)a*nP+b] + fxx[(size_t)b*nP+a] );
+            double lk = 0.;
+            if( CertSymEigMin( blk, nP, lk ) && lk < lmin )
+            {
+                lmin = lk;
+                worstPhase = k;
+            }
+            p0 = p1;
+        }
+    }
+    catch( ... )
+    {
+        // A solution model that throws on a perturbed composition must not turn a completed
+        // solve into a failed call - this runs after packDataBr(). Report nothing and restore.
+        lmin = kNone;
+        worstPhase = -1;
+    }
+
+    if( perturbed )
+    {
+        // restoreBase() has already run after the last column (or the catch skipped it), so
+        // pm.X is base here either way; the refresh is for the TSolMod objects, whose own
+        // internal composition is the one thing no array copy can put back.
+        restoreBase();
+        try
+        {
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );   // re-seed the TSolMod objects
+        }
+        catch( ... ) { /* the copies below are what make the state exact */ }
+        restoreBase();
+    }
+    return lmin;
+}
+
+void native_trace_run_result( const MULTI& pm, long int mode, long int status, TMultiBase* mb )
 {
     FILE* ntf = native_trace_file();
     if( !ntf || native_trace_quiet_depth > 0 )
@@ -432,10 +808,63 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, c
     //   mb_pass mb_rel <= 1 - the certificate's mass-balance clause as the plan defines it; pa_DT's
     //           absolute floor is deliberately not applied, so a native row passing only through
     //           that floor reads mb_pass=0 here
-    // Read-only. NOT yet in the record, and why: total G, the per-species reduced-gradient residual
-    // and the phase-stability fields. pm.FX and pm.Falp are refreshed by the native path only, and
-    // Optima's residual is a local of its post-solve check, so a trace writer reading them would
-    // print stale values on Optima rows - the DC_G0() shape (CLAUDE.md s4).
+    // The mass-balance block below is read-only. STILL NOT in the record: total G and the
+    // phase-stability fields - pm.FX and pm.Falp are refreshed by the native path only, so a trace
+    // writer reading them would print stale values on Optima rows, the DC_G0() shape (CLAUDE.md s4).
+    // The per-species reduced-gradient residual WAS in that list until Phase 3 WP1 and is now
+    // kkt_max below; it escapes the trap by rebuilding its own potentials from G0+fDQF+F0 at the
+    // returned pm.X rather than reading either path's pm.F[] or pm.G[].
+    // REPORT-ONLY CERTIFICATE INSTRUMENTS (Phase 3 WP1) - kkt_max, curv_min, dual_free_dirs.
+    // Computed here and appended to the CERT line below; NOT in mb_pass, and freeze_diff.py
+    // does not gate on them (Docs/PLAN-defaults-and-fallbacks.md s0.1, caution 1: a field
+    // that starts being emitted AND joins the pass rule in one step makes every row the new
+    // clause rejects arrive as a regression the scorer cannot tell from a real one).
+    // They run only because this function already returned early when the trace is closed -
+    // with GEMS3K_NATIVE_TRACE_FILE unset, not one line of this executes.
+    //   kkt_max        worst sign-aware reduced-gradient residual over the PRESENT species,
+    //                  in RT, at the dual pm.U[] the last linear solve committed. Compare
+    //                  against pa_GAS (1e-3 RT), which is the tolerance the Optima path's own
+    //                  post-solve check uses - but read dual_dirs first (below).
+    //   curv_min       smallest eigenvalue of any present multicomponent non-aqueous phase's
+    //                  symmetrised FD curvature block; < 0 = converged inside a spinodal.
+    //                  1e300 = no phase qualified (none present with two present end-members).
+    //   dual_dirs      free dual directions = N - rank of the interior species' stoichiometry.
+    //                  > 0 means the dual is NOT determined by the answer, so kkt_max on the
+    //                  bound-active species is a draw and a threshold on it is a lottery
+    //                  threshold (plan v5 s123.6). dual_rank/dual_of carry the rank and N.
+    //   dual_resolved  -1 no free-dual search ran on this call, 0 searched and failed,
+    //                  1 searched and resolved. Only the Optima path searches, and only after
+    //                  its plain sign test has failed.
+    double certKkt = -1., certCurv = 1e300;
+    long int certKktJ = -1, certCurvK = -1, certRank = 0, certNic = pm.N, certDirs = -1;
+    if( mb )
+    {
+        std::vector<double> certF;
+        mb->CertPrimalPotentials( certF );
+        certKkt  = mb->CertKktMax( certF, certKktJ );
+        certDirs = mb->CertDualFreeDirs( certF, certRank, certNic );
+        certCurv = mb->CertCurvMin( certCurvK );
+    }
+    // Separator-safe, exactly as the KEY record's phase names are: ' ', ',', ':' and '=' are
+    // this line's own separators and corpus species and phase names carry all four.
+    auto certSafeName = []( const char* raw, size_t len ) {
+        std::string s0 = char_array_to_string( raw, (int)len );
+        while( !s0.empty() && ( s0.back() == ' ' || s0.back() == '\0' ) ) s0.pop_back();
+        std::string t; bool sp = false;
+        for( char c : s0 )
+        {
+            if( c == ' ' || c == '\t' ) { sp = true; continue; }
+            if( sp && !t.empty() ) t += '_';
+            sp = false;
+            t += ( c == ',' || c == ':' || c == '=' ) ? '/' : c;
+        }
+        return t.empty() ? std::string( "-" ) : t;
+    };
+    const std::string certKktName  = certKktJ  >= 0 ? certSafeName( pm.SM[certKktJ], MAXDCNAME )
+                                                    : std::string( "-" );
+    const std::string certCurvName = certCurvK >= 0 ? certSafeName( pm.SF[certCurvK], MAXSYMB + MAXPHNAME )
+                                                    : std::string( "-" );
+
     if( pm.X && pm.B && pm.A && pm.N > 0 )
     {
         const long int Z = pm.N - pm.E;
@@ -480,11 +909,18 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, c
         // mb_seed_rel / mb_seed_ic: worst relative residual over the DEFAULT SEEDS, which mb_pass leaves out
         // (0 and "-" when nothing is marked of interest - then every IC is scored, exactly as before 2026-09-15).
         // Appended after mb_pass so a reader of the older fields is unaffected.
+        // The three WP1 fields are appended AFTER mb_seed_ic so every existing reader of this
+        // line - freeze.sh's lift, freeze_diff.py's key=value parse, cert_by_mode.py - is
+        // unaffected by their arrival, the same way mb_seed_* were appended in df8cf88.
         fprintf( ntf, "CERT  mode=%s status=%ld mb_rel=%.3e mb_rel_ic=%s mb_rel_b=%.3e mb_abs=%.3e"
-                      " mb_abs_ic=%s chg_abs=%.3e chg_ic=%s mb_pass=%d mb_seed_rel=%.3e mb_seed_ic=%s\n",
+                      " mb_abs_ic=%s chg_abs=%.3e chg_ic=%s mb_pass=%d mb_seed_rel=%.3e mb_seed_ic=%s"
+                      " kkt_max=%.3e kkt_species=%s curv_min=%.6e curv_phase=%s"
+                      " dual_dirs=%ld dual_rank=%ld dual_of=%ld dual_resolved=%d\n",
                  mname, (long)status, rel, icName( iRel ).c_str(), iRel >= 0 ? pm.B[iRel] : 0.,
                  absr, icName( iAbs ).c_str(), chg, icName( iChg ).c_str(), rel <= 1. ? 1 : 0,
-                 relSeed, icName( iSeed ).c_str() );
+                 relSeed, icName( iSeed ).c_str(),
+                 certKkt, certKktName.c_str(), certCurv, certCurvName.c_str(),
+                 (long)certDirs, (long)certRank, (long)certNic, native_cert_dualfree_get() );
     }
     fflush( ntf );
 }
