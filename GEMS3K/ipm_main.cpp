@@ -346,6 +346,31 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
 // ms_multi.h for what each field is, why it rebuilds Gj instead of reading
 // pm.G[] or pm.F[], and why none of them enters CERT's mb_pass.
 
+/// Separator-safe form of a species or phase name for a TRACE payload (work item 34).
+///
+/// The DECIDE records below join names with ',' inside fields separated by ' ', ':' and '=' -
+/// and corpus names carry all four. `f_/j_TestPNTDB` ship 30 comma-bearing names each
+/// (`Am(CO3)1.5(a,h)` and kin), `j_FeRedox_pHEh` six dimethylphenol isomers (`2,3-Dmp@`), and
+/// five Solvus projects a phase called `Alkali feldspar`. 78437cf fixed the KEY record's phase
+/// names and CERT's kkt_species/curv_phase the same way; these payloads were missed.
+///
+/// Identical substitution to that one, and deliberately a SEPARATE function rather than a
+/// refactor of it: native_trace_run_result()'s own lambda feeds the scored `# key` and `# cert`
+/// lines, and this change must leave those byte-identical.
+static std::string trace_safe_name( std::string s )
+{
+    while( !s.empty() && ( s.back() == ' ' || s.back() == '\t' || s.back() == '\0' ) ) s.pop_back();
+    std::string t; bool sp = false;
+    for( char c : s )
+    {
+        if( c == ' ' || c == '\t' ) { sp = true; continue; }
+        if( sp && !t.empty() ) t += '_';
+        sp = false;
+        t += ( c == ',' || c == ':' || c == '=' ) ? '/' : c;
+    }
+    return t.empty() ? std::string( "-" ) : t;
+}
+
 /// Optima's free-dual search result for the CERT record - see the declaration.
 static int native_cert_dualfree_resolved = -1;
 void native_cert_dualfree_reset() { native_cert_dualfree_resolved = -1; }
@@ -362,8 +387,13 @@ int  native_cert_dualfree_get() { return native_cert_dualfree_resolved; }
 /// perturbing. The sweep, the convergence test and the rotation are identical, so the two
 /// diagonalise the same block the same way.
 ///
-/// Returns false and leaves `lmin` untouched if the rotations do not settle.
-static bool CertSymEigMin( std::vector<double> a, int n, double& lmin )
+/// Returns false and leaves `lmin` (and `lmaxOut`, if given) untouched if the rotations do
+/// not settle. `lmaxOut` is an addition for the RANK trace record (Phase 3 WP2), which needs
+/// both ends of the spectrum for a condition number; kept as a trailing optional parameter
+/// rather than a second sweep function so the arithmetic - sweep, convergence test, rotation -
+/// stays in exactly one place. CertCurvMin()'s existing call, which never passes it, is
+/// unaffected.
+static bool CertSymEigMin( std::vector<double> a, int n, double& lmin, double* lmaxOut = nullptr )
 {
     if( n < 1 ) return false;
     const int maxSweeps = 60;
@@ -403,7 +433,13 @@ static bool CertSymEigMin( std::vector<double> a, int n, double& lmin )
     }
     if( !converged ) return false;
     lmin = a[0];
-    for( int i = 1; i < n; i++ ) lmin = std::min( lmin, a[(size_t)i*n+i] );
+    double lmax = a[0];
+    for( int i = 1; i < n; i++ )
+    {
+        lmin = std::min( lmin, a[(size_t)i*n+i] );
+        lmax = std::max( lmax, a[(size_t)i*n+i] );
+    }
+    if( lmaxOut ) *lmaxOut = lmax;
     return true;
 }
 
@@ -578,6 +614,294 @@ long int TMultiBase::CertDualFreeDirs( const std::vector<double>& F, long int& r
         rank++;
     }
     return N - rank;
+}
+
+/// cond(M) = lambda_max/lambda_min of a small dense symmetric M, via CertSymEigMin(), capped
+/// at 1e300 in every direction that carries no usable information: the sweep failing to
+/// converge, or either eigenvalue reading non-positive. A present-only Gram is PSD by
+/// construction, so a non-positive lambda_min here is the sweep's own rounding on a
+/// near-singular matrix rather than a true negative eigenvalue - "no bound", not "a condition
+/// number below one".
+static double CertCondFromGram( const std::vector<double>& M, long int n )
+{
+    if( n <= 0 ) return 1e300;
+    double lmin = 0., lmax = 0.;
+    if( !CertSymEigMin( M, (int)n, lmin, &lmax ) ) return 1e300;
+    if( !( lmin > 0. ) || !( lmax > 0. ) ) return 1e300;
+    return std::min( lmax / lmin, 1e300 );
+}
+
+/// M rescaled by its own symmetric Jacobi diagonal, d_i = sqrt(M_ii) where M_ii > 0, else 1 -
+/// the "else 1" leaves a structurally empty row (an IC no present species touches under this
+/// weight) undivided rather than manufacturing a 0/0. Equalises the diagonal to 1, which is
+/// the standard remedy for a Gram matrix whose rows differ in scale for a reason unrelated to
+/// conditioning (e.g. one IC counted in mol against another effectively suppressed by the
+/// weight) rather than a true near-dependency between them.
+static std::vector<double> CertJacobiScale( const std::vector<double>& M, long int n )
+{
+    std::vector<double> d( (size_t)n, 1. );
+    for( long int i = 0; i < n; i++ )
+        if( M[(size_t)(i*n+i)] > 0. ) d[(size_t)i] = sqrt( M[(size_t)(i*n+i)] );
+    std::vector<double> Ms( M.size() );
+    for( long int i = 0; i < n; i++ )
+        for( long int k = 0; k < n; k++ )
+            Ms[(size_t)(i*n+k)] = M[(size_t)(i*n+k)] / ( d[(size_t)i] * d[(size_t)k] );
+    return Ms;
+}
+
+void TMultiBase::CertRank( CertRankReport& r ) const
+{
+    r = CertRankReport();
+    if( !pm.X || !pm.A || pm.N <= 0 )
+        return;
+
+    const long int N = pm.N;
+
+    // PRESENT species - pm.X[j] > pm.DcMinM, the same test cert_species_scorable() applies
+    // minus its F condition: this record is about the geometry pm.A presents at the answer,
+    // not about which species CertPrimalPotentials() managed to fill in.
+    std::vector<long int> presentIdx;
+    presentIdx.reserve( (size_t)pm.L );
+    for( long int j = 0; j < pm.L; j++ )
+        if( pm.X[j] > pm.DcMinM ) presentIdx.push_back( j );
+    const long int pres = (long int)presentIdx.size();
+
+    r.of = N;
+    r.pres = pres;
+    if( pres <= 0 ) return;
+
+    // Row scale for `rank` and `sv_ratio`: each IC row divided by its own max |entry| over the
+    // PRESENT columns only, so a trace IC whose whole row is 1e-13-scale does not read as
+    // dependent on an abundant IC merely because both are "small" on an ABSOLUTE scale - the
+    // same shape of miscalibration CLAUDE.md s4 records for pa_OptimaZeroAbsent's absolute
+    // cutoff (there, a mass-balance residual; here, a matrix entry), one level up in the same
+    // system. A row with no present column at all (all zero) keeps scale 1.
+    std::vector<double> rowScale( (size_t)N, 1. );
+    for( long int i = 0; i < N; i++ )
+    {
+        double m = 0.;
+        for( long int jc = 0; jc < pres; jc++ )
+            m = std::max( m, fabs( pm.A[ i + presentIdx[(size_t)jc]*N ] ) );
+        if( m > 0. ) rowScale[(size_t)i] = m;
+    }
+
+    // rank: modified Gram-Schmidt over the ROW-SCALED present columns (each an N-vector down
+    // the IC axis), the same 1e-8-of-its-own-pre-orthogonalisation-norm acceptance test
+    // CertDualFreeDirs() uses. The two routines answer different questions with the same test:
+    // CertDualFreeDirs() ranks the INTERIOR species only, unscaled, to ask whether the dual is
+    // fixed; this ranks EVERY present species, row-scaled, to ask what the mass-balance system
+    // itself can resolve regardless of which species happen to sit on a bound right now.
+    {
+        std::vector<double> Q, col( (size_t)N ), resid( (size_t)N );
+        long int rank = 0;
+        for( long int jc = 0; jc < pres && rank < N; jc++ )
+        {
+            const long int j = presentIdx[(size_t)jc];
+            double nrm0 = 0.;
+            for( long int i = 0; i < N; i++ )
+            {
+                col[(size_t)i] = pm.A[ i + j*N ] / rowScale[(size_t)i];
+                nrm0 += col[(size_t)i]*col[(size_t)i];
+            }
+            nrm0 = sqrt( nrm0 );
+            if( !( nrm0 > 0. ) ) continue;
+            resid = col;
+            for( long int c = 0; c < rank; c++ )
+            {
+                double d = 0.;
+                for( long int i = 0; i < N; i++ ) d += Q[(size_t)(c*N+i)] * resid[(size_t)i];
+                for( long int i = 0; i < N; i++ ) resid[(size_t)i] -= d * Q[(size_t)(c*N+i)];
+            }
+            double nrm = 0.;
+            for( long int i = 0; i < N; i++ ) nrm += resid[(size_t)i]*resid[(size_t)i];
+            nrm = sqrt( nrm );
+            if( nrm < 1e-8 * nrm0 ) continue;
+            Q.resize( (size_t)((rank+1)*N) );
+            for( long int i = 0; i < N; i++ ) Q[(size_t)(rank*N+i)] = resid[(size_t)i] / nrm;
+            rank++;
+        }
+        r.rank = rank;
+    }
+
+    // sv_ratio / sv_ratio_raw: sigma_min/sigma_max of A_present, scaled and raw, read off the
+    // eigenvalues of the N x N Gram A_present A_present^T rather than a direct SVD -
+    // CertSymEigMin() is the one dense eigensolver already in this file, and a Gram's
+    // eigenvalues are exactly the squared singular values of the matrix it was built from.
+    auto buildGram = [&]( bool scaled )
+    {
+        std::vector<double> M( (size_t)(N*N), 0. );
+        for( long int jc = 0; jc < pres; jc++ )
+        {
+            const long int j = presentIdx[(size_t)jc];
+            for( long int i = 0; i < N; i++ )
+            {
+                const double ai = pm.A[ i + j*N ] / ( scaled ? rowScale[(size_t)i] : 1. );
+                if( ai == 0. ) continue;
+                for( long int k = i; k < N; k++ )
+                    M[(size_t)(i*N+k)] += ai * ( pm.A[ k + j*N ] / ( scaled ? rowScale[(size_t)k] : 1. ) );
+            }
+        }
+        for( long int i = 0; i < N; i++ )
+            for( long int k = 0; k < i; k++ )
+                M[(size_t)(i*N+k)] = M[(size_t)(k*N+i)];
+        return M;
+    };
+    {
+        double lmin, lmax;
+        if( CertSymEigMin( buildGram( true ), (int)N, lmin, &lmax ) && lmin >= 0. && lmax > 0. )
+            r.sv_ratio = sqrt( lmin / lmax );
+        if( CertSymEigMin( buildGram( false ), (int)N, lmin, &lmax ) && lmin >= 0. && lmax > 0. )
+            r.sv_ratio_raw = sqrt( lmin / lmax );
+    }
+
+    // chg_res / chg_span: is the charge row, restricted to the present columns, already a
+    // linear combination of the ELEMENT rows over the same columns? This is the same question
+    // as `rank` one level more specific - not "is the whole system full rank" but "does the
+    // charge constraint carry information the element rows don't already fix at THIS answer".
+    // Basis built by modified Gram-Schmidt over vectors indexed by the PRESENT columns (length
+    // pres, not N - the element/charge rows are what varies here, the present-species axis is
+    // fixed), same 1e-8 relative acceptance test. Uses the FIRST charge row, index Z = N - E;
+    // every corpus project measured so far has E in {0,1} (it is also the electroneutrality
+    // flag), so this is a defensive choice, not one exercised by anything on hand.
+    //
+    // EACH ROW DIVIDED BY THE SAME rowScale[i] BUILT ABOVE - reusing `rank`'s row scale rather
+    // than an unscaled projection. A relative residual is invariant to scaling the CHARGE row
+    // by a positive constant (it cancels in the ratio), but is NOT invariant to scaling the
+    // ELEMENT rows differently from one another - that changes which combinations the basis
+    // can reach, not just its length. Unscaled, an element row several orders smaller than the
+    // rest (a trace IC) is numerically swamped in the projection before its own direction is
+    // ever tested, which is the same absolute-vs-relative miscalibration the row scale above
+    // exists to avoid.
+    const long int Z = N - pm.E;
+    if( pm.E > 0 && Z > 0 )
+    {
+        std::vector<double> Q, col( (size_t)pres ), resid( (size_t)pres );
+        long int erank = 0;
+        for( long int i = 0; i < Z; i++ )
+        {
+            double nrm0 = 0.;
+            for( long int jc = 0; jc < pres; jc++ )
+            {
+                col[(size_t)jc] = pm.A[ i + presentIdx[(size_t)jc]*N ] / rowScale[(size_t)i];
+                nrm0 += col[(size_t)jc]*col[(size_t)jc];
+            }
+            nrm0 = sqrt( nrm0 );
+            if( !( nrm0 > 0. ) ) continue;
+            resid = col;
+            for( long int c = 0; c < erank; c++ )
+            {
+                double d = 0.;
+                for( long int jc = 0; jc < pres; jc++ ) d += Q[(size_t)(c*pres+jc)] * resid[(size_t)jc];
+                for( long int jc = 0; jc < pres; jc++ ) resid[(size_t)jc] -= d * Q[(size_t)(c*pres+jc)];
+            }
+            double nrm = 0.;
+            for( long int jc = 0; jc < pres; jc++ ) nrm += resid[(size_t)jc]*resid[(size_t)jc];
+            nrm = sqrt( nrm );
+            if( nrm < 1e-8 * nrm0 ) continue;
+            Q.resize( (size_t)((erank+1)*pres) );
+            for( long int jc = 0; jc < pres; jc++ ) Q[(size_t)(erank*pres+jc)] = resid[(size_t)jc] / nrm;
+            erank++;
+        }
+        double cnrm0 = 0.;
+        for( long int jc = 0; jc < pres; jc++ )
+        {
+            col[(size_t)jc] = pm.A[ Z + presentIdx[(size_t)jc]*N ] / rowScale[(size_t)Z];
+            cnrm0 += col[(size_t)jc]*col[(size_t)jc];
+        }
+        cnrm0 = sqrt( cnrm0 );
+        if( cnrm0 > 0. )
+        {
+            resid = col;
+            for( long int c = 0; c < erank; c++ )
+            {
+                double d = 0.;
+                for( long int jc = 0; jc < pres; jc++ ) d += Q[(size_t)(c*pres+jc)] * resid[(size_t)jc];
+                for( long int jc = 0; jc < pres; jc++ ) resid[(size_t)jc] -= d * Q[(size_t)(c*pres+jc)];
+            }
+            double rnrm = 0.;
+            for( long int jc = 0; jc < pres; jc++ ) rnrm += resid[(size_t)jc]*resid[(size_t)jc];
+            r.chg_res = sqrt( rnrm ) / cnrm0;
+        }
+        else
+            r.chg_res = 0.;   // charge row is identically zero over the present columns: trivially in span
+        r.chg_span = ( r.chg_res < 1e-10 ) ? 1 : 0;
+    }
+
+    // cond_ipm / cond_mbr: condition number of A_p diag(w) A_p^T for the two weights the two
+    // solver stages actually apply - IPM's (WeightMultipliers(false)) and MBR's
+    // (WeightMultipliers(true)). This is a LOCAL reconstruction of that function's arithmetic
+    // at the species amount it actually uses, pm.X[j], not a second call to it and not a read
+    // of pm.W[]: that array is live IPM/MBR scratch, last written mid-solve at pm.Y (not the
+    // final pm.X) and on some rows built for a different phase of the algorithm entirely, and
+    // a report-only path writing it back would be the same shape as HANDOFF-2026-09-20 s5's
+    // caution that "a report-only field can write solver state" (there, curv_min's restore-by-
+    // recomputation instead of restore-by-copy) - a different mechanism, the same trap.
+    // The 1.34e120 magnitude clamp and the "BOTH_LIM takes the min AFTER squaring" rule for the
+    // MBR shape are copied verbatim so the two cannot silently drift apart.
+    auto weightAt = [&]( long int j, bool square ) -> double
+    {
+        const char rlc = pm.RLC ? pm.RLC[j] : (char)NO_LIM;
+        const double lo = pm.DLL ? pm.DLL[j] : 0.;
+        const double hi = pm.DUL ? pm.DUL[j] : 0.;
+        auto clampSq = []( double w )
+        {
+            if( fabs(w) > 1.34e120 ) w = signbit(w) ? -1.34e120 : 1.34e120;
+            return w*w;
+        };
+        switch( rlc )
+        {
+          case UPPER_LIM:
+          {
+              const double w1 = hi - pm.X[j];
+              return square ? clampSq( w1 ) : std::max( w1, 0. );
+          }
+          case BOTH_LIM:
+          {
+              const double w1 = pm.X[j] - lo;
+              const double w2 = hi - pm.X[j];
+              if( square ) return std::min( clampSq( w1 ), clampSq( w2 ) );
+              const double w = std::min( w1, w2 );
+              return w < 0. ? 0. : w;
+          }
+          case NO_LIM:
+          case LOWER_LIM:
+          default:
+          {
+              const double w1 = pm.X[j] - lo;
+              return square ? clampSq( w1 ) : std::max( w1, 0. );
+          }
+        }
+    };
+    auto buildWeightedGram = [&]( bool square )
+    {
+        std::vector<double> M( (size_t)(N*N), 0. );
+        for( long int jc = 0; jc < pres; jc++ )
+        {
+            const long int j = presentIdx[(size_t)jc];
+            const double w = weightAt( j, square );
+            if( w == 0. ) continue;
+            for( long int i = 0; i < N; i++ )
+            {
+                const double ai = pm.A[ i + j*N ];
+                if( ai == 0. ) continue;
+                const double wai = w*ai;
+                for( long int k = i; k < N; k++ )
+                    M[(size_t)(i*N+k)] += wai * pm.A[ k + j*N ];
+            }
+        }
+        for( long int i = 0; i < N; i++ )
+            for( long int k = 0; k < i; k++ )
+                M[(size_t)(i*N+k)] = M[(size_t)(k*N+i)];
+        return M;
+    };
+    {
+        const std::vector<double> Mi = buildWeightedGram( false );
+        r.cond_ipm     = CertCondFromGram( Mi, N );
+        r.cond_ipm_jac = CertCondFromGram( CertJacobiScale( Mi, N ), N );
+        const std::vector<double> Mm = buildWeightedGram( true );
+        r.cond_mbr     = CertCondFromGram( Mm, N );
+        r.cond_mbr_jac = CertCondFromGram( CertJacobiScale( Mm, N ), N );
+    }
 }
 
 double TMultiBase::CertCurvMin( long int& worstPhase )
@@ -921,6 +1245,43 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
                  relSeed, icName( iSeed ).c_str(),
                  certKkt, certKktName.c_str(), certCurv, certCurvName.c_str(),
                  (long)certDirs, (long)certRank, (long)certNic, native_cert_dualfree_get() );
+    }
+
+    // RANK - the geometry and conditioning of the present-species stoichiometry at the
+    // RETURNED answer (Phase 3 WP2; Docs/HANDOFF-2026-09-20.md s3, gems-benchmark's
+    // 2026-09-18-rank-probe.txt). Where CERT's dual_dirs asks whether the INTERIOR species fix
+    // the dual, RANK asks the prior question about the system every solver stage forms from
+    // pm.A - is it full rank at all, restricted to what is actually present, and how differently
+    // conditioned does each stage's own weight leave it. Computed for EVERY mode, same as CERT.
+    //   rank/of/pres   numerical rank of the present species' stoichiometry (row-scaled) against
+    //                  pm.N, and how many species were present to rank.
+    //   sv_ratio(_raw) sigma_min/sigma_max of the present columns, row-scaled and unscaled - a
+    //                  property of the geometry alone, with no solver weight folded in.
+    //   chg_res/span   is the charge row, over present columns, already implied by the element
+    //                  rows at this answer? chg_span=1 says the charge constraint carries no
+    //                  independent information here (plan v5's Leal 2016 s3.1 question, but
+    //                  measured per answer rather than assumed from the model).
+    //   cond_ipm(_jac) condition number of A_p diag(w) A_p^T for IPM's own weight, plain and
+    //   cond_mbr(_jac) after symmetric Jacobi scaling; likewise for MBR's weight. WP2's own
+    //                  probe found the corpus's ill-conditioning lives almost entirely in this
+    //                  weight diagonal, not in `A_present` itself (medians 1e10-1e17 unscaled,
+    //                  collapsing under Jacobi) - which is why both weighted numbers are here
+    //                  and `sv_ratio` alone would read "nothing to see" on most of the corpus.
+    // REPORT-ONLY: CertRank() reads pm.A/pm.X/pm.DLL/pm.DUL/pm.RLC and writes nothing, including
+    // pm.W[] - see CertRank()'s own comment on cond_ipm/cond_mbr for why a second call to
+    // WeightMultipliers() would be the wrong shape entirely. Guarded and computed only when this
+    // function has already confirmed the trace file is open; with GEMS3K_NATIVE_TRACE_FILE unset
+    // not one line of it runs.
+    if( mb && pm.X && pm.A && pm.N > 0 )
+    {
+        TMultiBase::CertRankReport rk;
+        mb->CertRank( rk );
+        fprintf( ntf, "RANK  mode=%s status=%ld rank=%ld of=%ld pres=%ld sv_ratio=%.3e"
+                      " sv_ratio_raw=%.3e chg_res=%.3e chg_span=%d cond_ipm=%.3e cond_ipm_jac=%.3e"
+                      " cond_mbr=%.3e cond_mbr_jac=%.3e\n",
+                 mname, (long)status, (long)rk.rank, (long)rk.of, (long)rk.pres,
+                 rk.sv_ratio, rk.sv_ratio_raw, rk.chg_res, rk.chg_span,
+                 rk.cond_ipm, rk.cond_ipm_jac, rk.cond_mbr, rk.cond_mbr_jac );
     }
     fflush( ntf );
 }
@@ -1477,9 +1838,8 @@ void TMultiBase::EnergyDeterminacyCheck()
     if( n < 1 ) return;
     auto A = [&]( long int r, long int j ) { return pm.A[rows[(size_t)r] + j*N]; };
     auto trimmedPhaseName = [&]( long int k ) {
-        std::string s = char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME );
-        s.erase( s.find_last_not_of( " \t" ) + 1 );
-        return s;
+        // work item 34: this feeds comma-joined DECIDE payloads - see trace_safe_name()
+        return trace_safe_name( char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME ) );
     };
 
     // (a) Pure phases: a maximal independent subset P goes into K0; a phase is DEGENERATE iff
@@ -1724,15 +2084,12 @@ std::vector<TMultiBase::RedundantDCHold> TMultiBase::ExcludeRedundantDCs()
         return true;
     };
     auto freeBounds = [&]( long int j ) { return !( pm.DLL[j] > 0. ) && !( pm.DUL[j] < 1e6 ); };
+    // work item 34: both feed comma-joined DECIDE payloads - see trace_safe_name()
     auto dcName = [&]( long int j ) {
-        std::string s = char_array_to_string( pm.SM[j], MAXDCNAME );
-        s.erase( s.find_last_not_of( " \t" ) + 1 );
-        return s;
+        return trace_safe_name( char_array_to_string( pm.SM[j], MAXDCNAME ) );
     };
     auto phName = [&]( long int k ) {
-        std::string s = char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME );
-        s.erase( s.find_last_not_of( " \t" ) + 1 );
-        return s;
+        return trace_safe_name( char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME ) );
     };
 
     std::vector<long int> jb( (size_t)FI + 1, 0 );
@@ -1963,8 +2320,13 @@ void TMultiBase::StrandedElementCheck()
         const double nk = pm.XF[k] > 0. ? pm.XF[k] : 0.;
         const double share = nk > 0. ? carried / nk : 1.;
         const double trace = nk / total;
+        // work item 34: icName is COMPARED against elementsOfInterest below, so it stays the
+        // trimmed name; only the copy that reaches the DECIDE payload is made separator-safe.
+        // Corpus IC names carry none of the four characters, so the two are equal today - the
+        // split is here so that a sanitiser can never silently decide a membership test.
         const std::string icName = trimmed( char_array_to_string( pm.SB[i], MAXICNAME ) );
-        const std::string phName = trimmed( char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME ) );
+        const std::string icNameSafe = trace_safe_name( icName );
+        const std::string phName = trace_safe_name( char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME ) );
         if( probe )
             fprintf( stderr, "STRANDPROBE ic=%s phase=%s class=%c b_internal=%.3e phase_mol=%.3e share=%.3e trace=%.3e\n",
                      icName.c_str(), phName.c_str(), pm.PHC ? pm.PHC[k] : '?', pm.B[i],
@@ -1979,7 +2341,7 @@ void TMultiBase::StrandedElementCheck()
                 tag = std::find( elementsOfInterest.begin(), elementsOfInterest.end(), icName ) != elementsOfInterest.end()
                       ? " [of interest]" : " [default seed]";
             report += fmt::format( "{}{} in {} ({:.2g} mol, {:.0f} % of it){}", report.empty() ? "" : "; ",
-                                   icName, phName, nkReal, 100. * share, tag );
+                                   icNameSafe, phName, nkReal, 100. * share, tag );
             nWarn++;
         }
     }

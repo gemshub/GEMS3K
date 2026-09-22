@@ -630,13 +630,33 @@ void TMultiBase::ScaleSystemToInternal(  double ScFact )
   pm.FX  *= ScFact;
   pm.Yw  *= ScFact;  // added 08.06.10 DK
 
+  // Work item 33: record the pre-scale value and the value this call leaves, per index, so
+  // RescaleSystemFromInternal() replays this decision instead of re-deriving it from a value that
+  // may since have crossed the sentinel - or been rewritten mid-solve. See DUL_preScale_.
+  DUL_preScale_.assign( (size_t)pm.L, 0. );
+  DUL_postScale_.assign( (size_t)pm.L, 0. );
+  DLL_preScale_.assign( (size_t)pm.L, 0. );
+  DLL_postScale_.assign( (size_t)pm.L, 0. );
   for( j=0; j<pm.L; j++ )
   {
+    DUL_preScale_[(size_t)j] = pm.DUL[j];
     if(	pm.DUL[j] < 1e6  )
        pm.DUL[j] *= ScFact;
+    DUL_postScale_[(size_t)j] = pm.DUL[j];
 
+    // The LOWER bound is recorded and restored the SAME WAY as the upper one, and the symmetry is
+    // the whole point. Restoring DUL exactly while DLL still went through multiply-then-divide left
+    // the two ONE ULP apart on a phase where the caller pins dul == dll - the standard AMR idiom for
+    // kinetic control - and unpackDataBr() then rejects the NEXT call with "Upper kinetic restriction
+    // less than the lower one". Measured 2026-09-21 on GEMS3K's own node-gem CalcColumn example:
+    // dul = 2.13758000000000009e-04 against dll = 2.13758000000000036e-04, 3576 of 4200 solves lost
+    // on the SIA loop, with the benchmark corpus showing a byte-identical freeze throughout (no
+    // corpus project carries a real metastability bound across repeated calls). AN EXACTNESS FIX
+    // APPLIED TO ONE SIDE OF AN EQUALITY IS NOT A FIX.
+    DLL_preScale_[(size_t)j] = pm.DLL[j];
     // if( pm.DLL[j] > 0.0  )
        pm.DLL[j] *= ScFact;
+    DLL_postScale_[(size_t)j] = pm.DLL[j];
 
         pm.Y[j] *= ScFact;
         pm.X[j] *= ScFact;
@@ -660,14 +680,20 @@ void TMultiBase::ScaleSystemToInternal(  double ScFact )
     pm.FWGT[k] *= ScFact;
   }
 
+  PUL_preScale_.assign( (size_t)pm.FIs, 0. );
+  PUL_postScale_.assign( (size_t)pm.FIs, 0. );
   for( k=0; k<pm.FIs; k++ )
   {
       pm.XFA[k] *= ScFact;
       pm.YFA[k] *= ScFact;
 
       if( pm.PUL )
+      {
+        PUL_preScale_[(size_t)k] = pm.PUL[k];
         if( pm.PUL[k] < 1e6  )
          pm.PUL[k] *= ScFact;
+        PUL_postScale_[(size_t)k] = pm.PUL[k];
+      }
 
       if( pm.PLL )
       // if( pm.PLL[k] > 0.0  )
@@ -709,10 +735,20 @@ void TMultiBase::RescaleSystemFromInternal(  double ScFact )
 
   for( j=0; j<pm.L; j++ )
   {
-    if(	pm.DUL[j] < 1e6  ) {
+    // Work item 33: an entry still holding exactly what scale-in left has not been touched since,
+    // so its real-unit value is known exactly and is restored verbatim - which also removes the
+    // multiply-then-divide rounding the old form carried. An entry that has MOVED was written from
+    // inside the scaled region (Set_DC_limits() on the warm path), i.e. in internal units, and
+    // takes the original test. No record at all (an unpaired call) also takes the original test.
+    if( (size_t)j < DUL_postScale_.size() && pm.DUL[j] == DUL_postScale_[(size_t)j] ) {
+       pm.DUL[j] = DUL_preScale_[(size_t)j];
+    }
+    else if(	pm.DUL[j] < 1e6  ) {
        pm.DUL[j] /= ScFact;
     }
-    // if( pm.DLL[j] > 0.0  )
+    if( (size_t)j < DLL_postScale_.size() && pm.DLL[j] == DLL_postScale_[(size_t)j] )
+       pm.DLL[j] = DLL_preScale_[(size_t)j];   // symmetric with DUL above - see the note there
+    else
        pm.DLL[j] /= ScFact;
 
         pm.Y[j] /= ScFact;
@@ -745,8 +781,12 @@ void TMultiBase::RescaleSystemFromInternal(  double ScFact )
       pm.YFA[k] /= ScFact;
 
       if( pm.PUL )
-        if( pm.PUL[k] < 1e6  )
-         pm.PUL[k] /= ScFact;
+      {
+        if( (size_t)k < PUL_postScale_.size() && pm.PUL[k] == PUL_postScale_[(size_t)k] )
+         pm.PUL[k] = PUL_preScale_[(size_t)k];     // untouched since scale-in: exact restore
+        else if( pm.PUL[k] < 1e6  )
+         pm.PUL[k] /= ScFact;                      // rewritten mid-solve, in internal units
+      }
 
       if( pm.PLL )
       // if( pm.PLL[k] > 0.0  )
@@ -765,6 +805,12 @@ void TMultiBase::RescaleSystemFromInternal(  double ScFact )
               pm.XetaD[k][j] /= ScFact;
               pm.XFTS[k][j]  /= ScFact;
           }
+
+  // Work item 33: single-use records - clear them so a break in the 1:1 pairing invariant fails
+  // toward the original test rather than silently replaying a previous call's decision.
+  DUL_preScale_.clear();  DUL_postScale_.clear();
+  DLL_preScale_.clear();  DLL_postScale_.clear();
+  PUL_preScale_.clear();  PUL_postScale_.clear();
 
   pm.SizeFactor = 1.;   // using in TNode class
 }

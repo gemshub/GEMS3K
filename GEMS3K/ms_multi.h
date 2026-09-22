@@ -57,10 +57,23 @@ const int  QPSIZE = 180, // earlier 20, 40 SD oct 2005
 extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
     e_CONSTANT,k_CONSTANT, cal_to_J, C_to_K, lg_to_ln, ln_to_lg, H2O_mol_to_kg, Min_phys_amount;
 
+/// The `{ }` at the end of each field's comment below is the value a STANDALONE GEMS3K run gets
+/// when the project file does not pin that field - i.e. the entry in `pa_p_` (`ms_multi_diff.cpp`),
+/// which is the only default this library has. Re-derived field by field on 2026-09-21 with
+/// `gems-benchmark/tools/basefield_doc_check.py`: 26 of 36 braces named something else - 24 a
+/// different NUMBER (`pa_DG` documented 1e5 against a compiled 1000. being the one that was
+/// reported), plus `PE` and `IEPS`, which stated a value set and a settable range where every
+/// other field states its default, and are now written the same way as the rest. The checker is
+/// a registry claim (`inv-basefield-doc-defaults`), so this cannot rot again silently.
+/// A brace naming a value no build produces is the same defect shape as a freeze's
+/// `# set` line naming a configuration no row was produced at - it is read as the answer to
+/// "what runs if I change nothing", and it was wrong. Note most corpus projects pin most of these
+/// in their own -ipm.json, so the compiled default is what a project file's ABSENCE selects, not
+/// what a typical run uses. Comment only: no default was changed.
 struct BASE_PARAM /// Flags and thresholds for numeric modules
 {
    short
-           PC,   ///< Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }
+           PC,   ///< Mode of PhaseSelect() operation ( 0 1 2 ... ) { 2 }
            PD,   ///< abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }.
                  ///< Modes: 0-invoke, 1-at MBR only, 2-every MBR it, every IPM it. 3-not MBR, every IPM it.
                  ///< if PD < 0 then use test qd_real accuracy mode
@@ -83,42 +96,47 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
                  ///<     Clamping the threshold at PRD = 0 would move those projects' answers, so it is a
                  ///<     gated change and not a comment fix; this comment is the part that is free.
            PSM,  ///< Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace { 1 }
-           DP,   ///< Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }
+           DP,   ///< Maximum allowed number of iterations in the MassBalanceRefinement() procedure { 130 }
            DW,   ///< Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }
            DT,   ///< Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }
-           PLLG, ///< IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detection }
-           PE,   ///< Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }
-           IIM   ///< Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }
+           PLLG, ///< IPM tolerance for detecting divergence in dual solution { 30000; 1 to 1000 is the
+                 ///< documented working range and 0 disables the detection, but the shipped default is the
+                 ///< |PLLG| >= 30000 case, which InteriorPointsMethod() reads as "allow complete tracing" }
+           PE,   ///< Flag for using electroneutrality condition in GEM IPM calculations ( 0 or 1 ) { 1 }
+           IIM   ///< Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 7000 }
            ;
-         double DG,   ///< Standart total moles { 1e5 }
-           DHB,  ///< Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }
-           DS,   ///< Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }
-           DK,   ///< IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 < DK < 1e-4) { 1e-5 }
+         double DG,   ///< Standart total moles { 1000. }
+           DHB,  ///< Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-13 }
+           DS,   ///< Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-20 }
+           DK,   ///< IPM-2 convergence threshold for the Dikin criterion { 1e-6 }. NOTE the shipped default
+                 ///< sits ON the lower end of the interval this comment used to call the settable range
+                 ///< (1e-6 < DK < 1e-4), and plan v5 s74 measured eight projects whose DK is BELOW their own
+                 ///< numerical noise floor, where termination becomes a waiting time rather than a test
            DF,   ///< Threshold for the application of the Karpov phase stability criterion: (Fa > DF) for a lost stable phase { 0.01 }
-           DFM,  ///< Threshold for Karpov stability criterion f_a for insertion of a phase (Fa < -DFM) for a present unstable phase { 0.1 }
-           DFYw, ///< Insertion mole amount for water-solvent { 1e-6 }
-           DFYaq,///< Insertion mole amount for aqueous species { 1e-6 }
-           DFYid,///< Insertion mole amount for ideal solution components { 1e-6 }
-           DFYr, ///< Insertion mole amount for major solution components { 1e-6 }
-           DFYh, ///< Insertion mole amount for minor solution components { 1e-6 }
-           DFYc, ///< Insertion mole amount for single-component phase { 1e-6 }
-           DFYs, ///< Insertion mole amount used in PhaseSelect() for a condensed phase component  { 1e-7 }
+           DFM,  ///< Threshold for Karpov stability criterion f_a for insertion of a phase (Fa < -DFM) for a present unstable phase { 0.01 }
+           DFYw, ///< Insertion mole amount for water-solvent { 1e-5 }
+           DFYaq,///< Insertion mole amount for aqueous species { 1e-5 }
+           DFYid,///< Insertion mole amount for ideal solution components { 1e-5 }
+           DFYr, ///< Insertion mole amount for major solution components { 1e-5 }
+           DFYh, ///< Insertion mole amount for minor solution components { 1e-5 }
+           DFYc, ///< Insertion mole amount for single-component phase { 1e-5 }
+           DFYs, ///< Insertion mole amount used in PhaseSelect() for a condensed phase component  { 1e-6 }
            DB,   ///< Minimum amount of Independent Component in the bulk system composition (except charge "Zz") (moles) (1e-17)
-           AG,   ///< Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { -1 }
-           DGC,  ///< Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0.99 }
+           AG,   ///< Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { 1. }
+           DGC,  ///< Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { 0. }
            GAR,  ///< Initial activity coefficient value for major (M) species in a solution phase before LPP approximation { 1 }
            GAH,  ///< Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation { 1000 }
            GAS,  ///< Since r1583/r409: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup() { 1e-3 }.
                  ///< before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }
            DNS,  ///< Standard surface density (nm-2) for calculating activity of surface species (12.05)
-           XwMin,///< Cutoff mole amount for elimination of water-solvent { 1e-9 }
-           ScMin,///< Cutoff mole amount for elimination of solid sorbent {1e-7}
-           DcMin,///< Cutoff mole amount for elimination of solution- or surface species { 1e-30 }
-           PhMin,///< Cutoff mole amount for elimination of  non-electrolyte solution phase with all its components { 1e-10 }
-           ICmin,///< Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }
+           XwMin,///< Cutoff mole amount for elimination of water-solvent { 1e-13 }
+           ScMin,///< Cutoff mole amount for elimination of solid sorbent { 1e-13 }
+           DcMin,///< Cutoff mole amount for elimination of solution- or surface species { 1e-33 }
+           PhMin,///< Cutoff mole amount for elimination of  non-electrolyte solution phase with all its components { 1e-20 }
+           ICmin,///< Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 1e-5 }
            EPS,  ///< Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }
-           IEPS, ///< Convergence parameter of SACT calculation in sorption/surface complexation models { 0.01 to 0.000001, default 0.001 }
-           DKIN; ///< Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }
+           IEPS, ///< Convergence parameter of SACT calculation in sorption/surface complexation models { 1e-3; settable 0.01 to 1e-6 }
+           DKIN; ///< Tolerance on the amount of DC with two-side metastability constraints  { 1e-10 }
     char *tprn;       ///< internal
 
     // Enable (1, default) or disable (0) stall detection in MassBalanceRefinement(): with it
@@ -2150,6 +2168,32 @@ class TMultiBase
     char PSigm_; ///< Flag for using (+) or ignoring (-) specific surface free energies
     std::shared_ptr<BASE_PARAM> pa_standalone;
 
+    /// Work item 33. ScaleSystemToInternal()/RescaleSystemFromInternal() (ipm_simplex.cpp) guard
+    /// the pm.DUL[]/pm.PUL[] scaling with "< 1e6" so the sentinel meaning "no upper limit" is not
+    /// itself rescaled. That guard used to be RE-EVALUATED on whatever value was CURRENT at each
+    /// call, which is provably wrong once ScFact > 1: a genuine bound below 1e6 that crosses the
+    /// sentinel when multiplied, and an untouched value at or above 1e6, then occupy the SAME
+    /// post-scale range, and no threshold test on the post-scale value alone can separate them
+    /// (the ranges overlap on [1e6, 1e6*ScFact), and the ordinary sentinel 1e6 lies inside it).
+    ///
+    /// SO THE DECISION IS RECORDED, NOT RE-DERIVED - but recording only the DECISION is not
+    /// enough either, because a bound can be REWRITTEN between the two calls: Set_DC_limits(true)
+    /// (ipm_main.cpp, the warm pm.pNP path) writes pm.DUL[j] and pm.PUL[k] from INSIDE the scaled
+    /// region, for exactly the species that carry metastability restrictions. Replaying a stale
+    /// decision on those would be wrong in both directions. So both the pre-scale value and the
+    /// value this call LEFT are kept: an entry still holding what we left is restored VERBATIM
+    /// (exact - no multiply-then-divide rounding), and an entry that has moved since is a value
+    /// written in internal units, which takes the original test.
+    ///
+    /// Filled fresh by every ScaleSystemToInternal(); consumed and cleared by the matching
+    /// RescaleSystemFromInternal(). The two are 1:1 on this instance in every call path
+    /// (CalculateEquilibriumState(), CalculateEquilibriumStateOptima()) - never nested, never
+    /// re-entered - and an empty or mismatched vector falls back to the original test rather than
+    /// reading out of bounds.
+    std::vector<double> DUL_preScale_, DUL_postScale_;
+    std::vector<double> DLL_preScale_, DLL_postScale_;
+    std::vector<double> PUL_preScale_, PUL_postScale_;
+
     friend class TNode;
 protected:
     /// Default logger for ipm chemical
@@ -2341,6 +2385,38 @@ public:
     /// search in ipm_optima.cpp, so the two cannot disagree about the rank.
     /// \return N - rank, with rank and N returned in the out parameters.
     long int CertDualFreeDirs( const std::vector<double>& F, long int& rank, long int& nIC ) const;
+
+    /// The RANK trace record (Phase 3 WP2): what the present species' stoichiometry, and the
+    /// two normal-equation matrices each solver stage forms from it, actually look like at the
+    /// RETURNED answer pm.X[] - as opposed to dual_free_dirs above, which reads only the
+    /// INTERIOR species' columns. rank/sv_ratio/chg_res are properties of the geometry alone,
+    /// independent of any solver weight; cond_ipm/cond_mbr fold in the weight each stage's own
+    /// linear solve actually applies, so a system near-singular in the plain geometry can still
+    /// be well posed once the weight is included (a species riding a tight box collapses its own
+    /// column's effective magnitude) - or the reverse.
+    struct CertRankReport
+    {
+        long int rank = 0;            ///< numerical rank of A_present (present-species columns), row-scaled
+        long int of = 0;              ///< pm.N - the ambient dimension `rank` is measured against
+        long int pres = 0;            ///< number of present species, pm.X[j] > pm.DcMinM
+        double sv_ratio = -1.;        ///< sigma_min/sigma_max of the ROW-SCALED A_present; -1 if not computed
+        double sv_ratio_raw = -1.;    ///< the same, without row scaling; -1 if not computed
+        double chg_res = -1.;         ///< charge row's relative residual off the element rows' span; -1 if E<=0 or N-E<=0
+        int chg_span = 0;             ///< 1 when chg_res < 1e-10, i.e. the charge row IS a combination of the element rows
+        double cond_ipm = 1e300;      ///< cond(A_p diag(w) A_p^T), w = WeightMultipliers(false)'s shape at pm.X
+        double cond_ipm_jac = 1e300;  ///< the same, after symmetric Jacobi scaling
+        double cond_mbr = 1e300;      ///< cond(A_p diag(w) A_p^T), w = WeightMultipliers(true)'s shape at pm.X
+        double cond_mbr_jac = 1e300;  ///< the same, after symmetric Jacobi scaling
+    };
+
+    /// Fills a CertRankReport at the RETURNED pm.X[] - see CertRank() in ipm_main.cpp for the
+    /// construction of every field and why each is computed the way it is. REPORT-ONLY: reads
+    /// pm.A/pm.X/pm.DLL/pm.DUL/pm.RLC and writes nothing, including pm.W[] (WeightMultipliers()
+    /// itself is NOT called - the weight this computes is a local copy of its arithmetic, not a
+    /// second call to it, because pm.W[] is live solver scratch a report-only path must not
+    /// touch). Leaves `r` at its default (all-1e300/-1) if the guard at the top of the
+    /// implementation fails.
+    void CertRank( CertRankReport& r ) const;
 
     /// curv_min: the smallest eigenvalue, over every PRESENT multicomponent non-aqueous
     /// solution phase, of that phase's symmetrised finite-difference curvature block at the
