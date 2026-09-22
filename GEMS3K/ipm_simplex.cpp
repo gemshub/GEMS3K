@@ -905,8 +905,10 @@ void TMultiBase::MultiConstInit() // from MultiRemake
   pm.logYFk = -9.;
   pm.DXM = base_param()->DK;
 
-  //  ???????
-  pm.FX = 7777777.;
+  // "Total Gibbs energy not computed yet" - see kTotalGibbsEnergyUnset (ms_multi.h) for why the
+  // value is deliberately absurd, and for the defect that came of nothing ever testing for it.
+  // The original comment here was "???????".
+  pm.FX = kTotalGibbsEnergyUnset;
   if( pm.pH < -15. || pm.pH > 16.  )   // Check for trash in pH - bugfix 19.06.2013
       pm.pH = pm.Eh = pm.pe = 0.0;
   pm.YMET = 0;                      // always 0.0 ????

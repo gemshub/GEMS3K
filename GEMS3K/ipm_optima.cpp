@@ -6130,6 +6130,68 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     if( pa_p->DG > 1e-5 )
         RescaleSystemFromInternal( ScFact );
 
+    // pm.FX is the system's total Gibbs energy as a STORED field, and until here the Optima path
+    // never wrote it. That it is native-only was already known - ipm_main.cpp's CERT block says so
+    // in as many words ("pm.FX and pm.Falp are refreshed by the native path only, so a trace writer
+    // reading them would print stale values on Optima rows, the DC_G0() shape") - and the response
+    // was defensive: keep FX out of the trace and the certificate. What that left unaudited is that
+    // packDataBr() (node.cpp:560, `CNode->Gs = pmm->FX`) ALREADY publishes it, on every call, to
+    // every consumer of the documented interface: DATABR.Gs, GEM_to_MT()'s p_Gs, and the Gs field of
+    // every exported -dbr file. The instrument was protected and the product was not.
+    //
+    // WHAT WAS PUBLISHED. MultiConstInit() (ipm_simplex.cpp:909, under a comment reading "???????")
+    // seeds pm.FX = 7777777. as an unset marker; the native descent overwrites it (ipm_main.cpp:3700,
+    // :3791) and Optima did not. So DATABR.Gs was exactly 7777777. on AOP, SOP, HOP AND SHP -
+    // measured 2026-09-22 on seven projects spanning sorption, solid solutions, seawater and large
+    // multiphase, all four modes, every project, while TNode::Get_GibbsEnergy() (a RECOMPUTATION via
+    // TotalGibbsEnergy()) returned the right value and agreed with native's to eleven digits. HOP and
+    // SHP publish the sentinel too although native runs FIRST, because the Optima leg's own
+    // MultiConstInit() re-seeds FX after native's descent has set it - so on this field the hybrid
+    // modes are strictly worse than the native leg they are built on, which is worth remembering
+    // whenever "HOP >= native everywhere" is quoted: like the wall-time result of work item 37, that
+    // is a statement about the ANSWER.
+    //
+    // WHY NO GATE CAUGHT IT. mode_compare reads Get_GibbsEnergy() and freeze.sh parses that, so the
+    // freeze's G column is the recomputation and no scored column reads DATABR.Gs at all. The freeze
+    // is therefore blind to the defect AND to this fix - the same structural blindness as work item
+    // 33's one-ULP DUL/DLL regression, and the second finding in three days that only an instrument
+    // standing where a CALLER stands can reach. It was found by disbelieving a warm-standard answer
+    // digest that read an identical positive G on two unrelated chemistries.
+    //
+    // WHY HERE. After RescaleSystemFromInternal(), which divides pm.FX by ScFact itself
+    // (ipm_simplex.cpp) - that is how native's stored FX, written in internal units inside the
+    // descent, comes out in real units and matches the recomputation. Assigning BEFORE the rescale
+    // would therefore have published G/ScFact, and ScFact is 5.66-6.02 on the projects checked, not
+    // 1: the placement is load-bearing, not cosmetic. Placed last for the second reason too - every
+    // amount the post-solve tiers still move (pa_OptimaZeroAbsent, the extinction tiers above) is
+    // committed by now.
+    //
+    // WHY THIS VALUE. TotalGibbsEnergy() rather than GX(0) because it is exactly what
+    // TNode::Get_GibbsEnergy() calls, so the stored field and the recomputation agree BY
+    // CONSTRUCTION rather than by coincidence - two accessors for one quantity disagreeing silently
+    // is the whole defect being fixed here.
+    //
+    // WHY SAVED AND RESTORED. TotalGibbsEnergy() IS NOT A PURE READ - it opens with
+    // `for(i) pm.X[i] = pm.Y[i]` and then TotalPhasesAmounts(pm.X, pm.XF, pm.XFA), so it writes
+    // three arrays packDataBr() goes on to publish. Today that is value-neutral, because X == Y is
+    // an invariant here: the post-solve tiers resync X from Y at every branch that touches Y, and
+    // RescaleSystemFromInternal() divides X and Y by the same ScFact. But a fix whose correctness
+    // rests on an invariant maintained in four places elsewhere in this function will break silently
+    // the first time one of them changes, and the symptom would be a published composition quietly
+    // reverting to a pre-zeroing vector. Save and restore by copy instead - the same treatment, and
+    // for the same reason, as CertCurvMin() in ipm_main.cpp, which also writes solver state and
+    // restores it by copy rather than by recomputation. Three vectors once per solve is nothing
+    // against the solve itself.
+    {
+        std::vector<double> Xsave( pm.X,   pm.X   + pm.L );
+        std::vector<double> XFsave( pm.XF, pm.XF  + pm.FI );
+        std::vector<double> XFAsave( pm.XFA, pm.XFA + pm.FIs );
+        pm.FX = TotalGibbsEnergy();
+        for( long int j = 0; j < pm.L; j++ )    pm.X[j]   = Xsave[(size_t)j];
+        for( long int k = 0; k < pm.FI; k++ )   pm.XF[k]  = XFsave[(size_t)k];
+        for( long int k = 0; k < pm.FIs; k++ )  pm.XFA[k] = XFAsave[(size_t)k];
+    }
+
     NumIterFIA = pm.ITF;
     NumIterIPM = pm.ITG;
     pm.t_end = clock();

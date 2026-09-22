@@ -557,6 +557,19 @@ void TNode::packDataBr()
     CNode->IterDone = /*pmm->ITF+*/pmm->IT;   // Now complete number of FIA and IPM iterations
     // values
     CNode->Vs = pmm->VXc*1.e-6; // from cm3 to m3
+    // pm.FX is a STORED field, not a recomputation, and it is seeded each call with
+    // kTotalGibbsEnergyUnset. Publishing that marker as the system's Gibbs energy is what happened
+    // on every AOP/SOP/HOP/SHP call until 2026-09-22 (ipm_optima.cpp's closing note has the full
+    // measurement). Both solver paths now write pm.FX, so this branch is unreachable and is here to
+    // STAY unreachable: it converts "a solver forgot to price its answer" from a number that flows
+    // silently into a caller's mass-transport loop and its exported -dbr files into one line in the
+    // log. Checked with == because the marker is assigned verbatim, never computed into.
+    if( pmm->FX == kTotalGibbsEnergyUnset )
+        node_logger->error( "packDataBr(): total Gibbs energy is still kTotalGibbsEnergyUnset - the "
+                           "solver path that produced NodeStatusCH={} did not set pm.FX, so "
+                           "DATABR.Gs, GEM_to_MT()'s p_Gs and any exported -dbr carry a sentinel and "
+                           "not an energy. Use TNode::Get_GibbsEnergy() meanwhile; this is a bug.",
+                           CNode->NodeStatusCH );
     CNode->Gs = pmm->FX;
     CNode->Hs = pmm->HXc;
     CNode->IC = pmm->IC;

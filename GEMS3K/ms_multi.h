@@ -1533,6 +1533,24 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
 /// corpus lies between j_GEOTHERM (154 species, a 2.7x loss) and 07PSIna_G_mid_1
 /// (265 species, a 60x win) - which is why it is a named constant with an
 /// explicit off switch rather than a silent hardcode. See BASE_PARAM::OptimaDimReduce.
+/// The "total Gibbs energy not computed yet" marker that MultiConstInit() seeds pm.FX with
+/// (ipm_simplex.cpp), named here because until 2026-09-22 it was a bare 7777777. under a comment
+/// reading "???????" and was being PUBLISHED as an answer.
+///
+/// The VALUE is deliberately absurd and that is the good part of the design: a converged total
+/// Gibbs energy on this corpus is of order -5e3 J, so +7.777777e6 cannot be mistaken for one by
+/// eye, and its digits are greppable. Initialising to 0. instead would have looked plausible and
+/// hidden the defect indefinitely.
+///
+/// What was missing is that NOTHING TESTED IT. pm.FX is refreshed by the native descent only, so
+/// on every Optima-family mode this marker travelled out through packDataBr() as CNode->Gs - and
+/// therefore as GEM_to_MT()'s p_Gs and as the Gs field of every exported -dbr file - while
+/// TNode::Get_GibbsEnergy(), a recomputation, returned the right number. A marker whose whole
+/// purpose is to say "nobody computed this" is only worth having if something asks; packDataBr()
+/// now does. The Optima path also sets pm.FX properly (ipm_optima.cpp), so the guard should be
+/// silent - if it ever speaks, a path is returning an answer it never priced.
+constexpr double kTotalGibbsEnergyUnset = 7777777.;
+
 constexpr long int kOptimaDimReduceAutoMinDC  = 200;
 /// Pass count AUTO selects when the gate opens.
 constexpr long int kOptimaDimReduceAutoPasses = 8;
