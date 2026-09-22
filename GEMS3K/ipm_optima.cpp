@@ -6375,6 +6375,57 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
         ~HopLegGuard() { m->optima_hop_leg = prev; }
     } hopLegGuard( this, nativeOk );
 
+    // Work item 38: the per-leg record is written by a DESTRUCTOR, not at the end of the
+    // function, so that a call which THROWS is recorded too.
+    //
+    // WHY IT HAD TO MOVE. The first version wrote it just before `return`, and the
+    // !nativeOk branch below deliberately lets a failure propagate - so every failed
+    // two-leg call emitted nothing. Measured on the CalcColumn transport loop: 22 of 4200
+    // HOP solves errored and produced 4178 records, and a consumer summing them was
+    // summing only the calls that returned, with nothing in the record saying so. The
+    // count was recoverable (it equals the caller's own err count) but unmarked, which is
+    // this branch's recurring defect shape: an absent row and a measured one must not look
+    // alike. A destructor also means a future early return cannot silently skip it.
+    //
+    // WHAT A FAILED CALL CAN AND CANNOT REPORT. fiaO/ipmO are real: the Optima path's own
+    // catch(TError&) sets them before re-throwing, and those iterations are work actually
+    // spent - the same convention NumIterFIA/NumIterIPM already use for a discarded attempt
+    // above. timeOptima is NOT recoverable, because `calcTime +=` never completed; it is
+    // left at 0 and `failed=1` is what says the 0 is not a measurement. Do not later
+    // "improve" this by timing the throw - see the TIMES note below.
+    struct HopLegRecorder {
+        TMultiBase* m; bool warm, nok; const long int &fN, &iN, &fO, &iO;
+        const double &ct, tN; bool completed = false;
+        ~HopLegRecorder()
+        {
+            m->hop_split.valid      = true;
+            m->hop_split.failed     = !completed;
+            m->hop_split.warmNative = warm;
+            m->hop_split.nativeOk   = nok;
+            m->hop_split.fiaNative  = fN;
+            m->hop_split.ipmNative  = iN;
+            m->hop_split.fiaOptima  = fO;
+            m->hop_split.ipmOptima  = iO;
+            m->hop_split.timeNative = tN;
+            m->hop_split.timeOptima = completed ? ct - tN : 0.;
+            // A DECIDE record so the ITERATION split reaches a freeze the same way every
+            // other solver choice does, rather than needing its own harness. Costs
+            // nothing when GEMS3K_NATIVE_TRACE_FILE is unset.
+            //
+            // The two TIMES are deliberately NOT in this record and must not be added to
+            // it. Iteration counts are deterministic for a fixed input; wall times are
+            // not, so a `# dec` line carrying them would differ between any two freezes
+            // of identical code and turn a column whose whole job is to flag a mechanism
+            // behaving differently into noise. Same reason `dimreducepass` is excluded by
+            // freeze.sh (2026-09-12). The times are on hop_split for a caller that wants
+            // them, which is where a timing measurement belongs.
+            native_trace_decide( "hop-legsplit warm=%d nativeok=%d failed=%d "
+                                 "fian=%ld ipmn=%ld fiao=%ld ipmo=%ld",
+                                 warm ? 1 : 0, nok ? 1 : 0, completed ? 0 : 1,
+                                 (long)fN, (long)iN, (long)fO, (long)iO );
+        }
+    } legRecorder{ this, warmNative, nativeOk, fiaN, ipmN, fiaO, ipmO, calcTime, timeNativeLeg };
+
     if( !nativeOk )
     {
         // Nothing to fall back to - let a failure here propagate exactly
@@ -6432,34 +6483,8 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
     NumIterFIA = fiaN + fiaO;
     NumIterIPM = ipmN + ipmO;
 
-    // The same two legs kept APART, for a caller that needs a per-path cost
-    // rather than the call's total - work item 38. Recorded only; no solver
-    // decision reads it.
-    hop_split.valid      = true;
-    hop_split.warmNative = warmNative;
-    hop_split.nativeOk   = nativeOk;
-    hop_split.fiaNative  = fiaN;
-    hop_split.ipmNative  = ipmN;
-    hop_split.fiaOptima  = fiaO;
-    hop_split.ipmOptima  = ipmO;
-    hop_split.timeNative = timeNativeLeg;
-    hop_split.timeOptima = calcTime - timeNativeLeg;
-
-    // A DECIDE record so the ITERATION split reaches a freeze the same way every
-    // other solver choice does, rather than needing its own harness. Costs
-    // nothing when GEMS3K_NATIVE_TRACE_FILE is unset.
-    //
-    // The two TIMES are deliberately NOT in this record and must not be added to
-    // it. Iteration counts are deterministic for a fixed input; wall times are
-    // not, so a `# dec` line carrying them would differ between any two freezes
-    // of identical code and turn a column whose whole job is to flag a mechanism
-    // behaving differently into noise. Same reason `dimreducepass` is excluded by
-    // freeze.sh (2026-09-12). The times are on hop_split for a caller that wants
-    // them, which is where a timing measurement belongs.
-    native_trace_decide( "hop-legsplit warm=%d nativeok=%d fian=%ld ipmn=%ld fiao=%ld ipmo=%ld",
-                         warmNative ? 1 : 0, nativeOk ? 1 : 0, (long)fiaN, (long)ipmN,
-                         (long)fiaO, (long)ipmO );
-    return calcTime;
+    legRecorder.completed = true;       // see HopLegRecorder above - the record is written
+    return calcTime;                    // by its DESTRUCTOR, on this path and on a throw alike
 }
 
 #endif // USE_OPTIMA_SOLVER

@@ -524,7 +524,8 @@ long int TNode::GEM_Iterations( long int& PrecLoops_, long int& NumIterFIA_, lon
 // declaration in node.h and TMultiBase::HopLegSplit in ms_multi.h. Work item 38.
 bool TNode::GEM_IterationsHOP( long int& NumIterFIANative, long int& NumIterIPMNative,
                                long int& NumIterFIAOptima, long int& NumIterIPMOptima,
-                               double& TimeNative, double& TimeOptima ) const
+                               double& TimeNative, double& TimeOptima,
+                               bool* Failed ) const
 {
     const TMultiBase::HopLegSplit& s = multi_ptr()->hop_split;
     if( !s.valid )
@@ -535,6 +536,7 @@ bool TNode::GEM_IterationsHOP( long int& NumIterFIANative, long int& NumIterIPMN
     NumIterIPMOptima = s.ipmOptima;
     TimeNative = s.timeNative;
     TimeOptima = s.timeOptima;
+    if( Failed ) *Failed = s.failed;
     return true;
 }
 

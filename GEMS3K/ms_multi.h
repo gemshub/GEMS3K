@@ -2947,10 +2947,19 @@ protected:
     ///
     /// `valid` is false unless the LAST GEM_run() dispatched a two-leg mode;
     /// TNode::GEM_run() clears it before every dispatch so a single-leg call
-    /// cannot report a previous HOP call's split.
+    /// cannot report a previous HOP call's split. It is set from a DESTRUCTOR, so a
+    /// call that THROWS is recorded too, with `failed` true - see the HopLegRecorder
+    /// comment in CalculateEquilibriumStateHOP() for what such a record can and
+    /// cannot carry.
     struct HopLegSplit
     {
         bool valid = false;        ///< the last solve was HOP or SHP
+        /// The call did not return - it left by exception. The iteration counts are still
+        /// real work spent (the Optima path's own catch sets them before re-throwing), but
+        /// timeOptima is NOT recoverable and is left at 0: this flag is what says that 0 is
+        /// not a measurement. A caller summing splits over many solves must read it, or it
+        /// is summing only the calls that returned.
+        bool failed = false;
         bool warmNative = false;   ///< SHP (warm native leg) rather than HOP
         bool nativeOk = false;     ///< the native leg produced an answer to warm-start from
         long int fiaNative = 0;    ///< MBR iterations, native leg

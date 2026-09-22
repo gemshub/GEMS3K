@@ -601,9 +601,14 @@ public:
     /// \param NumIterFIANative,NumIterIPMNative  iterations in the native leg
     /// \param NumIterFIAOptima,NumIterIPMOptima  iterations in the Optima leg
     /// \param TimeNative,TimeOptima              seconds in each leg, same resolution as GEM_CalcTime()
+    /// \param Failed  optional: set true when that call left by EXCEPTION. Its iteration
+    ///        counts are still real work spent, but TimeOptima is then 0 and is not a
+    ///        measurement. A caller summing splits over many solves MUST read this, or it
+    ///        is silently summing only the calls that returned.
     bool GEM_IterationsHOP( long int& NumIterFIANative, long int& NumIterIPMNative,
                             long int& NumIterFIAOptima, long int& NumIterIPMOptima,
-                            double& TimeNative, double& TimeOptima ) const;
+                            double& TimeNative, double& TimeOptima,
+                            bool* Failed = nullptr ) const;
 
     /// (3) Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
     ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
