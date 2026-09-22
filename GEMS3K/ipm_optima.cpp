@@ -6350,6 +6350,11 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
     // than several hundred (section 27).
     pm.pNP = nativeOk ? 1 : 0;
     long int fiaO = 0, ipmO = 0;
+    // Everything accumulated into calcTime up to here belongs to the native leg
+    // (including a cold retry after a failed warm one, which re-assigns rather
+    // than adds). Work item 38 - see HopLegSplit in ms_multi.h for why the sum
+    // reported below is not enough on its own.
+    const double timeNativeLeg = calcTime;
 
     // Tell the Optima leg it is running on top of native's own assemblage,
     // which is what lets the dimension reduction - otherwise cold-start-only
@@ -6426,6 +6431,34 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
     // discarded).
     NumIterFIA = fiaN + fiaO;
     NumIterIPM = ipmN + ipmO;
+
+    // The same two legs kept APART, for a caller that needs a per-path cost
+    // rather than the call's total - work item 38. Recorded only; no solver
+    // decision reads it.
+    hop_split.valid      = true;
+    hop_split.warmNative = warmNative;
+    hop_split.nativeOk   = nativeOk;
+    hop_split.fiaNative  = fiaN;
+    hop_split.ipmNative  = ipmN;
+    hop_split.fiaOptima  = fiaO;
+    hop_split.ipmOptima  = ipmO;
+    hop_split.timeNative = timeNativeLeg;
+    hop_split.timeOptima = calcTime - timeNativeLeg;
+
+    // A DECIDE record so the ITERATION split reaches a freeze the same way every
+    // other solver choice does, rather than needing its own harness. Costs
+    // nothing when GEMS3K_NATIVE_TRACE_FILE is unset.
+    //
+    // The two TIMES are deliberately NOT in this record and must not be added to
+    // it. Iteration counts are deterministic for a fixed input; wall times are
+    // not, so a `# dec` line carrying them would differ between any two freezes
+    // of identical code and turn a column whose whole job is to flag a mechanism
+    // behaving differently into noise. Same reason `dimreducepass` is excluded by
+    // freeze.sh (2026-09-12). The times are on hop_split for a caller that wants
+    // them, which is where a timing measurement belongs.
+    native_trace_decide( "hop-legsplit warm=%d nativeok=%d fian=%ld ipmn=%ld fiao=%ld ipmo=%ld",
+                         warmNative ? 1 : 0, nativeOk ? 1 : 0, (long)fiaN, (long)ipmN,
+                         (long)fiaO, (long)ipmO );
     return calcTime;
 }
 

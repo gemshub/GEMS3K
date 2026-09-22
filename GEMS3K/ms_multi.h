@@ -2926,7 +2926,41 @@ protected:
     /// uniformly favourable. Default HOP behaviour is unchanged by this flag.
     bool optima_hop_leg = false;
 
-
+    /// Per-leg cost of the last two-leg (HOP/SHP) solve - work item 38.
+    ///
+    /// CalculateEquilibriumStateHOP() reports NumIterFIA = fiaN + fiaO and
+    /// NumIterIPM = ipmN + ipmO, one number each, and TNode::GEM_Iterations()
+    /// passes those on. That total is the TRUE cost of the call and stays as it
+    /// is - but it makes a per-iteration cost derived from it a BLEND of two
+    /// solvers, which is exactly the number the warm standard could not use:
+    /// measured over a transport loop, an SHP iteration came out at 223.1 us on
+    /// CalcColumn and 511.3 us on LimSeawat1 against 17.5 and 14.0 for a native
+    /// one (plan v5 section 130.2a), and those two figures cannot be attributed
+    /// to a path while the legs are summed. Native's own per-iteration cost is
+    /// nearly constant across the two chemistries (1.25x spread) and the Optima
+    /// family's is not (2.3-2.9x), so the blend cannot be calibrated away either.
+    ///
+    /// Recorded, never acted on: nothing in the solver reads these fields, so
+    /// they add no wall-clock-dependent decision - which matters, because every
+    /// parallel benchmark freeze depends on the solver having exactly one of
+    /// those (pa_OptimaMaxSeconds, off).
+    ///
+    /// `valid` is false unless the LAST GEM_run() dispatched a two-leg mode;
+    /// TNode::GEM_run() clears it before every dispatch so a single-leg call
+    /// cannot report a previous HOP call's split.
+    struct HopLegSplit
+    {
+        bool valid = false;        ///< the last solve was HOP or SHP
+        bool warmNative = false;   ///< SHP (warm native leg) rather than HOP
+        bool nativeOk = false;     ///< the native leg produced an answer to warm-start from
+        long int fiaNative = 0;    ///< MBR iterations, native leg
+        long int ipmNative = 0;    ///< IPM descent iterations, native leg
+        long int fiaOptima = 0;    ///< MBR-equivalent iterations reported by the Optima leg
+        long int ipmOptima = 0;    ///< Optima iterations (including a failed, discarded attempt)
+        double timeNative = 0.;    ///< seconds in the native leg, as CalculateEquilibriumState() reports
+        double timeOptima = 0.;    ///< seconds in the Optima leg
+    };
+    HopLegSplit hop_split;
 
     MULTI pm;
     MULTI *pmp;

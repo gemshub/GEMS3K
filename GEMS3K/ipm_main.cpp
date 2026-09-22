@@ -1572,6 +1572,50 @@ bool TMultiBase::MassBalanceReproject( double* amt )
     // Short of a full repair, fall back to the single-pass result - see BOUNDED above.
     if( improved && !( relCur < 1. ) && !Xsingle.empty() )
     {
+        // DIAGNOSTIC ONLY - this record GATES NOTHING and the discard below is
+        // unconditional, exactly as before it was added. Work item 40 (plan v5 §131,
+        // owner decision 2026-09-22) BLOCKED the rule that would have used these two
+        // counts to decide whether to keep the multi-pass repair: it detects one
+        // structural event exactly (an IC left with a single carrier where the single
+        // pass left several - 3 of 3, 90 sweep/path pairs, no false positives), but it
+        // was FITTED on those three cases, it succeeds on the benefit case only by never
+        // firing there, and the case that blocked it is a DIFFERENT mechanism (harm at
+        // single-carrier 0 -> 0 and rank 5 -> 5), which no retuning of this counter can
+        // reach. What is safe today is making the event VISIBLE on systems nobody has
+        // run yet, so a second, independent detector has data to be built against.
+        //
+        // The record is emitted at EVERY call site, not only the in-solve one the
+        // blocked patch exempted from the bound - a diagnostic that only fires where a
+        // mechanism was already suspected cannot find it anywhere else. Its fields are
+        // the blocked patch's, in that order, so the two arms read straight across; the
+        // patch's OWN records were renamed to mbreproject-rulekept/-rulediscarded when
+        // this shipped, because a scratch arm and the tree it is scored against must not
+        // emit the same record name - the ladder's "did the mechanism actually run"
+        // check greps for it, and a name both arms produce would make that check pass
+        // for a build in which the rule was not present at all.
+        //
+        // Cost: the O(N*L) count runs only when the trace is open AND a multi-pass
+        // repair was actually discarded. Zero when GEMS3K_NATIVE_TRACE_FILE is unset.
+        if( nPass > 1 && native_trace_file() )
+        {
+            const double thr = std::min( pm.lowPosNum, pm.DcMinM );
+            auto singleCarrierICs = [&]( const double* x ) {
+                long int ns = 0;
+                for( long int i = 0; i < N; i++ )
+                {
+                    long int c = 0;
+                    for( long int j = 0; j < L && c < 2; j++ )
+                        if( pm.A[i + j*N] != 0. && x[j] > thr ) c++;
+                    if( c == 1 ) ns++;
+                }
+                return ns;
+            };
+            const long int singleS = singleCarrierICs( Xsingle.data() );
+            const long int singleK = singleCarrierICs( amt );
+            native_trace_decide( "mbreproject-partialdiscarded species=%ld passes=%ld "
+                                 "relsingle=%.3e relkept=%.3e singlecarrier=%ld>%ld",
+                                 (long)N, (long)nPass, relSingle, relCur, singleS, singleK );
+        }
         for( long int j = 0; j < L; j++ ) amt[j] = Xsingle[(size_t)j];
         relCur = relSingle; absCur = absSingle; nPass = 1;
     }

@@ -585,6 +585,26 @@ public:
     /// \param NumIterIPM  Total number of performed IPM main descent algorithm iterations.
     long int GEM_Iterations( long int& PrecLoops, long int& NumIterFIA, long int& NumIterIPM );
 
+    /// To obtain the last GEM_run() call's cost split between its NATIVE and its OPTIMA leg,
+    /// for the two-leg modes (NEED_GEM_HOP, NEED_GEM_SHP) only.
+    ///
+    /// GEM_Iterations() and GEM_CalcTime() report the call's TOTAL, which is its true cost but
+    /// makes any per-iteration figure derived from it a BLEND of two solvers with very different
+    /// per-iteration costs - the number a transport loop could not attribute to a path (see
+    /// TMultiBase::HopLegSplit). This reports the same two legs apart.
+    ///
+    /// The Optima leg's iterations include a failed, discarded attempt where one occurred: those
+    /// are real work spent, and only the STATE that attempt produced is thrown away.
+    ///
+    /// \return false - and every output left untouched - when the last GEM_run() was not a
+    ///         two-leg mode, so a single-leg call can never report a previous HOP call's split.
+    /// \param NumIterFIANative,NumIterIPMNative  iterations in the native leg
+    /// \param NumIterFIAOptima,NumIterIPMOptima  iterations in the Optima leg
+    /// \param TimeNative,TimeOptima              seconds in each leg, same resolution as GEM_CalcTime()
+    bool GEM_IterationsHOP( long int& NumIterFIANative, long int& NumIterIPMNative,
+                            long int& NumIterFIAOptima, long int& NumIterIPMOptima,
+                            double& TimeNative, double& TimeOptima ) const;
+
     /// (3) Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
     ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
     ///                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance

@@ -342,6 +342,12 @@ long int TNode::GEM_run_single( bool uPrimalSol )
                 pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
         }
 
+        // Work item 38: invalidate the previous call's per-leg split BEFORE the
+        // dispatch below, so only a mode that actually ran two legs can report
+        // one. Reusing a node is the normal pattern here, so a stale split would
+        // otherwise be attributed to whatever mode ran last.
+        multi_ptr()->hop_split = TMultiBase::HopLegSplit();
+
         // GEM IPM calculation of equilibrium state - AOP/SOP dispatch to
         // the Optima-based solver (ipm_optima.cpp) instead of GEMS3K's own
         // IPM/MBR loop; only meaningful if built with USE_OPTIMA_SOLVER. If
@@ -512,6 +518,24 @@ long int TNode::GEM_Iterations( long int& PrecLoops_, long int& NumIterFIA_, lon
     NumIterFIA_ = NumIterFIA;
     NumIterIPM_ = NumIterIPM;
     return NumIterFIA+NumIterIPM;
+}
+
+// The last two-leg (HOP/SHP) call's cost, native leg and Optima leg apart - see the
+// declaration in node.h and TMultiBase::HopLegSplit in ms_multi.h. Work item 38.
+bool TNode::GEM_IterationsHOP( long int& NumIterFIANative, long int& NumIterIPMNative,
+                               long int& NumIterFIAOptima, long int& NumIterIPMOptima,
+                               double& TimeNative, double& TimeOptima ) const
+{
+    const TMultiBase::HopLegSplit& s = multi_ptr()->hop_split;
+    if( !s.valid )
+        return false;               // the last solve was not two-leg - leave the outputs alone
+    NumIterFIANative = s.fiaNative;
+    NumIterIPMNative = s.ipmNative;
+    NumIterFIAOptima = s.fiaOptima;
+    NumIterIPMOptima = s.ipmOptima;
+    TimeNative = s.timeNative;
+    TimeOptima = s.timeOptima;
+    return true;
 }
 
 // Extracting and packing GEM IPM results into work DATABR structure
