@@ -963,6 +963,39 @@ public:
     long int Get_solver_L() const
     { return multi_ptr()->GetPM()->L; }
 
+    /// Geometry and conditioning of the present-species stoichiometry at the RETURNED
+    /// answer - the same TMultiBase::CertRank() report the native trace's RANK line
+    /// carries, reachable from a caller that is not the trace.
+    ///
+    /// WHY THIS EXISTS. The RANK record is written only when GEMS3K_NATIVE_TRACE_FILE is
+    /// set, i.e. the only way to read sigma_min/sigma_max was to dump a trace and parse it.
+    /// In a transport loop that is one RANK line per solve - thousands of them per run, for
+    /// two numbers - and this branch has ~2 GB of disk. Work item 38 asks for that ratio as
+    /// a COLUMN of the warm standard, per step, which wants an accessor and not a parser.
+    ///
+    /// REPORT-ONLY, and that is a property of CertRank() itself rather than a promise made
+    /// here: it reads pm.A/pm.X/pm.DLL/pm.DUL/pm.RLC and writes nothing, including pm.W[].
+    /// Nothing in the solver calls it, so no solver decision depends on it.
+    ///
+    /// NOT FREE. CertRank() is a modified Gram-Schmidt over the present columns plus two
+    /// N x N conditioning estimates, O(pres * N^2). That is small against a solve but it is
+    /// not zero, so a caller timing anything must call it on a run whose wall it does not
+    /// quote - transport_loop.cpp gates it behind NG_RANK for exactly that reason and voids
+    /// its own wall column when it is on.
+    ///
+    /// \return false when there is no state to report (no pm.X/pm.A, or pm.N <= 0), in
+    /// which case `r` is left at its defaults - all sentinels, never zeros, so an absent
+    /// reading cannot be averaged in as "perfectly conditioned".
+    bool Get_CertRank( TMultiBase::CertRankReport& r ) const
+    {
+        r = TMultiBase::CertRankReport();
+        const MULTI* mp = multi_ptr() ? multi_ptr()->GetPM() : nullptr;
+        if( !mp || !mp->X || !mp->A || mp->N <= 0 )
+            return false;
+        multi_ptr()->CertRank( r );
+        return true;
+    }
+
     /// Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa)
     /// from the DATACH structure.
     /// \param xCH is the DC DCH index
