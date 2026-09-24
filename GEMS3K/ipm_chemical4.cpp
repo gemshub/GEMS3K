@@ -27,6 +27,7 @@
 //
 
 #include "ms_multi.h"
+#include "v_service.h"   // char_array_to_string(), for the degenerate-box DECIDE payload
 
 /// \return status code (0 if o.k., non-zero values if there were problems
 ///     with kinetic/metastability models)
@@ -51,10 +52,80 @@
 /// otherwise the rate calculation would advance twice per step. (Pre-existing and NOT changed here:
 /// SHP's cold-native retry after a failed warm leg calls CalculateEquilibriumState() a second time
 /// and so does advance it twice; no corpus project exercises that path, since none uses kinetics.)
+/// Separator-safe name for a comma-joined DECIDE payload - a DELIBERATE COPY of
+/// ipm_main.cpp's trace_safe_name() (work item 34), not a refactor of it: that one is
+/// file-static and feeds the scored `# key`/`# cert` lines, which must stay byte-identical.
+/// Corpus names carry ',', ':', '=' and spaces (`Am(CO3)1.5(a,h)`, `2,3-Dmp@`,
+/// `Alkali feldspar`), and this payload joins with ',' inside ' '-separated fields.
+static std::string kinm_safe_name( std::string s )
+{
+    while( !s.empty() && ( s.back() == ' ' || s.back() == '\t' || s.back() == '\0' ) ) s.pop_back();
+    std::string t; bool sp = false;
+    for( char c : s )
+    {
+        if( c == ' ' || c == '\t' ) { sp = true; continue; }
+        if( sp && !t.empty() ) t += '_';
+        sp = false;
+        t += ( c == ',' || c == ':' || c == '=' ) ? '/' : c;
+    }
+    return t.empty() ? std::string( "-" ) : t;
+}
+
 void TMultiBase::RunKineticsStep()
 {
     // New: Run of TKinMet class library
     ipm_logger->trace("kMM: {}  ITau: {}   kTau: {}   kdT: {}", pm.pKMM, pm.ITau, pm.kTau, pm.kdT);
+
+    // DEGENERATE-BOX DETECTION, plan v5 s136.13 (owner, 2026-09-25: "it is important when running
+    // RT that the problem doesn't fall into these boxes"). REPORT-ONLY: nothing below writes solver
+    // state, and the snapshot is taken only when the body that follows will actually run, so this is
+    // exactly zero cost with kinetics off - which is every corpus project.
+    //
+    // WHY HERE, and why this is the only place it can be done at all:
+    //
+    //  * THIS IS THE SITE THAT CREATES THE COLLAPSE. TKinMet::SetMetCon() sets nPll = nPul in every
+    //    live branch (s_kinmet.cpp ~1005-1055) and writes them straight into pm.DUL/pm.DLL through
+    //    arnxul/arnxll. The step that creates a zero-width box SUCCEEDS and reports nothing, so the
+    //    state is invisible where it is made. A later failing solve surfaces as E04IPM (native MBR)
+    //    or E90IPM (Optima), neither of which names the box. That is what this warning exists to fix.
+    //
+    //    IT DOES NOT CLAIM TO BE THE CAUSE OF THOSE FAILURES - that was measured and REFUTED
+    //    (handoff 2026-09-24 s14.3, NG_SUPPLY, both arms). On LimSeawat1 the shipped cold run fails
+    //    with ordered dolomite pinned at 1e-08 while every element residual is 7-9 orders above its
+    //    demand (nothing is over-subscribed), and the unconstrained-first-step variant fails at a
+    //    node with NO pinned phase at all. The first failure is also the very NEXT solve, not a
+    //    distant one. So this reports a real and otherwise undiagnosable state; the causal chain
+    //    from it to a given failure is NOT established and must not be asserted here.
+    //
+    //  * IT IS ALREADY SHARED BY BOTH SOLVER FAMILIES. RunKineticsStep() is called from exactly two
+    //    places - ipm_simplex.cpp (native) and ipm_optima.cpp (Optima) - so one site serves both.
+    //    That matters: on the LimSeawat1 fixture the two families fail on the SAME 380 of 420
+    //    solves, so a native-only site would serve half the cases.
+    //
+    //  * AND IT IS THE ONLY PLACE THE PROVENANCE SURVIVES. A collapsed box has THREE producers:
+    //    the project file (deliberate suppressions), ExcludeRedundantDCs() (which sets
+    //    DLL = DUL = 0, ipm_main.cpp) and the rate law. Only the first two can be legitimate, and
+    //    nothing in the data says who wrote a value - arnxul/arnxll are raw pointers into
+    //    pm.DUL/pm.DLL, and pm.RLC[] records only WHETHER a limit applies, never who set it.
+    //    But both other producers have already run by the time this function is entered (see this
+    //    function's own placement note above), so DIFFERENCING THE BOUNDS ACROSS THIS ONE CALL
+    //    separates all three. Downstream it is lost for good: packDataBr() copies pm.DUL into
+    //    CNode->dul and every producer's output becomes an indistinguishable number in one array.
+    //    Measured on LimSeawat1 (plan v5 s136.13c): of nine collapsed species, the eight deliberate
+    //    suppressions (CO2 CH4 H2 N2 O2 H2S Arg Mgs, all pinned at 0) are unchanged across the call
+    //    and stay silent; ordered dolomite goes 3.9046380e-01 -> 1.0000000e-08 and warns.
+    //
+    // ZERO WIDTH IS TESTED EXACTLY, not against a tolerance: SetMetCon() assigns nPll = nPul, the
+    // same double, so the degenerate case is exact. A narrow-but-nonzero box is a different and
+    // debatable thing and is deliberately NOT flagged here.
+    const bool kinmWillRun = ( pm.pKMM < 2 ) && pm.DUL && pm.DLL && pm.L > 0;
+    std::vector<double> kinmUl0, kinmLl0;
+    if( kinmWillRun )
+    {
+        kinmUl0.assign( pm.DUL, pm.DUL + pm.L );
+        kinmLl0.assign( pm.DLL, pm.DLL + pm.L );
+    }
+
     if( pm.pKMM < 2 )
     {
         if( pm.ITau < 0 || pm.pKMM != 1 )
@@ -65,6 +136,40 @@ void TMultiBase::RunKineticsStep()
         }
         else if( pm.ITau >= 0 ) {
             CalculateKinMet( LINK_PP_MODE );   // Rates and metast. constraints at time step
+        }
+    }
+
+    if( kinmWillRun )
+    {
+        std::string list; long int nDegen = 0; double firstVal = 0.; std::string firstName;
+        for( long int j = 0; j < pm.L; j++ )
+        {
+            const double u = pm.DUL[j], l = pm.DLL[j];
+            if( u != l )
+                continue;                                   // not a zero-width box
+            if( u == kinmUl0[(size_t)j] && l == kinmLl0[(size_t)j] )
+                continue;                                   // collapsed before this call - not ours
+            const std::string nm = kinm_safe_name( char_array_to_string( pm.SM[j], MAXDCNAME ) );
+            if( nDegen == 0 ) { firstName = nm; firstVal = u; }
+            if( nDegen < 24 ) { if( !list.empty() ) list += ','; list += nm; }
+            nDegen++;
+        }
+        if( nDegen > 0 )
+        {
+            if( nDegen > 24 ) list += ",...";
+            // Named, at the step that created it, with both downstream error codes spelled out so a
+            // reader who later meets one of them can find their way back here.
+            ipm_logger->warn( "RunKineticsStep: the kinetic rate law pinned {} species at a ZERO-WIDTH "
+                              "metastability box (dul == dll) this step - {}. Such a species cannot "
+                              "change amount at all until the rate law next rewrites its bounds. This "
+                              "step itself SUCCEEDED; the state is reported here because no later "
+                              "message names it - if a subsequent solve fails as E04IPM (mass balance, "
+                              "native) or E90IPM (did not converge, Optima), look here first. This is "
+                              "a report, NOT a diagnosis: a zero-width box is not known to cause those "
+                              "failures. First: {} at {:.6e} mol.",
+                              nDegen, list, firstName, firstVal );
+            native_trace_decide( "degenbox n=%ld first=%s val=%.6e list=%s",
+                                 (long)nDegen, firstName.c_str(), firstVal, list.c_str() );
         }
     }
 }
