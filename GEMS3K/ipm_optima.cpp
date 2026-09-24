@@ -3786,6 +3786,27 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                   stallWatch->timedOut ? "the wall-clock budget"
                                                        : "a window with no meaningful progress",
                                   stallWatch->window );
+                // ... and into the TRACE as a DECIDE, not only into the log. This site abandons a
+                // solve and hands it to the retry tiers, i.e. it changes both the outcome and the
+                // cost - CLAUDE.md s4's rule for where a DECIDE belongs - and it was the one such
+                // site with no record, so the freeze's `# dec` census could not see it at all and
+                // no corpus-scale question about this guard was answerable without scraping logs.
+                // Opened by work item 42b (plan v5 s136.8): the guard spends pa_OptimaStallWindow
+                // iterations PER WINDOW deciding, and a stall costs at least TWO windows - the first
+                // survives and rolls the reference forward, the second declares it. This record is
+                // what established that: on LimBrine it reads window=500 run=500 iters=1000, so the
+                // 1087-iteration cold solve is ONE abandoned solve spanning two windows plus an
+                // 87-iteration re-solve, not two abandoned solves as the arithmetic alone suggested.
+                // Whether that shape is corpus-wide or one fixture's quirk needs this record to ask.
+                // `iters` is Optima's own count for the abandoned solve; `run` is how far into the
+                // current window it got; `kind` separates the two ways this fires, because a
+                // wall-clock timeout is not a stall and must never be pooled with one (and
+                // pa_OptimaMaxSeconds is off by default, so `kind=timeout` should be absent).
+                native_trace_decide( "optimastall kind=%s window=%ld run=%ld iters=%ld"
+                                     " besterr=%.6e bestcomp=%.6e",
+                                     stallWatch->timedOut ? "timeout" : "stall",
+                                     (long)stallWatch->window, (long)stallWatch->run,
+                                     (long)r.iterations, stallWatch->bestErr, stallWatch->bestComp );
                 r.succeeded = false;
             }
         };
