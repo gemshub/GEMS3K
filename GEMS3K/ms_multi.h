@@ -1532,6 +1532,75 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// Trailing member: GEMSGUI serialises BASE_PARAM positionally.
     long int LpDualFillout = 0;
 
+    /// pa_FilloutBudget: cap how much the class fill-out may perturb the MASS BALANCE, as a
+    /// FRACTION of each element's own bulk amount. Native cold (AIA) path only, right after
+    /// DC_RaiseZeroedOff(); HOP/SHP's native leg inherits it. **DEFAULT 0 = OFF.**
+    ///
+    /// > IT WAS MEANT TO SHIP ON (owner, 2026-09-25, "ship it") AND IT DID NOT, because `ctest` came
+    /// back RED at 0.01 and CLAUDE.md s2 says a red gate is not overridden by the ship rule:
+    /// **ci.baseline 261 failing checks - 224 ANSWER, 33 COST, 3 STATUS, 1 pH** - plus proposed.aop's
+    /// physics check `crossing_T11`. The answer moves are small (Vs ~1e-8 relative, e.g. f_GEOTHERM
+    /// 1.594511804e-01 -> 1.594511917e-01) but the scored tolerance is 1e-9, so they count.
+    /// THE OPEN QUESTION THAT DECIDES IT (plan v5 138.10): native's stopping test is tolerance-limited
+    /// and 20 of 42 projects are count-unstable, so a start change redraws where the loop stops -
+    /// these 224 rows may be that known noise rather than a worse answer. Compare each move against
+    /// THAT PROJECT'S OWN jitter spread before calling it a regression, as CLAUDE.md s5 requires.
+    /// Until that is done the field stays 0.
+    /// A CORPUS SWEEP SCORING ONLY G AT 1e-9 FOUND ONE MOVED ROW; ci.baseline scores Vs too and found
+    /// 224. The sweep was too narrow - which is why the suite caught this and the sweep did not.
+    ///
+    /// WHY A JOINT BUDGET AND NOT A PER-SPECIES CAP. DC_RaiseZeroedOff() raises every species the
+    /// LP zeroed to a per-class constant, and those constants routinely ask for more of an element
+    /// than the system contains. Measured 2026-09-25 over 74 projects: EVERY project over-subscribes
+    /// at least one element, by a median of 48.9x and a maximum of 6.68e+09x, and the count of
+    /// over-subscribed elements scales with species count (median 60 elements on projects of 200+
+    /// species, 6 below that). Capping each species at PhaseInsertionCeiling() - the most the bulk
+    /// could supply to THAT species alone - only reaches a median of 3.25x and leaves 52 of 72
+    /// projects over, because the constraint being violated is a SUM over species and a per-species
+    /// bound cannot enforce a sum (plan v5 138.5).
+    ///
+    /// THE RULE. The LP solution satisfies A n = b exactly, so every bit of the excess comes from
+    /// the raise. With raised_i = sum_j (Y_j - Y_lp_j) * a(j,i), scale each raised species by the
+    /// tightest element it consumes, s_j = min_i( f * B_i / raised_i ), capped at 1. Because
+    /// raised_i is itself the sum over species, the per-species minimum GUARANTEES
+    /// sum_j s_j * raised_ji <= f * B_i - the joint bound holds by construction, not by tuning.
+    /// Measured worst ratio comes back at exactly 1 + f to six decimals on every project.
+    /// Dimensionless: f is a fraction of the project's own bulk, so it cannot become the fixed
+    /// absolute amount that is plan v5 section 76's defect.
+    ///
+    /// MEASURED AT 0.01, 74 projects, native cold AIA, one draw each (plan v5 138.8):
+    /// ITF (mass balance) 571 -> 314, 0.550x, better on 42 projects and worse on 3; ITG (IPM)
+    /// 0.984x and a wash per project (24 better, 28 worse, 22 same) - so the win is the
+    /// MASS-BALANCE STAGE, not the solve. One G row moves (07PSIna_G_vcomplex_0 @ 80 C) and one
+    /// status row moves, f_Solvus_G_test3, which is a coin flip at the SHIPPED settings (4 of 9 OK
+    /// under a 1e-15 nudge, Eh spread 1.68 V) and is owner-deferred on that basis (138.6).
+    ///
+    /// WHY 0.01 - TUNED over six decades, 2026-09-25 (plan v5 138.9), all three corpora, native
+    /// cold AIA, one draw per project, against f = 0 as the baseline:
+    ///
+    ///     f       answers lost   G moved   ITF ratio   ITG ratio   ITF better/worse
+    ///     1e-6         3            7        0.657       1.010         52/10
+    ///     1e-4         1            6        0.585       0.975         44/4
+    ///     1e-3         1            3        0.564       0.948         41/4
+    ///     1e-2         1            1        0.550       0.984         42/3     <- default
+    ///     1e-1         1            2        0.529       0.991         45/0
+    ///     1            1            3        0.538       1.026         42/0
+    ///
+    /// "TIGHTER IS ALWAYS BETTER" IS FALSE, and the sweep is what shows it: at f = 1e-6 the budget
+    /// starves the start and loses THREE answers instead of one, with ITG turning worse. The trend
+    /// reverses below about 1e-4. An earlier note here claimed the monotone reading from two points
+    /// an order apart; it was wrong and this table replaces it.
+    /// 1e-4 ... 1e-1 is a PLATEAU - every value there loses the same single answer (f_Solvus_G_test3,
+    /// a coin flip at the shipped settings, 138.6) and cuts ITF by 41-47 %. Within that plateau 0.01
+    /// has the FEWEST moved G rows (1, against 3 at 1e-3 and 6 at 1e-4), which is what the ship rule
+    /// scores after answers; 1e-3 is marginally cheaper overall (total iterations 0.929 vs 0.963) and
+    /// is the value to revisit if cost ever outranks row identity. The default is therefore inside a
+    /// measured plateau, not at an untested edge.
+    /// GEMS3K_FILLOUT_BUDGET overrides this field for a throwaway arm (negative = unset, so 0
+    /// stays a usable arm); that is how the default was chosen and how it should be re-chosen.
+    /// Trailing member: GEMSGUI serialises BASE_PARAM positionally.
+    double FilloutBudget = 0.;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -3219,6 +3288,13 @@ protected:
     /// BASE_PARAM for every measured number and why it is off; the definition in ipm_main.cpp for
     /// the formula and its three guards (big-M, composition ceiling, class floor).
     void LpDualFillout( const std::vector<double>& yLp );
+    /// pa_FilloutBudget (default 0.01): scale the class fill-out so it perturbs each element's
+    /// mass balance by at most that fraction of the element's own bulk amount. See the field's doc
+    /// comment in BASE_PARAM for the measurement and why a per-species cap cannot do this job.
+    void ApplyFilloutBudget( const std::vector<double>& yLp );
+    /// The effective pa_FilloutBudget - the field, unless GEMS3K_FILLOUT_BUDGET overrides it.
+    /// The call site and the mechanism must both read THIS, never the field directly.
+    double FilloutBudgetValue() const;
     /// Effective fill-out mode: the field, unless GEMS3K_LPDUAL_FILLOUT overrides it.
     long int LpFilloutMode() const;
     /// Record of every prediction against the amount the solve converged to, written at the ANSWER
@@ -3457,7 +3533,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit, f_pa_OptimaZeroAbsent,
     f_pa_OptimaReadmitSeed,
     f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn, f_pa_ColdRetryNudges,
-    f_pa_OptimaPreSolveFirstIters, f_pa_LpDualFillout
+    f_pa_OptimaPreSolveFirstIters, f_pa_LpDualFillout, f_pa_FilloutBudget
 
 } MULTI_DYNAMIC_FIELDS;
 

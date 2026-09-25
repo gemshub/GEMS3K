@@ -191,7 +191,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaDimReduceTol=%.6e pa_MbPivotSplit=%ld pa_OptimaZeroAbsent=%ld"
              " pa_OptimaReadmitSeed=%.6e pa_IpmStallWindow=%d pa_MbReproject=%d"
              " pa_DeterminacyWarn=%.6e pa_ColdRetryNudges=%ld"
-             " pa_OptimaPreSolveFirstIters=%ld pa_LpDualFillout=%ld\n",
+             " pa_OptimaPreSolveFirstIters=%ld pa_LpDualFillout=%ld"
+             " pa_FilloutBudget=%.6e\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -211,7 +212,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaZeroAbsent, pa->OptimaReadmitSeed,
              (int)pa->IpmStallWindow, (int)pa->MbReproject, pa->DeterminacyWarn,
              (long)pa->ColdRetryNudges, (long)pa->OptimaPreSolveFirstIters,
-             (long)pa->LpDualFillout );
+             (long)pa->LpDualFillout, pa->FilloutBudget );
 
     // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
     //
@@ -3213,12 +3214,17 @@ to_text_file( "MultiDumpLP.txt" );   // Debugging
         // the LP zeroed, and DC_RaiseZeroedOff() overwrites it. The snapshot is taken only when the
         // field is on or the record-only probe is armed - see LpDualFillout().
         std::vector<double> yLpFill;
-        const bool lpFillWanted = ( LpFilloutMode() > 0 || lpfill_probe_file() != nullptr );
+        const bool lpFillWanted = ( LpFilloutMode() > 0 || lpfill_probe_file() != nullptr
+                                    || FilloutBudgetValue() > 0. );
         if( lpFillWanted )
             yLpFill.assign( pm.Y, pm.Y + pm.L );
         DC_RaiseZeroedOff( 0, pm.L );
         if( lpFillWanted )
             LpDualFillout( yLpFill );
+        // pa_FilloutBudget: the class constants routinely ask for more of an element than the
+        // system holds, and the violated constraint is a SUM over species. Applied AFTER any
+        // fill-out so it bounds whatever was written, not only the class constants.
+        ApplyFilloutBudget( yLpFill );
         // this operation greatly affects the accuracy of mass balance!
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
         for( j=0; j< pm.L; j++ )
@@ -4486,6 +4492,89 @@ void TMultiBase::LpFillProbeReport()
                  char_array_to_string( pm.SM[r.j], MAXDCNAME ).c_str(),
                  r.cls, r.raw, r.pred, r.cap, r.aff, pm.X[r.j] );
     fflush( fp );
+}
+
+
+/// The effective budget: GEMS3K_FILLOUT_BUDGET if set, else the field.
+///
+/// NOT cached in a static, deliberately, unlike the other env gates in this file. It is read once
+/// per cold call - negligible next to a solve - and caching makes the value impossible to sweep or
+/// to A/B inside one process. Not hypothetical: the first version WAS cached and
+/// tests/test_fillout_budget.cpp caught it on its first run, taking both arms in one process and
+/// silently getting the first arm's value twice. A NEGATIVE env value means "unset", so 0 stays a
+/// usable arm - it is the mechanism's own off value.
+///
+/// Read by BOTH the call site (which must snapshot pm.Y before DC_RaiseZeroedOff() overwrites it)
+/// and ApplyFilloutBudget() itself. Those two disagreeing is the second bug the same test caught:
+/// the gate consulted the FIELD while the mechanism consulted the OVERRIDE, so an overridden run
+/// took no snapshot and the mechanism silently did nothing.
+double TMultiBase::FilloutBudgetValue() const
+{
+    const char* v = std::getenv( "GEMS3K_FILLOUT_BUDGET" );
+    const double envF = ( v && *v ) ? atof( v ) : -1.;
+    return ( envF >= 0. ) ? envF : base_param()->FilloutBudget;
+}
+
+/// pa_FilloutBudget - cap how much DC_RaiseZeroedOff()'s class constants may perturb the mass
+/// balance. See the field's doc comment in ms_multi.h for the measurement and for why a
+/// per-species cap cannot do this job. yLp is pm.Y as the simplex left it, BEFORE the raise.
+void TMultiBase::ApplyFilloutBudget( const std::vector<double>& yLp )
+{
+    // GEMS3K_FILLOUT_BUDGET overrides the field for a throwaway arm without editing a project
+    // file - the same idiom as GEMS3K_LPDUAL_FILLOUT above, and it exists for the same reason:
+    // this default was CHOSEN by a sweep, so the sweep has to stay cheap to repeat. A NEGATIVE
+    // value means "unset", so 0 stays a usable arm - it is the mechanism's own off value.
+    const double f = FilloutBudgetValue();
+    if( !( f > 0. ) || (long int)yLp.size() != (size_t)pm.L || !pm.A || !pm.B )
+        return;
+    const long int N = pm.N, L = pm.L;
+    const long int Zlim = N - pm.E;          // ordinary ICs only, as MBR's own loops scan
+    if( Zlim <= 0 )
+        return;
+
+    // Every bit of the excess comes from the raise: the LP solution satisfies A n = b exactly
+    // (measured - the check holds to 1e-16 on 74 of 77 projects; the three that fail are the
+    // big-M projects 07PSIna_G_edt_2 and f_/j_TestSUP98, where the LP supplies ZERO of one IC
+    // and there is nothing for this to scale).
+    std::vector<double> raised( (size_t)Zlim, 0. );
+    for( long int j = 0; j < L; j++ )
+    {
+        const double add = pm.Y[j] - yLp[(size_t)j];
+        if( add <= 0. )
+            continue;
+        for( long int i = 0; i < Zlim; i++ )
+        {
+            const double a = pm.A[ i + j*N ];
+            if( a > 0. )
+                raised[(size_t)i] += add * a;
+        }
+    }
+
+    long int nScaled = 0;
+    double worstS = 1.;
+    for( long int j = 0; j < L; j++ )
+    {
+        const double add = pm.Y[j] - yLp[(size_t)j];
+        if( add <= 0. )
+            continue;
+        double s = 1.;
+        for( long int i = 0; i < Zlim; i++ )
+        {
+            const double a = pm.A[ i + j*N ];
+            if( a <= 0. || !( pm.B[i] > 0. ) || raised[(size_t)i] <= 0. )
+                continue;
+            s = std::min( s, f * pm.B[i] / raised[(size_t)i] );
+        }
+        if( s < 1. )
+        {
+            pm.Y[j] = yLp[(size_t)j] + add * s;
+            nScaled++;
+            worstS = std::min( worstS, s );
+        }
+    }
+    if( nScaled > 0 )
+        native_trace_decide( "filloutbudget f=%.6e scaled=%ld of %ld worst_s=%.6e",
+                             f, nScaled, (long)L, worstS );
 }
 
 /// Adjustment of primal approximation according to kinetic constraints
