@@ -684,8 +684,14 @@ bool TMultiBase::LPFeasibilitySeed( std::vector<double>& nOut )
 // within 6-12% of the converged dual's own magnitude.
 //
 // Returns false without touching yOut if the LP or its dual is not trustworthy.
-bool TMultiBase::LPGibbsDual( std::vector<double>& yOut )
+bool TMultiBase::LPGibbsDual( std::vector<double>& yOut, const double* cost )
 {
+    // `cost` defaults to pm.G0, which is what every shipped caller uses. Passing pm.G instead
+    // prices against the CURRENT chemical potentials (G0 + fDQF + F0, i.e. including the mixing
+    // and activity terms) rather than the pure standard state - the difference the 29.3 RT dual
+    // gap looked like it was made of, and measurably is NOT (plan v5 137.8c/d: re-solving at the
+    // CONVERGED potentials leaves the dual 26.5 RT out, because an LP fixes its objective and not
+    // its dual). Used only by LpFillProbeReport()'s LPRELP record.
     const long int N = pm.N;
     const long int L = pm.L;
     if( N <= 0 || L <= 0 || pm.G0 == nullptr )
@@ -693,7 +699,7 @@ bool TMultiBase::LPGibbsDual( std::vector<double>& yOut )
     auto aFn = [this,N]( long int i, long int j ) { return pm.A[ i + j*N ]; };
     std::vector<double> nDummy;
     std::vector<double> y( (size_t)N, 0. );
-    if( !TwoPhaseSimplexMinSum( N, L, aFn, pm.B, nDummy, pm.G0, y.data() ) )
+    if( !TwoPhaseSimplexMinSum( N, L, aFn, pm.B, nDummy, cost ? cost : pm.G0, y.data() ) )
         return false;
     for( long int i = 0; i < N; i++ )
         if( !std::isfinite( y[(size_t)i] ) )

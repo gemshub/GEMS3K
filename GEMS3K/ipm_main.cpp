@@ -191,7 +191,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaDimReduceTol=%.6e pa_MbPivotSplit=%ld pa_OptimaZeroAbsent=%ld"
              " pa_OptimaReadmitSeed=%.6e pa_IpmStallWindow=%d pa_MbReproject=%d"
              " pa_DeterminacyWarn=%.6e pa_ColdRetryNudges=%ld"
-             " pa_OptimaPreSolveFirstIters=%ld\n",
+             " pa_OptimaPreSolveFirstIters=%ld pa_LpDualFillout=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -210,7 +210,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              pa->OptimaDimReduceTol, (long)pa->MbPivotSplit,
              (long)pa->OptimaZeroAbsent, pa->OptimaReadmitSeed,
              (int)pa->IpmStallWindow, (int)pa->MbReproject, pa->DeterminacyWarn,
-             (long)pa->ColdRetryNudges, (long)pa->OptimaPreSolveFirstIters );
+             (long)pa->ColdRetryNudges, (long)pa->OptimaPreSolveFirstIters,
+             (long)pa->LpDualFillout );
 
     // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
     //
@@ -2537,6 +2538,8 @@ FORCED_AIA:
        fflush( ntf );
    }
 
+   LpFillProbeReport();   // writes nothing unless GEMS3K_LPFILL_PROBE is set
+
    // ---- Mass-balance verdict on the ANSWER this call returns.
    //
    // WARN ONLY - deliberately, and this is a project-owner decision (2026-09-05),
@@ -3206,7 +3209,16 @@ to_text_file( "MultiDumpLP.txt" );   // Debugging
            return true; // If so, the GEM problem is already solved !
         }
         // Setting default trace amounts to DCs that were zeroed off
+        // pa_LpDualFillout (default 0 = off): the simplex solution is needed to tell WHICH species
+        // the LP zeroed, and DC_RaiseZeroedOff() overwrites it. The snapshot is taken only when the
+        // field is on or the record-only probe is armed - see LpDualFillout().
+        std::vector<double> yLpFill;
+        const bool lpFillWanted = ( LpFilloutMode() > 0 || lpfill_probe_file() != nullptr );
+        if( lpFillWanted )
+            yLpFill.assign( pm.Y, pm.Y + pm.L );
         DC_RaiseZeroedOff( 0, pm.L );
+        if( lpFillWanted )
+            LpDualFillout( yLpFill );
         // this operation greatly affects the accuracy of mass balance!
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
         for( j=0; j< pm.L; j++ )
@@ -4206,6 +4218,274 @@ case DC_SCM_SPECIES:
      if( k >=0 )
      pm.YF[k] += pm.Y[j];
    } // i
+}
+
+// ===========================================================================
+// WP5 (FABLE Phase 3) - LP-DUAL-BASED PRIMAL FILL-OUT. `pa_LpDualFillout`, DEFAULT 0 = OFF.
+//
+// MEASURED AND REJECTED AS A DEFAULT on 2026-09-25 (plan v5 137.3-137.8), and kept switchable the
+// same day on owner instruction ("might come back in the future"). The field's own doc comment in
+// ms_multi.h carries every measured number and the reason a future attempt needs a better-determined
+// DUAL rather than a better formula. Read it before enabling any non-zero value.
+//
+// WHAT IT REPLACES. After AutoInitialApproximation() solves the linearised-Gibbs
+// LP, DC_RaiseZeroedOff() raises every species the LP zeroed to a CLASS CONSTANT
+// (pa_DFYaq/DFYw/DFYid/DFYh/DFYr/DFYc), one number per DC class for the whole
+// corpus, with no reference to the chemistry. WP5's question is whether the LP's
+// OWN DUAL predicts those amounts better: x_j = X_k * exp( a_j^T u_LP - G_j )
+// in RT units (Karpov 1997 Eq. 12 as cited by FABLE Phase 1 section 6.10; the same
+// formula the Optima pre-solve's re-admission site pa_OptimaReadmitSeed uses).
+//
+// TWO GATES, DELIBERATELY SEPARATE, and keeping them separate is what made the measurement
+// possible at all:
+//   GEMS3K_LPFILL_PROBE=<path>   record the prediction; change NOTHING.
+//   pa_LpDualFillout = 1|2|3     also APPLY it (GEMS3K_LPDUAL_FILLOUT overrides, for experiments).
+// So the OFF arm still carries the prediction AND the answer it is scored against, which is what
+// makes the accuracy question answerable without perturbing anything - with one gate the only
+// available comparison is between two different trajectories.
+//
+// BOUNDED FAILURE, three ways, because every one of them has already cost this
+// project a session:
+//  (i) THE BIG-M. WP4 (work item 31m) measured three projects whose LP dual carries
+//      the simplex sentinel 1/pa_EPS = 1e10 for an IC the LP could not price
+//      (07PSIna_G_edt_2: U; f_/j_TestSUP98: Ne, Ti). Nothing in the tree handles
+//      that value today. A species touching such an IC is SKIPPED, not priced.
+//  (ii) THE CEILING. A fill-out amount written without asking what the bulk can
+//      supply is the plan v5 section 76 defect in its fill-out form - PSSC's fixed
+//      pa_DFYs = 1e-6 insertion over-subscribed its limiting element by 1000x on
+//      the psina projects. Capped at 0.5 * PhaseInsertionCeiling(j), the same
+//      quantity PSSC's INSERT_BUDGET uses.
+//  (iii) THE FLOOR. Never below what DC_RaiseZeroedOff() just wrote, so the "on"
+//      arm can only RAISE a species; the class constant remains the fallback for
+//      anything not priced, not finite, or predicted smaller.
+// A positive affinity is clamped to zero (counted as posaff): at an LP optimum a
+// species at its lower bound has reduced cost s_j = G_j - a_j^T u >= 0, so a
+// positive one is degeneracy or round-off, not a prediction.
+//
+// SELF-CHECK ON THE SIGN CONVENTION, printed rather than assumed: for a species
+// the LP made BASIC the same affinity must be ~ 0. presmax= is the largest |aff|
+// over LP-present species; if it is not small, pm.U after SolveSimplex() is not
+// the dual this formula wants and every number here is meaningless.
+/// The measured edge of the band where the LP dual carries information - see lpfill_apply_mode().
+static const double kLpFillAffCut = -8.;
+
+struct LpFillRec { long int j; long int k; double cls; double raw; double pred; double cap; double aff; };
+static thread_local std::vector<LpFillRec> lpfill_recs;
+static thread_local long int lpfill_raised = 0, lpfill_capped = 0, lpfill_skipped = 0;
+static thread_local long int lpfill_posaff = 0, lpfill_present = 0, lpfill_overcls = 0;
+static thread_local double  lpfill_overclsmax = 0.;
+static thread_local double  lpfill_presmax = 0.;
+static thread_local bool    lpfill_applied = false;
+static thread_local long int lpfill_applied_mode = 0;
+static thread_local std::vector<double> lpfill_uLP;   // the COLD LP's dual, before MBR overwrites pm.U
+
+/// GEMS3K_LPFILL_PROBE=<path> - see LpDualFillout(). Zero cost when unset.
+FILE* lpfill_probe_file()
+{
+    static FILE* fp = []() -> FILE*
+    {
+        const char* fn = std::getenv( "GEMS3K_LPFILL_PROBE" );
+        return fn ? fopen( fn, "a" ) : nullptr;
+    }();
+    return fp;
+}
+
+/// The applied mode is the FIELD pa_LpDualFillout; GEMS3K_LPDUAL_FILLOUT overrides it for a
+/// throwaway experiment without editing a project file, exactly as the probe that measured this did.
+///   1  the plan's own rule: the class constant is a FLOOR, so a species can only be raised.
+///   3  the plan's rule, but APPLIED ONLY NEAR THE LEVELING HYPERPLANE (aff >= -8 RT).
+///      Measured 2026-09-25 (plan v5 137.8a): the LP dual sizes a species to 0.19 decades at
+///      100 mol and degrades by about one decade per decade of rarity, crossing the class
+///      constant's accuracy at ~1e-2 mol. With X_k ~ 55 mol that crossing is exp(aff) ~ 2e-4,
+///      i.e. aff ~ -8.5. So -8 RT is the measured edge of the region where the dual carries
+///      information, expressed DIMENSIONLESSLY - an absolute mole cut-off here would be the
+///      section 76 defect again (pa_DG rescales every amount; RT does not rescale).
+///   2  the composition ceiling DOMINATES that floor. Added after the first run of this probe
+///      showed the floor is not always reachable: on f_CalcDolo the class constant pa_DFYaq =
+///      1e-5 exceeds PhaseInsertionCeiling() for 7 of 23 zeroed species (Ca(CO3)@ asks 17x the
+///      Ca the bulk holds), i.e. TODAY'S fill-out over-subscribes its limiting element - the
+///      plan v5 section 76 defect class, in the shipped class constants rather than in PSSC.
+///      Mode 1 cannot show what fixing that is worth, because its floor re-imposes it.
+long int TMultiBase::LpFilloutMode() const
+{
+    static const long int envM = []() -> long int
+    {
+        const char* v = std::getenv( "GEMS3K_LPDUAL_FILLOUT" );
+        return ( v && *v ) ? atol( v ) : -1;
+    }();
+    return ( envM >= 0 ) ? envM : base_param()->LpDualFillout;
+}
+
+/// Price every species the LP zeroed against the LP's own dual. yLp is pm.Y as the
+/// simplex left it, i.e. BEFORE DC_RaiseZeroedOff(); pm.Y as this is called already
+/// carries the class constants, so "the LP zeroed it" is exactly yLp[j] < pm.Y[j]
+/// and the class value needs no re-derivation from pm.DCC[j].
+void TMultiBase::LpDualFillout( const std::vector<double>& yLp )
+{
+    lpfill_recs.clear();
+    lpfill_raised = lpfill_capped = lpfill_skipped = lpfill_posaff = lpfill_present = 0;
+    lpfill_overcls = 0; lpfill_overclsmax = 0.;
+    lpfill_presmax = 0.;
+    const long int mode = LpFilloutMode();
+    lpfill_applied = ( mode > 0 );
+    lpfill_applied_mode = mode;
+    if( !lpfill_applied && !lpfill_probe_file() )
+        return;                                  // zero cost when neither gate is set
+    const long int N = pm.N, L = pm.L;
+    if( (long int)yLp.size() != (size_t)L || !pm.U || !pm.A || !pm.G || !pm.L1 )
+        return;
+
+    const double bigM = 0.1 / base_param()->EPS;     // the simplex's own 1/EPS sentinel
+    lpfill_uLP.assign( pm.U, pm.U + N );             // kept for the re-linearisation test below
+    std::vector<double> xfLp( (size_t)pm.FI, 0. );   // phase amounts AT THE LP VERTEX
+    long int jb = 0;
+    for( long int k = 0; k < pm.FI; k++ )
+    {
+        for( long int j = jb; j < jb + pm.L1[k]; j++ )
+            xfLp[(size_t)k] += yLp[(size_t)j];
+        jb += pm.L1[k];
+    }
+
+    jb = 0;
+    for( long int k = 0; k < pm.FI; k++ )
+    {
+        for( long int j = jb; j < jb + pm.L1[k]; j++ )
+        {
+            double aff = 0.;
+            bool priced = true;
+            for( long int i = 0; i < N; i++ )
+            {
+                const double a = pm.A[ i + j*N ];
+                if( a == 0. )
+                    continue;
+                if( !std::isfinite( pm.U[i] ) || fabs( pm.U[i] ) >= bigM )
+                {   priced = false; break; }
+                aff += a * pm.U[i];
+            }
+            if( priced )
+                aff -= pm.G[j];
+
+            const double cls = pm.Y[j];
+            if( yLp[(size_t)j] >= cls )
+            {   // the LP gave this species a real amount: the sign-convention control
+                if( priced && std::isfinite( aff ) && yLp[(size_t)j] > 0. )
+                {
+                    lpfill_present++;
+                    lpfill_presmax = std::max( lpfill_presmax, fabs( aff ) );
+                }
+                continue;
+            }
+            if( !priced || !std::isfinite( aff ) )
+            {   lpfill_skipped++; continue; }
+            if( aff > 0. )
+            {   lpfill_posaff++; aff = 0.; }
+
+            // mode 3: outside the reliable band the dual says nothing, so do not pretend
+            if( mode == 3 && aff < kLpFillAffCut )
+            {   lpfill_skipped++; continue; }
+            const double base = ( xfLp[(size_t)k] > 0. ) ? xfLp[(size_t)k] : cls;
+            const double pred = base * exp( aff );
+            if( !std::isfinite( pred ) || pred <= 0. )
+            {   lpfill_skipped++; continue; }
+
+            const double cap = PhaseInsertionCeiling( j );
+            if( cap > 0. && cls > cap )
+            {   // TODAY'S class constant already asks for more than the bulk can supply
+                lpfill_overcls++;
+                lpfill_overclsmax = std::max( lpfill_overclsmax, cls / cap );
+            }
+            double val = pred;
+            if( cap > 0. && val > 0.5*cap )
+            {   val = 0.5*cap; lpfill_capped++; }
+            if( val < cls && mode != 2 )
+                val = cls;                       // mode 1: the class constant is a floor
+            if( mode == 2 && cap > 0. && val > 0.5*cap )
+                val = 0.5*cap;                   // mode 2: the ceiling wins, floor or not
+            lpfill_recs.push_back( LpFillRec{ j, k, cls, pred, val, cap, aff } );
+            if( lpfill_applied && val != cls )
+            {   pm.Y[j] = val; lpfill_raised++; }
+        }
+        jb += pm.L1[k];
+    }
+    if( lpfill_applied )
+    {   // the raise changed phase totals; the LP site recomputes them right after,
+        // but a DECIDE record belongs where the choice was made.
+        native_trace_decide( "lpfillout mode=%ld n=%ld raised=%ld capped=%ld skipped=%ld posaff=%ld overcls=%ld",
+                             (long)mode, (long)lpfill_recs.size(), (long)lpfill_raised,
+                             (long)lpfill_capped, (long)lpfill_skipped, (long)lpfill_posaff,
+                             (long)lpfill_overcls );
+    }
+}
+
+/// One summary line plus one line per priced species, written at the ANSWER site so
+/// every prediction is scored against the amount the solve actually converged to.
+void TMultiBase::LpFillProbeReport()
+{
+    FILE* fp = lpfill_probe_file();
+    if( !fp || lpfill_recs.empty() )
+        return;
+    fprintf( fp, "LPFILL mode=%d n=%ld raised=%ld capped=%ld skipped=%ld posaff=%ld"
+                 " overcls=%ld overclsmax=%.3e"
+                 " present=%ld presmax=%.3e ITF=%ld ITG=%ld MK=%ld PZ=%ld L=%ld N=%ld\n",
+             (int)lpfill_applied_mode, (long)lpfill_recs.size(), (long)lpfill_raised,
+             (long)lpfill_capped, (long)lpfill_skipped, (long)lpfill_posaff,
+             (long)lpfill_overcls, lpfill_overclsmax,
+             (long)lpfill_present, lpfill_presmax,
+             (long)pm.ITF, (long)pm.ITG, (long)pm.MK, (long)pm.PZ, (long)pm.L, (long)pm.N );
+    // ---- HOW MUCH OF THE 29.3 RT DUAL GAP IS THE MISSING MIXING TERM?
+    //
+    // The cold LP prices every species at pm.G0 + pm.lnGam with lnGam FORCED TO ZERO and
+    // Gamma = 1 (ipm_main.cpp, just before AutoInitialApproximation()) - so it is the
+    // ideal-pure-phase linearisation, with no mixing entropy at all. For an aqueous trace
+    // species the ln(x) term alone is -20 to -45 RT, which is the order of the measured gap.
+    // If that is the whole story, re-solving the SAME LP with the CURRENT pm.G (= G0 + fDQF
+    // + F0, the primal chemical potentials including mixing and activity) must return a dual
+    // close to the converged pm.U.
+    //
+    // THIS IS A MECHANISM TEST, NOT A DESIGN TEST, and the distinction matters: linearising
+    // AT the solution is circular by construction. A small number here confirms WHAT the gap
+    // is made of; it says nothing about whether an LP called EARLY, at a state that is not
+    // the solution, would return anything useful. Read it that way.
+    {
+        double uInf = 0., d0 = 0., d1 = -1.;
+        for( long int i = 0; i < pm.N; i++ )
+            uInf = std::max( uInf, fabs( pm.U[i] ) );
+        if( (long int)lpfill_uLP.size() == pm.N )
+            for( long int i = 0; i < pm.N; i++ )
+                d0 = std::max( d0, fabs( lpfill_uLP[(size_t)i] - pm.U[i] ) );
+#ifdef USE_OPTIMA_SOLVER
+        std::vector<double> yRe;
+        if( LPGibbsDual( yRe, pm.G ) && (long int)yRe.size() == pm.N )
+        {
+            d1 = 0.;
+            for( long int i = 0; i < pm.N; i++ )
+                d1 = std::max( d1, fabs( yRe[(size_t)i] - pm.U[i] ) );
+        }
+#endif
+        // IS THE DIFFERENCE DEGENERACY? For any LP, EVERY optimal dual gives the same dual
+        // objective b^T y. So if b^T y_reLP equals b^T u_converged, both are optimal duals of
+        // the same LP and the 26 RT between them is the dual polytope's own width - the LP
+        // does not DETERMINE the dual. If they differ, the converged dual is not an optimal
+        // dual of that LP at all, and the gap is something else entirely.
+        double bu = 0., by = 0.;
+        for( long int i = 0; i < pm.N; i++ )
+            bu += pm.B[i] * pm.U[i];
+#ifdef USE_OPTIMA_SOLVER
+        if( d1 >= 0. )
+            for( long int i = 0; i < pm.N; i++ )
+                by += pm.B[i] * yRe[(size_t)i];
+#endif
+        const double sc = std::max( fabs( bu ), 1e-30 );
+        fprintf( fp, "LPRELP uinf=%.6e d_coldLP=%.6e d_relin=%.6e bu=%.10e by=%.10e"
+                     " dobj_rel=%.6e N=%ld\n",
+                 uInf, d0, d1, bu, by, fabs( by - bu ) / sc, (long)pm.N );
+    }
+
+    for( const LpFillRec& r : lpfill_recs )
+        fprintf( fp, "LPFILLSP dc=%s cls=%.6e raw=%.6e pred=%.6e cap=%.6e aff=%.4f final=%.6e\n",
+                 char_array_to_string( pm.SM[r.j], MAXDCNAME ).c_str(),
+                 r.cls, r.raw, r.pred, r.cap, r.aff, pm.X[r.j] );
+    fflush( fp );
 }
 
 /// Adjustment of primal approximation according to kinetic constraints

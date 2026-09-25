@@ -1502,6 +1502,36 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// positionally.
     long int OptimaPreSolveFirstIters = 6000;
 
+    /// pa_LpDualFillout: size the species the LP zeroed from the LP's OWN DUAL instead of from the
+    /// per-class constants pa_DFYaq/DFYw/DFYid/DFYh/DFYr/DFYc. Native cold (AIA) path only, at
+    /// DC_RaiseZeroedOff()'s call site in GEM_IPM_InitialApproximation(); HOP/SHP's native leg
+    /// inherits it. 0 = OFF and is the shipped default.
+    ///
+    /// x_j = X_k * exp( a_j^T u_LP - G_j ) in RT units - Karpov 1997 Eq. 12, the same formula
+    /// pa_OptimaReadmitSeed uses at the Optima pre-solve's re-admission site. X_k is the LP's own
+    /// amount of the species' phase.
+    ///
+    /// MEASURED AND REJECTED AS A DEFAULT, 2026-09-25 (plan v5 137.3; FABLE Phase 3 WP5, CLOSED).
+    /// Kept switchable on owner instruction the same day - "might come back in the future" - NOT
+    /// because the measurements were inconclusive. They were not:
+    ///   value 1  loses THREE answers (f_/j_GEOTHERM at the iteration cap, f_Solvus_G_test3) and
+    ///            costs +14.5 % ITF / +14.2 % ITG over the 72 projects OK in both arms. The amount
+    ///            it writes is closer to the converged one than the class constant on 457 of 12 579
+    ///            species. Variance is extreme: 34.0x worse on j_TiQ_PRSV and 0.13x on
+    ///            FeNaCl_FyGt_TransitionZone.
+    ///   value 2  the composition ceiling dominates the class floor: loses TWENTY answers. Offered
+    ///            only so 137.4's veto stays reproducible - do not use it on real work.
+    ///   value 3  value 1 applied only within 8 RT of the leveling hyperplane, where 137.8a measured
+    ///            the dual to carry information: WORSE than 1 (ITG 1.619x). Also measured, also kept.
+    /// WHY IT CANNOT WORK AS IT STANDS, and what a future attempt must fix first: an amount is the
+    /// exponential of a potential, and the LP's dual is a median 29.3 RT from the converged one
+    /// (WP4) - about 13 decades of amount. That gap is NOT a linearisation error. Re-solving the LP
+    /// at the CONVERGED potentials leaves it at 26.5 RT (137.8c), because the LP fixes its objective
+    /// and not its dual: on 63 of 76 projects two duals tens of RT apart price the bulk identically
+    /// to better than 1e-3. So a future attempt needs a BETTER-DETERMINED dual, not a better formula.
+    /// Trailing member: GEMSGUI serialises BASE_PARAM positionally.
+    long int LpDualFillout = 0;
+
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
@@ -2741,7 +2771,7 @@ public:
     /// "minimise total moles". Used by OptimaReducedPreSolve() to choose a
     /// generous initial active set. Returns false (leaving yOut untouched)
     /// if the LP fails or its dual does not verify against LP optimality.
-    bool LPGibbsDual( std::vector<double>& yOut );
+    bool LPGibbsDual( std::vector<double>& yOut, const double* cost = nullptr );
 
     /// Phase-assemblage stability scan for the Optima path - refreshes
     /// pm.YF/pm.YFA from pm.Y, calls StabilityIndexes(), and reports the
@@ -3184,6 +3214,17 @@ protected:
     double OptimizeStepSize( double LM );
     void DC_ZeroOff( long int jStart, long int jEnd, long int k=-1L );
     void DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k=-1L );
+    /// pa_LpDualFillout (default 0 = off): size the species the LP zeroed from the LP's own dual
+    /// instead of the per-class constants. Native cold path. See the field's doc comment in
+    /// BASE_PARAM for every measured number and why it is off; the definition in ipm_main.cpp for
+    /// the formula and its three guards (big-M, composition ceiling, class floor).
+    void LpDualFillout( const std::vector<double>& yLp );
+    /// Effective fill-out mode: the field, unless GEMS3K_LPDUAL_FILLOUT overrides it.
+    long int LpFilloutMode() const;
+    /// Record of every prediction against the amount the solve converged to, written at the ANSWER
+    /// site. Zero cost unless GEMS3K_LPFILL_PROBE is set; this is what keeps plan v5 137.4's and
+    /// 137.8's rejecting measurements reproducible.
+    void LpFillProbeReport();
     /// Largest amount of a single-species phase the bulk composition can supply,
     /// min_i b_i/a(j,i) over the ordinary IC rows. Used to clamp PSSC's fixed
     /// pure-phase insertion amount (pa_DFYs) so an insertion cannot be infeasible
@@ -3302,6 +3343,11 @@ void native_trace_quiet( bool on );
 /// InteriorPointsMethod() for the measurement it exists to support.
 FILE* ipm_probe_file();
 
+/// Per-prediction record for pa_LpDualFillout, gated on GEMS3K_LPFILL_PROBE=<path>. Same
+/// zero-cost-when-unset shape as the two above. This is what keeps plan v5 137.4's and 137.8's
+/// REJECTING measurements reproducible after the mechanism itself was rejected as a default.
+FILE* lpfill_probe_file();
+
 /// Complete run configuration - requested mode, T, P, bulk composition with IC
 /// names, and every BASE_PARAM field in force - written into the same file as
 /// native_trace_file(), once per GEM_run() call, for EVERY solver mode. Emitted
@@ -3411,7 +3457,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit, f_pa_OptimaZeroAbsent,
     f_pa_OptimaReadmitSeed,
     f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn, f_pa_ColdRetryNudges,
-    f_pa_OptimaPreSolveFirstIters
+    f_pa_OptimaPreSolveFirstIters, f_pa_LpDualFillout
 
 } MULTI_DYNAMIC_FIELDS;
 

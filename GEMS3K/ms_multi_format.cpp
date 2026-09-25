@@ -189,7 +189,8 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_MbReproject", 0 , 0, 0, "# pa_MbReproject: repair an unsatisfied mass balance on the returned answer by projecting X back onto A.X = b over a rank-revealing set of the most abundant species (White 1958); native path; 0 = off { 0 }" },
     { "pa_DeterminacyWarn", 0 , 0, 0, "# pa_DeterminacyWarn: warn when a present phase's amount is fixed by the minimised Gibbs energy only to worse than this relative uncertainty (native path; read-only, never changes the answer); 0 = off { 0.01 }" },
     { "pa_ColdRetryNudges", 0 , 0, 0, "# pa_ColdRetryNudges: a native cold (AIA) call that fails is re-solved cold at up to this many 1e-15 bulk-composition nudges, and the first that converges is finished warm at the exact composition; 0 = off { 4 }" },
-    { "pa_OptimaPreSolveFirstIters", 0 , 0, 0, "# pa_OptimaPreSolveFirstIters: iteration budget per pass of the dimension-reduction pre-solve's first attempt, never above max(2000, pa_IIM); a pass reaching it is discarded and the fallback attempt runs at the full budget; 0 = off { 6000 }" }
+    { "pa_OptimaPreSolveFirstIters", 0 , 0, 0, "# pa_OptimaPreSolveFirstIters: iteration budget per pass of the dimension-reduction pre-solve's first attempt, never above max(2000, pa_IIM); a pass reaching it is discarded and the fallback attempt runs at the full budget; 0 = off { 6000 }" },
+    { "pa_LpDualFillout", 0 , 0, 0, "# pa_LpDualFillout: size species the LP zeroed from the LP's own dual instead of the per-class constants (native cold path); 0 = off, 1 = class constant as floor, 2 = composition ceiling dominates, 3 = only within 8 RT of the hyperplane; measured and rejected as a default 2026-09-25, kept switchable { 0 }" }
 };
 
 
@@ -208,7 +209,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 105, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 106, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -405,6 +406,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_DeterminacyWarn, pa_p->DeterminacyWarn, _comment, false  );
         prar.writeField(f_pa_ColdRetryNudges, pa_p->ColdRetryNudges, _comment, false  );
         prar.writeField(f_pa_OptimaPreSolveFirstIters, pa_p->OptimaPreSolveFirstIters, _comment, false  );
+        prar.writeField(f_pa_LpDualFillout, pa_p->LpDualFillout, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -810,7 +812,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 105, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 106, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1264,6 +1266,8 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
                 break;
         case f_pa_OptimaPreSolveFirstIters: rddar.readArray("pa_OptimaPreSolveFirstIters" , &pa_p->OptimaPreSolveFirstIters, 1);
                 break;
+        case f_pa_LpDualFillout: rddar.readArray("pa_LpDualFillout" , &pa_p->LpDualFillout, 1);
+            break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;
         case f_pa_OptimaDimReduce: rddar.readArray("pa_OptimaDimReduce" , &pa_p->OptimaDimReduce, 1);
