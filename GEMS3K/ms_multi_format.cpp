@@ -193,6 +193,8 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_LpDualFillout", 0 , 0, 0, "# pa_LpDualFillout: size species the LP zeroed from the LP's own dual instead of the per-class constants (native cold path); 0 = off, 1 = class constant as floor, 2 = composition ceiling dominates, 3 = only within 8 RT of the hyperplane; measured and rejected as a default 2026-09-25, kept switchable { 0 }" },
     { "pa_FilloutBudget", 0 , 0, 0, "# pa_FilloutBudget: cap how much the class fill-out may perturb the mass balance, as a fraction of each element own bulk amount (native cold path); 0 = off; measured at 0.01 and held off pending plan v5 138.10 { 0 }" },
     { "pa_StabTPD", 0 , 0, 0, "# pa_StabTPD: tangent-plane stability scan of absent multicomponent phases, reported on the trace CERT line only { 0 off, 1 report (default) }" },
+    { "pa_IpmAugmentedKKT", 0 , 0, 0, "# pa_IpmAugmentedKKT: main IPM loop linear solve; 0 = normal equations (default), 1 = augmented saddle-point system by dense LU, 2 = same system by QR least squares; 1 and 2 floor a zero row instead of failing { 0 }" },
+    { "pa_IpmLoopTweaks", 0 , 0, 0, "# pa_IpmLoopTweaks: bit mask of main IPM loop changes; 1 = cap step size at 1, 2 = update activity coefficients every third iteration once PCI < 5e-4, 4 = after 120 iterations accept PCI < 300 x pa_DK; 0 = none { 0 }" },
 };
 
 
@@ -211,7 +213,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 108, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 110, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -411,6 +413,8 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_LpDualFillout, pa_p->LpDualFillout, _comment, false  );
         prar.writeField(f_pa_FilloutBudget, pa_p->FilloutBudget, _comment, false  );
         prar.writeField(f_pa_StabTPD, pa_p->StabTPD, _comment, false  );
+        prar.writeField(f_pa_IpmAugmentedKKT, pa_p->IpmAugmentedKKT, _comment, false  );
+        prar.writeField(f_pa_IpmLoopTweaks, pa_p->IpmLoopTweaks, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -816,7 +820,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 108, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 110, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1275,6 +1279,10 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_FilloutBudget: rddar.readArray("pa_FilloutBudget" , &pa_p->FilloutBudget, 1);
             break;
         case f_pa_StabTPD: rddar.readArray("pa_StabTPD" , &pa_p->StabTPD, 1);
+            break;
+        case f_pa_IpmAugmentedKKT: rddar.readArray("pa_IpmAugmentedKKT" , &pa_p->IpmAugmentedKKT, 1);
+            break;
+        case f_pa_IpmLoopTweaks: rddar.readArray("pa_IpmLoopTweaks" , &pa_p->IpmLoopTweaks, 1);
             break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;

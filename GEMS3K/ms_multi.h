@@ -1617,6 +1617,53 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// rs_ss (TPD -0.016..-0.23 on native's answer, 1100-1900 K) - plan v5 s139.7.
     /// Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 1 (report-only).
     long int StabTPD = 1;
+    /// pa_IpmAugmentedKKT: how the MAIN IPM loop solves its linear system for the dual u
+    /// (MakeAndSolveSystemOfLinearEquations(), initAppr = false only; MBR is untouched).
+    ///   0  off (default) - normal equations (A_act^T W A_act) u = A_act^T W F, Cholesky then LU.
+    ///   1  augmented (saddle-point) system, dense LU of size L_act + N:
+    ///          [ I          -W A_act ] [ x ]   [ -W F ]
+    ///          [ -A_act^T   -D       ] [ u ] = [  0   ]
+    ///      Ported from the owner's experimental SolverType == 2 (tmp/ipm_main.cpp, 2026-09-14).
+    ///      Eliminating x gives (A^T W A + D) u = A^T W F exactly, so the answer is the normal
+    ///      equations' up to D; what changes is that A^T W A is never FORMED, which squares the
+    ///      condition number of W^1/2 A. COST: dense O((L_act+N)^3) per iteration - ~1e9 flops per
+    ///      iteration on a 1392-species project; use 2 there.
+    ///   2  the same regularised least-squares problem, min |W^1/2 (A u - F)|^2 + u^T D u, by
+    ///      Householder QR of [W^1/2 A_act ; D^1/2] - also never forms A^T W A, O(L_act N^2).
+    /// D = 0 except on a ZERO ROW. The owner's version put an ABSOLUTE 1e-12 on every row (its size
+    /// then depends on pa_DG rescaling and on W), and kept only species with Y > 1e-12 mol where the
+    /// assembly keeps Y > min(lowPosNum, DcMinM); the active set here is the assembly's. A uniform
+    /// D was measured harmful - see the comment in SolveIpmAugmented() (f_Kaolinite: 1e-12 relative
+    /// per row gives 3963 iterations and a G off by 7e-6; D = 0 gives 45 against native's 273).
+    /// ZERO-ROW RESCUE: an IC no active species carries has d_i = sum_j W_j a_ji^2 = 0; the normal
+    /// equations then fail (E07IPM). Both arms here set D_ii = 1e-12 * max_i d_i instead, which sets that u_i to 0 and
+    /// continues - the owner's "the determinant no longer goes to zero". That HIDES a degeneracy rather
+    /// than repairing it, so it is recorded: DECIDE "ipmkkt-zerorow" on the first rescue of each
+    /// InteriorPointsMethod() call.
+    /// MEASURED 2026-09-28b, SMOKE ONLY (mode_compare native/AOP/HOP, 27 gems3k projects, one draw, NOT a
+    /// freeze): 2 -> native 0 answers lost, iterations x0.994, G moved only on f_/j_CASHNK (1.8e-7 / 8e-9
+    /// relative, a known jitter project); 1 -> 0 lost, native x0.960, HOP x1.165 all from j_CASHNK's Optima
+    /// leg (4526 -> 6526). Per-project counts move both ways on the lottery projects (f_Kaolinite 276 -> 48,
+    /// j_Kaolinite 58 -> 155 under 2), i.e. a redraw. Mode 2's solve was verified to rounding (normal-
+    /// equation residual <= 6e-16 on f_Kaolinite). Whether any case needed the zero-row rescue: NOT checked.
+    /// Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 0.
+    long int IpmAugmentedKKT = 0;
+    /// pa_IpmLoopTweaks: bit mask of the owner's three SolverType == 2 main-loop changes, split so each
+    /// can be measured alone (default 0 = none). Independent of pa_IpmAugmentedKKT.
+    ///   1  step cap - StepSizeEstimate()'s LM clamped to <= 1 before OptimizeStepSize().
+    ///   2  activity lag - once pm.PCI < 5e-4, CalculateActivityCoefficients() runs only on every third
+    ///      ITG, and the loop may not terminate on an iteration that skipped it (the lnGam in hand
+    ///      would not be the one the composition implies). 5e-4 is ABSOLUTE, as in the original.
+    ///   4  loose accept - after ITG > 120, accept pm.PCI < 300 * pm.DXM as converged. This LOOSENS
+    ///      the stopping test by up to 300x; it reports a state the Dikin test has not certified.
+    ///      DECIDE "ipmlooseaccept" when it fires.
+    /// MEASURED 2026-09-28b, SMOKE ONLY (same set and harness as pa_IpmAugmentedKKT): 1 -> 0 lost, native
+    /// iterations x1.506 (t_Solvus series2 410 -> 1555), HOP x1.220; 2 -> native x1.091, HOP LOSES
+    /// j_CASHNK (OK -> FAIL); 4 -> native LOSES 4 (f_/j_TestPNTDB, o_/t_Solvus series2, OK -> FAIL), x0.770
+    /// on the rest; 7 with pa_IpmAugmentedKKT = 2 -> native loses 2 (TestPNTDB), x1.662, HOP x2.150. None
+    /// is a candidate default; the switch exists so the owner's variant stays reproducible.
+    /// Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 0.
+    long int IpmLoopTweaks = 0;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -3143,6 +3190,13 @@ protected:
     long int nNu;  ///< number of ICs in the system
     long int cnr;  ///< current IPM iteration
     long int nCNud; ///< number of IC names for divergent dual chemical potentials
+    /// pa_IpmAugmentedKKT: zero-row rescues in the current InteriorPointsMethod() call (reset at its
+    /// entry). Only the first one per call emits DECIDE "ipmkkt-zerorow", so a rescue repeated on every
+    /// iteration does not flood the trace.
+    long int ipmKktRescues = 0;
+    /// pa_IpmAugmentedKKT = 1 or 2: the main-loop (initAppr = false) solve for pm.U without forming
+    /// A^T W A. \return 0 solved, 1 singular. See BASE_PARAM::IpmAugmentedKKT.
+    long int SolveIpmAugmented( long int N );
     double *U_mean; ///< Cumulative mean dual solution approximation [nNu]
     double *U_M2;   ///< Cumulative sum of squares [nNu]
     double *U_CVo;  ///< Cumulative Coefficient of Variation for dual solution approximation r-1 [nNu]
@@ -3567,7 +3621,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaReadmitSeed,
     f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn, f_pa_ColdRetryNudges,
     f_pa_OptimaPreSolveFirstIters, f_pa_LpDualFillout, f_pa_FilloutBudget,
-    f_pa_StabTPD
+    f_pa_StabTPD, f_pa_IpmAugmentedKKT, f_pa_IpmLoopTweaks
 
 } MULTI_DYNAMIC_FIELDS;
 

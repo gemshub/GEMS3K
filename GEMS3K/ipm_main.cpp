@@ -192,7 +192,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaReadmitSeed=%.6e pa_IpmStallWindow=%d pa_MbReproject=%d"
              " pa_DeterminacyWarn=%.6e pa_ColdRetryNudges=%ld"
              " pa_OptimaPreSolveFirstIters=%ld pa_LpDualFillout=%ld"
-             " pa_FilloutBudget=%.6e pa_StabTPD=%ld\n",
+             " pa_FilloutBudget=%.6e pa_StabTPD=%ld"
+             " pa_IpmAugmentedKKT=%ld pa_IpmLoopTweaks=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -212,7 +213,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaZeroAbsent, pa->OptimaReadmitSeed,
              (int)pa->IpmStallWindow, (int)pa->MbReproject, pa->DeterminacyWarn,
              (long)pa->ColdRetryNudges, (long)pa->OptimaPreSolveFirstIters,
-             (long)pa->LpDualFillout, pa->FilloutBudget, (long)pa->StabTPD );
+             (long)pa->LpDualFillout, pa->FilloutBudget, (long)pa->StabTPD,
+             (long)pa->IpmAugmentedKKT, (long)pa->IpmLoopTweaks );
 
     // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
     //
@@ -3930,6 +3932,12 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     std::vector<double> stW_xf;
     long int stW_n = 0, stW_head = 0;
     const BASE_PARAM *pa_p = base_param();
+    // pa_IpmLoopTweaks (default 0): the owner's SolverType == 2 main-loop changes, one bit each - see
+    // BASE_PARAM::IpmLoopTweaks. The constants are the original's, kept literal so an arm reproduces it.
+    const long int kIpmLooseAfter  = 120;    // bit 4: loose accept only past this ITG
+    const double   kIpmLooseFactor = 300.;   // bit 4: accept PCI < this x DXM
+    const double   kIpmLagPCI      = 5e-4;   // bit 2: lag lnGam updates below this PCI (absolute)
+    ipmKktRescues = 0;
 
     status = 0;
     if( pm.FIs )
@@ -4024,6 +4032,8 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
 
        // Initial estimate of IPM descent step size LM
        LM = StepSizeEstimate( false );
+       if( pa_p->IpmLoopTweaks & 1 )
+           LM = std::min( 1.0, LM );
        LM1 = OptimizeStepSize( LM ); // Finding an optimal value of the descent step size
        FX1 = GX( LM1 ); // Calculation of the total Gibbs energy of the system G(X)
                           // and copying of Y, YF vectors into X,XF, respectively.
@@ -4042,8 +4052,16 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
 
        // Main IPM iteration done
        // Main calculation of activity coefficients
+       // pa_IpmLoopTweaks bit 2 lags it near the minimum; an iteration that skipped it may not
+       // terminate, since its lnGam is not the one the current composition implies.
+        bool lnGamFresh = true;
         if( pm.PD >= 2 )
-            status = CalculateActivityCoefficients( LINK_UX_MODE );
+        {
+            if( ( pa_p->IpmLoopTweaks & 2 ) && pm.PCI < kIpmLagPCI && pm.ITG % 3 != 0 )
+            {   status = 0;  lnGamFresh = false;  }
+            else
+                status = CalculateActivityCoefficients( LINK_UX_MODE );
+        }
 
 if( pm.pNP && status ) // && rLoop < 0  )
 {
@@ -4098,8 +4116,15 @@ STEP_POINT( "IPM Iteration" );
             fflush( ipf );
         }
 
-        if( pm.PCI <= pm.DXM )  // Dikin criterion satisfied - converged!
+        if( pm.PCI <= pm.DXM && lnGamFresh )  // Dikin criterion satisfied - converged!
             goto CONVERGED;
+        if( ( pa_p->IpmLoopTweaks & 4 ) && lnGamFresh
+         && pm.ITG > kIpmLooseAfter && pm.PCI < kIpmLooseFactor * pm.DXM )
+        {
+            native_trace_decide( "ipmlooseaccept itg=%ld pci=%.6e dxm=%.6e ratio=%.4g",
+                                 (long)pm.ITG, pm.PCI, pm.DXM, pm.PCI / pm.DXM );
+            goto CONVERGED;   // NOT certified by the Dikin test - see BASE_PARAM::IpmLoopTweaks
+        }
         if( pa_p->IpmStallWindow > 0 )
         {
             const long int W = std::min( (long int)pa_p->IpmStallWindow, kIpmStallMaxW );
@@ -4182,7 +4207,7 @@ STEP_POINT( "IPM Iteration" );
                         else if( hi > negl && ( hi - lo ) > kIpmStallSpRel * hi ) xFlat = false;
                     }
                 }
-                if( xFlat
+                if( xFlat && lnGamFresh
                  && spreadOK( stW_fx,  kIpmStallFXTol )
                  && spreadOK( stW_sum, kIpmStallCompTol )
                  && spreadOK( stW_max, kIpmStallCompTol )
@@ -4967,6 +4992,166 @@ static double InverseIterationMinEig( Decomp& decomp, long int N, int iters )
 #endif // GEMS3K_BENCHMARK_DIAGNOSTICS
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/// pa_IpmAugmentedKKT = 1 or 2: the main-loop solve for pm.U that never forms A^T W A.
+/// See BASE_PARAM::IpmAugmentedKKT (ms_multi.h) for the system, D and the zero-row rescue.
+///
+/// Both arms solve (A_act^T W A_act + D) u = A_act^T W F over the SAME species the normal-
+/// equations assembly below uses (Y > min(lowPosNum, DcMinM)); they differ from it only by D and
+/// by rounding. pm.MU is not written here - DikinsCriterion() recomputes it from pm.U, and
+/// W (A u - F) is exactly the x block of arm 1, so there is nothing to carry over.
+/// \return 0 solved, 1 singular (the caller reports E07IPM, as for the normal equations).
+long int TMultiBase::SolveIpmAugmented( long int N )
+{
+    const long int Na = pm.N;   // stride of the a(j,i) macro
+    const long int mode = base_param()->IpmAugmentedKKT;
+    const double kRescueRel = 1e-12;
+
+    std::vector<long int> act;
+    for( long int jj = 0; jj < pm.L; jj++ )
+        if( pm.Y[jj] > min( pm.lowPosNum, pm.DcMinM ) )
+            act.push_back( jj );
+    const long int La = (long int)act.size();
+
+    // D is ZERO on every row some active species carries, and 1e-12 * max_i d_i on a row none does
+    // (d_i = sum_j W_j a_ji^2, the normal matrix's own diagonal). A uniform D - the original's
+    // absolute 1e-12, or 1e-12 * d_i per row - was MEASURED HARMFUL: this matrix is conditioned up to
+    // ~1e17 (plan v5, the MBR Jacobi preconditioner record), so a 1e-12 shift moves the weak
+    // directions of u by O(1). f_Kaolinite native, same QR solve: D = 1e-12 * d_i -> 3963 iterations
+    // and G off by 7.3e-6 relative; D = 1e-16 * d_i or 0 -> 45 IPM iterations, G to 10 digits
+    // (2026-09-28b, against 273 for the normal equations).
+    std::vector<double> dreg( (size_t)N, 0. );
+    for( long int r = 0; r < La; r++ )
+    {
+        const long int j = act[(size_t)r];
+        for( long int i = 0; i < N; i++ )
+        {   const double v = a(j,i);
+            dreg[(size_t)i] += pm.W[j] * v * v; }
+    }
+    double dmax = 0.;
+    for( long int i = 0; i < N; i++ )
+        dmax = std::max( dmax, dreg[(size_t)i] );
+    if( !( dmax > 0. ) )
+        return 1;                  // nothing active carries any IC: no scale to regularise with
+    long int nZero = 0, iZero = -1;
+    for( long int i = 0; i < N; i++ )
+    {
+        if( dreg[(size_t)i] > 0. )
+            dreg[(size_t)i] = 0.;
+        else
+        {   // Zero-row rescue: u_i is undetermined; the floor sets it to 0 instead of failing.
+            dreg[(size_t)i] = kRescueRel * dmax;
+            if( iZero < 0 ) iZero = i;
+            nZero++;
+        }
+    }
+    if( nZero > 0 && ipmKktRescues++ == 0 )
+        native_trace_decide( "ipmkkt-zerorow mode=%ld ics=%ld first=%s itg=%ld",
+                             (long)mode, (long)nZero,
+                             char_array_to_string( pm.SB[iZero], MAXICNAME ).c_str(), (long)pm.ITG );
+
+    if( mode == 1 )
+    {
+        // The owner's saddle-point form (tmp/ipm_main.cpp), dense LU with partial pivoting:
+        //   [ I          -W A_act ] [ x ]   [ -W F ]
+        //   [ -A_act^T   -D       ] [ u ] = [  0   ]
+        const long int K = La + N;
+        Array2D<double> KKT( K, K, 0.0 );
+        Array1D<double> V( K, 0.0 );
+        for( long int r = 0; r < La; r++ )
+        {
+            const long int j = act[(size_t)r];
+            KKT[r][r] = 1.0;
+            for( long int c = 0; c < N; c++ )
+                KKT[r][La + c] = -pm.W[j] * a(j,c);
+            V[r] = -pm.W[j] * pm.F[j];
+        }
+        for( long int r = 0; r < N; r++ )
+        {
+            for( long int c = 0; c < La; c++ )
+                KKT[La + r][c] = -a(act[(size_t)c], r);
+            KKT[La + r][La + r] = -dreg[(size_t)r];
+        }
+        JAMA::LU<double> lu( KKT );
+        if( !lu.isNonsingular() )
+        {
+            ipm_logger->warn("SolveIpmAugmented (pa_IpmAugmentedKKT=1): augmented matrix singular, "
+                             "L_act={} N={}", La, N);
+            return 1;
+        }
+        Array1D<double> S = lu.solve( V );
+        for( long int i = 0; i < N; i++ )
+            pm.U[i] = S[La + i];
+        return 0;
+    }
+
+    // mode 2: least squares  min |W^1/2 (A u - F)|^2 + u^T D u  by Householder QR of the
+    // (La+N) x N stack [W^1/2 A_act ; D^1/2], right-hand side [W^1/2 F ; 0]. Column-major.
+    const long int M = La + N;
+    std::vector<double> Q( (size_t)M * (size_t)N, 0. ), b( (size_t)M, 0. );
+    for( long int r = 0; r < La; r++ )
+    {
+        const long int j = act[(size_t)r];
+        const double sw = sqrt( std::max( pm.W[j], 0. ) );
+        for( long int c = 0; c < N; c++ )
+            Q[(size_t)c * M + r] = sw * a(j,c);
+        b[(size_t)r] = sw * pm.F[j];
+    }
+    for( long int i = 0; i < N; i++ )
+        Q[(size_t)i * M + La + i] = sqrt( dreg[(size_t)i] );
+
+    std::vector<double> Rd( (size_t)N, 0. ), v( (size_t)M, 0. );
+    for( long int k = 0; k < N; k++ )
+    {
+        double* qk = &Q[(size_t)k * M];
+        double nrm = 0.;
+        for( long int r = k; r < M; r++ ) nrm += qk[r] * qk[r];
+        nrm = sqrt( nrm );
+        if( !( nrm > 0. ) )
+        {
+            ipm_logger->warn("SolveIpmAugmented (pa_IpmAugmentedKKT=2): zero column {} of {}", k, N);
+            return 1;
+        }
+        const double alpha = ( qk[k] > 0. ) ? -nrm : nrm;
+        double vn2 = 0.;
+        for( long int r = k; r < M; r++ ) { v[(size_t)r] = qk[r]; }
+        v[(size_t)k] -= alpha;
+        for( long int r = k; r < M; r++ ) vn2 += v[(size_t)r] * v[(size_t)r];
+        if( vn2 > 0. )
+        {
+            for( long int c = k; c < N; c++ )
+            {
+                double* qc = &Q[(size_t)c * M];
+                double s = 0.;
+                for( long int r = k; r < M; r++ ) s += v[(size_t)r] * qc[r];
+                s *= 2. / vn2;
+                for( long int r = k; r < M; r++ ) qc[r] -= s * v[(size_t)r];
+            }
+            double s = 0.;
+            for( long int r = k; r < M; r++ ) s += v[(size_t)r] * b[(size_t)r];
+            s *= 2. / vn2;
+            for( long int r = k; r < M; r++ ) b[(size_t)r] -= s * v[(size_t)r];
+        }
+        Rd[(size_t)k] = qk[k];
+    }
+    double rmax = 0.;
+    for( long int k = 0; k < N; k++ ) rmax = std::max( rmax, fabs( Rd[(size_t)k] ) );
+    for( long int k = 0; k < N; k++ )
+        if( !( fabs( Rd[(size_t)k] ) > 1e-14 * rmax ) )
+        {
+            ipm_logger->warn("SolveIpmAugmented (pa_IpmAugmentedKKT=2): rank-deficient R at {} of {}", k, N);
+            return 1;
+        }
+    for( long int k = N - 1; k >= 0; k-- )
+    {
+        double s = b[(size_t)k];
+        for( long int c = k + 1; c < N; c++ )
+            s -= Q[(size_t)c * M + k] * pm.U[c];
+        pm.U[k] = s / Rd[(size_t)k];
+    }
+    return 0;
+}
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Make and Solve a system of linear equations to find the dual vector
 /// approximation using a method of Cholesky Decomposition. Good if a
 /// square matrix R happens to be symmetric and positive defined.
@@ -5130,6 +5315,17 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
 #endif
             return 0;
         }
+    }
+
+    if( !initAppr && base_param()->IpmAugmentedKKT > 0 )
+    {
+        const long int ret = SolveIpmAugmented( N );
+#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
+        pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
+                              std::chrono::high_resolution_clock::now() - solve_t0 ).count();
+        pm.CondNumTimeMs += diag_ms;
+#endif
+        return ret;
     }
 
     Alloc_A_B( N );
