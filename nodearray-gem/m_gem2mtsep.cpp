@@ -11,6 +11,7 @@
 //
 //-------------------------------------------------------------------
 
+#include <array>
 #include "m_gem2mt.h"
 #include "GEMS3K/nodearray.h"
 #include "GEMS3K/io_keyvalue.h"
