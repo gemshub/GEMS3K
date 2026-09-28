@@ -144,6 +144,7 @@ void TMultiBase::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
 /// Set default information
 void TMultiBase::set_def( int )
 {
+    base_param()->PSTALL = 1;
     //mem_cpy( &pm.PunE, "jjbC", 4 );
     fillValue( pm.stkey, '\0', EQ_RKLEN);
     pm.PunE = 'j';         // Units of energy  { j;  J c C N reserved }
@@ -1383,5 +1384,4 @@ void TMultiBase::solmod_to_json_file(const std::string& path)
 }
 
 //--------------------- End of ms_multi_file.cpp ---------------------------
-
 
