@@ -539,7 +539,7 @@ public:
     /// Lsf: of DCs in phases-solutions in Multi (DATACH) for setting box-fluxes
     long int nComponents() const
     {
-        return mtp->FIf;
+        return mtp->Lsf;
     }
 
     /// Define the number of mobile groups of phases, nMGP >= 0
