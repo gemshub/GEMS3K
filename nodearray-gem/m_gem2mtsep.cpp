@@ -635,7 +635,7 @@ void TGEM2MT::mem_kill(int q)
     }
     if(mtp->nPmax) {
         delete[] mtp->nPmax;
-        mtp->sdref = nullptr;
+        mtp->nPmax = nullptr;
     }
     if(mtp->ParTD) {
         delete[] mtp->ParTD;

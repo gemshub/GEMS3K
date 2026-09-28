@@ -80,7 +80,7 @@ void setInitialNodeEffectivePorosity(double val);
 /// Km:  Initial effective permeability, m2, usually 1
 void setInitialEffectivePermeability(double val);
 /// al:  Initial value of specific longitudinal dispersivity (m), usually 1e-3
-void setInitialDispersiviSome of them used for default array initialization, better define before allocationty(double val);
+void setInitialDispersivity(double val);
 /// Dif:  Initial general aqueous medium diffusivity (m2/sec), usually 1e-9
 void setInitialDiffusivity(double val);
 /// nto:  Initial tortuosity factor, usually 1

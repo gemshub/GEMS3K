@@ -402,7 +402,7 @@ public:
     void setComment(const std::string& task_notes)
     {
         strncpy(mtp->notes, task_notes.c_str(), MAXFORMULA-1);
-        mtp->name[MAXFORMULA-1]='\0';
+        mtp->notes[MAXFORMULA-1]='\0';
     }
 
     // (2) Allocation and setup flags
@@ -539,7 +539,7 @@ public:
     /// Lsf: of DCs in phases-solutions in Multi (DATACH) for setting box-fluxes
     long int nComponents() const
     {
-        return mtp->FIf;
+        return mtp->Lsf;
     }
 
     /// Define the number of mobile groups of phases, nMGP >= 0

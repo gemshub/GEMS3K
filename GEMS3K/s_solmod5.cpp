@@ -693,37 +693,32 @@ void TPitzer::free_internal()
 
 
 
-    if(Nn != 0)
+    for(i=0; i<Nn; i++)
     {
-
-        for(i=0; i<Nn; i++)
+        for(j=0; j<Nc; j++)
         {
-            for(j=0; j<Nc; j++)
-            {
-                delete[]Zeta[i][j];
-            }
+            delete[]Zeta[i][j];
         }
-
-        for(i=0; i<Nn; i++)
-        {
-            delete[]Zeta[i];
-        }
-        delete[]Zeta;
-
-
-        for( i=0; i<Nn ; i++)
-        {
-            delete[]Lam[i];
-        }
-        delete[]Lam;
-
-        for( i=0; i<Nn ; i++)
-        {
-            delete[]Lam1[i];
-        }
-        delete[]Lam1;
-
     }
+
+    for(i=0; i<Nn; i++)
+    {
+        delete[]Zeta[i];
+    }
+    delete[]Zeta;
+
+
+    for( i=0; i<Nn ; i++)
+    {
+        delete[]Lam[i];
+    }
+    delete[]Lam;
+
+    for( i=0; i<Nn ; i++)
+    {
+        delete[]Lam1[i];
+    }
+    delete[]Lam1;
 
     delete[]xcx;
     delete[]xax;
@@ -1344,13 +1339,13 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 i =  getIc( aIPx[ii * MaxOrd + 1] );
                 if( i<0 )
                 {
-                    ia = getIn( aIPx[ii * MaxOrd + 1] );
+                    in = getIn( aIPx[ii * MaxOrd + 1] );
                     i =  getIc( aIPx[ii * MaxOrd + 2] );
                 }
                 else
                     in = getIn( aIPx[ii * MaxOrd + 2] );
             }
-            ErrorIf( ic<0||in<0||i<0, "PTcalc", "Index of anion and 2 indexes of cations needed here"  );
+            ErrorIf( ic<0||in<0||i<0, "PTcalc", "Index of neutral and 2 indexes of cations needed here"  );
 
             Eta[ic][i][in] = setvalue(ii, Gex_or_Sex);
             Eta[i][ic][in] = Eta[ic][i][in]; // ca-ca-n
@@ -1375,7 +1370,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 else
                     in = getIn( aIPx[ii * MaxOrd + 2] );
             }
-            ErrorIf( in<0||ia<0||i<0, "PTcalc", "Indexes of 2 anions and one cation needed here"  );
+            ErrorIf( in<0||ia<0||i<0, "PTcalc", "Indexes of 2 anions and one neutral needed here"  );
 
             Eta1[ia][i][in] = setvalue(ii, Gex_or_Sex);
             Eta1[i][ia][in] = Eta1[ia][i][in]; // an-an-n
@@ -1565,127 +1560,6 @@ void TPitzer::Ecalc( double z, double z1, double I1, double DH_term,
     Ethetap= - (Etheta/I1) +((z*z1)/(8.0*I1*I1)) *(xMN*JpMN - 0.5*xMM*JpMM - 0.5*xNN*JpNN);
 }
 
-// needs testing
-/* ---------------------------------------------------------------------- */
-void TPitzer::ETHETAS(double ZJ, double ZK, double I, double DH_term, double& etheta, double& ethetap)
-/* ---------------------------------------------------------------------- */
-{
-    /* Revised ETHETAS code thanks to Wouter Falkena and the MoReS team, June, 2015 */
-   //*etheta = 0.0;
-   //*ethetap = 0.0;
-
-    if (essentiallyEqual(ZJ, ZK))
-      return /*(OK)*/;
-
-   const double XCON = 6.0e0 * DH_term * sqrt(I);
-   const double ZZ = ZJ * ZK;
-/*
-C
-C     NEXT 3 ARE EQUATION (A1)
-C
-*/
-   const double XJK = XCON * ZZ;
-   const double XJJ = XCON * ZJ * ZJ;
-   const double XKK = XCON * ZK * ZK;
-
-/*
-C
-C     EQUATION (A3)
-C
-*/
-   double JAY_XJK;
-   double JPRIME_XJK;
-   ETHETA_PARAMS( XJK, JAY_XJK, JPRIME_XJK );
-
-   double JAY_XJJ;
-   double JPRIME_XJJ;
-   ETHETA_PARAMS( XJJ, JAY_XJJ, JPRIME_XJJ );
-
-   double JAY_XKK;
-   double JPRIME_XKK;
-   ETHETA_PARAMS( XKK, JAY_XKK, JPRIME_XKK );
-
-   etheta =
-      ZZ * (JAY_XJK - JAY_XJJ / 2.0e0 - JAY_XKK / 2.0e0) / (4.0e0 * I);
-   ethetap =
-      ZZ * (JPRIME_XJK - JPRIME_XJJ / 2.0e0 -
-            JPRIME_XKK / 2.0e0) / (8.0e0 * I * I) - etheta / I;
-
-  // return (OK);
-}
-
-/* ---------------------------------------------------------------------- */
-void TPitzer::ETHETA_PARAMS(double X, double& JAY, double& JPRIME )
-/* ---------------------------------------------------------------------- */
-/*
-C
-C     NUMERICAL APPROXIMATION TO THE INTEGRALS IN THE EXPRESSIONS FOR J0
-C     AND J1.  CHEBYSHEV APPROXIMATION IS USED.  THE CONSTANTS 'AK' ARE
-C     DEFINED IN BLOCK COMMON.
-C
-*/
-/*
-C
-C     AK IS USED TO CALCULATE HIGHER ORDER ELECTROSTATIC TERMS IN
-C     SUBROUTINE PITZER
-C
-*/
-{
-   static const double AKX[42] = {
-      1.925154014814667e0, -.060076477753119e0, -.029779077456514e0,
-      -.007299499690937e0, 0.000388260636404e0, 0.000636874599598e0,
-      0.000036583601823e0, -.000045036975204e0, -.000004537895710e0,
-      0.000002937706971e0, 0.000000396566462e0, -.000000202099617e0,
-      -.000000025267769e0, 0.000000013522610e0, 0.000000001229405e0,
-      -.000000000821969e0, -.000000000050847e0, 0.000000000046333e0,
-      0.000000000001943e0, -.000000000002563e0, -.000000000010991e0,
-      0.628023320520852e0, 0.462762985338493e0, 0.150044637187895e0,
-      -.028796057604906e0, -.036552745910311e0, -.001668087945272e0,
-      0.006519840398744e0, 0.001130378079086e0, -.000887171310131e0,
-      -.000242107641309e0, 0.000087294451594e0, 0.000034682122751e0,
-      -.000004583768938e0, -.000003548684306e0, -.000000250453880e0,
-      0.000000216991779e0, 0.000000080779570e0, 0.000000004558555e0,
-      -.000000006944757e0, -.000000002849257e0, 0.000000000237816e0
-   };
-/*
-      LDBLE PRECISION AK, BK, DK
-      COMMON / MX8 / AK(0:20,2),BK(0:22),DK(0:22)
-*/
-   const double *AK;
-   double L_Z = 0.0;
-   double L_DZ = 0.0;
-
-   double BK[23], DK[23];
-
-   if ( X <= 1.0e0 )
-   {
-      const double powX0_2 = pow( X, 0.2 );
-      L_Z  = 4.0e0 * powX0_2 - 2.0e0;
-      L_DZ = 0.8e0 * powX0_2 / 2.0e0;
-      AK = &AKX[0];
-   }
-   else
-   {
-      const double powXmin0_1 = pow( X, -0.1 );
-      L_Z  = ( 40.0e0 * powXmin0_1 - 22.0e0 ) / 9.0e0;
-      L_DZ = -4.0e0 * powXmin0_1 / 18.0e0;
-      AK = &AKX[21];
-   }
-
-   BK[20] = AK[20];
-   BK[19] = L_Z * AK[20] + AK[19];
-   DK[19] = AK[20];
-   for ( int i = 18; i >= 0; i-- )
-   {
-      BK[i] = L_Z * BK[i + 1] - BK[i + 2] + AK[i];
-      DK[i] = BK[i + 1] + L_Z * DK[i + 1] - DK[i + 2];
-   }
-
-   JAY = X / 4.0e0 - 1.0e0 + 0.5e0 * (BK[0] - BK[2]);
-   JPRIME = X * .25e0 + L_DZ * (DK[0] - DK[2]);
-}
-
-
 /// Calculate Z-Term, Pitzer-Toughreact Report 2006, equation (A8)
 double TPitzer::Z_Term()
 {
@@ -1770,7 +1644,6 @@ double TPitzer::lnGammaH2O( double DH_term )
             z=zc[c];
             z1=zc[c1];
             Ecalc( z, z1, I, Aphi, Etheta,Ethetap);
-            //ETHETAS( z, z1, I, Aphi, Etheta,Ethetap); // needs testing
             Theta[c1][c]=Theta[c][c1];
             Phiphi = Theta[c][c1] + Etheta + Ethetap * I;// * sqrt(I);	 Pitzer-Toughreact Report 2006, equation (A14)
             OC3 += (pmc[c]*pmc[c1]*(Phiphi + OC3a));
@@ -1791,7 +1664,6 @@ double TPitzer::lnGammaH2O( double DH_term )
             z=za[a];
             z1=za[a1];
             Ecalc(z,z1,I,Aphi, Etheta,Ethetap);
-            //ETHETAS( z, z1, I, Aphi, Etheta,Ethetap); // needs testing
             Theta1[a1][a]=Theta1[a][a1];
             Phiphi1 = Theta1[a][a1] + Etheta + Ethetap * I;	// Pitzer-Toughreact Report, 2006 equation (A14)
             OC4 += (pma[a]*pma[a1]*(Phiphi1 + OC4a));
@@ -1885,7 +1757,7 @@ void TPitzer::getAlp( long int c, long int a, double& alp, double& alp1 )
     {
         alp=2.0;
         alp1=50.;
-     }
+    }
 }
 
 
@@ -1934,7 +1806,6 @@ double TPitzer::F_Factor( double DH_term )
             z=zc[c];
             z1=zc[c1];
             Ecalc(z,z1,I,DH_term, Etheta,Ethetap);
-            //ETHETAS( z, z1, I, DH_term, Etheta,Ethetap); // needs testing
             Phip = Ethetap;					//Pitzer-Toughreact Report 2006, equation (A16)
             F2 +=(pmc[c]*pmc[c1]*(Phip));
         }
@@ -1950,7 +1821,6 @@ double TPitzer::F_Factor( double DH_term )
             z=za[a];
             z1=za[a1];
             Ecalc(z,z1,I,DH_term, Etheta,Ethetap);
-            //ETHETAS( z, z1, I, DH_term, Etheta,Ethetap); // needs testing
             Phip1=Ethetap;      				//Pitzer-Toughreact Report 2006, equation (A16)
             F3 +=(pma[a]*pma[a1]*(Phip1));
         }
@@ -2000,7 +1870,7 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
         getAlp(  M,  a, alp, alp1 );
         if (!essentiallyEqual(Alp1[M][a],0.0))
             alp=Alp1[M][a];
-        if (!essentiallyEqual(Alp1[M][a],0.0))
+        if (!essentiallyEqual(Alp2[M][a],0.0))
             alp1=Alp2[M][a];
         C = Cphi[M][a]/(2.*sqrt(fabs(za[a]*zc[M])));	// Pitzer-Toughreact Report 2006, equation (A7)
         x_alp = alp*Is;
@@ -2023,7 +1893,6 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
         }
         z = zc[M];
         z1 = zc[c1];
-        //ETHETAS( z, z1, I, DH_term, Etheta,Ethetap); // needs testing
         Ecalc(z,z1,I,DH_term ,Etheta,Ethetap);
         Theta[c1][M] = Theta[M][c1];
         Phi = Theta[M][c1]+Etheta;  					// Pitzer-Toughreact Report 2006, equation (A15)
@@ -2113,7 +1982,7 @@ double TPitzer::lnGammaX( long int X, double DH_term )
         getAlp(  c,  X, alp, alp1 );
         if (!essentiallyEqual(Alp1[c][X],0.0))
             alp=Alp1[c][X];
-        if (!essentiallyEqual(Alp1[c][X],0.0))
+        if (!essentiallyEqual(Alp2[c][X],0.0))
             alp1=Alp2[c][X];
         C = Cphi[c][X]/(2.*sqrt(fabs(za[X]*zc[c])));
         x_alp = alp*Is;
@@ -2136,7 +2005,6 @@ double TPitzer::lnGammaX( long int X, double DH_term )
         z = za[X];
         z1 = za[a1];
         Ecalc(z,z1,I,DH_term , Etheta,Ethetap);
-        //ETHETAS( z, z1, I, DH_term, Etheta,Ethetap); // needs testing
         Theta1[a1][X] = Theta1[X][a1];
         Phi1 = Theta1[X][a1]+Etheta;
 

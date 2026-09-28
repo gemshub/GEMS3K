@@ -879,7 +879,7 @@ void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int
             delete phSolMod[k];
 
      phSolMod[k] = mySM; // set up new pointer for the solution model
-    if(TSolMod::solmod_logger->should_log(spdlog::level::debug)) {
+    if(mySM && TSolMod::solmod_logger->should_log(spdlog::level::debug)) {
      phSolMod[k]->to_json_file(std::string("solmod_")+std::to_string(k)+".json");
     }
 }

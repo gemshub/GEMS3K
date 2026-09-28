@@ -544,8 +544,8 @@ void TNode::CheckMtparam()
     P = PPa/bar_to_Pa;
     //pmp->pTPD = 2;
     node_logger->debug("CheckMtparam T: {} - {}  P: {} - {}", pmm->Tc, TK, pmm->Pc, P);
-    if( !load_thermodynamic_data || fabs( pmm->Tc - TK ) > CSD->Ttol
-            || fabs( pmm->Pc - P )  > CSD->Ptol/bar_to_Pa  )
+    if( !load_thermodynamic_data || fabs( pmm->Tc - TK ) >= CSD->Ttol
+            || fabs( pmm->Pc - P )  >= CSD->Ptol/bar_to_Pa  )
     {
         pmm->pTPD = 0;      //T, P is changed
     }
