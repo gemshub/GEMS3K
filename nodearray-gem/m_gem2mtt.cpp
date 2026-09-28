@@ -769,6 +769,9 @@ void TGEM2MT::alloc_loggers()
 {
     // could be other directory
     if(mtp->PsMO != S_OFF) {
+        spdlog::drop("ic_diff_log");
+        spdlog::drop("ic_aq_log");
+        spdlog::drop("ph_log");
         diff_log_file = spdlog::basic_logger_mt("ic_diff_log", "ICdif-log2.dat", true);
         diff_log_file->set_pattern("%v");
 
