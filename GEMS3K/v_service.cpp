@@ -116,11 +116,11 @@ void u_splitpath(const std::string& file_path, std::string& folder,
 {
     fs::path path(file_path);
     folder = path.parent_path().string();
-    if(!folder.empty()) {
-        folder += "/";
-    }
     stem = path.filename().stem().string();
     ext = path.extension().string();
+    if(!ext.empty() && ext[0] == '.') {
+        ext.erase(0, 1);
+    }
 }
 
 void u_splitpath_old(const std::string& Path, std::string& dir,
