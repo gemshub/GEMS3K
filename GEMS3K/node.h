@@ -1221,7 +1221,7 @@ public:
     double DC_mu0(const long int xCH, bool norm=true);
 
     /// Writes work node (DATABR structure) to a text VTK file
-    virtual void databr_to_vtk( std::fstream& ff, const char*name, double time, long int  cycle,
+    virtual void databr_to_vtk( std::fstream& ff, const std::string& name, double time, long int  cycle,
                                 long int nFilds, long int (*Flds)[2]);
 
     /// Get the last error message logged to the ipmlog file
@@ -1292,7 +1292,7 @@ protected:
 
     /// Prints header of VTK data with name, time, loop # and xyz coordinates set to 1
     /// into a VTK file referenced by ff
-    void databr_head_to_vtk( std::fstream& ff, const char*name, double time, long cycle,
+    void databr_head_to_vtk( std::fstream& ff, const std::string& name, double time, long cycle,
                              long nx = 1, long ny = 1, long nz = 1 );
 
     // Copying CSD and CNode data structures for TNodeArray parallelization

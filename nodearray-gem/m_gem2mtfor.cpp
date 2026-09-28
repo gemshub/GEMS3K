@@ -13,45 +13,44 @@
 
 #include "m_gem2mt.h"
 #include "GEMS3K/io_template.h"
-#include "GEMS3K/io_nlohmann.h"
 #include "GEMS3K/io_simdjson.h"
 #include "GEMS3K/io_keyvalue.h"
+#ifdef USE_NLOHMANNJSON
+#include "GEMS3K/io_nlohmann.h"
+#endif
 
-extern const std::string _GEMIPM_version_stamp;
 
-//=============================================================
-
-std::vector<io_formats::outField> GEM2MT_static_fields =  {  //57
+std::vector<io_formats::outField> GEM2MT_static_fields =  { //57
     // Allocation and setup flags
-     { "PvPGD" , 1, 0, 0, "# PvPGD: Use mobile phase groups definitions (+ -)" },
-     { "PvFDL" , 1, 0, 0, "# PvFDL: Use MGP flux definition list (+ -)" },
-     { "PvSFL" , 1, 0, 0, "# PvSFL: Use source fluxes and elemental stoichiometries for them (+ -)" },
-     { "PvGrid" , 1, 0, 0, "# PvGrid: Use array of grid point locations (+ -)" },
-     { "PvDDc" , 1, 0, 0, "# PvDDc:  Use diffusion coefficients for DC - DDc vector (+ -)" },
-     { "PvDIc" , 1, 0, 0, "# PvDIc:  Use diffusion coefficients for IC - DIc vector (+ -)" },
-     { "PvnVTK" , 1, 0, 0, "# PvnVTK: Use selected fields to VTK format (+ -)" },
-   // Controls on operation
-     { "PsMode", 1, 0, 0, "# PsMode: Code of GEM2MT mode of operation { S F A D T W V }" },
-     { "PsSIA" , 0, 0, 0, "# PsSIA: Use smart initial approximation in GEM IPM (+); SIA internal (*); AIA (-)" },
-     { "PsSdat" , 0, 0, 0, "# PsSdat:Save DataCH and inital DataBR files as text json files (j|f), as key value files (t|o) or binary (b)" },
-     { "PsSdef" , 0, 0, 0, "# PsSdef:Do not write data items that contain only default values (+ -)" },
-     { "PsScom" , 0, 0, 0, "# PsScom:Write files with comments for all data entries ( text mode ) or as pretty JSON (+ -)" },
-     { "PsMO" , 0, 0, 0, "# PsMO: Use non stop debug output for nodes (+ -)" },
-     { "PsVTK" , 1, 0, 0, "# PsVTK: Use non stop debug output nodes to VTK format(+ -)" },
-     { "PsMPh" , 1, 0, 0, "# PsMPh: Type flux Phase ( 0 undef, 1 - aq; 2 - gas; 3 - aq+gas, 4 - solids )" },
-      // sizes
-     { "nC", 1, 0, 0, "# nC:  Input number of local equilibrium cells (nodes)" },
-     { "nIV", 1, 0, 0, "# nIV:  Number of initial variants of the chemical system, nIV <= nC" },
-     { "nMGP", 0, 0, 0, "# nMGP:  Number of mobile groups of phases, nMGP >= 0" },
-     { "nFD", 0, 0, 0, "# nFD: Number of MGP fluxes defined in the megasystem, nFD >= 0" },
-     { "nSFD", 0, 0, 0, "# nSFD:  Number of IC source flux compositions defined in megasystem, nSFD >= 0" },
-     { "nEl" , 1, 0, 0, "# nEl: Number of electrolytes for diffusion coefficients in mDEl" },
-     { "nPTypes", 0, 0, 0, "# nPTypes:  Number of allocated particle types < 20" },
-     { "nProps", 0, 0, 0, "# nProps:  Number of particle statistic properties (for monitoring) >= nPTypes" },
-     { "Nsd",   1, 0, 0, "# Nsd:   Number of references to data sources" },
-     { "bTau" , 1, 0, 0, "# bTau:   Time point for the simulation break (Tau[0] at start)" },
-     { "ntM" , 0, 0, 0, "# ntM:  Maximum allowed number of time iteration steps" },
-     { "nVTKfld" , 0, 0, 0, "# nVTKfld:   Number of selected fields to VTK format" },
+    { "PvPGD" , 1, 0, 0, "# PvPGD: Use mobile phase groups definitions (+ -)" },
+    { "PvFDL" , 1, 0, 0, "# PvFDL: Use MGP flux definition list (+ -)" },
+    { "PvSFL" , 1, 0, 0, "# PvSFL: Use source fluxes and elemental stoichiometries for them (+ -)" },
+    { "PvGrid" , 1, 0, 0, "# PvGrid: Use array of grid point locations (+ -)" },
+    { "PvDDc" , 1, 0, 0, "# PvDDc:  Use diffusion coefficients for DC - DDc vector (+ -)" },
+    { "PvDIc" , 1, 0, 0, "# PvDIc:  Use diffusion coefficients for IC - DIc vector (+ -)" },
+    { "PvnVTK" , 1, 0, 0, "# PvnVTK: Use selected fields to VTK format (+ -)" },
+    // Controls on operation
+    { "PsMode", 1, 0, 0, "# PsMode: Code of GEM2MT mode of operation { S F A D T W V }" },
+    { "PsSIA" , 0, 0, 0, "# PsSIA: Use smart initial approximation in GEM IPM (+); SIA internal (*); AIA (-)" },
+    { "PsSdat" , 0, 0, 0, "# PsSdat:Save DataCH and inital DataBR files as text json files (j|f), as key value files (t|o) or binary (b)" },
+    { "PsSdef" , 0, 0, 0, "# PsSdef:Do not write data items that contain only default values (+ -)" },
+    { "PsScom" , 0, 0, 0, "# PsScom:Write files with comments for all data entries ( text mode ) or as pretty JSON (+ -)" },
+    { "PsMO" , 0, 0, 0, "# PsMO: Use non stop debug output for nodes (+ -)" },
+    { "PsVTK" , 1, 0, 0, "# PsVTK: Use non stop debug output nodes to VTK format(+ -)" },
+    { "PsMPh" , 1, 0, 0, "# PsMPh: Type flux Phase ( 0 undef, 1 - aq; 2 - gas; 3 - aq+gas, 4 - solids )" },
+    // sizes
+    { "nC", 1, 0, 0, "# nC:  Input number of local equilibrium cells (nodes)" },
+    { "nIV", 1, 0, 0, "# nIV:  Number of initial variants of the chemical system, nIV <= nC" },
+    { "nMGP", 0, 0, 0, "# nMGP:  Number of mobile groups of phases, nMGP >= 0" },
+    { "nFD", 0, 0, 0, "# nFD: Number of MGP fluxes defined in the megasystem, nFD >= 0" },
+    { "nSFD", 0, 0, 0, "# nSFD:  Number of IC source flux compositions defined in megasystem, nSFD >= 0" },
+    { "nEl" , 1, 0, 0, "# nEl: Number of electrolytes for diffusion coefficients in mDEl" },
+    { "nPTypes", 0, 0, 0, "# nPTypes:  Number of allocated particle types < 20" },
+    { "nProps", 0, 0, 0, "# nProps:  Number of particle statistic properties (for monitoring) >= nPTypes" },
+    { "Nsd",   1, 0, 0, "# Nsd:   Number of references to data sources" },
+    { "bTau" , 1, 0, 0, "# bTau:   Time point for the simulation break (Tau[0] at start)" },
+    { "ntM" , 0, 0, 0, "# ntM:  Maximum allowed number of time iteration steps" },
+    { "nVTKfld" , 0, 0, 0, "# nVTKfld:   Number of selected fields to VTK format" },
     { "nPai",   1, 0, 0, "# nPai: Number of P points in MTP interpolation array in DataCH ( 1 to 10 )" },
     { "nTai",   1, 0, 0, "# nTai: Number of T points in MTP interpolation array in DataCH ( 1 to 20 )" },
     { "Lsf",   1, 0, 0, "# Lsf:  Number of DCs in phases-solutions in Multi (DATACH)" },
@@ -86,88 +85,101 @@ std::vector<io_formats::outField> GEM2MT_static_fields =  {  //57
 };
 
 std::vector<io_formats::outField> GEM2MT_dynamic_fields = //26
-{  // write/read dynamic (array) data to/from the text-format IPM file
-   {  "SDref",  0, 0, 0, "# SDref: List of SDref keys to data sources " },
-   {  "SDval",  0, 0, 0, "# SDval: List of short comments to SDref  record keys in the GSDref list " },
-   {  "DiCp",   1, 0, 0, "# DiCp:  Array of indexes of initial system variants for distributing to nodes [nC]" },
-   {  "FDLi",   0, 0, 0, "# FDLi: Source/Receive box index in the flux definition" },
-   {  "xFlds",  0, 0, 0, "# xFlds: List of selected fields to VTK format" },
-   {  "mDDc",  0, 0, 0, "# mDDc: [Ls] diffusion coefficients for DC" },
-   {  "mDIc",  0, 0, 0, "# mDIc: [N] diffusion coefficients for IC" },
-   {  "mDEl",  0, 0, 0, "# mDEl: [nE] diffusion coefficients for electrolyte salts" },
-   {  "HydP",  0, 0, 0, "# HydP:  Initial hydraulic parameters in nodes: Vt, vp, eps, Km, al, Dif,  nto" },
-    {  "BSF",  0, 0, 0, "# BSF: [nSFD][N] table of bulk compositions of source fluxes " },
-    {  "MB",  0, 0, 0, "\n# MB: [nC]  column of current masses of boxes or reservoirs (in kg) " },
-    {  "dMB",  0, 0, 0, "# dMB: nC][Nb]  Table of current derivatives dM for elements in reservoirs " },
-    {  "FDLf",  0, 0, 0, "# FDLf:  [nFD][4] Part of the flux defnition list: flux order ,flux rate, MGP quantity" },
-    {  "PGT",  0, 0, 0, "# PGT: Quantities of phases in MGP [Fi][nPG]" },
-    {  "nam_i",  0, 0, 0, "\n# nam_i: [nIV][12] id names of initial systems" },
-    {  "for_e ",  0, 0, 0, "# for_e: [nE][40] formulae for diffusing dissolved electrolytes" },
-    {  "FDLid",  0, 0, 0, "# FDLid: [nFD] IDs of fluxes" },
-    {  "FDLop",  0, 0, 0, "# FDLop: [nFD] Operation codes (letters)" },
-    {  "FDLmp",  0, 0, 0, "# FDLmp: [nFD] ID of MGP to move in this flux " },
-    {  "MGPid",  0, 0, 0, "# MGPid: [nPG] ID list of mobile phase groups" },
-    {  "UMGP",  0, 0, 0, "# UMGP: [nFi] units for setting phase quantities in MGP (see PGT )" },
-    {  "mGrid",  0, 0, 0, "# mGrid: Array of grid point locations, size is nC*3" },
-    {  "NPmean",  0, 0, 0, "# NPmean: Array of initial mean particle type numbers per node [nPTypes]" },
-    {  "nPmin",  0, 0, 0, "# nPmin: Minimum average total number of particles of each type per one node [nPTypes]" },
-    {  "nPmax",  0, 0, 0, "# nPmax: Maximum average total number of particles of each type per one node [nPTypes]" },
-    {  "ParTD",  0, 0, 0, "# ParTD: Array of particle type definitions at t0 or after interruption [nPTypes]" }
+    {  // write/read dynamic (array) data to/from the text-format IPM file
+        {  "SDref",  0, 0, 0, "# SDref: List of SDref keys to data sources " },
+        {  "SDval",  0, 0, 0, "# SDval: List of short comments to SDref  record keys in the GSDref list " },
+        {  "DiCp",   1, 0, 0, "# DiCp:  Array of indexes of initial system variants for distributing to nodes [nC]" },
+        {  "FDLi",   0, 0, 0, "# FDLi: Source/Receive box index in the flux definition" },
+        {  "xFlds",  0, 0, 0, "# xFlds: List of selected fields to VTK format" },
+        {  "mDDc",  0, 0, 0, "# mDDc: [Ls] diffusion coefficients for DC" },
+        {  "mDIc",  0, 0, 0, "# mDIc: [N] diffusion coefficients for IC" },
+        {  "mDEl",  0, 0, 0, "# mDEl: [nE] diffusion coefficients for electrolyte salts" },
+        {  "HydP",  0, 0, 0, "# HydP:  Initial hydraulic parameters in nodes: Vt, vp, eps, Km, al, Dif,  nto" },
+        {  "BSF",  0, 0, 0, "# BSF: [nSFD][N] table of bulk compositions of source fluxes " },
+        {  "MB",  0, 0, 0, "\n# MB: [nC]  column of current masses of boxes or reservoirs (in kg) " },
+        {  "dMB",  0, 0, 0, "# dMB: nC][Nb]  Table of current derivatives dM for elements in reservoirs " },
+        {  "FDLf",  0, 0, 0, "# FDLf:  [nFD][4] Part of the flux defnition list: flux order ,flux rate, MGP quantity" },
+        {  "PGT",  0, 0, 0, "# PGT: Quantities of phases in MGP [Fi][nPG]" },
+        {  "nam_i",  0, 0, 0, "\n# nam_i: [nIV][12] id names of initial systems" },
+        {  "for_e ",  0, 0, 0, "# for_e: [nE][40] formulae for diffusing dissolved electrolytes" },
+        {  "FDLid",  0, 0, 0, "# FDLid: [nFD] IDs of fluxes" },
+        {  "FDLop",  0, 0, 0, "# FDLop: [nFD] Operation codes (letters)" },
+        {  "FDLmp",  0, 0, 0, "# FDLmp: [nFD] ID of MGP to move in this flux " },
+        {  "MGPid",  0, 0, 0, "# MGPid: [nPG] ID list of mobile phase groups" },
+        {  "UMGP",  0, 0, 0, "# UMGP: [nFi] units for setting phase quantities in MGP (see PGT )" },
+        {  "mGrid",  0, 0, 0, "# mGrid: Array of grid point locations, size is nC*3" },
+        {  "NPmean",  0, 0, 0, "# NPmean: Array of initial mean particle type numbers per node [nPTypes]" },
+        {  "nPmin",  0, 0, 0, "# nPmin: Minimum average total number of particles of each type per one node [nPTypes]" },
+        {  "nPmax",  0, 0, 0, "# nPmax: Maximum average total number of particles of each type per one node [nPTypes]" },
+        {  "ParTD",  0, 0, 0, "# ParTD: Array of particle type definitions at t0 or after interruption [nPTypes]" }
 };
 
 // reset mt counters
 void TGEM2MT::mt_reset()
 {
-// setup  counters
-//  mtp->cT = mtp->Tai[START_];
-//  mtp->cP = mtp->Pai[START_];
-  mtp->cV = 0.;
-  mtp->cTau = mtp->Tau[START_];
-  mtp->ctm = mtp->tmi[START_];
-  mtp->cnv = mtp->NVi[START_];
-  mtp->qc = 0;
-  mtp->kv = 0;
-  mtp->jt = 0;
-  mtp->ct = 0;
+    // setup  counters
+    //  mtp->cT = mtp->Tai[START_];
+    //  mtp->cP = mtp->Pai[START_];
+    mtp->cV = 0.;
+    mtp->cTau = mtp->Tau[START_];
+    mtp->ctm = mtp->tmi[START_];
+    mtp->cnv = mtp->NVi[START_];
+    mtp->qc = 0;
+    mtp->kv = 0;
+    mtp->jt = 0;
+    mtp->ct = 0;
 }
 
 //internal calc record structure
 bool TGEM2MT::internalCalc()
 {
-     bool iRet = 0;
-     calcFinished = false;
+    try {
 
-     if( mtp->PsMode == RMT_MODE_B ) // || mtp->PsMode == RMT_MODE_F  ) // Flux-box integrated model
-     {
-         iRet = CalcBoxFluxModel( NEED_GEM_SIA );
-     }
-     else if( mtp->PsMode == RMT_MODE_S )
-     {
-         iRet = CalcSeqReacModel( NEED_GEM_SIA );
-     }
-     else if( mtp->PsMode == RMT_MODE_A || mtp->PsMode == RMT_MODE_C || mtp->PsMode == RMT_MODE_W
-           || mtp->PsMode == RMT_MODE_F )  // 1D RMT models or simple 1D flux-box pipe sequence w/o integration
-     {
-         iRet =  Trans1D( NEED_GEM_SIA );  // here A,W,D and also F modes
-     }
-     else
-     {
-         ;  // Wrong model code - error message to be issued
-     }
-    calcFinished = true;
-    return iRet;
+        bool iret = false;
+        calcFinished = false;
+
+        //showMss = 0L; // skip multi err question for all systems
+
+        alloc_loggers();
+
+        // if(mtp->PsSmode == S_OFF) {
+        //     if(mtp->PvMSg != S_OFF && vfQuestion(window(), GetName(), "Use graphic monitoring?")) {
+        //         RecordPlot( nullptr );
+        //     }
+        // }
+
+        if(mtp->PsMode == RMT_MODE_B) { // || mtp->PsMode == RMT_MODE_F  ) // Flux-box integrated model
+            iret = CalcBoxFluxModel(NEED_GEM_SIA);
+        }
+        else if(mtp->PsMode == RMT_MODE_S) {
+            iret = CalcSeqReacModel(NEED_GEM_SIA);
+        }
+        else if(mtp->PsMode == RMT_MODE_A || mtp->PsMode == RMT_MODE_C || mtp->PsMode == RMT_MODE_W
+                 || mtp->PsMode == RMT_MODE_F) {  // 1D RMT models or simple 1D flux-box pipe sequence w/o integration
+            iret = Trans1D(NEED_GEM_SIA);  // here A,W,C, and also F modes
+        }
+        else {
+            ;  // Wrong model code - error message to be issued
+        }
+        calcFinished = true;
+        return iret;
+
+    }
+    catch(TError& xcpt) {
+        //pVisor->CloseMessage();
+        //vfMessage(window(), xcpt.title, xcpt.mess);
+        gems_logger->error("{}  {}", xcpt.title, xcpt.mess);
+        return 1;
+    }
 }
 
-
-
-//==========================================================================================
 //set default information
 void TGEM2MT::set_def(int q)
 {
     ErrorIf( mtp!=&mt[q], GetName(),
-        "E03GTrem: Attempt to access corrupted dynamic memory.");
+            "E03GTrem: Attempt to access corrupted dynamic memory.");
 
-//    TProfil *aPa= TProfil::pm;
+    //    TProfil *aPa= TProfil::pm;
     memcpy( &mtp->PunE, "jjbC", 4 );
     memcpy( &mtp->PvICi, "++-----------+S00--f--+-----", 28 );
     strcpy( mtp->name,  "`" );
@@ -177,7 +189,7 @@ void TGEM2MT::set_def(int q)
     //memcpy( mtp->xNames, TProfil::pm->pa.GDpcc[0], MAXAXISNAME );
     //memcpy( mtp->yNames, TProfil::pm->pa.GDpcc[1], MAXAXISNAME );
     memset( &mtp->nC, 0, sizeof(long int)*32 );
-    memset( &mtp->Msysb, 0, sizeof(double)*20 );
+    memset( &mtp->Msysb1, 0, sizeof(double)*20 );
     memset( mtp->size[0], 0, sizeof(float)*8 );
     memset( mtp->sizeLc, 0, sizeof(double)*3 );
     memset( mtp->sykey, 0, sizeof(char)*(EQ_RKLEN+10) );
@@ -207,7 +219,7 @@ void TGEM2MT::set_def(int q)
     mtp->Tau[START_] = 0.;
     mtp->Tau[STOP_] = 1000.;
     mtp->Tau[STEP_] = 1.;
-// pointers
+    // pointers
     mtp->lNam = nullptr;
     mtp->lNamE = nullptr;
     mtp->tExpr = nullptr;
@@ -259,12 +271,12 @@ void TGEM2MT::set_def(int q)
     mtp->nPmin = nullptr;
     mtp->nPmax = nullptr;
     mtp->ParTD = nullptr;
-// work
+    // work
     mtp->BM = nullptr;
     mtp->BdM = nullptr;
     mtp->FmgpJ = nullptr;
     mtp->BmgpM = nullptr;
-//
+    //
     mtp->An = nullptr;
     mtp->Ae = nullptr;
     mtp->gfc = nullptr;
@@ -275,123 +287,6 @@ void TGEM2MT::set_def(int q)
     na = nullptr;
     pa_mt = nullptr;
 }
-
-
-/*set default information
-void TGEM2MT::set_def(int q)
-{
-    ErrorIf( mtp!=&mt[q], GetName(),
-        "E03GTrem: Attempt to access corrupted dynamic memory.");
-
-//    TProfil *aPa= TProfil::pm;
-    memcpy( &mtp->PunE, "jjbC", 4 );
-    memcpy( &mtp->PvICi, "++------------S00--+-++-----", 28 );
-    strcpy( mtp->name,  "`" );
-    strcpy( mtp->notes, "`" );
-    strcpy( mtp->xNames, "X" );
-    strcpy( mtp->yNames, "Y" );
-    memset( &mtp->nC, 0, sizeof(long int)*32 );
-    memset( &mtp->Msysb, 0, sizeof(double)*20 );
-    memset( mtp->size[0], 0, sizeof(float)*8 );
-    memset( mtp->sizeLc, 0, sizeof(double)*3 );
-    memset( mtp->sykey, 0, sizeof(char)*(EQ_RKLEN+10) );
-    mtp->nC = 21;
-    mtp->nIV =2;
-    mtp->ntM =1000;
-    mtp->cdv = 1e-9;
-    mtp->cez = 1e-12;
-    mtp->nYS =0;
-    mtp->nYE =1;
-    mtp->nPai =1;
-    mtp->nTai =1;
-    mtp->tmi[START_] = 1000;
-    mtp->tmi[STOP_] = 1200;
-    mtp->tmi[STEP_] = 1;
-    mtp->NVi[START_] = 0;
-    mtp->NVi[STOP_] = 0;
-    mtp->NVi[STEP_] = 0;
-    mtp->Pai[START_] = 1.;
-    mtp->Pai[STOP_] = 1.;
-    mtp->Pai[STEP_] = 0.;
-    mtp->Pai[3] = .5;      //Ptol
-    mtp->Tai[START_] = 25.;
-    mtp->Tai[STOP_] = 25.;
-    mtp->Tai[STEP_] = 0.;
-    mtp->Tai[3] = 1.;     //Ttol
-    mtp->Tau[START_] = 0.;
-    mtp->Tau[STOP_] = 1000.;
-    mtp->Tau[STEP_] = 1.;
-// pointers
-    mtp->lNam = NULL;
-    mtp->lNamE = NULL;
-    mtp->tExpr = 0;
-    mtp->gExpr = 0;
-    mtp->sdref = 0;
-    mtp->sdval = 0;
-    mtp->DiCp = 0;
-    mtp->FDLi = 0;
-    mtp->PTVm = 0;
-    mtp->StaP = 0;
-    mtp->xVTKfld = 0;
-    mtp->xEt = 0;
-    mtp->yEt = 0;
-    mtp->Bn = 0;
-    mtp->HydP = 0;
-    mtp->qpi = 0;
-    mtp->qpc = 0;
-    mtp->xt = 0;
-    mtp->yt = 0;
-    mtp->CIb = 0;
-    mtp->CAb = 0;
-    mtp->FDLf = 0;
-    mtp->PGT = 0;
-    mtp->Tval = 0;
-    mtp->Pval = 0;
-    mtp->nam_i = 0;
-    mtp->for_i = 0;
-    mtp->stld = 0;
-    mtp->CIclb = 0;
-    mtp->AUcln = 0;
-    mtp->FDLid = 0;
-    mtp->FDLop = 0;
-    mtp->FDLmp = 0;
-    mtp->MGPid = 0;
-    mtp->UMGP = 0;
-    mtp->SBM = 0;
-    mtp->BSF = 0;
-    mtp->MB = 0;
-    mtp->dMB = 0;
-    mtp->DDc = 0;
-    mtp->DIc = 0;
-    mtp->DEl = 0;
-    mtp->for_e = 0;
-    mtp->xIC = 0;
-    mtp->xDC = 0;
-    mtp->xPH = 0;
-    mtp->grid = 0;
-    mtp->NPmean = 0;
-    mtp->nPmin = 0;
-    mtp->nPmax = 0;
-    mtp->ParTD = 0;
-    mtp->BM = 0;
-    mtp->BdM = 0;
-    mtp->BmgpM = 0;
-    mtp->BmgpJ = 0;
-
-// work
-    mtp->An = 0;
-    mtp->Ae = 0;
-    mtp->gfc = 0;
-    mtp->yfb = 0;
-    mtp->tt = 0;
-    mtp->etext = 0;
-    mtp->tprn = 0;
-    na = 0;
-    pa = 0;
-}
-*/
-
-//==============================================================================
 
 void TGEM2MT::checkAlws(io_formats::TRWArrays&  prar1, io_formats::TRWArrays&  prar) const
 {
@@ -412,27 +307,27 @@ void TGEM2MT::checkAlws(io_formats::TRWArrays&  prar1, io_formats::TRWArrays&  p
         prar.setAlws( f__HydP);
 
     if( mtp->PvFDL == S_ON )
-      {
+    {
         prar1.setAlws( f_nFD );
         prar.setAlws( f__FDLi);
         prar.setAlws( f__FDLf);
         prar.setAlws( f__FDLid);
         prar.setAlws( f__FDLop);
         prar.setAlws( f__FDLmp);
-      }
+    }
 
     if( mtp->PvPGD == S_ON )
-      {
+    {
         prar1.setAlws( f_nMGP );
         prar.setAlws( f__PGT);
         prar.setAlws( f__MGPid);
         prar.setAlws( f__UMGP);
-     }
+    }
 
     if( mtp->PvSFL == S_ON )
     {
-      prar1.setAlws( f_nSFD );
-      prar.setAlws( f__BSF);
+        prar1.setAlws( f_nSFD );
+        prar.setAlws( f__BSF);
     }
 
     /*if( mtp->PvPGD != S_OFF && mtp->PvFDL != S_OFF )
@@ -443,8 +338,8 @@ void TGEM2MT::checkAlws(io_formats::TRWArrays&  prar1, io_formats::TRWArrays&  p
     */
     if( mtp->PvnVTK == S_ON )
     {
-      prar1.setAlws( f_nVTKfld );
-      prar.setAlws( f__xFlds);
+        prar1.setAlws( f_nVTKfld );
+        prar.setAlws( f__xFlds);
     }
 
     if( mtp->PvDDc == S_ON )
@@ -453,10 +348,10 @@ void TGEM2MT::checkAlws(io_formats::TRWArrays&  prar1, io_formats::TRWArrays&  p
         prar.setAlws( f__mDIc);
 
     if( mtp->nEl > 0  )
-      {
+    {
         prar.setAlws( f__mDEl);
         prar.setAlws( f__for_e);
-     }
+    }
 }
 
 template<typename TIO>
@@ -473,7 +368,7 @@ void TGEM2MT::to_text_file( TIO& out_format, bool with_comments, bool brief_mode
 
     if( _comment )
     {
-        prar1.writeComment( _comment, std::string( "# ") + _GEMIPM_version_stamp);;
+        prar1.writeComment( _comment, std::string( "# ") + _GEMIPM_version_stamp);
         //        << "# File: " << path << endl;
         prar1.writeComment( _comment, "# Comments can be marked with # $ ; as the first character in the line\n");
     }
@@ -532,15 +427,15 @@ void TGEM2MT::to_text_file( TIO& out_format, bool with_comments, bool brief_mode
     if( _comment )
         prar1.writeComment( _comment, "\n## (4) Input for compositions of initial systems");
 
-    prar1.writeField(f_InpSys, mtp->Msysb, _comment, brief_mode  );
-    prar1.writeField(f_Vsysb, mtp->Vsysb, _comment, brief_mode  );
-    prar1.writeField(f_Mwatb, mtp->Mwatb, _comment, brief_mode  );
-    prar1.writeField(f_Maqb, mtp->Maqb, _comment, brief_mode  );
-    prar1.writeField(f_Vaqb, mtp->Vaqb, _comment, brief_mode  );
-    prar1.writeField(f_Pgb, mtp->Pgb, _comment, brief_mode  );
-    prar1.writeField(f_Tmolb, mtp->Tmolb, _comment, brief_mode  );
-    prar1.writeField(f_WmCb, mtp->WmCb, _comment, brief_mode  );
-    prar1.writeField(f_Asur, mtp->Asur, _comment, brief_mode  );
+    //prar1.writeField(f_InpSys, mtp->Msysb, _comment, brief_mode  );
+    //prar1.writeField(f_Vsysb, mtp->Vsysb, _comment, brief_mode  );
+    //prar1.writeField(f_Mwatb, mtp->Mwatb, _comment, brief_mode  );
+    //prar1.writeField(f_Maqb, mtp->Maqb, _comment, brief_mode  );
+    //prar1.writeField(f_Vaqb, mtp->Vaqb, _comment, brief_mode  );
+    //prar1.writeField(f_Pgb, mtp->Pgb, _comment, brief_mode  );
+    //prar1.writeField(f_Tmolb, mtp->Tmolb, _comment, brief_mode  );
+    //prar1.writeField(f_WmCb, mtp->WmCb, _comment, brief_mode  );
+    //prar1.writeField(f_Asur, mtp->Asur, _comment, brief_mode  );
     prar1.writeField(ff_tf, mtp->tf, _comment, brief_mode  );
     prar1.writeField(ff_Vt, mtp->vol_in, _comment, brief_mode  );
     prar1.writeField(ff_vp, mtp->fVel, _comment, brief_mode  );
@@ -601,11 +496,11 @@ void TGEM2MT::to_text_file( TIO& out_format, bool with_comments, bool brief_mode
     if( mtp->PvSFL == S_ON )
         prar.writeArray(  f__BSF, mtp->BSF,  mtp->nSFD*mtp->Nf, mtp->Nf,_comment, brief_mode);
 
-    if( mtp->PvPGD != S_OFF && mtp->PvFDL != S_OFF )
-    {
-        prar.writeArray(  f__MB, mtp->MB,  mtp->nC*mtp->Nf, mtp->Nf,_comment, brief_mode);
-        prar.writeArray(  f__dMB, mtp->dMB, mtp->nC*mtp->Nf,mtp->Nf,_comment, brief_mode);
-    }
+    // if( mtp->PvPGD != S_OFF && mtp->PvFDL != S_OFF ) // internal work data
+    // {
+    //     prar.writeArray(  f__MB, mtp->MB,  mtp->nC*mtp->Nf, mtp->Nf,_comment, brief_mode);
+    //     prar.writeArray(  f__dMB, mtp->dMB, mtp->nC*mtp->Nf,mtp->Nf,_comment, brief_mode);
+    // }
 
     if( mtp->PvnVTK == S_ON )
         prar.writeArray(  f__xFlds, &mtp->xVTKfld[0][0],  mtp->nVTKfld*2, 2L,_comment, brief_mode);
@@ -627,9 +522,6 @@ void TGEM2MT::to_text_file( TIO& out_format, bool with_comments, bool brief_mode
         prar.writeArrayF(  f_SDref, mtp->sdref[0],mtp->Nsd, V_SD_RKLEN,_comment, brief_mode);
         prar.writeArrayF(  f__SDval, mtp->sdval[0],mtp->Nsd, V_SD_RKLEN,_comment, brief_mode);
     }
-
-    //!!!mtp->Tval  = new double[ mtp->nTai ];  // from DataCH
-    //!!!mtp->Pval  = new double[ mtp->nPai ];
 
     out_format.dump( _comment );
 }
@@ -715,23 +607,23 @@ void TGEM2MT::from_text_file(TIO& in_format)
             break;
         case f_sizeLc: rdar.readArray( "sizeLc",  mtp->sizeLc, 3);
             break;
-        case f_InpSys: rdar.readArray( "InpSys",  &mtp->Msysb, 1);
+        case f_InpSys: rdar.readArray( "InpSys",  &mtp->Msysb1, 1);
             break;
-        case f_Vsysb: rdar.readArray( "Vsysb",  &mtp->Vsysb, 1);
+        case f_Vsysb: rdar.readArray( "Vsysb",  &mtp->Vsysb1, 1);
             break;
-        case f_Mwatb: rdar.readArray( "Mwatb",  &mtp->Mwatb, 1);
+        case f_Mwatb: rdar.readArray( "Mwatb",  &mtp->Mwatb1, 1);
             break;
-        case f_Maqb: rdar.readArray( "Maqb",  &mtp->Maqb, 1);
+        case f_Maqb: rdar.readArray( "Maqb",  &mtp->Maqb1, 1);
             break;
-        case f_Vaqb: rdar.readArray( "Vaqb",  &mtp->Vaqb, 1);
+        case f_Vaqb: rdar.readArray( "Vaqb",  &mtp->Vaqb1, 1);
             break;
-        case f_Pgb: rdar.readArray( "Pgb",  &mtp->Pgb, 1);
+        case f_Pgb: rdar.readArray( "Pgb",  &mtp->Pgb1, 1);
             break;
-        case f_Tmolb: rdar.readArray( "Tmolb",  &mtp->Tmolb, 1);
+        case f_Tmolb: rdar.readArray( "Tmolb",  &mtp->Tmolb1, 1);
             break;
-        case f_WmCb: rdar.readArray( "WmCb",  &mtp->WmCb, 1);
+        case f_WmCb: rdar.readArray( "WmCb",  &mtp->WmCb1, 1);
             break;
-        case f_Asur: rdar.readArray( "Asur",  &mtp->Asur, 1);
+        case f_Asur: rdar.readArray( "Asur",  &mtp->Asur1, 1);
             break;
         case ff_tf: rdar.readArray( "tf",  &mtp->tf, 1);
             break;
@@ -862,5 +754,5 @@ template void  TGEM2MT::to_text_file<io_formats::KeyValueWrite>( io_formats::Key
 template void  TGEM2MT::from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format );
 
 
-// --------------------- end of m_gem2mtbox.cpp ---------------------------
+// --------------------- end of m_gem2mtfor.cpp ---------------------------
 

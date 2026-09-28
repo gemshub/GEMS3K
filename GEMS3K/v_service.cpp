@@ -1,8 +1,10 @@
 #include <istream>
 #include <regex>
 #include <cstring>
+#include <filesystem>
 #include "v_service.h"
 
+namespace fs = std::filesystem;
 
 std::string char_array_to_string(const char* data_ptr, size_t max_size)
 {
@@ -93,15 +95,36 @@ u_makepath(const std::string& dir,  const std::string& name, const std::string& 
 
 std::string u_getpath( const std::string& file_path )
 {
-    std::size_t pos = file_path.find_last_of("/\\");
-    if( pos != std::string::npos )
-        return file_path.substr(0, pos);
-    return "";
+    fs::path path(file_path);
+    return path.parent_path().string();
+
+    // std::size_t pos = file_path.find_last_of("/\\");
+    // if( pos != std::string::npos )
+    //     return file_path.substr(0, pos);
+    // return "";
 }
 
+/// Creates the directory path.
+bool u_create_directory(const std::string& path)
+{
+    fs::path ps(path);
+    return fs::create_directories(ps);
+}
 
-void u_splitpath(const std::string& Path, std::string& dir,
-            std::string& name, std::string& ext)
+void u_splitpath(const std::string& file_path, std::string& folder,
+            std::string& stem, std::string& ext)
+{
+    fs::path path(file_path);
+    folder = path.parent_path().string();
+    if(!folder.empty()) {
+        folder += "/";
+    }
+    stem = path.filename().stem().string();
+    ext = path.extension().string();
+}
+
+void u_splitpath_old(const std::string& Path, std::string& dir,
+                 std::string& name, std::string& ext)
 {
     // Get path
     std::size_t pos = Path.find_last_of("/\\");

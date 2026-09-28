@@ -149,7 +149,7 @@ void TNodeArray::freeMemory()
 //   return code   true   Ok
 //                 false  Error in GEMipm calculation part
 //
-bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start_node, long int end_node, FILE* diffile )
+bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start_node, long int end_node, spdlog::logger* diffile )
 {
     int n;
     long int ii;
@@ -192,7 +192,7 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
 //                 false  Error in GEMipm calculation part
 //
 bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode* wrkNode,
-                               long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* piaN, FILE* diffile )
+                               long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* piaN, spdlog::logger* diffile)
 {
     bool iRet = true;
 
@@ -208,13 +208,11 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode* wrkNode
             std::string err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
             iRet = false;
 
-            if( diffile )
-            {
+            if(diffile) {
 #pragma omp critical
                 {
                     // write to file here
-                    fprintf( diffile, "\nError reported from GEMS3K module\n%s\n",
-                             err_msg.c_str() );
+                    diffile->error("Error reported from GEMS3K module: {}", err_msg);
                 }
             }
         }
@@ -233,7 +231,7 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode* wrkNode
 //   return code   true   Ok
 //                 false  Error in GEMipm calculation part
 //
-bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start_node, long int end_node, FILE* diffile )
+bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start_node, long int end_node, spdlog::logger* diffile)
 {
     long int ii;
     bool iRet = true;
@@ -258,8 +256,8 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
 //   return code   true   Ok
 //                 false  Error in GEMipm calculation part
 //
-bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode* wrkNode,
-                               long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* piaN, FILE* diffile )
+bool TNodeArray::CalcIPM_Node(const TestModeGEMParam& modeParam, TNode* wrkNode,
+                               long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* piaN, spdlog::logger* diffile)
 {
     bool iRet = true;
 
@@ -276,11 +274,9 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode* wrkNode
             std::string err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
             iRet = false;
 
-            if( diffile )
-            {
+            if(diffile){
                 // write to file here
-                fprintf( diffile, "\nError reported from GEMS3K module\n%s\n",
-                         err_msg.c_str() );
+                diffile->error("nError reported from GEMS3K module: {}", err_msg);
             }
         }
     }
@@ -657,7 +653,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     calcNode->current_output_set_name = generator.get_name();
 
     if( !generator.create_dir() ) {
-        message("Error create directory "+generator.get_dir(), 0);
+        ("Error create directory "+generator.get_dir(), 0);
         return "";
     }
     // open *-dat.lst

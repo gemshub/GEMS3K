@@ -59,11 +59,15 @@ inline void replace_all(std::string &s, const std::string &characters, char to_c
     }, to_character );
 }
 
+/// Creates the directory path.
+bool u_create_directory(const std::string& path);
+
 /// Splitting full pathname to path, directory, name and extension
 void u_splitpath(const std::string& pathname, std::string& dir,
             std::string& name, std::string& ext);
+
 /// Get directory from full pathname
-std::string u_getpath( const std::string& pathname );
+std::string u_getpath(const std::string& pathname);
 
 inline int ROUND(double x )
 {
