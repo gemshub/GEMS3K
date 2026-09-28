@@ -192,7 +192,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaReadmitSeed=%.6e pa_IpmStallWindow=%d pa_MbReproject=%d"
              " pa_DeterminacyWarn=%.6e pa_ColdRetryNudges=%ld"
              " pa_OptimaPreSolveFirstIters=%ld pa_LpDualFillout=%ld"
-             " pa_FilloutBudget=%.6e\n",
+             " pa_FilloutBudget=%.6e pa_StabTPD=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -212,7 +212,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaZeroAbsent, pa->OptimaReadmitSeed,
              (int)pa->IpmStallWindow, (int)pa->MbReproject, pa->DeterminacyWarn,
              (long)pa->ColdRetryNudges, (long)pa->OptimaPreSolveFirstIters,
-             (long)pa->LpDualFillout, pa->FilloutBudget );
+             (long)pa->LpDualFillout, pa->FilloutBudget, (long)pa->StabTPD );
 
     // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
     //
@@ -1038,6 +1038,172 @@ double TMultiBase::CertCurvMin( long int& worstPhase )
     return lmin;
 }
 
+double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long int& nDisagree )
+{
+    worstPhase = -1; nScanned = 0; nDisagree = 0;
+    const double kNone = 1e300, kTol = 1e-6;
+    if( !pm.X || !pm.XF || !pm.L1 || !pm.U || !pm.A || !pm.lnGam || pm.FIs <= 0 )
+        return kNone;
+    const BASE_PARAM* pa = base_param();
+    if( !pa || pa->StabTPD < 1 )
+        return kNone;
+
+    // The same save set and the same restore-by-copy as CertCurvMin() - see the comment there for why
+    // a recomputation at the original composition is NOT a restore.
+    struct CertSave { double* p; std::vector<double> v; };
+    std::vector<CertSave> saved;
+    auto keep = [&saved]( double* p, long int n ) {
+        if( p && n > 0 ) saved.push_back( { p, std::vector<double>( p, p + n ) } ); };
+    keep( pm.X, pm.L );      keep( pm.XF, pm.FI );     keep( pm.XFA, pm.FIs );
+    keep( pm.G, pm.L );      keep( pm.lnGam, pm.L );   keep( pm.lnGmo, pm.L );
+    keep( pm.Gamma, pm.L );  keep( pm.F0, pm.L );      keep( pm.fDQF, pm.L );
+    keep( pm.Wx, pm.L );     keep( pm.FitVar, 5 );
+    auto restoreBase = [&saved]() {
+        for( const CertSave& c : saved ) std::copy( c.v.begin(), c.v.end(), c.p ); };
+
+    const double dcFloor = cert_dc_floor( pm, pa );
+    const long int N = pm.N;
+    double sumXF = 0.;
+    for( long int k = 0; k < pm.FI; k++ ) sumXF += std::max( pm.XF[k], 0. );
+    double worst = kNone;
+    bool perturbed = false;
+    long int p0 = 0;
+    for( long int k = 0; k < pm.FIs; k++ )
+    {
+        const long int p1 = p0 + pm.L1[k];
+        const long int n = pm.L1[k];
+        const char ph = pm.PHC[k];
+        if( n <= 1 || p1 > pm.L || ph == PH_AQUEL || ph == PH_SORPTION || ph == PH_POLYEL
+            || ph == PH_ADSORPT || ph == PH_IONEX ) { p0 = p1; continue; }
+        double xmax = 0.;
+        for( long int j = p0; j < p1; j++ ) xmax = std::max( xmax, pm.X[j] );
+        // TRACE counts as absent: a phase holding under 1e-6 of the system's total phase amount carries no
+        // material share, and native routinely leaves an unstable phase there - Al2O3-SiO2 at 1900 K keeps
+        // l_liquid at 9e-8 and rs_ss at 1e-8 mol with its OWN Falp > 0, and the first rule (XF <= DSM) skipped
+        // both, reporting stab_n = 0 on the one cell where both have TPD < 0 (2026-09-28).
+        const bool absent = pm.XF[k] <= pm.DSM || xmax <= dcFloor * 1e3 || pm.XF[k] < 1e-6 * sumXF;
+        if( !absent ) { p0 = p1; continue; }
+
+        std::vector<double> c0( (size_t)n );
+        for( long int j = p0; j < p1; j++ )
+        {
+            double au = 0.;
+            for( long int i = 0; i < N; i++ ) au += pm.A[ i + j*N ] * pm.U[i];
+            c0[(size_t)(j-p0)] = au - ( pm.G0[j] + pm.fDQF[j] );
+        }
+        // TPD(y) = sum_j y_j (ln y_j + lnGam_j(y) - c_j), recorded at EVERY composition evaluated - starts
+        // and substitution iterates alike. A negative value anywhere is a certificate that the phase lowers
+        // G and needs no stationarity. The first version scored only the best CONVERGED stationary point
+        // and gave a false all-clear on Al2O3-SiO2's rs_ss (asymmetric Redlich-Kister, gems_tests-
+        // nuclearsafety CORIUM, found by a peer session 2026-09-28): every start settled at y ~ (1, 2e-5),
+        // lnTM* = -1.09, while the uniform start had already passed through TPD < 0 (min -1.6e-2 at 1100 K,
+        // -0.23 at 1900 K - the size of the G native leaves on the table there).
+        double tpdMin = 1e300;
+        // lnTM(y) and the substitution step W(y)/sum W(y); the phase is put at 1 mol so every
+        // presence gate inside CalculateActivityCoefficients() passes.
+        auto evalY = [&]( const std::vector<double>& y, std::vector<double>& ynew ) -> double {
+            restoreBase();
+            perturbed = true;
+            for( long int j = p0; j < p1; j++ ) pm.X[j] = std::max( y[(size_t)(j-p0)], 1e-300 );
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );
+            double mx = -1e300;
+            std::vector<double> lw( (size_t)n );
+            for( long int a = 0; a < n; a++ )
+            {
+                lw[(size_t)a] = c0[(size_t)a] - pm.lnGam[p0+a];
+                mx = std::max( mx, lw[(size_t)a] );
+            }
+            double s = 0.;
+            for( double v : lw ) s += exp( v - mx );
+            ynew.resize( (size_t)n );
+            for( long int a = 0; a < n; a++ ) ynew[(size_t)a] = exp( lw[(size_t)a] - mx ) / s;
+            double tpd = 0.;
+            for( long int a = 0; a < n; a++ )
+                if( y[(size_t)a] > 0. ) tpd += y[(size_t)a] * ( log( y[(size_t)a] ) - lw[(size_t)a] );
+            tpdMin = std::min( tpdMin, tpd );
+            return mx + log( s );
+        };
+        std::vector<double> y0( (size_t)n, 1.0 / n ), tmp;
+        double s0 = 0.;
+        for( long int j = p0; j < p1; j++ ) s0 += std::max( pm.X[j], 0. );
+        if( s0 > 0. )
+            for( long int j = p0; j < p1; j++ ) y0[(size_t)(j-p0)] = std::max( pm.X[j], 0. ) / s0;
+        try
+        {
+            (void)evalY( y0, tmp );
+            std::vector<std::vector<double>> starts;
+            for( long int a = 0; a < n; a++ )
+            {
+                std::vector<double> v( (size_t)n, 1e-6 / std::max( 1L, n - 1 ) );
+                v[(size_t)a] = 1. - 1e-6;
+                starts.push_back( v );
+            }
+            {
+                const double mx = *std::max_element( c0.begin(), c0.end() );
+                double s = 0.;
+                std::vector<double> v( (size_t)n );
+                for( long int a = 0; a < n; a++ ) { v[(size_t)a] = exp( c0[(size_t)a] - mx ); s += v[(size_t)a]; }
+                for( double& x : v ) x /= s;
+                starts.push_back( v );
+            }
+            starts.push_back( y0 );
+            // Denser starts, for the same false all-clear: the centroid, a 19-point grid for a binary, edge
+            // midpoints (capped at 64 starts) otherwise.
+            starts.push_back( std::vector<double>( (size_t)n, 1.0 / n ) );
+            if( n == 2 )
+                for( int g = 1; g < 20; g++ ) starts.push_back( { g / 20., 1. - g / 20. } );
+            else
+                for( long int a = 0; a < n && starts.size() < 64; a++ )
+                    for( long int b2 = a + 1; b2 < n && starts.size() < 64; b2++ )
+                    {
+                        std::vector<double> v( (size_t)n, 1e-6 ); v[(size_t)a] = 0.5; v[(size_t)b2] = 0.5;
+                        double t = 0.; for( double x : v ) t += x; for( double& x : v ) x /= t;
+                        starts.push_back( v );
+                    }
+            for( auto y : starts )
+            {
+                double lt = 0.;
+                bool conv = false;
+                for( int it = 0; it < 300; it++ )
+                {
+                    lt = evalY( y, tmp );
+                    double d = 0.;
+                    for( long int a = 0; a < n; a++ ) d = std::max( d, fabs( tmp[(size_t)a] - y[(size_t)a] ) );
+                    y = tmp;
+                    if( d < 1e-11 ) { conv = true; break; }
+                }
+                (void)conv; (void)lt;
+            }
+            nScanned++;
+            if( tpdMin < 1e300 )
+            {
+                if( tpdMin < worst ) { worst = tpdMin; worstPhase = k; }
+                // Disagreement against the SOLVER'S OWN single-point index (pm.Falp, log10; <= 0 reads
+                // "stable"), not against lnTM at some composition - lnTM away from a stationary point is not a
+                // TPD value. Note StabilityIndexes() writes the sentinel -1 for a zero-amount non-ideal phase
+                // it did not restore, which also reads "stable" (peer finding, same day).
+                const double falp = pm.Falp ? pm.Falp[k] : 0.;
+                if( falp <= kTol && tpdMin < -kTol ) nDisagree++;
+            }
+        }
+        catch( ... ) { /* a model that throws at a trial composition is skipped, never fatal */ }
+        restoreBase();
+        p0 = p1;
+    }
+    if( perturbed )
+    {
+        try
+        {
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );   // re-seed the TSolMod objects
+        }
+        catch( ... ) {}
+        restoreBase();
+    }
+    return worst;
+}
+
 void native_trace_run_result( const MULTI& pm, long int mode, long int status, TMultiBase* mb )
 {
     FILE* ntf = native_trace_file();
@@ -1163,6 +1329,12 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
     //                  its plain sign test has failed.
     double certKkt = -1., certCurv = 1e300;
     long int certKktJ = -1, certCurvK = -1, certRank = 0, certNic = pm.N, certDirs = -1;
+    // stab_ss / stab_ph / stab_n / stab_dis - pa_StabTPD (WP6): min TPD in RT over the absent
+    // multicomponent phases scanned (1e300 = none scanned or pa_StabTPD = 0), the phase carrying it,
+    // how many were scanned, and how many the single-point index misclassifies. Appended at the END
+    // of CERT so every existing reader is unaffected, as mb_seed_* and the WP1 fields were.
+    double certStab = 1e300;
+    long int certStabK = -1, certStabN = 0, certStabDis = 0;
     if( mb )
     {
         std::vector<double> certF;
@@ -1170,6 +1342,7 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
         certKkt  = mb->CertKktMax( certF, certKktJ );
         certDirs = mb->CertDualFreeDirs( certF, certRank, certNic );
         certCurv = mb->CertCurvMin( certCurvK );
+        certStab = mb->CertStabTPD( certStabK, certStabN, certStabDis );
     }
     // Separator-safe, exactly as the KEY record's phase names are: ' ', ',', ':' and '=' are
     // this line's own separators and corpus species and phase names carry all four.
@@ -1189,6 +1362,8 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
     const std::string certKktName  = certKktJ  >= 0 ? certSafeName( pm.SM[certKktJ], MAXDCNAME )
                                                     : std::string( "-" );
     const std::string certCurvName = certCurvK >= 0 ? certSafeName( pm.SF[certCurvK], MAXSYMB + MAXPHNAME )
+                                                    : std::string( "-" );
+    const std::string certStabName = certStabK >= 0 ? certSafeName( pm.SF[certStabK], MAXSYMB + MAXPHNAME )
                                                     : std::string( "-" );
 
     if( pm.X && pm.B && pm.A && pm.N > 0 )
@@ -1241,12 +1416,14 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
         fprintf( ntf, "CERT  mode=%s status=%ld mb_rel=%.3e mb_rel_ic=%s mb_rel_b=%.3e mb_abs=%.3e"
                       " mb_abs_ic=%s chg_abs=%.3e chg_ic=%s mb_pass=%d mb_seed_rel=%.3e mb_seed_ic=%s"
                       " kkt_max=%.3e kkt_species=%s curv_min=%.6e curv_phase=%s"
-                      " dual_dirs=%ld dual_rank=%ld dual_of=%ld dual_resolved=%d\n",
+                      " dual_dirs=%ld dual_rank=%ld dual_of=%ld dual_resolved=%d"
+                      " stab_ss=%.6e stab_ph=%s stab_n=%ld stab_dis=%ld\n",
                  mname, (long)status, rel, icName( iRel ).c_str(), iRel >= 0 ? pm.B[iRel] : 0.,
                  absr, icName( iAbs ).c_str(), chg, icName( iChg ).c_str(), rel <= 1. ? 1 : 0,
                  relSeed, icName( iSeed ).c_str(),
                  certKkt, certKktName.c_str(), certCurv, certCurvName.c_str(),
-                 (long)certDirs, (long)certRank, (long)certNic, native_cert_dualfree_get() );
+                 (long)certDirs, (long)certRank, (long)certNic, native_cert_dualfree_get(),
+                 certStab, certStabName.c_str(), (long)certStabN, (long)certStabDis );
     }
 
     // RANK - the geometry and conditioning of the present-species stoichiometry at the

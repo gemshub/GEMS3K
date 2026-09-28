@@ -1600,6 +1600,23 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// stays a usable arm); that is how the default was chosen and how it should be re-chosen.
     /// Trailing member: GEMSGUI serialises BASE_PARAM positionally.
     double FilloutBudget = 0.;
+    /// pa_StabTPD: the tangent-plane (TPD) stability scan of ABSENT multicomponent phases, reported on
+    /// the trace's CERT line (FABLE Phase 3 WP6; plan v5 s139.2; owner decision 2026-09-28).
+    ///   0  off - nothing computed, the CERT fields read stab_ss=1e300 stab_ph=- stab_n=0 stab_dis=0.
+    ///   1  compute and REPORT (default). Runs only where the CERT record runs, i.e. only when
+    ///      GEMS3K_NATIVE_TRACE_FILE is set, after the answer has been packed - a production call
+    ///      executes none of it, and the scan cannot change what the call returns.
+    ///   2  (reserved) gate the certificate on it - NOT implemented; plan s20 owner decision, open.
+    /// For each absent non-aqueous multicomponent phase: Michelsen successive substitution
+    /// y <- W(y)/sum W(y), W_j = exp(a_j.u - G0_j - fDQF_j - lnGam_j(y)), from every vertex, the ideal
+    /// closed form, the current composition, the centroid and a grid (binary) or edge midpoints; stab_ss =
+    /// min over phases of the smallest TPD(y) = sum_j y_j (mu_j(y) - a_j.u) seen at ANY composition the
+    /// search evaluated (< 0: the phase would lower G - the answer left a phase out). stab_dis counts
+    /// phases the solver's own single-point index (pm.Falp <= 0) calls stable while stab_ss < 0 for them.
+    /// CORRECTED 2026-09-28: the first version scored only converged stationary points and missed Al2O3-SiO2
+    /// rs_ss (TPD -0.016..-0.23 on native's answer, 1100-1900 K) - plan v5 s139.7.
+    /// Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 1 (report-only).
+    long int StabTPD = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2563,6 +2580,22 @@ public:
     /// \param worstPhase index of the phase carrying the minimum, -1 if none.
     /// \return the minimum, or +1e300 if no phase qualified.
     double CertCurvMin( long int& worstPhase );
+
+    /// pa_StabTPD = 1 (FABLE Phase 3 WP6, plan v5 s139.2): the tangent-plane stability scan of every
+    /// ABSENT or TRACE non-aqueous multicomponent phase at the returned answer. Absent = XF <= DSM, or
+    /// XF < 1e-6 of the summed phase amounts (trace), or every end-member at or below 1e3 x the certificate's species floor (so Optima's floor-held phases,
+    /// kept above DSM by pa_OptimaZeroAbsent = 2, count as absent - the first AOP control built on
+    /// XF > DSM alone read 2.5e+02 on floor-held phases). Sorption/ion-exchange/polyelectrolyte phases
+    /// are skipped (their activity is not a mole-fraction model). Search: Michelsen successive
+    /// substitution from every vertex, the ideal closed form and the current composition; only
+    /// every evaluated composition is scored by its TPD directly (a lnTM value from a non-converged start
+    /// is not a TPD and read +25.7 RT on a present multi-site phase in the first probe).
+    /// \param worstPhase phase carrying the minimum, -1 if none.
+    /// \param nScanned   absent phases scanned.
+    /// \param nDisagree  phases the single-point index calls stable while the search finds them unstable.
+    /// \return min over scanned phases of the smallest TPD(y) evaluated, in RT (< 0: unstable), +1e300 if none.
+    /// MUTATES AND RESTORES BY COPY, exactly as CertCurvMin() does, for the same measured reason.
+    double CertStabTPD( long int& worstPhase, long int& nScanned, long int& nDisagree );
 
     double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
@@ -3533,7 +3566,8 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDimReduceTol, f_pa_MbPivotSplit, f_pa_OptimaZeroAbsent,
     f_pa_OptimaReadmitSeed,
     f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn, f_pa_ColdRetryNudges,
-    f_pa_OptimaPreSolveFirstIters, f_pa_LpDualFillout, f_pa_FilloutBudget
+    f_pa_OptimaPreSolveFirstIters, f_pa_LpDualFillout, f_pa_FilloutBudget,
+    f_pa_StabTPD
 
 } MULTI_DYNAMIC_FIELDS;
 
