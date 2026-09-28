@@ -385,6 +385,8 @@ long int TRegular::PTparam()
             Wv[ip] = aIPc[NPcoef*ip+2];
             Wpt[ip] = Wu[ip]+ Ws[ip]*Tk + Wv[ip]*Pbar;
             aIP[ip] = Wpt[ip];
+            solmod_logger->debug("TRegular::PTparam ip={} W={:.6e} W_T={:.6e} W_P={:.6e} -> Wpt(T={:.2f},P={:.2f})={:.6e}",
+                                  ip, Wu[ip], Ws[ip], Wv[ip], Tk, Pbar, Wpt[ip]);
         }
         return 0;
 }

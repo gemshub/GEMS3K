@@ -2,7 +2,9 @@
 cmake_minimum_required(VERSION 3.16..4.2)
 
 # Set the name of the project
-project(GEMS3K VERSION 4.5.5 LANGUAGES CXX C)
+project(GEMS3K VERSION 4.6.1 LANGUAGES CXX C)
+
+include(CTest)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -171,6 +173,10 @@ endif()
 add_subdirectory(GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/lib)
+
+if(BUILD_TESTING)
+   add_subdirectory(tests)
+endif()
 
 if(BUILD_GEM2MT MATCHES ON)
     add_subdirectory(nodearray-gem)
