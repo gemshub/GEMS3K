@@ -107,8 +107,9 @@ std::string u_getpath( const std::string& file_path )
 /// Creates the directory path.
 bool u_create_directory(const std::string& path)
 {
-    fs::path ps(path);
-    return fs::create_directories(ps);
+    std::error_code ec;
+    fs::create_directories(fs::path(path), ec);
+    return !ec && fs::is_directory(fs::path(path), ec);
 }
 
 void u_splitpath(const std::string& file_path, std::string& folder,
