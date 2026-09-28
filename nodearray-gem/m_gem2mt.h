@@ -563,7 +563,7 @@ public:
     /// Define number of allocated particle types (<20)
     void setNumberParticleTypes(long int num)
     {
-        mtp->nPTypes = (num>0 ? S_ON: S_OFF);
+        mtp->nPTypes = num;
     }
 
     // (5) Inital scalars and iterators
@@ -754,6 +754,8 @@ protected:
     std::shared_ptr<spdlog::logger> main_logfile;
     std::shared_ptr<spdlog::logger> ph_file;
     std::shared_ptr<spdlog::logger> diff_log_file;
+
+    bool read_task_from_file = false;
 
     void logProfilePhMol(spdlog::logger* logfile, int inode )
     {

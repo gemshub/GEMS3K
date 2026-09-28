@@ -814,7 +814,7 @@ long int TGEM2MT::LookUpXMGP( const char* MGPid )
 bool TGEM2MT::CalcSeqReacModel(char mode)
 {
     long int p, i, kk, x_aq=-1, x_gf=-1;
-    bool iret = false;
+    bool calc_ret = true;
 
     BoxFluxTransportStart();
 
@@ -878,7 +878,7 @@ bool TGEM2MT::CalcSeqReacModel(char mode)
     }
 
     if( !na->CalcIPM_One( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), 0, 0)) {
-        iret = false;  // Analysis of errors after GEM calculation?
+        calc_ret = false;  // Analysis of errors after GEM calculation?
     }
 
     // Calculation of current box 0 reactive IC masses in kg
@@ -887,7 +887,7 @@ bool TGEM2MT::CalcSeqReacModel(char mode)
     ComposMGPinBox( 0 );
 
     // Status before iterations
-    iret = accept_point(mtp->ct, "Simulating Transport through Sequential Reactors chain: ", mtp->ct, mtp->ntM);
+    auto iret = accept_point(mtp->ct, "Simulating Transport through Sequential Reactors chain: ", mtp->ct, mtp->ntM);
 
     //  This loop contains the overall transport time step (wave)
     do {
@@ -926,7 +926,7 @@ bool TGEM2MT::CalcSeqReacModel(char mode)
             node1_Tm( p ) = mtp->cTau;
             node1_dt( p ) = mtp->dTau;
             if(!na->CalcIPM_One(TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez), p, 0)) {
-                ;  // Analysis of errors after GEM calculation?
+                calc_ret=false;  // Analysis of errors after GEM calculation?
             }
 
             mtp->qc = p;

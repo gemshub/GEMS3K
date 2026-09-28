@@ -102,6 +102,9 @@ int TGEM2MT::ReadTask(const std::string& gem2mt_file, const std::string& vtk_dir
         std::fstream ff(gem2mt_in, std::ios::in );
         ErrorIf(!ff.good(), gem2mt_in, "Fileopen error");
 
+        // clear old allocation
+        mem_kill(0);
+
         if(gem2mt_in.rfind(".json") != std::string::npos) {
 #ifdef USE_NLOHMANNJSON
             io_formats::NlohmannJsonRead in_format(ff, "", "gem2mt");
@@ -116,6 +119,8 @@ int TGEM2MT::ReadTask(const std::string& gem2mt_file, const std::string& vtk_dir
             io_formats::KeyValueRead in_format( ff );
             from_text_file( in_format );
         }
+
+        read_task_from_file = true;
 
         pathVTK = vtk_dir;
         if(!pathVTK.empty()) {
@@ -138,6 +143,10 @@ int TGEM2MT::ReadTaskString(const std::string json_string)
     }
 
     try  {
+
+        // clear old allocation
+        mem_kill(0);
+
         std::stringstream ss;
         ss.str(json_string);
 #ifdef USE_NLOHMANNJSON
@@ -147,6 +156,7 @@ int TGEM2MT::ReadTaskString(const std::string json_string)
         io_formats::SimdJsonRead in_format(ss, "", "gem2mt");
         from_text_file(in_format);
 #endif
+        read_task_from_file = true;
         return 0;
     }
     catch(TError& err) {
@@ -219,6 +229,7 @@ void TGEM2MT::math_transport_defaults()
     memset( &mtp->Msysb1, 0, sizeof(double)*20 );
     memset( mtp->size[0], 0, sizeof(float)*8 );
 
+    read_task_from_file = false;
     mtp->nVTKfld = 0;
     mtp->Tau[START_] = 0.;
     mtp->Tau[STOP_] = 1000.;
@@ -248,6 +259,11 @@ void TGEM2MT::math_transport_defaults()
 
     mtp->PsMO =   S_ON;
     mtp->iStat =  AS_READY;
+
+    if(mtp->PsMode == RMT_MODE_B || mtp->PsMode == RMT_MODE_S || mtp->PsMode == RMT_MODE_F) {
+        setNumberPhaseGroups(1);
+    }
+
 }
 
 // Here we read the MULTI structure, DATACH and DATABR files prepared from GEMS
@@ -278,7 +294,7 @@ int TGEM2MT::restore_data_from_gems3k(const std::vector<std::string>& dbr_names)
     CalcIPM(NEED_GEM_AIA, 0, mtp->nC); //recalc all nodes ?
 
     // realloc gem2mt memory  (if not read exported gem2mt)
-    if(true) {
+    if(!read_task_from_file) {
 
         // Restore sizes from gems3k export
         mtp->Lsf = na->pCSD()->nDCs;
