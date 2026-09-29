@@ -532,12 +532,12 @@ public:
         return mtp->FIf;
     }
     /// Nf:  Number of ICs in (DATABR) for setting box-fluxes
-    long int nElements() const
+    size_t nElements() const
     {
         return mtp->Nf;
     }
     /// Lsf: of DCs in phases-solutions in Multi (DATACH) for setting box-fluxes
-    long int nComponents() const
+    size_t nComponents() const
     {
         return mtp->Lsf;
     }
@@ -638,9 +638,9 @@ public:
     // (6) Initialize/change defaults for arrays
 
     /// DiCp:  Change array of indexes of initial system variants for distributing to nodes [nC]
-    void setDistributing(long int node_ndx, long int sys_ndx)
+    void setDistributing(size_t node_ndx, size_t sys_ndx)
     {
-        if(mtp->DiCp && node_ndx>=0 && node_ndx<mtp->nC) {
+        if(mtp->DiCp && node_ndx<mtp->nC) {
             mtp->DiCp[node_ndx][0] = sys_ndx;
         }
     }
@@ -654,9 +654,9 @@ public:
     /// 3:   Cauchy source (constant flux source);
     /// -3:  Cauchy sink;
     /// 4:   Input time-depended function (TBD).
-    void setNodeType(long int node_ndx, long int type)
+    void setNodeType(size_t node_ndx, long int type)
     {
-        if(mtp->DiCp && node_ndx>=0 && node_ndx<mtp->nC) {
+        if(mtp->DiCp && node_ndx<mtp->nC) {
             mtp->DiCp[node_ndx][1] = type;
         }
     }
@@ -667,7 +667,7 @@ public:
     /// @param nPmin: Minimum average total number of particles of each type per one node
     /// @param nPmax: Maximum average total number of particles of each type per one node
     /// @param ParTD: Array of particle type definitions at t0 or after interruption
-    void setParticle(long int pndx, long int pmean, long int pmin, long int pmax, const std::array<long int, 6>& pparam);
+    void setParticle(size_t pndx, long int pmean, long int pmin, long int pmax, const std::array<long int, 6>& pparam);
 
     /// HydP:  Initial hydraulic parameters in nodes: Vt, vp, eps, Km, al, Dif,  nto
     /// @param pndx: index in array
@@ -678,40 +678,40 @@ public:
     /// @param al: initial specific longitudinal dispersivity
     /// @param Dif: initial general diffusivity
     /// @param nto: initial tortuosity factor
-    void setHydraulicParameters(long int pndx, double Vt, double vp, double eps, double Km, double al, double Dif, double nto);
+    void setHydraulicParameters(size_t pndx, double Vt, double vp, double eps, double Km, double al, double Dif, double nto);
 
     // Use phase groups definitions
     /// MGPid: ID list of mobile phase groups
-    void setPhaseGroupsID(long int  gndx, const std::string& ids);
+    void setPhaseGroupsID(size_t gndx, const std::string& ids);
     /// UMGP: [nFi] units for setting phase quantities in MGP (see PGT )
-    void setUnitsPhaseQuantities(long int  pndx, char units);
+    void setUnitsPhaseQuantities(size_t pndx, char units);
     /// PGT: Quantities of phases in MGP [Fi][nPG]
     /// @param gndx: phase groups index
     /// @param pndx: phase index
-    void setPhaseGroupsQuantities(long int gndx, long int pndx, double quantity);
+    void setPhaseGroupsQuantities(size_t gndx, size_t pndx, double quantity);
 
     /// BSF: table of bulk compositions of elemental fluxes [nSFD][Nf]
     /// @param gndx: groups index
     /// @param indx: element index
-    void setICsourceQuantities(long int gndx, long int indx, double quantity);
+    void setICsourceQuantities(size_t gndx, size_t indx, double quantity);
 
     /// FDLi: Set Source/Receive box index in the flux definition
-    void setFluxSourceReceive(long int  pndx, long int  source, long int  receive);
+    void setFluxSourceReceive(size_t  pndx, long int  source, long int  receive);
 
     /// FDLf: Set the flux defnition: flux order, flux rate, MGP quantity
-    void setFluxSourceReceive(long int  pndx, double order, double rate, double quantity, double val);
+    void setFluxSourceReceive(size_t  pndx, double order, double rate, double quantity, double val);
 
     /// FDLmp: [nFD] ID of MGP to move in this flux
-    void setFluxMGPid(long int  pndx, const std::string& ids);
+    void setFluxMGPid(size_t pndx, const std::string& ids);
     /// FDLid: Set IDs of fluxes
-    void setFluxIDs(long int  pndx, const std::string& ids);
+    void setFluxIDs(size_t pndx, const std::string& ids);
 
     /// Set grid point location, size is nC [grid]
     /// @param pndx: index in array
     /// @param x: Array of initial mean particle type numbers per node
     /// @param y: Minimum average total number of particles of each type per one node
     /// @param z: Maximum average total number of particles of each type per one node
-    void setGridPoint(long int pndx, double x,  double y,  double z);
+    void setGridPoint(size_t pndx, double x,  double y,  double z);
 
     /// xFlds: Set list of selected fields and indexes to VTK format
     void setVTKfields(const std::vector<std::pair<int, int>>& vtk_fields);

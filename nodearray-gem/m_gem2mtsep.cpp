@@ -406,7 +406,7 @@ void TGEM2MT::setVTKfields(const std::vector<std::pair<int, int>> &vtk_fields)
     }
 }
 
-void TGEM2MT::setParticle(long int pndx, long int pmean, long int pmin, long int pmax, const std::array<long int, 6> &pparam)
+void TGEM2MT::setParticle(size_t pndx, long int pmean, long int pmin, long int pmax, const std::array<long int, 6> &pparam)
 {
     if(mtp->PsMode == RMT_MODE_W && pndx<mtp->nPTypes) {
         mtp->NPmean[pndx] = pmean;
@@ -416,7 +416,7 @@ void TGEM2MT::setParticle(long int pndx, long int pmean, long int pmin, long int
     }
 }
 
-void TGEM2MT::setHydraulicParameters(long pndx, double Vt, double vp, double eps, double Km, double al, double Dif, double nto)
+void TGEM2MT::setHydraulicParameters(size_t pndx, double Vt, double vp, double eps, double Km, double al, double Dif, double nto)
 {
     if(mtp->HydP && pndx<mtp->nC) {
         mtp->HydP[pndx][0] = Vt;
@@ -429,35 +429,35 @@ void TGEM2MT::setHydraulicParameters(long pndx, double Vt, double vp, double eps
     }
 }
 
-void TGEM2MT::setPhaseGroupsID(long gndx, const std::string &ids)
+void TGEM2MT::setPhaseGroupsID(size_t gndx, const std::string &ids)
 {
     if(mtp->MGPid && gndx<mtp->nPG) {
         strncpy( mtp->MGPid[gndx], ids.c_str(), MAXSYMB);
     }
 }
 
-void TGEM2MT::setUnitsPhaseQuantities(long pndx, char units)
+void TGEM2MT::setUnitsPhaseQuantities(size_t pndx, char units)
 {
     if(mtp->UMGP && pndx<mtp->FIf) {
         mtp->UMGP[pndx] = units;
     }
 }
 
-void TGEM2MT::setPhaseGroupsQuantities(long gndx, long pndx, double quantity)
+void TGEM2MT::setPhaseGroupsQuantities(size_t gndx, size_t pndx, double quantity)
 {
     if(mtp->MGPid && gndx<mtp->nPG && pndx<mtp->FIf) {
         mtp->PGT[gndx*mtp->FIf+pndx] = quantity;
     }
 }
 
-void TGEM2MT::setICsourceQuantities(long gndx, long indx, double quantity)
+void TGEM2MT::setICsourceQuantities(size_t gndx, size_t indx, double quantity)
 {
     if(mtp->MGPid && gndx<mtp->nSFD && indx<mtp->Nf) {
         mtp->BSF[gndx*mtp->Nf+indx] = quantity;
     }
 }
 
-void TGEM2MT::setFluxSourceReceive(long pndx, double order, double rate, double quantity, double val)
+void TGEM2MT::setFluxSourceReceive(size_t pndx, double order, double rate, double quantity, double val)
 {
     if(mtp->FDLf && pndx<mtp->nFD) {
         mtp->FDLf[pndx][0] = order;
@@ -467,21 +467,21 @@ void TGEM2MT::setFluxSourceReceive(long pndx, double order, double rate, double 
     }
 }
 
-void TGEM2MT::setFluxMGPid(long pndx, const std::string &ids)
+void TGEM2MT::setFluxMGPid(size_t pndx, const std::string &ids)
 {
     if(mtp->FDLmp && pndx<mtp->nFD) {
         strncpy( mtp->FDLmp[pndx], ids.c_str(), MAXSYMB);
     }
 }
 
-void TGEM2MT::setFluxIDs(long pndx, const std::string &ids)
+void TGEM2MT::setFluxIDs(size_t pndx, const std::string &ids)
 {
     if(mtp->FDLid && pndx<mtp->nFD) {
         strncpy( mtp->FDLid[pndx], ids.c_str(), MAXSYMB);
     }
 }
 
-void TGEM2MT::setGridPoint(long pndx, double x, double y, double z)
+void TGEM2MT::setGridPoint(size_t pndx, double x, double y, double z)
 {
     if(mtp->grid && pndx<mtp->nC) {
         mtp->grid[pndx][0] = x;
@@ -490,7 +490,7 @@ void TGEM2MT::setGridPoint(long pndx, double x, double y, double z)
     }
 }
 
-void TGEM2MT::setFluxSourceReceive(long pndx, long source, long receive)
+void TGEM2MT::setFluxSourceReceive(size_t pndx, long int source, long int receive)
 {
     if(mtp->FDLi && pndx<mtp->nFD) {
         mtp->FDLi[pndx][0] = source;
