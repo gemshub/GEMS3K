@@ -276,7 +276,7 @@ bool TNodeArray::CalcIPM_Node(const TestModeGEMParam& modeParam, TNode* wrkNode,
 
             if(diffile){
                 // write to file here
-                diffile->error("nError reported from GEMS3K module: {}", err_msg);
+                diffile->error("Error reported from GEMS3K module: {}", err_msg);
             }
         }
     }

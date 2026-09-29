@@ -501,33 +501,33 @@ public:
     // (4) Dimensions for gem2mt (memory allocation)
 
     /// nC:  Input number of local equilibrium cells (nodes)
-    long int nNodes() const
+    size_t nNodes() const
     {
         return mtp->nC;
     }
     /// nMGP: Number of mobile groups of phases, nMGP >= 0
-    long int nPhaseGroups() const
+    size_t  nPhaseGroups() const
     {
         return mtp->nPG;
     }
     /// nFD: Number of MGP fluxes defined in the megasystem, nFD >= 0
-    long int nMGPfluxes() const
+    size_t nMGPfluxes() const
     {
         return mtp->nFD;
     }
     /// nSFD:  Number of IC source flux compositions defined in megasystem, nSFD >= 0
-    long int nICsourceFluxes() const
+    size_t nICsourceFluxes() const
     {
         return mtp->nSFD;
     }
     /// nPTypes:  Number of allocated particle types < 20
-    long int nParticleTypes()
+    size_t nParticleTypes()
     {
         return mtp->nPTypes;
     }
 
     /// FIf:  Number of phases in (DATABR) for setting box-fluxes
-    long int nPhases() const
+    size_t nPhases() const
     {
         return mtp->FIf;
     }
