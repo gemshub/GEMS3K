@@ -174,6 +174,7 @@ void TNode::Get_sMod(int ndx, std::string &sMod)
 //               true  (1)  -  use speciation provided in the DATABR memory structure (e.g. after reading the DBR file)
 //  Return values:    NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
 extern thread_local bool g_optimaLineSearchRetry;
+extern thread_local bool g_optimaLSEscapeOff;
 long int TNode::GEM_run( bool uPrimalSol )
 {
     const long int requested = CNode->NodeStatusCH;
@@ -181,10 +182,16 @@ long int TNode::GEM_run( bool uPrimalSol )
     // pa_OptimaLineSearch < 0: an Optima call that fails without the line search is re-run once with it (see
     // g_optimaLineSearchRetry, ipm_optima.cpp). The DATABR is snapshotted BEFORE the first attempt so the retry starts from
     // the same inputs; a retry that does not return OK hands the first failure back unchanged. DECIDE lsretry.
-    const bool lsRetryArmed = multi_ptr()->base_param()->OptimaLineSearch < 0. && !kinetics &&
+    // pa_OptimaLSStallEscape > 0 with the line search on (owner 2026-09-30, "if fail with escape on try again with off"): a
+    // failed Optima call is re-run once with the escape OFF (g_optimaLSEscapeOff), same snapshot/restore. The escape at 10 lost
+    // three corium cells the escape-off solve converges (Zr-C, B2O3-SrO, NaCl-NiCl2 AOP) while gaining one (Fe-U). DECIDE escretry.
+    const bool optimaReq = !kinetics &&
         ( requested == NEED_GEM_AOP || requested == NEED_GEM_SOP || requested == NEED_GEM_HOP || requested == NEED_GEM_SHP );
+    const bool lsRetryArmed = optimaReq && multi_ptr()->base_param()->OptimaLineSearch < 0.;
+    const bool escRetryArmed = optimaReq && !lsRetryArmed && multi_ptr()->base_param()->OptimaLineSearch > 0.
+                               && multi_ptr()->base_param()->OptimaLSStallEscape > 0;
     DATABR* lsBefore = nullptr;
-    if( lsRetryArmed )
+    if( lsRetryArmed || escRetryArmed )
     {
         lsBefore = new DATABR;
         dbr_dch_api::databr_reset( lsBefore, 1 );
@@ -206,11 +213,12 @@ long int TNode::GEM_run( bool uPrimalSol )
             long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
             databr_copy( lsBefore );                  // the first attempt's INPUTS
             CNode->NodeStatusCH = requested;
-            g_optimaLineSearchRetry = true;
+            if( lsRetryArmed ) g_optimaLineSearchRetry = true; else g_optimaLSEscapeOff = true;
             const long int second = GEM_run_single( uPrimalSol );
-            g_optimaLineSearchRetry = false;
+            g_optimaLineSearchRetry = false; g_optimaLSEscapeOff = false;
             itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
-            native_trace_decide( "lsretry requested=%ld first=%ld second=%ld", (long)requested, (long)status, (long)second );
+            native_trace_decide( "%s requested=%ld first=%ld second=%ld", lsRetryArmed ? "lsretry" : "escretry",
+                                 (long)requested, (long)status, (long)second );
             const bool ok2 = second == OK_GEM_AOP || second == OK_GEM_SOP || second == OK_GEM_HOP || second == OK_GEM_SHP
                           || second == OK_GEM_AIA || second == OK_GEM_SIA;
             if( !ok2 ) { databr_copy( failed ); ipmlog_error = failedError; }

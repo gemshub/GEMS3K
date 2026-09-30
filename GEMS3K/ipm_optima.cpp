@@ -78,6 +78,8 @@ static long g_fdDiagFloorHits = 0, g_fdDiagFloorCols = 0;
 // (Cu-Pourbaix AOP 108 -> 483 it, f_TestPNTDB 501 -> 1827, Error fixed at 2.29844 for 900 it); a non-monotone reference (max of
 // the last M errors) fixed Cu-Pourbaix but not TestPNTDB (M = 10: 11325 it) and lost T-cement at every M (HANDOFF-2026-09-28b s7).
 thread_local bool g_optimaLineSearchRetry = false;
+// Set by TNode::GEM_run() for the re-run of a failed Optima call with pa_OptimaLSStallEscape switched off (DECIDE escretry).
+thread_local bool g_optimaLSEscapeOff = false;
 static void apply_optima_linesearch( Optima::Options& o, double factor, long int stallEscape = 0, long int window = 0 )
 {
     if( factor < 0. )
@@ -89,7 +91,7 @@ static void apply_optima_linesearch( Optima::Options& o, double factor, long int
     o.linesearch.enabled = true;
     o.linesearch.use_unmasked_error = true;
 #ifdef OPTIMA_LINESEARCH_STALL_ESCAPE   // pa_OptimaLSStallEscape / pa_OptimaLSWindow need optima/install-ls2 or later
-    o.linesearch.stall_escape_after = stallEscape > 0 ? (std::size_t)stallEscape : 0;
+    o.linesearch.stall_escape_after = ( stallEscape > 0 && !g_optimaLSEscapeOff ) ? (std::size_t)stallEscape : 0;
     o.linesearch.nonmonotone_window = window > 0 ? (std::size_t)window : 0;
 #else
     (void)stallEscape; (void)window;
