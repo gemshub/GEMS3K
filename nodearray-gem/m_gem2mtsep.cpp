@@ -231,6 +231,7 @@ void TGEM2MT::math_transport_defaults()
 
     read_task_from_file = false;
     mtp->nVTKfld = 0;
+    mtp->sizeLc[0] = 1.;
     mtp->Tau[START_] = 0.;
     mtp->Tau[STOP_] = 1000.;
     mtp->Tau[STEP_] = 1.;
@@ -238,6 +239,7 @@ void TGEM2MT::math_transport_defaults()
     mtp->cdv = 1e-9;
     mtp->cez = 1e-12;
     mtp->tf = 1.;
+    mtp->eps_in = 1.;
 
     mtp->Msysb1 = 0.;
     mtp->Vsysb1 = 0.;
