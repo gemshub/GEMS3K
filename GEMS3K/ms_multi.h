@@ -1619,7 +1619,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     long int StabTPD = 1;
     /// pa_IpmAugmentedKKT: how the MAIN IPM loop solves its linear system for the dual u
     /// (MakeAndSolveSystemOfLinearEquations(), initAppr = false only; MBR is untouched).
-    ///   0  off (default) - normal equations (A_act^T W A_act) u = A_act^T W F, Cholesky then LU.
+    ///   0  off - normal equations (A_act^T W A_act) u = A_act^T W F, Cholesky then LU (the default until 2026-09-30).
     ///   1  augmented (saddle-point) system, dense LU of size L_act + N:
     ///          [ I          -W A_act ] [ x ]   [ -W F ]
     ///          [ -A_act^T   -D       ] [ u ] = [  0   ]
@@ -1628,7 +1628,8 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     ///      equations' up to D; what changes is that A^T W A is never FORMED, which squares the
     ///      condition number of W^1/2 A. COST: dense O((L_act+N)^3) per iteration - ~1e9 flops per
     ///      iteration on a 1392-species project; use 2 there.
-    ///   2  the same regularised least-squares problem, min |W^1/2 (A u - F)|^2 + u^T D u, by
+    ///   2  (DEFAULT since 2026-09-30, owner: "on by default if no way to smart detect") the same regularised
+    ///      least-squares problem, min |W^1/2 (A u - F)|^2 + u^T D u, by
     ///      Householder QR of [W^1/2 A_act ; D^1/2] - also never forms A^T W A, O(L_act N^2).
     /// D = 0 except on a ZERO ROW. The owner's version put an ABSOLUTE 1e-12 on every row (its size
     /// then depends on pa_DG rescaling and on W), and kept only species with Y > 1e-12 mol where the
@@ -1651,8 +1652,12 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// leg (4526 -> 6526). Per-project counts move both ways on the lottery projects (f_Kaolinite 276 -> 48,
     /// j_Kaolinite 58 -> 155 under 2), i.e. a redraw. Mode 2's solve was verified to rounding (normal-
     /// equation residual <= 6e-16 on f_Kaolinite). Whether any case needed the zero-row rescue: NOT checked.
+    /// DEFAULT FLIP 2026-09-30: gate 2026-09-29-combined STD-OFF -> STD-ON: 0 lost, 1 won, 13 changes <= 2e-6 rel + two
+    /// lower-G assemblages, 0.987x; RAW 0 lost, 9 won, 0.851x. A "smart" trigger (QR only where Cholesky of the normal
+    /// matrix fails) was probed and rejected: it fired on 1 of 18 projects and kept 1 of the 9 RAW gains - the gains come
+    /// from the QR solve's accuracy in general, not from rescuing a failed factorisation.
     /// Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 0.
-    long int IpmAugmentedKKT = 0;
+    long int IpmAugmentedKKT = 2;
     /// pa_IpmLoopTweaks: bit mask of the owner's three SolverType == 2 main-loop changes, split so each
     /// can be measured alone (default 0 = none). Independent of pa_IpmAugmentedKKT.
     ///   1  step cap - StepSizeEstimate()'s LM clamped to <= 1 before OptimizeStepSize().
