@@ -200,7 +200,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaPreSolveFirstIters=%ld pa_LpDualFillout=%ld"
              " pa_FilloutBudget=%.6e pa_StabTPD=%ld"
              " pa_IpmAugmentedKKT=%ld pa_IpmLoopTweaks=%ld"
-             " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld\n",
+             " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
+             " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -222,7 +223,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->ColdRetryNudges, (long)pa->OptimaPreSolveFirstIters,
              (long)pa->LpDualFillout, pa->FilloutBudget, (long)pa->StabTPD,
              (long)pa->IpmAugmentedKKT, (long)pa->IpmLoopTweaks,
-             pa->OptimaLineSearch, (long)pa->OptimaFDDiagFloor );
+             pa->OptimaLineSearch, (long)pa->OptimaFDDiagFloor,
+             (long)pa->OptimaLSStallEscape, (long)pa->OptimaLSWindow );
 
     // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
     //

@@ -72,11 +72,28 @@ static long g_fdDiagFloorHits = 0, g_fdDiagFloorCols = 0;
 
 // pa_OptimaLineSearch - put Optima's merit line search on the unmasked error at the given trigger factor.
 // Only meaningful with the local Optima fix in ErrorControl::execute (plan v5 s139.6).
-static void apply_optima_linesearch( Optima::Options& o, double factor )
+// pa_OptimaLineSearch < 0 (owner 2026-09-30, "option 3"): the line search is a SECOND attempt. The first Optima attempt runs
+// without it; TNode::GEM_run() re-runs a failed Optima call once with g_optimaLineSearchRetry set, at |factor|. Measured why:
+// on a call the solver already solves the monotone trigger can only refuse a productive uphill excursion and freeze the iterate
+// (Cu-Pourbaix AOP 108 -> 483 it, f_TestPNTDB 501 -> 1827, Error fixed at 2.29844 for 900 it); a non-monotone reference (max of
+// the last M errors) fixed Cu-Pourbaix but not TestPNTDB (M = 10: 11325 it) and lost T-cement at every M (HANDOFF-2026-09-28b s7).
+thread_local bool g_optimaLineSearchRetry = false;
+static void apply_optima_linesearch( Optima::Options& o, double factor, long int stallEscape = 0, long int window = 0 )
 {
+    if( factor < 0. )
+    {
+        if( !g_optimaLineSearchRetry ) return;   // first attempt: no line search
+        factor = -factor;
+    }
     if( !( factor > 0. ) ) return;
     o.linesearch.enabled = true;
     o.linesearch.use_unmasked_error = true;
+#ifdef OPTIMA_LINESEARCH_STALL_ESCAPE   // pa_OptimaLSStallEscape / pa_OptimaLSWindow need optima/install-ls2 or later
+    o.linesearch.stall_escape_after = stallEscape > 0 ? (std::size_t)stallEscape : 0;
+    o.linesearch.nonmonotone_window = window > 0 ? (std::size_t)window : 0;
+#else
+    (void)stallEscape; (void)window;
+#endif
     o.linesearch.trigger_when_current_error_is_greater_than_previous_error_by_factor = factor;
 }
 
@@ -1223,7 +1240,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     // max(2000, pa_IIM), or less on the first attempt (pa_OptimaPreSolveFirstIters).
     options.maxiters = (unsigned)passBudget;
     options.convergence.tolerance = pa_p->OptimaTol;
-    apply_optima_linesearch( options, pa_p->OptimaLineSearch );
+    apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape, pa_p->OptimaLSWindow );
 
     // ---- Stall / wall-clock guard for the pre-solve itself ----
     // The full solve in CalculateEquilibriumStateOptima() has carried a stall
@@ -3208,7 +3225,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // measured HARMFUL at every nonzero value tried (GEMS3K/CLAUDE.md
             // 2026-08-24), kept only as re-runnable infrastructure.
             options.backtracksearch.max_step_ratio = pa_p->OptimaMaxStepRatio;
-            apply_optima_linesearch( options, pa_p->OptimaLineSearch );
+            apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape, pa_p->OptimaLSWindow );
         }
         // else (reaktoroMode): leave Optima::Options() entirely at the
         // library's own untouched defaults - matching Reaktoro's own

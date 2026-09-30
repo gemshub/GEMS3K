@@ -1691,6 +1691,21 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// 0 = off (behaviour before the field; ships off, owner 2026-09-28), 1 = on. RAW value 0.
     /// DECIDE fddiagfloor reports the count.
     long int OptimaFDDiagFloor = 0;
+    /// pa_OptimaLSStallEscape (2026-09-30, owner's "option 2"): with the line search on, after this many CONSECUTIVE line
+    /// searches that leave the error unchanged (relative change <= 1e-8) keep the full step once. 0 = off. Needs an Optima
+    /// built with OPTIMA_LINESEARCH_STALL_ESCAPE (optima/install-ls2); against an older install it is inert. Measured on
+    /// probes: f_TestPNTDB AOP 1827 -> 493 it at 10 (line search off: 501); T-cement's rescue, 07PSIna_G_edt_2's 656-it speed-up
+    /// and j_Solvus unchanged; Cu-Pourbaix's crawl (483) is not a freeze and is not caught - looser tolerances (1e-3, 1e-2)
+    /// caught it but lost T-cement. Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 0.
+    /// DEFAULT 10 since 2026-09-30 (owner: "agree"), pending the escape freeze pair; corium diagrams identical to 10 = off
+    /// within 0.1 % on all five x {AOP, SHP}.
+    long int OptimaLSStallEscape = 10;
+    /// pa_OptimaLSWindow (2026-09-30, owner's "option 1", kept opt-in): the line-search trigger compares with the max of the
+    /// last N pre-step errors instead of the previous one. 0 = off (default). Helped Cu-Pourbaix (AOP 483 -> 110 it at 10) but
+    /// was WORSE than the strict trigger on every corium phase diagram (Al2O3-SiO2 AOP converged 89.9 % -> 38.8 % at 10) and lost
+    /// T-cement's rescue at every N - not recommended for phase diagrams. Needs OPTIMA_LINESEARCH_STALL_ESCAPE, as above.
+    /// Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 0.
+    long int OptimaLSWindow = 0;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -3650,7 +3665,7 @@ typedef enum {  // Field index into outField structure
     f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn, f_pa_ColdRetryNudges,
     f_pa_OptimaPreSolveFirstIters, f_pa_LpDualFillout, f_pa_FilloutBudget,
     f_pa_StabTPD, f_pa_IpmAugmentedKKT, f_pa_IpmLoopTweaks,
-    f_pa_OptimaLineSearch, f_pa_OptimaFDDiagFloor
+    f_pa_OptimaLineSearch, f_pa_OptimaFDDiagFloor, f_pa_OptimaLSStallEscape, f_pa_OptimaLSWindow
 
 } MULTI_DYNAMIC_FIELDS;
 

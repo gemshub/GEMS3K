@@ -173,11 +173,54 @@ void TNode::Get_sMod(int ndx, std::string &sMod)
 //               false  (0) -  use speciation and activity coefficients from previous GEM_run() calculation
 //               true  (1)  -  use speciation provided in the DATABR memory structure (e.g. after reading the DBR file)
 //  Return values:    NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
+extern thread_local bool g_optimaLineSearchRetry;
 long int TNode::GEM_run( bool uPrimalSol )
 {
     const long int requested = CNode->NodeStatusCH;
     const bool kinetics = CNode->dt > 0.;
+    // pa_OptimaLineSearch < 0: an Optima call that fails without the line search is re-run once with it (see
+    // g_optimaLineSearchRetry, ipm_optima.cpp). The DATABR is snapshotted BEFORE the first attempt so the retry starts from
+    // the same inputs; a retry that does not return OK hands the first failure back unchanged. DECIDE lsretry.
+    const bool lsRetryArmed = multi_ptr()->base_param()->OptimaLineSearch < 0. && !kinetics &&
+        ( requested == NEED_GEM_AOP || requested == NEED_GEM_SOP || requested == NEED_GEM_HOP || requested == NEED_GEM_SHP );
+    DATABR* lsBefore = nullptr;
+    if( lsRetryArmed )
+    {
+        lsBefore = new DATABR;
+        dbr_dch_api::databr_reset( lsBefore, 1 );
+        dbr_dch_api::databr_realloc( CSD, lsBefore );
+        { DATABR* live = CNode; CNode = lsBefore; databr_copy( live ); CNode = live; }
+    }
     long int status = GEM_run_single( uPrimalSol );
+    if( lsBefore )
+    {
+        const bool okNow = status == OK_GEM_AOP || status == OK_GEM_SOP || status == OK_GEM_HOP || status == OK_GEM_SHP
+                        || status == OK_GEM_AIA || status == OK_GEM_SIA;
+        if( !okNow )
+        {
+            DATABR* failed = new DATABR;
+            dbr_dch_api::databr_reset( failed, 1 );
+            dbr_dch_api::databr_realloc( CSD, failed );
+            { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+            const std::string failedError = ipmlog_error;
+            long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
+            databr_copy( lsBefore );                  // the first attempt's INPUTS
+            CNode->NodeStatusCH = requested;
+            g_optimaLineSearchRetry = true;
+            const long int second = GEM_run_single( uPrimalSol );
+            g_optimaLineSearchRetry = false;
+            itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+            native_trace_decide( "lsretry requested=%ld first=%ld second=%ld", (long)requested, (long)status, (long)second );
+            const bool ok2 = second == OK_GEM_AOP || second == OK_GEM_SOP || second == OK_GEM_HOP || second == OK_GEM_SHP
+                          || second == OK_GEM_AIA || second == OK_GEM_SIA;
+            if( !ok2 ) { databr_copy( failed ); ipmlog_error = failedError; }
+            databr_free( failed );
+            pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
+            CNode->IterDone = itf + itg; CalcTime = seconds;
+            status = CNode->NodeStatusCH;
+        }
+        databr_free( lsBefore );
+    }
     if( requested == NEED_GEM_AIA && status == ERR_GEM_AIA && !kinetics )
     {
         const long int nudges = multi_ptr()->base_param()->ColdRetryNudges;
