@@ -65,6 +65,21 @@
 #include <memory>
 #include <sstream>
 
+// pa_OptimaFDDiagFloor hit counter (plan v5 s139.5): FD-Hessian columns whose diagonal was restored to the
+// analytic value, accumulated across the reduced pre-solve and the full solve and reported by a DECIDE
+// fddiagfloor record after each full solve, then reset.
+static long g_fdDiagFloorHits = 0, g_fdDiagFloorCols = 0;
+
+// pa_OptimaLineSearch - put Optima's merit line search on the unmasked error at the given trigger factor.
+// Only meaningful with the local Optima fix in ErrorControl::execute (plan v5 s139.6).
+static void apply_optima_linesearch( Optima::Options& o, double factor )
+{
+    if( !( factor > 0. ) ) return;
+    o.linesearch.enabled = true;
+    o.linesearch.use_unmasked_error = true;
+    o.linesearch.trigger_when_current_error_is_greater_than_previous_error_by_factor = factor;
+}
+
 namespace {
 // Symmetric eigenvalue floor for a small dense block, by cyclic Jacobi
 // rotations (n is the number of end-members of one solution phase - 3 for a
@@ -1082,6 +1097,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     const BASE_PARAM* pa_p = base_param();
     const bool kMoleFracHessian = ( pa_p->OptimaMoleFracHessian != 0 );
     const bool kFDHessian       = ( pa_p->OptimaFDHessian != 0 );
+    const bool kFDDiagFloor     = ( pa_p->OptimaFDDiagFloor != 0 );
     const double kLogBarrierTau = pa_p->LogBarrierTau;
     const double kPhaseHessianFloor = pa_p->PhaseHessianFloor;
     const bool hasAq = HasAqueousPhase();
@@ -1207,6 +1223,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     // max(2000, pa_IIM), or less on the first attempt (pa_OptimaPreSolveFirstIters).
     options.maxiters = (unsigned)passBudget;
     options.convergence.tolerance = pa_p->OptimaTol;
+    apply_optima_linesearch( options, pa_p->OptimaLineSearch );
 
     // ---- Stall / wall-clock guard for the pre-solve itself ----
     // The full solve in CalculateEquilibriumStateOptima() has carried a stall
@@ -1447,7 +1464,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
         // (pa_MbTrendPhaseDecay, default off) are not maintained here; the
         // full solve that follows maintains its own.
         problem.f = [this, L, nS, dcFloor, kLogBarrierTau, kPhaseHessianFloor,
-                     kFDHessian, kMoleFracHessian, hasAq, &nxToJ, &jToNx, &xlo, &act, &Fbase]
+                     kFDHessian, kFDDiagFloor, kMoleFracHessian, hasAq, &nxToJ, &jToNx, &xlo, &act, &Fbase]
                     ( Optima::ObjectiveResultRef res, Optima::VectorView x,
                       Optima::VectorView /*p*/, Optima::VectorView /*c*/,
                       Optima::ObjectiveOptions opts )
@@ -1560,6 +1577,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                     const long int i = nxToJ[(size_t)si];
                     const double Xi = pm.X[i];
                     const double h = std::max( std::fabs(Xi) * 1e-7, dcFloor * 10. );
+                    const double dIdeal = res.fxx(si,si);
                     pm.X[i] = Xi + h;
                     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
                     CalculateActivityCoefficients( LINK_UX_MODE );
@@ -1569,6 +1587,11 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                         const long int r = nxToJ[(size_t)sr];
                         res.fxx(sr,si) = ( pm.F[r] - Fbase[(size_t)r] ) / h;
                     }
+                    // pa_OptimaFDDiagFloor: an FD diagonal that is not positive (exactly 0 when X_i is below
+                    // PrimalChemicalPotentials()'s recompute threshold) replaces a positive analytic one and
+                    // makes the reduced Hessian indefinite; put the analytic value back (plan v5 s139.5).
+                    if( kFDDiagFloor ) { g_fdDiagFloorCols++;
+                        if( !( res.fxx(si,si) > 0. ) && dIdeal > 0. ) { res.fxx(si,si) = dIdeal; g_fdDiagFloorHits++; } }
                     pm.X[i] = Xi;
                 }
 
@@ -2588,6 +2611,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const double kPhaseHessianFloor = pa_p->PhaseHessianFloor;
         // Captured by value like the constants above - pa_p is not in scope inside the lambda.
         const bool kFDHessian = ( pa_p->OptimaFDHessian != 0 );
+        const bool kFDDiagFloor = ( pa_p->OptimaFDDiagFloor != 0 );
         const bool hasAq = HasAqueousPhase();
 
         // Leal 2014 §2.3.3's
@@ -2631,7 +2655,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const long int kFDDelay = ( !reaktoroMode && pm.pNP == 0 && pa_p->OptimaFDHessianDelay > 0 )
                                   ? pa_p->OptimaFDHessianDelay : 0;
         const bool kMoleFracHessian = ( pa_p->OptimaMoleFracHessian != 0 );
-        problem.f = [this, L, R, dcFloor, &fixedGrad, kLogBarrierTau, kPhaseHessianFloor, kFDHessian, kMoleFracHessian, fdSuppress, hasAq, phLast, phDec, phMax]
+        problem.f = [this, L, R, dcFloor, &fixedGrad, kLogBarrierTau, kPhaseHessianFloor, kFDHessian, kFDDiagFloor, kMoleFracHessian, fdSuppress, hasAq, phLast, phDec, phMax]
                     ( Optima::ObjectiveResultRef res, Optima::VectorView x,
                       Optima::VectorView /*p*/, Optima::VectorView /*c*/,
                       Optima::ObjectiveOptions opts )
@@ -2945,12 +2969,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         if( i >= L ) continue; // a control-condition virtual slot, not a real species - matches Reaktoro's own "i>=Nn: continue" guard
                         const double Xi = pm.X[i];
                         const double h = std::max( std::fabs(Xi) * 1e-7, dcFloor * 10. );
+                        const double dIdeal = res.fxx(i,i);
                         pm.X[i] = Xi + h;
                         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
                         CalculateActivityCoefficients( LINK_UX_MODE );
                         PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
                         for( long int j = 0; j < L; j++ )
                             res.fxx(j,i) = ( pm.F[j] - Fbase[j] ) / h;
+                        // pa_OptimaFDDiagFloor - same rule as the reduced path (plan v5 s139.5).
+                        if( kFDDiagFloor ) { g_fdDiagFloorCols++;
+                            if( !( res.fxx(i,i) > 0. ) && dIdeal > 0. ) { res.fxx(i,i) = dIdeal; g_fdDiagFloorHits++; } }
                         pm.X[i] = Xi;
                     }
                     // EXACT, REGULARISED curvature for the non-aqueous
@@ -3180,6 +3208,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // measured HARMFUL at every nonzero value tried (GEMS3K/CLAUDE.md
             // 2026-08-24), kept only as re-runnable infrastructure.
             options.backtracksearch.max_step_ratio = pa_p->OptimaMaxStepRatio;
+            apply_optima_linesearch( options, pa_p->OptimaLineSearch );
         }
         // else (reaktoroMode): leave Optima::Options() entirely at the
         // library's own untouched defaults - matching Reaktoro's own
@@ -4133,6 +4162,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         *earlyCapArmed = ( earlyCapN > 0 );
         Optima::Result result = wantSens ? solver.solve( problem, state, sensitivity )
                                          : solver.solve( problem, state );
+        if( g_fdDiagFloorCols > 0 )
+        {
+            native_trace_decide( "fddiagfloor hits=%ld cols=%ld", g_fdDiagFloorHits, g_fdDiagFloorCols );
+            g_fdDiagFloorHits = g_fdDiagFloorCols = 0;
+        }
         // Returning true from convergence.check means "stop", and Optima reports
         // that as SUCCESS - so an early-trend stop has to be folded back to a
         // failure HERE, before anything reads result.succeeded. Getting this
@@ -6153,6 +6187,23 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
         Error( xcpt.title, xcpt.mess );
     }
+    catch( std::exception& e )
+    {
+        // Optima reports its own failures by THROWING std::runtime_error (the errorif/assert macros,
+        // optima/Optima/Exception.hpp), not TError. Without this block such an exception skipped the
+        // rescale above - leaving MULTI in pa_DG's internal units - and, more seriously, escaped
+        // CalculateEquilibriumStateHOP()'s catch(TError&), so HOP/SHP lost native's converged answer and
+        // ended T_ERROR_GEM instead of restoring it as BAD_GEM_HOP. Same cleanup, rethrown as TError so
+        // every caller sees one failure type. Precedent: GEMS4R's TEqulibrate (equlibrate.cpp:94-118)
+        // did exactly this for Reaktoro. Docs/REVIEW-2026-09-29-gems4r.md s3.3.
+        if( pa_p->DG > 1e-5 )
+            RescaleSystemFromInternal( ScFact );
+        NumIterFIA = pm.ITF;
+        NumIterIPM = pm.ITG;
+        pm.t_end = clock();
+        pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
+        Error( "E91IPM: Optima exception: ", e.what() );
+    }
 
     if( pa_p->DG > 1e-5 )
         RescaleSystemFromInternal( ScFact );
@@ -6255,6 +6306,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
     bool nativeOk = true;
     double calcTime = 0.;
     std::vector<double> Ysave, Usave;
+    double FXsave = kTotalGibbsEnergyUnset;   // native's total G, external units (restored below)
 
     // SHP (warmNative) starts the NATIVE leg warm instead of cold. HOP as
     // built runs it cold at EVERY call, which is right for a single
@@ -6319,6 +6371,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
         // describe native's own answer.
         Ysave.assign( pm.Y, pm.Y + pm.L );
         Usave.assign( pm.U, pm.U + pm.N );
+        FXsave = pm.FX;
     }
     catch( TError& werr )
     {
@@ -6344,6 +6397,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
                 calcTime = CalculateEquilibriumState( fiaN, ipmN );
                 Ysave.assign( pm.Y, pm.Y + pm.L );
                 Usave.assign( pm.U, pm.U + pm.N );
+                FXsave = pm.FX;
             }
             catch( TError& nerr2 )
             {
@@ -6479,6 +6533,11 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             // already uses, above.
             for( long int j = 0; j < pm.L; j++ ) pm.Y[j] = pm.X[j] = Ysave[(size_t)j];
             for( long int i = 0; i < pm.N; i++ ) pm.U[i] = Usave[(size_t)i];
+            // pm.FX too: the Optima leg re-initialises it to kTotalGibbsEnergyUnset and fails before
+            // assigning it, so without this every BAD_GEM_HOP/SHP row published the sentinel through
+            // packDataBr() -> DATABR.Gs (seen on GEMS4R's Opa-CI; REVIEW-2026-09-29-gems4r.md s4).
+            // Native's own value, saved after its leg rescaled, so already in external units.
+            pm.FX = FXsave;
             TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
             CalculateActivityCoefficients( LINK_UX_MODE );
             CalculateConcentrations( pm.X, pm.XF, pm.XFA );

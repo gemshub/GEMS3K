@@ -195,6 +195,8 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_StabTPD", 0 , 0, 0, "# pa_StabTPD: tangent-plane stability scan of absent multicomponent phases, reported on the trace CERT line only { 0 off, 1 report (default) }" },
     { "pa_IpmAugmentedKKT", 0 , 0, 0, "# pa_IpmAugmentedKKT: main IPM loop linear solve; 0 = normal equations (default), 1 = augmented saddle-point system by dense LU, 2 = same system by QR least squares; 1 and 2 floor a zero row instead of failing { 0 }" },
     { "pa_IpmLoopTweaks", 0 , 0, 0, "# pa_IpmLoopTweaks: bit mask of main IPM loop changes; 1 = cap step size at 1, 2 = update activity coefficients every third iteration once PCI < 5e-4, 4 = after 120 iterations accept PCI < 300 x pa_DK; 0 = none { 0 }" },
+    { "pa_OptimaLineSearch", 0 , 0, 0, "# pa_OptimaLineSearch: Optima merit line search on the unmasked error, trigger factor { 0 off; 1.5 default }" },
+    { "pa_OptimaFDDiagFloor", 0 , 0, 0, "# pa_OptimaFDDiagFloor: restore the analytic diagonal where the FD Hessian column gives a non-positive one { 0 off (default), 1 on }" },
 };
 
 
@@ -213,7 +215,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 110, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 112, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -415,6 +417,8 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_StabTPD, pa_p->StabTPD, _comment, false  );
         prar.writeField(f_pa_IpmAugmentedKKT, pa_p->IpmAugmentedKKT, _comment, false  );
         prar.writeField(f_pa_IpmLoopTweaks, pa_p->IpmLoopTweaks, _comment, false  );
+        prar.writeField(f_pa_OptimaLineSearch, pa_p->OptimaLineSearch, _comment, false  );
+        prar.writeField(f_pa_OptimaFDDiagFloor, pa_p->OptimaFDDiagFloor, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -820,7 +824,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 110, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 112, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1283,6 +1287,10 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_IpmAugmentedKKT: rddar.readArray("pa_IpmAugmentedKKT" , &pa_p->IpmAugmentedKKT, 1);
             break;
         case f_pa_IpmLoopTweaks: rddar.readArray("pa_IpmLoopTweaks" , &pa_p->IpmLoopTweaks, 1);
+            break;
+        case f_pa_OptimaLineSearch: rddar.readArray("pa_OptimaLineSearch" , &pa_p->OptimaLineSearch, 1);
+            break;
+        case f_pa_OptimaFDDiagFloor: rddar.readArray("pa_OptimaFDDiagFloor" , &pa_p->OptimaFDDiagFloor, 1);
             break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;

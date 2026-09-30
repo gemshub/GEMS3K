@@ -1640,6 +1640,11 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// continues - the owner's "the determinant no longer goes to zero". That HIDES a degeneracy rather
     /// than repairing it, so it is recorded: DECIDE "ipmkkt-zerorow" on the first rescue of each
     /// InteriorPointsMethod() call.
+    /// FALLBACK: where the augmented solve finds its system singular (QR rank test 1e-14, or LU), that
+    /// step is taken by the normal equations instead (DECIDE "ipmkkt-fallback", first per call) - so
+    /// the switch can never fail where the default would have gone on. Added after the 2026-09-28c
+    /// standard freeze lost three warm SIA answers (07PSIna_G_simple_1/2, CASH+CsSr) to QR declaring
+    /// rank deficiency on the first warm step; with it all three are OK again (probe, 2026-09-29).
     /// MEASURED 2026-09-28b, SMOKE ONLY (mode_compare native/AOP/HOP, 27 gems3k projects, one draw, NOT a
     /// freeze): 2 -> native 0 answers lost, iterations x0.994, G moved only on f_/j_CASHNK (1.8e-7 / 8e-9
     /// relative, a known jitter project); 1 -> 0 lost, native x0.960, HOP x1.165 all from j_CASHNK's Optima
@@ -1664,6 +1669,23 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// is a candidate default; the switch exists so the owner's variant stays reproducible.
     /// Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 0.
     long int IpmLoopTweaks = 0;
+    /// pa_OptimaLineSearch: Optima's merit line search on the UNMASKED error, with this trigger factor
+    /// (a step whose error exceeds factor x the previous one is line-searched). 0 = off (Optima's own default,
+    /// the behaviour before the field). Reaches Optima::Options::linesearch in both the reduced pre-solve and
+    /// the full solve. REQUIRES the local Optima fix in ErrorControl::execute (E updated at the new point
+    /// before the comparison) - without it the trigger compares the error with itself and never fires
+    /// (plan v5 s139.6). Measured with that fix, AOP cold, 77 projects: factor 1.5 loses 0 answers and
+    /// 0 phases, wins T-cement (native's G to 9 digits), median ITG 0.93x, total +8 %. Ships 1.5 (owner,
+    /// 2026-09-28). RAW value 0. Trailing member: GEMSGUI serialises BASE_PARAM positionally.
+    double OptimaLineSearch = 1.5;
+    /// pa_OptimaFDDiagFloor: in the pa_OptimaFDHessian block, which OVERWRITES a basic variable's whole column
+    /// (diagonal included) with a finite difference, put the analytic diagonal back where the FD diagonal is
+    /// not positive. A basic variable below the amount at which PrimalChemicalPotentials() recomputes F gets
+    /// an FD diagonal of exactly 0; with a non-zero coupling that makes the reduced Hessian indefinite by
+    /// construction (plan v5 s139.5: resolved negative curvature on 2 of 83 projects, all of it this).
+    /// 0 = off (behaviour before the field; ships off, owner 2026-09-28), 1 = on. RAW value 0.
+    /// DECIDE fddiagfloor reports the count.
+    long int OptimaFDDiagFloor = 0;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -3195,7 +3217,8 @@ protected:
     /// iteration does not flood the trace.
     long int ipmKktRescues = 0;
     /// pa_IpmAugmentedKKT = 1 or 2: the main-loop (initAppr = false) solve for pm.U without forming
-    /// A^T W A. \return 0 solved, 1 singular. See BASE_PARAM::IpmAugmentedKKT.
+    /// A^T W A. \return 0 solved, 2 singular - the caller then takes that step by the normal
+    /// equations (DECIDE ipmkkt-fallback). See BASE_PARAM::IpmAugmentedKKT.
     long int SolveIpmAugmented( long int N );
     double *U_mean; ///< Cumulative mean dual solution approximation [nNu]
     double *U_M2;   ///< Cumulative sum of squares [nNu]
@@ -3621,7 +3644,8 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaReadmitSeed,
     f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn, f_pa_ColdRetryNudges,
     f_pa_OptimaPreSolveFirstIters, f_pa_LpDualFillout, f_pa_FilloutBudget,
-    f_pa_StabTPD, f_pa_IpmAugmentedKKT, f_pa_IpmLoopTweaks
+    f_pa_StabTPD, f_pa_IpmAugmentedKKT, f_pa_IpmLoopTweaks,
+    f_pa_OptimaLineSearch, f_pa_OptimaFDDiagFloor
 
 } MULTI_DYNAMIC_FIELDS;
 

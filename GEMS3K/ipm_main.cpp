@@ -93,6 +93,12 @@ FILE* ipm_probe_file()
 
 /// One DECIDE record - see the declaration in ms_multi.h for why the solver's own
 /// choices belong in the trace and not only in the log.
+/// pa_IpmAugmentedKKT: fallbacks to the normal equations in the current InteriorPointsMethod() call
+/// (reset at its entry); only the first emits DECIDE "ipmkkt-fallback". File-static rather than a
+/// TMultiBase member so the fix touched ipm_main.cpp alone; thread_local because nodes may be solved
+/// concurrently on separate threads.
+static thread_local long int s_ipmKktFallbacks = 0;
+
 void native_trace_decide( const char* fmt, ... )
 {
     FILE* ntf = native_trace_file();
@@ -193,7 +199,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_DeterminacyWarn=%.6e pa_ColdRetryNudges=%ld"
              " pa_OptimaPreSolveFirstIters=%ld pa_LpDualFillout=%ld"
              " pa_FilloutBudget=%.6e pa_StabTPD=%ld"
-             " pa_IpmAugmentedKKT=%ld pa_IpmLoopTweaks=%ld\n",
+             " pa_IpmAugmentedKKT=%ld pa_IpmLoopTweaks=%ld"
+             " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -214,7 +221,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (int)pa->IpmStallWindow, (int)pa->MbReproject, pa->DeterminacyWarn,
              (long)pa->ColdRetryNudges, (long)pa->OptimaPreSolveFirstIters,
              (long)pa->LpDualFillout, pa->FilloutBudget, (long)pa->StabTPD,
-             (long)pa->IpmAugmentedKKT, (long)pa->IpmLoopTweaks );
+             (long)pa->IpmAugmentedKKT, (long)pa->IpmLoopTweaks,
+             pa->OptimaLineSearch, (long)pa->OptimaFDDiagFloor );
 
     // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
     //
@@ -3938,6 +3946,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     const double   kIpmLooseFactor = 300.;   // bit 4: accept PCI < this x DXM
     const double   kIpmLagPCI      = 5e-4;   // bit 2: lag lnGam updates below this PCI (absolute)
     ipmKktRescues = 0;
+    s_ipmKktFallbacks = 0;
 
     status = 0;
     if( pm.FIs )
@@ -4999,7 +5008,12 @@ static double InverseIterationMinEig( Decomp& decomp, long int N, int iters )
 /// equations assembly below uses (Y > min(lowPosNum, DcMinM)); they differ from it only by D and
 /// by rounding. pm.MU is not written here - DikinsCriterion() recomputes it from pm.U, and
 /// W (A u - F) is exactly the x block of arm 1, so there is nothing to carry over.
-/// \return 0 solved, 1 singular (the caller reports E07IPM, as for the normal equations).
+/// \return 0 solved, 2 singular - the caller then FALLS BACK to the normal equations for this
+///         step (DECIDE ipmkkt-fallback). Never 1: the augmented solve must not fail where the
+///         normal equations would have gone on. MEASURED 2026-09-28c freeze: without the fallback,
+///         a warm SIA start (07PSIna_G_simple_1/2, CASH+CsSr) had QR report R rank-deficient at
+///         column 5 of 6 on its first step while Cholesky/LU of A^T W A pushed through, and SIA then
+///         auto-switched to AIA - three SIA answers lost.
 long int TMultiBase::SolveIpmAugmented( long int N )
 {
     const long int Na = pm.N;   // stride of the a(j,i) macro
@@ -5031,7 +5045,7 @@ long int TMultiBase::SolveIpmAugmented( long int N )
     for( long int i = 0; i < N; i++ )
         dmax = std::max( dmax, dreg[(size_t)i] );
     if( !( dmax > 0. ) )
-        return 1;                  // nothing active carries any IC: no scale to regularise with
+        return 2;                  // nothing active carries any IC: no scale to regularise with
     long int nZero = 0, iZero = -1;
     for( long int i = 0; i < N; i++ )
     {
@@ -5076,7 +5090,7 @@ long int TMultiBase::SolveIpmAugmented( long int N )
         {
             ipm_logger->warn("SolveIpmAugmented (pa_IpmAugmentedKKT=1): augmented matrix singular, "
                              "L_act={} N={}", La, N);
-            return 1;
+            return 2;
         }
         Array1D<double> S = lu.solve( V );
         for( long int i = 0; i < N; i++ )
@@ -5109,7 +5123,7 @@ long int TMultiBase::SolveIpmAugmented( long int N )
         if( !( nrm > 0. ) )
         {
             ipm_logger->warn("SolveIpmAugmented (pa_IpmAugmentedKKT=2): zero column {} of {}", k, N);
-            return 1;
+            return 2;
         }
         const double alpha = ( qk[k] > 0. ) ? -nrm : nrm;
         double vn2 = 0.;
@@ -5139,7 +5153,7 @@ long int TMultiBase::SolveIpmAugmented( long int N )
         if( !( fabs( Rd[(size_t)k] ) > 1e-14 * rmax ) )
         {
             ipm_logger->warn("SolveIpmAugmented (pa_IpmAugmentedKKT=2): rank-deficient R at {} of {}", k, N);
-            return 1;
+            return 2;
         }
     for( long int k = N - 1; k >= 0; k-- )
     {
@@ -5320,12 +5334,21 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
     if( !initAppr && base_param()->IpmAugmentedKKT > 0 )
     {
         const long int ret = SolveIpmAugmented( N );
+        if( ret == 2 )
+        {   // singular for the augmented solve: take this step by the normal equations below
+            if( s_ipmKktFallbacks++ == 0 )
+                native_trace_decide( "ipmkkt-fallback mode=%ld itg=%ld N=%ld",
+                                     (long)base_param()->IpmAugmentedKKT, (long)pm.ITG, (long)N );
+        }
+        else
+        {
 #ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
-        pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
-                              std::chrono::high_resolution_clock::now() - solve_t0 ).count();
-        pm.CondNumTimeMs += diag_ms;
+            pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
+                                  std::chrono::high_resolution_clock::now() - solve_t0 ).count();
+            pm.CondNumTimeMs += diag_ms;
 #endif
-        return ret;
+            return ret;
+        }
     }
 
     Alloc_A_B( N );
