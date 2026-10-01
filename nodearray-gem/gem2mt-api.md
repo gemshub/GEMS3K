@@ -167,7 +167,7 @@ Sizes must be defined before allocation, flags sets when size more then 0;
    /// FDLi: Set Source/Receive box index in the flux definition
    void setFluxSourceReceive(long int  pndx, long int  source, long int  receive);
    /// FDLf: Set the flux defnition: flux order, flux rate, MGP quantity
-   void setFluxSourceDefinition(long int  pndx, double order, double rate, double quantity, double val);
+   void setFluxDefinition(size_t pndx, double order, double rate, double quantity, double val);
    /// FDLmp: [nFD] ID of MGP to move in this flux
    void setFluxMGPid(long int  pndx, const std::string& ids);
    /// FDLid: Set IDs of fluxes
