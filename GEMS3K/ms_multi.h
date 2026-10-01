@@ -1706,6 +1706,53 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// T-cement's rescue at every N - not recommended for phase diagrams. Needs OPTIMA_LINESEARCH_STALL_ESCAPE, as above.
     /// Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 0.
     long int OptimaLSWindow = 0;
+    /// pa_OptimaLSRejectWorse (2026-09-30, gems3k-6f): a line search that ends at or above the pre-step error is discarded
+    /// and the full step kept (Optima LineSearchOptions::reject_if_worse). 0 = off (DEFAULT since 2026-10-01, owner: "off by
+    /// default if only special difficult projects are affected"), 1 = on; always off in TNode::GEM_run()'s legacy retry.
+    /// RC freeze 2026-09-30: clean in STANDARD (0 lost/changed, AOP 1.144x) but MASKED HARM raw (2 fake OKs CSHSnplus mb_rel
+    /// 1.767, f_BaSrCarbonate_a0wide AOP/SOP loses native's answer). Recommend per project where the line search crawls. Measured (AOP, line search 1.5, escape 10, objective memo): Cu-Pourbaix fired 341 line searches, 329 ending
+    /// ABOVE the pre-step error - a crawl the stall escape cannot see; with the rule 489 -> 149 it, j_Solvus 153 -> 104,
+    /// 07PSIna_G_edt_2 687 -> 639, f_TestPNTDB 463 unchanged, same G; solvus sweep 61/61 (6388 -> 6564 it); corium diagrams
+    /// within 0.4 % on answers; T-cement OK via the retry. Needs OPTIMA_LINESEARCH_REJECT_WORSE; inert against an older Optima.
+    /// Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 0.
+    long int OptimaLSRejectWorse = 0;
+    /// pa_OptimaTpdAccept (PROTOTYPE, plan v5 section 140.15 A): when Optima ends not converged / KKT / stability failed
+    /// but mass balance holds, accept the state iff every off-bound species is stationary, every at-bound species of a
+    /// single-DC/aqueous/gas phase has gradJ >= -kktTol, and every ABSENT non-ideal condensed phase has a direct-TPD search
+    /// minimum >= -value (THERMOCHIMICA's phase-level criterion). 0 = off. Measured value 1e-6. RAW value: 0.
+#ifndef GEMS3K_DEFAULT_OPTIMA_TPDACCEPT
+#define GEMS3K_DEFAULT_OPTIMA_TPDACCEPT 1e-6   // release default 2026-10-01 (RC freeze: clean standard + raw)
+#endif
+    double OptimaTpdAccept = GEMS3K_DEFAULT_OPTIMA_TPDACCEPT;
+    /// pa_OptimaCgSeed (PROTOTYPE, plan v5 section 140.15 B): cold Optima seed by column generation (species Gibbs-LP +
+    /// TPD-priced pseudo-compound columns, THERMOCHIMICA's Leveling/PEA); value = TPD tolerance; 0 = off (feasibility-LP
+    /// seed). Measured value 1e-6. RAW value: 0.
+#ifndef GEMS3K_DEFAULT_OPTIMA_CGSEED
+#define GEMS3K_DEFAULT_OPTIMA_CGSEED 1e-6   // release default 2026-10-01 (RC freeze: clean standard + raw)
+#endif
+    double OptimaCgSeed = GEMS3K_DEFAULT_OPTIMA_CGSEED;
+    /// pa_OptimaColdRetry (PROTOTYPE, plan v5 section 140.16 C/C'): a warm Optima call (SOP, SHP) that is not OK is
+    /// re-solved cold (AOP) by TNode::GEM_run_optima_cold_retry(); 0 = off, 1 = retry after the full warm budget,
+    /// 2 = fail fast (skip the warm call's full-budget re-solves, then retry). Measured value 2. RAW value: 0.
+#ifndef GEMS3K_DEFAULT_OPTIMA_COLDRETRY
+#define GEMS3K_DEFAULT_OPTIMA_COLDRETRY 2   // release default 2026-10-01 (RC freeze: clean standard + raw)
+#endif
+    long int OptimaColdRetry = GEMS3K_DEFAULT_OPTIMA_COLDRETRY;
+    /// pa_OptimaFinish (PROTOTYPE, plan v5 section 142): when an Optima call ends not converged, a Newton finish on the FIXED
+    /// phase set (species amounts and multipliers, equality-constrained, line-searched on G) is run from Optima's last
+    /// primal by TMultiBase::PotentialSpaceFinish(); its result is then judged by the same KKT / mass-balance / TPD checks
+    /// as Optima's own. 0 = off, 1 = on. RAW value: 0.
+#ifndef GEMS3K_DEFAULT_OPTIMA_FINISH
+#define GEMS3K_DEFAULT_OPTIMA_FINISH 1   // release default 2026-10-01 (RC freeze: clean standard + raw)
+#endif
+    long int OptimaFinish = GEMS3K_DEFAULT_OPTIMA_FINISH;
+    /// pa_OptimaAcceptRepair (2026-10-01, gems3k-6f; owner: off by default, on per project): when pa_OptimaTpdAccept's
+    /// acceptance passes every test except the per-IC relative mass balance (mb_rel > 1), apply MassBalanceReproject() - the
+    /// repair the success path already applies (OptimaZeroAbsent = 2, DECIDE optimarepair) - and re-test; restored if it does
+    /// not bring mb_rel <= 1 (DECIDE tpdaccept-repair). Needs pa_OptimaTpdAccept > 0. 0 = off (default), 1 = on.
+    /// Measured on T-cement (with pa_GAS = 2e-3 in the project): AOP/SOP OK at 11-13 g H2O (were FAIL), G = native's to
+    /// 8-10 digits; 10.0 g still fails (no attempt reaches native's answer). Trailing member (GEMSGUI). RAW value: 0.
+    long int OptimaAcceptRepair = 0;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2685,6 +2732,8 @@ public:
     /// \return min over scanned phases of the smallest TPD(y) evaluated, in RT (< 0: unstable), +1e300 if none.
     /// MUTATES AND RESTORES BY COPY, exactly as CertCurvMin() does, for the same measured reason.
     double CertStabTPD( long int& worstPhase, long int& nScanned, long int& nDisagree );
+    /// PROTOTYPE (plan v5 §140.12): composition search for one absent non-ideal phase; see ipm_main.cpp.
+    double NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest );
 
     double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
@@ -2952,6 +3001,9 @@ public:
     /// DetectPhaseCollapseAndReseed() afterward, same as this method's own
     /// call site in CalculateEquilibriumStateOptima() does.
     bool LPFeasibilitySeed( std::vector<double>& nOut );
+    /// PROTOTYPE (plan v5 §140.15): THERMOCHIMICA-style column-generation cold seed; see ipm_optima.cpp.
+    bool ColumnGenerationSeed( std::vector<double>& nOut, double tol );
+    bool PotentialSpaceFinish( double dcFloor, const std::vector<double>& xlower, const std::vector<double>& xupper );
 
     /// Dual of the LINEARISED-Gibbs LP (min sum_j G0[j]*n_j s.t. A n = b,
     /// n >= 0), computed with the same simplex as LPFeasibilitySeed() and
@@ -3665,7 +3717,10 @@ typedef enum {  // Field index into outField structure
     f_pa_IpmStallWindow, f_pa_MbReproject, f_pa_DeterminacyWarn, f_pa_ColdRetryNudges,
     f_pa_OptimaPreSolveFirstIters, f_pa_LpDualFillout, f_pa_FilloutBudget,
     f_pa_StabTPD, f_pa_IpmAugmentedKKT, f_pa_IpmLoopTweaks,
-    f_pa_OptimaLineSearch, f_pa_OptimaFDDiagFloor, f_pa_OptimaLSStallEscape, f_pa_OptimaLSWindow
+    f_pa_OptimaLineSearch, f_pa_OptimaFDDiagFloor, f_pa_OptimaLSStallEscape, f_pa_OptimaLSWindow,
+    f_pa_OptimaLSRejectWorse,
+    f_pa_OptimaTpdAccept, f_pa_OptimaCgSeed, f_pa_OptimaColdRetry, f_pa_OptimaFinish,
+    f_pa_OptimaAcceptRepair
 
 } MULTI_DYNAMIC_FIELDS;
 

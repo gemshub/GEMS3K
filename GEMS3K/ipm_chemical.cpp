@@ -1488,6 +1488,56 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                  (long)trPass, (long)pm.FI, (long)CleanupStatus, pa_p->DF, pa_p->DFM,
                  pm.DSM, pm.DcMinM, AmountThreshold, MjuDiffCutoff );
 
+    // PROTOTYPE (session gems3k-e6, 2026-09-28; plan v5 section 140.12), OFF unless GEMS3K_NATIVE_TPD_INSERT is set
+    // (value = TPD tolerance in RT, default 1e-6). For every ABSENT non-ideal phase the single-point index Falp -
+    // evaluated at an arbitrary trace composition, or the -1 "cannot restore" sentinel - is replaced by a
+    // composition search against the current dual (NativeTpdPhase(), the CertStabTPD() search): Falp :=
+    // -min TPD / ln 10, raised to just above pa_DF when min TPD < -tolerance so the phase is INSERTED, and the
+    // insertion then puts its end-members at the composition the search found. THERMOCHIMICA's Subminimization
+    // is the reference design (plan v5 section 140.6). Measured on gems_tests-nuclearsafety Fe-Cr / Al2O3-SiO2.
+    static const double tpdInsTol = []() {
+        const char* e = std::getenv( "GEMS3K_NATIVE_TPD_INSERT" );
+        if( !e ) return -1.;
+        const double v = atof( e );
+        return ( v > 0. && v < 0.1 ) ? v : 1e-6; }();
+    std::vector<std::vector<double>> tpdY( (size_t)pm.FI );
+    if( tpdInsTol > 0. )
+    {
+        // ABSENT or TRACE, as CertStabTPD() counts it: a phase below 1e-6 of the total phase amount carries no
+        // material share, and PSSC otherwise ELIMINATEs it on its single-point index (rs_ss on Al2O3-SiO2 at 1.7e-7).
+        double sumXFt = 0.;
+        for( long int kk = 0; kk < pm.FI; kk++ ) sumXFt += std::max( pm.XF[kk], 0. );
+        long int p0 = 0;
+        for( long int kk = 0; kk < pm.FIs; kk++ )
+        {
+            const long int n = pm.L1[kk];
+            const char ph = pm.PHC[kk];
+            if( n > 1 && ( pm.XF[kk] < pm.DSM || pm.XF[kk] < 1e-6 * sumXFt ) && ph != PH_AQUEL && ph != PH_SORPTION && ph != PH_POLYEL
+                && ph != PH_ADSORPT && ph != PH_IONEX )
+            {
+                std::vector<double> yb;
+                const double tpd = NativeTpdPhase( kk, p0, yb );
+                if( tpd < 1e299 )
+                {
+                    const double falpSingle = pm.Falp[kk];
+                    double falp = -tpd / log( 10. );
+                    const bool ins = tpd < -tpdInsTol;
+                    if( ins ) { falp = std::max( falp, pa_p->DF * 1.001 ); tpdY[(size_t)kk] = yb; }
+                    pm.Falp[kk] = falp;
+                    if( ntf )
+                    {
+                        fprintf( ntf, "PSSC  pass=%ld tpd k=%ld %-20s tpd_min=%+.6e Falp_single=%+.6e Falp_used=%+.6e insert=%d y=",
+                                 (long)trPass, (long)kk, char_array_to_string(pm.SF[kk],MAXPHNAME+MAXSYMB).c_str(),
+                                 tpd, falpSingle, falp, ins ? 1 : 0 );
+                        for( size_t a = 0; a < yb.size(); a++ ) fprintf( ntf, "%s%.4g", a ? "," : "", yb[a] );
+                        fprintf( ntf, "\n" );
+                    }
+                }
+            }
+            p0 += n;
+        }
+    }
+
     for(k=0;k<pm.FI;k++)
     {
        L1k = pm.L1[k]; // Number of components in the phase
@@ -1571,7 +1621,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
        }
        if( logSI >= pa_p->DF )  // 2 - INSERTION CASE
        {  // this phase is stable or over-stable
-           if( PhaseAmount < pm.DSM ) // pm.DFYsM )
+           if( PhaseAmount < pm.DSM || !tpdY[(size_t)k].empty() ) // pm.DFYsM ); PROTOTYPE 140.12: also a TRACE phase the TPD search wants
            {  // phase appears to be lost - insertion of all components of the phase.
               // FEASIBILITY CHECK FIRST: pm.DFYsM (= pa_DFYs, default 1e-6) is a fixed
               // amount that does not look at the composition, so for a phase whose
@@ -1613,6 +1663,13 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                }
                if( L1k > 1 )
                   DC_RaiseZeroedOff( jb, jb+L1k, k );
+               if( L1k > 1 && !tpdY[(size_t)k].empty() )
+               {   // PROTOTYPE (section 140.12): put the inserted end-members at the composition the TPD search found
+                   double tot = 0.;
+                   for( j = jb; j < jb+L1k; j++ ) tot += pm.Y[j];
+                   for( j = jb; j < jb+L1k; j++ )
+                       pm.Y[j] = std::max( tot * tpdY[(size_t)k][(size_t)(j-jb)], tot * 1e-6 );
+               }
                else
                   pm.Y[jb] = insAmt; // pa_DFYs for a major phase, the composition ceiling for a trace one
                DCinserted += L1k;

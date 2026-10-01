@@ -188,8 +188,10 @@ long int TNode::GEM_run( bool uPrimalSol )
     const bool optimaReq = !kinetics &&
         ( requested == NEED_GEM_AOP || requested == NEED_GEM_SOP || requested == NEED_GEM_HOP || requested == NEED_GEM_SHP );
     const bool lsRetryArmed = optimaReq && multi_ptr()->base_param()->OptimaLineSearch < 0.;
-    const bool escRetryArmed = optimaReq && !lsRetryArmed && multi_ptr()->base_param()->OptimaLineSearch > 0.
-                               && multi_ptr()->base_param()->OptimaLSStallEscape > 0;
+    // Extended 2026-09-30 (owner: "memo first, then retry without"): with the line search on, the objective memo
+    // (memoize_objective_if_linesearch, ipm_optima.cpp) is always active, so the same LEGACY retry - escape off AND memo off -
+    // is armed whenever the line search is on, whatever the escape. It reproduces the pre-2026-09-30 behaviour exactly.
+    const bool escRetryArmed = optimaReq && !lsRetryArmed && multi_ptr()->base_param()->OptimaLineSearch > 0.;
     DATABR* lsBefore = nullptr;
     if( lsRetryArmed || escRetryArmed )
     {
@@ -235,7 +237,125 @@ long int TNode::GEM_run( bool uPrimalSol )
         if( nudges > 0 )
             status = GEM_run_cold_retry( nudges );
     }
+    // PROTOTYPE (session gems3k-e6, 2026-09-28; plan v5 section 140.16), OFF unless pa_OptimaColdRetry > 0:
+    // a WARM Optima call (SOP, or SHP whose Optima leg failed) that did not return OK is re-solved cold as AOP from
+    // the same inputs - ORCHESTRA's and THERMOCHIMICA's effective behaviour (each cell solved from its own start).
+    // With pa_OptimaCgSeed > 0 a failed cold call is tried once more from the column-generation seed. A retry that is not OK hands the
+    // failed call back exactly as it was (an SHP fallback answer is never lost).
+    const bool optimaColdRetry = ( multi_ptr()->base_param()->OptimaColdRetry > 0 );   // pa_OptimaColdRetry
+    if( optimaColdRetry && !kinetics && ( requested == NEED_GEM_SOP || requested == NEED_GEM_SHP )
+        && status != OK_GEM_SOP && status != OK_GEM_SHP && status != OK_GEM_AOP
+        && status != OK_GEM_SIA && status != OK_GEM_AIA )
+        status = GEM_run_optima_cold_retry( requested );
+    // FIX (gems3k-da 2026-09-29): pa_OptimaCgSeed only as a SECOND attempt of a failed cold AOP call - see
+    // g_optimaCgSeedArmed (ipm_optima.cpp). A retry that is not OK hands the first failure back unchanged.
+    if( multi_ptr()->base_param()->OptimaCgSeed > 0. && !kinetics && requested == NEED_GEM_AOP && status != OK_GEM_AOP )
+    {
+        DATABR* failed = new DATABR;
+        dbr_dch_api::databr_reset( failed, 1 );
+        dbr_dch_api::databr_realloc( CSD, failed );
+        { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+        const std::string failedError = ipmlog_error;
+        long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
+        const long int second = GEM_run_aop_cgseed( itf, itg, seconds );
+        if( second != OK_GEM_AOP ) { databr_copy( failed ); ipmlog_error = failedError; }
+        databr_free( failed );
+        pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
+        CNode->IterDone = itf + itg; CalcTime = seconds;
+        status = CNode->NodeStatusCH;
+    }
     return status;
+}
+
+// One GEM_run_single() with the same LEGACY retry GEM_run() gives its first attempt (owner proposal 2026-09-30, via
+// gems3k-97): with the line search on, a failed call is re-run once from the same inputs with the stall escape, the
+// objective memo and reject_if_worse off (g_optimaLSEscapeOff); a retry that is not OK hands the first failure back.
+// Used by the later rungs (the warm->cold leg, the column-generation seed), which otherwise ran bare - T-cement's cold
+// AOP is OK only via this retry. A call that is OK first time is untouched. Accumulates into the caller's totals.
+long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* rung )
+{
+    const long int requested = CNode->NodeStatusCH;
+    auto isOk = []( long int st ) { return st == OK_GEM_AOP || st == OK_GEM_SOP || st == OK_GEM_HOP || st == OK_GEM_SHP
+                                           || st == OK_GEM_AIA || st == OK_GEM_SIA; };
+    const bool armed = multi_ptr()->base_param()->OptimaLineSearch > 0. && !g_optimaLSEscapeOff;
+    DATABR* before = nullptr;
+    if( armed )
+    {
+        before = new DATABR;
+        dbr_dch_api::databr_reset( before, 1 );
+        dbr_dch_api::databr_realloc( CSD, before );
+        { DATABR* live = CNode; CNode = before; databr_copy( live ); CNode = live; }
+    }
+    long int st = GEM_run_single( uPrimalSol );
+    itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+    if( armed && !isOk( st ) )
+    {
+        DATABR* failed = new DATABR;
+        dbr_dch_api::databr_reset( failed, 1 );
+        dbr_dch_api::databr_realloc( CSD, failed );
+        { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+        const std::string failedError = ipmlog_error;
+        databr_copy( before );
+        CNode->NodeStatusCH = requested;
+        g_optimaLSEscapeOff = true;
+        const long int second = GEM_run_single( uPrimalSol );
+        g_optimaLSEscapeOff = false;
+        itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+        native_trace_decide( "escretry rung=%s requested=%ld first=%ld second=%ld", rung, (long)requested, (long)st, (long)second );
+        if( !isOk( second ) ) { databr_copy( failed ); ipmlog_error = failedError; }
+        databr_free( failed );
+        st = CNode->NodeStatusCH;
+    }
+    if( before ) databr_free( before );
+    return st;
+}
+
+// Cold AOP with the column-generation seed armed (one call); accumulates iterations/time into the caller's totals.
+extern thread_local bool g_optimaCgSeedArmed;
+long int TNode::GEM_run_aop_cgseed( long int& itf, long int& itg, double& seconds )
+{
+    CNode->NodeStatusCH = NEED_GEM_AOP;
+    g_optimaCgSeedArmed = true;
+    const long int st = GEM_run_single_legacy_retry( false, itf, itg, seconds, "cgseed" );
+    g_optimaCgSeedArmed = false;
+    native_trace_decide( "cgseedretry aop=%ld", (long)st );
+    return st;
+}
+
+// Cold AOP re-solve of a failed warm Optima call (pa_OptimaColdRetry; plan v5 section 140.16). Same snapshot/
+// restore discipline as GEM_run_cold_retry(): the inputs (bIC, T, P, dll/dul) are still in CNode, since packDataBr()
+// writes only outputs; an OK_GEM_AOP result is reported under the cold code - like SIA's documented switch to
+// OK_GEM_AIA - and anything else restores the failed call's DATABR, status and error message.
+long int TNode::GEM_run_optima_cold_retry( long int requested )
+{
+    DATABR* failed = new DATABR;
+    dbr_dch_api::databr_reset( failed, 1 );
+    dbr_dch_api::databr_realloc( CSD, failed );
+    { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+    const std::string failedError = ipmlog_error;
+    const long int failedStatus = failed->NodeStatusCH;
+    long int itf = pmm->ITF, itg = pmm->ITG;
+    double seconds = CalcTime;
+
+    CNode->NodeStatusCH = NEED_GEM_AOP;
+    long int cold = GEM_run_single_legacy_retry( false, itf, itg, seconds, "coldleg" );
+    if( cold != OK_GEM_AOP && multi_ptr()->base_param()->OptimaCgSeed > 0. )   // FIX: seed as 2nd attempt here too
+        cold = GEM_run_aop_cgseed( itf, itg, seconds );
+    native_trace_decide( "optimacoldretry requested=%ld failed=%ld aop=%ld", (long)requested,
+                         (long)failedStatus, (long)cold );
+    if( cold != OK_GEM_AOP )
+    {
+        databr_copy( failed );
+        ipmlog_error = failedError;
+    }
+    databr_free( failed );
+    pmm->ITF = itf;
+    pmm->ITG = itg;
+    NumIterFIA = itf;
+    NumIterIPM = itg;
+    CNode->IterDone = itf + itg;
+    CalcTime = seconds;
+    return CNode->NodeStatusCH;
 }
 
 // Recovery of a failed cold native call (pa_ColdRetryNudges; the measurement is in its BASE_PARAM comment).

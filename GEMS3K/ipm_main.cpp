@@ -201,7 +201,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_FilloutBudget=%.6e pa_StabTPD=%ld"
              " pa_IpmAugmentedKKT=%ld pa_IpmLoopTweaks=%ld"
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
-             " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld\n",
+             " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
+             " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -224,7 +225,10 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->LpDualFillout, pa->FilloutBudget, (long)pa->StabTPD,
              (long)pa->IpmAugmentedKKT, (long)pa->IpmLoopTweaks,
              pa->OptimaLineSearch, (long)pa->OptimaFDDiagFloor,
-             (long)pa->OptimaLSStallEscape, (long)pa->OptimaLSWindow );
+             (long)pa->OptimaLSStallEscape, (long)pa->OptimaLSWindow,
+             (long)pa->OptimaLSRejectWorse,
+             pa->OptimaTpdAccept, pa->OptimaCgSeed, (long)pa->OptimaColdRetry, (long)pa->OptimaFinish,
+             (long)pa->OptimaAcceptRepair );
 
     // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
     //
@@ -1214,6 +1218,104 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
         restoreBase();
     }
     return worst;
+}
+
+// PROTOTYPE (session gems3k-e6, 2026-09-28; plan v5 §140.12): the composition search of CertStabTPD() for ONE
+// absent non-ideal phase k (species p0 .. p0+L1[k]-1), returning min TPD (RT per mole of phase; < 0: the phase
+// lowers G against the current dual pm.U) and the composition where it was found. Used by
+// PhaseSelectionSpeciationCleanup() when GEMS3K_NATIVE_TPD_INSERT is set, to replace the single-point index Falp
+// (evaluated at an arbitrary trace composition, or the -1 "cannot restore" sentinel) by a composition search -
+// THERMOCHIMICA's Subminimization idea. Same save/restore-by-copy as CertStabTPD(); returns 1e300 if the model
+// throws or nothing was evaluated.
+double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
+{
+    const long int n = pm.L1[k], p1 = p0 + n, N = pm.N;
+    ybest.assign( (size_t)n, 1.0 / std::max( 1L, n ) );
+    if( n <= 1 || p1 > pm.L || !pm.X || !pm.U || !pm.A || !pm.lnGam )
+        return 1e300;
+    struct Save { double* p; std::vector<double> v; };
+    std::vector<Save> saved;
+    auto keep = [&saved]( double* p, long int m ) { if( p && m > 0 ) saved.push_back( { p, std::vector<double>( p, p + m ) } ); };
+    keep( pm.X, pm.L );      keep( pm.XF, pm.FI );     keep( pm.XFA, pm.FIs );
+    keep( pm.G, pm.L );      keep( pm.lnGam, pm.L );   keep( pm.lnGmo, pm.L );
+    keep( pm.Gamma, pm.L );  keep( pm.F0, pm.L );      keep( pm.fDQF, pm.L );
+    keep( pm.Wx, pm.L );     keep( pm.FitVar, 5 );
+    auto restoreBase = [&saved]() { for( const Save& c : saved ) std::copy( c.v.begin(), c.v.end(), c.p ); };
+
+    std::vector<double> c0( (size_t)n );
+    for( long int j = p0; j < p1; j++ )
+    {
+        double au = 0.;
+        for( long int i = 0; i < N; i++ ) au += pm.A[ i + j*N ] * pm.U[i];
+        c0[(size_t)(j-p0)] = au - ( pm.G0[j] + pm.fDQF[j] );
+    }
+    double tpdMin = 1e300;
+    auto evalY = [&]( const std::vector<double>& y, std::vector<double>& ynew ) {
+        restoreBase();
+        for( long int j = p0; j < p1; j++ ) pm.X[j] = std::max( y[(size_t)(j-p0)], 1e-300 );
+        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+        CalculateActivityCoefficients( LINK_UX_MODE );
+        double mx = -1e300;
+        std::vector<double> lw( (size_t)n );
+        for( long int a = 0; a < n; a++ ) { lw[(size_t)a] = c0[(size_t)a] - pm.lnGam[p0+a]; mx = std::max( mx, lw[(size_t)a] ); }
+        double s = 0.;
+        for( double v : lw ) s += exp( v - mx );
+        ynew.resize( (size_t)n );
+        for( long int a = 0; a < n; a++ ) ynew[(size_t)a] = exp( lw[(size_t)a] - mx ) / s;
+        double tpd = 0.;
+        for( long int a = 0; a < n; a++ )
+            if( y[(size_t)a] > 0. ) tpd += y[(size_t)a] * ( log( y[(size_t)a] ) - lw[(size_t)a] );
+        if( tpd < tpdMin ) { tpdMin = tpd; ybest = y; }
+    };
+    try
+    {
+        std::vector<std::vector<double>> starts;
+        for( long int a = 0; a < n; a++ )
+        {
+            std::vector<double> v( (size_t)n, 1e-6 / std::max( 1L, n - 1 ) );
+            v[(size_t)a] = 1. - 1e-6;
+            starts.push_back( v );
+        }
+        {
+            const double mx = *std::max_element( c0.begin(), c0.end() );
+            double s = 0.;
+            std::vector<double> v( (size_t)n );
+            for( long int a = 0; a < n; a++ ) { v[(size_t)a] = exp( c0[(size_t)a] - mx ); s += v[(size_t)a]; }
+            for( double& x : v ) x /= s;
+            starts.push_back( v );
+        }
+        starts.push_back( std::vector<double>( (size_t)n, 1.0 / n ) );
+        if( n == 2 )
+            for( int g = 1; g < 20; g++ ) starts.push_back( { g / 20., 1. - g / 20. } );
+        else
+            for( long int a = 0; a < n && starts.size() < 64; a++ )
+                for( long int b2 = a + 1; b2 < n && starts.size() < 64; b2++ )
+                {
+                    std::vector<double> v( (size_t)n, 1e-6 ); v[(size_t)a] = 0.5; v[(size_t)b2] = 0.5;
+                    double t = 0.; for( double x : v ) t += x; for( double& x : v ) x /= t;
+                    starts.push_back( v );
+                }
+        std::vector<double> tmp;
+        for( auto y : starts )
+            for( int it = 0; it < 300; it++ )
+            {
+                evalY( y, tmp );
+                double d = 0.;
+                for( long int a = 0; a < n; a++ ) d = std::max( d, fabs( tmp[(size_t)a] - y[(size_t)a] ) );
+                y = tmp;
+                if( d < 1e-11 ) break;
+            }
+    }
+    catch( ... ) { tpdMin = 1e300; }
+    try
+    {
+        restoreBase();
+        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+        CalculateActivityCoefficients( LINK_UX_MODE );   // re-seed the TSolMod objects at the base state
+    }
+    catch( ... ) {}
+    restoreBase();
+    return tpdMin;
 }
 
 void native_trace_run_result( const MULTI& pm, long int mode, long int status, TMultiBase* mb )
@@ -5076,16 +5178,16 @@ long int TMultiBase::SolveIpmAugmented( long int N )
         for( long int r = 0; r < La; r++ )
         {
             const long int j = act[(size_t)r];
-            KKT[r][r] = 1.0;
+            KKT[(int)r][(int)r] = 1.0;
             for( long int c = 0; c < N; c++ )
-                KKT[r][La + c] = -pm.W[j] * a(j,c);
-            V[r] = -pm.W[j] * pm.F[j];
+                KKT[(int)r][(int)(La + c)] = -pm.W[j] * a(j,c);
+            V[(int)r] = -pm.W[j] * pm.F[j];
         }
         for( long int r = 0; r < N; r++ )
         {
             for( long int c = 0; c < La; c++ )
-                KKT[La + r][c] = -a(act[(size_t)c], r);
-            KKT[La + r][La + r] = -dreg[(size_t)r];
+                KKT[(int)(La + r)][(int)c] = -a(act[(size_t)c], r);
+            KKT[(int)(La + r)][(int)(La + r)] = -dreg[(size_t)r];
         }
         JAMA::LU<double> lu( KKT );
         if( !lu.isNonsingular() )
@@ -5096,7 +5198,7 @@ long int TMultiBase::SolveIpmAugmented( long int N )
         }
         Array1D<double> S = lu.solve( V );
         for( long int i = 0; i < N; i++ )
-            pm.U[i] = S[La + i];
+            pm.U[i] = S[(int)(La + i)];
         return 0;
     }
 

@@ -199,6 +199,12 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaFDDiagFloor", 0 , 0, 0, "# pa_OptimaFDDiagFloor: restore the analytic diagonal where the FD Hessian column gives a non-positive one { 0 off (default), 1 on }" },
     { "pa_OptimaLSStallEscape", 0 , 0, 0, "# pa_OptimaLSStallEscape: with the Optima line search on, keep the full step after this many consecutive zero-progress line searches; 0 = off { 10 }" },
     { "pa_OptimaLSWindow", 0 , 0, 0, "# pa_OptimaLSWindow: line-search trigger compares with the max of the last N errors (non-monotone); 0 = off, not recommended for phase diagrams { 0 }" },
+    { "pa_OptimaLSRejectWorse", 0 , 0, 0, "# pa_OptimaLSRejectWorse: with the Optima line search on, discard a line search that ends no better than it started and keep the full step; 0 = off (default), 1 = on (for projects where the line search crawls) { 0 }" },
+    { "pa_OptimaTpdAccept", 0 , 0, 0, "# pa_OptimaTpdAccept: accept a non-converged Optima state when only ABSENT non-ideal phases fail and their TPD search is >= -value (prototype) { 0 off; measured 1e-6 }" },
+    { "pa_OptimaCgSeed", 0 , 0, 0, "# pa_OptimaCgSeed: cold Optima seed by column generation, species Gibbs-LP + TPD-priced pseudo-compounds (prototype) { 0 off; measured 1e-6 }" },
+    { "pa_OptimaColdRetry", 0 , 0, 0, "# pa_OptimaColdRetry: re-solve a failed warm Optima call (SOP/SHP) cold (prototype) { 0 off, 1 after full budget, 2 fail fast }" },
+    { "pa_OptimaFinish", 0 , 0, 0, "# pa_OptimaFinish: Newton finish on the fixed phase set after a non-converged Optima call (prototype) { 0 off, 1 on }" },
+    { "pa_OptimaAcceptRepair", 0 , 0, 0, "# pa_OptimaAcceptRepair: when the Optima TPD acceptance fails only on mass balance, repair it (MassBalanceReproject) and re-test; 0 = off (default), 1 = on { 0 }" },
 };
 
 
@@ -217,7 +223,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 114, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 120, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -423,6 +429,12 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_OptimaFDDiagFloor, pa_p->OptimaFDDiagFloor, _comment, false  );
         prar.writeField(f_pa_OptimaLSStallEscape, pa_p->OptimaLSStallEscape, _comment, false  );
         prar.writeField(f_pa_OptimaLSWindow, pa_p->OptimaLSWindow, _comment, false  );
+        prar.writeField(f_pa_OptimaLSRejectWorse, pa_p->OptimaLSRejectWorse, _comment, false  );
+        prar.writeField(f_pa_OptimaTpdAccept, pa_p->OptimaTpdAccept, _comment, false  );
+        prar.writeField(f_pa_OptimaCgSeed, pa_p->OptimaCgSeed, _comment, false  );
+        prar.writeField(f_pa_OptimaColdRetry, pa_p->OptimaColdRetry, _comment, false  );
+        prar.writeField(f_pa_OptimaFinish, pa_p->OptimaFinish, _comment, false  );
+        prar.writeField(f_pa_OptimaAcceptRepair, pa_p->OptimaAcceptRepair, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -828,7 +840,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 114, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 120, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1299,6 +1311,18 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_OptimaLSStallEscape: rddar.readArray("pa_OptimaLSStallEscape" , &pa_p->OptimaLSStallEscape, 1);
             break;
         case f_pa_OptimaLSWindow: rddar.readArray("pa_OptimaLSWindow" , &pa_p->OptimaLSWindow, 1);
+            break;
+        case f_pa_OptimaLSRejectWorse: rddar.readArray("pa_OptimaLSRejectWorse" , &pa_p->OptimaLSRejectWorse, 1);
+            break;
+        case f_pa_OptimaTpdAccept: rddar.readArray("pa_OptimaTpdAccept" , &pa_p->OptimaTpdAccept, 1);
+            break;
+        case f_pa_OptimaCgSeed: rddar.readArray("pa_OptimaCgSeed" , &pa_p->OptimaCgSeed, 1);
+            break;
+        case f_pa_OptimaColdRetry: rddar.readArray("pa_OptimaColdRetry" , &pa_p->OptimaColdRetry, 1);
+            break;
+        case f_pa_OptimaFinish: rddar.readArray("pa_OptimaFinish" , &pa_p->OptimaFinish, 1);
+            break;
+        case f_pa_OptimaAcceptRepair: rddar.readArray("pa_OptimaAcceptRepair" , &pa_p->OptimaAcceptRepair, 1);
             break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;
