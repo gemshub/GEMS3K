@@ -57,7 +57,7 @@
 
 // pa_OptimaCgSeed is a second attempt: the column-generation seed is used only while TNode
 // arms it for the retry of a cold AOP call that failed from the ordinary LP-feasibility seed.
-thread_local bool g_optimaCgSeedArmed = false;
+extern thread_local bool g_optimaCgSeedArmed;   // defined in node.cpp (needed without USE_OPTIMA_SOLVER)
 // Set by the caller when PotentialSpaceFinish() starts from a call Optima reported OK. From
 // such a start the finish may only improve: it must not raise G, worsen the mass balance or
 // drop a present phase.
@@ -68,10 +68,10 @@ thread_local bool g_finishFromSuccess = false;
 // trigger factor (needs the Optima fork's ErrorControl::execute). A negative value makes the
 // line search a second attempt: the first Optima attempt runs without it, and
 // TNode::GEM_run() re-runs a failed call once with g_optimaLineSearchRetry set, at |factor|.
-thread_local bool g_optimaLineSearchRetry = false;
+extern thread_local bool g_optimaLineSearchRetry;   // defined in node.cpp (needed without USE_OPTIMA_SOLVER)
 // Set by TNode::GEM_run() for the re-run of a failed Optima call with pa_OptimaLSStallEscape
 // switched off (DECIDE escretry).
-thread_local bool g_optimaLSEscapeOff = false;
+extern thread_local bool g_optimaLSEscapeOff;   // defined in node.cpp (needed without USE_OPTIMA_SOLVER)
 // Objective memo for the line search. Optima's line-search trigger evaluates the objective at
 // the new point, and the solver then evaluates it again at the same point. GEMS3K's objective
 // is not a pure function: CalculateActivityCoefficients(LINK_UX_MODE) accumulates lnGmo and

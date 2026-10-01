@@ -173,8 +173,10 @@ void TNode::Get_sMod(int ndx, std::string &sMod)
 //               false  (0) -  use speciation and activity coefficients from previous GEM_run() calculation
 //               true  (1)  -  use speciation provided in the DATABR memory structure (e.g. after reading the DBR file)
 //  Return values:    NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
-extern thread_local bool g_optimaLineSearchRetry;
-extern thread_local bool g_optimaLSEscapeOff;
+// Defined here, not in ipm_optima.cpp, so a build without USE_OPTIMA_SOLVER still links.
+thread_local bool g_optimaLineSearchRetry = false;
+thread_local bool g_optimaLSEscapeOff = false;
+thread_local bool g_optimaCgSeedArmed = false;
 long int TNode::GEM_run( bool uPrimalSol )
 {
     const long int requested = CNode->NodeStatusCH;
@@ -308,7 +310,6 @@ long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, lon
 }
 
 // Cold AOP with the column-generation seed armed (one call); accumulates iterations/time into the caller's totals.
-extern thread_local bool g_optimaCgSeedArmed;
 long int TNode::GEM_run_aop_cgseed( long int& itf, long int& itg, double& seconds )
 {
     CNode->NodeStatusCH = NEED_GEM_AOP;
