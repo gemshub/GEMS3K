@@ -179,18 +179,16 @@ long int TNode::GEM_run( bool uPrimalSol )
 {
     const long int requested = CNode->NodeStatusCH;
     const bool kinetics = CNode->dt > 0.;
-    // pa_OptimaLineSearch < 0: an Optima call that fails without the line search is re-run once with it (see
-    // g_optimaLineSearchRetry, ipm_optima.cpp). The DATABR is snapshotted BEFORE the first attempt so the retry starts from
-    // the same inputs; a retry that does not return OK hands the first failure back unchanged. DECIDE lsretry.
-    // pa_OptimaLSStallEscape > 0 with the line search on (owner 2026-09-30, "if fail with escape on try again with off"): a
-    // failed Optima call is re-run once with the escape OFF (g_optimaLSEscapeOff), same snapshot/restore. The escape at 10 lost
-    // three corium cells the escape-off solve converges (Zr-C, B2O3-SrO, NaCl-NiCl2 AOP) while gaining one (Fe-U). DECIDE escretry.
+    // pa_OptimaLineSearch < 0: an Optima call that fails without the line search is re-run once
+    // with it (g_optimaLineSearchRetry). The DATABR is snapshotted before the first attempt; a
+    // retry that does not return OK hands the first failure back unchanged. DECIDE lsretry.
+    // pa_OptimaLSStallEscape > 0 with the line search on: a failed call is re-run once with the
+    // escape off (g_optimaLSEscapeOff), same snapshot/restore. DECIDE escretry.
     const bool optimaReq = !kinetics &&
         ( requested == NEED_GEM_AOP || requested == NEED_GEM_SOP || requested == NEED_GEM_HOP || requested == NEED_GEM_SHP );
     const bool lsRetryArmed = optimaReq && multi_ptr()->base_param()->OptimaLineSearch < 0.;
-    // Extended 2026-09-30 (owner: "memo first, then retry without"): with the line search on, the objective memo
-    // (memoize_objective_if_linesearch, ipm_optima.cpp) is always active, so the same LEGACY retry - escape off AND memo off -
-    // is armed whenever the line search is on, whatever the escape. It reproduces the pre-2026-09-30 behaviour exactly.
+    // With the line search on, the objective memo is always active, so the legacy retry -
+    // escape off and memo off - is armed whenever the line search is on.
     const bool escRetryArmed = optimaReq && !lsRetryArmed && multi_ptr()->base_param()->OptimaLineSearch > 0.;
     DATABR* lsBefore = nullptr;
     if( lsRetryArmed || escRetryArmed )
@@ -237,18 +235,17 @@ long int TNode::GEM_run( bool uPrimalSol )
         if( nudges > 0 )
             status = GEM_run_cold_retry( nudges );
     }
-    // Release default 2026-10-01 (plan v5 section 140.16; prototyped session gems3k-e6, 2026-09-28), on when pa_OptimaColdRetry > 0 (default 2):
-    // a WARM Optima call (SOP, or SHP whose Optima leg failed) that did not return OK is re-solved cold as AOP from
-    // the same inputs - ORCHESTRA's and THERMOCHIMICA's effective behaviour (each cell solved from its own start).
-    // With pa_OptimaCgSeed > 0 a failed cold call is tried once more from the column-generation seed. A retry that is not OK hands the
-    // failed call back exactly as it was (an SHP fallback answer is never lost).
+    // pa_OptimaColdRetry > 0: a warm Optima call (SOP, or SHP whose Optima leg failed) that did
+    // not return OK is re-solved cold as AOP from the same inputs. With pa_OptimaCgSeed > 0 a
+    // failed cold call is tried once more from the column-generation seed. A retry that is not OK
+    // hands the failed call back exactly as it was.
     const bool optimaColdRetry = ( multi_ptr()->base_param()->OptimaColdRetry > 0 );   // pa_OptimaColdRetry
     if( optimaColdRetry && !kinetics && ( requested == NEED_GEM_SOP || requested == NEED_GEM_SHP )
         && status != OK_GEM_SOP && status != OK_GEM_SHP && status != OK_GEM_AOP
         && status != OK_GEM_SIA && status != OK_GEM_AIA )
         status = GEM_run_optima_cold_retry( requested );
-    // FIX (gems3k-da 2026-09-29): pa_OptimaCgSeed only as a SECOND attempt of a failed cold AOP call - see
-    // g_optimaCgSeedArmed (ipm_optima.cpp). A retry that is not OK hands the first failure back unchanged.
+    // pa_OptimaCgSeed is used only as a second attempt of a failed cold AOP call (see
+    // g_optimaCgSeedArmed). A retry that is not OK hands the first failure back unchanged.
     if( multi_ptr()->base_param()->OptimaCgSeed > 0. && !kinetics && requested == NEED_GEM_AOP && status != OK_GEM_AOP )
     {
         DATABR* failed = new DATABR;
@@ -267,11 +264,11 @@ long int TNode::GEM_run( bool uPrimalSol )
     return status;
 }
 
-// One GEM_run_single() with the same LEGACY retry GEM_run() gives its first attempt (owner proposal 2026-09-30, via
-// gems3k-97): with the line search on, a failed call is re-run once from the same inputs with the stall escape, the
-// objective memo and reject_if_worse off (g_optimaLSEscapeOff); a retry that is not OK hands the first failure back.
-// Used by the later rungs (the warm->cold leg, the column-generation seed), which otherwise ran bare - T-cement's cold
-// AOP is OK only via this retry. A call that is OK first time is untouched. Accumulates into the caller's totals.
+// One GEM_run_single() with the legacy retry: with the line search on, a failed call is re-run
+// once from the same inputs with the stall escape, the objective memo and reject_if_worse off
+// (g_optimaLSEscapeOff); a retry that is not OK hands the first failure back. Used by the later
+// retry rungs (the warm->cold leg, the column-generation seed). Accumulates into the caller's
+// totals.
 long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* rung )
 {
     const long int requested = CNode->NodeStatusCH;
@@ -322,10 +319,10 @@ long int TNode::GEM_run_aop_cgseed( long int& itf, long int& itg, double& second
     return st;
 }
 
-// Cold AOP re-solve of a failed warm Optima call (pa_OptimaColdRetry; plan v5 section 140.16). Same snapshot/
-// restore discipline as GEM_run_cold_retry(): the inputs (bIC, T, P, dll/dul) are still in CNode, since packDataBr()
-// writes only outputs; an OK_GEM_AOP result is reported under the cold code - like SIA's documented switch to
-// OK_GEM_AIA - and anything else restores the failed call's DATABR, status and error message.
+// Cold AOP re-solve of a failed warm Optima call (pa_OptimaColdRetry). The inputs (bIC, T, P,
+// dll/dul) are still in CNode, since packDataBr() writes only outputs. An OK_GEM_AOP result is
+// reported under the cold code (as SIA's switch to OK_GEM_AIA); anything else restores the
+// failed call's DATABR, status and error message.
 long int TNode::GEM_run_optima_cold_retry( long int requested )
 {
     DATABR* failed = new DATABR;
@@ -339,7 +336,7 @@ long int TNode::GEM_run_optima_cold_retry( long int requested )
 
     CNode->NodeStatusCH = NEED_GEM_AOP;
     long int cold = GEM_run_single_legacy_retry( false, itf, itg, seconds, "coldleg" );
-    if( cold != OK_GEM_AOP && multi_ptr()->base_param()->OptimaCgSeed > 0. )   // FIX: seed as 2nd attempt here too
+    if( cold != OK_GEM_AOP && multi_ptr()->base_param()->OptimaCgSeed > 0. )   // the column-generation seed as a second attempt here too
         cold = GEM_run_aop_cgseed( itf, itg, seconds );
     native_trace_decide( "optimacoldretry requested=%ld failed=%ld aop=%ld", (long)requested,
                          (long)failedStatus, (long)cold );
@@ -358,11 +355,10 @@ long int TNode::GEM_run_optima_cold_retry( long int requested )
     return CNode->NodeStatusCH;
 }
 
-// Recovery of a failed cold native call (pa_ColdRetryNudges; the measurement is in its BASE_PARAM comment).
-// A converged solve one 1e-15 nudge away is a warm start from which SIA reaches the equilibrium at the
-// exact composition; the failed state itself is not (a warm retry from it recovered none of T-cement's
-// four failures). Nothing about the requested composition changes: every nudge is undone before the warm
-// solve, and a call that no nudge recovers is handed back exactly as it failed.
+// Recovery of a failed cold native call (pa_ColdRetryNudges): a converged solve one 1e-15 nudge
+// away is a warm start from which SIA reaches the equilibrium at the exact composition. Every
+// nudge is undone before the warm solve, and a call that no nudge recovers is handed back
+// exactly as it failed.
 long int TNode::GEM_run_cold_retry( long int maxNudges )
 {
     const long int nIC = CSD->nICb;
@@ -434,14 +430,12 @@ long int TNode::GEM_run_single( bool uPrimalSol )
         ipmlog_file->debug(" GEM_run() begin Mode= {}", CNode->NodeStatusCH);
 
 #ifndef NDEBUG
-        // Bulk composition (IC amounts) as received, before any internal processing --
-        // makes a caller-side bulk-composition bug visible without a second historical build.
+        // Bulk composition as received, before any internal processing (debug level).
         if (node_logger->should_log(spdlog::level::debug)) {
             for (long int i = 0; i < CSD->nICb; i++)
                 node_logger->debug("bIC[{}] {} = {:.6e}", i, CSD->ICNL[i], CNode->bIC[i]);
         }
-        // Cheap sanity warning: an IC pinned at/below the numerical floor is exactly the
-        // symptom that once took hours of manual instrumentation to spot by hand.
+        // Warn about an IC at or below the numerical floor.
         for (long int i = 0; i < CSD->nICb; i++) {
             if (CNode->bIC[i] > 0. && CNode->bIC[i] <= pmm->DcMinM)
                 node_logger->warn("bIC[{}] {} = {:.6e} is at/below the numerical floor (DcMinM={:.3e})",
@@ -463,15 +457,9 @@ long int TNode::GEM_run_single( bool uPrimalSol )
                  || CNode->NodeStatusCH == NEED_GEM_SHP )
         {
             pmm->pNP = 0; // As default setting AIA/AOP/ROP/HOP/SHP mode - ROP is a single mode
-                          // (no warm-start pair), and HOP's own first leg is the NATIVE
-                          // solve, which starts cold; the warm start it hands to Optima is
-                          // set below, not here. SHP is listed here too, and deliberately:
-                          // unpackDataBr() never reads pmm->pNP, so resetting it to 0 here
-                          // costs nothing and guarantees no stale warm flag can leak in,
-                          // while SHP's own warm native leg sets pmm->pNP = 1 itself inside
-                          // CalculateEquilibriumStateHOP() - the same place, and for the
-                          // same reason, that HOP already sets it for the Optima leg.
-                          // See NODECODECH's comment in databr.h
+                          // (no warm pair), HOP's first leg is the cold native solve, and
+                          // SHP's warm native leg sets pmm->pNP = 1 itself inside
+                          // CalculateEquilibriumStateHOP().
             if (CNode->dt > 0.)
                 uPrimalSol = true;
             unpackDataBr( uPrimalSol );
@@ -479,17 +467,12 @@ long int TNode::GEM_run_single( bool uPrimalSol )
         else
             return CNode->NodeStatusCH;
 
-        // Complete run configuration into the calculation trace, once per call and
-        // for EVERY mode: what was asked for (mode, T, P, system shape), the bulk
-        // composition asked for, and every BASE_PARAM field in force. Placed here
-        // deliberately - after unpackDataBr(), so pmm->B[] holds the caller's own
-        // bulk vector, and before the mode dispatch, so NodeStatusCH is still the
-        // REQUEST rather than the OK/BAD/ERR result packDataBr() will overwrite it
-        // with. No-op unless GEMS3K_NATIVE_TRACE_FILE is set; see the definition
-        // in ipm_main.cpp for the format.
+        // Complete run configuration into the trace, once per call and for every mode: after
+        // unpackDataBr() (pmm->B[] holds the caller's bulk vector) and before the dispatch
+        // (NodeStatusCH is still the request). No-op unless GEMS3K_NATIVE_TRACE_FILE is set.
         native_trace_run_header( *pmm, multi_ptr()->base_param(), CNode->NodeStatusCH );
-        // The mode as REQUESTED, kept for the result record below: the dispatch
-        // and packDataBr() both overwrite NodeStatusCH with the outcome.
+        // The mode as requested, kept for the result record below (the dispatch and
+        // packDataBr() overwrite NodeStatusCH with the outcome).
         const long int traceRequestedMode = CNode->NodeStatusCH;
 
         // added 18.12.14 DK : setting chemical kinetics time counter and variables
@@ -513,32 +496,18 @@ long int TNode::GEM_run_single( bool uPrimalSol )
                 pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
         }
 
-        // Work item 38: invalidate the previous call's per-leg split BEFORE the
-        // dispatch below, so only a mode that actually ran two legs can report
-        // one. Reusing a node is the normal pattern here, so a stale split would
-        // otherwise be attributed to whatever mode ran last.
+        // Invalidate the previous call's per-leg split before the dispatch, so only a mode that
+        // actually ran two legs reports one.
         multi_ptr()->hop_split = TMultiBase::HopLegSplit();
 
-        // GEM IPM calculation of equilibrium state - AOP/SOP dispatch to
-        // the Optima-based solver (ipm_optima.cpp) instead of GEMS3K's own
-        // IPM/MBR loop; only meaningful if built with USE_OPTIMA_SOLVER. If
-        // not, fall back to the equivalent native AIA/SIA solve rather than
-        // failing outright - a caller requesting AOP/SOP shouldn't have to
-        // know in advance whether this particular GEMS3K build has Optima.
+        // Optima modes dispatch to ipm_optima.cpp. Without USE_OPTIMA_SOLVER they fall back to the
+        // equivalent native AIA/SIA solve rather than failing.
         if( CNode->NodeStatusCH == NEED_GEM_HOP || CNode->NodeStatusCH == NEED_GEM_SHP )
         {
 #ifdef USE_OPTIMA_SOLVER
-            // HYBRID, in series: native selects the species, Optima finishes.
-            // See NODECODECH's own comment in databr.h for why this is a
-            // separate caller-selected mode rather than something AOP does.
-            // The two-leg orchestration (native, then a warm Optima leg that
-            // degrades to a restored native answer - BAD_GEM_HOP, never a
-            // lost one - if it fails) lives entirely in
-            // TMultiBase::CalculateEquilibriumStateHOP() (ipm_optima.cpp),
-            // which needs pm.* access this layer doesn't have.
-            // SHP is HOP with a WARM native leg (and a cold fallback inside) -
-            // for sequential work, where HOP as built throws away the previous
-            // point's converged state at every call. See databr.h.
+            // Hybrid: native selects the phases, then a warm Optima leg finishes (restoring
+            // native's answer as BAD_GEM_HOP if it fails) - TMultiBase::CalculateEquilibriumStateHOP().
+            // SHP is HOP with a warm native leg (with a cold fallback inside).
             CalcTime = multi_ptr()->CalculateEquilibriumStateHOP( NumIterFIA, NumIterIPM,
                                        CNode->NodeStatusCH == NEED_GEM_SHP );
 #else
@@ -617,12 +586,8 @@ long int TNode::GEM_run_single( bool uPrimalSol )
                 CNode->NodeStatusCH = OK_GEM_SIA;
         }
 
-        // The regime this call actually reached, into the same trace as the
-        // RUN/BULK/SET header above - emitted here, after the status has
-        // settled, so a FAIL row is labelled as one. Nothing is emitted from
-        // the catch blocks below on purpose: GEM_run()'s catch never calls
-        // packDataBr(), so every reported value on a thrown call is stale and
-        // an outcome key built from it would be a fabrication. No-op unless
+        // The regime this call reached, into the trace (after the status has settled). Not
+        // emitted from the catch blocks: a thrown call's reported values are stale. No-op unless
         // GEMS3K_NATIVE_TRACE_FILE is set.
         native_trace_run_result( *pmm, traceRequestedMode, CNode->NodeStatusCH, multi_base );
 
@@ -692,7 +657,7 @@ long int TNode::GEM_Iterations( long int& PrecLoops_, long int& NumIterFIA_, lon
 }
 
 // The last two-leg (HOP/SHP) call's cost, native leg and Optima leg apart - see the
-// declaration in node.h and TMultiBase::HopLegSplit in ms_multi.h. Work item 38.
+// declaration in node.h and TMultiBase::HopLegSplit.
 bool TNode::GEM_IterationsHOP( long int& NumIterFIANative, long int& NumIterIPMNative,
                                long int& NumIterFIAOptima, long int& NumIterIPMOptima,
                                double& TimeNative, double& TimeOptima,
@@ -718,20 +683,14 @@ void TNode::packDataBr()
 
     // set default data to DataBr
     //   CNode->NodeStatusCH = NEED_GEM_AIA;
-    // pmm->pNP (0=cold,1=warm) selects AIA/SIA vs. AOP/SOP; AOP/SOP share
-    // pNP's convention with AIA/SIA, so which pair to reset to is read
-    // from the still-unmodified NodeStatusCH before this overwrites it.
+    // pmm->pNP (0 = cold, 1 = warm) selects AIA/SIA vs. AOP/SOP; which pair is read from the
+    // still unmodified NodeStatusCH.
     if( CNode->NodeStatusCH == NEED_GEM_ROP || CNode->NodeStatusCH == NEED_GEM_HOP
         || CNode->NodeStatusCH == NEED_GEM_SHP )
     {
-        ; // Nothing here is a pNP-driven cold/warm pair that this function can
-          // re-derive: ROP is a single mode, and HOP/SHP ARE such a pair but the
-          // caller - not pmm->pNP - is what distinguishes them (both legs of both
-          // set pmm->pNP themselves, so by the time packDataBr() runs it reads 1
-          // for either). They MUST be listed here: the generic branch below would
-          // silently rewrite the node to NEED_GEM_SIA and the caller would never
-          // see a HOP/SHP status at all. Same trap as the one that hid AOP/SOP
-          // when those were added.
+        ; // ROP is a single mode, and HOP/SHP are told apart by the caller, not by pmm->pNP
+          // (both legs set it themselves). They must be listed here, or the generic branch
+          // below would rewrite the node to NEED_GEM_SIA.
     }
     else if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP )
     {
@@ -754,13 +713,10 @@ void TNode::packDataBr()
     CNode->IterDone = /*pmm->ITF+*/pmm->IT;   // Now complete number of FIA and IPM iterations
     // values
     CNode->Vs = pmm->VXc*1.e-6; // from cm3 to m3
-    // pm.FX is a STORED field, not a recomputation, and it is seeded each call with
-    // kTotalGibbsEnergyUnset. Publishing that marker as the system's Gibbs energy is what happened
-    // on every AOP/SOP/HOP/SHP call until 2026-09-22 (ipm_optima.cpp's closing note has the full
-    // measurement). Both solver paths now write pm.FX, so this branch is unreachable and is here to
-    // STAY unreachable: it converts "a solver forgot to price its answer" from a number that flows
-    // silently into a caller's mass-transport loop and its exported -dbr files into one line in the
-    // log. Checked with == because the marker is assigned verbatim, never computed into.
+    // pm.FX is seeded each call with kTotalGibbsEnergyUnset and both solver paths overwrite it,
+    // so this branch should be unreachable: it reports an answer whose Gibbs energy was never
+    // computed instead of publishing the marker. Checked with == because the marker is assigned
+    // verbatim.
     if( pmm->FX == kTotalGibbsEnergyUnset )
         node_logger->error( "packDataBr(): total Gibbs energy is still kTotalGibbsEnergyUnset - the "
                            "solver path that produced NodeStatusCH={} did not set pm.FX, so "

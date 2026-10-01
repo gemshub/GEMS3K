@@ -252,12 +252,10 @@ public:
     }
 
 #ifdef USE_OPTIMA_SOLVER
-    /// Registers (or replaces) a pH equilibrium control condition for the
-    /// next GEM_run() call made in NEED_GEM_AOP/SOP mode (see NODECODECH
-    /// in databr.h and TMultiBase::CalculateEquilibriumStateOptima()).
-    /// Persists across calls until Clear_ControlConditions(). `tolerance < 0`
-    /// (the default) derives the tolerance from pa_p->GAS instead of a
-    /// hardcoded constant - see ipm_optima.h/SetControlCondition_pH().
+    /// Registers (or replaces) a pH control condition for the next GEM_run() call in
+    /// NEED_GEM_AOP/SOP mode. Persists until Clear_ControlConditions(). `tolerance < 0` (the
+    /// default) derives the tolerance from pa_p->GAS.
+    /// In plain words: asks the Optima solver to reach a given pH.
     void Set_pH_target( double pH_target, double tolerance = -1. )
     { multi_ptr()->SetControlCondition_pH( pH_target, tolerance ); }
     /// Registers (or replaces) an Eh (V) equilibrium control condition.
@@ -268,14 +266,10 @@ public:
     /// Removes every registered control condition.
     void Clear_ControlConditions()
     { multi_ptr()->ClearControlConditions(); }
-    /// Titrant amount actually solved for the given condition ("pH"/"Eh")
-    /// in the last AOP/SOP GEM_run() call, or 0 if that condition was not
-    /// active. REAL moles, and a solver unknown rather than an addition: the
-    /// input bulk composition gained -stoich*xi (pH: -xi mol H+; Eh: xi mol of
-    /// electrons removed), and the returned bIC already includes it. Before
-    /// 2026-09-14 this returned pa_DG's internally scaled value (x pa_DG/sum bIC).
-    /// See EqControlCondition (ipm_optima.h) for the full result
-    /// (achieved value, whether the target was actually met).
+    /// Titrant amount solved for the given condition ("pH"/"Eh") in the last AOP/SOP GEM_run()
+    /// call, or 0 if that condition was not active. Real moles; the input bulk composition
+    /// gained -stoich*xi (pH: -xi mol H+; Eh: xi mol of electrons removed), and the returned
+    /// bIC already includes it. See EqControlCondition (ipm_optima.h) for the full result.
     double Get_ControlCondition_titrant( const std::string& name ) const
     {
         for( const auto& c : multi_ptr()->GetControlConditions() )
@@ -517,47 +511,36 @@ public:
         std::vector<std::pair<std::string,double>> phases;  ///< partitioning at the given amount (fraction > 1e-4)
         std::vector<std::string> boundaryPhases;            ///< phases that appear/disappear (BOUNDARY)
     };
-    /// DILUTE-REGIME CHECK for trace elements (owner decision 2026-09-14b: never change a trace amount
-    /// silently; offer a check). Re-solves this node with every trace IC's bulk amount scaled by each factor
-    /// (all together - they share the solutions' activity models), cold (NodeStatusCH = mode), and classifies
-    /// each trace IC (see TraceRegime::verdict). A trace IC has bIC <= traceRel x the total non-charge bulk;
-    /// ofInterest (IC names), when given, restricts the check to those elements - the hook for marking
-    /// elements of interest, every other trace element being a default seed (xGEMS Material: 1e-15; GEMSGUI:
-    /// often 1e-9). The node is restored exactly afterwards - DATABR (inputs AND results) and MULTI, so a warm
-    /// GEM_run(false) after the check starts from the same state as without it. Costs 1 + factors.size() solves.
-    /// Measured (gems-benchmark tools/trace_linearity.py, same logic): CASH+CsSr 7/7 LINEAR 1e-12..1e-6 mol;
-    /// T8_aq101 35 LINEAR / 5 SATURATED / 4 BOUNDARY (P, Pd, Pu, Zr); T-cement Cs, Sr STRANDED.
+    /// Dilute-regime check for trace elements. Re-solves this node (cold, NodeStatusCH = mode)
+    /// with every trace IC's bulk amount scaled by each factor (all together - they share the
+    /// solutions' activity models) and classifies each trace IC (TraceRegime::verdict). A trace
+    /// IC has bIC <= traceRel x the total non-charge bulk; ofInterest (IC names), when given,
+    /// restricts the check to those elements. The node is restored exactly afterwards (DATABR
+    /// inputs and results, and MULTI). Costs 1 + factors.size() solves.
+    /// In plain words: checks whether the result for a trace element would scale simply if its
+    /// amount were changed.
     std::vector<TraceRegime> GEM_trace_regimes( const std::vector<double>& factors = { 0.1, 10. },
                                                double traceRel = 1e-6, double tol = 1e-3,
                                                long int mode = NEED_GEM_AIA,
                                                const std::vector<std::string>& ofInterest = {} );
 
-    /// ELEMENTS OF INTEREST (owner decision 2026-09-14b, trace policy (4)): the independent components whose
-    /// amounts the caller NEEDS, e.g. radionuclides at 1e-9 mol. Once any are marked, every other trace IC is a
-    /// DEFAULT SEED - a placeholder amount that only keeps the element defined (xGEMS Material: 1e-15; GEMSGUI:
-    /// often 1e-9). Nothing in the solve reads it. Used as GEM_trace_regimes()' default ofInterest, and by the
-    /// stranded-element warning, which then tags each element it names [of interest] or [default seed] - the
-    /// remedy differs (a host phase for the first, removing the element for the second). Names are matched
-    /// against the IC list after trimming; unknown names are skipped with a warning. Returns the number matched;
-    /// an empty list clears the marking.
+    /// Marks the independent components whose amounts the caller needs (e.g. radionuclides at
+    /// 1e-9 mol). Once any are marked, every other trace IC is a default seed - a placeholder
+    /// amount that only keeps the element defined. Nothing in the solve reads it; it is the
+    /// default ofInterest of GEM_trace_regimes(), and the stranded-element warning tags each
+    /// element it names [of interest] or [default seed]. Names are matched after trimming;
+    /// unknown names are skipped with a warning. Returns the number matched; an empty list
+    /// clears the marking.
+    /// In plain words: tell the program which trace elements you actually care about.
     long int GEM_set_elements_of_interest( const std::vector<std::string>& names );
     /// The IC names currently marked of interest (see GEM_set_elements_of_interest()).
     const std::vector<std::string>& GEM_elements_of_interest() const;
 
 #ifdef USE_OPTIMA_SOLVER
-    /// Convenience dispatch combining ROP's speed with native AIA's
-    /// robustness (see GEMS3K's CLAUDE.md, 2026-08-24, "Combining
-    /// native's robustness with ROP's/Reaktoro's speed"): tries
-    /// NEED_GEM_ROP first (fast - matches or beats Reaktoro's own
-    /// iteration count - on the chemical systems it handles well, per
-    /// that session's 25-project sweep), and falls back to a plain
-    /// NEED_GEM_AIA solve on anything but a clean OK_GEM_ROP. No changes
-    /// to either solver - purely a caller-side retry using two already-
-    /// independently-validated paths, so average-case speed depends
-    /// entirely on how often a given caller's own systems resemble the
-    /// ones ROP already handles well versus the harder ones (Solvus-
-    /// family-like) that still need the AIA fallback and so pay ROP's
-    /// own (wasted) attempt cost on top.
+    /// Tries NEED_GEM_ROP first and falls back to a plain NEED_GEM_AIA solve on anything but a
+    /// clean OK_GEM_ROP. A caller-side retry over two existing paths; systems ROP does not
+    /// handle pay its wasted attempt on top.
+    /// In plain words: try the quick reference Optima run, and use the original solver if it fails.
     long int GEM_run_ROP_or_AIA( bool uPrimalSol )
     {
         CNode->NodeStatusCH = NEED_GEM_ROP;
@@ -585,26 +568,17 @@ public:
     /// \param NumIterIPM  Total number of performed IPM main descent algorithm iterations.
     long int GEM_Iterations( long int& PrecLoops, long int& NumIterFIA, long int& NumIterIPM );
 
-    /// To obtain the last GEM_run() call's cost split between its NATIVE and its OPTIMA leg,
-    /// for the two-leg modes (NEED_GEM_HOP, NEED_GEM_SHP) only.
-    ///
-    /// GEM_Iterations() and GEM_CalcTime() report the call's TOTAL, which is its true cost but
-    /// makes any per-iteration figure derived from it a BLEND of two solvers with very different
-    /// per-iteration costs - the number a transport loop could not attribute to a path (see
-    /// TMultiBase::HopLegSplit). This reports the same two legs apart.
-    ///
-    /// The Optima leg's iterations include a failed, discarded attempt where one occurred: those
-    /// are real work spent, and only the STATE that attempt produced is thrown away.
-    ///
+    /// The last GEM_run() call's cost split between its native and its Optima leg, for the
+    /// two-leg modes (NEED_GEM_HOP, NEED_GEM_SHP) only. GEM_Iterations() and GEM_CalcTime()
+    /// report the total. The Optima leg's iterations include a failed, discarded attempt.
     /// \return false - and every output left untouched - when the last GEM_run() was not a
-    ///         two-leg mode, so a single-leg call can never report a previous HOP call's split.
+    ///         two-leg mode.
     /// \param NumIterFIANative,NumIterIPMNative  iterations in the native leg
     /// \param NumIterFIAOptima,NumIterIPMOptima  iterations in the Optima leg
     /// \param TimeNative,TimeOptima              seconds in each leg, same resolution as GEM_CalcTime()
-    /// \param Failed  optional: set true when that call left by EXCEPTION. Its iteration
-    ///        counts are still real work spent, but TimeOptima is then 0 and is not a
-    ///        measurement. A caller summing splits over many solves MUST read this, or it
-    ///        is silently summing only the calls that returned.
+    /// \param Failed  optional: true when that call left by exception; its iteration counts are
+    ///        real, but TimeOptima is then 0 and not a measurement.
+    /// In plain words: how the work of a HOP/SHP call was split between the two solvers.
     bool GEM_IterationsHOP( long int& NumIterFIANative, long int& NumIterIPMNative,
                             long int& NumIterFIAOptima, long int& NumIterIPMOptima,
                             double& TimeNative, double& TimeOptima,
@@ -936,26 +910,13 @@ public:
     /// \return G0(P,TK) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
     double DC_G0(const long int xCH, const double P, const double TK,  bool norm=true) const;
 
-    /// The standard molar Gibbs energies the SOLVER actually minimised with -
-    /// pm.G0[], indexed over the MULTI species list - or nullptr before any run.
-    ///
-    /// THIS IS NOT DC_G0(). DC_G0() reads CSD->G0[], the DATACH lookup grid that
-    /// was exported with the project. The two are the same array's content only
-    /// when the grid is the source. On a ThermoFun project they are NOT:
-    /// load_all_thermodynamic_from_thermo() (node_copy.cpp) writes pm.G0[]
-    /// straight from ThermoEngine and never touches CSD->G0[], so DC_G0() there
-    /// returns the stale exported table while the solve used something else.
-    ///
-    /// That gap is not hypothetical and it is silent. Measured 2026-09-07c on
-    /// f_/j_CASHNK: identical DATACH G0 to eleven digits, and answers 0.14 J
-    /// apart - about a thousand times any solver-to-solver difference on the same
-    /// pair. A probe reading DC_G0() alone concluded the thermodynamic data were
-    /// identical. Use this accessor to ask what was minimised; use DC_G0() to ask
-    /// what the export shipped.
-    ///
-    /// UNITS: the internal uniform standard state (see
-    /// ConvertGj_toUniformStandardState), not J/mol. Compare it against another
-    /// run of the same project, never against DC_G0()'s J/mol.
+    /// The standard molar Gibbs energies the solver actually minimised - pm.G0[], indexed over
+    /// the MULTI species list - or nullptr before any run. Not the same as DC_G0(), which reads
+    /// the exported DATACH grid (CSD->G0[]); on a ThermoFun project
+    /// load_all_thermodynamic_from_thermo() writes pm.G0[] directly and the two can differ.
+    /// Units: the internal uniform standard state (see ConvertGj_toUniformStandardState), not
+    /// J/mol; compare only with another run of the same project.
+    /// In plain words: the energies the solver really used, which may differ from the file.
     const double* Get_solver_G0() const
     { return multi_ptr()->GetPM()->G0; }
 
@@ -963,29 +924,13 @@ public:
     long int Get_solver_L() const
     { return multi_ptr()->GetPM()->L; }
 
-    /// Geometry and conditioning of the present-species stoichiometry at the RETURNED
-    /// answer - the same TMultiBase::CertRank() report the native trace's RANK line
-    /// carries, reachable from a caller that is not the trace.
-    ///
-    /// WHY THIS EXISTS. The RANK record is written only when GEMS3K_NATIVE_TRACE_FILE is
-    /// set, i.e. the only way to read sigma_min/sigma_max was to dump a trace and parse it.
-    /// In a transport loop that is one RANK line per solve - thousands of them per run, for
-    /// two numbers - and this branch has ~2 GB of disk. Work item 38 asks for that ratio as
-    /// a COLUMN of the warm standard, per step, which wants an accessor and not a parser.
-    ///
-    /// REPORT-ONLY, and that is a property of CertRank() itself rather than a promise made
-    /// here: it reads pm.A/pm.X/pm.DLL/pm.DUL/pm.RLC and writes nothing, including pm.W[].
-    /// Nothing in the solver calls it, so no solver decision depends on it.
-    ///
-    /// NOT FREE. CertRank() is a modified Gram-Schmidt over the present columns plus two
-    /// N x N conditioning estimates, O(pres * N^2). That is small against a solve but it is
-    /// not zero, so a caller timing anything must call it on a run whose wall it does not
-    /// quote - transport_loop.cpp gates it behind NG_RANK for exactly that reason and voids
-    /// its own wall column when it is on.
-    ///
-    /// \return false when there is no state to report (no pm.X/pm.A, or pm.N <= 0), in
-    /// which case `r` is left at its defaults - all sentinels, never zeros, so an absent
-    /// reading cannot be averaged in as "perfectly conditioned".
+    /// Geometry and conditioning of the present-species stoichiometry at the returned answer -
+    /// the TMultiBase::CertRank() report of the trace's RANK line, for callers that do not use
+    /// the trace. Report-only (writes nothing; nothing in the solver calls it). Costs
+    /// O(pres * N^2), small against a solve but not zero.
+    /// \return false when there is no state to report (no pm.X/pm.A, or pm.N <= 0); `r` is then
+    /// left at its defaults - sentinels, never zeros.
+    /// In plain words: tells how well-posed the final equations of the last solve were.
     bool Get_CertRank( TMultiBase::CertRankReport& r ) const
     {
         r = TMultiBase::CertRankReport();
@@ -1458,9 +1403,9 @@ protected:
     long int GEM_run_single( bool uPrimalSol );
     /// pa_ColdRetryNudges' recovery of a failed NEED_GEM_AIA call; see BASE_PARAM::ColdRetryNudges.
     long int GEM_run_cold_retry( long int maxNudges );
-    long int GEM_run_optima_cold_retry( long int requested );   // release default 2026-10-01, plan v5 section 140.16
+    long int GEM_run_optima_cold_retry( long int requested );   // pa_OptimaColdRetry
     long int GEM_run_aop_cgseed( long int& itf, long int& itg, double& seconds );
-    long int GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* rung );   // cold AOP, pa_OptimaCgSeed as 2nd attempt
+    long int GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* rung );   // cold AOP retry, with the column-generation seed as the second attempt
 
     void allocMemory();
     void freeMemory();

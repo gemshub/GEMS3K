@@ -31,32 +31,15 @@
 
 /// \return status code (0 if o.k., non-zero values if there were problems
 ///     with kinetic/metastability models)
-/// ONE kinetics/metastability time step, for EVERY solver path.
-///
-/// Lifted verbatim out of CalculateEquilibriumState() (ipm_simplex.cpp) on 2026-09-20 so that the
-/// Optima entry point can run it too. Until then CalculateKinMet() was reachable ONLY from the
-/// native path, so on AOP/SOP the Additional Metastability Restrictions were never updated and a
-/// kinetically controlled phase could never change: on GEMS3K's own node-gem dolomitization example
-/// the Optima modes held calcite bit-identical for 200 time steps while native dissolved it at the
-/// computed rate. The control that identified it: with dt = 0 (kinetics off) native behaves exactly
-/// like Optima. See gems-benchmark/Docs/2026-09-20-transport-loop-calcite.txt.
-///
-/// WHERE IT MUST BE CALLED FROM, and why the position is not free. Both entry points call it after
-/// InitalizeGEM_IPM_Data() and ExcludeRedundantDCs() - so redundant species are already held at
-/// DUL = DLL = 0 when TKinMet sees them - and BEFORE ScaleSystemToInternal(), so the AMRs are
-/// computed in the caller's real units rather than in pa_DG's internal scale. Moving it across
-/// either boundary changes what TKinMet is handed.
-///
-/// ONCE PER GEM_run() CALL, NOT once per solver entry. CalculateEquilibriumStateHOP() runs a native
-/// leg and then an Optima leg for a single time step, so its Optima leg passes runKinetics = false -
-/// otherwise the rate calculation would advance twice per step. (Pre-existing and NOT changed here:
-/// SHP's cold-native retry after a failed warm leg calls CalculateEquilibriumState() a second time
-/// and so does advance it twice; no corpus project exercises that path, since none uses kinetics.)
-/// Separator-safe name for a comma-joined DECIDE payload - a DELIBERATE COPY of
-/// ipm_main.cpp's trace_safe_name() (work item 34), not a refactor of it: that one is
-/// file-static and feeds the scored `# key`/`# cert` lines, which must stay byte-identical.
-/// Corpus names carry ',', ':', '=' and spaces (`Am(CO3)1.5(a,h)`, `2,3-Dmp@`,
-/// `Alkali feldspar`), and this payload joins with ',' inside ' '-separated fields.
+/// One kinetics/metastability time step, for every solver path (formerly inside
+/// CalculateEquilibriumState()). Both entry points call it after InitalizeGEM_IPM_Data() and
+/// ExcludeRedundantDCs() - so redundant species are already held at DUL = DLL = 0 - and before
+/// ScaleSystemToInternal(), so the metastability restrictions are computed in the caller's real
+/// units. Once per GEM_run() call: the HOP Optima leg passes runKinetics = false, since its
+/// native leg already advanced the step. (SHP's cold-native retry after a failed warm leg calls
+/// CalculateEquilibriumState() a second time and so advances it twice.)
+/// Separator-safe name for a comma-joined DECIDE payload (same substitution as ipm_main.cpp's
+/// trace_safe_name(), kept separate so the scored trace lines stay unchanged).
 static std::string kinm_safe_name( std::string s )
 {
     while( !s.empty() && ( s.back() == ' ' || s.back() == '\t' || s.back() == '\0' ) ) s.pop_back();
@@ -76,48 +59,16 @@ void TMultiBase::RunKineticsStep()
     // New: Run of TKinMet class library
     ipm_logger->trace("kMM: {}  ITau: {}   kTau: {}   kdT: {}", pm.pKMM, pm.ITau, pm.kTau, pm.kdT);
 
-    // DEGENERATE-BOX DETECTION, plan v5 s136.13 (owner, 2026-09-25: "it is important when running
-    // RT that the problem doesn't fall into these boxes"). REPORT-ONLY: nothing below writes solver
-    // state, and the snapshot is taken only when the body that follows will actually run, so this is
-    // exactly zero cost with kinetics off - which is every corpus project.
-    //
-    // WHY HERE, and why this is the only place it can be done at all:
-    //
-    //  * THIS IS THE SITE THAT CREATES THE COLLAPSE. TKinMet::SetMetCon() sets nPll = nPul in every
-    //    live branch (s_kinmet.cpp ~1005-1055) and writes them straight into pm.DUL/pm.DLL through
-    //    arnxul/arnxll. The step that creates a zero-width box SUCCEEDS and reports nothing, so the
-    //    state is invisible where it is made. A later failing solve surfaces as E04IPM (native MBR)
-    //    or E90IPM (Optima), neither of which names the box. That is what this warning exists to fix.
-    //
-    //    IT DOES NOT CLAIM TO BE THE CAUSE OF THOSE FAILURES - that was measured and REFUTED
-    //    (handoff 2026-09-24 s14.3, NG_SUPPLY, both arms). On LimSeawat1 the shipped cold run fails
-    //    with ordered dolomite pinned at 1e-08 while every element residual is 7-9 orders above its
-    //    demand (nothing is over-subscribed), and the unconstrained-first-step variant fails at a
-    //    node with NO pinned phase at all. The first failure is also the very NEXT solve, not a
-    //    distant one. So this reports a real and otherwise undiagnosable state; the causal chain
-    //    from it to a given failure is NOT established and must not be asserted here.
-    //
-    //  * IT IS ALREADY SHARED BY BOTH SOLVER FAMILIES. RunKineticsStep() is called from exactly two
-    //    places - ipm_simplex.cpp (native) and ipm_optima.cpp (Optima) - so one site serves both.
-    //    That matters: on the LimSeawat1 fixture the two families fail on the SAME 380 of 420
-    //    solves, so a native-only site would serve half the cases.
-    //
-    //  * AND IT IS THE ONLY PLACE THE PROVENANCE SURVIVES. A collapsed box has THREE producers:
-    //    the project file (deliberate suppressions), ExcludeRedundantDCs() (which sets
-    //    DLL = DUL = 0, ipm_main.cpp) and the rate law. Only the first two can be legitimate, and
-    //    nothing in the data says who wrote a value - arnxul/arnxll are raw pointers into
-    //    pm.DUL/pm.DLL, and pm.RLC[] records only WHETHER a limit applies, never who set it.
-    //    But both other producers have already run by the time this function is entered (see this
-    //    function's own placement note above), so DIFFERENCING THE BOUNDS ACROSS THIS ONE CALL
-    //    separates all three. Downstream it is lost for good: packDataBr() copies pm.DUL into
-    //    CNode->dul and every producer's output becomes an indistinguishable number in one array.
-    //    Measured on LimSeawat1 (plan v5 s136.13c): of nine collapsed species, the eight deliberate
-    //    suppressions (CO2 CH4 H2 N2 O2 H2S Arg Mgs, all pinned at 0) are unchanged across the call
-    //    and stay silent; ordered dolomite goes 3.9046380e-01 -> 1.0000000e-08 and warns.
-    //
-    // ZERO WIDTH IS TESTED EXACTLY, not against a tolerance: SetMetCon() assigns nPll = nPul, the
-    // same double, so the degenerate case is exact. A narrow-but-nonzero box is a different and
-    // debatable thing and is deliberately NOT flagged here.
+    // Degenerate-box detection (report-only): the kinetic rate law (TKinMet::SetMetCon(), which
+    // sets nPll = nPul and writes them into pm.DUL/pm.DLL) can collapse a species' box to zero
+    // width without reporting anything; a later failing solve then shows only as E04IPM (native
+    // MBR) or E90IPM (Optima), neither naming the box. This is not claimed to be the cause of
+    // such failures. A collapsed box can come from the project file, ExcludeRedundantDCs() or the
+    // rate law; the first two have run before this function, so differencing the bounds across
+    // this one call identifies the rate law's boxes. Zero width is tested exactly (SetMetCon()
+    // assigns the same double); a narrow nonzero box is not flagged. The snapshot is taken only
+    // when the kinetics body below will run, so this costs nothing with kinetics off.
+    // In plain words: warns when the kinetic limits squeeze a mineral to a fixed amount.
     const bool kinmWillRun = ( pm.pKMM < 2 ) && pm.DUL && pm.DLL && pm.L > 0;
     std::vector<double> kinmUl0, kinmLl0;
     if( kinmWillRun )
@@ -157,8 +108,8 @@ void TMultiBase::RunKineticsStep()
         if( nDegen > 0 )
         {
             if( nDegen > 24 ) list += ",...";
-            // Named, at the step that created it, with both downstream error codes spelled out so a
-            // reader who later meets one of them can find their way back here.
+            // Names the two downstream error codes, so a reader who later meets one of them can
+            // find this warning.
             ipm_logger->warn( "RunKineticsStep: the kinetic rate law pinned {} species at a ZERO-WIDTH "
                               "metastability box (dul == dll) this step - {}. Such a species cannot "
                               "change amount at all until the rate law next rewrites its bounds. This "

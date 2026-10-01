@@ -757,25 +757,9 @@ double TMultiBase::GX( double LM  )
         {  // gradient vector pm.MU - the direction of descent!
             pm.X[i]=pm.Y[i]+LM*pm.MU[i];
 //            if( pm.X[i] <  pm.lowPosNum )   // this is the Ls set cutoff !!!!!!!!!!
-            // THIS IS WHERE NATIVE'S EXACT ZEROS COME FROM. Observed 2026-09-03
-            // with GEMS3K_NATIVE_TRACE_FILE (see ms_multi.h): on
-            // Resources/gems3k-psina/07PSIna_G_complex_1_0_1_80_0 the initial
-            // approximation carries ZERO exact zeros, and 609 of the 542 that
-            // survive into the answer are already present at the FIRST exit from
-            // InteriorPointsMethod(), i.e. before PhaseSelectionSpeciationCleanup()
-            // has run once. A temporary counter put the number of truncations in
-            // that single solve at 1 113 007 - GX() is the golden-section line
-            // search's objective and is re-evaluated many times per iteration.
-            //
-            // WHY IT MATTERS BEYOND BOOKKEEPING: a hard truncation to exact zero
-            // is not available to a box-constrained interior-point method, whose
-            // variables live above a positive lower bound (dcFloor = pa_DHB, 1e-13
-            // on this project) and can only approach it asymptotically. So the
-            // standing reading of the psina failures - "native deletes the phase
-            // via PSSC, AOP cannot" - names the wrong mechanism: PSSC INSERTS and
-            // eliminates a handful of phases per pass (4/1, 0/3, 0/1 here) as an
-            // assemblage correction, while the bulk removal happens here, twenty
-            // orders of magnitude below AOP's floor.
+            // This truncation to exact zero is where native's exact zeros come from (most of
+            // them appear before PSSC runs). An interior-point method on a box with a positive
+            // lower bound cannot do this; it can only approach the bound.
             if( pm.X[i] <  pm.DcMinM )
                 pm.X[i]=0.;
         }
@@ -843,24 +827,12 @@ NEXT_PHASE:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/// Total Gibbs energy G(X) of the converged system, in RT units, on a basis
-/// that is identical for every solver path.  See the declaration in ms_multi.h
-/// for why total G (and not the OK/FAIL status) is the correctness criterion.
-///
-/// This deliberately does NOT reuse GX()'s own accumulation, because GX() reads
-/// pm.G[], which is NOT a path-independent basis: native's GEM_IPM() resets
-/// pm.G[i] = pm.G0[i] on exit (ipm_main.cpp), discarding the fDQF and F0
-/// (activity-coefficient) terms, while CalculateEquilibriumStateOptima() leaves
-/// pm.G[j] = G0 + fDQF + F0 as its last LINK_UX_MODE update wrote it.  Comparing
-/// GX(0.) across the two therefore compares an ideal-mixing G against a real one.
-/// Measured on f_Flowline (CLAUDE.md 2026-08-25): identical assemblage, identical
-/// amounts to 7 significant figures, identical lnGam/F0 per species - yet GX(0.)
-/// differed by 1.0818 RT, exactly sum(X_j * F0_j) over the aqueous phase.
-///
-/// So the excess term is rebuilt here from G0[]+fDQF[]+F0[], which both paths do
-/// leave current and equal.  Everything else - the Y->X copy, the phase-inclusion
-/// tests, the DcMinM cutoff, the per-species-class formulas - mirrors GX(0.)
-/// exactly.  Post-solve only: it copies Y into X and refreshes pm.XF/pm.XFA.
+/// Total Gibbs energy G(X) of the converged system, in RT units, on a basis identical for every
+/// solver path. Does not reuse GX(), which reads pm.G[]: native's GEM_IPM() resets
+/// pm.G[i] = pm.G0[i] on exit, while the Optima path leaves G0 + fDQF + F0 there. The excess
+/// term is rebuilt from G0[]+fDQF[]+F0[], which both paths leave current. Everything else (the
+/// Y->X copy, the phase-inclusion tests, the DcMinM cutoff, the per-class formulas) mirrors
+/// GX(0.). Post-solve only: it copies Y into X and refreshes pm.XF/pm.XFA.
 double TMultiBase::TotalGibbsEnergy()
 {
     long int i, j, k;
@@ -1380,37 +1352,11 @@ long int TMultiBase::SpeciationCleanup( double AmountCorrectionThreshold, double
    return NeedToImproveMassBalance;
 }
 
-// Largest amount of a single-species phase the bulk composition can actually
-// supply: min over the ICs it consumes of b_i / a(j,i). Charge rows are skipped
-// (b[Zz] is normally 0, which would give a meaningless ceiling of 0 for a charged
-// species; single-component phases are neutral, so this is defensive only).
-//
-// WHY THIS EXISTS. PSSC inserts a lost pure phase at pm.DFYsM = pa_DFYs, a FIXED
-// 1e-6 mol that does not look at the composition, and sets MassBalanceViolation
-// in the same branch. On a project whose elements are seeded at 1e-9 mol - the
-// psina/T8 families do exactly that - every such insertion asks for 1000-2000x
-// more of its limiting element than exists, so it is INFEASIBLE rather than
-// merely aggressive: the following MBR pass must undo it, PSSC re-proposes it,
-// and the assemblage never settles. Measured 2026-09-05 (plan v5 section 76) on
-// 07PSIna_G_vcomplex_2 @ 80 C (all 12 insertions 1000-2000x over) and T8_aq801
-// (both cycling phases 1000x over, ZrO2(cr) re-inserted at a bit-identical
-// stability index on passes 4 and 6). Both exhausted PSSC's pass budget, set
-// pm.PZ = 2 and reported BAD_GEM_AIA - on a state whose IPM loop had already
-// converged with mass balance passing, and whose G was right to 11 digits.
-//
-// STALE CLAIM CORRECTED 2026-09-07. This comment used to say "clamping to exactly
-// this ceiling (no safety fraction) is SUFFICIENT: measured, both projects go
-// BAD -> OK". That was section 76.3, which section 77.2 then retracted as a UNITS
-// error - pm.B[] and pm.DFYsM are both in the internally rescaled frame, so the
-// parameter test that appeared to confirm it was really running at 0.18x the
-// ceiling, not 1.0x. Clamping at the true ceiling was implemented and left BOTH
-// projects at status 3 (section 77.1). What flipped them was the SKIP (section
-// 77.4); what the clamp is good for is not erasing a supersaturated trace phase,
-// which is why PhaseSelect() now does both - one budget-sized attempt, then skip.
-// The same quantity, bounded per
-// end-member, is what ipm_optima.cpp's DetectPhaseCollapseAndReseed() already
-// uses for the analogous job on the Optima path - for a single end-member its
-// "/nEnd" divisor is 1, so the two conventions agree exactly here.
+// Largest amount of a single-species phase the bulk composition can supply: min over the ICs
+// it consumes of b_i / a(j,i). Charge rows are skipped. PSSC inserts a lost pure phase at the
+// fixed pa_DFYs; on a system whose limiting element is seeded at a trace amount that insertion
+// is infeasible and the assemblage never settles, so PhaseSelect() inserts at most this
+// amount, once. The same quantity bounds end-members in DetectPhaseCollapseAndReseed().
 double TMultiBase::PhaseInsertionCeiling( long int j )
 {
     const long int Zlim = pm.N - pm.E;   // ordinary ICs only, as MBR's own loops scan
@@ -1472,14 +1418,8 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     StabilityIndexes( ); // Calculation of phase stability criteria
     (pm.K2)++;
 
-    // Native event trace (GEMS3K_NATIVE_TRACE_FILE) - see the declaration in
-    // ms_multi.h. This function IS the phase-selection decision procedure an
-    // AOP/SOP equivalent has to reproduce, and it has only ever been studied
-    // through its OUTPUT (the exact zeros left in the converged answer). What
-    // follows logs the decision itself: per pass, per phase, the stability
-    // index, the threshold it was compared against, the amount, and the branch
-    // taken - with names rather than bare indices, since a trace of indices on
-    // a 1392-species system is not worth writing.
+    // Native event trace (GEMS3K_NATIVE_TRACE_FILE): per pass and phase, the stability index,
+    // the threshold it was compared against, the amount and the branch taken, with names.
     FILE* ntf = native_trace_file();
     const long int trPass = pm.K2;   // pass index, 1-based; native bails out after 5
     if( ntf )
@@ -1488,13 +1428,11 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                  (long)trPass, (long)pm.FI, (long)CleanupStatus, pa_p->DF, pa_p->DFM,
                  pm.DSM, pm.DcMinM, AmountThreshold, MjuDiffCutoff );
 
-    // PROTOTYPE (session gems3k-e6, 2026-09-28; plan v5 section 140.12), OFF unless GEMS3K_NATIVE_TPD_INSERT is set
-    // (value = TPD tolerance in RT, default 1e-6). For every ABSENT non-ideal phase the single-point index Falp -
-    // evaluated at an arbitrary trace composition, or the -1 "cannot restore" sentinel - is replaced by a
-    // composition search against the current dual (NativeTpdPhase(), the CertStabTPD() search): Falp :=
-    // -min TPD / ln 10, raised to just above pa_DF when min TPD < -tolerance so the phase is INSERTED, and the
-    // insertion then puts its end-members at the composition the search found. THERMOCHIMICA's Subminimization
-    // is the reference design (plan v5 section 140.6). Measured on gems_tests-nuclearsafety Fe-Cr / Al2O3-SiO2.
+    // GEMS3K_NATIVE_TPD_INSERT (value = TPD tolerance in RT, default 1e-6), off unless set:
+    // for every absent non-ideal phase the single-point index Falp is replaced by a composition
+    // search against the current dual (NativeTpdPhase()): Falp := -min TPD / ln 10, raised to
+    // just above pa_DF when min TPD < -tolerance so the phase is inserted, with its end-members
+    // at the composition the search found.
     static const double tpdInsTol = []() {
         const char* e = std::getenv( "GEMS3K_NATIVE_TPD_INSERT" );
         if( !e ) return -1.;
@@ -1503,8 +1441,8 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     std::vector<std::vector<double>> tpdY( (size_t)pm.FI );
     if( tpdInsTol > 0. )
     {
-        // ABSENT or TRACE, as CertStabTPD() counts it: a phase below 1e-6 of the total phase amount carries no
-        // material share, and PSSC otherwise ELIMINATEs it on its single-point index (rs_ss on Al2O3-SiO2 at 1.7e-7).
+        // Absent or trace, as CertStabTPD() counts it: a phase below 1e-6 of the total phase
+        // amount carries no material share.
         double sumXFt = 0.;
         for( long int kk = 0; kk < pm.FI; kk++ ) sumXFt += std::max( pm.XF[kk], 0. );
         long int p0 = 0;
@@ -1542,9 +1480,8 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     {
        L1k = pm.L1[k]; // Number of components in the phase
        KinConstrPh = false;
-       // Trace state for this phase. Read independently of PhaseAmount/logSI
-       // below, which are only assigned AFTER the kinetic-constraint check and
-       // would otherwise be the previous phase's values on the skip path.
+       // Trace state for this phase (read independently of PhaseAmount/logSI, which are
+       // assigned only after the kinetic-constraint check).
        const char* trAction = "KEEP";
        double trLogSI = pm.Falp[k], trAmount = pm.XF[k], trYbefore = 0.;
        if( ntf ) for(j=jb; j<jb+L1k; j++) trYbefore += pm.Y[j];
@@ -1621,36 +1558,19 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
        }
        if( logSI >= pa_p->DF )  // 2 - INSERTION CASE
        {  // this phase is stable or over-stable
-           if( PhaseAmount < pm.DSM || !tpdY[(size_t)k].empty() ) // pm.DFYsM ); PROTOTYPE 140.12: also a TRACE phase the TPD search wants
+           if( PhaseAmount < pm.DSM || !tpdY[(size_t)k].empty() ) // pm.DFYsM ); also a trace phase the TPD search selected
            {  // phase appears to be lost - insertion of all components of the phase.
-              // FEASIBILITY CHECK FIRST: pm.DFYsM (= pa_DFYs, default 1e-6) is a fixed
-              // amount that does not look at the composition, so for a phase whose
-              // limiting IC the system barely contains the insertion is INFEASIBLE -
-              // it demands more of that element than exists, the following MBR pass
-              // must undo it, and PSSC re-proposes it until the pass budget runs out.
-              // See PhaseInsertionCeiling() above for the measurement.
-              // Both quantities are in the internally rescaled frame (pm.B[] is scaled
-              // by ScFact = pa_DG/sum(bIC), and pm.DFYsM is used directly as a pm.Y[]
-              // amount), so they are directly comparable - do NOT compare either against
-              // the caller's raw bIC.
+              // Feasibility check first: pm.DFYsM (= pa_DFYs) is a fixed amount, so for a
+              // phase whose limiting IC the system barely contains, the insertion would
+              // demand more of that element than exists. Both quantities are in the
+              // internally rescaled frame, so they are directly comparable.
                const double insCap = ( L1k > 1 ) ? -1. : PhaseInsertionCeiling( jb );
                double insAmt      = pm.DFYsM;   // MAJOR phase: the fixed pa_DFYs, unchanged
                bool   budgetSized = false;
                if( insCap >= 0. && insCap < pm.DFYsM )
-               {   // TRACE phase: the bulk composition cannot supply the fixed pa_DFYs.
-                   // Insert what the element budget DOES allow, once. Before
-                   // 2026-09-07 this branch skipped outright, which is why a phase
-                   // controlled by a 1e-9 mol element read ABSENT rather than trace
-                   // even when strongly supersaturated - five of them on T14_ball120,
-                   // Chromite at logSI +6.39 (plan v5 section 93.3).
-                   //
-                   // ONE attempt, not unlimited: the ceiling consumes the whole
-                   // element budget, so re-proposing it every pass is the thrash the
-                   // 2026-09-05c skip existed to stop. Clamping WITHOUT this bound was
-                   // measured and left both rescued projects at status 3 (section 77.1),
-                   // and a safety fraction was swept and came out chaotic (section 77.3).
-                   // A one-shot rule bounds the cost at one pass per phase and needs no
-                   // tuned constant.
+               {   // Trace phase: the bulk composition cannot supply the fixed pa_DFYs.
+                   // Insert what the element budget allows, once per solve
+                   // (insBudgetTried); if it is lost again it is skipped from then on.
                    const size_t kk = static_cast<size_t>( k );
                    if( insCap <= 0. || kk >= insBudgetTried.size() || insBudgetTried[kk] )
                    {   // nothing at all to give it, or it has already had its attempt
@@ -1664,7 +1584,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                if( L1k > 1 )
                   DC_RaiseZeroedOff( jb, jb+L1k, k );
                if( L1k > 1 && !tpdY[(size_t)k].empty() )
-               {   // PROTOTYPE (section 140.12): put the inserted end-members at the composition the TPD search found
+               {   // GEMS3K_NATIVE_TPD_INSERT: put the inserted end-members at the composition the TPD search found
                    double tot = 0.;
                    for( j = jb; j < jb+L1k; j++ ) tot += pm.Y[j];
                    for( j = jb; j < jb+L1k; j++ )
@@ -1811,43 +1731,11 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                   YjCleaned = Yj / exp( MjuDiff ); // also applies to a DC in a solution phase
                   if( L1k == 1 )
                   {  // Pure phase
-                      // NOT APPLIED TO A COMPOSITION-LIMITED PHASE, 2026-09-08.
-                      //
-                      // Third site with the same defect shape as the insertion and the
-                      // floor below: a FIXED ABSOLUTE AMOUNT used as a TEST on a system
-                      // whose whole budget for the limiting element is under it.
-                      // AmountThreshold is 10^-|pa_PRD| - 1e-4 on 46 corpus projects,
-                      // 1e-5 on 22 - and a trace phase is permanently below either, so
-                      // the second clause carries no information and the decision rests
-                      // entirely on the first. That first clause is -0.4343*MjuDiffCutoff
-                      // = -4.343e-04 at the shipped pa_GAS, i.e. 23x TIGHTER than the
-                      // -pa_DFM = -1e-2 at which phase selection would genuinely
-                      // eliminate the phase. So a noise-level dip erases it outright.
-                      //
-                      // Measured on 07PSIna_G_iron @25 C (whole Fe inventory 3.0e-09 mol),
-                      // warm SIA leg: phase selection reads Fe3O4(cr) at logSI
-                      // -3.407403e-03 and KEEPS it (correctly - that is well inside
-                      // -pa_DFM), and this line then zeroes 4.174715e-09 mol to exactly 0.
-                      // The COLD leg of the same run reads +1.144578e-02, keeps the phase
-                      // and cleans it UP to 4.127876e-09. AOP puts it at 4.15e-09. So
-                      // every other path on that project agrees the phase is present, at
-                      // an amount they agree on to two figures, and only the warm cleanup
-                      // erases it - which is why that row returned nPh=1 against AOP's 2.
-                      //
-                      // What this branch is FOR is snapping a vanishing pure phase to an
-                      // exact zero instead of leaving a numerical crumb, and "vanishing"
-                      // is meant in absolute terms. In a system that cannot supply
-                      // AmountThreshold of the phase in the first place there is no such
-                      // absolute amount: every attainable value is "small", the test is a
-                      // tautology, and the dual-derived YjCleaned is the best estimate
-                      // available. So the test is SKIPPED when the phase's own composition
-                      // ceiling is below the threshold it would be judged against. No
-                      // tuned constant - the bound is structural, exactly as for the twin
-                      // sites (section 77.1's unbounded clamp and section 77.3's swept
-                      // safety fraction both needed one and both failed).
-                      //
-                      // A phase the system CAN supply AmountThreshold of keeps the
-                      // original behaviour untouched. L1k == 1 here, so j == jb.
+                      // Not applied to a composition-limited phase: when the phase's own
+                      // composition ceiling is below AmountThreshold, the absolute test carries
+                      // no information (every attainable amount is "small"), and the
+                      // dual-derived YjCleaned is kept. A phase the system can supply
+                      // AmountThreshold of keeps the original behaviour. L1k == 1, so j == jb.
                       const double clnCap = PhaseInsertionCeiling( j );
                       const bool compLimited = ( clnCap >= 0. && clnCap < AmountThreshold );
                       if( logSI <= -0.4343*MjuDiffCutoff && YjCleaned < AmountThreshold
@@ -1862,43 +1750,10 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                       if( logSI >= pa_p->DF && YjCleaned < pm.DFYsM )
                       {   // over-stable phase in too small amount - insertion and next IPM loop (experimental)
                           //
-                          // NOT APPLIED TO A COMPOSITION-LIMITED PHASE, 2026-09-07.
-                          //
-                          // This floor is the TWIN of the budget-sized insertion in
-                          // PhaseSelect() above, and until now shared its defect: a fixed
-                          // pm.DFYsM that never looks at what the bulk composition can supply.
-                          // Bounding the INSERTION alone is not enough - the two undo each
-                          // other inside one solve. Measured on 07PSIna_G_iron @25 C, whose
-                          // entire Fe inventory is 3.0e-09 mol:
-                          //
-                          //   PhaseSelect() inserts Fe3O4(cr) at its 6.00e-09 ceiling (all of
-                          //   the Fe, in the rescaled frame); MBR cannot absorb that, the
-                          //   solve cold-restarts and lands Fe3O4 at 4.02e-09 - essentially
-                          //   the converged value, AOP puts it at 4.15e-09. THIS line then
-                          //   rewrote it to 1e-6, i.e. 333x the whole Fe budget.
-                          //
-                          // Merely CLAMPING the floor to the ceiling does not fix it, and the
-                          // reason is worth keeping: the "is it too small?" TEST uses the same
-                          // fixed pm.DFYsM as the value did. A composition-limited phase is
-                          // permanently below 1e-6, so the test is always true and the floor
-                          // fires on every pass - kicking a phase already at 67% of its own
-                          // ceiling up to 100% of it, until a pass reads it marginally
-                          // undersaturated (logSI -4.6e-03) and the zeroing branch above
-                          // erases it. Measured: the clamped version still loses the phase and
-                          // still returns FAIL. Nor is a one-shot flag the answer - the cold
-                          // restart re-enters GEM_IPM() and clears it.
-                          //
-                          // So the floor is SKIPPED for a composition-limited phase, with no
-                          // tuned constant anywhere. What the floor is for is keeping a
-                          // present phase above a negligible ABSOLUTE amount; in a system
-                          // whose whole budget for the limiting element is under pa_DFYs there
-                          // is no such amount, every attainable value is "small", and the
-                          // dual-derived YjCleaned is the best estimate available. Rescuing a
-                          // LOST trace phase is the insertion branch's job, not this one's;
-                          // this branch was only ever undoing it. A MAJOR phase, whose ceiling
-                          // is at or above pm.DFYsM, keeps the original behaviour untouched.
-                          //
-                          // L1k == 1 here, so j == jb and the pure-phase ceiling applies.
+                          // Not applied to a composition-limited phase (one whose ceiling is
+                          // below pm.DFYsM): there the fixed floor would undo the budget-sized
+                          // insertion above and keep re-firing every pass. A major phase keeps
+                          // the original behaviour. L1k == 1 here, so j == jb.
                           const double clnCap = PhaseInsertionCeiling( j );
                           if( !( clnCap >= 0. && clnCap < pm.DFYsM ) )
                           {
@@ -1962,9 +1817,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
 //        goto NextPhaseC;
      }
      NextPhaseC:
-       // Speciation cleanup is a per-DC correction, not a phase decision, so
-       // only phases it actually CHANGED are logged - otherwise this adds one
-       // line per phase per pass (320+ on the psina giants) saying nothing.
+       // Only phases the speciation cleanup actually changed are logged.
        if( ntf )
        {
            double trYafterC = 0.; long int trNzeroAfterC = 0;
@@ -2030,10 +1883,8 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     ipm_logger->debug("CleanupStatus= {}", CleanupStatus);
     if( ntf )
     {
-        // status: 1 = final and consistent; 0 = phases changed, another IPM loop;
-        // -1 = still inconsistent after 5 loops, and the Y changes are DISCARDED
-        // (restored from pm.XY) - which is why a -1 line reports the counters of
-        // a pass whose effect was then thrown away.
+        // status: 1 = final and consistent; 0 = phases changed, another IPM loop; -1 = still
+        // inconsistent after 5 loops, and the Y changes are discarded (restored from pm.XY).
         long int trNzeroTotal = 0;
         for( long int jj = 0; jj < pm.L; jj++ )
             if( pm.Y[jj] == 0. ) trNzeroTotal++;

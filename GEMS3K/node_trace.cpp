@@ -41,13 +41,11 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
     dbr_dch_api::databr_reset( backup, 1 );
     dbr_dch_api::databr_realloc( CSD, backup );
     { DATABR* live = CNode; CNode = backup; databr_copy( live ); CNode = live; }
-    // ... and of MULTI. A warm GEM_run(false) starts from MULTI's RETAINED primal (unpackDataBr() does not
-    // unpack xDC when uPrimalSol is false), so restoring DATABR alone left the next warm call starting from
-    // the last CHECK solve. Measured 2026-09-14 through xGEMS, reequilibrate(true) after traceRegimes() vs
-    // without: T-cement pH 14.048 -> 13.812; CASH+CsSr 147 extra iterations and species amounts moved by up
-    // to 1.6e-3 relative. The snapshot is a fresh TMultiBase filled by copyMULTI(); the restore copies
-    // values back WITHOUT reallocating (copyMULTIData(.., false)), because this node's TSolMod objects hold
-    // pointers into the live arrays.
+    // ... and of MULTI: a warm GEM_run(false) starts from MULTI's retained primal, so restoring
+    // DATABR alone would leave the next warm call starting from the last check solve. The
+    // snapshot is a fresh TMultiBase filled by copyMULTI(); the restore copies values back
+    // without reallocating (copyMULTIData(.., false)), since the TSolMod objects point into the
+    // live arrays.
     std::unique_ptr<TMultiBase> savedMulti( new TMultiBase( this ) );
     savedMulti->set_def();
     savedMulti->copyMULTI( *multi_base );

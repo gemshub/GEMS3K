@@ -53,6 +53,7 @@
 /// row(s) to the chemical potential implied by `target`, solved in one
 /// Newton system together with the rest of the equilibrium (see
 /// ipm_optima.cpp, TMultiBase::CalculateEquilibriumStateOptima()).
+/// In plain words: a request such as "reach pH 7", met by adding the right amount of acid or base.
 struct EqControlCondition
 {
     std::string name;    ///< diagnostic label, e.g. "pH", "Eh" - also used by

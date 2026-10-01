@@ -524,9 +524,8 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
   pm.t_elap_sec = 0.0;
   pm.ITF = pm.ITG = 0;
 
-  // One kinetics/metastability time step. Moved into RunKineticsStep() (ipm_chemical4.cpp) on
-  // 2026-09-20, unchanged, so the Optima entry point can run the same step - it never did, which is
-  // why AOP/SOP could not move a kinetically controlled phase at all.
+  // One kinetics/metastability time step (RunKineticsStep(), ipm_chemical4.cpp), shared with
+  // the Optima entry point.
   RunKineticsStep();
 
     if( base_param()->DG > 1e-5 )
@@ -630,9 +629,8 @@ void TMultiBase::ScaleSystemToInternal(  double ScFact )
   pm.FX  *= ScFact;
   pm.Yw  *= ScFact;  // added 08.06.10 DK
 
-  // Work item 33: record the pre-scale value and the value this call leaves, per index, so
-  // RescaleSystemFromInternal() replays this decision instead of re-deriving it from a value that
-  // may since have crossed the sentinel - or been rewritten mid-solve. See DUL_preScale_.
+  // Record the pre-scale value and the value this call leaves, per index, so
+  // RescaleSystemFromInternal() replays this decision (see DUL_preScale_).
   DUL_preScale_.assign( (size_t)pm.L, 0. );
   DUL_postScale_.assign( (size_t)pm.L, 0. );
   DLL_preScale_.assign( (size_t)pm.L, 0. );
@@ -644,15 +642,9 @@ void TMultiBase::ScaleSystemToInternal(  double ScFact )
        pm.DUL[j] *= ScFact;
     DUL_postScale_[(size_t)j] = pm.DUL[j];
 
-    // The LOWER bound is recorded and restored the SAME WAY as the upper one, and the symmetry is
-    // the whole point. Restoring DUL exactly while DLL still went through multiply-then-divide left
-    // the two ONE ULP apart on a phase where the caller pins dul == dll - the standard AMR idiom for
-    // kinetic control - and unpackDataBr() then rejects the NEXT call with "Upper kinetic restriction
-    // less than the lower one". Measured 2026-09-21 on GEMS3K's own node-gem CalcColumn example:
-    // dul = 2.13758000000000009e-04 against dll = 2.13758000000000036e-04, 3576 of 4200 solves lost
-    // on the SIA loop, with the benchmark corpus showing a byte-identical freeze throughout (no
-    // corpus project carries a real metastability bound across repeated calls). AN EXACTNESS FIX
-    // APPLIED TO ONE SIDE OF AN EQUALITY IS NOT A FIX.
+    // The lower bound is recorded and restored the same way as the upper one: if only DUL were
+    // restored exactly, a caller's dul == dll pin could come back one ULP apart and be rejected
+    // by unpackDataBr() on the next call.
     DLL_preScale_[(size_t)j] = pm.DLL[j];
     // if( pm.DLL[j] > 0.0  )
        pm.DLL[j] *= ScFact;
@@ -735,11 +727,10 @@ void TMultiBase::RescaleSystemFromInternal(  double ScFact )
 
   for( j=0; j<pm.L; j++ )
   {
-    // Work item 33: an entry still holding exactly what scale-in left has not been touched since,
-    // so its real-unit value is known exactly and is restored verbatim - which also removes the
-    // multiply-then-divide rounding the old form carried. An entry that has MOVED was written from
-    // inside the scaled region (Set_DC_limits() on the warm path), i.e. in internal units, and
-    // takes the original test. No record at all (an unpaired call) also takes the original test.
+    // An entry still holding exactly what scale-in left is restored verbatim (no
+    // multiply-then-divide rounding). An entry that has moved was written inside the scaled
+    // region (Set_DC_limits() on the warm path), in internal units, and takes the original test,
+    // as does an entry with no record.
     if( (size_t)j < DUL_postScale_.size() && pm.DUL[j] == DUL_postScale_[(size_t)j] ) {
        pm.DUL[j] = DUL_preScale_[(size_t)j];
     }
@@ -806,8 +797,7 @@ void TMultiBase::RescaleSystemFromInternal(  double ScFact )
               pm.XFTS[k][j]  /= ScFact;
           }
 
-  // Work item 33: single-use records - clear them so a break in the 1:1 pairing invariant fails
-  // toward the original test rather than silently replaying a previous call's decision.
+  // Single-use records: cleared, so an unpaired call falls back to the original test.
   DUL_preScale_.clear();  DUL_postScale_.clear();
   DLL_preScale_.clear();  DLL_postScale_.clear();
   PUL_preScale_.clear();  PUL_postScale_.clear();
@@ -905,9 +895,7 @@ void TMultiBase::MultiConstInit() // from MultiRemake
   pm.logYFk = -9.;
   pm.DXM = base_param()->DK;
 
-  // "Total Gibbs energy not computed yet" - see kTotalGibbsEnergyUnset (ms_multi.h) for why the
-  // value is deliberately absurd, and for the defect that came of nothing ever testing for it.
-  // The original comment here was "???????".
+  // "Total Gibbs energy not computed yet" - see kTotalGibbsEnergyUnset (ms_multi.h).
   pm.FX = kTotalGibbsEnergyUnset;
   if( pm.pH < -15. || pm.pH > 16.  )   // Check for trash in pH - bugfix 19.06.2013
       pm.pH = pm.Eh = pm.pe = 0.0;

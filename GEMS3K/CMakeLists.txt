@@ -16,29 +16,18 @@ if(USE_SPDLOG_PRECOMPILED)
    endif()
 endif()
 
-# Equilibrium via the Optima library's general primal-dual interior-point
-# NLP solver, as an alternative to GEMS3K's own IPM/MBR loop (AOP/SOP
-# solver modes, see NODECODECH in databr.h and ipm_optima.cpp). OFF by
-# default - purely additive/opt-in: adds TMultiBase::CalculateEquilibriumStateOptima()
-# and the AOP/SOP dispatch in TNode::GEM_run() only when explicitly
-# enabled; normal builds (and every existing AIA/SIA code path) are
-# unaffected either way. Requires Optima to be findable via
-# CMAKE_PREFIX_PATH (e.g. a conda env that has it installed).
+# Equilibrium via the Optima library's primal-dual interior-point NLP solver, as an alternative
+# to GEMS3K's own IPM/MBR loop (solver modes AOP, SOP, ROP, HOP, SHP; see NODECODECH in databr.h
+# and ipm_optima.cpp). OFF by default; without it the native AIA/SIA paths are unchanged and the
+# Optima modes fall back to native. Requires Optima to be findable via CMAKE_PREFIX_PATH.
 option(USE_OPTIMA_SOLVER "Enable the Optima-based equilibrium solver (AOP/SOP modes, requires Optima to be installed)" OFF)
 if(USE_OPTIMA_SOLVER)
     find_package(Optima REQUIRED)
 endif()
 
-# General gate for benchmark/diagnostics-only instrumentation (condition-number
-# estimation, per-phase timing, and future additions in the same spirit —
-# structured failure counters, stall/convergence-trajectory export, etc., per
-# GEMS3K/CLAUDE.md's sequencing plan). This code adds real overhead per call
-# (e.g. condition-number estimation costs ~44% of the linear-solve step itself
-# — see ipm_main.cpp's MakeAndSolveSystemOfLinearEquations()), so it's OFF by
-# default: normal/production use of GEMS3K pays nothing extra. gems-benchmark's
-# build turns this ON to get per-system diagnostics. New instrumentation of
-# this kind should reuse GEMS3K_BENCHMARK_DIAGNOSTICS rather than adding a new
-# macro per feature.
+# Benchmark/diagnostics-only instrumentation (condition-number estimation, per-phase timing).
+# It adds overhead to every linear solve, so it is OFF by default; gems-benchmark turns it ON.
+# Further instrumentation of this kind should use the same option.
 option(ENABLE_BENCHMARK_DIAGNOSTICS "Enable benchmark/diagnostics-only instrumentation (condition-number estimation, per-phase timing, etc.) in the IPM solver (adds overhead; for benchmarking/diagnostics only)" OFF)
 
 # Check if a shared library is to be built

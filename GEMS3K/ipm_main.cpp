@@ -49,14 +49,9 @@ std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = spdlog::stdout_color_mt
 #define uDDtrace false
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/// Native-solver event trace - see the declaration in ms_multi.h for what it is
-/// for and why it is env-gated rather than NDEBUG-gated.
-///
-/// Thread note: the open is a function-local static, so its initialisation is
-/// thread-safe (C++11 magic statics); concurrent fprintf() calls on one FILE*
-/// are individually locked by glibc, which is sufficient for a line-oriented
-/// diagnostic. Interleaving between threads is possible and would show as
-/// out-of-order events, not as corrupted lines.
+/// Solver event trace - see the declaration in ms_multi.h. The file is opened in a
+/// function-local static (thread-safe initialisation); concurrent fprintf() calls are
+/// individually locked, so lines from different threads may interleave but are not corrupted.
 FILE* native_trace_file()
 {
     static FILE* fp = []() -> FILE*
@@ -68,19 +63,17 @@ FILE* native_trace_file()
 }
 
 /// Nesting depth of native_trace_quiet(). While > 0, native_trace_run_header() and
-/// native_trace_run_result() write nothing; DECIDE and event records are unaffected. For solves that
-/// belong to ONE GEM_run() call (TNode's cold-call recovery, pa_ColdRetryNudges): the freeze attributes
-/// RUN/KEY records to solver modes by position, so an inner solve writing its own would shift every
-/// later row.
+/// native_trace_run_result() write nothing (DECIDE and event records are unaffected). Used for
+/// inner solves that belong to one GEM_run() call (e.g. pa_ColdRetryNudges), since the RUN/KEY
+/// records are attributed to modes by position.
 static thread_local int native_trace_quiet_depth = 0;
 void native_trace_quiet( bool on )
 {
     native_trace_quiet_depth += on ? 1 : -1;
 }
 
-/// Companion to native_trace_file() for the one thing an event-level trace
-/// cannot show: the shape of the IPM descent, one line per iteration. See the
-/// call site in InteriorPointsMethod() for what it measured and why.
+/// Per-iteration IPM descent record (GEMS3K_IPM_PROBE); see the call site in
+/// InteriorPointsMethod().
 FILE* ipm_probe_file()
 {
     static FILE* fp = []() -> FILE*
@@ -91,12 +84,10 @@ FILE* ipm_probe_file()
     return fp;
 }
 
-/// One DECIDE record - see the declaration in ms_multi.h for why the solver's own
-/// choices belong in the trace and not only in the log.
-/// pa_IpmAugmentedKKT: fallbacks to the normal equations in the current InteriorPointsMethod() call
-/// (reset at its entry); only the first emits DECIDE "ipmkkt-fallback". File-static rather than a
-/// TMultiBase member so the fix touched ipm_main.cpp alone; thread_local because nodes may be solved
-/// concurrently on separate threads.
+/// One DECIDE record - see the declaration in ms_multi.h.
+/// pa_IpmAugmentedKKT: fallbacks to the normal equations in the current InteriorPointsMethod()
+/// call (reset at its entry); only the first emits DECIDE "ipmkkt-fallback". thread_local
+/// because nodes may be solved concurrently on separate threads.
 static thread_local long int s_ipmKktFallbacks = 0;
 
 void native_trace_decide( const char* fmt, ... )
@@ -113,31 +104,15 @@ void native_trace_decide( const char* fmt, ... )
     fflush( ntf );
 }
 
-/// Complete run configuration, once per GEM_run() call, for EVERY solver mode.
-///
-/// Three lines: RUN (what was asked for - mode, T, P, system shape), BULK (the
-/// bulk composition asked for, with IC names) and SET (the complete BASE_PARAM
-/// set actually in force). Written into the same file as the native event trace
-/// (GEMS3K_NATIVE_TRACE_FILE); the env var keeps its historical name, but this
-/// header is emitted from TNode::GEM_run() and so covers AOP/SOP/ROP/HOP/SHP
-/// as well as native - a trace of any mode now carries its own configuration.
-///
-/// Why the WHOLE parameter set rather than the handful the CALL record below
-/// already carried: the standing question on this branch is which COMBINATION
-/// of settings solves every case at a low iteration count, and a trace that
-/// records the answer without the configuration that produced it cannot be used
-/// to search for one. Most projects pin most of these fields in their own
-/// -ipm.json, so the compiled defaults say nothing about what a given run used.
-///
-/// pm.B[] is read here in CALLER units - GEM_run() emits this straight after
-/// unpackDataBr() and before CalculateEquilibriumState()'s internal rescaling to
-/// pa_DG total moles - so BULK is the vector the caller supplied, not the
-/// rescaled one a mid-solve dump would show.
+/// Complete run configuration, once per GEM_run() call, for every solver mode. Three lines:
+/// RUN (mode, T, P, system shape), BULK (the bulk composition with IC names) and SET (every
+/// BASE_PARAM field in force), plus EFF (below). Written into the GEMS3K_NATIVE_TRACE_FILE trace
+/// from TNode::GEM_run(), so it covers AOP/SOP/ROP/HOP/SHP as well as native. pm.B[] is read
+/// in caller units (after unpackDataBr(), before any internal rescaling).
 void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mode )
 {
-    // One call, one certificate: the free-dual search result must never survive into the
-    // next call's CERT line. Reset here rather than at the result, because only the header
-    // is guaranteed to run before the dispatch that may set it.
+    // One call, one certificate: reset the free-dual search result here, since only the
+    // header is guaranteed to run before the dispatch that may set it.
     native_cert_dualfree_reset();
     FILE* ntf = native_trace_file();
     if( !ntf || !pa || native_trace_quiet_depth > 0 )
@@ -173,11 +148,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
     }
     fprintf( ntf, "\n" );
 
-    // One line, key=value, every field of BASE_PARAM in declaration order. Long,
-    // but greppable and diffable - two runs' configurations differ exactly where
-    // this line differs. Keep this list in step with BASE_PARAM (ms_multi.h): a
-    // field added there and not added here is invisible to every settings search
-    // that uses this trace.
+    // One line, key=value, every field of BASE_PARAM in declaration order. Keep this list in
+    // step with BASE_PARAM (ms_multi.h): a field missing here is invisible in the trace.
     fprintf( ntf, "SET  "
              " pa_PC=%d pa_PD=%d pa_PRD=%d pa_PSM=%d pa_DP=%d pa_DW=%d pa_DT=%d"
              " pa_PLLG=%d pa_PE=%d pa_IIM=%d"
@@ -230,72 +202,39 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              pa->OptimaTpdAccept, pa->OptimaCgSeed, (long)pa->OptimaColdRetry, (long)pa->OptimaFinish,
              (long)pa->OptimaAcceptRepair );
 
-    // ---- EFF: the settings whose EFFECTIVE value differs from the configured one
-    //
-    // The SET line above is literal - it prints what the project file carries.
-    // For a THREE-VALUED field that is not what ran: a configured 0 means "decide
-    // from the problem", and every settings audit we have (this trace, the
-    // benchmark freeze's `# set` line, the project file itself) then names a
-    // configuration no row was produced at. Plan v5 section 95.4 is the worked
-    // example and it cost a whole measurement: the T14 ballast ladder was scored
-    // against pa_OptimaPhaseCompaction while all five rungs silently ran 8
-    // dimension-reduction passes.
-    //
-    // So every auto-gated knob is resolved here, through the SAME function the
-    // solver calls (optima_dimreduce_passes, ms_multi.h), and printed alongside
-    // the inputs its gate read. `_cfg` is what the file said, `_eff` is what the
-    // solver will attempt, and the gate inputs are printed so a reader can see
-    // WHY without knowing the constant.
-    //
-    // ADD ANY NEW AUTO-GATED FIELD HERE. A knob whose effective value is not in
-    // the trace cannot be measured, and its absence is silent.
-    //
-    // One honest limit, stated rather than papered over: this header is written
-    // once per GEM_run() call, before the solve, so it reports the PASS COUNT the
-    // gate resolves to and not whether the pre-solve is reached. Reaching it also
-    // needs a cold Optima leg (pm.pNP == 0), or a HOP leg under an explicit
-    // positive setting - AUTO does not reach HOP. pNP is printed on the RUN line
-    // above, so the two together say it; `reached=` records what can be decided
-    // here.
+    // ---- EFF: the effective value of every auto-gated setting -------------
+    // The SET line is literal (what the project file carries). For a three-valued field a
+    // configured 0 means "decide from the problem", so each such field is resolved here
+    // through the same function the solver calls, and printed with its gate inputs: `_cfg` is
+    // the configured value, `_eff` what the solver will use. Any new auto-gated field must be
+    // added here. The header runs before the solve, so for the pre-solve it reports the pass
+    // count and `reached=` what can be decided now (it also needs a cold leg, or a HOP leg
+    // under an explicit positive setting; pNP is on the RUN line).
     {
         const long int drCfg = (long)pa->OptimaDimReduce;
         const long int drEff = optima_dimreduce_passes( drCfg, (long)pm.L );
         const char* drGate = ( drCfg > 0 ) ? "EXPLICIT"
                            : ( drCfg < 0 ) ? "OFF" : "AUTO";
-        // Decidable here: a warm leg never takes the cold-start path, and ROP
-        // (referenceMode) skips the pre-solve entirely.
+        // A warm leg never takes the cold-start path, and ROP (referenceMode) skips the
+        // pre-solve entirely.
         const char* drReached = ( drEff <= 0 )      ? "no(off)"
                               : ( mode == 18 )      ? "no(ROP)"
                               : ( pm.pNP != 0 && drCfg <= 0 ) ? "no(warm,AUTO)"
                               : "maybe";
-        // pa_OptimaEarlyStabilityAt, AUTO-gated on the presence of a MULTISITE
-        // (sublattice) solid-solution model since 2026-09-10 - see
-        // optima_earlystability_at() in ms_multi.h for the gate and the
-        // measurement behind it. The gate INPUT printed here is the multisite
-        // phase count, so a reader can see why AUTO answered as it did without
-        // knowing which mixing-model codes count.
+        // pa_OptimaEarlyStabilityAt, AUTO-gated on the presence of a multisite solid-solution
+        // model (optima_earlystability_at()); the multisite phase count is printed as the gate input.
         const long int esCfg  = (long)pa->OptimaEarlyStabilityAt;
         const long int esMulti = optima_multisite_phase_count( pm.sMod, pm.FIs );
-        // AUTO is leg-dependent since 2026-09-10 (plan v5 s106), so the EFF line has to
-        // carry the leg as well - it is a gate INPUT here, exactly like the multisite
-        // count, and a reader cannot reconstruct the answer without it.
-        //
-        // DERIVED FROM THE MODE, NOT FROM pm.pNP, and that is not a shortcut - pm.pNP is
-        // WRONG here for two of the four Optima modes. This header is written once at the
-        // top of GEM_run(), and on HOP/SHP the NATIVE leg runs first and the Optima leg is
-        // warm-started from it, so pm.pNP is still 0 when this executes and only becomes 1
-        // later. Read off pm.pNP, the EFF line said AUTO-COLD/eff=200 on a HOP call the
-        // solver had actually resolved to the warm cap - caught on the first run of this
-        // code, by the row coming back 4611 (the warm-25 value) under a line claiming 200.
-        // The mode determines the leg exactly and is known here: SOP warm-starts, HOP and
-        // SHP warm their Optima leg from native's answer, AOP and ROP are cold.
+        // AUTO is leg-dependent, so the leg is printed as a gate input. It is derived from the
+        // mode, not from pm.pNP: on HOP/SHP this header runs before the native leg, when pm.pNP
+        // is still 0, while the Optima leg is warm. SOP, HOP and SHP have a warm Optima leg;
+        // AOP and ROP are cold.
         const bool esWarm = ( mode == 14 || mode == 22 || mode == 26 );
         const long int esEff  = optima_earlystability_at( esCfg, esMulti, esWarm );
         const char* esGate = ( esCfg > 0 ) ? "EXPLICIT-CAP"
                            : ( esCfg < 0 ) ? "EXPLICIT-TREND"
                            : esWarm        ? "AUTO-WARM" : "AUTO-COLD";
-        // Decidable here: the field is read only on an Optima leg, so a native
-        // AIA/SIA call never reaches either form whatever it resolves to.
+        // A native AIA/SIA call never reaches either form.
         const char* esReached = ( esEff == 0 ) ? "no(off)"
                               : ( mode == 1 || mode == 5 ) ? "no(native)"
                               : "maybe";
@@ -323,58 +262,21 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
 }
 
 // ---------------------------------------------------------------------------
-// The OUTCOME KEY - what regime the solve actually landed in
+// The outcome KEY - the regime the solve landed in
 // ---------------------------------------------------------------------------
-//
-// Work item 7 and plan v5 section 81.5 reach the same architecture from
-// independent evidence: a setting cannot be PREDICTED from the input (every
-// candidate property is null at n = 9, and two projects with the same species
-// count, ICs, pa_DHB, bIC range and scaling have floors differing 375x), but it
-// CAN be looked up, keyed on the regime the composition LEADS TO. That key is
-// an output, which is why the lookup is memoisation and never prediction, and
-// why a cold start with nothing stored has to bootstrap by solving once.
-//
-// Section 81.5 names three axes. Two are emitted here as measured quantities:
-//
-//   * WHICH PHASES ARE PRESENT - the pH 3.5->12 step and the FeNaCl 386x step
-//     are both speciation changes. Emitted as the present-phase name list AND
-//     as an order-independent 64-bit hash of it, so a consumer can group by
-//     assemblage without parsing names.
-//   * A COARSE pH BUCKET - within-branch variation is only 1.1-1.9x, so one
-//     bucket per branch suffices. Emitted as the raw pH; bucketing is the
-//     consumer's, because the right width is a property of the store and not
-//     of the solve.
-//
-// The third - THE FLUID ROOT, where a cubic-EoS phase exists (the 1.85x step at
-// 63.9 bar is nothing else) - is NOT classified here, deliberately: this branch
-// has no root classifier, and inventing one inside a trace writer would put a
-// guess into the data. What is emitted instead is each present phase's own
-// molar volume, which is the quantity a root classifier would be built on and
-// which distinguishes a liquid-like from a gas-like root at one composition.
-// Say plainly what that means for a consumer: the key as emitted is the
-// assemblage and the pH, and anything wanting the root axis has to derive it.
-//
-// Emitted once per GEM_run() call, after the dispatch, from the same one place
-// the RUN/BULK/SET header comes from - so a trace carries the configuration a
-// result was produced at AND the regime it reached, and the two cannot drift
-// apart. No new MULTI or BASE_PARAM member, so the ABI is unchanged.
+// Emitted once per GEM_run() call, after the dispatch: the present-phase name list with an
+// order-independent 64-bit hash of it, pH, pe, ionic strength, and each present phase's
+// amount and molar volume. Lets results be grouped by the assemblage they reached (e.g. to
+// look up settings by regime). The fluid-root type of a cubic-EoS phase is not classified;
+// the molar volume it would be derived from is emitted instead. No new MULTI or BASE_PARAM
+// member.
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// REPORT-ONLY CERTIFICATE INSTRUMENTS (Phase 3 WP1). See the declarations in
-// ms_multi.h for what each field is, why it rebuilds Gj instead of reading
-// pm.G[] or pm.F[], and why none of them enters CERT's mb_pass.
+// Report-only certificate instruments; see the declarations in ms_multi.h.
 
-/// Separator-safe form of a species or phase name for a TRACE payload (work item 34).
-///
-/// The DECIDE records below join names with ',' inside fields separated by ' ', ':' and '=' -
-/// and corpus names carry all four. `f_/j_TestPNTDB` ship 30 comma-bearing names each
-/// (`Am(CO3)1.5(a,h)` and kin), `j_FeRedox_pHEh` six dimethylphenol isomers (`2,3-Dmp@`), and
-/// five Solvus projects a phase called `Alkali feldspar`. 78437cf fixed the KEY record's phase
-/// names and CERT's kkt_species/curv_phase the same way; these payloads were missed.
-///
-/// Identical substitution to that one, and deliberately a SEPARATE function rather than a
-/// refactor of it: native_trace_run_result()'s own lambda feeds the scored `# key` and `# cert`
-/// lines, and this change must leave those byte-identical.
+/// Separator-safe form of a species or phase name for a trace payload: the DECIDE records join
+/// names with ',' inside fields separated by ' ', ':' and '=', and real names contain all four.
+/// Same substitution as the KEY/CERT writers, kept separate so their output is unchanged.
 static std::string trace_safe_name( std::string s )
 {
     while( !s.empty() && ( s.back() == ' ' || s.back() == '\t' || s.back() == '\0' ) ) s.pop_back();
@@ -395,22 +297,11 @@ void native_cert_dualfree_reset() { native_cert_dualfree_resolved = -1; }
 void native_cert_dualfree_set( int resolved ) { native_cert_dualfree_resolved = resolved; }
 int  native_cert_dualfree_get() { return native_cert_dualfree_resolved; }
 
-/// Smallest eigenvalue of a small dense SYMMETRIC block, by cyclic Jacobi sweeps.
-///
-/// Deliberately NOT a refactor of ipm_optima.cpp's SymEigFloorInPlace(). That routine
-/// returns the FLOORED matrix rather than its spectrum and accumulates the eigenvector
-/// basis to rebuild it; this one needs only the diagonal after convergence, so it is a
-/// smaller routine and not a copy - and, more to the point, SymEigFloorInPlace() is a live
-/// mechanism on the Optima path whose arithmetic a report-only field has no business
-/// perturbing. The sweep, the convergence test and the rotation are identical, so the two
-/// diagonalise the same block the same way.
-///
-/// Returns false and leaves `lmin` (and `lmaxOut`, if given) untouched if the rotations do
-/// not settle. `lmaxOut` is an addition for the RANK trace record (Phase 3 WP2), which needs
-/// both ends of the spectrum for a condition number; kept as a trailing optional parameter
-/// rather than a second sweep function so the arithmetic - sweep, convergence test, rotation -
-/// stays in exactly one place. CertCurvMin()'s existing call, which never passes it, is
-/// unaffected.
+/// Smallest eigenvalue of a small dense symmetric block, by cyclic Jacobi sweeps (the same
+/// sweep, convergence test and rotation as ipm_optima.cpp's SymEigFloorInPlace(), which returns
+/// the floored matrix instead). Returns false and leaves `lmin` (and `lmaxOut`, if given)
+/// untouched if the rotations do not settle. `lmaxOut` (optional) returns the largest
+/// eigenvalue, for a condition number.
 static bool CertSymEigMin( std::vector<double> a, int n, double& lmin, double* lmaxOut = nullptr )
 {
     if( n < 1 ) return false;
@@ -483,7 +374,7 @@ void TMultiBase::CertPrimalPotentials( std::vector<double>& F ) const
         if( Yf <= pm.DSM || ( pm.PHC[k] == PH_AQUEL &&
             ( Yf <= pm.DSM || pm.X[pm.LO] <= pm.XwMinM ) ) ) { j = i; continue; }
         if( Yf >= 1e6 ) { j = i; continue; }   // PrimalChemicalPotentials() throws here; a
-                                               // report-only field must not, so skip the phase
+                                               // report-only field skips the phase instead
 
         NonLogTerm = 0.;
         if( ( pm.PHC[k] == PH_AQUEL && YFk >= pm.XwMinM )
@@ -525,10 +416,8 @@ static inline bool cert_species_scorable( const MULTI& pm, const std::vector<dou
     return pm.X[j] > pm.DcMinM && F[(size_t)j] != 0.;
 }
 
-/// The NUMERICAL FLOOR on a species amount, the same one CalculateEquilibriumStateOptima()
-/// builds its box lower bounds from: pa_OptimaDcFloor when set, else pa_DHB. It is what
-/// "this species is at zero" means to the solver, and the certificate has to use the same
-/// definition or it reads a floor-pinned species as interior - see cert_box_state().
+/// The numerical floor on a species amount, as CalculateEquilibriumStateOptima() builds its
+/// box lower bounds: pa_OptimaDcFloor when set, else pa_DHB.
 static inline double cert_dc_floor( const MULTI& pm, const BASE_PARAM* pa )
 {
     const double f = pa ? ( pa->OptimaDcFloor > 0. ? pa->OptimaDcFloor : std::max( pa->DHB, 1e-300 ) )
@@ -536,20 +425,10 @@ static inline double cert_dc_floor( const MULTI& pm, const BASE_PARAM* pa )
     return std::max( f, pm.DcMinM );
 }
 
-/// The box a species sits in, as the Optima KKT check classifies it: 0 interior,
-/// -1 at the lower bound, +1 at the upper bound, 2 degenerate (DUL <= DLL, a kinetically
-/// fixed species - an equality constraint, no sign test applies).
-///
-/// THE TOLERANCE IS THE NUMERICAL FLOOR, NOT pm.DcMinM, and that distinction is the whole
-/// field. Measured on f_CalcDolo AOP the first time this ran: CH4 sits at 1.66e-16 mol with
-/// DLL = 0, its reduced gradient is s = +327 - the correct sign for a species pinned at zero
-/// that wants to stay there - and scoring it as INTERIOR reported kkt_max = 3.27e+02 on a row
-/// Optima's own post-solve check passes at 1e-3. pm.DcMinM is 1e-30-scale and classifies
-/// every floor species as interior; the box Optima actually solved has its lower bound at
-/// max(DLL, dcFloor), so that is the bound to test against. Native has no such floor - it
-/// truncates below pa_DcMin to exact zero - but a native species below the floor is at zero
-/// in the same sense, and the sign test can only LOWER the residual it would otherwise
-/// report, never raise it.
+/// The box a species sits in, as the Optima KKT check classifies it: 0 interior, -1 at the
+/// lower bound, +1 at the upper bound, 2 degenerate (DUL <= DLL, a kinetically fixed species -
+/// an equality constraint, no sign test). The lower-bound tolerance is the numerical floor
+/// max(DLL, dcFloor), not pm.DcMinM, so a floor-pinned species is not read as interior.
 static inline int cert_box_state( const MULTI& pm, long int j, double dcFloor )
 {
     const double lo = pm.DLL ? pm.DLL[j] : 0.;
@@ -567,11 +446,8 @@ double TMultiBase::CertKktMax( const std::vector<double>& F, long int& worstJ ) 
     if( !pm.X || !pm.A || !pm.U || pm.N <= 0 || (long int)F.size() != pm.L )
         return -1.;
 
-    // pm.N, not pm.NR. NR drops the last IC row while the aqueous phase is absent, and the
-    // Optima path's own KKT check sums over all N rows - a certificate field that changed its
-    // index set with the solver path could not be compared across modes. Where NR < N the
-    // omitted row's dual is whatever the last solve that did use it left, which is a
-    // limitation of this field on a water-free native row and is why it is report-only.
+    // pm.N, not pm.NR: NR drops the last IC row while the aqueous phase is absent, and the
+    // Optima path's KKT check sums over all N rows, so one index set serves every mode.
     const double dcFloor = cert_dc_floor( pm, base_param() );
     double worst = -1.;
     for( long int j = 0; j < pm.L; j++ )
@@ -634,12 +510,9 @@ long int TMultiBase::CertDualFreeDirs( const std::vector<double>& F, long int& r
     return N - rank;
 }
 
-/// cond(M) = lambda_max/lambda_min of a small dense symmetric M, via CertSymEigMin(), capped
-/// at 1e300 in every direction that carries no usable information: the sweep failing to
-/// converge, or either eigenvalue reading non-positive. A present-only Gram is PSD by
-/// construction, so a non-positive lambda_min here is the sweep's own rounding on a
-/// near-singular matrix rather than a true negative eigenvalue - "no bound", not "a condition
-/// number below one".
+/// cond(M) = lambda_max/lambda_min of a small dense symmetric M, via CertSymEigMin(), set to
+/// 1e300 when the sweep does not converge or either eigenvalue is non-positive (on a PSD Gram
+/// that is rounding on a near-singular matrix: "no bound").
 static double CertCondFromGram( const std::vector<double>& M, long int n )
 {
     if( n <= 0 ) return 1e300;
@@ -649,12 +522,8 @@ static double CertCondFromGram( const std::vector<double>& M, long int n )
     return std::min( lmax / lmin, 1e300 );
 }
 
-/// M rescaled by its own symmetric Jacobi diagonal, d_i = sqrt(M_ii) where M_ii > 0, else 1 -
-/// the "else 1" leaves a structurally empty row (an IC no present species touches under this
-/// weight) undivided rather than manufacturing a 0/0. Equalises the diagonal to 1, which is
-/// the standard remedy for a Gram matrix whose rows differ in scale for a reason unrelated to
-/// conditioning (e.g. one IC counted in mol against another effectively suppressed by the
-/// weight) rather than a true near-dependency between them.
+/// M rescaled by its own symmetric Jacobi diagonal, d_i = sqrt(M_ii) where M_ii > 0, else 1
+/// (a structurally empty row is left undivided).
 static std::vector<double> CertJacobiScale( const std::vector<double>& M, long int n )
 {
     std::vector<double> d( (size_t)n, 1. );
@@ -675,9 +544,7 @@ void TMultiBase::CertRank( CertRankReport& r ) const
 
     const long int N = pm.N;
 
-    // PRESENT species - pm.X[j] > pm.DcMinM, the same test cert_species_scorable() applies
-    // minus its F condition: this record is about the geometry pm.A presents at the answer,
-    // not about which species CertPrimalPotentials() managed to fill in.
+    // Present species: pm.X[j] > pm.DcMinM (as in cert_species_scorable(), without its F test).
     std::vector<long int> presentIdx;
     presentIdx.reserve( (size_t)pm.L );
     for( long int j = 0; j < pm.L; j++ )
@@ -689,11 +556,8 @@ void TMultiBase::CertRank( CertRankReport& r ) const
     if( pres <= 0 ) return;
 
     // Row scale for `rank` and `sv_ratio`: each IC row divided by its own max |entry| over the
-    // PRESENT columns only, so a trace IC whose whole row is 1e-13-scale does not read as
-    // dependent on an abundant IC merely because both are "small" on an ABSOLUTE scale - the
-    // same shape of miscalibration CLAUDE.md s4 records for pa_OptimaZeroAbsent's absolute
-    // cutoff (there, a mass-balance residual; here, a matrix entry), one level up in the same
-    // system. A row with no present column at all (all zero) keeps scale 1.
+    // present columns, so a trace IC's row does not read as dependent merely because it is
+    // small. A row with no present column keeps scale 1.
     std::vector<double> rowScale( (size_t)N, 1. );
     for( long int i = 0; i < N; i++ )
     {
@@ -703,12 +567,9 @@ void TMultiBase::CertRank( CertRankReport& r ) const
         if( m > 0. ) rowScale[(size_t)i] = m;
     }
 
-    // rank: modified Gram-Schmidt over the ROW-SCALED present columns (each an N-vector down
-    // the IC axis), the same 1e-8-of-its-own-pre-orthogonalisation-norm acceptance test
-    // CertDualFreeDirs() uses. The two routines answer different questions with the same test:
-    // CertDualFreeDirs() ranks the INTERIOR species only, unscaled, to ask whether the dual is
-    // fixed; this ranks EVERY present species, row-scaled, to ask what the mass-balance system
-    // itself can resolve regardless of which species happen to sit on a bound right now.
+    // rank: modified Gram-Schmidt over the row-scaled present columns, with the same acceptance
+    // test as CertDualFreeDirs(). That routine ranks the interior species, unscaled, to ask
+    // whether the dual is fixed; this ranks every present species, row-scaled.
     {
         std::vector<double> Q, col( (size_t)N ), resid( (size_t)N );
         long int rank = 0;
@@ -741,10 +602,8 @@ void TMultiBase::CertRank( CertRankReport& r ) const
         r.rank = rank;
     }
 
-    // sv_ratio / sv_ratio_raw: sigma_min/sigma_max of A_present, scaled and raw, read off the
-    // eigenvalues of the N x N Gram A_present A_present^T rather than a direct SVD -
-    // CertSymEigMin() is the one dense eigensolver already in this file, and a Gram's
-    // eigenvalues are exactly the squared singular values of the matrix it was built from.
+    // sv_ratio / sv_ratio_raw: sigma_min/sigma_max of A_present, scaled and raw, from the
+    // eigenvalues of the N x N Gram A_present A_present^T (squared singular values).
     auto buildGram = [&]( bool scaled )
     {
         std::vector<double> M( (size_t)(N*N), 0. );
@@ -772,24 +631,10 @@ void TMultiBase::CertRank( CertRankReport& r ) const
             r.sv_ratio_raw = sqrt( lmin / lmax );
     }
 
-    // chg_res / chg_span: is the charge row, restricted to the present columns, already a
-    // linear combination of the ELEMENT rows over the same columns? This is the same question
-    // as `rank` one level more specific - not "is the whole system full rank" but "does the
-    // charge constraint carry information the element rows don't already fix at THIS answer".
-    // Basis built by modified Gram-Schmidt over vectors indexed by the PRESENT columns (length
-    // pres, not N - the element/charge rows are what varies here, the present-species axis is
-    // fixed), same 1e-8 relative acceptance test. Uses the FIRST charge row, index Z = N - E;
-    // every corpus project measured so far has E in {0,1} (it is also the electroneutrality
-    // flag), so this is a defensive choice, not one exercised by anything on hand.
-    //
-    // EACH ROW DIVIDED BY THE SAME rowScale[i] BUILT ABOVE - reusing `rank`'s row scale rather
-    // than an unscaled projection. A relative residual is invariant to scaling the CHARGE row
-    // by a positive constant (it cancels in the ratio), but is NOT invariant to scaling the
-    // ELEMENT rows differently from one another - that changes which combinations the basis
-    // can reach, not just its length. Unscaled, an element row several orders smaller than the
-    // rest (a trace IC) is numerically swamped in the projection before its own direction is
-    // ever tested, which is the same absolute-vs-relative miscalibration the row scale above
-    // exists to avoid.
+    // chg_res / chg_span: is the charge row, restricted to the present columns, already a linear
+    // combination of the element rows over the same columns? Modified Gram-Schmidt over vectors
+    // indexed by the present columns, same 1e-8 relative test, first charge row Z = N - E. Each
+    // row is divided by the same rowScale[i] as above, so a trace IC's row is not swamped.
     const long int Z = N - pm.E;
     if( pm.E > 0 && Z > 0 )
     {
@@ -845,17 +690,11 @@ void TMultiBase::CertRank( CertRankReport& r ) const
         r.chg_span = ( r.chg_res < 1e-10 ) ? 1 : 0;
     }
 
-    // cond_ipm / cond_mbr: condition number of A_p diag(w) A_p^T for the two weights the two
-    // solver stages actually apply - IPM's (WeightMultipliers(false)) and MBR's
-    // (WeightMultipliers(true)). This is a LOCAL reconstruction of that function's arithmetic
-    // at the species amount it actually uses, pm.X[j], not a second call to it and not a read
-    // of pm.W[]: that array is live IPM/MBR scratch, last written mid-solve at pm.Y (not the
-    // final pm.X) and on some rows built for a different phase of the algorithm entirely, and
-    // a report-only path writing it back would be the same shape as HANDOFF-2026-09-20 s5's
-    // caution that "a report-only field can write solver state" (there, curv_min's restore-by-
-    // recomputation instead of restore-by-copy) - a different mechanism, the same trap.
-    // The 1.34e120 magnitude clamp and the "BOTH_LIM takes the min AFTER squaring" rule for the
-    // MBR shape are copied verbatim so the two cannot silently drift apart.
+    // cond_ipm / cond_mbr: condition number of A_p diag(w) A_p^T for the two weights the solver
+    // stages apply - IPM's (WeightMultipliers(false)) and MBR's (WeightMultipliers(true)). A local
+    // reconstruction of that function's arithmetic at pm.X[j], not a call to it and not a read of
+    // pm.W[] (live solver scratch, which a report-only path must not write). The 1.34e120 clamp
+    // and the "BOTH_LIM takes the min after squaring" rule for the MBR shape are the same.
     auto weightAt = [&]( long int j, bool square ) -> double
     {
         const char rlc = pm.RLC ? pm.RLC[j] : (char)NO_LIM;
@@ -929,20 +768,12 @@ double TMultiBase::CertCurvMin( long int& worstPhase )
     if( !pm.X || !pm.XF || !pm.L1 || pm.FIs <= 0 )
         return kNone;
 
-    // RESTORE BY COPY, NOT BY RECOMPUTATION - measured, not assumed.
-    // CalculateActivityCoefficients(LINK_UX_MODE) is NOT IDEMPOTENT: it writes
-    // pm.lnGmo[j] = pm.lnGam[j] + lnGamG (accumulating from the value already there) and
-    // pm.F0[j] = DC_PrimalChemicalPotentialUpdate(), which blends with the previous F0
-    // through the IPM smoothing factor pm.FitVar[3] (ipm_chemical3.cpp). So re-running it at
-    // the ORIGINAL composition does not reproduce the state it found. The first build of this
-    // routine restored that way and moved j_CASHNK's native G from -6.028481601e+03 to
-    // -6.028481556e+03 - 7.5e-12 relative, invisible in every scored freeze column except that
-    // the freeze prints G to ten digits, and exactly the class of silent drift the row-identity
-    // gate on this change exists to catch.
-    //
-    // The refresh at the original X is still run, because the TSolMod objects carry their own
-    // internal composition and must be re-seeded there; the arrays are then overwritten by the
-    // saved copies so the numeric state a later warm call reads is bit-identical.
+    // Restore by copy, not by recomputation: CalculateActivityCoefficients(LINK_UX_MODE) is not
+    // idempotent (it accumulates pm.lnGmo and blends pm.F0 through the smoothing factor
+    // pm.FitVar[3]), so re-running it at the original composition does not reproduce the state.
+    // The refresh at the original X is still run to re-seed the TSolMod objects' own
+    // composition; the arrays are then overwritten by the saved copies, so a later warm call
+    // reads a bit-identical state.
     struct CertSave { double* p; std::vector<double> v; };
     std::vector<CertSave> saved;
     auto keep = [&saved]( double* p, long int n ) {
@@ -955,17 +786,9 @@ double TMultiBase::CertCurvMin( long int& worstPhase )
     auto restoreBase = [&saved]() {
         for( const CertSave& c : saved ) std::copy( c.v.begin(), c.v.end(), c.p ); };
 
-    // EVERY FD COLUMN STARTS FROM THE SAME BASE STATE, and F at the base is computed ONCE.
-    // Both halves of that are corrections to the first build, which recomputed Fbase per phase
-    // and let each column start from the previous column's state:
-    //  - CalculateActivityCoefficients(LINK_UX_MODE) is history-dependent for the same reason
-    //    the restore is (it accumulates lnGmo and blends F0 through FitVar[3]), so a column
-    //    taken after another column's perturbation differences two states that differ by more
-    //    than h*e_i. Restoring between columns costs a handful of array copies against one
-    //    full activity evaluation and removes the dependence entirely.
-    //  - Fbase computed inside the phase loop read pm.XF and pm.F0 as the PREVIOUS phase's
-    //    last perturbation left them, so every phase after the first differenced against the
-    //    wrong base. It is now taken here, before anything moves.
+    // Every FD column starts from the same base state, and F at the base is computed once:
+    // CalculateActivityCoefficients(LINK_UX_MODE) is history-dependent, so the base is restored
+    // between columns.
     std::vector<double> Fbase;
     CertPrimalPotentials( Fbase );
 
@@ -979,16 +802,11 @@ double TMultiBase::CertCurvMin( long int& worstPhase )
             const long int p1 = p0 + pm.L1[k];
             const long int nEnd = p1 - p0;
             const bool isAq = ( pm.LO >= p0 && pm.LO < p1 );
-            // pm.XF[k] > pm.DSM is the same presence test the KEY record uses, so curv_min is
-            // scored over exactly the phases KEY calls present. Without it, pa_OptimaZeroAbsent
-            // = 2 leaves every absent phase at its floor amount and the block is built out of
-            // 1/X_j entries: f_CalcDolo AOP reported curv_min = 4.28e+08 on a gas phase holding
-            // 6.6e-16 mol the first time this ran.
+            // pm.XF[k] > pm.DSM is the presence test the KEY record uses, so curv_min is scored
+            // over the phases KEY calls present.
             if( isAq || nEnd <= 1 || p1 > pm.L || pm.XF[k] <= pm.DSM ) { p0 = p1; continue; }
 
-            // Present end-members only, on the same test the pa_PhaseHessianFloor site uses:
-            // an end-member at the numerical floor has 1/X_j up to 1e13 and would set the
-            // block's largest entry, and its FD column is a 10x-perturbation secant anyway.
+            // Present end-members only, on the same test as the pa_PhaseHessianFloor site.
             const double dcFloor = cert_dc_floor( pm, base_param() );
             double phTot = 0.;
             for( long int j = p0; j < p1; j++ ) phTot += std::max( pm.X[j], 0. );
@@ -1032,16 +850,15 @@ double TMultiBase::CertCurvMin( long int& worstPhase )
     catch( ... )
     {
         // A solution model that throws on a perturbed composition must not turn a completed
-        // solve into a failed call - this runs after packDataBr(). Report nothing and restore.
+        // solve into a failed call (this runs after packDataBr()): report nothing and restore.
         lmin = kNone;
         worstPhase = -1;
     }
 
     if( perturbed )
     {
-        // restoreBase() has already run after the last column (or the catch skipped it), so
-        // pm.X is base here either way; the refresh is for the TSolMod objects, whose own
-        // internal composition is the one thing no array copy can put back.
+        // pm.X is at the base state here; the refresh re-seeds the TSolMod objects, whose own
+        // internal composition no array copy can restore.
         restoreBase();
         try
         {
@@ -1064,8 +881,7 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
     if( !pa || pa->StabTPD < 1 )
         return kNone;
 
-    // The same save set and the same restore-by-copy as CertCurvMin() - see the comment there for why
-    // a recomputation at the original composition is NOT a restore.
+    // The same save set and restore-by-copy as CertCurvMin().
     struct CertSave { double* p; std::vector<double> v; };
     std::vector<CertSave> saved;
     auto keep = [&saved]( double* p, long int n ) {
@@ -1093,10 +909,8 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
             || ph == PH_ADSORPT || ph == PH_IONEX ) { p0 = p1; continue; }
         double xmax = 0.;
         for( long int j = p0; j < p1; j++ ) xmax = std::max( xmax, pm.X[j] );
-        // TRACE counts as absent: a phase holding under 1e-6 of the system's total phase amount carries no
-        // material share, and native routinely leaves an unstable phase there - Al2O3-SiO2 at 1900 K keeps
-        // l_liquid at 9e-8 and rs_ss at 1e-8 mol with its OWN Falp > 0, and the first rule (XF <= DSM) skipped
-        // both, reporting stab_n = 0 on the one cell where both have TPD < 0 (2026-09-28).
+        // A trace phase counts as absent too: a phase holding under 1e-6 of the system's total
+        // phase amount carries no material share.
         const bool absent = pm.XF[k] <= pm.DSM || xmax <= dcFloor * 1e3 || pm.XF[k] < 1e-6 * sumXF;
         if( !absent ) { p0 = p1; continue; }
 
@@ -1107,13 +921,9 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
             for( long int i = 0; i < N; i++ ) au += pm.A[ i + j*N ] * pm.U[i];
             c0[(size_t)(j-p0)] = au - ( pm.G0[j] + pm.fDQF[j] );
         }
-        // TPD(y) = sum_j y_j (ln y_j + lnGam_j(y) - c_j), recorded at EVERY composition evaluated - starts
-        // and substitution iterates alike. A negative value anywhere is a certificate that the phase lowers
-        // G and needs no stationarity. The first version scored only the best CONVERGED stationary point
-        // and gave a false all-clear on Al2O3-SiO2's rs_ss (asymmetric Redlich-Kister, gems_tests-
-        // nuclearsafety CORIUM, found by a peer session 2026-09-28): every start settled at y ~ (1, 2e-5),
-        // lnTM* = -1.09, while the uniform start had already passed through TPD < 0 (min -1.6e-2 at 1100 K,
-        // -0.23 at 1900 K - the size of the G native leaves on the table there).
+        // TPD(y) = sum_j y_j (ln y_j + lnGam_j(y) - c_j), recorded at every composition evaluated
+        // (starts and substitution iterates alike). A negative value anywhere certifies that the
+        // phase lowers G; no stationarity is needed.
         double tpdMin = 1e300;
         // lnTM(y) and the substitution step W(y)/sum W(y); the phase is put at 1 mol so every
         // presence gate inside CalculateActivityCoefficients() passes.
@@ -1164,8 +974,8 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
                 starts.push_back( v );
             }
             starts.push_back( y0 );
-            // Denser starts, for the same false all-clear: the centroid, a 19-point grid for a binary, edge
-            // midpoints (capped at 64 starts) otherwise.
+            // Denser starts: the centroid, a 19-point grid for a binary, edge midpoints (capped at
+            // 64 starts) otherwise.
             starts.push_back( std::vector<double>( (size_t)n, 1.0 / n ) );
             if( n == 2 )
                 for( int g = 1; g < 20; g++ ) starts.push_back( { g / 20., 1. - g / 20. } );
@@ -1195,10 +1005,9 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
             if( tpdMin < 1e300 )
             {
                 if( tpdMin < worst ) { worst = tpdMin; worstPhase = k; }
-                // Disagreement against the SOLVER'S OWN single-point index (pm.Falp, log10; <= 0 reads
-                // "stable"), not against lnTM at some composition - lnTM away from a stationary point is not a
-                // TPD value. Note StabilityIndexes() writes the sentinel -1 for a zero-amount non-ideal phase
-                // it did not restore, which also reads "stable" (peer finding, same day).
+                // Disagreement against the solver's own single-point index (pm.Falp, log10; <= 0
+                // reads "stable"). StabilityIndexes() writes the sentinel -1 for a zero-amount
+                // non-ideal phase, which also reads "stable".
                 const double falp = pm.Falp ? pm.Falp[k] : 0.;
                 if( falp <= kTol && tpdMin < -kTol ) nDisagree++;
             }
@@ -1220,13 +1029,15 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
     return worst;
 }
 
-// PROTOTYPE (session gems3k-e6, 2026-09-28; plan v5 §140.12): the composition search of CertStabTPD() for ONE
-// absent non-ideal phase k (species p0 .. p0+L1[k]-1), returning min TPD (RT per mole of phase; < 0: the phase
-// lowers G against the current dual pm.U) and the composition where it was found. Used by
-// PhaseSelectionSpeciationCleanup() when GEMS3K_NATIVE_TPD_INSERT is set, to replace the single-point index Falp
-// (evaluated at an arbitrary trace composition, or the -1 "cannot restore" sentinel) by a composition search -
-// THERMOCHIMICA's Subminimization idea. Same save/restore-by-copy as CertStabTPD(); returns 1e300 if the model
-// throws or nothing was evaluated.
+// The composition search of CertStabTPD() for one absent non-ideal phase k (species p0 ..
+// p0+L1[k]-1): returns min TPD (RT per mole of phase; < 0: the phase lowers G against the
+// current dual pm.U) and the composition where it was found. Used by the TPD acceptance of the
+// Optima path, the column-generation seed, and by PhaseSelectionSpeciationCleanup() when
+// GEMS3K_NATIVE_TPD_INSERT is set (in place of the single-point index Falp). Same
+// save/restore-by-copy as CertStabTPD(); returns 1e300 if the model throws or nothing was
+// evaluated.
+// In plain words: searches for the composition at which a missing mixed phase would be most
+// stable, and says whether it should form.
 double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
 {
     const long int n = pm.L1[k], p1 = p0 + n, N = pm.N;
@@ -1324,9 +1135,7 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
     if( !ntf || native_trace_quiet_depth > 0 )
         return;
 
-    // The REQUESTED mode, captured by the caller before the dispatch - the
-    // status code alone would do (each mode owns its own OK/BAD/ERR triple) but
-    // decoding it here would duplicate that mapping in a second place.
+    // The requested mode, captured by the caller before the dispatch.
     const char* mname;
     switch( mode )
     {
@@ -1340,27 +1149,16 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
       default: mname = "?";    break;
     }
 
-    // FNV-1a over the present-phase names, order-independent by XOR-folding
-    // each phase's own hash: the assemblage is a SET, and two solves that
-    // reached it in a different phase order are the same regime.
+    // FNV-1a over the present-phase names, order-independent by XOR-folding each phase's hash:
+    // the assemblage is a set.
     unsigned long long akey = 0ull;
     long int nPresent = 0;
 
-    // Phase NAMES - full, and unique within the system (names=2, 2026-09-16).
-    // pm.SF[k] is MAXSYMB (4) characters of phase-class code and padding, then the MAXPHNAME (16)
-    // character name, so it comes back as "a   aq_gen" - collapse the internal run of blanks to one
-    // underscore and trim the trailing padding, or the phase list stops being one whitespace-separated
-    // token per phase and every consumer of this line has to guess where a name ends.
-    // Until 2026-09-16 this read only the first MAXPHNAME characters of the WHOLE field, i.e. the class
-    // code plus the first 12 characters of the name ("s_Montmorillon"). Harmless while only present
-    // phases were listed; once pa_OptimaZeroAbsent = 2 left every absent phase at its floor amount, 320
-    // phases of 07PSIna_G_complex_1 collapsed to 310 names, a floor-level twin overwrote the real
-    // Montmorillonite in every name-keyed consumer, and two equal names cancelled in the XOR fold below.
-    // The full 16-character database names still collide (315 of 320 distinct there: the exporter itself
-    // truncates "Montmorillonite(...)"), so a repeated name carries its occurrence number, "~2", "~3" -
-    // counted over ALL FI phases in system order, not over the present ones, so a phase keeps the same
-    // label whichever phases happen to be present. freeze_diff.py maps names=2 back to the legacy form
-    // when it compares against a freeze written before this change.
+    // Phase names - full, and unique within the system (names=2). pm.SF[k] is MAXSYMB characters
+    // of phase-class code and padding, then the MAXPHNAME-character name: the internal run of
+    // blanks becomes one underscore and the trailing padding is trimmed, so each phase is one
+    // token. A repeated name carries its occurrence number, "~2", "~3", counted over all FI
+    // phases in system order, so a phase keeps the same label whichever phases are present.
     std::vector<std::string> keyName( (size_t)pm.FI );
     {
         std::map<std::string, long int> seen;
@@ -1374,9 +1172,7 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
                 if( c == ' ' || c == '\t' ) { sp = true; continue; }
                 if( sp && !t.empty() ) t += '_';
                 sp = false;
-                // ',' ':' '=' are this line's own separators; 30 corpus phases carry a comma in their
-                // names ("PuO2(coll,hyd)", f_/j_TestPNTDB), which split the list into fragments in
-                // BOTH name forms until this substitution.
+                // ',' ':' '=' are this line's own separators; some phase names contain a comma.
                 t += ( c == ',' || c == ':' || c == '=' ) ? '/' : c;
             }
             const long int occ = ++seen[t];
@@ -1402,51 +1198,31 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
     }
     fprintf( ntf, " nph=%ld akey=%016llx names=2\n", (long)nPresent, akey );
 
-    // CERT - the mass-balance part of the answer certificate (Docs/PLAN-defaults-and-fallbacks.md
-    // s0.1), computed on the returned amounts pm.X for EVERY mode, so a row that reports OK with a
-    // mass balance its own relative test would reject is visible per mode in the trace and in the
-    // freeze (the silent-OK class: 11 of 56 projects' native cold answers, CLAUDE.md s4).
+    // CERT record - the answer certificate, computed on the returned amounts pm.X for every mode:
     //   mb_rel  worst |C_i| / (B_i * DHBM) over the ordinary ICs [0, N-E); > 1 fails the relative
     //           test MBR applies (an IC with B_i = 0 and a non-zero residual reads 1e300)
     //   mb_abs  worst |C_i| over the same range
-    //   chg_abs worst |C_i| over the charge row(s) [N-E, N), which no convergence test on either
-    //           path compares
-    //   mb_pass mb_rel <= 1 - the certificate's mass-balance clause as the plan defines it; pa_DT's
-    //           absolute floor is deliberately not applied, so a native row passing only through
-    //           that floor reads mb_pass=0 here
-    // The mass-balance block below is read-only. STILL NOT in the record: total G and the
-    // phase-stability fields - pm.FX and pm.Falp are refreshed by the native path only, so a trace
-    // writer reading them would print stale values on Optima rows, the DC_G0() shape (CLAUDE.md s4).
-    // The per-species reduced-gradient residual WAS in that list until Phase 3 WP1 and is now
-    // kkt_max below; it escapes the trap by rebuilding its own potentials from G0+fDQF+F0 at the
-    // returned pm.X rather than reading either path's pm.F[] or pm.G[].
-    // REPORT-ONLY CERTIFICATE INSTRUMENTS (Phase 3 WP1) - kkt_max, curv_min, dual_free_dirs.
-    // Computed here and appended to the CERT line below; NOT in mb_pass, and freeze_diff.py
-    // does not gate on them (Docs/PLAN-defaults-and-fallbacks.md s0.1, caution 1: a field
-    // that starts being emitted AND joins the pass rule in one step makes every row the new
-    // clause rejects arrive as a regression the scorer cannot tell from a real one).
-    // They run only because this function already returned early when the trace is closed -
-    // with GEMS3K_NATIVE_TRACE_FILE unset, not one line of this executes.
-    //   kkt_max        worst sign-aware reduced-gradient residual over the PRESENT species,
-    //                  in RT, at the dual pm.U[] the last linear solve committed. Compare
-    //                  against pa_GAS (1e-3 RT), which is the tolerance the Optima path's own
-    //                  post-solve check uses - but read dual_dirs first (below).
+    //   chg_abs worst |C_i| over the charge row(s) [N-E, N)
+    //   mb_pass mb_rel <= 1 (pa_DT's absolute floor is not applied)
+    // Report-only fields, not part of mb_pass:
+    //   kkt_max        worst sign-aware reduced-gradient residual over the present species, in
+    //                  RT, at the dual pm.U[] (compare with pa_GAS; read dual_dirs first).
     //   curv_min       smallest eigenvalue of any present multicomponent non-aqueous phase's
-    //                  symmetrised FD curvature block; < 0 = converged inside a spinodal.
-    //                  1e300 = no phase qualified (none present with two present end-members).
-    //   dual_dirs      free dual directions = N - rank of the interior species' stoichiometry.
-    //                  > 0 means the dual is NOT determined by the answer, so kkt_max on the
-    //                  bound-active species is a draw and a threshold on it is a lottery
-    //                  threshold (plan v5 s123.6). dual_rank/dual_of carry the rank and N.
-    //   dual_resolved  -1 no free-dual search ran on this call, 0 searched and failed,
-    //                  1 searched and resolved. Only the Optima path searches, and only after
-    //                  its plain sign test has failed.
+    //                  symmetrised FD curvature block; < 0 = converged inside a spinodal;
+    //                  1e300 = no phase qualified.
+    //   dual_dirs      free dual directions = N - rank of the interior species' stoichiometry;
+    //                  > 0 means the dual is not determined by the answer, so kkt_max on the
+    //                  bound-active species depends on where the solver stopped.
+    //                  dual_rank/dual_of carry the rank and N.
+    //   dual_resolved  -1 no free-dual search ran, 0 searched and failed, 1 searched and resolved
+    //                  (only the Optima path searches).
+    // Total G and pm.Falp are not recorded: they are refreshed by the native path only. Runs
+    // only when the trace file is open.
     double certKkt = -1., certCurv = 1e300;
     long int certKktJ = -1, certCurvK = -1, certRank = 0, certNic = pm.N, certDirs = -1;
-    // stab_ss / stab_ph / stab_n / stab_dis - pa_StabTPD (WP6): min TPD in RT over the absent
-    // multicomponent phases scanned (1e300 = none scanned or pa_StabTPD = 0), the phase carrying it,
-    // how many were scanned, and how many the single-point index misclassifies. Appended at the END
-    // of CERT so every existing reader is unaffected, as mb_seed_* and the WP1 fields were.
+    // stab_ss / stab_ph / stab_n / stab_dis - pa_StabTPD: min TPD in RT over the absent
+    // multicomponent phases scanned (1e300 = none scanned or pa_StabTPD = 0), the phase carrying
+    // it, how many were scanned, and how many the single-point index misclassifies.
     double certStab = 1e300;
     long int certStabK = -1, certStabN = 0, certStabDis = 0;
     if( mb )
@@ -1458,8 +1234,7 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
         certCurv = mb->CertCurvMin( certCurvK );
         certStab = mb->CertStabTPD( certStabK, certStabN, certStabDis );
     }
-    // Separator-safe, exactly as the KEY record's phase names are: ' ', ',', ':' and '=' are
-    // this line's own separators and corpus species and phase names carry all four.
+    // Separator-safe, as the KEY record's names: ' ', ',', ':' and '=' are this line's separators.
     auto certSafeName = []( const char* raw, size_t len ) {
         std::string s0 = char_array_to_string( raw, (int)len );
         while( !s0.empty() && ( s0.back() == ' ' || s0.back() == '\0' ) ) s0.pop_back();
@@ -1499,8 +1274,8 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
             if( a > absr ) { absr = a; iAbs = i; }
             const double bar = pm.B[i] * pm.DHBM;
             const double r = bar > 0. ? a / bar : ( a > 0. ? 1e300 : 0. );
-            // A DEFAULT SEED (TMultiBase::ICIsDefaultSeed) is reported apart as mb_seed_rel and does not enter
-            // mb_pass: its amount is a placeholder (owner 2026-09-15). With nothing marked there are none.
+            // A default seed (ICIsDefaultSeed()) is reported apart as mb_seed_rel and does not
+            // enter mb_pass.
             if( mb && mb->ICIsDefaultSeed( i ) )
             {
                 if( r > relSeed ) { relSeed = r; iSeed = i; }
@@ -1514,19 +1289,10 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
             while( !s.empty() && ( s.back() == ' ' || s.back() == '\0' ) ) s.pop_back();
             return s.empty() ? std::string( "-" ) : s;
         };
-        // mb_rel_b: the bulk amount of the IC carrying mb_rel. Measured on the first four projects
-        // this ran on (07PSIna_G_iron_1_0_1_25, Al-species_G_sys_2_0_0_101, FeNaCl_FyGt_Precip,
-        // Cu-Pourbaix_G_pHtitr): every native row passes at mb_rel 1.4e-3..2.6e-3, and EVERY Optima
-        // row (AOP/SOP/HOP/SHP) fails at mb_rel 6.2e3..5.2e8 on a trace IC (Fe, K, Cu) while its mb_abs
-        // is 2.4e-13..9.2e-13 mol - Optima's own post-solve check (CheckMassBalanceResiduals) accepts an
-        // absolute residual up to min(DHBM*1e10, 1e-2). So the plan's relative clause, as defined,
-        // rejects the Optima path wholesale on trace ICs; which clause is right is open.
-        // mb_seed_rel / mb_seed_ic: worst relative residual over the DEFAULT SEEDS, which mb_pass leaves out
-        // (0 and "-" when nothing is marked of interest - then every IC is scored, exactly as before 2026-09-15).
-        // Appended after mb_pass so a reader of the older fields is unaffected.
-        // The three WP1 fields are appended AFTER mb_seed_ic so every existing reader of this
-        // line - freeze.sh's lift, freeze_diff.py's key=value parse, cert_by_mode.py - is
-        // unaffected by their arrival, the same way mb_seed_* were appended in df8cf88.
+        // mb_rel_b: the bulk amount of the IC carrying mb_rel. mb_seed_rel / mb_seed_ic: worst
+        // relative residual over the default seeds, which mb_pass leaves out (0 and "-" when
+        // nothing is marked of interest). New fields are appended at the end of the line, so
+        // existing readers are unaffected.
         fprintf( ntf, "CERT  mode=%s status=%ld mb_rel=%.3e mb_rel_ic=%s mb_rel_b=%.3e mb_abs=%.3e"
                       " mb_abs_ic=%s chg_abs=%.3e chg_ic=%s mb_pass=%d mb_seed_rel=%.3e mb_seed_ic=%s"
                       " kkt_max=%.3e kkt_species=%s curv_min=%.6e curv_phase=%s"
@@ -1540,31 +1306,16 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
                  certStab, certStabName.c_str(), (long)certStabN, (long)certStabDis );
     }
 
-    // RANK - the geometry and conditioning of the present-species stoichiometry at the
-    // RETURNED answer (Phase 3 WP2; Docs/HANDOFF-2026-09-20.md s3, gems-benchmark's
-    // 2026-09-18-rank-probe.txt). Where CERT's dual_dirs asks whether the INTERIOR species fix
-    // the dual, RANK asks the prior question about the system every solver stage forms from
-    // pm.A - is it full rank at all, restricted to what is actually present, and how differently
-    // conditioned does each stage's own weight leave it. Computed for EVERY mode, same as CERT.
+    // RANK record: the geometry and conditioning of the present species' stoichiometry at the
+    // returned answer, for every mode.
     //   rank/of/pres   numerical rank of the present species' stoichiometry (row-scaled) against
-    //                  pm.N, and how many species were present to rank.
-    //   sv_ratio(_raw) sigma_min/sigma_max of the present columns, row-scaled and unscaled - a
-    //                  property of the geometry alone, with no solver weight folded in.
-    //   chg_res/span   is the charge row, over present columns, already implied by the element
-    //                  rows at this answer? chg_span=1 says the charge constraint carries no
-    //                  independent information here (plan v5's Leal 2016 s3.1 question, but
-    //                  measured per answer rather than assumed from the model).
-    //   cond_ipm(_jac) condition number of A_p diag(w) A_p^T for IPM's own weight, plain and
-    //   cond_mbr(_jac) after symmetric Jacobi scaling; likewise for MBR's weight. WP2's own
-    //                  probe found the corpus's ill-conditioning lives almost entirely in this
-    //                  weight diagonal, not in `A_present` itself (medians 1e10-1e17 unscaled,
-    //                  collapsing under Jacobi) - which is why both weighted numbers are here
-    //                  and `sv_ratio` alone would read "nothing to see" on most of the corpus.
-    // REPORT-ONLY: CertRank() reads pm.A/pm.X/pm.DLL/pm.DUL/pm.RLC and writes nothing, including
-    // pm.W[] - see CertRank()'s own comment on cond_ipm/cond_mbr for why a second call to
-    // WeightMultipliers() would be the wrong shape entirely. Guarded and computed only when this
-    // function has already confirmed the trace file is open; with GEMS3K_NATIVE_TRACE_FILE unset
-    // not one line of it runs.
+    //                  pm.N, and how many species were present.
+    //   sv_ratio(_raw) sigma_min/sigma_max of the present columns, row-scaled and unscaled.
+    //   chg_res/span   whether the charge row, over present columns, is implied by the element
+    //                  rows at this answer (chg_span=1: it carries no independent information).
+    //   cond_ipm(_jac) condition number of A_p diag(w) A_p^T for IPM's weight, plain and after
+    //   cond_mbr(_jac) symmetric Jacobi scaling; likewise for MBR's weight.
+    // Report-only; computed only when the trace file is open.
     if( mb && pm.X && pm.A && pm.N > 0 )
     {
         TMultiBase::CertRankReport rk;
@@ -1579,18 +1330,10 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
     fflush( ntf );
 }
 
-/// Worst per-IC mass-balance residual of the CURRENT primal pm.Y, recomputed
-/// locally rather than read out of pm.C[] - that array is MBR's own scratch and
-/// is one update stale by the time MBR returns. Reports the same quantities
-/// MBR's own convergence test compares (ipm_main.cpp, the pa_DT branches):
-/// worst RELATIVE |C[i]|/(B[i]*DHBM) and worst ABSOLUTE |C[i]|, each with the
-/// IC that carries it, so the "which test was binding" question the pa_DT /
-/// `||`-vs-`&&` item turns on is answered at no extra instrumentation cost.
-/// Scans the same [0, N - E) range MBR does, i.e. excluding the charge row.
-/// Worst relative and worst absolute mass-balance residual of the amount vector `amt`,
-/// over the ordinary IC range [0, Z) - the charge-balance IC in [Z, pm.N) is excluded,
-/// exactly as MBR's own convergence loops exclude it. `rel` is normalised so that
-/// rel > 1 means "this state fails the relative test MBR applies".
+/// Worst relative and worst absolute mass-balance residual of the amount vector `amt`, recomputed
+/// locally (pm.C[] is MBR's scratch and one update stale), over the ordinary IC range [0, Z) -
+/// the charge row is excluded, as in MBR's convergence loops - each with the IC that carries it.
+/// `rel` is normalised so that rel > 1 means "fails the relative test MBR applies".
 static void native_trace_mb_of( const MULTI& pm, const double* amt,
                                 long int& iRelOut, double& relOut,
                                 long int& iAbsOut, double& absOut )
@@ -1656,23 +1399,14 @@ static void native_trace_stage( const MULTI& pm, const BASE_PARAM* pa_p,
     fflush( fp );
 }
 
-/// One MBRX line naming the exit path MassBalanceRefinement() actually took.
-///
-/// WHY THIS AND NOT JUST eRet. The return code does not distinguish "every IC
-/// passed the test" from "gave up, and the strict check that would have reported
-/// that did not apply". The latter is reached whenever the post-loop guard
+/// One MBRX line naming the exit path MassBalanceRefinement() took. The return code does not
+/// distinguish "every IC passed" from "gave up, and the strict check did not apply": the
+/// post-loop guard
 ///
 ///     if( pa_p->DW && ( WhereCalledFrom == 0L || pm.pNP ) )
 ///
-/// is false - so a COLD call's second MBR (WhereCalledFrom = pm.K2 >= 1,
-/// pm.pNP = 0) skips it whatever pa_DW is set to, and returns iRet = 0 on a
-/// state its own per-IC test rejects. That is the mechanism behind native
-/// returning an answer whose relative mass-balance residual exceeds pa_DHB, and
-/// hence behind the eight projects whose own SIA cannot re-solve their own
-/// converged answer: a cold call never re-checks what it returns, and a warm one
-/// does. Observed directly on Resources/gems3k-fail/Al-species_G_sys_2_0_0_101,
-/// where the cold call exits "lenient" at rel = 2.61x tolerance and the warm
-/// call then correctly refuses the same state.
+/// is false for a cold call's second MBR (WhereCalledFrom = pm.K2 >= 1, pm.pNP = 0), which then
+/// returns iRet = 0 on a state its own per-IC test rejects.
 static void native_trace_mbr_exit( const MULTI& pm, const BASE_PARAM* pa_p,
                                    const char* reason, long int whereFrom,
                                    long int it1, long int iRet, bool restored )
@@ -1690,21 +1424,11 @@ static void native_trace_mbr_exit( const MULTI& pm, const BASE_PARAM* pa_p,
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Call to GEM IPM calculation of equilibrium state in MULTI
 /// (with already scaled GEM problem)
-// pa_MbReproject: repair an unsatisfied mass balance on the answer, instead of
-// adjusting what residual is acceptable. White, Johnson & Dantzig (1958), the note
-// under their Table III - one m x m solve projecting Y back onto A.Y = b.
-//
-// White's own pivot rule ("the m most abundant species") is EXACTLY SINGULAR on
-// aqueous chemistry and is deliberately not what this uses: the most abundant
-// species are precisely the ones most likely to be exact stoichiometric sums of one
-// another (H2O = H+ + OH-, NaCl@ = Na+ + Cl-, NaOH(aq) = Na+ + OH-). Measured on the
-// three projects whose warning fires on every run, det(Ap) was exactly 0 on all
-// three. His own test case was a 10-species ideal gas mixture over 3 elements.
-// So the set here is RANK-REVEALING: species in decreasing amount, kept only if the
-// column raises the rank. See BASE_PARAM::MbReproject for the alternatives measured.
-//
-// All N rows take part, the charge row included, so the correction cannot introduce
-// a charge imbalance while removing an element one.
+// pa_MbReproject: repairs an unsatisfied mass balance on the answer by projecting Y back onto
+// A.Y = b with one solve over a set of N species. The set is rank-revealing: species in
+// decreasing amount, each kept only if its column raises the rank (the most abundant species
+// alone can be exactly linearly dependent, e.g. H2O = H+ + OH-). All N rows take part, the
+// charge row included, so the correction cannot introduce a charge imbalance.
 bool TMultiBase::MassBalanceReproject( double* amt )
 {
     const long int N = pm.N, L = pm.L;
@@ -1717,26 +1441,11 @@ bool TMultiBase::MassBalanceReproject( double* amt )
     // The state on entry, for a full revert if the whole attempt fails to improve.
     std::vector<double> Xorig( amt, amt + L );
 
-    // ITERATE the projection rather than taking one shot at it. Measured on the
-    // Cu-Pourbaix pH titration, 401 repair events over a full-diagram sweep: when no
-    // component has to be clamped the one-shot projection is essentially exact
-    // (median leftover 4.3e-14 mol) and clears the test 20 times out of 20; when even
-    // ONE component clamps it clears it 0 times out of 200, leftover 3.8e-07 mol.
-    // The separation is total, so the clamp IS the failure mode - and it is
-    // self-correcting under iteration: a clamped component is driven to exactly zero,
-    // so on the next pass it sorts last and the rank-revealing selection is forced to
-    // pick a DIFFERENT carrier for that direction, working against the residual the
-    // clamped step has already taken out. Each pass must strictly improve the worst
-    // relative residual or it is undone and the loop stops, so this can only ever do
-    // better than the single pass it replaces.
-    // BOUNDED: the extra passes are kept only if they carry the answer all the way
-    // under its own tolerance. Anything short of that is reverted to what the single
-    // pass produced, so on every state this mechanism cannot fully repair, behaviour
-    // is byte-for-byte what it was before. That matters because a partial repair still
-    // MOVES the answer, and a moved answer re-enters the warm path differently: the
-    // unbounded form lost one of T-cement's 50 SIA answers and took its warm re-solve
-    // from 75 iterations to 479, for a residual that was never going to clear anyway.
-    // Buying the win only where it is complete costs nothing and bounds the worst case.
+    // Iterated projection: when a component has to be clamped, the next pass sorts it last, so
+    // the rank-revealing selection picks a different carrier for that direction. Each pass must
+    // strictly improve the worst relative residual or it is undone and the loop stops.
+    // Bounded: the extra passes are kept only if they bring the answer under its own tolerance;
+    // otherwise the single-pass result is kept, since a partial repair still moves the answer.
     const long int maxPass = 8;
     long int nClamped = 0, nPass = 0;
     double relCur = relOld, absCur = absOld;
@@ -1825,18 +1534,10 @@ bool TMultiBase::MassBalanceReproject( double* amt )
         dy[(size_t)k] = sum / M[(size_t)(k*N + k)];
     }
 
-    // Feasibility: a repair that drives a species negative is not a repair. Rather
-    // than abandoning the whole projection, CLAMP the offending component and let the
-    // acceptance test below decide - a clamped step no longer satisfies Ap.dy = C
-    // exactly, so it is kept only if it still strictly improves the worst relative
-    // residual, and reverted otherwise. Measured on 10TH_G_00001, where the
-    // unclamped step asks to remove 2.6585e-09 mol of H2@ from the 2.6584e-09 mol
-    // that exists - it overshoots the only carrier of that IC's residual by 1.5e-13.
-    // Refusing outright there left a repairable state unrepaired.
-    // How many components had to be clamped is the diagnostic that separates
-    // "the projection was solved and is simply ill-conditioned" from "a carrier
-    // ran out of material and the step could not be taken" - two failure modes
-    // whose leftover residuals look alike from outside but need opposite fixes.
+    // Feasibility: a component that would go negative is clamped, and the acceptance test below
+    // decides (a clamped step no longer satisfies Ap.dy = C exactly, so it is kept only if it
+    // still strictly improves the worst relative residual). The number of clamped components
+    // separates an ill-conditioned but solved projection from a carrier that ran out.
     long int nClampedPass = 0;
     for( long int c = 0; c < N; c++ )
     {
@@ -1862,33 +1563,12 @@ bool TMultiBase::MassBalanceReproject( double* amt )
     if( relCur < 1. ) break;         // the answer now passes its own mass-balance test
     }   // pass loop
 
-    // Short of a full repair, fall back to the single-pass result - see BOUNDED above.
+    // Short of a full repair, fall back to the single-pass result (see "Bounded" above).
     if( improved && !( relCur < 1. ) && !Xsingle.empty() )
     {
-        // DIAGNOSTIC ONLY - this record GATES NOTHING and the discard below is
-        // unconditional, exactly as before it was added. Work item 40 (plan v5 §131,
-        // owner decision 2026-09-22) BLOCKED the rule that would have used these two
-        // counts to decide whether to keep the multi-pass repair: it detects one
-        // structural event exactly (an IC left with a single carrier where the single
-        // pass left several - 3 of 3, 90 sweep/path pairs, no false positives), but it
-        // was FITTED on those three cases, it succeeds on the benefit case only by never
-        // firing there, and the case that blocked it is a DIFFERENT mechanism (harm at
-        // single-carrier 0 -> 0 and rank 5 -> 5), which no retuning of this counter can
-        // reach. What is safe today is making the event VISIBLE on systems nobody has
-        // run yet, so a second, independent detector has data to be built against.
-        //
-        // The record is emitted at EVERY call site, not only the in-solve one the
-        // blocked patch exempted from the bound - a diagnostic that only fires where a
-        // mechanism was already suspected cannot find it anywhere else. Its fields are
-        // the blocked patch's, in that order, so the two arms read straight across; the
-        // patch's OWN records were renamed to mbreproject-rulekept/-rulediscarded when
-        // this shipped, because a scratch arm and the tree it is scored against must not
-        // emit the same record name - the ladder's "did the mechanism actually run"
-        // check greps for it, and a name both arms produce would make that check pass
-        // for a build in which the rule was not present at all.
-        //
-        // Cost: the O(N*L) count runs only when the trace is open AND a multi-pass
-        // repair was actually discarded. Zero when GEMS3K_NATIVE_TRACE_FILE is unset.
+        // Diagnostic only - this record gates nothing; the discard below is unconditional.
+        // Counts, for a discarded multi-pass repair, the ICs left with a single carrier and the
+        // rank, compared with the single-pass result. O(N*L), only when the trace is open.
         if( nPass > 1 && native_trace_file() )
         {
             const double thr = std::min( pm.lowPosNum, pm.DcMinM );
@@ -1916,10 +1596,7 @@ bool TMultiBase::MassBalanceReproject( double* amt )
     if( !improved )
     {
         for( long int j = 0; j < L; j++ ) amt[j] = Xorig[(size_t)j];
-        // A repair that is computed and then THROWN AWAY is as much a decision as one
-        // that is kept, and it was previously invisible: the trace recorded only the
-        // successful branch, so a project whose every repair was reverted read
-        // identically to one where the mechanism never ran at all.
+        // DECIDE record of a repair that was computed and then reverted.
         native_trace_decide( "mbreproject-reverted species=%ld clamped=%ld relbefore=%.3e "
                              "absbefore=%.3e", (long)N, (long)nClamped, relOld, absOld );
         return false;
@@ -1938,17 +1615,15 @@ bool TMultiBase::MassBalanceReproject( double* amt )
                        "relative residual {:.3e}x -> {:.3e}x its own tolerance, worst "
                        "absolute {:.3e} -> {:.3e} mol",
                        N, relOld, relNew, absOld, absNew );
-    // A repair that FIRES is a decision, and on 11 of 56 projects native returns an
-    // answer failing its own mass-balance test - so which rows needed repairing is
-    // part of what a freeze should carry, not a log-only detail.
+    // DECIDE record of a repair that fired.
     native_trace_decide( "mbreproject species=%ld passes=%ld clamped=%ld relbefore=%.3e "
                          "relafter=%.3e absbefore=%.3e absafter=%.3e",
                          (long)N, (long)nPass, (long)nClamped, relOld, relNew, absOld, absNew );
     return true;
 }
 
-// Element classes - see the declarations in ms_multi.h (owner 2026-09-15). ONE place computes them, so the
-// zeroing's rebalance test and the CERT record cannot disagree about which IC is a default seed.
+// Element classes - see the declarations in ms_multi.h. One place computes them, so the
+// zeroing's rebalance test and the CERT record agree on which IC is a default seed.
 bool TMultiBase::ICIsNumericalTrace( long int i ) const
 {
     if( !pm.B || i < 0 || i >= pm.N - pm.E ) return false;      // charge rows are never trace
@@ -2021,72 +1696,38 @@ void TMultiBase::SubFloorElementCheck( double dcFloor ) const
         nWarn, bulkHint, floorHint, report );
 }
 
-// EnergyDeterminacyCheck: is each present phase's AMOUNT actually fixed by the energy?
+// EnergyDeterminacyCheck: is each present phase's amount actually fixed by the energy?
+// Warns when a present phase's amount is not fixed to pa_DeterminacyWarn (0 = skipped).
 //
-// Motivation, 07PSIna_G_vcomplex_2_0_1_80_0 (2026-09-13): a change to the MBR reprojection
-// moved TiO2(am_hyd) by +14 % (800x its own 21-nudge spread) while G agreed to 11 digits in
-// both arms. Neither answer is "more converged" - the energy cannot tell them apart - and a
-// 1e-15 bIC jitter does NOT reveal it (spread 1.7e-4): the solver lands reproducibly at a
-// point fixed by its TRAJECTORY inside a flat valley. Jitter measures reproducibility, not
-// determinacy; only a trajectory change exposes the valley. This measures the valley itself,
-// from one solve, and warns when a present phase's amount is not fixed to pa_DeterminacyWarn
-// (0 = the check is skipped entirely, at zero cost).
-//
-// Model. Moving present phase k by t mol while keeping A.x = b costs, at the least,
+// Model. Moving present phase k by t mol while keeping A.x = b costs at least
 //     E(t) = (1/2) t^2 / c_k,
-// c_k the phase's COMPLIANCE - the cheapest way to move k with every other species free to
+// c_k the phase's compliance - the cheapest way to move k with every other species free to
 // compensate under A dn = 0. Answers whose energies differ by less than the energy resolution
-// eps_G are indistinguishable, so k's amount is fixed only to  dn_k = sqrt( 2 eps_G c_k ).
+// eps_G are indistinguishable, so k's amount is fixed only to dn_k = sqrt( 2 eps_G c_k ).
 //
-// Curvature. A species of a MULTI-component phase has ideal curvature 1/x_j. A PURE phase has
-// NONE of its own - constant chemical potential - and moves only by pushing material into or
-// out of solution species sharing its elements, so pure phases are FREE variables. A first
-// version instead gave them the IPM barrier's 1/x_j; on vcomplex that fictitious term alone
-// put TiO2(am_hyd) at 6900 % (observed 14 %) and 11 trace solids above 100 %.
+// Curvature. A species of a multi-component phase has ideal curvature 1/x_j; a pure phase has
+// none of its own, so pure phases are free variables.
 //
 // With S the active multi-component species (weights X_S), P the active pure phases,
 //     K0 = [ A_S X_S A_S'   A_P ]        v_k = [ A_S X_S g_S ]      w_k = g_S' X_S g_S
 //          [ A_P'           0   ]              [ g_P         ]
-// for phase k's indicator g = (g_S, g_P), eliminating the border of the least-energy KKT
-// system gives   c_k = w_k - v_k' K0^-1 v_k   (>= 0). One factorisation of K0, size N + |P|
-// with |P| <= N by the phase rule, then one solve per present phase. c_k == 0 means k is
-// pinned by mass balance alone (e.g. the only carrier of an IC) - fully determined.
+// for phase k's indicator g = (g_S, g_P), eliminating the border of the least-energy KKT system
+// gives c_k = w_k - v_k' K0^-1 v_k (>= 0). One factorisation of K0, size N + |P|, then one solve
+// per present phase. c_k == 0 means k is pinned by mass balance alone.
 //
-// When K0 is singular. With every active X_S > 0, K0 (y;z) = 0 forces A_S' y = 0, A_P' y = 0
-// and A_P z = 0, so there are exactly two causes, and they mean opposite things:
-//  (a) A_P z = 0 - PURE PHASES WITH DEPENDENT STOICHIOMETRIES. Moving along z keeps A.x = b
-//      and costs nothing to ANY order (pure phases have no curvature, and z' mu_P = u' A_P z
-//      = 0), so every pure phase with z_q != 0 has an amount the energy does not fix AT ALL.
-//      Measured: T-cement's water sweep, 15 of 15 singular calls - `Lime` and `lime` are the
-//      same DC twice (CaO, identical G0 and V0) and the solver split 0.244 / 3.9e-8 mol between
-//      them by trajectory. Handled STRUCTURALLY: a phase q is degenerate iff dropping q from
-//      A_P does not lower its rank; the involved phases are named as such, a maximal independent
-//      subset stays in K0, and every other phase is still checked.
-//  (b) A_S' y = A_P' y = 0 - A REDUNDANT IC ROW over the active species (e.g. the charge row
-//      being the valence sum of the element rows when no species of another oxidation state is
-//      active). The constraint is redundant and every c_k is still well defined - the system is
-//      consistent - so such rows are simply DROPPED before assembly. Measured 2026-09-14, one
-//      native call per corpus project: 4 of 76 (`07PSIna_G_simple_1`, `_2`, `10TH_G_00001`,
-//      `CASH+CsSr`), with the kept factorisation's smallest pivot 3.4e-17 .. 9e-10 of its column
-//      and c_k agreeing with an independently equilibrated factorisation to every printed digit.
-// Both selections are greedy Gram-Schmidt on the UNWEIGHTED stoichiometry at 1e-9 relative:
-// stoichiometric entries are O(1..100) exact values, so an exact dependence leaves a residual at
-// rounding level and a genuine independence one many orders larger. Where neither cause is
-// present the matrix and every result are bit-identical to the version without the selection.
-// A pivot below m*DBL_EPSILON of its ORIGINAL column scale after that is reported as
-// `determinacy-singular` and the check makes no statement (not observed on the corpus: the
-// smallest such pivot on a structurally nonsingular K0 was 2.2e-12, f_Solvus_G_test3). The
-// 2026-09-13 version compared the pivot with the running maximum of the SAME column, i.e. with
-// itself, so only an exactly zero pivot was ever caught - (a) on T-cement was caught only because
-// the duplicate columns are bit-identical, and (b) was never caught.
+// When K0 is singular there are two causes:
+//  (a) A_P z = 0 - pure phases with dependent stoichiometries: moving along z costs nothing, so
+//      every pure phase with z_q != 0 has an amount the energy does not fix at all. A phase q is
+//      degenerate iff dropping it does not lower rank(A_P); these are named, a maximal
+//      independent subset stays in K0, and every other phase is still checked.
+//  (b) A_S' y = A_P' y = 0 - a redundant IC row over the active species (e.g. the charge row as
+//      the valence sum of the element rows); such rows are dropped before assembly.
+// Both selections are greedy Gram-Schmidt on the unweighted stoichiometry at 1e-9 relative.
+// A pivot below m*DBL_EPSILON of its original column scale is then reported as
+// `determinacy-singular` and the check makes no statement.
 //
-// Energy resolution:  eps_G = DBL_EPSILON * sum_j |x_j mu_j|  (RT units), the rounding floor of
-// G itself, mu_j = sum_i a_ij u_i the dual potential. MEASURED, not assumed: on vcomplex it
-// predicts TiO2(am_hyd) +-20 % (observed trajectory move 14 %) and CaSiO3(cr) +-2.6e-6
-// (observed jitter spread 2.2e-6, move 1.1e-6). The alternative, the first-order stationarity
-// slack sum_j |x_j (F_j - mu_j)|, overstated both by ~750x and was dropped.
-//
-// Species pinned at a kinetic bound (DLL/DUL) are excluded: a constraint fixes their amount.
+// Energy resolution: eps_G = DBL_EPSILON * sum_j |x_j mu_j| (RT units), the rounding floor of G,
+// mu_j = sum_i a_ij u_i. Species pinned at a kinetic bound (DLL/DUL) are excluded.
 // Read-only: nothing here writes solver state.
 void TMultiBase::EnergyDeterminacyCheck()
 {
@@ -2175,7 +1816,7 @@ void TMultiBase::EnergyDeterminacyCheck()
     if( n < 1 ) return;
     auto A = [&]( long int r, long int j ) { return pm.A[rows[(size_t)r] + j*N]; };
     auto trimmedPhaseName = [&]( long int k ) {
-        // work item 34: this feeds comma-joined DECIDE payloads - see trace_safe_name()
+        // feeds comma-joined DECIDE payloads - see trace_safe_name()
         return trace_safe_name( char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME ) );
     };
 
@@ -2287,9 +1928,8 @@ void TMultiBase::EnergyDeterminacyCheck()
         if( !present ) continue;
         if( degenerate[(size_t)k] )
         {
-            // Not fixed at all (cause (a) in the header comment): no c_k is computed - with its
-            // partners' columns dropped from K0 it would describe the group's TOTAL, not this
-            // phase. Listed first, so the 8-name cap never hides the strongest statement.
+            // Not fixed at all (cause (a) above): no c_k is computed. Listed first, so the
+            // 8-name cap never hides it.
             if( warnRel > 0. )
             {
                 if( nListedDegenerate++ < 8 )
@@ -2321,9 +1961,7 @@ void TMultiBase::EnergyDeterminacyCheck()
                      name.c_str(), pm.PHC ? pm.PHC[k] : '?', (int)( k >= FIs ), nk, rel, ck, epsG );
         if( warnRel > 0. && rel >= warnRel )
         {
-            // rel >= 1: the amount is inside its own energy resolution, i.e. the energy cannot
-            // even say whether the phase is PRESENT - a percentage there (1e15 % was observed,
-            // Gibbsite at 4.6e-18 mol) is true but unreadable, so it is named as such.
+            // rel >= 1: the energy cannot even say whether the phase is present; named as such.
             if( nListedOther++ < 8 )
                 listed += ( listed.empty() ? "" : ", " ) + name
                         + ( rel >= 1. ? std::string( " (presence)" ) : fmt::format( " ({:.2g} %)", 100. * rel ) );
@@ -2362,42 +2000,23 @@ void TMultiBase::EnergyDeterminacyCheck()
 
 // ExcludeRedundantDCs: a species entered twice is removed from the solve.
 //
-// REDUNDANT means thermodynamically indistinguishable in the problem the solver is given:
-// identical stoichiometry (all N rows, charge included), identical DC class code, and identical
-// standard properties at the current T,P - G0 (the value minimised, DQF terms included), H0, S0,
-// Cp0 and molar volume - in one of two placements:
-//  (a) twice in the SAME multi-component phase. Two copies of one species double its share of
-//      the ideal mixing term: the pair behaves as one species with G0 lowered by RT ln 2, so the
-//      duplicate CHANGES the answer, not only its reporting. Found 2026-09-14 in the corpus
-//      data: B(OH)4- at positions 7 and 8 of aq_gen in all 11 T8_aq*/T14_ball*/T8ax2_nIC61
-//      exports.
-//  (b) as two SINGLE-species phases (pure phases, or one-species gas/fluid phases) - which copy is kept is
-//      decided by the rules at the (b) loop below (pure over solution remnant, then name, then first). Their
-//      amounts are interchangeable at zero cost and only the sum is determined: T-cement's
-//      Lime/lime (CaO, split 0.244 / 3.9e-8 mol by trajectory, EnergyDeterminacyCheck
-//      determinacy-degenerate on 15 of 50 water-sweep calls) and Amakinite/Brucite (Mg(OH)2)
-//      in 10TH_G_00001 and j_10TH_G_seawater.
-// NOT redundant, deliberately:
-//  - same formula with different properties (polymorphs; ~230 corpus groups);
-//  - two MULTI-component phases with identical member lists. That is how a miscibility gap is
-//    modelled (f_Solvus Alkali feldspar / Plagioclase, T-cement's ettringite and AFm pairs,
-//    CASHNK CSH / CSHK - 9 corpus pairs), and it is required, not duplicated;
-//  - species of a multi-site (sublattice) phase: end-members with the same formula and G0 can
-//    differ in site occupancy and hence configurational entropy (the CASHNK twins);
-//  - species of sorption / polyelectrolyte phases (site-specific parameters);
-//  - a copy whose end-member (DMc) coefficients differ, or that appears in the phase's
-//    interaction-parameter index (IPx): its activity is not that of the other copy;
-//  - the solvent.
-// A pair that is otherwise redundant but carries user metastability limits on either copy
-// (DLL > 0 or DUL < 1e6) is REPORTED but not changed: the limits may be the point.
-//
-// Removal reuses the solver's own kinetic-exclusion path, which both solvers already honour
-// (o_/t_Kaolinite ship Quartz with DLL = DUL = 0): for this call only, every copy after the
-// first gets DLL = DUL = 0 with RLC = BOTH_LIM, and any starting amount is moved onto the kept
-// copy (mass balance is unchanged - identical stoichiometry). The result reports the removed copy
-// at 0 and the kept one with the total. The caller's DATABR dll/dul are never written;
-// RestoreRedundantDCs() puts pm.DLL/DUL/RLC back at the end of the solve. Warns once per
-// distinct finding per process; a DECIDE record on every call.
+// Redundant means thermodynamically indistinguishable: identical stoichiometry (all N rows,
+// charge included), identical DC class code, and identical standard properties at the current
+// T,P (G0 including DQF terms, H0, S0, Cp0, molar volume), in one of two placements:
+//  (a) twice in the same multi-component phase - the pair behaves as one species with G0
+//      lowered by RT ln 2, so the duplicate changes the answer;
+//  (b) as two single-species phases - their amounts are interchangeable and only the sum is
+//      determined.
+// Not redundant: same formula with different properties (polymorphs); two multi-component
+// phases with identical member lists (that is how a miscibility gap is modelled); species of a
+// multi-site phase; species of sorption / polyelectrolyte phases; a copy whose end-member (DMc)
+// coefficients differ or that appears in the interaction-parameter index (IPx); the solvent.
+// A pair with user metastability limits on either copy (DLL > 0 or DUL < 1e6) is reported but
+// not changed.
+// Removal uses the kinetic-exclusion path: for this call only, every copy after the first gets
+// DLL = DUL = 0 with RLC = BOTH_LIM, and any starting amount moves to the kept copy. The caller's
+// DATABR dll/dul are never written; RestoreRedundantDCs() restores pm.DLL/DUL/RLC after the
+// solve. Warns once per distinct finding per process; a DECIDE record on every call.
 std::vector<TMultiBase::RedundantDCHold> TMultiBase::ExcludeRedundantDCs()
 {
     std::vector<RedundantDCHold> held;
@@ -2421,7 +2040,7 @@ std::vector<TMultiBase::RedundantDCHold> TMultiBase::ExcludeRedundantDCs()
         return true;
     };
     auto freeBounds = [&]( long int j ) { return !( pm.DLL[j] > 0. ) && !( pm.DUL[j] < 1e6 ); };
-    // work item 34: both feed comma-joined DECIDE payloads - see trace_safe_name()
+    // both feed comma-joined DECIDE payloads - see trace_safe_name()
     auto dcName = [&]( long int j ) {
         return trace_safe_name( char_array_to_string( pm.SM[j], MAXDCNAME ) );
     };
@@ -2451,9 +2070,8 @@ std::vector<TMultiBase::RedundantDCHold> TMultiBase::ExcludeRedundantDCs()
                                kKeep == kDrop ? phName( kKeep ) : phName( kDrop ) + ">" + phName( kKeep ),
                                why && *why ? std::string( ",kept:" ) + why : std::string() );
     };
-    // SUSPICIOUS: same class, stoichiometry and G0 at this T,P, but another standard property differs. Not
-    // interchangeable (enthalpy, entropy, heat capacity or volume differ), so nothing is removed - but two
-    // entries agreeing on G0 to 1e-12 while differing elsewhere are rarely intended. Reported only.
+    // Suspicious: same class, stoichiometry and G0 at this T,P, but another standard property
+    // differs. Not interchangeable, so nothing is removed; reported only.
     std::string reportSuspicious;
     auto suspicious = [&]( long int j1, long int j2 ) {
         if( pm.DCC[j1] != pm.DCC[j2] || !same( pm.G0[j1], pm.G0[j2] ) ) return false;
@@ -2501,17 +2119,11 @@ std::vector<TMultiBase::RedundantDCHold> TMultiBase::ExcludeRedundantDCs()
         }
     }
 
-    // (b) single-species phases of the same class. WHICH copy to keep (owner, 2026-09-14): in GEMS a solid
-    // solution whose other elements are switched off is left with ONE end-member, which can duplicate a real
-    // pure phase - and it is the solution remnant that should go to zero. So:
-    //   1. "pure":   a pure phase (k >= FIs) is kept over a single-species SOLUTION phase (k < FIs);
-    //   2. "name":   otherwise the phase whose NAME the species symbol abbreviates is kept - its letters in
-    //                order, first letter matching, case-insensitive ("Brc" -> Brucite, not Amakinite). The
-    //                exporter writes such a remnant as an ordinary pure phase (10TH_G_00001, j_10TH_G_seawater:
-    //                Amakinite - in nature the (Fe,Mg)(OH)2 solid solution - and Brucite, both pure, both DC
-    //                "Brc"), so the phase type alone cannot see it; no corpus project exports a single-species
-    //                solution phase at all;
-    //   3. "first":  otherwise the first listed (T-cement Lime/lime, both "Lim").
+    // (b) single-species phases of the same class. Which copy to keep:
+    //   1. "pure":   a pure phase (k >= FIs) over a single-species solution phase (k < FIs);
+    //   2. "name":   otherwise the phase whose name the species symbol abbreviates (letters in
+    //                order, first letter matching, case-insensitive: "Brc" -> Brucite);
+    //   3. "first":  otherwise the first listed.
     auto abbreviates = []( const std::string& sym, const std::string& name ) {
         if( sym.empty() || name.empty() || tolower( (unsigned char)sym[0] ) != tolower( (unsigned char)name[0] ) )
             return false;
@@ -2601,28 +2213,16 @@ void TMultiBase::RestoreRedundantDCs( const std::vector<RedundantDCHold>& held )
     }
 }
 
-// StrandedElementCheck: an element that can only live in ONE multi-component phase, and holds that
-// phase open.
-//
-// Found on T-cement (2026-09-14): Cs and Sr are seeded at 1e-9 mol and every species carrying them is
-// aqueous (3 and 7 species, no solid host). Below ~34 g of water the aqueous phase holds ~3e-9 mol, so
-// the two trace elements are about two thirds of "the solution", which then sits at pH 16 and ionic
-// strength 30 - far outside its activity model - because it exists largely to hold them. Measured over
-// 5 draws (1e-15 bIC nudges) of the 50-point water sweep, native + SIA: shipped 2 lost / 2 lost /
-// 4 warm abandonments; Sr ALONE raised to 1e-6 mol gives 0 / 0 / 0, all four trace elements at 1e-6
-// likewise; suppressing the aqueous phase fails every point (the element has nowhere else to go); a
-// zero amount is rejected on input. The first T-cement export failed the same way with K and Mg
-// before their solid hosts were added (gems-benchmark CLAUDE.md s4). The effect of the seed LEVEL is
-// not monotonic (1e-8: 5 lost; 1e-7: 1 lost, 10 abandonments), so no amount is recommended here - the
-// structural remedy is a host phase or removing the element.
-//
-// Detector, read-only, on the converged answer: IC i (not charge/volume, B[i] > 0) whose carriers -
-// species with a(i,j) != 0 not excluded by DUL = 0 - all belong to one multi-component phase k. Then
+// StrandedElementCheck: an element that can only live in one multi-component phase and holds
+// that phase open (e.g. trace elements whose only carriers are aqueous, in a system with very
+// little water). Read-only, on the converged answer: IC i (not charge/volume, B[i] > 0) whose
+// carriers - species with a(i,j) != 0 not excluded by DUL = 0 - all belong to one
+// multi-component phase k. Then
 //   share_i = sum_{carriers in k} X[j] / XF[k]    (fraction of phase k's moles that carry i)
 //   trace_k = XF[k] / sum_k XF[k]                 (phase k's size relative to the system)
-// Warn when share_i >= kStrandedShareWarn and trace_k <= kStrandedTraceWarn. GEMS3K_STRANDED_PROBE
-// prints every confined element with both numbers. A pure-phase-only element is not flagged: one pure
-// phase can hold any amount at constant chemical potential.
+// Warn when share_i >= kStrandedShareWarn and trace_k <= kStrandedTraceWarn.
+// GEMS3K_STRANDED_PROBE prints every confined element with both numbers. An element held only
+// by pure phases is not flagged. The remedy is a host phase or removing the element.
 void TMultiBase::StrandedElementCheck()
 {
     const long int N = pm.N, L = pm.L, FI = pm.FI;
@@ -2657,10 +2257,8 @@ void TMultiBase::StrandedElementCheck()
         const double nk = pm.XF[k] > 0. ? pm.XF[k] : 0.;
         const double share = nk > 0. ? carried / nk : 1.;
         const double trace = nk / total;
-        // work item 34: icName is COMPARED against elementsOfInterest below, so it stays the
-        // trimmed name; only the copy that reaches the DECIDE payload is made separator-safe.
-        // Corpus IC names carry none of the four characters, so the two are equal today - the
-        // split is here so that a sanitiser can never silently decide a membership test.
+        // icName is compared against elementsOfInterest, so it stays the trimmed name; only the
+        // copy that goes into the DECIDE payload is made separator-safe.
         const std::string icName = trimmed( char_array_to_string( pm.SB[i], MAXICNAME ) );
         const std::string icNameSafe = trace_safe_name( icName );
         const std::string phName = trace_safe_name( char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME ) );
@@ -2739,9 +2337,8 @@ void TMultiBase::GibbsEnergyMinimization()
   }
 
 #ifndef NDEBUG
-  // DATABR values as received, before any internal processing -- lets a caller-side
-  // bug (e.g. a bulk composition silently zeroed before GEMS3K ever runs) be visually
-  // distinguished from a solver-side one without needing a second historical build.
+  // DATABR values as received, before any internal processing (debug level), to tell a
+  // caller-side problem from a solver-side one.
   if(gems_logger->should_log(spdlog::level::debug)) {
       gems_logger->debug("GibbsEnergyMinimization() entry - bulk composition B[]:");
       for(int i = 0; i < pm.N; i++)
@@ -2807,12 +2404,9 @@ FORCED_AIA:
    }
    pm.FitVar[0] = bfc_mass();  // getting total mass of solid phases in the system
 
-   // Exact-zero census of the answer this call returns. Pairs with the PSSC
-   // lines above: an interior-point method on a box with a positive lower bound
-   // cannot produce a single exact zero, so every zero counted here was written
-   // by an explicit removal step, and the PSSC lines say which phase and why.
-   // This is the observation behind the "native deletes the phase, it does not
-   // solve it" reading of the psina failures.
+   // Exact-zero census of the answer, into the trace: an interior-point method cannot produce
+   // an exact zero, so each zero here was written by an explicit removal step (see the PSSC
+   // lines).
    if( FILE* ntf = native_trace_file() )
    {
        long int nzX = 0, nzY = 0, nzPh = 0;
@@ -2832,32 +2426,10 @@ FORCED_AIA:
 
    LpFillProbeReport();   // writes nothing unless GEMS3K_LPFILL_PROBE is set
 
-   // ---- Mass-balance verdict on the ANSWER this call returns.
-   //
-   // WARN ONLY - deliberately, and this is a project-owner decision (2026-09-05),
-   // not an oversight. Native's COLD path structurally never checks the state it
-   // hands back: MBR's strict guard is gated on ( WhereCalledFrom == 0L || pm.pNP ),
-   // so a cold call's SECOND MBR (K2 >= 1, pNP == 0) is exempt whatever pa_DW is and
-   // returns iRet = 0 on a state its own per-IC test rejects. A warm call's FIRST MBR
-   // has WhereCalledFrom == 0, the guard applies, and the same state is refused -
-   // which is the whole mechanism behind the ten projects whose native SIA cannot
-   // re-solve their own converged answer (plan v5 section 60.5).
-   //
-   // Dropping that clause was measured: it turns cold OK into FAIL on exactly the six
-   // projects whose warm restart already fails. That is a user-facing behaviour change
-   // on real projects, so the verdict is left alone and the FACT is surfaced instead.
-   // A caller that wants to act on it has the message; one that does not is unaffected.
-   // This is also the free signal an outcome-driven solver chooser needs (plan v5,
-   // handoff item 8: "build the signal first").
-   //
-   // Unconditional, not NDEBUG-gated, for the same reason as the clamp warnings in
-   // ipm_chemical.cpp: the event is rare and its whole point is to make a silently
-   // accepted state visible in a production build. Suppressed when pm.MK/pm.PZ already
-   // say the solution is bad, since testMulti() reports that case - the signal worth
-   // having is the one on a run that would otherwise read as clean.
-   //
-   // Cost when it does not fire: one O(N*L) pass, against a solve that has just done
-   // hundreds of them.
+   // ---- Mass-balance check of the answer this call returns: warn only. Native's cold path
+   // does not check the state it returns (a cold call's second MBR is exempt from the strict
+   // guard), so the fact is reported instead of changing the verdict. Not NDEBUG-gated.
+   // Suppressed when pm.MK/pm.PZ already mark the solution as bad. One O(N*L) pass.
    if( !pm.MK && !pm.PZ )
    {
        long int iRel = -1, iAbs = -1; double rel = 0., absr = 0.;
@@ -2868,9 +2440,8 @@ FORCED_AIA:
        // relative test exists; with DT != 0 an IC must exceed BOTH.
        bool fails = !base_param()->DT ? ( rel > 1. )
                                       : ( rel > 1. && absr > absCut );
-       // pa_MbReproject: try to REPAIR the state before reporting it. Only reached
-       // when the answer has already failed its own per-IC test, and it restores
-       // pm.X untouched unless it strictly improves the worst relative residual.
+       // pa_MbReproject: try to repair the state before reporting it. Restores pm.X unless the
+       // worst relative residual strictly improves.
        if( fails && iRel >= 0 && base_param()->MbReproject )
        {
            if( MassBalanceReproject( pm.X ) )
@@ -2923,8 +2494,7 @@ void TMultiBase::GEM_IPM( long int /*rLoop*/ )
 
     pm.W1=0; pm.K2=0;         // internal counters and indicators
     pm.Ec = pm.MK = pm.PZ = 0;    // Return codes
-    // Per-SOLVE, spanning this call's phase-selection passes: see the member's own
-    // comment in ms_multi.h for why the budget-sized re-insertion is one-shot.
+    // Per solve, across this call's phase-selection passes (see insBudgetTried).
     insBudgetTried.assign( static_cast<size_t>( pm.FI ), 0 );
     if(!nCNud && !cnr )
         setErrorMessage( 0, "" , "");  // empty error info
@@ -3066,38 +2636,12 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 #endif
        ps_rcode = PhaseSelectionSpeciationCleanup( k_miss, k_unst, cleanupStatus );
 
-       // pa_MbReproject, SECOND call site (plan v5 section 88). PSSC's speciation
-       // CLEANUP is a per-DC correction that does not look at the mass balance -
-       // it can zero a DC that has fallen below pm.DcMinM, or raise one back from
-       // zero - and it then reports NeedToImproveMassBalance and leaves the repair
-       // to the MBR that follows. On a WARM call that MBR carries the strict guard
-       // (pNP = 1), so an unrepairable perturbation is fatal rather than merely
-       // untidy - which is exactly why two projects still failed their warm restart
-       // with their FINAL answer already repaired (section 86.10):
-       //     07PSIna_G_iron   worst relative residual 1.26e-05 -> 1.88e+11
-       //     f_Solvus_G_test3                         3.43e-03 -> 2.29e+04
-       // in both cases across a PSSC pass that inserted nothing.
-       //
-       // Gated on k_miss < 0 - no phase was INSERTED - deliberately, and NOT on
-       // ps_rcode. When PSSC has inserted a phase the state changed structurally and
-       // MBR must re-equilibrate it; a linear projection over N species would be
-       // papering over a real change. But ps_rcode is the wrong test for that:
-       // status 0 means "mass balance violated, do another IPM loop", which the
-       // speciation cleanup also raises when it makes a bounded correction of its
-       // own with nothing inserted or removed. Measured - on f_Solvus_G_test3's warm
-       // call PSSC reports status=0 with PHins = PHrem = DCins = DCrem = 0 and
-       // kfr = -1, and gating on ps_rcode == 1 declined exactly the case this
-       // exists for.
-       //
-       // A phase ELIMINATION is not separately gated because PSSC does not expose
-       // its removal counters here; it is covered by the method's own acceptance
-       // test instead - a correction large enough to put a removed phase's mass back
-       // is clamped at the feasibility bound and then fails to improve the worst
-       // relative residual, so it is reverted.
-       //
-       // PSSC works on pm.Y, so that is what is repaired; the method
-       // re-synchronises pm.X and everything derived from it on success, and
-       // restores pm.Y untouched unless the worst relative residual strictly falls.
+       // pa_MbReproject, second call site: PSSC's speciation cleanup can zero or raise single
+       // species without looking at the mass balance and leaves the repair to the next MBR, which
+       // on a warm call carries the strict guard. Applied only when no phase was inserted
+       // (k_miss < 0); with an insertion MBR must re-equilibrate. A correction that would undo a
+       // phase elimination fails the method's own acceptance test and is reverted. PSSC works on
+       // pm.Y, so pm.Y is repaired (pm.X and derived values re-synchronised on success).
        if( k_miss < 0 && base_param()->MbReproject )
            MassBalanceReproject( pm.Y );
 
@@ -3501,9 +3045,8 @@ to_text_file( "MultiDumpLP.txt" );   // Debugging
            return true; // If so, the GEM problem is already solved !
         }
         // Setting default trace amounts to DCs that were zeroed off
-        // pa_LpDualFillout (default 0 = off): the simplex solution is needed to tell WHICH species
-        // the LP zeroed, and DC_RaiseZeroedOff() overwrites it. The snapshot is taken only when the
-        // field is on or the record-only probe is armed - see LpDualFillout().
+        // pa_LpDualFillout: the simplex solution is needed to tell which species the LP zeroed,
+        // and DC_RaiseZeroedOff() overwrites it; snapshot only when the field or the probe is on.
         std::vector<double> yLpFill;
         const bool lpFillWanted = ( LpFilloutMode() > 0 || lpfill_probe_file() != nullptr
                                     || FilloutBudgetValue() > 0. );
@@ -3512,9 +3055,8 @@ to_text_file( "MultiDumpLP.txt" );   // Debugging
         DC_RaiseZeroedOff( 0, pm.L );
         if( lpFillWanted )
             LpDualFillout( yLpFill );
-        // pa_FilloutBudget: the class constants routinely ask for more of an element than the
-        // system holds, and the violated constraint is a SUM over species. Applied AFTER any
-        // fill-out so it bounds whatever was written, not only the class constants.
+        // pa_FilloutBudget: the class constants can ask for more of an element than the system
+        // holds. Applied after any fill-out, so it bounds whatever was written.
         ApplyFilloutBudget( yLpFill );
         // this operation greatly affects the accuracy of mass balance!
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
@@ -3626,44 +3168,20 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     double prev_maxResidual = std::numeric_limits<double>::max();
     long int stalledIter = 0;
 
-    // Best-residual tracking. PORTED 2026-09-02 from branch ipm_contraints
-    // commit d3ae685 (implemented and validated there 2026-08-21), which had
-    // never been merged onto develop_optima - the same cross-branch gap as the
-    // MBR Jacobi preconditioner, found by the same survey. The Tier A titrant
-    // terms that version snapshots alongside Y do not exist on this branch, so
-    // the metric below is written directly on pm.C[] - which is exactly what
-    // that version's own helper reduces to when Tier A is inactive.
-    //
-    // WHY. Every early-exit path below - the LM-too-small break, the
-    // stall-detector break, and simply exhausting pa_p->DP iterations - returns
-    // whatever pm.Y happens to hold at that moment, which is the state AFTER
-    // the last update was applied. Nothing guarantees that is the best state
-    // MBR actually visited; in the oscillating case it is routinely worse than
-    // an earlier iteration already reached. bestY snapshots pm.Y at whichever
-    // iteration has the smallest ResidualMetric() seen so far, taken right
-    // where the residual is measured and BEFORE that iteration's own update.
-    //
-    // UNCONDITIONAL, not behind a new BASE_PARAM flag. It runs only on paths
-    // that are already non-ideal exits - the clean "balance residuals OK"
-    // branch returns before reaching the restore - and it can only substitute
-    // a state with a strictly SMALLER ResidualMetric() for the one about to be
-    // returned, on the same metric the convergence and stall checks already
-    // use. So it cannot make a converging run worse, and a toggle would only
-    // add a way to keep returning a known-worse state. Unlike stall detection
-    // itself - a heuristic that changes WHEN MBR gives up, and so needs its own
-    // A/B - this changes only WHICH already-computed state is reported once MBR
-    // has independently decided to give up.
+    // Best-residual tracking. Every early exit below (LM too small, stall detector, pa_p->DP
+    // exhausted) returns whatever pm.Y holds at that moment, which need not be the best state
+    // MBR visited. bestY snapshots pm.Y at the iteration with the smallest ResidualMetric(),
+    // before that iteration's update. It can only replace the returned state by one with a
+    // strictly smaller residual, and only on exits that are already non-ideal.
+    // In plain words: if the mass-balance step gives up, return the best point it found, not
+    // the last one.
     std::vector<double> bestY( pm.L );
     double bestResidual = std::numeric_limits<double>::max();
     bool haveBest = false, trRestored = false;
 
-    // Worst normalized mass-balance residual across all N ICs (>1 means at
-    // least one IC is outside its tolerance) - the same relative/absolute
-    // combined tolerance logic as the per-IC convergence checks below, but
-    // scanned over the FULL [0,N) range every time rather than from the
-    // first-failing index onward, so that states from different iterations -
-    // which can have different first-failing indices - stay comparable on one
-    // consistent scale.
+    // Worst normalised mass-balance residual over all N ICs (> 1: some IC is outside its
+    // tolerance), with the same tolerance logic as the per-IC checks below but always over
+    // the full range, so states from different iterations are comparable.
     auto ResidualMetric = [&]() -> double
     {
         double worst = 0.;
@@ -3694,26 +3212,17 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
        Z = pm.N - pm.E;
        if( pa_p->MbClassRule > 0. )
        {
-           // PER-IC-CLASS rule, opt-in, default OFF (pa_MbClassRule == 0 takes the
-           // pre-existing branches below, byte for byte).
-           //
-           // This is what Kulik 2013 App. 2.2 actually prescribes: a RELATIVE
-           // threshold for minor/trace ICs and an ABSOLUTE one for major ICs. The
-           // branches below apply BOTH tests to EVERY IC when pa_DT != 0, which is
-           // strictly stricter and never a per-class selection - see the field's
-           // own comment in ms_multi.h for the measured consequences.
-           //
-           // Classification is by RATIO to the largest IC, not by an absolute
-           // amount: pm.B[] is internally rescaled to pa_DG total moles, so an
-           // absolute classification would not be scale-invariant.
+           // pa_MbClassRule (default 0 takes the branches below unchanged): a relative
+           // threshold for trace ICs and an absolute one for major ICs, classified by ratio to
+           // the largest IC (scale-invariant under pa_DG rescaling).
            double maxB = 0.;
            for( I=0; I<Z; I++ )
                if( pm.B[I] > maxB ) maxB = pm.B[I];
            double AbsMbCutoff_cls;
            {
                const double e = fabs( (double)pa_p->DT );
-               // |DT| >= 2 names the major absolute cutoff explicitly and is the
-               // recommended usage; otherwise fall back so the switch works alone.
+               // |DT| >= 2 names the major absolute cutoff; otherwise fall back so the switch
+               // works alone.
                AbsMbCutoff_cls = ( e >= 2. ) ? pow( 10., -e ) : pm.DHBM * 1e5;
                if( e >= 2. ) AbsMbCutoff_stall = AbsMbCutoff_cls;
            }
@@ -3732,46 +3241,12 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
              if( fabs(pm.C[I]) > pm.B[I] * pm.DHBM )
                break;
        }
-       else { // combined balance accuracy - an absolute FLOOR under the relative test
-           // Each IC must exceed BOTH thresholds to count as not converged, i.e.
-           // the effective bar is max(absolute, relative) per IC. That makes the
-           // absolute cutoff a FLOOR: a trace IC, whose relative bar B[I]*DHBM is
-           // vanishingly small, is judged on the absolute one instead, while a
-           // major IC keeps its relative bar because that is already the larger
-           // of the two. This is the per-IC-class behaviour pa_DT has always
-           // documented and never had.
-           //
-           // CHANGED 2026-09-02 from `||` to `&&`. With `||` an IC failed if
-           // EITHER threshold was exceeded, so pa_DT != 0 was strictly STRICTER
-           // than pa_DT == 0 and could never relax anything - confirmed
-           // empirically before the change (pa_DT = -9 on scratch copies of
-           // Al-species, FeNaCl_FyGt_Precip and 07PSIna_G_iron changed nothing at
-           // all, because their relative test was already the binding one).
-           //
-           // WHY IT MATTERS, measured with tools/trace_ladder on
-           // Resources/gems3k-fail/07PSIna_G_iron (scale bIC[Fe] across a ladder,
-           // everything else bit-identical, fresh TNode per rung): native's own
-           // SIA cannot re-solve its own converged answer at any Fe below 3e-7,
-           // and EVERY failing rung has an absolute residual between 1e-14 and
-           // 1e-8 mol - 0.5 picomole at Fe = 3e-10, 35 femtomoles at 3e-12. No
-           // physical criterion would reject those; they fail only because the
-           // test is relative and Fe's own total is tiny.
-           //
-           // AND IT DOES NOT MAKE THE SYSTEM DETERMINATE - record it that way.
-           // The same ladder, reporting SIGNED H and O residuals, shows the error
-           // lying along the WATER direction (H/O ~ 2.0, same sign, in five of
-           // eight rungs) - the same near-rank-1 H2O H:O = 2:1 dependence already
-           // diagnosed for MBR's own Schur-complement matrix - and the worst rung
-           // (Fe = 3e-9) is exactly where the redox constraint evaporates
-           // (H2(aq) collapses to 8.7e-27 with O2(aq) still 0, neither couple
-           // present). So this makes the TEST physical; it does not resolve the
-           // degeneracy the test is detecting.
-           //
-           // Corpus-wide no-op at the time of the change: all 52 projects in
-           // Resources/{gems3k,gems3k-fail,gems3k-psina} either set pa_DT = 0 or
-           // omit it, so none of them takes this branch at all. A project must
-           // opt in by setting pa_DT (|DT| >= 2 names the absolute cutoff as
-           // 10^-|DT|, which is the recommended usage).
+       else { // combined balance accuracy - an absolute floor under the relative test
+           // An IC counts as not converged only if it exceeds both thresholds, i.e. the bar is
+           // max(absolute, relative) per IC: a trace IC is judged on the absolute cutoff, a
+           // major one keeps its relative bar. Only projects that set pa_DT take this branch
+           // (|DT| >= 2 names the absolute cutoff as 10^-|DT|). This makes the test physical;
+           // it does not remove a degeneracy the test is detecting.
            double AbsMbAccExp, AbsMbCutoff;
            AbsMbAccExp = abs( pa_p->DT );
            if( AbsMbAccExp < 2. )  // If DT is set to 1 or -1 then DHBM is used also as the absolute cutoff
@@ -3785,10 +3260,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
               if( fabs( pm.C[I]) > AbsMbCutoff && fabs(pm.C[I]) > pm.B[I] * pm.DHBM )
                   break;
        }
-       // Best-residual snapshot. Taken here because pm.C[] is this iteration's
-       // freshly measured residual for the PRE-update pm.Y (the LM-scaled
-       // update below has not been applied yet) and AbsMbCutoff_stall has just
-       // been set by the residual test above - see the declaration for why.
+       // Best-residual snapshot: pm.C[] is this iteration's residual for the pre-update pm.Y.
        {
            double curResidual = ResidualMetric();
            if( curResidual < bestResidual )
@@ -3949,13 +3421,9 @@ STEP_POINT("FIA Iteration");
 }  /* End loop on IT1 */
 //----------------------------------------------------------------------------
 
-    // Best-residual restore. Every path that reaches this point is a non-ideal
-    // exit - the LM-too-small break, the stall-detector break, or exhausting
-    // pa_p->DP iterations - and each returns whatever pm.Y was left at, with no
-    // guarantee it is the best state MBR actually visited. Recompute the
-    // residual of the state about to be returned and put back the in-loop
-    // snapshot if it is strictly better. See the bestY/ResidualMetric
-    // declarations above for why this is unconditional.
+    // Best-residual restore. Every path reaching this point is a non-ideal exit (LM too small,
+    // stall detector, or pa_p->DP exhausted). If the in-loop snapshot has a strictly smaller
+    // residual than the state about to be returned, put it back.
     if( haveBest )
     {
         MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
@@ -4015,21 +3483,8 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     bool StatusDivg;
     long int N, IT1,J,Z,iRet,i,  nDivIC;
     double LM=0., LM1=1., FX1,    DivTol;
-    // Noise-stall accept, gated on pa_IpmStallWindow (default 0 = off). See the
-    // field's own comment in ms_multi.h for the mechanism and the measurement.
-    //
-    // FOUR SIGNALS, ALL REQUIRED, AND NONE OF THEM REFERENCES pa_DK. That is the
-    // whole point: an earlier version guarded on "pm.PCI is already within 30x of
-    // pm.DXM", which works but ties the accepted ACCURACY to the tolerance the
-    // rule is meant to replace - and flipping its default then broke
-    // proposed.aop's "native G is settings-independent" assertion. Each signal
-    // below is individually insufficient and was individually measured unsafe:
-    //   energy alone      -> 115 % error on f_/j_TestSUP98 (plan v5 74.9)
-    //   criterion alone   -> 11 % error, fires on 25 of 42 (80.2)
-    //   mass balance      -> unusable here: it is established by MBR and then
-    //                        DEGRADES monotonically inside the IPM loop by design
-    // Together they are safe, because a transient plateau in one is not a
-    // simultaneous plateau in all.
+    // Noise-stall accept, pa_IpmStallWindow (see the field in ms_multi.h). All signals are
+    // required, and none references pa_DK; each alone was found unsafe.
     const long int kIpmStallMaxW = 200;
     const double kIpmStallFXTol   = 1.e-9;  // energy flat over the window
     const double kIpmStallCompTol = 1.e-6;  // sumX and maxX flat over the window
@@ -4038,14 +3493,12 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     const double kIpmStallIncLo   = 0.35;   // PCI increases on 35-65 % of steps,
     const double kIpmStallIncHi   = 0.65;   //   i.e. it is bouncing, not moving
     std::vector<double> stW_pci, stW_fx, stW_sum, stW_max;
-    // One row of pm.X[] per iteration, held in a RING rather than the erase(begin())
-    // the scalars above use: the species rows make the array L times larger, and an
-    // O(L*W) memmove every iteration is not free on a 1392-species project.
+    // One row of pm.X[] per iteration, held in a ring buffer.
     std::vector<double> stW_xf;
     long int stW_n = 0, stW_head = 0;
     const BASE_PARAM *pa_p = base_param();
-    // pa_IpmLoopTweaks (default 0): the owner's SolverType == 2 main-loop changes, one bit each - see
-    // BASE_PARAM::IpmLoopTweaks. The constants are the original's, kept literal so an arm reproduces it.
+    // pa_IpmLoopTweaks (default 0): three optional main-loop changes, one bit each - see
+    // BASE_PARAM::IpmLoopTweaks.
     const long int kIpmLooseAfter  = 120;    // bit 4: loose accept only past this ITG
     const double   kIpmLooseFactor = 300.;   // bit 4: accept PCI < this x DXM
     const double   kIpmLagPCI      = 5e-4;   // bit 2: lag lnGam updates below this PCI (absolute)
@@ -4185,27 +3638,9 @@ if( pm.pNP && status ) // && rLoop < 0  )
 // STEPWISE (6)  Stop point at IPM() main iteration
 STEP_POINT( "IPM Iteration" );
 
-        // Per-iteration descent record, env-gated (GEMS3K_IPM_PROBE=<path>).
-        //
-        // WHY IT EXISTS. The IPM loop terminates on pm.PCI <= pm.DXM, and on part
-        // of this corpus PCI stops carrying signal long before that test is met:
-        // once the composition has settled, PCI is computed from differences of
-        // nearly-equal numbers and becomes noise, wandering in a band whose median
-        // sits ABOVE DXM with only its lower tail below. Termination is then a
-        // waiting time for a lucky draw, which is what makes the iteration count
-        // irreproducible under a 1e-15 bIC nudge while the answer is not. That is
-        // only visible per iteration - the event-level trace above cannot show it -
-        // and it is measured from this record's PCI/FX columns:
-        //
-        //   f_Kaolinite, 9 nudges: energy final to 1e-11 by iteration 25 on EVERY
-        //   run; PCI thereafter median 6.6e-6 against DXM 1e-6, rising on 49 % of
-        //   steps (no trend), P(PCI <= DXM) = 0.0063 per iteration. Predicted mean
-        //   25 + 1/0.0063 = 184.8 against an observed 183.8 over 62-363.
-        //
-        // Cost when unset: one null test on an already-resolved static pointer,
-        // the same shape as native_trace_file(). L is small on the projects this
-        // diagnoses; do not use it on the 1392-species giants without redirecting
-        // to scratch.
+        // Per-iteration descent record, GEMS3K_IPM_PROBE=<path> (PCI, FX, mass-balance columns).
+        // Shows when the Dikin criterion has become noise around DXM while the composition has
+        // settled. Cost when unset: one null test. O(N*L) per iteration when set.
         if( FILE* ipf = ipm_probe_file() )
         {
             double sumX = 0., minX = 1e300, maxX = 0.;
@@ -4215,11 +3650,8 @@ STEP_POINT( "IPM Iteration" );
                 if( pm.X[jj] > maxX ) maxX = pm.X[jj];
                 if( pm.X[jj] > 0. && pm.X[jj] < minX ) minX = pm.X[jj];
             }
-            // Mass-balance residual of the CURRENT primal pm.X, normalised so that
-            // mbRel > 1 means "this state fails the per-IC test MBR applies". It is
-            // measured against pa_DHB - a PHYSICAL tolerance - which is what makes it
-            // usable as an independent second signal alongside PCI (a numerical one).
-            // O(N*L) per iteration, so this probe is for diagnosis, not for the giants.
+            // Mass-balance residual of the current primal pm.X, normalised so that mbRel > 1
+            // means "fails the per-IC test MBR applies" (a physical tolerance, pa_DHB).
             long int iRel, iAbs; double mbRel, mbAbs;
             native_trace_mb_of( pm, pm.X, iRel, mbRel, iAbs, mbAbs );
             fprintf( ipf, "IPMIT %ld PCI=%.10e DXM=%.6e LM=%.10e LM1=%.10e FX=%.14e"
@@ -4270,32 +3702,11 @@ STEP_POINT( "IPM Iteration" );
                 for( size_t q = 1; q < stW_pci.size(); q++ )
                     if( stW_pci[q] > stW_pci[q-1] ) up++;
                 const double inc = (double)up / (double)( stW_pci.size() - 1 );
-                // EVERY SPECIES amount flat, under BOTH normalisers. The aggregate
-                // sumX/maxX pair above is blind to any REDISTRIBUTION at nearly constant
-                // total - between phases, or between the end-members of one solid
-                // solution - and those are exactly the cases that blocked this check's
-                // default (a closing miscibility gap, an appearing phase). Measured
-                // while fixing it, plan v5 section 82:
-                //
-                //   per-PHASE on pm.XF[] fixes the BETWEEN-phase half only, taking the
-                //     301-point solvus sweep from 5 non-convergences and 7 out-of-
-                //     tolerance points to 0 and 1. Motion WITHIN a phase is invisible
-                //     to it - hence per species, not per phase.
-                //   TOTAL-relative alone passes both solvus tests and fails T11's phase
-                //     crossing: that vestigial gas phase is 1.5e-6 OF THE TOTAL while
-                //     moving 75 % of ITSELF, so no total-relative threshold separates
-                //     it from settled rounding noise (1e-6 misses the boundary, 1e-8
-                //     saves 0.4 % of iterations instead of 79.7 %).
-                //   SPECIES-relative alone passes T11 and fails solvus.native.
-                //
-                // So both are required: one catches large ABSOLUTE motion in a big
-                // species, the other large RELATIVE motion in a small one. With both,
-                // the suite is 11/11 at the changed default for the first time.
-                //
-                // Cost is O(L) per iteration amortised, not O(L*W): the scan is
-                // species-major and bails on the first species still moving, which
-                // during ordinary descent is the first one looked at. Only a genuinely
-                // settled state pays the full L*W scan.
+                // Every species amount flat, under both normalisers: the aggregate sumX/maxX
+                // pair is blind to a redistribution at nearly constant total (between phases,
+                // or between end-members of one solid solution). One clause catches large
+                // absolute motion in a big species, the other large relative motion in a small
+                // one. O(L) amortised: the scan bails on the first species still moving.
                 bool xFlat = ( (size_t)stW_n == nR );
                 if( xFlat )
                 {
@@ -4310,12 +3721,9 @@ STEP_POINT( "IPM Iteration" );
                         for( size_t q = 1; q < nR; q++ )
                         {   const double v = stW_xf[ q * nSp + k ];
                             if( v < lo ) lo = v;   if( v > hi ) hi = v; }
-                        // Second clause: relative to the species' OWN largest amount
-                        // over the window. Take hi rather than the newest value, or a
-                        // species on its way OUT exempts itself as it vanishes. The
-                        // negligibility test is what makes this clause usable at all -
-                        // without it a species resting at the numerical floor wiggles
-                        // by 100 % of itself and blocks acceptance for ever.
+                        // Second clause: relative to the species' own largest amount over the
+                        // window (not the newest value, or a vanishing species would exempt
+                        // itself); species below kIpmStallSpNegl of the total are exempt.
                         if( ( hi - lo ) > kIpmStallCompTol * tot ) xFlat = false;
                         else if( hi > negl && ( hi - lo ) > kIpmStallSpRel * hi ) xFlat = false;
                     }
@@ -4542,52 +3950,26 @@ case DC_SCM_SPECIES:
 }
 
 // ===========================================================================
-// WP5 (FABLE Phase 3) - LP-DUAL-BASED PRIMAL FILL-OUT. `pa_LpDualFillout`, DEFAULT 0 = OFF.
+// pa_LpDualFillout (default 0 = off): LP-dual-based primal fill-out.
 //
-// MEASURED AND REJECTED AS A DEFAULT on 2026-09-25 (plan v5 137.3-137.8), and kept switchable the
-// same day on owner instruction ("might come back in the future"). The field's own doc comment in
-// ms_multi.h carries every measured number and the reason a future attempt needs a better-determined
-// DUAL rather than a better formula. Read it before enabling any non-zero value.
+// After AutoInitialApproximation() solves the linearised-Gibbs LP, DC_RaiseZeroedOff() raises
+// every species the LP zeroed to a class constant (pa_DFYaq/DFYw/DFYid/DFYh/DFYr/DFYc). This
+// instead predicts the amount from the LP's own dual: x_j = X_k * exp( a_j^T u_LP - G_j ) in RT
+// units, X_k the LP's amount of the species' phase.
 //
-// WHAT IT REPLACES. After AutoInitialApproximation() solves the linearised-Gibbs
-// LP, DC_RaiseZeroedOff() raises every species the LP zeroed to a CLASS CONSTANT
-// (pa_DFYaq/DFYw/DFYid/DFYh/DFYr/DFYc), one number per DC class for the whole
-// corpus, with no reference to the chemistry. WP5's question is whether the LP's
-// OWN DUAL predicts those amounts better: x_j = X_k * exp( a_j^T u_LP - G_j )
-// in RT units (Karpov 1997 Eq. 12 as cited by FABLE Phase 1 section 6.10; the same
-// formula the Optima pre-solve's re-admission site pa_OptimaReadmitSeed uses).
+// Two separate gates:
+//   GEMS3K_LPFILL_PROBE=<path>   record the prediction, change nothing;
+//   pa_LpDualFillout = 1|2|3     also apply it (GEMS3K_LPDUAL_FILLOUT overrides).
 //
-// TWO GATES, DELIBERATELY SEPARATE, and keeping them separate is what made the measurement
-// possible at all:
-//   GEMS3K_LPFILL_PROBE=<path>   record the prediction; change NOTHING.
-//   pa_LpDualFillout = 1|2|3     also APPLY it (GEMS3K_LPDUAL_FILLOUT overrides, for experiments).
-// So the OFF arm still carries the prediction AND the answer it is scored against, which is what
-// makes the accuracy question answerable without perturbing anything - with one gate the only
-// available comparison is between two different trajectories.
-//
-// BOUNDED FAILURE, three ways, because every one of them has already cost this
-// project a session:
-//  (i) THE BIG-M. WP4 (work item 31m) measured three projects whose LP dual carries
-//      the simplex sentinel 1/pa_EPS = 1e10 for an IC the LP could not price
-//      (07PSIna_G_edt_2: U; f_/j_TestSUP98: Ne, Ti). Nothing in the tree handles
-//      that value today. A species touching such an IC is SKIPPED, not priced.
-//  (ii) THE CEILING. A fill-out amount written without asking what the bulk can
-//      supply is the plan v5 section 76 defect in its fill-out form - PSSC's fixed
-//      pa_DFYs = 1e-6 insertion over-subscribed its limiting element by 1000x on
-//      the psina projects. Capped at 0.5 * PhaseInsertionCeiling(j), the same
-//      quantity PSSC's INSERT_BUDGET uses.
-//  (iii) THE FLOOR. Never below what DC_RaiseZeroedOff() just wrote, so the "on"
-//      arm can only RAISE a species; the class constant remains the fallback for
-//      anything not priced, not finite, or predicted smaller.
-// A positive affinity is clamped to zero (counted as posaff): at an LP optimum a
-// species at its lower bound has reduced cost s_j = G_j - a_j^T u >= 0, so a
-// positive one is degeneracy or round-off, not a prediction.
-//
-// SELF-CHECK ON THE SIGN CONVENTION, printed rather than assumed: for a species
-// the LP made BASIC the same affinity must be ~ 0. presmax= is the largest |aff|
-// over LP-present species; if it is not small, pm.U after SolveSimplex() is not
-// the dual this formula wants and every number here is meaningless.
-/// The measured edge of the band where the LP dual carries information - see lpfill_apply_mode().
+// Bounded three ways:
+//  (i) big-M: a species touching an IC whose LP dual carries the simplex sentinel 1/pa_EPS
+//      is skipped, not priced;
+//  (ii) ceiling: capped at 0.5 * PhaseInsertionCeiling(j);
+//  (iii) floor: never below what DC_RaiseZeroedOff() wrote (except mode 2).
+// A positive affinity is clamped to zero (counted as posaff): at an LP optimum a species at
+// its lower bound has s_j = G_j - a_j^T u >= 0. presmax= (the largest |aff| over LP-present
+// species, which should be ~0) checks the sign convention.
+/// The edge of the band where the LP dual carries information - see LpFilloutMode().
 static const double kLpFillAffCut = -8.;
 
 struct LpFillRec { long int j; long int k; double cls; double raw; double pred; double cap; double aff; };
@@ -4611,22 +3993,11 @@ FILE* lpfill_probe_file()
     return fp;
 }
 
-/// The applied mode is the FIELD pa_LpDualFillout; GEMS3K_LPDUAL_FILLOUT overrides it for a
-/// throwaway experiment without editing a project file, exactly as the probe that measured this did.
-///   1  the plan's own rule: the class constant is a FLOOR, so a species can only be raised.
-///   3  the plan's rule, but APPLIED ONLY NEAR THE LEVELING HYPERPLANE (aff >= -8 RT).
-///      Measured 2026-09-25 (plan v5 137.8a): the LP dual sizes a species to 0.19 decades at
-///      100 mol and degrades by about one decade per decade of rarity, crossing the class
-///      constant's accuracy at ~1e-2 mol. With X_k ~ 55 mol that crossing is exp(aff) ~ 2e-4,
-///      i.e. aff ~ -8.5. So -8 RT is the measured edge of the region where the dual carries
-///      information, expressed DIMENSIONLESSLY - an absolute mole cut-off here would be the
-///      section 76 defect again (pa_DG rescales every amount; RT does not rescale).
-///   2  the composition ceiling DOMINATES that floor. Added after the first run of this probe
-///      showed the floor is not always reachable: on f_CalcDolo the class constant pa_DFYaq =
-///      1e-5 exceeds PhaseInsertionCeiling() for 7 of 23 zeroed species (Ca(CO3)@ asks 17x the
-///      Ca the bulk holds), i.e. TODAY'S fill-out over-subscribes its limiting element - the
-///      plan v5 section 76 defect class, in the shipped class constants rather than in PSSC.
-///      Mode 1 cannot show what fixing that is worth, because its floor re-imposes it.
+/// The applied mode: pa_LpDualFillout, unless GEMS3K_LPDUAL_FILLOUT overrides it.
+///   1  the class constant is a floor, so a species can only be raised.
+///   2  the composition ceiling dominates that floor.
+///   3  as 1, but applied only near the leveling hyperplane (aff >= kLpFillAffCut RT), the
+///      band where the LP dual carries information; dimensionless, unaffected by pa_DG.
 long int TMultiBase::LpFilloutMode() const
 {
     static const long int envM = []() -> long int
@@ -4637,10 +4008,9 @@ long int TMultiBase::LpFilloutMode() const
     return ( envM >= 0 ) ? envM : base_param()->LpDualFillout;
 }
 
-/// Price every species the LP zeroed against the LP's own dual. yLp is pm.Y as the
-/// simplex left it, i.e. BEFORE DC_RaiseZeroedOff(); pm.Y as this is called already
-/// carries the class constants, so "the LP zeroed it" is exactly yLp[j] < pm.Y[j]
-/// and the class value needs no re-derivation from pm.DCC[j].
+/// Price every species the LP zeroed against the LP's own dual. yLp is pm.Y as the simplex
+/// left it, before DC_RaiseZeroedOff(); pm.Y here already carries the class constants, so
+/// "the LP zeroed it" is exactly yLp[j] < pm.Y[j].
 void TMultiBase::LpDualFillout( const std::vector<double>& yLp )
 {
     lpfill_recs.clear();
@@ -4711,7 +4081,7 @@ void TMultiBase::LpDualFillout( const std::vector<double>& yLp )
 
             const double cap = PhaseInsertionCeiling( j );
             if( cap > 0. && cls > cap )
-            {   // TODAY'S class constant already asks for more than the bulk can supply
+            {   // the class constant already asks for more than the bulk can supply
                 lpfill_overcls++;
                 lpfill_overclsmax = std::max( lpfill_overclsmax, cls / cap );
             }
@@ -4730,7 +4100,7 @@ void TMultiBase::LpDualFillout( const std::vector<double>& yLp )
     }
     if( lpfill_applied )
     {   // the raise changed phase totals; the LP site recomputes them right after,
-        // but a DECIDE record belongs where the choice was made.
+        // but the DECIDE record is written where the choice was made.
         native_trace_decide( "lpfillout mode=%ld n=%ld raised=%ld capped=%ld skipped=%ld posaff=%ld overcls=%ld",
                              (long)mode, (long)lpfill_recs.size(), (long)lpfill_raised,
                              (long)lpfill_capped, (long)lpfill_skipped, (long)lpfill_posaff,
@@ -4738,8 +4108,8 @@ void TMultiBase::LpDualFillout( const std::vector<double>& yLp )
     }
 }
 
-/// One summary line plus one line per priced species, written at the ANSWER site so
-/// every prediction is scored against the amount the solve actually converged to.
+/// One summary line plus one line per priced species, written at the answer site, so each
+/// prediction is compared with the amount the solve converged to.
 void TMultiBase::LpFillProbeReport()
 {
     FILE* fp = lpfill_probe_file();
@@ -4753,20 +4123,11 @@ void TMultiBase::LpFillProbeReport()
              (long)lpfill_overcls, lpfill_overclsmax,
              (long)lpfill_present, lpfill_presmax,
              (long)pm.ITF, (long)pm.ITG, (long)pm.MK, (long)pm.PZ, (long)pm.L, (long)pm.N );
-    // ---- HOW MUCH OF THE 29.3 RT DUAL GAP IS THE MISSING MIXING TERM?
-    //
-    // The cold LP prices every species at pm.G0 + pm.lnGam with lnGam FORCED TO ZERO and
-    // Gamma = 1 (ipm_main.cpp, just before AutoInitialApproximation()) - so it is the
-    // ideal-pure-phase linearisation, with no mixing entropy at all. For an aqueous trace
-    // species the ln(x) term alone is -20 to -45 RT, which is the order of the measured gap.
-    // If that is the whole story, re-solving the SAME LP with the CURRENT pm.G (= G0 + fDQF
-    // + F0, the primal chemical potentials including mixing and activity) must return a dual
-    // close to the converged pm.U.
-    //
-    // THIS IS A MECHANISM TEST, NOT A DESIGN TEST, and the distinction matters: linearising
-    // AT the solution is circular by construction. A small number here confirms WHAT the gap
-    // is made of; it says nothing about whether an LP called EARLY, at a state that is not
-    // the solution, would return anything useful. Read it that way.
+    // ---- Diagnostic: re-solve the LP at the current potentials -----------
+    // The cold LP prices species at G0 with lnGam forced to zero (no mixing term). Re-solving
+    // the same LP with the current pm.G (G0 + fDQF + F0) tests whether the missing mixing term
+    // explains the gap between the LP dual and the converged pm.U. A mechanism test only:
+    // linearising at the solution is circular by construction.
     {
         double uInf = 0., d0 = 0., d1 = -1.;
         for( long int i = 0; i < pm.N; i++ )
@@ -4783,11 +4144,8 @@ void TMultiBase::LpFillProbeReport()
                 d1 = std::max( d1, fabs( yRe[(size_t)i] - pm.U[i] ) );
         }
 #endif
-        // IS THE DIFFERENCE DEGENERACY? For any LP, EVERY optimal dual gives the same dual
-        // objective b^T y. So if b^T y_reLP equals b^T u_converged, both are optimal duals of
-        // the same LP and the 26 RT between them is the dual polytope's own width - the LP
-        // does not DETERMINE the dual. If they differ, the converged dual is not an optimal
-        // dual of that LP at all, and the gap is something else entirely.
+        // Is the difference degeneracy? Every optimal dual of an LP gives the same b^T y, so equal
+        // values mean both are optimal duals of one LP (the LP does not determine the dual).
         double bu = 0., by = 0.;
         for( long int i = 0; i < pm.N; i++ )
             bu += pm.B[i] * pm.U[i];
@@ -4810,19 +4168,9 @@ void TMultiBase::LpFillProbeReport()
 }
 
 
-/// The effective budget: GEMS3K_FILLOUT_BUDGET if set, else the field.
-///
-/// NOT cached in a static, deliberately, unlike the other env gates in this file. It is read once
-/// per cold call - negligible next to a solve - and caching makes the value impossible to sweep or
-/// to A/B inside one process. Not hypothetical: the first version WAS cached and
-/// tests/test_fillout_budget.cpp caught it on its first run, taking both arms in one process and
-/// silently getting the first arm's value twice. A NEGATIVE env value means "unset", so 0 stays a
-/// usable arm - it is the mechanism's own off value.
-///
-/// Read by BOTH the call site (which must snapshot pm.Y before DC_RaiseZeroedOff() overwrites it)
-/// and ApplyFilloutBudget() itself. Those two disagreeing is the second bug the same test caught:
-/// the gate consulted the FIELD while the mechanism consulted the OVERRIDE, so an overridden run
-/// took no snapshot and the mechanism silently did nothing.
+/// The effective budget: GEMS3K_FILLOUT_BUDGET if set (negative = unset), else the field.
+/// Not cached, so it can be changed within one process. Read by both the call site (which
+/// must snapshot pm.Y before DC_RaiseZeroedOff()) and ApplyFilloutBudget(), so they agree.
 double TMultiBase::FilloutBudgetValue() const
 {
     const char* v = std::getenv( "GEMS3K_FILLOUT_BUDGET" );
@@ -4830,15 +4178,11 @@ double TMultiBase::FilloutBudgetValue() const
     return ( envF >= 0. ) ? envF : base_param()->FilloutBudget;
 }
 
-/// pa_FilloutBudget - cap how much DC_RaiseZeroedOff()'s class constants may perturb the mass
-/// balance. See the field's doc comment in ms_multi.h for the measurement and for why a
-/// per-species cap cannot do this job. yLp is pm.Y as the simplex left it, BEFORE the raise.
+/// pa_FilloutBudget: caps how much DC_RaiseZeroedOff()'s class constants may change the mass
+/// balance. yLp is pm.Y as the simplex left it, before the raise.
 void TMultiBase::ApplyFilloutBudget( const std::vector<double>& yLp )
 {
-    // GEMS3K_FILLOUT_BUDGET overrides the field for a throwaway arm without editing a project
-    // file - the same idiom as GEMS3K_LPDUAL_FILLOUT above, and it exists for the same reason:
-    // this default was CHOSEN by a sweep, so the sweep has to stay cheap to repeat. A NEGATIVE
-    // value means "unset", so 0 stays a usable arm - it is the mechanism's own off value.
+    // GEMS3K_FILLOUT_BUDGET overrides the field (negative = unset, so 0 stays a usable value).
     const double f = FilloutBudgetValue();
     if( !( f > 0. ) || (long int)yLp.size() != (size_t)pm.L || !pm.A || !pm.B )
         return;
@@ -4847,10 +4191,8 @@ void TMultiBase::ApplyFilloutBudget( const std::vector<double>& yLp )
     if( Zlim <= 0 )
         return;
 
-    // Every bit of the excess comes from the raise: the LP solution satisfies A n = b exactly
-    // (measured - the check holds to 1e-16 on 74 of 77 projects; the three that fail are the
-    // big-M projects 07PSIna_G_edt_2 and f_/j_TestSUP98, where the LP supplies ZERO of one IC
-    // and there is nothing for this to scale).
+    // All of the excess comes from the raise: the LP solution satisfies A n = b exactly
+    // (except where the LP supplies none of an IC, when there is nothing to scale).
     std::vector<double> raised( (size_t)Zlim, 0. );
     for( long int j = 0; j < L; j++ )
     {
@@ -5003,14 +4345,9 @@ void TMultiBase::WeightMultipliers( bool square )
 #define  a(j,i) ((*(pm.A+(i)+(j)*Na)))
 
 #ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
-// The following diagnostics (condition-number estimation + per-phase timing)
-// add real overhead per linear solve — up to several hundred percent of the
-// Cholesky/LU solve itself for small systems (see gems-benchmark/CLAUDE.md,
-// 2026-07-28). Gated so normal/production use of GEMS3K compiles none of
-// this in; only builds that explicitly opt in (GEMS3K's CMake option
-// ENABLE_BENCHMARK_DIAGNOSTICS, used by gems-benchmark) pay the cost. Future
-// benchmark/diagnostics-only instrumentation should reuse this same macro
-// rather than introducing a new one per feature.
+// The following diagnostics (condition-number estimation, per-phase timing) add real overhead
+// per linear solve, so they are compiled only with the CMake option
+// ENABLE_BENCHMARK_DIAGNOSTICS. Other benchmark-only instrumentation should use the same macro.
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Cheap proxy for conditioning: ratio of largest to smallest |diagonal|
@@ -5106,18 +4443,12 @@ static double InverseIterationMinEig( Decomp& decomp, long int N, int iters )
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// pa_IpmAugmentedKKT = 1 or 2: the main-loop solve for pm.U that never forms A^T W A.
-/// See BASE_PARAM::IpmAugmentedKKT (ms_multi.h) for the system, D and the zero-row rescue.
-///
-/// Both arms solve (A_act^T W A_act + D) u = A_act^T W F over the SAME species the normal-
-/// equations assembly below uses (Y > min(lowPosNum, DcMinM)); they differ from it only by D and
-/// by rounding. pm.MU is not written here - DikinsCriterion() recomputes it from pm.U, and
-/// W (A u - F) is exactly the x block of arm 1, so there is nothing to carry over.
-/// \return 0 solved, 2 singular - the caller then FALLS BACK to the normal equations for this
-///         step (DECIDE ipmkkt-fallback). Never 1: the augmented solve must not fail where the
-///         normal equations would have gone on. MEASURED 2026-09-28c freeze: without the fallback,
-///         a warm SIA start (07PSIna_G_simple_1/2, CASH+CsSr) had QR report R rank-deficient at
-///         column 5 of 6 on its first step while Cholesky/LU of A^T W A pushed through, and SIA then
-///         auto-switched to AIA - three SIA answers lost.
+/// Both modes solve (A_act^T W A_act + D) u = A_act^T W F over the same species as the
+/// normal-equations assembly below (Y > min(lowPosNum, DcMinM)), differing from it only by D
+/// and rounding. pm.MU is not written here (DikinsCriterion() recomputes it from pm.U).
+/// \return 0 solved, 2 singular - the caller then takes this step by the normal equations
+///         (DECIDE ipmkkt-fallback). Never 1: the augmented solve must not fail where the
+///         normal equations would have gone on.
 long int TMultiBase::SolveIpmAugmented( long int N )
 {
     const long int Na = pm.N;   // stride of the a(j,i) macro
@@ -5130,13 +4461,9 @@ long int TMultiBase::SolveIpmAugmented( long int N )
             act.push_back( jj );
     const long int La = (long int)act.size();
 
-    // D is ZERO on every row some active species carries, and 1e-12 * max_i d_i on a row none does
-    // (d_i = sum_j W_j a_ji^2, the normal matrix's own diagonal). A uniform D - the original's
-    // absolute 1e-12, or 1e-12 * d_i per row - was MEASURED HARMFUL: this matrix is conditioned up to
-    // ~1e17 (plan v5, the MBR Jacobi preconditioner record), so a 1e-12 shift moves the weak
-    // directions of u by O(1). f_Kaolinite native, same QR solve: D = 1e-12 * d_i -> 3963 iterations
-    // and G off by 7.3e-6 relative; D = 1e-16 * d_i or 0 -> 45 IPM iterations, G to 10 digits
-    // (2026-09-28b, against 273 for the normal equations).
+    // D is zero on every row some active species carries, and 1e-12 * max_i d_i on a row none
+    // does (d_i = sum_j W_j a_ji^2, the normal matrix's own diagonal). A uniform D would move
+    // the weak directions of u in this badly conditioned system.
     std::vector<double> dreg( (size_t)N, 0. );
     for( long int r = 0; r < La; r++ )
     {
@@ -5169,7 +4496,7 @@ long int TMultiBase::SolveIpmAugmented( long int N )
 
     if( mode == 1 )
     {
-        // The owner's saddle-point form (tmp/ipm_main.cpp), dense LU with partial pivoting:
+        // Saddle-point form, dense LU with partial pivoting:
         //   [ I          -W A_act ] [ x ]   [ -W F ]
         //   [ -A_act^T   -D       ] [ u ] = [  0   ]
         const long int K = La + N;
@@ -5293,24 +4620,10 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
     long int ii, i, jj, kk, k, Na = pm.N;
 
     // ------------------------------------------------------------------
-    // Appendix A of Leal et al. (2017), Eqs. 130-136: a pivot/non-pivot
-    // SPLIT of this reduction, gated on pa_MbPivotSplit (default 0 = off).
-    // See BASE_PARAM::MbPivotSplit (ms_multi.h) for the derivation, the
-    // classification rule and the honest bound on what it can achieve.
-    //
-    // Implemented as a self-contained early branch rather than by widening
-    // AA/BB, so that with the field off this function is byte-identical to
-    // what it was before - AA's stride is N everywhere below, and changing
-    // it would touch every indexing site in the naive path.
-    //
-    // Falls through to that naive path when the split is empty (Eq. 136
-    // then degenerates to Eq. 132 exactly, so there is nothing to gain and
-    // the existing diagnostics are worth keeping) or when the non-pivot set
-    // is larger than N (the augmented solve would then be more than twice
-    // the size of the thing it replaces, against the paper's own claim that
-    // |I_n| is "typically small and not greater than the number of
-    // elements" - a system that violates that is not the case Appendix A
-    // was written for).
+    // pa_MbPivotSplit: pivot/non-pivot split of this reduction (see BASE_PARAM::MbPivotSplit).
+    // A self-contained early branch, so with the field off the function is unchanged. Falls
+    // through to the plain path when the non-pivot set is empty (the split then reduces to
+    // the plain assembly exactly) or larger than N.
     // ------------------------------------------------------------------
     if( initAppr && base_param()->MbPivotSplit )
     {
@@ -5385,10 +4698,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
             for( ii = 0; ii < N; ii++ )
                 BM[(size_t)ii] = pm.C[ii];     // BM[N..M) stay 0
 
-            // Same symmetric Jacobi scaling as the naive path - see the block
-            // below. Applied here too on purpose: comparing an unpreconditioned
-            // Appendix A against a preconditioned baseline would measure the
-            // loss of the preconditioner rather than the gain of the split.
+            // Same symmetric Jacobi scaling as the plain path below.
             std::vector<double> Ds( (size_t)M, 1. );
             for( long int r = 0; r < M; r++ )
             {
@@ -5403,10 +4713,8 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
                 BM[(size_t)r] *= Ds[(size_t)r];
             }
 
-            // The augmented matrix is symmetric but INDEFINITE (the non-pivot
-            // diagonal block is -1/W[j] < 0), so Cholesky cannot apply and is
-            // not attempted; LU with partial pivoting is the whole point of
-            // Appendix A in the first place.
+            // The augmented matrix is symmetric but indefinite (the non-pivot diagonal block
+            // is -1/W[j] < 0), so it is solved by LU with partial pivoting, not Cholesky.
             Array2D<double> AAm( M, M, AM.data() );
             Array1D<double> BBm( M, BM.data() );
             JAMA::LU<double> lum( AAm );
@@ -5498,35 +4806,13 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
                 }
     }
 
-    // Diagonal (Jacobi) preconditioning of the initAppr (MBR) Schur-complement
-    // matrix. PORTED 2026-09-02 from branch ipm_contraints commit 26d9d57a,
-    // where it was implemented and validated on 2026-08-21 - it had never been
-    // merged onto develop_optima, which branched from master, so this branch's
-    // native MBR ran unpreconditioned for the whole of the Optima work. Same
-    // cross-branch trap already on record twice (PSTALL, and
-    // ENABLE_BENCHMARK_DIAGNOSTICS).
-    //
-    // On at least one real project (Cu-Pourbaix) AA's diagonal spans up to ~17
-    // orders of magnitude - diagMax stays flat ~4.4e5 while diagMin collapses
-    // ~10x per iteration toward ~1e-12 - which is a SCALING problem, not rank
-    // deficiency. Symmetric scaling A' = D*A*D, B' = D*B with
-    // D = diag(1/sqrt(|A_ii|)) preserves symmetry and positive-definiteness
-    // (A is a Gram matrix, a(j,i)*a(j,k)*W[j] summed over j, so A' is one too)
-    // while normalising every nonzero diagonal entry to exactly 1. The solved
-    // dual is unscaled back (U = D*U') at the unpack site below.
-    //
-    // Rows/columns with a structurally-zero diagonal (no species touches that
-    // IC) get Dscale = 1 rather than dividing by zero - such a row already
-    // makes the matrix singular regardless of preconditioning, and the existing
-    // singular-matrix path handles it unchanged.
-    //
-    // Measured when first adopted: the real eigenvalue-based condition number
-    // drops ~7 orders (~3.4e17 implied -> ~3.06e10 measured) with zero
-    // regression across all 25 gems-benchmark Resources/gems3k projects. It
-    // does NOT touch the remaining ~10 orders of NON-diagonal ill-conditioning,
-    // which was traced to water's fixed H:O = 2:1 stoichiometry making the H
-    // and O rows of the assembled matrix near-linearly-dependent - a genuine
-    // near-singularity of A D^-1 A^T, which no rescaling can repair.
+    // Diagonal (Jacobi) preconditioning of the initAppr (MBR) Schur-complement matrix:
+    // A' = D*A*D, B' = D*B with D = diag(1/sqrt(|A_ii|)), which keeps symmetry and positive
+    // definiteness and normalises every nonzero diagonal entry to 1. The dual is unscaled
+    // (U = D*U') at the unpack site below. A row with a structurally zero diagonal gets
+    // Dscale = 1 (it is singular anyway and goes to the existing singular-matrix path).
+    // Rescaling cannot repair a genuine near-singularity of A D^-1 A^T (e.g. the H and O rows
+    // tied by water's fixed 2:1 stoichiometry).
     if( initAppr )
     {
         Dscale.assign( N, 1. );
