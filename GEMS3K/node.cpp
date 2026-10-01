@@ -237,7 +237,7 @@ long int TNode::GEM_run( bool uPrimalSol )
         if( nudges > 0 )
             status = GEM_run_cold_retry( nudges );
     }
-    // PROTOTYPE (session gems3k-e6, 2026-09-28; plan v5 section 140.16), OFF unless pa_OptimaColdRetry > 0:
+    // Release default 2026-10-01 (plan v5 section 140.16; prototyped session gems3k-e6, 2026-09-28), on when pa_OptimaColdRetry > 0 (default 2):
     // a WARM Optima call (SOP, or SHP whose Optima leg failed) that did not return OK is re-solved cold as AOP from
     // the same inputs - ORCHESTRA's and THERMOCHIMICA's effective behaviour (each cell solved from its own start).
     // With pa_OptimaCgSeed > 0 a failed cold call is tried once more from the column-generation seed. A retry that is not OK hands the

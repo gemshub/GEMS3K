@@ -1458,7 +1458,7 @@ protected:
     long int GEM_run_single( bool uPrimalSol );
     /// pa_ColdRetryNudges' recovery of a failed NEED_GEM_AIA call; see BASE_PARAM::ColdRetryNudges.
     long int GEM_run_cold_retry( long int maxNudges );
-    long int GEM_run_optima_cold_retry( long int requested );   // PROTOTYPE, plan v5 section 140.16
+    long int GEM_run_optima_cold_retry( long int requested );   // release default 2026-10-01, plan v5 section 140.16
     long int GEM_run_aop_cgseed( long int& itf, long int& itg, double& seconds );
     long int GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* rung );   // cold AOP, pa_OptimaCgSeed as 2nd attempt
 

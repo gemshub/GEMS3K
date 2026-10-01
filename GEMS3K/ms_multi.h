@@ -1716,29 +1716,31 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// within 0.4 % on answers; T-cement OK via the retry. Needs OPTIMA_LINESEARCH_REJECT_WORSE; inert against an older Optima.
     /// Trailing member: GEMSGUI serialises BASE_PARAM positionally. RAW value: 0.
     long int OptimaLSRejectWorse = 0;
-    /// pa_OptimaTpdAccept (PROTOTYPE, plan v5 section 140.15 A): when Optima ends not converged / KKT / stability failed
-    /// but mass balance holds, accept the state iff every off-bound species is stationary, every at-bound species of a
-    /// single-DC/aqueous/gas phase has gradJ >= -kktTol, and every ABSENT non-ideal condensed phase has a direct-TPD search
-    /// minimum >= -value (THERMOCHIMICA's phase-level criterion). 0 = off. Measured value 1e-6. RAW value: 0.
+    /// pa_OptimaTpdAccept (release default 2026-10-01, plan v5 section 140.15 A): when Optima ends not converged / KKT /
+    /// stability failed but mass balance holds, accept the state iff every off-bound species is stationary, every at-bound
+    /// species of a single-DC/aqueous/gas phase has gradJ >= -kktTol, and every ABSENT non-ideal condensed phase has a
+    /// direct-TPD search minimum >= -value (THERMOCHIMICA's phase-level criterion). 0 = off. Release default 1e-6
+    /// (RC freeze 2026-10-01: clean standard + raw). RAW value: 0.
 #ifndef GEMS3K_DEFAULT_OPTIMA_TPDACCEPT
 #define GEMS3K_DEFAULT_OPTIMA_TPDACCEPT 1e-6   // release default 2026-10-01 (RC freeze: clean standard + raw)
 #endif
     double OptimaTpdAccept = GEMS3K_DEFAULT_OPTIMA_TPDACCEPT;
-    /// pa_OptimaCgSeed (PROTOTYPE, plan v5 section 140.15 B): cold Optima seed by column generation (species Gibbs-LP +
-    /// TPD-priced pseudo-compound columns, THERMOCHIMICA's Leveling/PEA); value = TPD tolerance; 0 = off (feasibility-LP
-    /// seed). Measured value 1e-6. RAW value: 0.
+    /// pa_OptimaCgSeed (release default 2026-10-01, plan v5 section 140.15 B): cold Optima seed by column generation
+    /// (species Gibbs-LP + TPD-priced pseudo-compound columns, THERMOCHIMICA's Leveling/PEA); value = TPD tolerance;
+    /// 0 = off (feasibility-LP seed). Release default 1e-6 (RC freeze 2026-10-01: clean standard + raw). RAW value: 0.
 #ifndef GEMS3K_DEFAULT_OPTIMA_CGSEED
 #define GEMS3K_DEFAULT_OPTIMA_CGSEED 1e-6   // release default 2026-10-01 (RC freeze: clean standard + raw)
 #endif
     double OptimaCgSeed = GEMS3K_DEFAULT_OPTIMA_CGSEED;
-    /// pa_OptimaColdRetry (PROTOTYPE, plan v5 section 140.16 C/C'): a warm Optima call (SOP, SHP) that is not OK is
-    /// re-solved cold (AOP) by TNode::GEM_run_optima_cold_retry(); 0 = off, 1 = retry after the full warm budget,
-    /// 2 = fail fast (skip the warm call's full-budget re-solves, then retry). Measured value 2. RAW value: 0.
+    /// pa_OptimaColdRetry (release default 2026-10-01, plan v5 section 140.16 C/C'): a warm Optima call (SOP, SHP) that is
+    /// not OK is re-solved cold (AOP) by TNode::GEM_run_optima_cold_retry(); 0 = off, 1 = retry after the full warm budget,
+    /// 2 = fail fast (skip the warm call's full-budget re-solves, then retry). Release default 2, fail fast (owner:
+    /// corium speed). RAW value: 0.
 #ifndef GEMS3K_DEFAULT_OPTIMA_COLDRETRY
 #define GEMS3K_DEFAULT_OPTIMA_COLDRETRY 2   // release default 2026-10-01 (RC freeze: clean standard + raw)
 #endif
     long int OptimaColdRetry = GEMS3K_DEFAULT_OPTIMA_COLDRETRY;
-    /// pa_OptimaFinish (PROTOTYPE, plan v5 section 142): when an Optima call ends not converged, a Newton finish on the FIXED
+    /// pa_OptimaFinish (release default 2026-10-01, plan v5 section 142): when an Optima call ends not converged, a Newton finish on the FIXED
     /// phase set (species amounts and multipliers, equality-constrained, line-searched on G) is run from Optima's last
     /// primal by TMultiBase::PotentialSpaceFinish(); its result is then judged by the same KKT / mass-balance / TPD checks
     /// as Optima's own. 0 = off, 1 = on. RAW value: 0.
@@ -3001,7 +3003,7 @@ public:
     /// DetectPhaseCollapseAndReseed() afterward, same as this method's own
     /// call site in CalculateEquilibriumStateOptima() does.
     bool LPFeasibilitySeed( std::vector<double>& nOut );
-    /// PROTOTYPE (plan v5 §140.15): THERMOCHIMICA-style column-generation cold seed; see ipm_optima.cpp.
+    /// Release default 2026-10-01 (plan v5 §140.15): THERMOCHIMICA-style column-generation cold seed; see ipm_optima.cpp.
     bool ColumnGenerationSeed( std::vector<double>& nOut, double tol );
     bool PotentialSpaceFinish( double dcFloor, const std::vector<double>& xlower, const std::vector<double>& xupper );
 

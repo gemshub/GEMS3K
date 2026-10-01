@@ -729,7 +729,7 @@ bool TMultiBase::DetectPhaseCollapseAndReseed( const double* x,
     return !reseedsOut.empty();
 }
 
-// PROTOTYPE (session gems3k-e6, 2026-09-28; plan v5 section 140.15), used only when pa_OptimaCgSeed > 0
+// Release default 2026-10-01 (plan v5 section 140.15; prototyped session gems3k-e6, 2026-09-28), used only when pa_OptimaCgSeed > 0
 // (value = TPD tolerance in RT; measured 1e-6). THERMOCHIMICA's (Equilipy 0.3.3) Leveling + PEA global stage as a cold
 // seed for Optima, i.e. COLUMN GENERATION: the species Gibbs-LP (min sum_c cost_c n_c, A n = b, n >= 0; species columns
 // priced at G0 + fDQF) gives a vertex and its dual u; every non-ideal condensed solution phase is then searched for its
@@ -834,7 +834,7 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
     return true;
 }
 
-// PROTOTYPE (session gems3k-e6, 2026-09-28; plan v5 section 142), OFF unless pa_OptimaFinish = 1. THERMOCHIMICA's last stage
+// Release default 2026-10-01 (plan v5 section 142; prototyped session gems3k-e6, 2026-09-28), on when pa_OptimaFinish = 1 (default). THERMOCHIMICA's last stage
 // (RunLagrangianGEM): with the phase set FIXED the problem is smooth, and the exchange Optima cycles on (a pure compound
 // against a solution end-member of the same composition, Al2O3-CaO 1872 K: CaO(s) <-> CaO(l)) is ONE equation. Equality-
 // constrained Newton on the species amounts of the present phases (pure phases linear, solution phases through a
@@ -6016,7 +6016,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // longer than the budget can never complete - so this only becomes live
         // for ROP if someone sets a small window explicitly, which is exactly
         // when they would want the net.
-        // PROTOTYPE (plan v5 section 140.17): with pa_OptimaColdRetry = 2, a WARM call (pm.pNP == 1) skips the
+        // Release default 2026-10-01 (plan v5 section 140.17): with pa_OptimaColdRetry = 2 (default), a WARM call (pm.pNP == 1) skips the
         // expensive full-budget re-solves below and fails fast, so TNode::GEM_run_optima_cold_retry() takes over at once.
         const bool warmFailFast = ( pa_p->OptimaColdRetry == 2 );   // pa_OptimaColdRetry = 2
         const bool skipFullBudgetResolves = warmFailFast && pm.pNP == 1;
@@ -6278,7 +6278,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         for( long int i = 0; i < N; i++ )
             pm.U[i] = -state.ye[i];
 
-        // PROTOTYPE (plan v5 section 142), OFF unless pa_OptimaFinish = 1: Newton finish on the fixed phase set from
+        // Release default 2026-10-01 (plan v5 section 142), on when pa_OptimaFinish = 1 (default): Newton finish on the fixed phase set from
         // Optima's last primal; the KKT / mass-balance / stability checks below judge its result like Optima's own.
         bool finishTrace = false;   // a reported success that leaves a species at trace level (above the floor) inside an interior-looking state
         if( pa_p->OptimaFinish > 0 && result.succeeded && R == 0 )
@@ -6864,7 +6864,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
         }
 
-        // PROTOTYPE (session gems3k-e6, 2026-09-28; plan v5 section 140.15), OFF unless pa_OptimaTpdAccept > 0
+        // Release default 2026-10-01 (plan v5 section 140.15; prototyped session gems3k-e6, 2026-09-28), on when pa_OptimaTpdAccept > 0 (default 1e-6)
         // (value = TPD tolerance in RT; measured 1e-6). THERMOCHIMICA's convergence criterion instead of Optima's
         // per-species one for ABSENT non-ideal phases: Optima's error test (and kktOk / stabilityOk above) demand a
         // non-negative reduced gradient of EACH end-member of an absent solution phase, whose internal composition is

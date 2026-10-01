@@ -200,10 +200,10 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaLSStallEscape", 0 , 0, 0, "# pa_OptimaLSStallEscape: with the Optima line search on, keep the full step after this many consecutive zero-progress line searches; 0 = off { 10 }" },
     { "pa_OptimaLSWindow", 0 , 0, 0, "# pa_OptimaLSWindow: line-search trigger compares with the max of the last N errors (non-monotone); 0 = off, not recommended for phase diagrams { 0 }" },
     { "pa_OptimaLSRejectWorse", 0 , 0, 0, "# pa_OptimaLSRejectWorse: with the Optima line search on, discard a line search that ends no better than it started and keep the full step; 0 = off (default), 1 = on (for projects where the line search crawls) { 0 }" },
-    { "pa_OptimaTpdAccept", 0 , 0, 0, "# pa_OptimaTpdAccept: accept a non-converged Optima state when only ABSENT non-ideal phases fail and their TPD search is >= -value (prototype) { 0 off; measured 1e-6 }" },
-    { "pa_OptimaCgSeed", 0 , 0, 0, "# pa_OptimaCgSeed: cold Optima seed by column generation, species Gibbs-LP + TPD-priced pseudo-compounds (prototype) { 0 off; measured 1e-6 }" },
-    { "pa_OptimaColdRetry", 0 , 0, 0, "# pa_OptimaColdRetry: re-solve a failed warm Optima call (SOP/SHP) cold (prototype) { 0 off, 1 after full budget, 2 fail fast }" },
-    { "pa_OptimaFinish", 0 , 0, 0, "# pa_OptimaFinish: Newton finish on the fixed phase set after a non-converged Optima call (prototype) { 0 off, 1 on }" },
+    { "pa_OptimaTpdAccept", 0 , 0, 0, "# pa_OptimaTpdAccept: accept a non-converged Optima state when only ABSENT non-ideal phases fail and their TPD search is >= -value; 0 = off, 1e-6 = default { 1e-6 }" },
+    { "pa_OptimaCgSeed", 0 , 0, 0, "# pa_OptimaCgSeed: cold Optima seed by column generation, species Gibbs-LP + TPD-priced pseudo-compounds; 0 = off (feasibility-LP seed), 1e-6 = default { 1e-6 }" },
+    { "pa_OptimaColdRetry", 0 , 0, 0, "# pa_OptimaColdRetry: re-solve a failed warm Optima call (SOP/SHP) cold; 0 = off, 1 = retry after full budget, 2 = fail fast (default) { 2 }" },
+    { "pa_OptimaFinish", 0 , 0, 0, "# pa_OptimaFinish: Newton finish on the fixed phase set after a non-converged Optima call; 0 = off, 1 = on (default) { 1 }" },
     { "pa_OptimaAcceptRepair", 0 , 0, 0, "# pa_OptimaAcceptRepair: when the Optima TPD acceptance fails only on mass balance, repair it (MassBalanceReproject) and re-test; 0 = off (default), 1 = on { 0 }" },
 };
 
