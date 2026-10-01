@@ -191,30 +191,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     // open problem.
     double LogBarrierTau = 1.0e-16;
 
-    // Relative trust-region cap on Optima's per-iteration Newton step,
-    // passed through to the modified Optima::BacktrackSearchOptions::
-    // max_step_ratio (Optima/BacktrackSearch.cpp/.hpp, local checkout
-    // /home/dmiron/git/hub/optima, NOT the vendored/conda-packaged Optima -
-    // this option does not exist in stock Optima and only takes effect
-    // when GEMS3K is built against the modified local checkout, see
-    // debug-optima-vs-reaktoro/README.md for the build recipe). Disabled
-    // (0., no cap, byte-identical to stock Optima's own BacktrackSearch
-    // behavior) by default - kept OFF deliberately, not merely un-tuned.
-    // Tried first (2026-08-24) as the fix for the aqueous-solvent-
-    // collapses-to-floor failure (GEMS3K's CLAUDE.md, 2026-08-23) and
-    // directly disproven: on Resources/gems3k/j_Flowline_G_series1_...,
-    // every tested value (2, 3, 5, 10) made the SAME case actively WORSE
-    // (a clean-but-wrong convergence turned into an outright KKT-residual
-    // blowup, ~1e15-1e16) rather than better - root-cause tracing (this
-    // same CLAUDE.md entry) found the real defect was an AIA cold-start
-    // seed placing the solvent below its own solutes' total mass, not a
-    // step-size/globalization problem this cap could ever have addressed;
-    // capping the step size just slowed the same wrong trajectory down
-    // without changing its direction. Left in place (Optima source and
-    // this field both) as available infrastructure for a genuinely
-    // step-size-related failure mode, should one turn up on a different
-    // system - re-validate on its own merits before enabling, don't
-    // assume the j_Flowline finding above generalizes either way.
+    /// pa_OptimaMaxStepRatio: reserved, no effect. It set Optima's relative step limit
+    /// (BacktrackSearchOptions::max_step_ratio), which was removed from the Optima fork on
+    /// 2026-10-01 (measured harmful at every nonzero value, 2026-08-24; restore patch:
+    /// optima/docs/patches/backtrack_step_control.patch). Kept for GEMSGUI's positional serialisation.
     double OptimaMaxStepRatio = 0.0;
 
     // Eigenvalue floor, as a fraction of the block's own largest |eigenvalue|,

@@ -3899,11 +3899,6 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // budget here, and there is nothing to restore after the first
             // attempt - arming is what scopes the cap to it now.
             options.convergence.tolerance = pa_p->OptimaTol;
-            // Trust region on per-variable Newton-step growth - a field this
-            // branch added to its local Optima checkout. Default 0.0 = off;
-            // measured HARMFUL at every nonzero value tried (GEMS3K/CLAUDE.md
-            // 2026-08-24), kept only as re-runnable infrastructure.
-            options.backtracksearch.max_step_ratio = pa_p->OptimaMaxStepRatio;
             apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape, pa_p->OptimaLSWindow,
                              pa_p->OptimaLSRejectWorse );
         }

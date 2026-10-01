@@ -168,7 +168,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_PSTALL", 0 , 0, 0, "# pa_PSTALL: Enable (1) or disable (0) stall detection in MassBalanceRefinement { 1 }" },
     { "pa_OptimaTol", 0 , 0, 0, "# pa_OptimaTol: Optima solver's own KKT optimality-error convergence tolerance { 1e-8 }" },
     { "pa_LogBarrierTau", 0 , 0, 0, "# pa_LogBarrierTau: log-barrier penalty weight for pure single-species phases in the Optima solver { 1e-16 }" },
-    { "pa_OptimaMaxStepRatio", 0 , 0, 0, "# pa_OptimaMaxStepRatio: max per-iteration relative Newton step in the Optima solver (0=disabled, needs the modified local Optima checkout) { 0 }" },
+    { "pa_OptimaMaxStepRatio", 0 , 0, 0, "# pa_OptimaMaxStepRatio: reserved, no effect { 0 }" },
     { "pa_PhaseHessianFloor", 0 , 0, 0, "# pa_PhaseHessianFloor: eigenvalue floor (fraction of the block's own largest) for the exact per-phase curvature block of non-aqueous multicomponent phases in the Optima solver; 0 disables it { 0.01 }" },
     { "pa_OptimaStallWindow", 0 , 0, 0, "# pa_OptimaStallWindow: abandon an Optima (AOP/SOP/ROP) solve when, over a window of this many iterations, the best-so-far optimality error has not fallen by a meaningful relative amount; 0 disables it { 500 }" },
     { "pa_OptimaMaxSeconds", 0 , 0, 0, "# pa_OptimaMaxSeconds: wall-clock budget in seconds for one Optima (AOP/SOP/ROP) solve including retries; 0 disables it. Per-project guard only - a time limit is not reproducible across machines { 0 }" },
