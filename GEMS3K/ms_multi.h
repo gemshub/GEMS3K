@@ -94,8 +94,8 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
            DB,   ///< Minimum amount of Independent Component in the bulk system composition (except charge "Zz") (moles) (1e-17)
            AG,   ///< Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { 1. }
            DGC,  ///< Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { 0. }
-           GAR,  ///< Initial activity coefficient value for major (M) species in a solution phase before LPP approximation { 1 }
-           GAH,  ///< Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation { 1000 }
+           GAR,  ///< reserved, no effect (not read by GEMS3K; kept for the field order and GEMSGUI) { 1 }
+           GAH,  ///< reserved, no effect (not read by GEMS3K; kept for the field order and GEMSGUI) { 1000 }
            GAS,  ///< Since r1583/r409: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup() { 1e-3 }.
                  ///< before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }
            DNS,  ///< Standard surface density (nm-2) for calculating activity of surface species (12.05)
@@ -190,12 +190,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// slows others.
     long int OptimaMoleFracHessian = 0;
 
-    /// pa_OptimaPhaseCompaction: number of Optima iterations for a short classification probe
-    /// before the real solve; phases the probe classifies as absent are then pinned at the
-    /// floor (problem.xlower/xupper only, so a wrongly pinned phase is readmitted by the
-    /// phase-selection loop). 0 = off (default). Has no effect where pa_OptimaDimReduce's
-    /// pre-solve runs, which removes the same species earlier.
-    /// In plain words: a quick trial run to find and set aside phases that are clearly absent.
+    /// pa_OptimaPhaseCompaction: reserved, no effect (code removed 2026-10-01, owner; restore patch
+    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// In plain words: an old setting that no longer does anything.
     long int OptimaPhaseCompaction = 0;
 
     /// pa_OptimaFDHessianDelay: iterations of the cheap Hessian to attempt before falling back
@@ -226,12 +224,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// accuracy, as the method's theory suggests.
     double MbClassRule = 0.;
 
-    /// pa_MbTrendPhaseDecay: trend-based vanishing-phase detection in the Optima path's
-    /// phase-extinction retry. 0 = off (default): the twin-only path. When > 0, a phase is
-    /// deactivated if its total fell monotonically for at least this many consecutive
-    /// objective evaluations and is now below 1e-2 of its own peak. Tracked in the objective
-    /// callback. The retry runs only after a solve has already failed.
-    /// In plain words: removes a phase that has been shrinking steadily toward nothing.
+    /// pa_MbTrendPhaseDecay: reserved, no effect (code removed 2026-10-01, owner; restore patch
+    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// In plain words: an old setting that no longer does anything.
     long int MbTrendPhaseDecay = 0;
 
     /// pa_OptimaEarlyStabilityAt: ends the first Optima attempt early so the phase-selection
@@ -289,18 +285,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// In plain words: how generous the first guess of "species that matter" is.
     double OptimaDimReduceTol = 10.;
 
-    /// pa_MbPivotSplit: pivot/non-pivot split of native MBR's Schur-complement reduction.
-    /// 0 = off (default), non-zero = on. Native path only.
-    /// MakeAndSolveSystemOfLinearEquations()'s initAppr branch assembles
-    ///     A[i,k] = sum_j a(j,i) a(j,k) W[j],
-    /// i.e. A D^-1 A^T with D_jj = 1/W[j], formed without pivoting. The split marks a species
-    /// non-pivot when 1/W[j] < max_i |a(j,i)|, i.e. W[j]*max_i|a(j,i)| > 1 (under MBR's
-    /// quadratic weight: the abundant species). Only the pivot block is eliminated; the
-    /// non-pivot unknowns are solved jointly with the duals (dimension N + |I_n|). An empty
-    /// non-pivot set falls through to the plain assembly. The augmented system is symmetric
-    /// indefinite and is solved by LU. Applied together with the Jacobi preconditioner of the
-    /// same function. It cannot repair a genuine near-singularity of A D^-1 A^T.
-    /// In plain words: a more careful way to solve the mass-balance step's equations.
+    /// pa_MbPivotSplit: reserved, no effect (code removed 2026-10-01, owner; restore patch
+    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// In plain words: an old setting that no longer does anything.
     long int MbPivotSplit = 0;
 
     /// pa_OptimaZeroAbsent: how species that are absent in an Optima answer are reported.
@@ -326,19 +314,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// amount, and fixes the element totals if needed.
     long int OptimaZeroAbsent = 2;
 
-    /// pa_OptimaReadmitSeed: in OptimaReducedPreSolve()'s pricing loop, seed a readmitted
-    /// species at its predicted amount instead of at the numerical floor. 0 = off (default).
-    /// A positive value caps the growth exponent, in RT units.
-    /// For a species whose chemical potential carries ln(x_j) with unit coefficient
-    /// (DC_SYMMETRIC, DC_ASYM_SPECIES), setting the reduced gradient s_j = F[j] -
-    /// sum_i U[i]*a(j,i) to zero gives x_j^predicted = x_j^current * exp( -s_j ). DC_SINGLE and
-    /// DC_ASYM_CARRIER stay at the floor. The seed is also clamped to the species' box and its
-    /// stoichiometric ceiling min_i b_i/a(j,i). It changes only where the next pass starts, not
-    /// the reduced problem's solution. If used, use a cap large enough that the stoichiometric
-    /// ceiling binds (>= 20), never a small one. Reached only on a cold AOP/SOP solve at or
-    /// above the dimension-reduction size gate, without control conditions.
-    /// In plain words: when a species is brought back into the calculation, start it at the
-    /// amount theory predicts rather than at almost zero.
+    /// pa_OptimaReadmitSeed: reserved, no effect (code removed 2026-10-01, owner; restore patch
+    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// In plain words: an old setting that no longer does anything.
     double OptimaReadmitSeed = 0.;
 
     /// pa_IpmStallWindow: window (in IPM iterations) for the noise-stall test; 0 = off.
@@ -396,17 +375,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// In plain words: gives up early on a preliminary step that is going nowhere.
     long int OptimaPreSolveFirstIters = 6000;
 
-    /// pa_LpDualFillout: sizes the species the LP zeroed from the LP's own dual instead of
-    /// from the per-class constants pa_DFYaq/DFYw/DFYid/DFYh/DFYr/DFYc. Native cold (AIA)
-    /// path, at DC_RaiseZeroedOff()'s call site; the native leg of HOP/SHP inherits it.
-    /// x_j = X_k * exp( a_j^T u_LP - G_j ) in RT units, X_k the LP's amount of the phase.
-    ///   0  off (default)
-    ///   1  as above
-    ///   2  the composition ceiling dominates the class floor
-    ///   3  1, applied only within 8 RT of the leveling hyperplane
-    /// Not recommended: every value lost answers in testing.
-    /// In plain words: an experimental way to give small starting amounts to species the
-    /// first rough guess left out.
+    /// pa_LpDualFillout: reserved, no effect (code removed 2026-10-01, owner; restore patch
+    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// In plain words: an old setting that no longer does anything.
     long int LpDualFillout = 0;
 
     /// pa_FilloutBudget: caps how much the class fill-out may change the mass balance, as a
@@ -453,16 +425,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// LU), that step is taken by the normal equations (DECIDE "ipmkkt-fallback").
     /// In plain words: a more accurate way to solve each step's equations in the original solver.
     long int IpmAugmentedKKT = 2;
-    /// pa_IpmLoopTweaks: bit mask of three optional main IPM loop changes, each measurable
-    /// alone (default 0 = none). Independent of pa_IpmAugmentedKKT.
-    ///   1  step cap - StepSizeEstimate()'s LM clamped to <= 1 before OptimizeStepSize().
-    ///   2  activity lag - once pm.PCI < 5e-4 (absolute), CalculateActivityCoefficients() runs
-    ///      only on every third ITG, and the loop may not terminate on an iteration that
-    ///      skipped it.
-    ///   4  loose accept - after ITG > 120, accept pm.PCI < 300 * pm.DXM as converged. Loosens
-    ///      the stopping test by up to 300x. DECIDE "ipmlooseaccept" when it fires.
-    /// Not recommended as a default; kept for reproducibility.
-    /// In plain words: experimental shortcuts in the original solver's main loop.
+    /// pa_IpmLoopTweaks: reserved, no effect (code removed 2026-10-01, owner; restore patch
+    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// In plain words: an old setting that no longer does anything.
     long int IpmLoopTweaks = 0;
     /// pa_OptimaLineSearch: Optima's merit line search on the unmasked error, with this
     /// trigger factor (a step whose error exceeds factor x the previous one is line-searched).
@@ -471,12 +437,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// Optima fork's ErrorControl::execute (error updated at the new point before comparing).
     /// In plain words: when a step makes things much worse, try a shorter one.
     double OptimaLineSearch = 1.5;
-    /// pa_OptimaFDDiagFloor: the finite-difference Hessian (pa_OptimaFDHessian) overwrites a
-    /// basic variable's whole column, diagonal included. Where that FD diagonal is not
-    /// positive (a species below the amount at which PrimalChemicalPotentials() recomputes F
-    /// gets exactly 0), put the analytic diagonal back. 0 = off (default), 1 = on.
-    /// DECIDE fddiagfloor reports the count.
-    /// In plain words: prevents a curvature estimate of zero for very small species.
+    /// pa_OptimaFDDiagFloor: reserved, no effect (code removed 2026-10-01, owner; restore patch
+    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// In plain words: an old setting that no longer does anything.
     long int OptimaFDDiagFloor = 0;
     /// pa_OptimaLSStallEscape: with the line search on, after this many consecutive line
     /// searches that leave the error unchanged (relative change <= 1e-8), keep the full step
@@ -484,10 +448,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// inert otherwise.
     /// In plain words: breaks the Optima solver out when it gets stuck at the same error.
     long int OptimaLSStallEscape = 10;
-    /// pa_OptimaLSWindow: the line-search trigger compares with the maximum of the last N
-    /// pre-step errors instead of the previous one (non-monotone). 0 = off (default); not
-    /// recommended for phase diagrams. Needs OPTIMA_LINESEARCH_STALL_ESCAPE.
-    /// In plain words: lets the error rise for a few steps before the line search steps in.
+    /// pa_OptimaLSWindow: reserved, no effect (code removed 2026-10-01, owner; restore patch
+    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// In plain words: an old setting that no longer does anything.
     long int OptimaLSWindow = 0;
     /// pa_OptimaLSRejectWorse: with the Optima line search on, a line search that ends at or
     /// above the pre-step error is discarded and the full step kept. 0 = off (default),
@@ -1792,24 +1756,13 @@ protected:
     double OptimizeStepSize( double LM );
     void DC_ZeroOff( long int jStart, long int jEnd, long int k=-1L );
     void DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k=-1L );
-    /// pa_LpDualFillout: sizes the species the LP zeroed from the LP's own dual instead of
-    /// the per-class constants, with three guards (big-M, composition ceiling, class floor).
-    /// Native cold path.
-    /// In plain words: a smarter way to give small starting amounts to species the first
-    /// rough guess left out.
-    void LpDualFillout( const std::vector<double>& yLp );
     /// pa_FilloutBudget: scales the class fill-out so it changes each element's mass balance
     /// by at most that fraction of the element's own bulk amount. Native cold path.
     /// In plain words: limits how much the starting guess may disturb the element totals.
     void ApplyFilloutBudget( const std::vector<double>& yLp );
-    /// Effective pa_FilloutBudget: the field, unless GEMS3K_FILLOUT_BUDGET overrides it.
-    /// Both the call site and the mechanism read this, never the field directly.
+    /// Effective pa_FilloutBudget: the field, unless GEMS3K_FILLOUT_BUDGET overrides it (kept for
+    /// the fillout.budget test). Both the call site and the mechanism read this.
     double FilloutBudgetValue() const;
-    /// Effective fill-out mode: pa_LpDualFillout, unless GEMS3K_LPDUAL_FILLOUT overrides it.
-    long int LpFilloutMode() const;
-    /// Writes each fill-out prediction against the amount the solve converged to, at the
-    /// answer site. Zero cost unless GEMS3K_LPFILL_PROBE is set.
-    void LpFillProbeReport();
     /// Largest amount of a single-species phase the bulk composition can supply,
     /// min_i b_i/a(j,i) over the ordinary IC rows. Caps PSSC's pure-phase insertion amount
     /// (pa_DFYs) so an insertion is never infeasible by construction.
@@ -1902,10 +1855,6 @@ void native_trace_quiet( bool on );
 /// Per-iteration IPM descent record, written when GEMS3K_IPM_PROBE=<path> is set;
 /// nullptr otherwise.
 FILE* ipm_probe_file();
-
-/// Per-prediction record for pa_LpDualFillout, written when GEMS3K_LPFILL_PROBE=<path> is set;
-/// nullptr otherwise.
-FILE* lpfill_probe_file();
 
 /// Writes the full run configuration - requested mode, T, P, bulk composition with IC
 /// names, and every BASE_PARAM field in force - into the trace file, once per

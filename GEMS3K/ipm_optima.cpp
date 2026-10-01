@@ -63,10 +63,6 @@ thread_local bool g_optimaCgSeedArmed = false;
 // drop a present phase.
 thread_local bool g_finishFromSuccess = false;
 
-// pa_OptimaFDDiagFloor hit counter: FD-Hessian columns whose diagonal was restored, summed
-// over the reduced pre-solve and the full solve, reported by a DECIDE fddiagfloor record
-// after each full solve, then reset.
-static long g_fdDiagFloorHits = 0, g_fdDiagFloorCols = 0;
 
 // pa_OptimaLineSearch: put Optima's merit line search on the unmasked error at the given
 // trigger factor (needs the Optima fork's ErrorControl::execute). A negative value makes the
@@ -119,7 +115,7 @@ static void memoize_objective_if_linesearch( Optima::Problem& problem, double fa
     };
 }
 
-static void apply_optima_linesearch( Optima::Options& o, double factor, long int stallEscape = 0, long int window = 0,
+static void apply_optima_linesearch( Optima::Options& o, double factor, long int stallEscape = 0,
                                      long int rejectWorse = 0 )
 {
     if( factor < 0. )
@@ -130,11 +126,10 @@ static void apply_optima_linesearch( Optima::Options& o, double factor, long int
     if( !( factor > 0. ) ) return;
     o.linesearch.enabled = true;
     o.linesearch.use_unmasked_error = true;
-#ifdef OPTIMA_LINESEARCH_STALL_ESCAPE   // pa_OptimaLSStallEscape / pa_OptimaLSWindow need an Optima build with these fields
+#ifdef OPTIMA_LINESEARCH_STALL_ESCAPE   // pa_OptimaLSStallEscape needs an Optima build with this field
     o.linesearch.stall_escape_after = ( stallEscape > 0 && !g_optimaLSEscapeOff ) ? (std::size_t)stallEscape : 0;
-    o.linesearch.nonmonotone_window = window > 0 ? (std::size_t)window : 0;
 #else
-    (void)stallEscape; (void)window;
+    (void)stallEscape;
 #endif
 #ifdef OPTIMA_LINESEARCH_REJECT_WORSE
     o.linesearch.reject_if_worse = rejectWorse > 0 && !g_optimaLSEscapeOff;
@@ -1479,13 +1474,9 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     const BASE_PARAM* pa_p = base_param();
     const bool kMoleFracHessian = ( pa_p->OptimaMoleFracHessian != 0 );
     const bool kFDHessian       = ( pa_p->OptimaFDHessian != 0 );
-    const bool kFDDiagFloor     = ( pa_p->OptimaFDDiagFloor != 0 );
     const double kLogBarrierTau = pa_p->LogBarrierTau;
     const double kPhaseHessianFloor = pa_p->PhaseHessianFloor;
     const bool hasAq = HasAqueousPhase();
-    // pa_OptimaReadmitSeed: 0 = readmit at the floor; > 0 = seed at the predicted amount,
-    // with this value capping the growth exponent in RT units.
-    const double kReadmitSeed = pa_p->OptimaReadmitSeed;
 
     // Box bounds, built as the full path builds them (pm.DUL[j] < 1e6 marks a real, possibly
     // zero, upper restriction).
@@ -1571,7 +1562,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     // max(2000, pa_IIM), or less on the first attempt (pa_OptimaPreSolveFirstIters).
     options.maxiters = (unsigned)passBudget;
     options.convergence.tolerance = pa_p->OptimaTol;
-    apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape, pa_p->OptimaLSWindow,
+    apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
 
         // ---- Stall / wall-clock guard for the pre-solve ----
@@ -1720,7 +1711,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
         // to an active species is still its chemical potential. The phase-decay counters are
         // not maintained here (the full solve keeps its own).
         problem.f = [this, L, nS, dcFloor, kLogBarrierTau, kPhaseHessianFloor,
-                     kFDHessian, kFDDiagFloor, kMoleFracHessian, hasAq, &nxToJ, &jToNx, &xlo, &act, &Fbase]
+                     kFDHessian, kMoleFracHessian, hasAq, &nxToJ, &jToNx, &xlo, &act, &Fbase]
                     ( Optima::ObjectiveResultRef res, Optima::VectorView x,
                       Optima::VectorView /*p*/, Optima::VectorView /*c*/,
                       Optima::ObjectiveOptions opts )
@@ -1827,7 +1818,6 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                     const long int i = nxToJ[(size_t)si];
                     const double Xi = pm.X[i];
                     const double h = std::max( std::fabs(Xi) * 1e-7, dcFloor * 10. );
-                    const double dIdeal = res.fxx(si,si);
                     pm.X[i] = Xi + h;
                     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
                     CalculateActivityCoefficients( LINK_UX_MODE );
@@ -1837,10 +1827,6 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                         const long int r = nxToJ[(size_t)sr];
                         res.fxx(sr,si) = ( pm.F[r] - Fbase[(size_t)r] ) / h;
                     }
-                    // pa_OptimaFDDiagFloor: put the analytic diagonal back where the FD diagonal
-                    // is not positive.
-                    if( kFDDiagFloor ) { g_fdDiagFloorCols++;
-                        if( !( res.fxx(si,si) > 0. ) && dIdeal > 0. ) { res.fxx(si,si) = dIdeal; g_fdDiagFloorHits++; } }
                     pm.X[i] = Xi;
                 }
 
@@ -2049,32 +2035,6 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             if( sj >= 0. ) continue;
             act[(size_t)j] = 1; readmitted++;
 
-            // pa_OptimaReadmitSeed: start the readmitted species at the amount its own
-            // chemical potential predicts, x_j * exp(-s_j) with the exponent capped, instead
-            // of at the floor. pm.Y[j] is what the next pass's state is built from (clamped
-            // into [xlower, xupper] there).
-            if( kReadmitSeed > 0.
-                && ( pm.DCCW[j] == DC_SYMMETRIC || pm.DCCW[j] == DC_ASYM_SPECIES ) )
-            {
-                const double xcur = pm.X[j];             // == xlo[j] for an omitted species
-                if( xcur > 0. )
-                {
-                    // Stoichiometric ceiling: the most of this species the bulk composition
-                    // can supply.
-                    double nmax = std::numeric_limits<double>::infinity();
-                    for( long int i = 0; i < N; i++ )
-                    {
-                        const double aij = pm.A[ i + j*N ];
-                        if( aij > 0. )
-                            nmax = std::min( nmax, pm.B[i] / aij );
-                    }
-                    const double grow = std::min( -sj, kReadmitSeed );   // sj < 0 here
-                    double xpred = xcur * std::exp( grow );
-                    if( nmax > 0. && xpred > nmax ) xpred = nmax;
-                    xpred = std::min( std::max( xpred, xlo[(size_t)j] ), xhi[(size_t)j] );
-                    if( xpred > pm.Y[j] ) { pm.Y[j] = xpred; seeded++; }
-                }
-            }
         }
 
         ipm_logger->info( "OptimaReducedPreSolve: pass {} - {} of {} species active, "
@@ -2189,19 +2149,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // a uniform tiny seed is used and the retries below remain the safety net.
             std::vector<double> lpSeed;
             const double cgSeedTol = pa_p->OptimaCgSeed;      // pa_OptimaCgSeed; 0 = off
-            // Diagnostic environment switches: GEMS3K_CGSEED_FIRST=1 arms the column-generation
-            // seed on the first attempt; GEMS3K_CGSEED_BLEND=theta mixes (1-theta)*CG +
-            // theta*LP-feasibility vertex (both satisfy A n = b exactly).
-            static const bool cgFirstProbe = getenv( "GEMS3K_CGSEED_FIRST" ) != nullptr;
-            static const double cgBlend = getenv( "GEMS3K_CGSEED_BLEND" ) ? atof( getenv( "GEMS3K_CGSEED_BLEND" ) ) : 0.;
             bool cgUsed = false;
-            if( cgSeedTol > 0. && ( g_optimaCgSeedArmed || cgFirstProbe ) && ColumnGenerationSeed( lpSeed, cgSeedTol ) )
-            {
+            if( cgSeedTol > 0. && g_optimaCgSeedArmed && ColumnGenerationSeed( lpSeed, cgSeedTol ) )
                 cgUsed = true;
-                std::vector<double> lpv;
-                if( cgBlend > 0. && LPFeasibilitySeed( lpv ) )
-                    for( long int j = 0; j < pm.L; j++ ) lpSeed[j] = ( 1. - cgBlend ) * lpSeed[j] + cgBlend * lpv[j];
-            }
             if( cgUsed || LPFeasibilitySeed( lpSeed ) )
             {
                 for( long int j = 0; j < pm.L; j++ )
@@ -2450,7 +2400,6 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const double kPhaseHessianFloor = pa_p->PhaseHessianFloor;
         // Captured by value like the constants above - pa_p is not in scope inside the lambda.
         const bool kFDHessian = ( pa_p->OptimaFDHessian != 0 );
-        const bool kFDDiagFloor = ( pa_p->OptimaFDDiagFloor != 0 );
         const bool hasAq = HasAqueousPhase();
 
         // Per-phase trend counters (last total, consecutive decreases, peak), kept here
@@ -2470,7 +2419,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const long int kFDDelay = ( !referenceMode && pm.pNP == 0 && pa_p->OptimaFDHessianDelay > 0 )
                                   ? pa_p->OptimaFDHessianDelay : 0;
         const bool kMoleFracHessian = ( pa_p->OptimaMoleFracHessian != 0 );
-        problem.f = [this, L, R, dcFloor, &fixedGrad, kLogBarrierTau, kPhaseHessianFloor, kFDHessian, kFDDiagFloor, kMoleFracHessian, fdSuppress, hasAq, phLast, phDec, phMax]
+        problem.f = [this, L, R, dcFloor, &fixedGrad, kLogBarrierTau, kPhaseHessianFloor, kFDHessian, kMoleFracHessian, fdSuppress, hasAq, phLast, phDec, phMax]
                     ( Optima::ObjectiveResultRef res, Optima::VectorView x,
                       Optima::VectorView /*p*/, Optima::VectorView /*c*/,
                       Optima::ObjectiveOptions opts )
@@ -2531,8 +2480,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     double Xf = 0.;
                     for( long int j = j0; j < j1; j++ )
                         Xf += std::max( pm.X[j], dcFloor );
-                    // Consecutive-decrease counter per phase (pa_MbTrendPhaseDecay and the
-                    // early-stability trend trigger).
+                    // Consecutive-decrease counter per phase (the early-stability trend trigger).
                     {
                         double& prev = (*phLast)[k];
                         if( Xf > (*phMax)[k] ) (*phMax)[k] = Xf;
@@ -2609,16 +2557,12 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         if( i >= L ) continue; // a control-condition virtual slot, not a species
                         const double Xi = pm.X[i];
                         const double h = std::max( std::fabs(Xi) * 1e-7, dcFloor * 10. );
-                        const double dIdeal = res.fxx(i,i);
                         pm.X[i] = Xi + h;
                         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
                         CalculateActivityCoefficients( LINK_UX_MODE );
                         PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
                         for( long int j = 0; j < L; j++ )
                             res.fxx(j,i) = ( pm.F[j] - Fbase[j] ) / h;
-                        // pa_OptimaFDDiagFloor - same rule as the reduced path.
-                        if( kFDDiagFloor ) { g_fdDiagFloorCols++;
-                            if( !( res.fxx(i,i) > 0. ) && dIdeal > 0. ) { res.fxx(i,i) = dIdeal; g_fdDiagFloorHits++; } }
                         pm.X[i] = Xi;
                     }
                     // Exact, regularised curvature for non-aqueous multicomponent phases
@@ -2736,7 +2680,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // pa_OptimaEarlyStabilityAt's cap is enforced in the convergence hook, not as a
             // maxiters clamp, so maxiters keeps the full budget.
             options.convergence.tolerance = pa_p->OptimaTol;
-            apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape, pa_p->OptimaLSWindow,
+            apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
         }
         // else (referenceMode): Optima::Options stay at the library defaults; GEMS3K's own
@@ -2797,8 +2741,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // pa_OptimaEarlyStabilityAt, resolved by optima_earlystability_at() (0 = AUTO), so the
         // solver and the trace's EFF line agree.
         //   < 0  trend trigger: -N ends the first attempt once some multicomponent phase has
-        //        fallen monotonically for N consecutive objective evaluations (counters kept by
-        //        pa_MbTrendPhaseDecay's code in the objective callback). Spent only on a run
+        //        fallen monotonically for N consecutive objective evaluations (counters kept in
+        //        the objective callback). Spent only on a run
         //        that shows the signature.
         //   > 0  iteration cap (below).
         // A false trigger costs the abandoned attempt only: the safety net re-solves at the
@@ -3065,72 +3009,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         std::vector<char> phSelState( (size_t)std::max( pm.FI, 1L ), 0 );
         std::vector<double> savedLo( (size_t)std::max( L, 1L ), 0. );
         std::vector<double> savedHi( (size_t)std::max( L, 1L ), 0. );
-        // Iterations spent in the compaction probe, added to optimaIterTotal later.
-        long int probeIterations = 0;
 
-        // ---- Phase compaction probe (pa_OptimaPhaseCompaction, default 0 = off) ----
-        // A short, deliberately unconverged probe solve gives a dual good enough to say which
-        // phases are absent; those are pinned at the floor for the real solve. A wrongly
-        // pinned phase is readmitted by the phase-selection loop.
-        if( !referenceMode && pa_p->OptimaPhaseCompaction > 0 && L > 0 )
-        {
-            Optima::Options probeOpts = options;
-            probeOpts.maxiters = pa_p->OptimaPhaseCompaction;
-            Optima::Solver probeSolver;
-            probeSolver.setOptions( probeOpts );
-            Optima::State probeState = state;
-            stallWatch->reset();
-            Optima::Result probeResult = probeSolver.solve( problem, probeState );
-            probeIterations += probeResult.iterations;
-
-            // The solvent's phase is never compacted away.
-            long int aqPhIdxC = -1;
-            {
-                long int j0a = 0;
-                for( long int k = 0; k < pm.FIs; k++ )
-                {
-                    if( pm.LO >= j0a && pm.LO < j0a + pm.L1[k] ) { aqPhIdxC = k; break; }
-                    j0a += pm.L1[k];
-                }
-            }
-            long int nPinnedPh = 0, nPinnedSp = 0, j0c = 0;
-            for( long int k = 0; k < pm.FI; k++ )
-            {
-                const long int j1c = j0c + pm.L1[k];
-                if( k != aqPhIdxC && j1c <= L )
-                {
-                    // A phase under any kinetic restriction is exempt (as in the stability check).
-                    bool kinC = false;
-                    for( long int j = j0c; j < j1c; j++ )
-                        if( pm.DUL[j] < 1e6 || pm.DLL[j] > 0.0 ) { kinC = true; break; }
-                    double totC = 0.;
-                    for( long int j = j0c; j < j1c; j++ )
-                        totC += std::max( probeState.x[j], 0. );
-                    if( !kinC && totC < presenceThreshold )
-                    {
-                        for( long int j = j0c; j < j1c; j++ )
-                        {
-                            savedLo[(size_t)j] = problem.xlower[j];
-                            savedHi[(size_t)j] = problem.xupper[j];
-                            problem.xlower[j] = dcFloor;
-                            problem.xupper[j] = dcFloor;
-                            state.x[j] = dcFloor;
-                            nPinnedSp++;
-                        }
-                        phSelState[(size_t)k] = 1;
-                        nPinnedPh++;
-                    }
-                }
-                j0c = j1c;
-            }
-            ipm_logger->warn( "CalculateEquilibriumStateOptima: phase compaction probe ({} iterations) "
-                               "pinned {} of {} phases ({} of {} species) as absent",
-                               probeResult.iterations, nPinnedPh, pm.FI, nPinnedSp, L );
-            native_trace_decide( "compaction probeiters=%ld pinnedph=%ld ofph=%ld "
-                                 "pinnedsp=%ld ofsp=%ld",
-                                 (long)probeResult.iterations, (long)nPinnedPh,
-                                 (long)pm.FI, (long)nPinnedSp, (long)L );
-        }
 
         // ---- Tiered Hessian: a short attempt with the cheap Hessian first ----
         // pa_OptimaFDHessianDelay = N runs up to N iterations with the FD PartiallyExact loop
@@ -3251,11 +3130,6 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         *earlyCapArmed = ( earlyCapN > 0 );
         Optima::Result result = wantSens ? solver.solve( problem, state, sensitivity )
                                          : solver.solve( problem, state );
-        if( g_fdDiagFloorCols > 0 )
-        {
-            native_trace_decide( "fddiagfloor hits=%ld cols=%ld", g_fdDiagFloorHits, g_fdDiagFloorCols );
-            g_fdDiagFloorHits = g_fdDiagFloorCols = 0;
-        }
         // Returning true from convergence.check means "stop", and Optima reports that as
         // success, so an early stop is folded back to a failure here, before anything reads
         // result.succeeded.
@@ -3319,7 +3193,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         applyStall( result );
         // Optima's iteration count, summed over every solve() this function makes, goes
         // into pm.ITG below; pm.ITF stays 0.
-        long int optimaIterTotal = result.iterations + probeIterations + fdCheapIterations + dimReduceIters;
+        long int optimaIterTotal = result.iterations + fdCheapIterations + dimReduceIters;
 
         // The phase-extinction tier, as a re-runnable unit: assembled below for AOP/SOP and
         // left empty for ROP. It must be callable a second time, by the early-probe safety
@@ -3568,19 +3442,6 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         j0 = j1;
                     }
                 }
-                // pa_MbTrendPhaseDecay's two-clause test (below a threshold and decreasing),
-                // applied in addition to the twin criterion below, not instead of it.
-                const long int trendDecayN = pa_p->MbTrendPhaseDecay;
-                auto decaying = [&]( long int k ) -> bool
-                {
-                    if( trendDecayN <= 0 ) return false;
-                    if( k < 0 || k >= (long int)phDec->size() ) return false;
-                    const double tot = (k < (long int)phTot.size()) ? phTot[k] : 0.;
-                    const double pk  = (*phMax)[k];
-                    // Small, and monotonically falling for a sustained run, and below 1e-2
-                    // of its own peak.
-                    return (*phDec)[k] >= trendDecayN && pk > 0. && tot < pk * 1.0e-2;
-                };
                 auto interchangeable = [&]( long int ka, long int kb ) -> bool
                 {
                     if( pm.L1[ka] != pm.L1[kb] ) return false;
@@ -3602,16 +3463,6 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     for( long int j = ph0[(size_t)ka]; j < ph1[(size_t)ka]; j++ )
                         if( problem.xupper[j] > problem.xlower[j] ) { alreadyFixed = false; break; }
                     if( alreadyFixed ) continue;
-                    if( decaying( ka ) )
-                    {
-                        for( long int j = ph0[(size_t)ka]; j < ph1[(size_t)ka]; j++ )
-                            deactivated.push_back( j );
-                        ipm_logger->warn( "CalculateEquilibriumStateOptima: phase {} "
-                                          "deactivated by trend (consecutive decreases={}, "
-                                          "total={:.3e}, peak={:.3e})",
-                                          ka, (*phDec)[ka], phTot[(size_t)ka], (*phMax)[ka] );
-                        continue;
-                    }
                     for( long int kb = 0; kb < pm.FIs; kb++ )
                     {
                         if( kb == ka || kb == aqueousPhaseIdx || pm.L1[kb] <= 1 ) continue;

@@ -2424,7 +2424,6 @@ FORCED_AIA:
        fflush( ntf );
    }
 
-   LpFillProbeReport();   // writes nothing unless GEMS3K_LPFILL_PROBE is set
 
    // ---- Mass-balance check of the answer this call returns: warn only. Native's cold path
    // does not check the state it returns (a cold call's second MBR is exempt from the strict
@@ -3045,16 +3044,12 @@ to_text_file( "MultiDumpLP.txt" );   // Debugging
            return true; // If so, the GEM problem is already solved !
         }
         // Setting default trace amounts to DCs that were zeroed off
-        // pa_LpDualFillout: the simplex solution is needed to tell which species the LP zeroed,
-        // and DC_RaiseZeroedOff() overwrites it; snapshot only when the field or the probe is on.
+        // pa_FilloutBudget needs the simplex solution (which species the LP zeroed), and
+        // DC_RaiseZeroedOff() overwrites it; snapshot only when the budget is on.
         std::vector<double> yLpFill;
-        const bool lpFillWanted = ( LpFilloutMode() > 0 || lpfill_probe_file() != nullptr
-                                    || FilloutBudgetValue() > 0. );
-        if( lpFillWanted )
+        if( FilloutBudgetValue() > 0. )
             yLpFill.assign( pm.Y, pm.Y + pm.L );
         DC_RaiseZeroedOff( 0, pm.L );
-        if( lpFillWanted )
-            LpDualFillout( yLpFill );
         // pa_FilloutBudget: the class constants can ask for more of an element than the system
         // holds. Applied after any fill-out, so it bounds whatever was written.
         ApplyFilloutBudget( yLpFill );
@@ -3497,11 +3492,6 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     std::vector<double> stW_xf;
     long int stW_n = 0, stW_head = 0;
     const BASE_PARAM *pa_p = base_param();
-    // pa_IpmLoopTweaks (default 0): three optional main-loop changes, one bit each - see
-    // BASE_PARAM::IpmLoopTweaks.
-    const long int kIpmLooseAfter  = 120;    // bit 4: loose accept only past this ITG
-    const double   kIpmLooseFactor = 300.;   // bit 4: accept PCI < this x DXM
-    const double   kIpmLagPCI      = 5e-4;   // bit 2: lag lnGam updates below this PCI (absolute)
     ipmKktRescues = 0;
     s_ipmKktFallbacks = 0;
 
@@ -3598,8 +3588,6 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
 
        // Initial estimate of IPM descent step size LM
        LM = StepSizeEstimate( false );
-       if( pa_p->IpmLoopTweaks & 1 )
-           LM = std::min( 1.0, LM );
        LM1 = OptimizeStepSize( LM ); // Finding an optimal value of the descent step size
        FX1 = GX( LM1 ); // Calculation of the total Gibbs energy of the system G(X)
                           // and copying of Y, YF vectors into X,XF, respectively.
@@ -3618,16 +3606,8 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
 
        // Main IPM iteration done
        // Main calculation of activity coefficients
-       // pa_IpmLoopTweaks bit 2 lags it near the minimum; an iteration that skipped it may not
-       // terminate, since its lnGam is not the one the current composition implies.
-        bool lnGamFresh = true;
         if( pm.PD >= 2 )
-        {
-            if( ( pa_p->IpmLoopTweaks & 2 ) && pm.PCI < kIpmLagPCI && pm.ITG % 3 != 0 )
-            {   status = 0;  lnGamFresh = false;  }
-            else
-                status = CalculateActivityCoefficients( LINK_UX_MODE );
-        }
+            status = CalculateActivityCoefficients( LINK_UX_MODE );
 
 if( pm.pNP && status ) // && rLoop < 0  )
 {
@@ -3661,15 +3641,8 @@ STEP_POINT( "IPM Iteration" );
             fflush( ipf );
         }
 
-        if( pm.PCI <= pm.DXM && lnGamFresh )  // Dikin criterion satisfied - converged!
+        if( pm.PCI <= pm.DXM )  // Dikin criterion satisfied - converged!
             goto CONVERGED;
-        if( ( pa_p->IpmLoopTweaks & 4 ) && lnGamFresh
-         && pm.ITG > kIpmLooseAfter && pm.PCI < kIpmLooseFactor * pm.DXM )
-        {
-            native_trace_decide( "ipmlooseaccept itg=%ld pci=%.6e dxm=%.6e ratio=%.4g",
-                                 (long)pm.ITG, pm.PCI, pm.DXM, pm.PCI / pm.DXM );
-            goto CONVERGED;   // NOT certified by the Dikin test - see BASE_PARAM::IpmLoopTweaks
-        }
         if( pa_p->IpmStallWindow > 0 )
         {
             const long int W = std::min( (long int)pa_p->IpmStallWindow, kIpmStallMaxW );
@@ -3728,7 +3701,7 @@ STEP_POINT( "IPM Iteration" );
                         else if( hi > negl && ( hi - lo ) > kIpmStallSpRel * hi ) xFlat = false;
                     }
                 }
-                if( xFlat && lnGamFresh
+                if( xFlat
                  && spreadOK( stW_fx,  kIpmStallFXTol )
                  && spreadOK( stW_sum, kIpmStallCompTol )
                  && spreadOK( stW_max, kIpmStallCompTol )
@@ -3949,228 +3922,10 @@ case DC_SCM_SPECIES:
    } // i
 }
 
-// ===========================================================================
-// pa_LpDualFillout (default 0 = off): LP-dual-based primal fill-out.
-//
-// After AutoInitialApproximation() solves the linearised-Gibbs LP, DC_RaiseZeroedOff() raises
-// every species the LP zeroed to a class constant (pa_DFYaq/DFYw/DFYid/DFYh/DFYr/DFYc). This
-// instead predicts the amount from the LP's own dual: x_j = X_k * exp( a_j^T u_LP - G_j ) in RT
-// units, X_k the LP's amount of the species' phase.
-//
-// Two separate gates:
-//   GEMS3K_LPFILL_PROBE=<path>   record the prediction, change nothing;
-//   pa_LpDualFillout = 1|2|3     also apply it (GEMS3K_LPDUAL_FILLOUT overrides).
-//
-// Bounded three ways:
-//  (i) big-M: a species touching an IC whose LP dual carries the simplex sentinel 1/pa_EPS
-//      is skipped, not priced;
-//  (ii) ceiling: capped at 0.5 * PhaseInsertionCeiling(j);
-//  (iii) floor: never below what DC_RaiseZeroedOff() wrote (except mode 2).
-// A positive affinity is clamped to zero (counted as posaff): at an LP optimum a species at
-// its lower bound has s_j = G_j - a_j^T u >= 0. presmax= (the largest |aff| over LP-present
-// species, which should be ~0) checks the sign convention.
-/// The edge of the band where the LP dual carries information - see LpFilloutMode().
-static const double kLpFillAffCut = -8.;
-
-struct LpFillRec { long int j; long int k; double cls; double raw; double pred; double cap; double aff; };
-static thread_local std::vector<LpFillRec> lpfill_recs;
-static thread_local long int lpfill_raised = 0, lpfill_capped = 0, lpfill_skipped = 0;
-static thread_local long int lpfill_posaff = 0, lpfill_present = 0, lpfill_overcls = 0;
-static thread_local double  lpfill_overclsmax = 0.;
-static thread_local double  lpfill_presmax = 0.;
-static thread_local bool    lpfill_applied = false;
-static thread_local long int lpfill_applied_mode = 0;
-static thread_local std::vector<double> lpfill_uLP;   // the COLD LP's dual, before MBR overwrites pm.U
-
-/// GEMS3K_LPFILL_PROBE=<path> - see LpDualFillout(). Zero cost when unset.
-FILE* lpfill_probe_file()
-{
-    static FILE* fp = []() -> FILE*
-    {
-        const char* fn = std::getenv( "GEMS3K_LPFILL_PROBE" );
-        return fn ? fopen( fn, "a" ) : nullptr;
-    }();
-    return fp;
-}
-
-/// The applied mode: pa_LpDualFillout, unless GEMS3K_LPDUAL_FILLOUT overrides it.
-///   1  the class constant is a floor, so a species can only be raised.
-///   2  the composition ceiling dominates that floor.
-///   3  as 1, but applied only near the leveling hyperplane (aff >= kLpFillAffCut RT), the
-///      band where the LP dual carries information; dimensionless, unaffected by pa_DG.
-long int TMultiBase::LpFilloutMode() const
-{
-    static const long int envM = []() -> long int
-    {
-        const char* v = std::getenv( "GEMS3K_LPDUAL_FILLOUT" );
-        return ( v && *v ) ? atol( v ) : -1;
-    }();
-    return ( envM >= 0 ) ? envM : base_param()->LpDualFillout;
-}
-
-/// Price every species the LP zeroed against the LP's own dual. yLp is pm.Y as the simplex
-/// left it, before DC_RaiseZeroedOff(); pm.Y here already carries the class constants, so
-/// "the LP zeroed it" is exactly yLp[j] < pm.Y[j].
-void TMultiBase::LpDualFillout( const std::vector<double>& yLp )
-{
-    lpfill_recs.clear();
-    lpfill_raised = lpfill_capped = lpfill_skipped = lpfill_posaff = lpfill_present = 0;
-    lpfill_overcls = 0; lpfill_overclsmax = 0.;
-    lpfill_presmax = 0.;
-    const long int mode = LpFilloutMode();
-    lpfill_applied = ( mode > 0 );
-    lpfill_applied_mode = mode;
-    if( !lpfill_applied && !lpfill_probe_file() )
-        return;                                  // zero cost when neither gate is set
-    const long int N = pm.N, L = pm.L;
-    if( (long int)yLp.size() != (size_t)L || !pm.U || !pm.A || !pm.G || !pm.L1 )
-        return;
-
-    const double bigM = 0.1 / base_param()->EPS;     // the simplex's own 1/EPS sentinel
-    lpfill_uLP.assign( pm.U, pm.U + N );             // kept for the re-linearisation test below
-    std::vector<double> xfLp( (size_t)pm.FI, 0. );   // phase amounts AT THE LP VERTEX
-    long int jb = 0;
-    for( long int k = 0; k < pm.FI; k++ )
-    {
-        for( long int j = jb; j < jb + pm.L1[k]; j++ )
-            xfLp[(size_t)k] += yLp[(size_t)j];
-        jb += pm.L1[k];
-    }
-
-    jb = 0;
-    for( long int k = 0; k < pm.FI; k++ )
-    {
-        for( long int j = jb; j < jb + pm.L1[k]; j++ )
-        {
-            double aff = 0.;
-            bool priced = true;
-            for( long int i = 0; i < N; i++ )
-            {
-                const double a = pm.A[ i + j*N ];
-                if( a == 0. )
-                    continue;
-                if( !std::isfinite( pm.U[i] ) || fabs( pm.U[i] ) >= bigM )
-                {   priced = false; break; }
-                aff += a * pm.U[i];
-            }
-            if( priced )
-                aff -= pm.G[j];
-
-            const double cls = pm.Y[j];
-            if( yLp[(size_t)j] >= cls )
-            {   // the LP gave this species a real amount: the sign-convention control
-                if( priced && std::isfinite( aff ) && yLp[(size_t)j] > 0. )
-                {
-                    lpfill_present++;
-                    lpfill_presmax = std::max( lpfill_presmax, fabs( aff ) );
-                }
-                continue;
-            }
-            if( !priced || !std::isfinite( aff ) )
-            {   lpfill_skipped++; continue; }
-            if( aff > 0. )
-            {   lpfill_posaff++; aff = 0.; }
-
-            // mode 3: outside the reliable band the dual says nothing, so do not pretend
-            if( mode == 3 && aff < kLpFillAffCut )
-            {   lpfill_skipped++; continue; }
-            const double base = ( xfLp[(size_t)k] > 0. ) ? xfLp[(size_t)k] : cls;
-            const double pred = base * exp( aff );
-            if( !std::isfinite( pred ) || pred <= 0. )
-            {   lpfill_skipped++; continue; }
-
-            const double cap = PhaseInsertionCeiling( j );
-            if( cap > 0. && cls > cap )
-            {   // the class constant already asks for more than the bulk can supply
-                lpfill_overcls++;
-                lpfill_overclsmax = std::max( lpfill_overclsmax, cls / cap );
-            }
-            double val = pred;
-            if( cap > 0. && val > 0.5*cap )
-            {   val = 0.5*cap; lpfill_capped++; }
-            if( val < cls && mode != 2 )
-                val = cls;                       // mode 1: the class constant is a floor
-            if( mode == 2 && cap > 0. && val > 0.5*cap )
-                val = 0.5*cap;                   // mode 2: the ceiling wins, floor or not
-            lpfill_recs.push_back( LpFillRec{ j, k, cls, pred, val, cap, aff } );
-            if( lpfill_applied && val != cls )
-            {   pm.Y[j] = val; lpfill_raised++; }
-        }
-        jb += pm.L1[k];
-    }
-    if( lpfill_applied )
-    {   // the raise changed phase totals; the LP site recomputes them right after,
-        // but the DECIDE record is written where the choice was made.
-        native_trace_decide( "lpfillout mode=%ld n=%ld raised=%ld capped=%ld skipped=%ld posaff=%ld overcls=%ld",
-                             (long)mode, (long)lpfill_recs.size(), (long)lpfill_raised,
-                             (long)lpfill_capped, (long)lpfill_skipped, (long)lpfill_posaff,
-                             (long)lpfill_overcls );
-    }
-}
-
-/// One summary line plus one line per priced species, written at the answer site, so each
-/// prediction is compared with the amount the solve converged to.
-void TMultiBase::LpFillProbeReport()
-{
-    FILE* fp = lpfill_probe_file();
-    if( !fp || lpfill_recs.empty() )
-        return;
-    fprintf( fp, "LPFILL mode=%d n=%ld raised=%ld capped=%ld skipped=%ld posaff=%ld"
-                 " overcls=%ld overclsmax=%.3e"
-                 " present=%ld presmax=%.3e ITF=%ld ITG=%ld MK=%ld PZ=%ld L=%ld N=%ld\n",
-             (int)lpfill_applied_mode, (long)lpfill_recs.size(), (long)lpfill_raised,
-             (long)lpfill_capped, (long)lpfill_skipped, (long)lpfill_posaff,
-             (long)lpfill_overcls, lpfill_overclsmax,
-             (long)lpfill_present, lpfill_presmax,
-             (long)pm.ITF, (long)pm.ITG, (long)pm.MK, (long)pm.PZ, (long)pm.L, (long)pm.N );
-    // ---- Diagnostic: re-solve the LP at the current potentials -----------
-    // The cold LP prices species at G0 with lnGam forced to zero (no mixing term). Re-solving
-    // the same LP with the current pm.G (G0 + fDQF + F0) tests whether the missing mixing term
-    // explains the gap between the LP dual and the converged pm.U. A mechanism test only:
-    // linearising at the solution is circular by construction.
-    {
-        double uInf = 0., d0 = 0., d1 = -1.;
-        for( long int i = 0; i < pm.N; i++ )
-            uInf = std::max( uInf, fabs( pm.U[i] ) );
-        if( (long int)lpfill_uLP.size() == pm.N )
-            for( long int i = 0; i < pm.N; i++ )
-                d0 = std::max( d0, fabs( lpfill_uLP[(size_t)i] - pm.U[i] ) );
-#ifdef USE_OPTIMA_SOLVER
-        std::vector<double> yRe;
-        if( LPGibbsDual( yRe, pm.G ) && (long int)yRe.size() == pm.N )
-        {
-            d1 = 0.;
-            for( long int i = 0; i < pm.N; i++ )
-                d1 = std::max( d1, fabs( yRe[(size_t)i] - pm.U[i] ) );
-        }
-#endif
-        // Is the difference degeneracy? Every optimal dual of an LP gives the same b^T y, so equal
-        // values mean both are optimal duals of one LP (the LP does not determine the dual).
-        double bu = 0., by = 0.;
-        for( long int i = 0; i < pm.N; i++ )
-            bu += pm.B[i] * pm.U[i];
-#ifdef USE_OPTIMA_SOLVER
-        if( d1 >= 0. )
-            for( long int i = 0; i < pm.N; i++ )
-                by += pm.B[i] * yRe[(size_t)i];
-#endif
-        const double sc = std::max( fabs( bu ), 1e-30 );
-        fprintf( fp, "LPRELP uinf=%.6e d_coldLP=%.6e d_relin=%.6e bu=%.10e by=%.10e"
-                     " dobj_rel=%.6e N=%ld\n",
-                 uInf, d0, d1, bu, by, fabs( by - bu ) / sc, (long)pm.N );
-    }
-
-    for( const LpFillRec& r : lpfill_recs )
-        fprintf( fp, "LPFILLSP dc=%s cls=%.6e raw=%.6e pred=%.6e cap=%.6e aff=%.4f final=%.6e\n",
-                 char_array_to_string( pm.SM[r.j], MAXDCNAME ).c_str(),
-                 r.cls, r.raw, r.pred, r.cap, r.aff, pm.X[r.j] );
-    fflush( fp );
-}
-
-
-/// The effective budget: GEMS3K_FILLOUT_BUDGET if set (negative = unset), else the field.
-/// Not cached, so it can be changed within one process. Read by both the call site (which
-/// must snapshot pm.Y before DC_RaiseZeroedOff()) and ApplyFilloutBudget(), so they agree.
+/// The effective budget: GEMS3K_FILLOUT_BUDGET if set (negative = unset), else the field. The
+/// environment override is kept for the CTest case fillout.budget. Not cached, so it can be
+/// changed within one process. Read by both the call site (which must snapshot pm.Y before
+/// DC_RaiseZeroedOff()) and ApplyFilloutBudget(), so they agree.
 double TMultiBase::FilloutBudgetValue() const
 {
     const char* v = std::getenv( "GEMS3K_FILLOUT_BUDGET" );
@@ -4619,129 +4374,6 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
 
     long int ii, i, jj, kk, k, Na = pm.N;
 
-    // ------------------------------------------------------------------
-    // pa_MbPivotSplit: pivot/non-pivot split of this reduction (see BASE_PARAM::MbPivotSplit).
-    // A self-contained early branch, so with the field off the function is unchanged. Falls
-    // through to the plain path when the non-pivot set is empty (the split then reduces to
-    // the plain assembly exactly) or larger than N.
-    // ------------------------------------------------------------------
-    if( initAppr && base_param()->MbPivotSplit )
-    {
-        // Eq. 133b, with D_jj = 1/W[j] and C_(i,j) = a(j,i):
-        //     non-pivot  <=>  1/W[j] < max_i |a(j,i)|
-        std::vector<long int> np;              // I_n, in species order
-        std::vector<char> isNP( (size_t)pm.L, 0 );
-        for( jj = 0; jj < pm.L; jj++ )
-        {
-            if( pm.Y[jj] <= min( pm.lowPosNum, pm.DcMinM ) )
-                continue;                      // same filter as the assembly
-            if( !( pm.W[jj] > 0. ) )
-                continue;
-            double colmax = 0.;
-            for( i = arrL[jj]; i < arrL[jj+1]; i++ )
-            {   ii = arrAN[i];
-                if( ii >= N )
-                    continue;
-                double v = fabs( a(jj,ii) );
-                if( v > colmax ) colmax = v;
-            }
-            if( colmax > 0. && pm.W[jj] * colmax > 1. )
-            {   np.push_back( jj );  isNP[(size_t)jj] = 1;  }
-        }
-
-        const long int nn = (long int)np.size();
-        if( nn > 0 && nn <= N )
-        {
-            const long int M = N + nn;
-            std::vector<double> AM( (size_t)M * (size_t)M, 0. );
-            std::vector<double> BM( (size_t)M, 0. );
-            // AM is row-major: AM[r*M + c] is row r, column c. The matrix is
-            // symmetric, so this agrees with the naive path's own (column-
-            // major) convention regardless.
-
-            // Top-left N x N: the same Gram matrix, over PIVOT species only.
-            for( jj = 0; jj < pm.L; jj++ )
-            {
-                if( pm.Y[jj] <= min( pm.lowPosNum, pm.DcMinM ) )
-                    continue;
-                if( isNP[(size_t)jj] )
-                    continue;
-                for( k = arrL[jj]; k < arrL[jj+1]; k++)
-                    for( i = arrL[jj]; i < arrL[jj+1]; i++ )
-                    {   ii = arrAN[i];
-                        kk = arrAN[k];
-                        if( ii >= N || kk >= N )
-                            continue;
-                        AM[(size_t)ii*(size_t)M + (size_t)kk] += a(jj,ii) * a(jj,kk) * pm.W[jj];
-                    }
-            }
-
-            // Coupling blocks C_n / B_n and the non-pivot diagonal D_n.
-            // Row N+t is the retained equation  sum_k a(j,k) y_k - x_t/W[j] = 0
-            // (negated from Eq. 134's own row so the whole matrix stays
-            // symmetric; the right-hand side is zero either way).
-            for( long int t = 0; t < nn; t++ )
-            {
-                const long int j = np[(size_t)t];
-                const long int r = N + t;
-                for( i = arrL[j]; i < arrL[j+1]; i++ )
-                {   ii = arrAN[i];
-                    if( ii >= N )
-                        continue;
-                    const double v = a(j,ii);
-                    AM[(size_t)ii*(size_t)M + (size_t)r] = v;
-                    AM[(size_t)r *(size_t)M + (size_t)ii] = v;
-                }
-                AM[(size_t)r*(size_t)M + (size_t)r] = -1. / pm.W[j];
-            }
-
-            for( ii = 0; ii < N; ii++ )
-                BM[(size_t)ii] = pm.C[ii];     // BM[N..M) stay 0
-
-            // Same symmetric Jacobi scaling as the plain path below.
-            std::vector<double> Ds( (size_t)M, 1. );
-            for( long int r = 0; r < M; r++ )
-            {
-                double d = fabs( AM[(size_t)r*(size_t)M + (size_t)r] );
-                if( d > 1e-300 )
-                    Ds[(size_t)r] = 1. / sqrt( d );
-            }
-            for( long int r = 0; r < M; r++ )
-            {
-                for( long int c = 0; c < M; c++ )
-                    AM[(size_t)r*(size_t)M + (size_t)c] *= Ds[(size_t)r] * Ds[(size_t)c];
-                BM[(size_t)r] *= Ds[(size_t)r];
-            }
-
-            // The augmented matrix is symmetric but indefinite (the non-pivot diagonal block
-            // is -1/W[j] < 0), so it is solved by LU with partial pivoting, not Cholesky.
-            Array2D<double> AAm( M, M, AM.data() );
-            Array1D<double> BBm( M, BM.data() );
-            JAMA::LU<double> lum( AAm );
-            if( !lum.isNonsingular() )
-            {
-                ipm_logger->warn("MakeAndSolveSystemOfLinearEquations (Appendix A "
-                                 "pivot split, |I_n|={}): augmented matrix singular", nn);
-#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
-                pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
-                                      std::chrono::high_resolution_clock::now() - solve_t0 ).count();
-                pm.CondNumTimeMs += diag_ms;
-#endif
-                return 1;
-            }
-            BBm = lum.solve( BBm );
-            for( ii = 0; ii < N; ii++ )
-                pm.Uefd[ii] = BBm[(int)ii] * Ds[(size_t)ii];
-            ipm_logger->trace("Appendix A pivot split: |I_n|={} of {} active species, "
-                              "augmented system {} x {}", nn, pm.L, M, M);
-#ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
-            pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
-                                  std::chrono::high_resolution_clock::now() - solve_t0 ).count();
-            pm.CondNumTimeMs += diag_ms;
-#endif
-            return 0;
-        }
-    }
 
     if( !initAppr && base_param()->IpmAugmentedKKT > 0 )
     {
