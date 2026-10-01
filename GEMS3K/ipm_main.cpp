@@ -263,7 +263,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
         const char* drGate = ( drCfg > 0 ) ? "EXPLICIT"
                            : ( drCfg < 0 ) ? "OFF" : "AUTO";
         // Decidable here: a warm leg never takes the cold-start path, and ROP
-        // (reaktoroMode) skips the pre-solve entirely.
+        // (referenceMode) skips the pre-solve entirely.
         const char* drReached = ( drEff <= 0 )      ? "no(off)"
                               : ( mode == 18 )      ? "no(ROP)"
                               : ( pm.pNP != 0 && drCfg <= 0 ) ? "no(warm,AUTO)"

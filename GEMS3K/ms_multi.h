@@ -926,7 +926,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// runs exactly as it would have.
     ///
     /// NOT applied when control conditions are active (R > 0) or in ROP
-    /// (reaktoroMode), which is a faithful port of Reaktoro's own mechanism.
+    /// (referenceMode), which is a faithful port of Reaktoro's own mechanism.
     ///
     /// THREE-VALUED, and 0 is AUTO rather than off (changed 2026-09-02, see
     /// section 35 of Docs/gems3k-optima-plan-v5.md):
@@ -2792,7 +2792,7 @@ public:
     // architecturally equivalent to AIA/SIA but solved via Optima instead
     // of GEMS3K's own IPM/MBR.
     //
-    // `reaktoroMode` (default false = AOP/SOP's own established behavior,
+    // `referenceMode` (default false = AOP/SOP's own established behavior,
     // unchanged): when true, dispatched for NEED_GEM_ROP instead - a
     // faithful port of Reaktoro's OWN equilibrium mechanism onto this same
     // objective/constraint plumbing, not just AOP's seed/options swapped
@@ -2820,7 +2820,7 @@ public:
     /// \param runKinetics run the kinetics/metastability time step (RunKineticsStep()). TRUE for a
     ///        normal AOP/SOP call; FALSE for CalculateEquilibriumStateHOP()'s Optima leg, whose native
     ///        leg has already advanced it for this time step - running it twice would double the rate.
-    double CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool reaktoroMode = false,
+    double CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool referenceMode = false,
                                             bool runKinetics = true );
 
     /// HYBRID: native selects the species (its own IPM/MBR/PSSC pipeline,

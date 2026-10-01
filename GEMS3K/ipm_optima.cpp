@@ -2611,7 +2611,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     return discard();
 }
 
-double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool reaktoroMode,
+double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool referenceMode,
                                                     bool runKinetics )
 {
     // Disable the IPM-2 chemical-potential smoothing for the whole of this
@@ -2856,9 +2856,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             {
                 ipm_logger->warn( "CalculateEquilibriumStateOptima: LP-feasibility seed unavailable "
                                    "(infeasible or numerical issue) - falling back to the uniform seed" );
-                const double reaktoroSeed = std::max( dcFloor, 1e-16 * ScFact );
+                const double uniformSeed = std::max( dcFloor, 1e-16 * ScFact );
                 for( long int j = 0; j < pm.L; j++ )
-                    pm.Y[j] = reaktoroSeed;
+                    pm.Y[j] = uniformSeed;
             }
         }
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
@@ -2982,7 +2982,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
         long int dimReduceIters = 0;
         bool dimReduceDone = false;
-        if( !reaktoroMode && R == 0 && ( pm.pNP == 0 || hopReduce ) && dimReducePasses > 0 )
+        if( !referenceMode && R == 0 && ( pm.pNP == 0 || hopReduce ) && dimReducePasses > 0 )
         {
             // Re-establish the same consistent (Y, X, XF/XFA, activity
             // coefficients) state the seed block above leaves behind. The
@@ -3128,7 +3128,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 fprintf( fh, "# HANDOVER L=%ld N=%ld FI=%ld pNP=%ld hop=%d reaktoro=%d "
                              "IT=%ld ITG=%ld ITF=%ld K2=%ld FitVar3=%.17g FitVar4=%.17g\n",
                          (long)L, (long)N, (long)pm.FI, (long)pm.pNP,
-                         optima_hop_leg ? 1 : 0, reaktoroMode ? 1 : 0, (long)pm.IT,
+                         optima_hop_leg ? 1 : 0, referenceMode ? 1 : 0, (long)pm.IT,
                          (long)pm.ITG, (long)pm.ITF, (long)pm.K2,
                          pm.FitVar[3], pm.FitVar[4] );
                 for( long int j = 0; j < L; j++ )
@@ -3299,7 +3299,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // ipm-dat field, so setting it to the project's own pa_DHB reproduces
         // the tested configuration exactly. See CLAUDE.md 2026-08-25.
         const double kLogBarrierTau = pa_p->LogBarrierTau;
-        // No reaktoroMode capture: since the FD PartiallyExact Hessian was made
+        // No referenceMode capture: since the FD PartiallyExact Hessian was made
         // unconditional (2026-08-25) the objective, gradient and Hessian are
         // byte-identical for AOP/SOP and ROP. The two modes now differ ONLY in
         // Optima::Options and in their retry chains - see below.
@@ -3347,7 +3347,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // warm modes systematically - about twenty SOP/SHP rows went from 1 iteration to
         // 2, taking SHP +42 % and SOP +2 % overall - while AOP, the cold mode it is
         // actually for, went -5 %. HOP's Optima leg is warm (pm.pNP = 1) and was +7 %.
-        const long int kFDDelay = ( !reaktoroMode && pm.pNP == 0 && pa_p->OptimaFDHessianDelay > 0 )
+        const long int kFDDelay = ( !referenceMode && pm.pNP == 0 && pa_p->OptimaFDHessianDelay > 0 )
                                   ? pa_p->OptimaFDHessianDelay : 0;
         const bool kMoleFracHessian = ( pa_p->OptimaMoleFracHessian != 0 );
         problem.f = [this, L, R, dcFloor, &fixedGrad, kLogBarrierTau, kPhaseHessianFloor, kFDHessian, kFDDiagFloor, kMoleFracHessian, fdSuppress, hasAq, phLast, phDec, phMax]
@@ -3865,7 +3865,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // here; it is a defensible neutral start. (The warm path above is a
         // different case entirely: there the dual is not estimated but KNOWN.)
         Optima::Options options;
-        if( !reaktoroMode )
+        if( !referenceMode )
         {
             // Reuse GEMS3K's own equivalents rather than adding parallel
             // Optima-only fields wherever one exists (per the AOP/SOP design
@@ -3902,7 +3902,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape, pa_p->OptimaLSWindow,
                              pa_p->OptimaLSRejectWorse );
         }
-        // else (reaktoroMode): leave Optima::Options() entirely at the
+        // else (referenceMode): leave Optima::Options() entirely at the
         // library's own untouched defaults - matching Reaktoro's own
         // practice exactly (Reaktoro/Equilibrium/EquilibriumOptions.hpp
         // carries a plain `Optima::Options optima` member with no
@@ -4591,7 +4591,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // See BASE_PARAM::OptimaPhaseCompaction (ms_multi.h) for why this
         // cannot be done after the fact and why misclassification is
         // self-correcting rather than silent.
-        if( !reaktoroMode && pa_p->OptimaPhaseCompaction > 0 && L > 0 )
+        if( !referenceMode && pa_p->OptimaPhaseCompaction > 0 && L > 0 )
         {
             Optima::Options probeOpts = options;
             probeOpts.maxiters = pa_p->OptimaPhaseCompaction;
@@ -5056,7 +5056,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // judged on the ordinary (non-early-stop) path.
         std::function<void(bool)> runExtinctionTier;
 
-        if( reaktoroMode )
+        if( referenceMode )
         {
             // TWO SEPARATE REORDERING ATTEMPTS, both tried and REVERTED
             // the same session - do not try a third without a genuinely
@@ -5906,7 +5906,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
 
         }
-        } // else (!reaktoroMode) - AOP/SOP's own solvent-collapse retry
+        } // else (!referenceMode) - AOP/SOP's own solvent-collapse retry
 
         // ---- A NET MUST RESTORE THE PROBLEM, NOT ONLY THE STATE -------------
         // Both safety nets below re-solve from `initialState` so the re-solve
@@ -6259,8 +6259,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
         }
 
-        ipm_logger->info( "CalculateEquilibriumStateOptima: pNP={} reaktoroMode={} succeeded={} iterations={} nConditions={}",
-                           pm.pNP, reaktoroMode, result.succeeded, result.iterations, R );
+        ipm_logger->info( "CalculateEquilibriumStateOptima: pNP={} referenceMode={} succeeded={} iterations={} nConditions={}",
+                           pm.pNP, referenceMode, result.succeeded, result.iterations, R );
 
         for( long int j = 0; j < L; j++ )
         {

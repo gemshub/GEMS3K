@@ -163,7 +163,7 @@ typedef DATABR*  DATABRPTR;
  // mechanism onto GEMS3K's chemistry (same uniform tiny initial guess,
  // same PartiallyExact Hessian strategy, same untouched Optima::Options
  // defaults, same single apply_min_max_fix_and_accept-toggle fallback -
- // see TMultiBase::CalculateEquilibriumStateOptima()'s reaktoroMode
+ // see TMultiBase::CalculateEquilibriumStateOptima()'s referenceMode
  // branch, ipm_optima.cpp) - NOT just AOP's own seed/options swapped in.
  // Unlike AOP/SOP there is no cold/warm pair: Reaktoro's own default
  // equilibrate() always starts from the same uniform seed regardless of
