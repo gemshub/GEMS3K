@@ -32,8 +32,8 @@ BRANCH_TFUN=master
 #sudo rm -rf /usr/local/include/eigen3/Eigen/Eigen
 #sudo rm -rf /usr/local/include/pybind11
 #sudo rm -rf /usr/local/include/spdlog
-#sudo rm -f  /usr/local/lib/libChemicalFun.$EXTN
-#sudo rm -f  /usr/local/lib/libThermoFun.$EXTN
+sudo rm -f  /usr/local/lib/libChemicalFun.$EXTN
+sudo rm -f  /usr/local/lib/libThermoFun.$EXTN
 
 # spdlog
 # if no spdlog installed in /usr/local/include/spdlog (copy only headers)
@@ -42,7 +42,7 @@ test -d /usr/local/include/spdlog || {
         # Building spdlog library
         mkdir -p ~/code && \
                 cd ~/code && \
-                git clone https://github.com/gabime/spdlog -b v1.11.0  && \
+                git clone https://github.com/gabime/spdlog  && \
                 cd spdlog/include && \
                 sudo cp -r spdlog /usr/local/include
 

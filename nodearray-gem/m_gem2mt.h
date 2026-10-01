@@ -82,7 +82,7 @@ typedef struct
    PvDDc,    //  Use diffusion coefficients for DC - DDc vector (+ -)
    PvDIc,    //  Use diffusion coefficients for IC - DIc vector (+ -)
    PvDCH,    //  Select ICs, DCs and phases to be exchanged via DATABR file (take all, if unchecked) (+ -)?
-   PvnVTK,   //  Use selected fields to VTK format (+ -)?
+   PvnVTK,   // Use selected fields to VTK format (+ -)?
    PvMSc,    // Use math script for control on time steps (+ -)?
 
      // Controls on operation (14)
@@ -117,7 +117,7 @@ typedef struct
    nSFD,   // number of elemental source flux definitions (0 or >= 1 )
    nEl,   // number of electrolytes for setting up electrolyte diffusion coefficients in mDEl vector
    nPTypes,     // res Number of allocated particle types (< 20 ? )
-   nProps,      // res Number of particle statistic properties (for monitoring) >= anPTypes
+   nProps,      // res Number of particle statistic properties (for monitoring) >= anPTypes (now not used in particlearray)
    Lbi,  // Lb - number of formula units to set compositions in initial variants
    Nsd,  // N of references to data sources
    Nqpt, // Number of elements in the script work array qpi for transport
@@ -137,9 +137,9 @@ typedef struct
   // These dimensionalities define sizes of dynamic data in DATABR structure!!!
   // Needed to reduce on storage demand for data bridge instances (nodes)!
   // Connection occurs through xIC, xPH and xDC lists!
-    nICb,       // number of stoichiometry units (<= nIC) used in the data bridge
-    nDCb,      	// number of DC (chemical species, <= nDC) used in the data bridge
-    nPHb,     	// number of phases (<= nPH) used in the data bridge
+    nICb1,       // number of stoichiometry units (<= nIC) used in the data bridge
+    nDCb1,      	// number of DC (chemical species, <= nDC) used in the data bridge
+    nPHb1,     	// number of phases (<= nPH) used in the data bridge
     Nf,       // nICb number of ICs in  (DATABR) for setting box-fluxes
     FIf,      // nPHb number of phases in (DATABR) for setting box-fluxes
     nVTKfld, //  Number of selected fields to VTK format
@@ -154,15 +154,15 @@ nRes3,  //   reserved
 
   double
   // Input for compositions of initial systems
-   Msysb, // Masses (kg) and volumes (L) for initial systems: Ms (total mass, normalize)
-   Vsysb, // Vs (total volume of the object, for volume concentrations)
-   Mwatb, // M(H2O) (mass of water-solvent for molalities)
-   Maqb,  // Maq (mass of aqueous solution for ppm etc.)
-   Vaqb,  // Vaq (volume of aqueous solution for molarities)
-   Pgb,   // Pg (pressure in gas, for partial pressures)
-   Tmolb, // MOL total mole amount for basis sub-system composition calculations
-   WmCb,  // mole fraction of the carrier DC (e.g. sorbent or solvent)
-   Asur,  // Specific surface area of the sorbent (for adsorbed species)
+   Msysb1, // Masses (kg) and volumes (L) for initial systems: Ms (total mass, normalize)
+   Vsysb1, // Vs (total volume of the object, for volume concentrations)
+   Mwatb1, // M(H2O) (mass of water-solvent for molalities)
+   Maqb1,  // Maq (mass of aqueous solution for ppm etc.)
+   Vaqb1,  // Vaq (volume of aqueous solution for molarities)
+   Pgb1,   // Pg (pressure in gas, for partial pressures)
+   Tmolb1, // MOL total mole amount for basis sub-system composition calculations
+   WmCb1,  // mole fraction of the carrier DC (e.g. sorbent or solvent)
+   Asur1,  // Specific surface area of the sorbent (for adsorbed species)
 // "ADpar" data object (11 doubles)
    tf,     // time step reduction factor (usually 1)
    vol_in, // initial total node volume (m3),  was column length (m)  -> to sizeLc[0]
@@ -341,143 +341,380 @@ GEM2MT;
 // Current GEM2MT
 class TGEM2MT
 {
-  GEM2MT mt[1];
+    GEM2MT mt[1];
 
-  std::shared_ptr<TNodeArray> na = nullptr;       // pointer to nodearray class instance
-  TParticleArray* pa_mt = nullptr;       // pointer to TParticleArray class instance
-
-    std::string pathVTK;
-    std::string nameVTK;
-    std::string prefixVTK;
-
-    void logProfilePhMol( FILE* logfile, int inode )
-    {
-        if( pa_mt )
-            pa_mt->logProfilePhMol( logfile, inode );
-    }
-
-protected:
-
-    void AllocNa();
-
-    void keyTest( const char *key );
-    void Expr_analyze( int obj_num );
-    void CalcPoint( int nPoint );
-    bool test_sizes();
-    void SelectNodeStructures( bool select_all );
-    void init_arrays( bool mode );
-    void calc_eqstat( bool startSys );
-    void outMulti();
-    void mt_next();
-    void mt_reset();
-    void gen_task( bool startSys );
-    void make_A( long int siz_, char (*for_)[MAXFORMUNITDT] );
-    void Bn_Calc();
-    void gen_TPval();
-    void CalcStartScript();
-    void CalcControlScript();
-
-    void  copyNodeArrays();
-    void  NewNodeArray();
-    void  putHydP( DATABRPTR* C0 );
-    void  LinkNode0(  long int nNode );
-    void  LinkNode1(  long int nNode );
-    void  LinkCSD(  long int nNode );
-    void  allocNodeWork();
-    void  freeNodeWork();
-
-    void  CalcGraph();
-    long int CheckPIAinNodes1D( char mode,
-              long int start_node = 0, long int end_node = 1000 );
-
-    bool  CalcIPM( char mode, long int start_node = 0,
-         long int end_node = 1000, FILE* diffile = nullptr );
-
-    void  MassTransAdvecStart();
-    void  MassTransAdvecStep( bool ComponentMode = true );
-    void  MassTransCraNicStart();
-    void  MassTransCraNicStep( bool ComponentMode = true );
-    void  MassTransParticleStart();
-    void  MassTransParticleStep( bool ComponentMode = true );
-    bool Trans1D( char mode  );  // return true if canceled
-
-   // for box flux ODE integration sims with variable time step (TBD)
-    long int MaxIter,  // max number of iterations
-         nfcn,      // number of functional estimates
-         nstep,     // number of steps
-         naccept,   // number of permissible steps
-         nrejct;    // number of unpermissible steps
-    double *x = nullptr;
-    double *dx = nullptr;
-    double *tv = nullptr;
-
-    // Flow-through box-flux transport simulations
-    void  BoxFluxTransportStart();
-    void  FlowThroughBoxFluxStep();
-
-    double BoxMasses( long int q );
-    void ComposMGPinBox( long int q );
-//    void DisCoefMGPinBox( long int q );
-    void  dMBZeroOff(  double *dm );
-    double MassICinHfe( long int fe, long int i );
-    double MassHfe(long int fe);
-    double MassICinMGP( long int q, long int f, long int i);
-    double MassMGP(long int q, long int f  );
-    double dMBfluxDir( long int q, long int i, double *dm, double fRate, double sign = 1.);
-    long int LookUpXMGP( const char* MGPid );
-    void  dMBflux( long int kk, double *dm );
-    void  BoxComposUpdate( long int q );
-    void  BoxesBCupdate();  // was CalcNodeFlux()
-    void  CalcMGPdata();
-    // Calculate new box states for tcur = x
-    bool BoxEqStatesUpdate( long int Ni,long int pr, double x, double step );
-    bool CalcSeqReacModel( char mode ); // Calculation of S-mode sequential reactors model
-    bool CalcBoxFluxModel( char mode ); // integrate boxes with fluxes of Mobile Groups of Phases
-
-    // calculate 1-step for the system of ODEs
-    void Solut( double *m, double *dm, double t );
-    // internal point j calculation
-    void MIDEX( long int j, double t, double h );
-    // ODE integration from t_begin to t_end with time step step (step can be reduced inside)
-    // returns current (possibly reduced) step value or negative value in case of error
-   double INTEG( double eps, double step, double t_begin, double t_end );
-
-    double PrintPoint( long int nPoint, FILE* diffile = nullptr, FILE* logfile = nullptr, FILE* ph_file = nullptr);
-    
 public:
 
     static TGEM2MT* pm;
-    
     GEM2MT *mtp;
 
     std::shared_ptr<TNodeArray> nodeArray()
     { return na; }
-    explicit TGEM2MT( size_t nrt );
 
-    ~TGEM2MT();
+    explicit TGEM2MT(size_t nrt);
+    explicit TGEM2MT(char ps_mode, long int  n_nodes);
+
+    /// Copy constructor
+    TGEM2MT(const TGEM2MT &obj )=delete;
+    /// Move constructor
+    TGEM2MT( TGEM2MT &&obj ) noexcept=delete;
+    /// Copy assignment
+    TGEM2MT &operator =( const TGEM2MT &other)=delete;
+    /// Move assignment
+    TGEM2MT &operator =(TGEM2MT &&other)=delete;
+    virtual ~TGEM2MT();
 
     const char* GetName() const
     {
         return "GEM2MT";
     }
 
-
-    void set_def(int q);
-    void mem_kill(int q);
-    void mem_new(int q);
-
-    double Reduce_Conc( char UNITP, double Xe, double DCmw, double Vm,
-        double R1, double Msys, double Mwat, double Vaq, double Maq, double Vsys );
-
     // write/read gem2mt structure
-    int ReadTask( const char *gem2mt_in1, const char *vtk_dir );
-    int ReadTaskString( const std::string json_string );
-    int WriteTask( const char *unsp_in1 );
+    int ReadTask(const std::string& gem2mt_in1, const std::string& vtk_dir);
+    int ReadTaskString(const std::string json_string);
+    int WriteTask(const std::string& unsp_in1);
 
-    int MassTransInit( const char *lst_f_name, const char *dbr_lst_f_name );
+    int MassTransInit(const std::string& ipm_lst_file, const std::string& dbr_lst_file);
     int MassTransStringInit(const std::string& dch_json, const std::string& ipm_json,
                             const std::vector<std::string>& dbr_json);
     void RecCalc();
+
+    // (1)  Task definition
+
+    /// Get the full name of this GEM2MT task
+    std::string name() const
+    {
+        return char_array_to_string(mtp->name, MAXFORMULA);
+    }
+    /// Set the full name of this GEM2MT task
+    void setName(const std::string& task_name)
+    {
+        strncpy(mtp->name, task_name.c_str(), MAXFORMULA-1);
+        mtp->name[MAXFORMULA-1]='\0';
+    }
+
+    /// Get the comment of this GEM2MT task
+    std::string comment() const
+    {
+        return char_array_to_string(mtp->notes, MAXFORMULA);
+    }
+    /// Set the comment of this GEM2MT task
+    void setComment(const std::string& task_notes)
+    {
+        strncpy(mtp->notes, task_notes.c_str(), MAXFORMULA-1);
+        mtp->notes[MAXFORMULA-1]='\0';
+    }
+
+    // (2) Allocation and setup flags
+
+    /// PvGrid: Use array of grid point locations (+ -) (default -)
+    void useArrayGridPoints(bool enable)
+    {
+        if(enable) {
+            mtp->PvGrid = S_ON;
+        }
+        else {
+            mtp->PvGrid = S_OFF;
+        }
+    }
+
+    /// PvDDc: Use diffusion coefficients for DC - DDc vector (+ -) (default -)
+    void usePvDDc(bool enable)
+    {
+        if(enable) {
+            mtp->PvDDc = S_ON;
+        }
+        else {
+            mtp->PvDDc = S_OFF;
+        }
+    }
+
+    /// PvDIc: Use diffusion coefficients for IC - DIc vector (+ -) (default -)
+    void usePvDIc(bool enable)
+    {
+        if(enable) {
+            mtp->PvDIc = S_ON;
+        }
+        else {
+            mtp->PvDIc = S_OFF;
+        }
+    }
+
+    // (3) Controls on operation
+    /// PvMSt,    // ? Use math script for start setup (+ -)?    callback to update internal
+    /// PvMSg,    // ? Use math script for graphic presentation (+ -)?  callback to collect graphic data
+    /// PvMSc,    // ?  Use math script for control on time steps (+ -)?  CalcControlScript
+
+    /// PsSIA: Use smart initial approximation in GEM IPM (+); SIA internal (*); AIA (-)
+    void setSIA(char flag)
+    {
+        switch(flag) {
+        case S_ON:
+        case S_OFF:
+            mtp->PsSIA = flag;
+            break;
+        case S_REM:
+        default:
+            mtp->PsSIA = S_REM;
+            break;
+        }
+    }
+
+    /// PsMO: Use non stop debug output for nodes (+ -) (default +)
+    void setOutput(bool enable)
+    {
+        if(enable) {
+            mtp->PsMO = S_ON;
+        }
+        else {
+            mtp->PsMO = S_OFF;
+        }
+    }
+
+    /// PsVTK: Use non stop debug output nodes to VTK format(+ -) (default -)
+    void setOutVTK(bool enable)
+    {
+        if(enable) {
+            mtp->PsVTK = S_ON;
+        }
+        else {
+            mtp->PsVTK = S_OFF;
+        }
+    }
+
+    /// PsMPh: Type flux Phase ( 0 undef, 1 - aq; 2 - gas; 3 - aq+gas, 4 - solids ) (default 1)
+    void setTypeFluxPhase(char flag)
+    {
+        switch(flag) {
+        case '2':
+        case '3':
+        case '4':
+            mtp->PsMPh = flag;
+            break;
+        case '1':
+        default:
+            mtp->PsMPh = '1';
+            break;
+        }
+    }
+
+    // (4) Dimensions for gem2mt (memory allocation)
+
+    /// nC:  Input number of local equilibrium cells (nodes)
+    size_t nNodes() const
+    {
+        return mtp->nC;
+    }
+    /// nMGP: Number of mobile groups of phases, nMGP >= 0
+    size_t  nPhaseGroups() const
+    {
+        return mtp->nPG;
+    }
+    /// nFD: Number of MGP fluxes defined in the megasystem, nFD >= 0
+    size_t nMGPfluxes() const
+    {
+        return mtp->nFD;
+    }
+    /// nSFD:  Number of IC source flux compositions defined in megasystem, nSFD >= 0
+    size_t nICsourceFluxes() const
+    {
+        return mtp->nSFD;
+    }
+    /// nPTypes:  Number of allocated particle types < 20
+    size_t nParticleTypes()
+    {
+        return mtp->nPTypes;
+    }
+
+    /// FIf:  Number of phases in (DATABR) for setting box-fluxes
+    size_t nPhases() const
+    {
+        return mtp->FIf;
+    }
+    /// Nf:  Number of ICs in (DATABR) for setting box-fluxes
+    size_t nElements() const
+    {
+        return mtp->Nf;
+    }
+    /// Lsf: of DCs in phases-solutions in Multi (DATACH) for setting box-fluxes
+    size_t nComponents() const
+    {
+        return mtp->Lsf;
+    }
+
+    /// Define the number of mobile groups of phases, nMGP >= 0
+    void setNumberPhaseGroups(long int num)
+    {
+        mtp->nPG = num;
+        mtp->PvPGD = (num>0 ? S_ON: S_OFF);
+    }
+    /// Define the number of elemental source flux definitions, nSFD >= 0
+    void setNumberICsourceFluxes(long int num)
+    {
+        mtp->nSFD = num;
+        mtp->PvSFL = (num>0 ? S_ON: S_OFF);
+    }
+    /// nFD: Number of MGP fluxes defined in the megasystem, nFD >= 0
+    void setNumberMGPfluxes(long int num)
+    {
+        mtp->nFD = num;
+        mtp->PvFDL = (num>0 ? S_ON: S_OFF);
+    }
+    /// Define number of allocated particle types (<20)
+    void setNumberParticleTypes(long int num)
+    {
+        mtp->nPTypes = num;
+    }
+
+    // (5) Inital scalars and iterators
+
+    /// Tau:   Physical time iterator (start,end,step)
+    void setTau(double start, double end, double step)
+    {
+        mtp->Tau[START_]=start;
+        mtp->Tau[STOP_]=end;
+        mtp->Tau[STEP_]=step;
+        mtp->ntM = (mtp->Tau[STOP_]-mtp->Tau[START_])/(mtp->Tau[STEP_])+1;
+    }
+    /// sizeLc:  Spatial dimensions of the medium defines topology of nodes ( x y z )
+    void setSpatialDimensions(double x, double y, double z)
+    {
+        mtp->sizeLc[0]=x;
+        mtp->sizeLc[1]=y;
+        mtp->sizeLc[2]=z;
+    }
+
+    /// tf:  Advection/diffusion mass transport: time step reduction factor (usually 1)
+    void setTimeStepReductionFactor(double val)
+    {
+        mtp->tf = val;
+    }
+    /// Vt:  Initial total node volume (m^3)
+    void setInitialTotalNodeVolume(double val)
+    {
+        mtp->vol_in = val;
+    }
+    /// vp:  Fluid advection velocity (m/sec)
+    void setFluidAdvectionVelocity(double val)
+    {
+        mtp->fVel = val;
+    }
+    /// eps:  Initial node effective porosity (0 < eps < 1), usually 1
+    void setInitialNodeEffectivePorosity(double val)
+    {
+        mtp->eps_in = val;
+    }
+    /// Km:  Initial effective permeability, m2, usually 1
+    void setInitialEffectivePermeability(double val)
+    {
+        mtp->Km_in = val;
+    }
+    /// al:  Initial value of specific longitudinal dispersivity (m), usually 1e-3
+    void setInitialDispersivity(double val)
+    {
+        mtp->al_in = val;
+    }
+    /// Dif:  Initial general aqueous medium diffusivity (m2/sec), usually 1e-9
+    void setInitialDiffusivity(double val)
+    {
+        mtp->Dif_in = val;
+    }
+    /// nto:  Initial tortuosity factor, usually 1
+    void setInitialTortuosityFactor(double val)
+    {
+        mtp->nto_in = val;
+    }
+    /// cdv:   Cutoff for IC amount differences in the node between time steps (mol), usually 1e-9
+    void setCutoffICamount(double val)
+    {
+        mtp->cdv = val;
+    }
+    /// cez:   Cutoff for minimal amounts of IC in node bulk compositions (mol), usually 1e-12
+    void setCutoffMinimalAmountsIC(double val)
+    {
+        mtp->cez = val;
+    }
+
+    // (6) Initialize/change defaults for arrays
+
+    /// DiCp:  Change array of indexes of initial system variants for distributing to nodes [nC]
+    void setDistributing(size_t node_ndx, size_t sys_ndx)
+    {
+        if(mtp->DiCp && node_ndx<mtp->nC) {
+            mtp->DiCp[node_ndx][0] = sys_ndx;
+        }
+    }
+    /// DiCp: The second column DiCp[1] contains the node type for each node:
+    /// 0:   normal node;
+    /// Boundary condition nodes:
+    /// 1:   Dirichlet source (constant composition source);
+    /// -1:  Dirichlet sink;
+    /// 2:   Neumann source (constant gradient source);
+    /// -2:  Neumann sink;
+    /// 3:   Cauchy source (constant flux source);
+    /// -3:  Cauchy sink;
+    /// 4:   Input time-depended function (TBD).
+    void setNodeType(size_t node_ndx, long int type)
+    {
+        if(mtp->DiCp && node_ndx<mtp->nC) {
+            mtp->DiCp[node_ndx][1] = type;
+        }
+    }
+
+    /// Set of particle statistic property [nPTypes]
+    /// @param pndx: index in array
+    /// @param NPmean: Array of initial mean particle type numbers per node
+    /// @param nPmin: Minimum average total number of particles of each type per one node
+    /// @param nPmax: Maximum average total number of particles of each type per one node
+    /// @param ParTD: Array of particle type definitions at t0 or after interruption
+    void setParticle(size_t pndx, long int pmean, long int pmin, long int pmax, const std::array<long int, 6>& pparam);
+
+    /// HydP:  Initial hydraulic parameters in nodes: Vt, vp, eps, Km, al, Dif,  nto
+    /// @param pndx: index in array
+    /// @param Vt: initial total volume of the node, m3 (for porosity)
+    /// @param vp: initial advection velocity, m/s
+    /// @param eps: initial effective porosity
+    /// @param Km: initial effective permeability
+    /// @param al: initial specific longitudinal dispersivity
+    /// @param Dif: initial general diffusivity
+    /// @param nto: initial tortuosity factor
+    void setHydraulicParameters(size_t pndx, double Vt, double vp, double eps, double Km, double al, double Dif, double nto);
+
+    // Use phase groups definitions
+    /// MGPid: ID list of mobile phase groups
+    void setPhaseGroupsID(size_t gndx, const std::string& ids);
+    /// UMGP: [nFi] units for setting phase quantities in MGP (see PGT )
+    void setUnitsPhaseQuantities(size_t pndx, char units);
+    /// PGT: Quantities of phases in MGP [Fi][nPG]
+    /// @param gndx: phase groups index
+    /// @param pndx: phase index
+    void setPhaseGroupsQuantities(size_t gndx, size_t pndx, double quantity);
+
+    /// BSF: table of bulk compositions of elemental fluxes [nSFD][Nf]
+    /// @param gndx: groups index
+    /// @param indx: element index
+    void setICsourceQuantities(size_t gndx, size_t indx, double quantity);
+
+    /// FDLi: Set Source/Receive box index in the flux definition
+    void setFluxSourceReceive(size_t  pndx, long int  source, long int  receive);
+
+    /// FDLf: Set the flux definition: flux order, flux rate, MGP quantity
+    void setFluxDefinition(size_t  pndx, double order, double rate, double quantity, double val);
+
+    /// FDLmp: [nFD] ID of MGP to move in this flux
+    void setFluxMGPid(size_t pndx, const std::string& ids);
+    /// FDLid: Set IDs of fluxes
+    void setFluxID(size_t pndx, const std::string& ids);
+
+    /// Set grid point location, size is nC [grid]
+    /// @param pndx: index in array
+    /// @param x: Array of initial mean particle type numbers per node
+    /// @param y: Minimum average total number of particles of each type per one node
+    /// @param z: Maximum average total number of particles of each type per one node
+    void setGridPoint(size_t pndx, double x,  double y,  double z);
+
+    /// xFlds: Set list of selected fields and indexes to VTK format
+    void setVTKfields(const std::vector<std::pair<int, int>>& vtk_fields);
 
     // for separate
     void checkAlws(io_formats::TRWArrays&  prar1, io_formats::TRWArrays&  prar) const;
@@ -490,12 +727,120 @@ public:
     bool stepWise;
     bool calcFinished;
     std::string Vmessage;
+    class UserCancelException {};
+    GEMS3KGenerator GEMS3k_generator();
+    virtual bool internalCalc();
+    //void savePoint();
 
-   class UserCancelException {};
-   bool internalCalc();
-   void savePoint();
+protected:
 
-   GEMS3KGenerator GEMS3k_generator();
+    std::shared_ptr<TNodeArray> na = nullptr;       // pointer to nodearray class instance
+    TParticleArray* pa_mt = nullptr;       // pointer to TParticleArray class instance
+
+    // for box flux ODE integration sims with variable time step (TBD)
+    long int MaxIter,  // max number of iterations
+        nfcn,      // number of functional estimates
+        nstep,     // number of steps
+        naccept,   // number of permissible steps
+        nrejct;    // number of unpermissible steps
+    double *x = nullptr;
+    double *dx = nullptr;
+    double *tv = nullptr;
+
+    std::string pathVTK;
+    std::string nameVTK;
+    std::string prefixVTK;
+
+    std::shared_ptr<spdlog::logger> main_logfile;
+    std::shared_ptr<spdlog::logger> ph_file;
+    std::shared_ptr<spdlog::logger> diff_log_file;
+
+    bool read_task_from_file = false;
+
+    void logProfilePhMol(spdlog::logger* logfile, int inode )
+    {
+        if( pa_mt )
+            pa_mt->logProfilePhMol(logfile, inode);
+    }
+    /// Preparations: opening output files for monitoring 1D profiles
+    void alloc_loggers();
+    /// Added one point to loggers
+    void point_to_loggers();
+    /// Log time point to VTK format file
+    void log_vtk();
+
+    /// Function for sampling and plotting the properties of nodes at next time step.
+    /// Output of the results if step accepted
+    /// @param mtp_cp - actual time index
+    bool accept_point(long int mtp_cp, std::string message, int prog, int total);
+    void CalcStartScript();
+    void CalcControlScript();
+
+    void  copyNodeArrays();
+    void  putHydP( DATABRPTR* C0 );
+    long int CheckPIAinNodes1D(char mode, long int start_node = 0, long int end_node = 1000);
+    bool  CalcIPM(char mode, long int start_node = 0,long int end_node = 1000);
+
+    void  MassTransAdvecStart();
+    void  MassTransAdvecStep( bool ComponentMode = true );
+    void  MassTransCraNicStart();
+    void  MassTransCraNicStep( bool ComponentMode = true );
+    void  MassTransParticleStart();
+    void  MassTransParticleStep( bool ComponentMode = true );
+    bool  Trans1D(char mode);  // return true if canceled
+
+    // Flow-through box-flux transport simulations
+    void  BoxFluxTransportStart();
+    void  FlowThroughBoxFluxStep();
+
+    double BoxMasses( long int q );
+    void ComposMGPinBox( long int q );
+    //    void DisCoefMGPinBox( long int q );
+    void  dMBZeroOff(  double *dm );
+    double MassICinHfe( long int fe, long int i );
+    double MassHfe(long int fe);
+    double MassICinMGP( long int q, long int f, long int i);
+    double MassMGP(long int q, long int f  );
+    double dMBfluxDir( long int q, long int i, double *dm, double fRate, double sign = 1.);
+    long int LookUpXMGP( const char* MGPid );
+    void  dMBflux( long int kk, double *dm );
+    void  BoxComposUpdate( long int q );
+    void  BoxesBCupdate();  // was CalcNodeFlux()
+    void  CalcMGPdata();
+    // Calculate new box states for tcur = x
+    bool BoxEqStatesUpdate( long int Ni, double x, double step );
+    bool CalcSeqReacModel( char mode ); // Calculation of S-mode sequential reactors model
+    bool CalcBoxFluxModel( char mode ); // integrate boxes with fluxes of Mobile Groups of Phases
+
+    // calculate 1-step for the system of ODEs
+    void Solut( double *m, double *dm, double t );
+    // internal point j calculation
+    void MIDEX( long int j, double t, double h );
+    // ODE integration from t_begin to t_end with time step step (step can be reduced inside)
+    // returns current (possibly reduced) step value or negative value in case of error
+    double INTEG( double eps, double step, double t_begin, double t_end );
+
+    void mt_reset();
+    void init_arrays(bool mode);
+    void math_transport_defaults();
+    virtual void defaults_DiCp();
+    virtual void defaults_HydP();
+    virtual void defaults_particle_setup();
+    virtual void defaults_MGPid_PGT_FDLmp_FDLid(bool mode);
+    virtual void defaults_FDLi_FDLf();
+    virtual void defaults_BSF();
+    virtual void defaults_Grid();
+
+    virtual void set_def(int q);
+    virtual void mem_kill(int q);
+    virtual void mem_new(int q);
+    void default_VTK(const std::string &work_path);
+    int gem3k_files_read(const std::string &ipm_lst_file, const std::string &dbr_lst_file);
+    int restore_data_from_gems3k(const std::vector<std::string>& dbr_names);
+    int gems3k_strings(const std::string &dch_json, const std::string &ipm_json, const std::vector<std::string> &dbr_json);
+    double Reduce_Conc(char UNITP, double Xe, double DCmw, double Vm,
+                       double R1, double Msys, double Mwat, double Vaq, double Maq, double Vsys);
+
 };
 
 enum gem2mt_inernal {
@@ -544,3 +889,4 @@ typedef enum {  /// Field index into outField structure
 } GEM2MT_DYNAMIC_FIELDS;
 
 #endif //_m_gem2mt_h_
+

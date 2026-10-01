@@ -37,8 +37,8 @@
 #include "node.h"
 
 /// The function is executed when ProcessProgress
-using  ProcessProgressFunction = std::function<bool( const std::string& message, long point )>;
-using  PhaseDataLogFunction = std::function<void( FILE* logfile, int inode )>;
+using  ProcessProgressFunction = std::function<bool(const std::string& message, long point)>;
+using  PhaseDataLogFunction = std::function<void(spdlog::logger* logfile, int inode)>;
 
 // These structures are needed for implementation of Random Walk and
 // similar particle-based transport algorithms
@@ -162,7 +162,7 @@ protected:
 
     ///  Here we do a GEM calculation in box ii (implementation thread-safe)
     virtual bool CalcIPM_Node(  const TestModeGEMParam& modeParam, TNode* wrkNode,
-                        long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* iaN, FILE* diffile  );
+                        long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* iaN, spdlog::logger* diffile);
 
     // alloc new memory
     DATABR * allocNewDBR(TNode* wrkNode)
@@ -402,13 +402,13 @@ public:
     /// New Stuff--------------------------------------------------------------
 
     ///  Here we do a GEM calculation in box ii
-    bool CalcIPM_One(  const TestModeGEMParam& modeParam, long int ii, FILE* diffile )
+    bool CalcIPM_One(  const TestModeGEMParam& modeParam, long int ii, spdlog::logger* diffile)
     {
-        return CalcIPM_Node(  modeParam, calcNode, ii, pNodT0(), pNodT1(), piaNode(), diffile );
+        return CalcIPM_Node(  modeParam, calcNode, ii, pNodT0(), pNodT1(), piaNode(), diffile);
     }
 
     ///  Here we do a GEM calculation in boxes from  start_node to end_node
-    virtual bool CalcIPM_List( const TestModeGEMParam& modeParam, long int start_node, long int end_node, FILE* diffile );
+    virtual bool CalcIPM_List( const TestModeGEMParam& modeParam, long int start_node, long int end_node, spdlog::logger* diffile );
 
     ///
     /// Initialization of GEM IPM3 data structures in coupled programs
@@ -475,22 +475,22 @@ public:
     // formatted writing into text file that must be already open
     //
     /// Prints difference increments in all nodes (cells) for step t (time point at)
-    void logDiffsIC( FILE* diffile, long int t, double at, long int nx, long int every_t );
+    void logDiffsIC(spdlog::logger* diffile, long int t, double at, long int nx, long int every_t);
 
     /// Prints dissolved elemental molarities in all cells for time point t / at
-    void logProfileAqIC( FILE* logfile, long int t, double at, long int nx, long int every_t );
+    void logProfileAqIC(spdlog::logger* logfile, long int t, double at, long int nx, long int every_t);
 
     /// Prints total elemental amounts in all cells for time point t / at
-    void logProfileTotIC( FILE* logfile, long int t, double at, long int nx, long int every_t );
+    void logProfileTotIC(spdlog::logger* logfile, long int t, double at, long int nx, long int every_t);
 
     /// Prints amounts of phases in all cells for time point t / at
-    void logProfilePhMol( FILE* logfile, PhaseDataLogFunction pa, long int t, double at, long int nx, long int every_t );
+    void logProfilePhMol(spdlog::logger* logfile, PhaseDataLogFunction pa, long int t, double at, long int nx, long int every_t);
     
     /// Prints volumes of phases in all cells for time point t / at
-    void logProfilePhVol( FILE* logfile, long int t, double at, long int nx, long int every_t );
+    void logProfilePhVol(spdlog::logger* logfile, long int t, double at, long int nx, long int every_t);
     
     /// Prints dissolved species molarities in all cells for time point t / at
-    void logProfileAqDC( FILE* logfile, long int t, double at, long int nx, long int every_t );
+    void logProfileAqDC(spdlog::logger* logfile, long int t, double at, long int nx, long int every_t);
 
     //---------------------------------------------------------
     // Working with the node grid (mainly used in Random Walk algorithms)
@@ -523,7 +523,7 @@ public:
                            char tcode, unsigned char ips, double m_v );
 
     /// Writes work node (DATABR structure) to a text VTK file
-    void databr_to_vtk( std::fstream& ff, const char*name, double time, long cycle,
+    void databr_to_vtk( std::fstream& ff, const std::string& name, double time, long cycle,
                         long int nFields=0, long int (*Flds)[2]=nullptr);
 
 };

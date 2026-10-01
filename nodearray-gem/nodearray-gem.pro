@@ -9,7 +9,7 @@ VERSION = 3.4.6
 CONFIG -= qt
 CONFIG += warn_on
 CONFIG += thread console
-CONFIG += c++17
+CONFIG += c++20
 CONFIG += sanitaze sanitaze_thread
 
 #DEFINES += NO_NODEARRAYLEVEL
@@ -50,7 +50,7 @@ include($$GEMS3K_CPP/gems3k.pri)
 HEADERS	 +=  m_gem2mt.h \
              particlearray.h
 
-SOURCES  +=   main.cpp \
+SOURCES  +=   test_main.cpp \
               particlearray.cpp \
               m_gem2mtsep.cpp \
               m_gem2mtt.cpp \

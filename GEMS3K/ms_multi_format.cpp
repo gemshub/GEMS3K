@@ -26,9 +26,11 @@
 
 #include "v_detail.h"
 #include "io_template.h"
-#include "io_nlohmann.h"
 #include "io_simdjson.h"
 #include "io_keyvalue.h"
+#ifdef USE_NLOHMANNJSON
+#include "io_nlohmann.h"
+#endif
 #include "ms_multi.h"
 extern const std::string _GEMIPM_version_stamp;
 

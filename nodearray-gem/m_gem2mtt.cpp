@@ -21,6 +21,7 @@
 #include "m_gem2mt.h"
 #include "GEMS3K/nodearray.h"
 #include "GEMS3K/v_service.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 #ifdef useOMP
 #include <omp.h>
@@ -31,36 +32,35 @@
 // Copying nodes from C1 to C0 row
 void  TGEM2MT::copyNodeArrays()
 {
-  //  Getting direct access to TNodeArray class data
-  DATACH* CH = na->pCSD();       // DataCH structure
-  DATABRPTR* C0 = na->pNodT0();  // nodes at current time point
-  DATABRPTR* C1 = na->pNodT1();  // nodes at previous time point
-  double dc;
+    //  Getting direct access to TNodeArray class data
+    DATACH* CH = na->pCSD();       // DataCH structure
+    DATABRPTR* C0 = na->pNodT0();  // nodes at current time point
+    DATABRPTR* C1 = na->pNodT1();  // nodes at previous time point
+    double dc;
 
-  for (long int ii=1; ii<mtp->nC; ii++)    // node iteration
-   {
-     bool NeedCopy = false;
-     for(long int ic=0; ic < CH->nICb-1; ic++) // do not check charge
-     {
-        dc = C0[ii]->bIC[ic] - C1[ii]->bIC[ic];
-        if( fabs( dc ) > std::min( mtp->cdv, (C1[ii]->bIC[ic] * 1e-3)))
-                  NeedCopy = true;
-     }
-     if( NeedCopy )
-       na->CopyNodeFromTo( ii, mtp->nC, C1, C0 );
-   }  // ii    end of node iteration loop
+    for (long int ii=1; ii<mtp->nC; ii++)    // node iteration
+    {
+        bool NeedCopy = false;
+        for(long int ic=0; ic < CH->nICb-1; ic++) // do not check charge
+        {
+            dc = C0[ii]->bIC[ic] - C1[ii]->bIC[ic];
+            if( fabs( dc ) > std::min( mtp->cdv, (C1[ii]->bIC[ic] * 1e-3)))
+                NeedCopy = true;
+        }
+        if( NeedCopy )
+            na->CopyNodeFromTo( ii, mtp->nC, C1, C0 );
+    }  // ii    end of node iteration loop
 }
 
 
 // put HydP
 void  TGEM2MT::putHydP( DATABRPTR* C0 )
 {
-    for( long int jj=0; jj<mtp->nC; jj ++)
-    {
+    for(long int jj=0; jj<mtp->nC; ++jj)  {
         C0[jj]->NodeTypeHY = mtp->DiCp[jj][1];
 #ifndef NO_NODEARRAYLEVEL
-        if( mtp->HydP )
-        { C0[jj]->Vt = mtp->HydP[jj][0];
+        if( mtp->HydP ) {
+            C0[jj]->Vt = mtp->HydP[jj][0];
             C0[jj]->vp = mtp->HydP[jj][1];
             C0[jj]->eps = mtp->HydP[jj][2];
             C0[jj]->Km = mtp->HydP[jj][3];
@@ -85,101 +85,101 @@ void  TGEM2MT::putHydP( DATABRPTR* C0 )
 //
 long int TGEM2MT::CheckPIAinNodes1D( char IAmode, long int start_node, long int end_node )
 {
-       long int nSetAIA = 0;
-       // Getting direct access to data
-       DATACH* CH = na->pCSD();       // DataCH structure
-       DATABRPTR* C0 = na->pNodT0();  // nodes at previous time point
-//       DATABRPTR* C1 = na->pNodT1();  // nodes at current time point
-       bool* iaN = na->piaNode();      // indicators for IA in the nodes
+    long int nSetAIA = 0;
+    // Getting direct access to data
+    DATACH* CH = na->pCSD();       // DataCH structure
+    DATABRPTR* C0 = na->pNodT0();  // nodes at previous time point
+    //       DATABRPTR* C1 = na->pNodT1();  // nodes at current time point
+    bool* iaN = na->piaNode();      // indicators for IA in the nodes
 
-       start_node =std::max( start_node, 0L );
-       end_node = std::min( end_node, mtp->nC-1 );
+    start_node =std::max( start_node, 0L );
+    end_node = std::min( end_node, mtp->nC-1 );
 
-       // Initializing iaNode vector
-       if( IAmode == NEED_GEM_SIA && CH->nDCb == CH->nDC )
-       {
-          for( long int ii = start_node; ii<= end_node; ii++ )
-    		 iaN[ii] = false;    // potentially need PIA
-       }
-       else { // setting all nodes to AIA GEM calculations
-          for( long int ii = 0; ii< mtp->nC; ii++ )
-     	  {
-     		  iaN[ii] = true;
-     		  nSetAIA++;
-     	  }
-          return nSetAIA;
-       }
+    // Initializing iaNode vector
+    if( IAmode == NEED_GEM_SIA && CH->nDCb == CH->nDC )
+    {
+        for( long int ii = start_node; ii<= end_node; ii++ )
+            iaN[ii] = false;    // potentially need PIA
+    }
+    else { // setting all nodes to AIA GEM calculations
+        for( long int ii = 0; ii< mtp->nC; ii++ )
+        {
+            iaN[ii] = true;
+            nSetAIA++;
+        }
+        return nSetAIA;
+    }
 
-       // This is done only if PIA mode is requested!
-       // First variant: 1-neighbour algorithm
-       for( long int ii = start_node; ii<= end_node; ii++) // node iteration
-	   {
-         // mtp->qc = ii;
-	      switch( C0[ii]->NodeTypeMT )
-	     {
-	        case normal: // normal node
-	             // Checking phase assemblage
-	        	break;
-	                     // boundary condition node
-	        case NBC1source:  //1: Dirichlet source ( constant concentration )
-	        	    break;
-	        case NBC1sink:    // -1: Dirichlet sink
-	        case NBC2source:  // 2: Neumann source ( constant gradient )
-	        case NBC2sink:    // -2: Neumann sink
-	        case NBC3source:  // 3: Cauchy source ( constant flux )
-	        case NBC3sink:    // -3: Cauchy sink
-	        case INIT_FUNK:   // 4: functional conditions (e.g. input time-depended functions)
-	        default:
-	        			iaN[ii] = true;
-	        			nSetAIA++;
-	        			continue;
-	     }
-         if( (ii == 0 || ii == mtp->nC-1 ) ) // &&
-//	    	 (C0[ii]->NodeTypeMT == normal || C0[ii]->NodeTypeMT == NBC1source) )
-//	     {
-//	     	iaN[ii] = true;
-//	     	nSetAIA++;
-	     	continue;
-//	     }
-	     // checking pair of adjacent nodes for phase assemblage differences
-         for( long int kk=0; kk<CH->nPHb; kk++ )
-	     {
+    // This is done only if PIA mode is requested!
+    // First variant: 1-neighbour algorithm
+    for( long int ii = start_node; ii<= end_node; ii++) // node iteration
+    {
+        // mtp->qc = ii;
+        switch( C0[ii]->NodeTypeMT )
+        {
+        case normal: // normal node
+            // Checking phase assemblage
+            break;
+                // boundary condition node
+        case NBC1source:  //1: Dirichlet source ( constant concentration )
+            break;
+        case NBC1sink:    // -1: Dirichlet sink
+        case NBC2source:  // 2: Neumann source ( constant gradient )
+        case NBC2sink:    // -2: Neumann sink
+        case NBC3source:  // 3: Cauchy source ( constant flux )
+        case NBC3sink:    // -3: Cauchy sink
+        case INIT_FUNK:   // 4: functional conditions (e.g. input time-depended functions)
+        default:
+            iaN[ii] = true;
+            nSetAIA++;
+            continue;
+        }
+        if( (ii == 0 || ii == mtp->nC-1 ) ) // &&
+            //	    	 (C0[ii]->NodeTypeMT == normal || C0[ii]->NodeTypeMT == NBC1source) )
+            //	     {
+            //	     	iaN[ii] = true;
+            //	     	nSetAIA++;
+            continue;
+        //	     }
+        // checking pair of adjacent nodes for phase assemblage differences
+        for( long int kk=0; kk<CH->nPHb; kk++ )
+        {
             if( approximatelyZero( C0[ii]->xPH[kk] ) && approximatelyZero( C0[ii-1]->xPH[kk] ) )
-	    		continue;    // Phase kk is absent in both node systems
-	    	if( C0[ii]->xPH[kk] > 0.0 && C0[ii-1]->xPH[kk] > 0.0 )
-	    		continue;    // Phase kk is present in both node systems
-	    	// At least one phase is absent in one and present in another node system
-	    	goto DIFFERENT;
-	     }
-	     // Should we check difference in pe or pH?
+                continue;    // Phase kk is absent in both node systems
+            if( C0[ii]->xPH[kk] > 0.0 && C0[ii-1]->xPH[kk] > 0.0 )
+                continue;    // Phase kk is present in both node systems
+            // At least one phase is absent in one and present in another node system
+            goto DIFFERENT;
+        }
+        // Should we check difference in pe or pH?
 
-	     continue;
-DIFFERENT:
-         if( iaN[ii] == false )
-         {
-	         iaN[ii] = true;
-	         nSetAIA++;
-         }
-         if( iaN[ii-1] == false )
-         {
-	         iaN[ii-1] = true;
-	         nSetAIA++;
-         }
-// Activating first neighbours - experimental algorithm
-         if( iaN[ii+1] == false )
-         {
-	         iaN[ii+1] = true;
-	         nSetAIA++;
-         }
-         if( ii > start_node+1 && iaN[ii-2] == false )
-         {
-	         iaN[ii-2] = true;
-	         nSetAIA++;
-         }
-	   } // loop ii
+        continue;
+    DIFFERENT:
+        if( iaN[ii] == false )
+        {
+            iaN[ii] = true;
+            nSetAIA++;
+        }
+        if( iaN[ii-1] == false )
+        {
+            iaN[ii-1] = true;
+            nSetAIA++;
+        }
+        // Activating first neighbours - experimental algorithm
+        if( iaN[ii+1] == false )
+        {
+            iaN[ii+1] = true;
+            nSetAIA++;
+        }
+        if( ii > start_node+1 && iaN[ii-2] == false )
+        {
+            iaN[ii-2] = true;
+            nSetAIA++;
+        }
+    } // loop ii
 
-      // End of checking
-       return nSetAIA;
+    // End of checking
+    return nSetAIA;
 }
 
 //   Here we call a loop on GEM calculations over nodes
@@ -189,34 +189,34 @@ DIFFERENT:
 //   return code   true   Ok
 //                 false  Error in GEMipm calculation part
 //
-bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* updiffile )
+bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node)
 {
     bool iRet = true;
 
-    FILE* diffile = nullptr;
+    spdlog::logger* diffile = nullptr;
     if( mtp->PsMO != S_OFF )
-      diffile = updiffile;
+        diffile = diff_log_file.get();
 
     start_node = std::max( start_node, 0L );
     end_node = std::min( end_node, mtp->nC-1 );
 
     for( long int ii = start_node; ii<= end_node; ii++) // node iteration
     {
-      node1_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
-      node1_dt( ii ) = mtp->dTau;
-   }
+        node1_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
+        node1_dt( ii ) = mtp->dTau;
+    }
 
 #ifdef useOMP
-   double  t0 = omp_get_wtime();
+    double  t0 = omp_get_wtime();
 #else
-   clock_t t_start, t_end;
-   t_start = clock();
+    clock_t t_start, t_end;
+    t_start = clock();
 #endif
 
 
-   na->CalcIPM_List( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), start_node, end_node, diffile );
+    na->CalcIPM_List( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), start_node, end_node, diffile );
 
-   /* test output generated structure
+    /* test output generated structure
     ProcessProgressFunction messageF = [](const std::string& message, long point){
         gui_logger->info("TProcess GEM3k output {} point {}", message, point);
         return false;
@@ -227,19 +227,19 @@ bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* 
    */
 
 #ifdef useOMP
-   double  t1 = omp_get_wtime();
-   mtp->TimeGEM += t1-t0;
+    double  t1 = omp_get_wtime();
+    mtp->TimeGEM += t1-t0;
 #else
-   double clc_sec = CLOCKS_PER_SEC;
-   t_end = clock();
-   mtp->TimeGEM = ( t_end- t_start )/clc_sec;
+    double clc_sec = CLOCKS_PER_SEC;
+    t_end = clock();
+    mtp->TimeGEM = ( t_end- t_start )/clc_sec;
 #endif
 
-   // Here dt can be analyzed over nodes - if changed anywhere by TKinMet
-   //   then the overall time step should be reduced and the MT loop started all over
+    // Here dt can be analyzed over nodes - if changed anywhere by TKinMet
+    //   then the overall time step should be reduced and the MT loop started all over
 
-   mtp->qc = end_node;
-   return iRet;
+    mtp->qc = end_node;
+    return iRet;
 }
 
 // The mass transport iteration initial time step
@@ -284,7 +284,7 @@ void TGEM2MT::MassTransParticleStart()
         mtp->dTau = std::min( dt_adv, dt_dif ) / mtp->tf; // advection and diffusion
     else
         mtp->dTau = dt_dif / mtp->tf;    // only diffusion
-//    mtp->dTau = 0.5*(mtp->dx/mtp->fVel)*1./mtp->tf;  // Courant criterion
+    //    mtp->dTau = 0.5*(mtp->dx/mtp->fVel)*1./mtp->tf;  // Courant criterion
     mtp->oTau = 0.;
     mtp->cTau = mtp->Tau[START_];
     // mtp->cTau = 0;
@@ -293,17 +293,15 @@ void TGEM2MT::MassTransParticleStart()
 
 }
 
-
 // The mass transport iteration time step
 void TGEM2MT::MassTransParticleStep( bool CompMode )
 {
-   mtp->ct += 1;
-   mtp->oTau = mtp->cTau;
-   mtp->cTau += mtp->dTau;
+    mtp->ct += 1;
+    mtp->oTau = mtp->cTau;
+    mtp->cTau += mtp->dTau;
 
-   pa_mt->GEMPARTRACK( mtp->PsMode, CompMode, mtp->oTau, mtp->cTau );
+    pa_mt->GEMPARTRACK( mtp->PsMode, CompMode, mtp->oTau, mtp->cTau );
 }
-
 
 // The mass transport iteration time step
 // CompMode: true: Transport via dependent components in Aq phase (except H2O)
@@ -311,95 +309,95 @@ void TGEM2MT::MassTransParticleStep( bool CompMode )
 //
 void TGEM2MT::MassTransAdvecStep( bool CompMode )
 {
- double c0, c1, cm1,  cm2, /*cmax,*/ c12, cm12,
+    double c0, c1, cm1,  cm2, /*cmax,*/ c12, cm12,
         /*charge, c0new,*/ dc, cr, aji, fmolal;      // some help variables
- long int ii, ic, jc;
+    long int ii, ic, jc;
 
- //  Getting direct access to TNodeArray class data
- DATACH* CH = na->pCSD();       // DataCH structure
- // DATABRPTR* C0 = na->pNodT0();  // nodes at current time point
- // DATABRPTR* C1 = na->pNodT1();  // nodes at previous time point
+    //  Getting direct access to TNodeArray class data
+    DATACH* CH = na->pCSD();       // DataCH structure
+    // DATABRPTR* C0 = na->pNodT0();  // nodes at current time point
+    // DATABRPTR* C1 = na->pNodT1();  // nodes at previous time point
 
-   mtp->ct += 1;
-   mtp->cTau += mtp->dTau;
-   cr = mtp->fVel * mtp->dTau/mtp->dx;
+    mtp->ct += 1;
+    mtp->cTau += mtp->dTau;
+    cr = mtp->fVel * mtp->dTau/mtp->dx;
 
-   for( ii = 2; ii< mtp->nC-1; ii++) // node iteration, -1 the right boundary is open ....
-   {
-     mtp->qc = ii;
-     if( CompMode == true )
-     {  // Advective mass transport over DC gradients in Aq phase
-         fmolal = 55.5084/node1_xDC( ii, CH->nDCinPH[0]-1 );
-    	 for( jc=0; jc < CH->nDCinPH[0]-1; jc++ )
-     	 {   // splitting for dependent components except H2O@
-     		 // It has to be checked on minimal allowed c0 value
-    		 c0  = node1_xDC( ii, jc )* fmolal;
-     		 c1  = node1_xDC( ii+1, jc )* fmolal;
-     		 cm1 = node1_xDC( ii-1, jc )* fmolal;
-     		 cm2 = node1_xDC( ii-2, jc )* fmolal;
-       		 if( c0 < 1e-20 && c1 < 1e-20 && cm1 < 1e-20 && cm2 < 1e-20 )
-      			continue;
-     		 c12=((c1+c0)/2)-(cr*(c1-c0)/2)-((1-cr*cr)*(c1-2*c0+cm1)/6);
-    	     cm12=((c0+cm1)/2)-(cr*(c0-cm1)/2)-((1-cr*cr)*(c0-2*cm1+cm2)/6);
-    	     dc = cr*(c12-cm12);
-             if( fabs( dc ) < mtp->cdv )   // *c0   Insignificant fractional difference?
-            	 continue;
-    	     dc /= fmolal;
-             // Checking the new DC amount
-    	     if( (c0/fmolal - dc) > mtp->cez )
-    	     {  // the amount of DC remains positive 
-    	    	 node1_xDC( ii, jc ) -= dc;			 
-            	 for( ic=0; ic<CH->nICb; ic++)  // incrementing independent components
-            	 {
-                     aji = na->DCaJI( jc, ic );
-                     if( noZero( aji ) )
-            		     node1_bIC(ii, ic) -= aji * dc;
-            	 }
-    	     }
-    	     else {  // setting the DC amount to minimum
-    	    	 node1_xDC( ii, jc ) = mtp->cez;
-    	    	 dc = c0/fmolal - mtp->cez;
-    	    	 for( ic=0; ic<CH->nICb; ic++)  // incrementing independent components
-            	 {
-                     aji = na->DCaJI( jc, ic );
-                     if( noZero( aji ) )
-            		     node1_bIC(ii, ic) -= aji * dc;
-            	 }
-    	     }	 
-    	 } // loop over DC
-     }
-     else { // Advective mass transport over IC gradients in Aq phase
-    	 double niw; // IC amount in H2O
-    	 fmolal = 55.5084/node1_xDC( ii, CH->nDCinPH[0]-1 ); // molality factor
-    	 for( ic=0; ic < CH->nICb; ic++)  // splitting for independent components
-    	 {                        
-                 niw = node1_xDC( ii, CH->nDCinPH[0]-1 )* na->DCaJI( CH->nDCinPH[0]-1, ic );
-    		    // IC amount in H2O
-    		 // Chemical compositions may become inconsistent with time
-    		 // It has to be checked on minimal allowed c0 value
-    		 c0  = (node1_bPS( ii, 0, ic ) - niw )*fmolal;    //C1[ii]->bPS[0*CH->nICb + ic];
-             c1  = (node1_bPS( ii+1, 0, ic) - niw )*fmolal;   //C1[ii+1]->bPS[0*CH->nICb + ic];
-    		 cm1 = (node1_bPS( ii-1, 0, ic ) - niw )*fmolal;  //C1[ii-1]->bPS[0*CH->nICb + ic];
-             cm2 = (node1_bPS( ii-2, 0, ic ) - niw )*fmolal;  //C1[ii-2]->bPS[0*CH->nICb + ic];
-
-    		 // Finite-difference calculation (suggested by FE )
-             c12=((c1+c0)/2)-(cr*(c1-c0)/2)-((1-cr*cr)*(c1-2*c0+cm1)/6);
-             cm12=((c0+cm1)/2)-(cr*(c0-cm1)/2)-((1-cr*cr)*(c0-2*cm1+cm2)/6);
-             dc = cr*(c12-cm12);
-             if( fabs( dc ) < mtp->cdv )  // *c0
+    for( ii = 2; ii< mtp->nC-1; ii++) // node iteration, -1 the right boundary is open ....
+    {
+        mtp->qc = ii;
+        if( CompMode == true )
+        {  // Advective mass transport over DC gradients in Aq phase
+            fmolal = 55.5084/node1_xDC( ii, CH->nDCinPH[0]-1 );
+            for( jc=0; jc < CH->nDCinPH[0]-1; jc++ )
+            {   // splitting for dependent components except H2O@
+                // It has to be checked on minimal allowed c0 value
+                c0  = node1_xDC( ii, jc )* fmolal;
+                c1  = node1_xDC( ii+1, jc )* fmolal;
+                cm1 = node1_xDC( ii-1, jc )* fmolal;
+                cm2 = node1_xDC( ii-2, jc )* fmolal;
+                if( c0 < 1e-20 && c1 < 1e-20 && cm1 < 1e-20 && cm2 < 1e-20 )
                     continue;
-    		 dc /= fmolal; 
-             // Checking the new IC amount
-             if( (node1_bPS(ii, 0, ic) - dc) > mtp->cez )
-    		 {  // New IC amount is positive
-    			 node1_bPS( ii, 0, ic ) -= dc;
-    			 node1_bIC(ii, ic) -= dc;
-    		 }
-    		 else { // Setting the new IC amount to threshold  
-    			 node1_bPS( ii, 0, ic ) = mtp->cez;
-    			 node1_bIC(ii, ic) = mtp->cez;
-    		 }
-    		 /*if( dc >= C1[i]->bIC[ic] )
+                c12=((c1+c0)/2)-(cr*(c1-c0)/2)-((1-cr*cr)*(c1-2*c0+cm1)/6);
+                cm12=((c0+cm1)/2)-(cr*(c0-cm1)/2)-((1-cr*cr)*(c0-2*cm1+cm2)/6);
+                dc = cr*(c12-cm12);
+                if( fabs( dc ) < mtp->cdv )   // *c0   Insignificant fractional difference?
+                    continue;
+                dc /= fmolal;
+                // Checking the new DC amount
+                if( (c0/fmolal - dc) > mtp->cez )
+                {  // the amount of DC remains positive
+                    node1_xDC( ii, jc ) -= dc;
+                    for( ic=0; ic<CH->nICb; ic++)  // incrementing independent components
+                    {
+                        aji = na->DCaJI( jc, ic );
+                        if( noZero( aji ) )
+                            node1_bIC(ii, ic) -= aji * dc;
+                    }
+                }
+                else {  // setting the DC amount to minimum
+                    node1_xDC( ii, jc ) = mtp->cez;
+                    dc = c0/fmolal - mtp->cez;
+                    for( ic=0; ic<CH->nICb; ic++)  // incrementing independent components
+                    {
+                        aji = na->DCaJI( jc, ic );
+                        if( noZero( aji ) )
+                            node1_bIC(ii, ic) -= aji * dc;
+                    }
+                }
+            } // loop over DC
+        }
+        else { // Advective mass transport over IC gradients in Aq phase
+            double niw; // IC amount in H2O
+            fmolal = 55.5084/node1_xDC( ii, CH->nDCinPH[0]-1 ); // molality factor
+            for( ic=0; ic < CH->nICb; ic++)  // splitting for independent components
+            {
+                niw = node1_xDC( ii, CH->nDCinPH[0]-1 )* na->DCaJI( CH->nDCinPH[0]-1, ic );
+                // IC amount in H2O
+                // Chemical compositions may become inconsistent with time
+                // It has to be checked on minimal allowed c0 value
+                c0  = (node1_bPS( ii, 0, ic ) - niw )*fmolal;    //C1[ii]->bPS[0*CH->nICb + ic];
+                c1  = (node1_bPS( ii+1, 0, ic) - niw )*fmolal;   //C1[ii+1]->bPS[0*CH->nICb + ic];
+                cm1 = (node1_bPS( ii-1, 0, ic ) - niw )*fmolal;  //C1[ii-1]->bPS[0*CH->nICb + ic];
+                cm2 = (node1_bPS( ii-2, 0, ic ) - niw )*fmolal;  //C1[ii-2]->bPS[0*CH->nICb + ic];
+
+                // Finite-difference calculation (suggested by FE )
+                c12=((c1+c0)/2)-(cr*(c1-c0)/2)-((1-cr*cr)*(c1-2*c0+cm1)/6);
+                cm12=((c0+cm1)/2)-(cr*(c0-cm1)/2)-((1-cr*cr)*(c0-2*cm1+cm2)/6);
+                dc = cr*(c12-cm12);
+                if( fabs( dc ) < mtp->cdv )  // *c0
+                    continue;
+                dc /= fmolal;
+                // Checking the new IC amount
+                if( (node1_bPS(ii, 0, ic) - dc) > mtp->cez )
+                {  // New IC amount is positive
+                    node1_bPS( ii, 0, ic ) -= dc;
+                    node1_bIC(ii, ic) -= dc;
+                }
+                else { // Setting the new IC amount to threshold
+                    node1_bPS( ii, 0, ic ) = mtp->cez;
+                    node1_bIC(ii, ic) = mtp->cez;
+                }
+                /*if( dc >= C1[i]->bIC[ic] )
  			 {
     			fprintf( diffile, "\nError in Mass Transport calculation part :" );
     			fprintf( diffile, " Node= %-8d  Step= %-8d  IC= %s ", i, t, CH->ICNL[ic] );
@@ -407,12 +405,12 @@ void TGEM2MT::MassTransAdvecStep( bool CompMode )
          		C1[i]->bIC[ic]-dc, C1[i]->bIC[ic], dc);
     			BC_error = true;
  			 } */
-    	 } // loop over IC
-     }
-	 // checking charge balance
-     //charge = node1_bIC(ii, CH->nICb-1 );
-     node1_bIC(ii, CH->nICb-1 ) = 0.0;		// debugging
-   } // end of loop over nodes
+            } // loop over IC
+        }
+        // checking charge balance
+        //charge = node1_bIC(ii, CH->nICb-1 );
+        node1_bIC(ii, CH->nICb-1 ) = 0.0;		// debugging
+    } // end of loop over nodes
 }
 
 // The mass transport iteration time step (Crank-Nicolson scheme, cf Alina Yapparova 2015)
@@ -421,95 +419,95 @@ void TGEM2MT::MassTransAdvecStep( bool CompMode )
 //
 void TGEM2MT::MassTransCraNicStep( bool CompMode )
 {
- double c0, c1, cm1,  cm2, /*cmax,*/ c12, cm12,
+    double c0, c1, cm1,  cm2, /*cmax,*/ c12, cm12,
         /*charge, c0new,*/ dc, cr, aji, fmolal;      // some help variables
- long int ii, ic, jc;
+    long int ii, ic, jc;
 
- //  Getting direct access to TNodeArray class data
- DATACH* CH = na->pCSD();       // DataCH structure
- // DATABRPTR* C0 = na->pNodT0();  // nodes at current time point
- // DATABRPTR* C1 = na->pNodT1();  // nodes at previous time point
+    //  Getting direct access to TNodeArray class data
+    DATACH* CH = na->pCSD();       // DataCH structure
+    // DATABRPTR* C0 = na->pNodT0();  // nodes at current time point
+    // DATABRPTR* C1 = na->pNodT1();  // nodes at previous time point
 
-   mtp->ct += 1;
-   mtp->cTau += mtp->dTau;
-   cr = mtp->fVel * mtp->dTau/mtp->dx;
+    mtp->ct += 1;
+    mtp->cTau += mtp->dTau;
+    cr = mtp->fVel * mtp->dTau/mtp->dx;
 
-   for( ii = 2; ii< mtp->nC-1; ii++) // node iteration, -1 the right boundary is open ....
-   {
-     mtp->qc = ii;
-     if( CompMode == true )
-     {  // Advective mass transport over DC gradients in Aq phase
-         fmolal = 55.5084/node1_xDC( ii, CH->nDCinPH[0]-1 );
-         for( jc=0; jc < CH->nDCinPH[0]-1; jc++ )
-         {   // splitting for dependent components except H2O@
-             // It has to be checked on minimal allowed c0 value
-             c0  = node1_xDC( ii, jc )* fmolal;
-             c1  = node1_xDC( ii+1, jc )* fmolal;
-             cm1 = node1_xDC( ii-1, jc )* fmolal;
-             cm2 = node1_xDC( ii-2, jc )* fmolal;
-             if( c0 < 1e-20 && c1 < 1e-20 && cm1 < 1e-20 && cm2 < 1e-20 )
-                continue;
-             c12=((c1+c0)/2)-(cr*(c1-c0)/2)-((1-cr*cr)*(c1-2*c0+cm1)/6);
-             cm12=((c0+cm1)/2)-(cr*(c0-cm1)/2)-((1-cr*cr)*(c0-2*cm1+cm2)/6);
-             dc = cr*(c12-cm12);
-             if( fabs( dc ) < mtp->cdv )   // *c0   Insignificant fractional difference?
-                 continue;
-             dc /= fmolal;
-             // Checking the new DC amount
-             if( (c0/fmolal - dc) > mtp->cez )
-             {  // the amount of DC remains positive
-                 node1_xDC( ii, jc ) -= dc;
-                 for( ic=0; ic<CH->nICb; ic++)  // incrementing independent components
-                 {
-                     aji = na->DCaJI( jc, ic );
-                     if( noZero( aji ) )
-                         node1_bIC(ii, ic) -= aji * dc;
-                 }
-             }
-             else {  // setting the DC amount to minimum
-                 node1_xDC( ii, jc ) = mtp->cez;
-                 dc = c0/fmolal - mtp->cez;
-                 for( ic=0; ic<CH->nICb; ic++)  // incrementing independent components
-                 {
-                     aji = na->DCaJI( jc, ic );
-                     if( noZero( aji ) )
-                         node1_bIC(ii, ic) -= aji * dc;
-                 }
-             }
-         } // loop over DC
-     }
-     else { // Advective mass transport over IC gradients in Aq phase
-         double niw; // IC amount in H2O
-         fmolal = 55.5084/node1_xDC( ii, CH->nDCinPH[0]-1 ); // molality factor
-         for( ic=0; ic < CH->nICb; ic++)  // splitting for independent components
-         {
-                 niw = node1_xDC( ii, CH->nDCinPH[0]-1 )* na->DCaJI( CH->nDCinPH[0]-1, ic );
-                // IC amount in H2O
-             // Chemical compositions may become inconsistent with time
-             // It has to be checked on minimal allowed c0 value
-             c0  = (node1_bPS( ii, 0, ic ) - niw )*fmolal;    //C1[ii]->bPS[0*CH->nICb + ic];
-             c1  = (node1_bPS( ii+1, 0, ic) - niw )*fmolal;   //C1[ii+1]->bPS[0*CH->nICb + ic];
-             cm1 = (node1_bPS( ii-1, 0, ic ) - niw )*fmolal;  //C1[ii-1]->bPS[0*CH->nICb + ic];
-             cm2 = (node1_bPS( ii-2, 0, ic ) - niw )*fmolal;  //C1[ii-2]->bPS[0*CH->nICb + ic];
-
-             // Finite-difference calculation (suggested by FE )
-             c12=((c1+c0)/2)-(cr*(c1-c0)/2)-((1-cr*cr)*(c1-2*c0+cm1)/6);
-             cm12=((c0+cm1)/2)-(cr*(c0-cm1)/2)-((1-cr*cr)*(c0-2*cm1+cm2)/6);
-             dc = cr*(c12-cm12);
-             if( fabs( dc ) < mtp->cdv )  // *c0
+    for( ii = 2; ii< mtp->nC-1; ii++) // node iteration, -1 the right boundary is open ....
+    {
+        mtp->qc = ii;
+        if( CompMode == true )
+        {  // Advective mass transport over DC gradients in Aq phase
+            fmolal = 55.5084/node1_xDC( ii, CH->nDCinPH[0]-1 );
+            for( jc=0; jc < CH->nDCinPH[0]-1; jc++ )
+            {   // splitting for dependent components except H2O@
+                // It has to be checked on minimal allowed c0 value
+                c0  = node1_xDC( ii, jc )* fmolal;
+                c1  = node1_xDC( ii+1, jc )* fmolal;
+                cm1 = node1_xDC( ii-1, jc )* fmolal;
+                cm2 = node1_xDC( ii-2, jc )* fmolal;
+                if( c0 < 1e-20 && c1 < 1e-20 && cm1 < 1e-20 && cm2 < 1e-20 )
                     continue;
-             dc /= fmolal;
-             // Checking the new IC amount
-             if( (node1_bPS(ii, 0, ic) - dc) > mtp->cez )
-             {  // New IC amount is positive
-                 node1_bPS( ii, 0, ic ) -= dc;
-                 node1_bIC(ii, ic) -= dc;
-             }
-             else { // Setting the new IC amount to threshold
-                 node1_bPS( ii, 0, ic ) = mtp->cez;
-                 node1_bIC(ii, ic) = mtp->cez;
-             }
-             /*if( dc >= C1[i]->bIC[ic] )
+                c12=((c1+c0)/2)-(cr*(c1-c0)/2)-((1-cr*cr)*(c1-2*c0+cm1)/6);
+                cm12=((c0+cm1)/2)-(cr*(c0-cm1)/2)-((1-cr*cr)*(c0-2*cm1+cm2)/6);
+                dc = cr*(c12-cm12);
+                if( fabs( dc ) < mtp->cdv )   // *c0   Insignificant fractional difference?
+                    continue;
+                dc /= fmolal;
+                // Checking the new DC amount
+                if( (c0/fmolal - dc) > mtp->cez )
+                {  // the amount of DC remains positive
+                    node1_xDC( ii, jc ) -= dc;
+                    for( ic=0; ic<CH->nICb; ic++)  // incrementing independent components
+                    {
+                        aji = na->DCaJI( jc, ic );
+                        if( noZero( aji ) )
+                            node1_bIC(ii, ic) -= aji * dc;
+                    }
+                }
+                else {  // setting the DC amount to minimum
+                    node1_xDC( ii, jc ) = mtp->cez;
+                    dc = c0/fmolal - mtp->cez;
+                    for( ic=0; ic<CH->nICb; ic++)  // incrementing independent components
+                    {
+                        aji = na->DCaJI( jc, ic );
+                        if( noZero( aji ) )
+                            node1_bIC(ii, ic) -= aji * dc;
+                    }
+                }
+            } // loop over DC
+        }
+        else { // Advective mass transport over IC gradients in Aq phase
+            double niw; // IC amount in H2O
+            fmolal = 55.5084/node1_xDC( ii, CH->nDCinPH[0]-1 ); // molality factor
+            for( ic=0; ic < CH->nICb; ic++)  // splitting for independent components
+            {
+                niw = node1_xDC( ii, CH->nDCinPH[0]-1 )* na->DCaJI( CH->nDCinPH[0]-1, ic );
+                // IC amount in H2O
+                // Chemical compositions may become inconsistent with time
+                // It has to be checked on minimal allowed c0 value
+                c0  = (node1_bPS( ii, 0, ic ) - niw )*fmolal;    //C1[ii]->bPS[0*CH->nICb + ic];
+                c1  = (node1_bPS( ii+1, 0, ic) - niw )*fmolal;   //C1[ii+1]->bPS[0*CH->nICb + ic];
+                cm1 = (node1_bPS( ii-1, 0, ic ) - niw )*fmolal;  //C1[ii-1]->bPS[0*CH->nICb + ic];
+                cm2 = (node1_bPS( ii-2, 0, ic ) - niw )*fmolal;  //C1[ii-2]->bPS[0*CH->nICb + ic];
+
+                // Finite-difference calculation (suggested by FE )
+                c12=((c1+c0)/2)-(cr*(c1-c0)/2)-((1-cr*cr)*(c1-2*c0+cm1)/6);
+                cm12=((c0+cm1)/2)-(cr*(c0-cm1)/2)-((1-cr*cr)*(c0-2*cm1+cm2)/6);
+                dc = cr*(c12-cm12);
+                if( fabs( dc ) < mtp->cdv )  // *c0
+                    continue;
+                dc /= fmolal;
+                // Checking the new IC amount
+                if( (node1_bPS(ii, 0, ic) - dc) > mtp->cez )
+                {  // New IC amount is positive
+                    node1_bPS( ii, 0, ic ) -= dc;
+                    node1_bIC(ii, ic) -= dc;
+                }
+                else { // Setting the new IC amount to threshold
+                    node1_bPS( ii, 0, ic ) = mtp->cez;
+                    node1_bIC(ii, ic) = mtp->cez;
+                }
+                /*if( dc >= C1[i]->bIC[ic] )
              {
                 fprintf( diffile, "\nError in Mass Transport calculation part :" );
                 fprintf( diffile, " Node= %-8d  Step= %-8d  IC= %s ", i, t, CH->ICNL[ic] );
@@ -517,14 +515,13 @@ void TGEM2MT::MassTransCraNicStep( bool CompMode )
                 C1[i]->bIC[ic]-dc, C1[i]->bIC[ic], dc);
                 BC_error = true;
              } */
-         } // loop over IC
-     }
-     // checking charge balance
-     //charge = node1_bIC(ii, CH->nICb-1 );
-     node1_bIC(ii, CH->nICb-1 ) = 0.0;		// debugging
-   } // end of loop over nodes
+            } // loop over IC
+        }
+        // checking charge balance
+        //charge = node1_bIC(ii, CH->nICb-1 );
+        node1_bIC(ii, CH->nICb-1 ) = 0.0;		// debugging
+    } // end of loop over nodes
 }
-
 
 /*
 // A very simple example of finite difference transport algorithm
@@ -599,7 +596,6 @@ double TMyTransport::OneTimeStepRun_CN( long int *ICndx, long int nICndx )
     }
     return dt;
 }
-
 */
 
 // Main call for the mass transport iterations in 1D case
@@ -608,53 +604,35 @@ double TMyTransport::OneTimeStepRun_CN( long int *ICndx, long int nICndx )
 // If NEED_GEM_PIA then the program will try smart initial approximation for the nodes
 // (PIA when possible, AIA in the vicinity of fronts, pH and pe barriers).
 // returns true, if cancelled/interrupted by the user; false if finished Ok
-bool TGEM2MT::Trans1D( char mode )
+bool TGEM2MT::Trans1D(char mode)
 {
-    bool iRet = false;
+    bool iret = false;
     bool CompMode = false;   // Component transport mode: true: DC; false: IC
     long int nStart = 0, nEnd = mtp->nC;
-    // long int NodesSetToAIA;
-    // std::string Vmessage;
 
-    FILE* logfile = nullptr;
-    FILE* ph_file = nullptr;
-    FILE* diffile = nullptr;
-
-
-    if( mtp->PvDDc == S_ON && mtp->PvDIc == S_OFF )  // Set of DC transport using record switches
+    if(mtp->PvDDc == S_ON && mtp->PvDIc == S_OFF) { // Set of DC transport using record switches
         CompMode = true;
-    if( mtp->PvDDc == S_OFF && mtp->PvDIc == S_ON )  // Set of IC transport using record switches
+    }
+    if(mtp->PvDDc == S_OFF && mtp->PvDIc == S_ON) { // Set of IC transport using record switches
         CompMode = false;
-
-    if( mtp->PsMO != S_OFF )
-    {
-        std::string fname;
-   
-        // Preparations: opening output files for monitoring 1D profiles
-        logfile = fopen( ( fname + "ICaq-log.dat").c_str(), "w+" );    // Total dissolved element molarities
-        if( !logfile)
-            return iRet;
-        ph_file = fopen( ( fname + "Ph-log.dat" ).c_str(), "w+" );   // Mole amounts of phases
-        if( !ph_file)
-            return iRet;
-        diffile = fopen( ( fname + "ICdif-log.dat").c_str(), "w+" );   //  Element amount diffs for t and t-1
-        if( !diffile)
-            return iRet;
     }
 
-    // time scales testing
+// time scales testing
 #ifdef useOMP
+    double  ta0, ta1;
     double  t0 = omp_get_wtime();
 #else
     clock_t t_start, t_end;
+    clock_t t_ap0, t_ap1;
+    double clc_sec = CLOCKS_PER_SEC;
     t_start = clock();
 #endif
+
     double otime = 0.;
     mtp->TimeGEM = 0.0;
 
-    if( mtp->iStat!= AS_RUN  )
-    {  switch( mtp->PsMode )
-        {
+    if(mtp->iStat != AS_RUN) {
+        switch(mtp->PsMode)   {
         case RMT_MODE_A:   // A: 1D advection (numerical) coupled FMT finite-differences model
             MassTransAdvecStart();
             nStart = 1; nEnd = mtp->nC-1;
@@ -672,42 +650,48 @@ bool TGEM2MT::Trans1D( char mode )
         default: // more mass transport models here
             break;
         }
-        //
-        // Calculation of chemical equilibria in all nodes at the beginning
-        // with the LPP AIA
-        if( mtp->PsSIA != S_ON )
-            CalcIPM( NEED_GEM_AIA, nStart, nEnd, diffile );
-        else
-            CalcIPM( NEED_GEM_SIA,nStart, nEnd, diffile );
-        ///       CalcIPM( NEED_GEM_AIA, nStart, nEnd, diffile );
+
+        // Calculation of chemical equilibria in all nodes at the beginning with the LPP AIA
+        CalcIPM( (mtp->PsSIA != S_ON ? NEED_GEM_AIA : NEED_GEM_SIA), nStart, nEnd);
     }
+
     mtp->iStat = AS_READY;
 
-    if( mtp->PsMode == RMT_MODE_F )
+    if(mtp->PsMode == RMT_MODE_F) {
         CalcMGPdata();
+    }
 
-    if( mtp->PsMO != S_OFF )
-        otime += PrintPoint( 2, diffile, logfile, ph_file );
+#ifdef useOMP
+    ta0 = omp_get_wtime();
+#else
+    t_ap0 = clock();
+#endif
+    iret = accept_point(mtp->ct, "Simulating Reactive Transport: ", mtp->ct, mtp->ntM);
+#ifdef useOMP
+    ta1 = omp_get_wtime();
+    otime +=(ta1-ta0);
+#else
+    t_ap1 = clock();
+    otime +=(t_ap1 -t_ap0)/clc_sec;
+#endif
 
-    if( mtp->PsVTK != S_OFF )
-        otime += PrintPoint( 0 );
-
+    if(mtp->PsVTK != S_OFF) {
+        log_vtk();
+    }
 
     //  This loop contains the mass transport iteration time step
-    do {   // time iteration step
-
-
-        if( iRet )
+    do {
+        if(iret) {  // GUI stop point
             break;
+        }
 
         //  the mass transport iteration time step
-        switch( mtp->PsMode )
-        {
-        case RMT_MODE_A: MassTransAdvecStep( CompMode );
+        switch(mtp->PsMode) {
+        case RMT_MODE_A: MassTransAdvecStep(CompMode);
             break;
-        case RMT_MODE_C: MassTransCraNicStep( CompMode );
+        case RMT_MODE_C: MassTransCraNicStep(CompMode);
             break;
-        case RMT_MODE_W: MassTransParticleStep( CompMode );
+        case RMT_MODE_W: MassTransParticleStep(CompMode);
             break;
         case RMT_MODE_F: FlowThroughBoxFluxStep();
             break;
@@ -721,133 +705,460 @@ bool TGEM2MT::Trans1D( char mode )
 
         //   Here we call a loop on GEM calculations over nodes
         //   parallelization should affect this loop only
-        CalcIPM( mode, nStart, nEnd, diffile );
+        CalcIPM(mode, nStart, nEnd);
 
-        if( mtp->PsMO != S_OFF )
-            otime += PrintPoint( 3, diffile, logfile, ph_file );
+#ifdef useOMP
+        ta0 = omp_get_wtime();
+#else
+        t_ap0 = clock();
+#endif \
+    // Show/out results after GEM calculations over nodes
+        iret = accept_point(mtp->ct, "Simulating Reactive Transport: ", mtp->ct, mtp->ntM);
+#ifdef useOMP
+        ta1 = omp_get_wtime();
+        otime +=(ta1-ta0);
+#else
+        t_ap1 = clock();
+        otime +=(t_ap1 -t_ap0)/clc_sec;
+#endif
 
+        // copy node array T1 into node array T0
+        copyNodeArrays();
+
+        if(mtp->PsMode == RMT_MODE_W) { // copy particle array ?
+            pa_mt->CopyfromT1toT0();
+        }
+
+        // Calculating the control script at the end of a new time step
+        if(mtp->ct >0) {
+            CalcControlScript();
+        }
+        
+        if( mtp->PsMode == RMT_MODE_F ) { // in F mode
+            CalcMGPdata(); // Recalculation of MGP compositions and masses
+        }
+
+        if(mtp->PsVTK != S_OFF) {
+            log_vtk();
+        }
+
+    } while(mtp->cTau < mtp->Tau[STOP_] && mtp->ct < mtp->ntM);
+
+
+#ifdef useOMP
+    double  t1 = omp_get_wtime();
+    double dtime = (t1-t0);
+#else
+    t_end = clock();
+    double dtime = (t_end-t_start)/clc_sec;
+#endif
+
+    if(mtp->PsMO != S_OFF) {
+        diff_log_file->info("Total time of calculation {} s;  Time of output {} s;  Whole run time {} s;  Pure GEM run time {} s",
+                            (dtime-otime), otime, dtime, mtp->TimeGEM);
+    }
+
+    //pVisor->CloseMessage();
+    return iret;
+}
+
+//==================================================================================
+
+// Preparations: opening output files for monitoring 1D profiles
+void TGEM2MT::alloc_loggers()
+{
+    // could be other directory
+    if(mtp->PsMO != S_OFF) {
+        spdlog::drop("ic_diff_log");
+        spdlog::drop("ic_aq_log");
+        spdlog::drop("ph_log");
+        diff_log_file = spdlog::basic_logger_mt("ic_diff_log", "ICdif-log2.dat", true);
+        diff_log_file->set_pattern("%v");
+
+        main_logfile = spdlog::basic_logger_mt("ic_aq_log", "ICaq-log2.dat", true);
+        main_logfile->set_pattern("%v");
+
+        ph_file = spdlog::basic_logger_mt("ph_log", "Ph-log2.dat", true);
+        ph_file->set_pattern("%v");
+    }
+}
+
+// Added one point to loggers
+void TGEM2MT::point_to_loggers()
+{
+    long int evrt =10;
+
+    na->logDiffsIC(diff_log_file.get(), mtp->ct, mtp->cTau, mtp->nC, evrt);
+    na->logProfileAqIC(main_logfile.get(), mtp->ct, mtp->cTau, mtp->nC, evrt);
+    na->logProfilePhMol(ph_file.get(), std::bind(&TGEM2MT::logProfilePhMol, this,std::placeholders::_1, std::placeholders::_2),
+                        mtp->ct, mtp->cTau, mtp->nC, evrt);
+
+}
+
+bool TGEM2MT::accept_point(long int mtp_cp, std::string message, int prog, int total)
+{
+    bool iret = false;
+    auto Vmessage = message;
+    Vmessage += " step "+std::to_string(mtp->ct)+"; time "+std::to_string(mtp->cTau)+"; dtime "+std::to_string(mtp->dTau);
+    Vmessage += ". Please, wait (may take time)...";
+
+    gems_logger->info(Vmessage);
+
+    if(mtp_cp >= 0) {
         // Here one has to compare old and new equilibrium phase assemblage
         // and pH/pe in all nodes and decide if the time step was Ok or it
         // should be decreased. If so then the nodes from C0 should be
         // copied to C1 (to be implemented)
 
-
-        // copy node array T1 into node array T0
-        copyNodeArrays();
-
-        if( mtp->PsMode == RMT_MODE_W ) // copy particle array ?
-            pa_mt->CopyfromT1toT0();
-
-
-        if( mtp->PsMode == RMT_MODE_F ) // in F mode
-            CalcMGPdata(); // Recalculation of MGP compositions and masses
-
-        if( mtp->PsMO != S_OFF )
-            otime += PrintPoint( 4, diffile, logfile, ph_file );
-
-        if( mtp->PsVTK != S_OFF )
-            otime += PrintPoint( 0 );
-
-    } while ( mtp->cTau < mtp->Tau[STOP_] && mtp->ct < mtp->ntM );
-
-
-#ifdef useOMP
-    double  t1 = omp_get_wtime();
-    double dtime = ( t1- t0 );
-#else
-    double clc_sec = CLOCKS_PER_SEC;
-    t_end = clock();
-    double dtime = ( t_end- t_start )/clc_sec;
-#endif
-
-
-    if( mtp->PsMO != S_OFF )
-    {
-        fprintf( diffile,
-                 "\nTotal time of calculation %lg s;  Time of output %lg s;  Whole run time %lg s;  Pure GEM run time %lg s\n",
-                 (dtime-otime),  otime, dtime, mtp->TimeGEM );
-        fclose( logfile );
-        fclose( ph_file );
-        fclose( diffile );
+        // Output of the results if step accepted
+        if(mtp->PsMO != S_OFF) {
+            point_to_loggers();
+        }
     }
 
-    return iRet;
+    // time step accepted or first
+    //pVisor->Update();
+    //CalcGraph();
+    //if(mtp->PsSmode != S_OFF)  {
+    //    STEP_POINT2();
+    //}
+    //else {
+    //    iret = pVisor->Message(GetName(), Vmessage.c_str(), prog, total);
+    //}
+
+    return iret;
+}
+
+void TGEM2MT::log_vtk()
+{
+    if(mtp->PvnVTK == S_OFF) {
+        return; // no output defined
+    }
+
+    std::string fname = std::to_string(mtp->ct)+".vtk";
+    fname = pathVTK + nameVTK + "/" + prefixVTK + fname;
+
+    std::fstream out_vtk(fname, std::ios::out);
+    if(!out_vtk.good()) {
+        gems_logger->warn("VTK text make error {} ", fname);
+    }
+    else {
+        na->databr_to_vtk(out_vtk, nameVTK, mtp->cTau, mtp->ct, mtp->nVTKfld, mtp->xVTKfld);
+    }
+}
+
+// Calculation of control script at time mtp->cTau (step mtp->ct) of RT simulation
+void TGEM2MT::CalcControlScript()
+{
+    gems_logger->info("Control Script runs @ ct= {}   cTau= {}", mtp->ct, mtp->cTau);
+
+    if(mtp->PvMSc == S_OFF) {  // This switch is S_ON when mtp->PvMSt is S_ON, but this may be optimized
+        return;
+    }
+
+    // scroll through the nodes (boxes)
+    //for(long int ii=0; ii< mtp->nC; ++ii) {
+    //    mtp->jt = std::min( ii, (mtp->nC-1));
+    //    mtp->qc = ii;
+    //    mtp->qf = 0;  // index of flux should be set explicitly, explicit index of mgp taken from the flux
+    //}
+
+}
+
+// Calculation of control script at RT problem initialization stage
+// Initialization part at zero (time) step
+void TGEM2MT::CalcStartScript()
+{
+    // if(mtp->PvMSt == S_OFF) {
+    //     return;
+    // }
 }
 
 
-// plotting the record -------------------------------------------------
-//Added one point to graph
-double TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE* ph_file )
+// Default initialization DiCp
+void TGEM2MT::defaults_DiCp()
 {
-    long int evrt =10;
+    for(long int ii=0; ii< mtp->nC; ++ii) {
+        mtp->qc = ii; // index of node
 
-#ifdef useOMP
-    double  t0 = omp_get_wtime();
-#else
-    clock_t t_out, t_out2;
-    t_out = clock();
-#endif
+        //  Assign different fluid and rock composition indices to nodes (assuming fluid=0 and rock=1)
+        if(mtp->PsMode == RMT_MODE_A || mtp->PsMode == RMT_MODE_C) {
+            // for A or C mode, nodes 0 and 1 contain the initial fluid
+            mtp->DiCp[mtp->qc][0] = (mtp->qc==0 || mtp->qc==1 ? 0 : (mtp->nIV>1 ?  1 : 0 ));
+        }
+        else {
+            // for other modes, one Cauchy source is sufficient
+            // Node 0 contains initial fluid, for more nodes change as: ( qc=0 | qc=XX )
+            mtp->DiCp[mtp->qc][0] = (mtp->qc==0 ? 0 : (mtp->nIV>1 ?  1 : 0));
+        }
+
+        if(mtp->PsMode == RMT_MODE_A || mtp->PsMode == RMT_MODE_C) {
+            // for A and C mode, we need two first nodes as Cauchy sources
+            // for A or C mode, nodes 0 and 1 are set to a constant-flux source
+            mtp->DiCp[mtp->qc][1] = (mtp->qc==0 || mtp->qc==1 ? 3 : 0);
+        }
+        else if(mtp->PsMode == RMT_MODE_B || mtp->PsMode == RMT_MODE_F) {
+            //  for B or F mode, node 0 is set to a constant-flux source
+            mtp->DiCp[mtp->qc][1] = (mtp->qc==0 ? 3: 0 );
+            //mtp->DiCp[mtp->qc][1] = (mtp->qc==0 ? (mtp->nSFD==1? 0: 3) : 0);
+        }
+        else {
+            // One Cauchy source is sufficient
+            // Node 0 is set as source, for more sources change as: ( qc=0 | qc=XX )
+            mtp->DiCp[mtp->qc][1] = (mtp->qc==0 ? 3 : 0);
+        }
+
+        if(mtp->PsMode == RMT_MODE_B)  {// Random-walk sink fix
+            //  Other nodes normal, the last two set as constant source and sink
+            mtp->DiCp[mtp->qc][1] = (mtp->qc<mtp->nC-2 ? mtp->DiCp[mtp->qc][1]: 3);
+            mtp->DiCp[mtp->qc][1] = (mtp->qc<mtp->nC-1 ? mtp->DiCp[mtp->qc][1]: -3);
+        }
+        else {
+            // Other nodes normal, the last one is set as a constant-flux sink
+            mtp->DiCp[mtp->qc][1] = (mtp->qc<mtp->nC-1 ? mtp->DiCp[mtp->qc][1]: -3);
+        }
+    }
+}
+
+// Default initialization HydP
+void TGEM2MT::defaults_HydP()
+{
+    for(long int ii=0; ii< mtp->nC; ++ii) {
+        mtp->qc = ii; // index of node
+
+        if(mtp->HydP && mtp->PsMode != RMT_MODE_S  && mtp->PsMode != RMT_MODE_F && mtp->PsMode != RMT_MODE_B) {
+            //  Initial total volume of the node, m3 (for porosity)
+            mtp->HydP[mtp->qc][0] = mtp->vol_in;
+            //  Initial advection velocity, m/s
+            mtp->HydP[mtp->qc][1] = mtp->fVel;
+            //  Initial effective porosity
+            mtp->HydP[mtp->qc][2] = mtp->eps_in;
+            //  Initial effective permeability
+            mtp->HydP[mtp->qc][3] = mtp->Km_in;
+            //  Initial specific longitudinal dispersivity
+            mtp->HydP[mtp->qc][4] = mtp->al_in;
+            //  Initial general diffusivity
+            mtp->HydP[mtp->qc][5] = mtp->Dif_in;
+            //  Initial tortuosity factor
+            mtp->HydP[mtp->qc][6] = mtp->nto_in;
+        }
+    }
+}
+
+// Default  particle array setup
+void TGEM2MT::defaults_particle_setup()
+{
+    if(mtp->PsMode == RMT_MODE_W) {
+        for(int ii=0; ii< mtp->nPTypes; ++ii) {
+            mtp->NPmean[ii] = 500;
+            mtp->nPmin[ii] = 100;
+            mtp->nPmax[ii] = 1000;
+            mtp->ParTD[ii][0] = ii;
+            mtp->ParTD[ii][1] = MOBILE_C_MASS;
+            mtp->ParTD[ii][2] = DISSOLVED;
+            mtp->ParTD[ii][3] = 0;
+            mtp->ParTD[ii][4] = 0;
+            mtp->ParTD[ii][5] = 0;
+        }
+    }
+}
+
+// Default initialization MGPid, PGT, UMGP, FDLmp, FDLid
+void TGEM2MT::defaults_MGPid_PGT_FDLmp_FDLid(bool mode)
+{
+    long int ii;
+    std::string phName = "Pg1";
+    double xaq= 0.;
+    double xgas = 0.;
+    double xsld = 0.;
+
+    switch(mtp->PsMPh)  {
+    case MGP_TT_AQGF: phName = "flu"; xgas = 1.; xaq = 1.;    // '3'
+        break;
+    case MGP_TT_AQS: phName = "aq"; xaq = 1.;                 // '1'
+        break;
+    case MGP_TT_GASF: phName = "gas"; xgas = 1.;              // '2'
+        break;
+    case MGP_TT_SOLID: phName = "sld"; xsld = 1.;             // '4'
+        break;
+    default: break;
+    }
+    if(mtp->nPG>0 && !(!*mtp->MGPid[0] || *mtp->MGPid[0] == ' ')) {
+        phName = char_array_to_string(mtp->MGPid[0], MAXSYMB);
+        strip(phName);
+    }
+
+    if(mode) {  // only start
+        for(ii=0; ii<mtp->nPG; ++ii) {
+            if(!*mtp->MGPid[ii] || *mtp->MGPid[ii] == ' ' || *mtp->MGPid[ii] == '`') {
+                strncpy(mtp->MGPid[ii], phName.c_str(), MAXSYMB );
+            }
+            for(long int k=0; k<mtp->FIf; ++k) {
+                char PHC_ = na->pCSD()->ccPH[k];
+
+                if(PHC_ == PH_AQUEL) {
+                    mtp->PGT[ii*mtp->FIf+k] = xaq;
+                }
+                else {
+                    if(PHC_ == PH_GASMIX || PHC_ == PH_FLUID || PHC_ == PH_PLASMA) {
+                        mtp->PGT[ii*mtp->FIf+k] = xgas;
+                    }
+                    else {
+                        mtp->PGT[ii*mtp->FIf+k] = xsld;
+                    }
+                }
+            }
+        }
+    }
+
+    if(mtp->UMGP) {
+        for(ii=0; ii<mtp->FIf; ++ii) {
+            if(!mtp->UMGP[ii] || mtp->UMGP[ii] == ' '|| mtp->UMGP[ii] == '`') {
+                mtp->UMGP[ii] = QUAN_MOL;
+            }
+        }
+    }
+
+    if(mtp->PvFDL != S_OFF) {
+        for(ii=0; ii<mtp->nFD; ++ii) {
+            if(!*mtp->FDLmp[ii] || *mtp->FDLmp[ii] == ' ' || *mtp->FDLmp[ii] == '`') {
+                strncpy( mtp->FDLmp[ii], phName.c_str(), MAXSYMB );
+            }
+            if(!*mtp->FDLid[ii] || *mtp->FDLid[ii] == ' ') {
+                strncpy( mtp->FDLid[ii], "qj", MAXSYMB );
+            }
+        }
+    }
+
+}
+
+// Default initialization FDLf, FDLi
+void TGEM2MT::defaults_FDLi_FDLf()
+{
+    // generate fluxes arrays
+    if(mtp->PvFDL != S_OFF /*(nFD > 0) & (qf < nFD)*/)  {
+        for(long int ii=0; ii< mtp->nFD; ++ii) {
+            mtp->jt = std::min(ii, mtp->nC-1);
+            mtp->qc = std::min(ii, mtp->nC-1);  // index of node
+            mtp->qf = std::min(ii, mtp->nFD-1);  // index of flux
+
+            //   initialisation of tables for properties of fluxes
+            if(mtp->qf == mtp->qc) {
+                // Setting the chain of unidirectional fluxes connecting boxes
+                if(mtp->PsMode == RMT_MODE_S) {
+                    // flux from node/box
+                    mtp->FDLi[mtp->qf][0] = (mtp->qf==0? 0: mtp->FDLi[mtp->qf-1][1] );
+                    // flux to node/box
+                    mtp->FDLi[mtp->qf][1] = (mtp->qf<mtp->nC-1? mtp->qf+1: -1);
+                    // flux order zero (constant mass per step)
+                    mtp->FDLf[mtp->qf][0] = 0;
+                    // flux rate 1 (the whole fluid mass)
+                    mtp->FDLf[mtp->qf][1] = 1;
+                }
+                if(mtp->PsMode == RMT_MODE_F) {
+                    // flux from node/box
+                    mtp->FDLi[mtp->qf][0] = (mtp->qf==0 ? 0: mtp->FDLi[mtp->qf-1][1] );
+                    // flux to node/box
+                    mtp->FDLi[mtp->qf][1] = (mtp->qf<mtp->nC-1 ? mtp->qf+1 : -1);
+                    // flux order 1 (proportional to source MPG mass)
+                    mtp->FDLf[mtp->qf][0] = (mtp->qf==0 ? 0 : 1);
+                    //  flux rate constant
+                    mtp->FDLf[mtp->qf][1] = (mtp->qf==0 ? 1 : 0.1);
+                }
+                if(mtp->PsMode == RMT_MODE_B) {
+                    // flux from node/box
+                    mtp->FDLi[mtp->qf][0] = (mtp->qf==0 ? 0: mtp->FDLi[mtp->qf-1][1]);
+                    // flux to node/box
+                    mtp->FDLi[mtp->qf][1] = (mtp->qf<mtp->nC-1 ? mtp->qf+1 : -1);
+                    // flux order 1 (proportional to source MPG mass)
+                    mtp->FDLf[mtp->qf][0] = (mtp->qf==0 ? 0 : 1);
+                    // flux rate constant
+                    mtp->FDLf[mtp->qf][1] = (mtp->qf==0? 1 : 0.1);
+                }
+            } // end of setting a chain of 1-dir fluxes connecting boxes
+
+            if(mtp->qf > mtp->nC-1 ) {
+                // additional fluxes (elemental remo/prod or arbitrary normal fluxes)
+                //  enter index 0 as MPG name in FDLmp[qf] column
+                //   group for first elemental removal or production row in BSF table
+                if(mtp->qf == mtp->nC) {
+                    mtp->FDLi[mtp->qf][0] = 30;
+                    mtp->FDLi[mtp->qf][1] = (-1);
+                    // flux order (0, 1 or 3), change as desired
+                    mtp->FDLf[mtp->qf][0] = 0;
+                    //  flux rate (constant): >0: removal; <0: production. Change as desired
+                    mtp->FDLf[mtp->qf][1] = 0.001;
+                } //  end of group - add below groups for other remo/prod rows in BSF table
+
+                //  for the second group, enter index 1 as MPG name in FDLmp[qf] column
+                //       if( qf = nC+1 ) {
+                //        .....
+                //     }
+                //  For arbitrary normal MPG fluxes between boxes, add groups like above
+                //  in setting the chain of fluxes
+                //    end of additional fluxes
+
+            } // end of initialization of fluxes
+        }
+    }
+}
+
+// Default initialization BSF
+// to be done; temporally all 0
+void TGEM2MT::defaults_BSF()
+{
+    for(long int ii=0; ii<mtp->nSFD; ++ii) {
+        for(long int k=0; k<mtp->Nf; ++k) {
+            mtp->BSF[ii*mtp->Nf+k] = 0.;
+        }
+    }
+}
+
+// Set default grid coordinate array use predefined sizeLc
+void TGEM2MT::defaults_Grid()
+{
+    long int i, j, k, ndx;
+    LOCATION delta(mtp->sizeLc[0]/na->SizeN(), mtp->sizeLc[1]/na->SizeM(), mtp->sizeLc[2]/na->SizeK());
+    for(i=0; i<na->SizeN(); ++i)
+        for(j=0; j<na->SizeM(); ++j)
+            for(k=0; k<na->SizeK(); ++k) {
+                ndx = na->iNode(i, j, k);
+                mtp->grid[ndx][0] = delta.x*i;
+                mtp->grid[ndx][1] = delta.y*j;
+                mtp->grid[ndx][2] = delta.z*k;
+            }
+}
 
 
-    // from BoxEqStatesUpdate (BoxFlux ) not tested and used
-    if( nPoint == 1 )
-    {
-       if( diffile )
-       {
-           na->logDiffsIC( diffile, mtp->ct, mtp->cTau, mtp->nC, 10 );
-           // logging differences after the MT iteration loop
-       }
-   }
+// Set up default values to arrays after allocation
+void TGEM2MT::init_arrays(bool mode)
+{
+    // setup flags and counters
+    mtp->gStat = GS_INDEF;
+    mtp->iStat = GS_INDEF;
+    mt_reset();
 
+    if(mode)  {
+        for(long int ii=0; ii<mtp->nIV; ++ii) {
+            std::string sname = "System"+std::to_string(ii);
+            strncpy( mtp->nam_i[ii], sname.c_str(), MAXIDNAME );
+        }
 
-   // from  Trans1D
-   if( nPoint == 2 )
-   {
-     na->logDiffsIC( diffile, mtp->ct, mtp->cTau, mtp->nC, 1 );
-     na->logProfileAqIC( logfile, mtp->ct, mtp->cTau, mtp->nC, 1 );
-     na->logProfilePhMol( ph_file, std::bind(&TGEM2MT::logProfilePhMol, this,std::placeholders::_1, std::placeholders::_2),
-                          mtp->ct, mtp->cTau, mtp->nC, 1 );
-   }
+        if(mtp->PsMode == RMT_MODE_W) {
+            defaults_particle_setup();
+        }
+    }
 
-   if( nPoint == 3 )
-   {
-       na->logDiffsIC( diffile, mtp->ct, mtp->cTau, mtp->nC, evrt );
-   }
+    if(mtp->PsMode == RMT_MODE_S || mtp->PsMode == RMT_MODE_F || mtp->PsMode == RMT_MODE_B) {
+        defaults_MGPid_PGT_FDLmp_FDLid(mode);
+    }
 
-   if( nPoint == 4 )
-   {
-       na->logProfileAqIC( logfile, mtp->ct, mtp->cTau, mtp->nC, evrt );
-       na->logProfilePhMol( ph_file, std::bind(&TGEM2MT::logProfilePhMol, this,std::placeholders::_1, std::placeholders::_2),
-                            mtp->ct, mtp->cTau, mtp->nC, evrt );
-   }
-
-   // write to VTK
-   if( nPoint == 0  && mtp->PsVTK != S_OFF )
-   {
-       char buf[200];
-
-       sprintf( buf, "%05ld", mtp->ct);
-       std::string name = buf;
-
-       strip(name);
-       name += ".vtk";
-
-       name = pathVTK + nameVTK + "/" + prefixVTK + name;
-
-       std::fstream out_br(name, std::ios::out );
-       ErrorIf( !out_br.good() , name, "VTK text make error");
-       na->databr_to_vtk(out_br, nameVTK.c_str(), mtp->cTau, mtp->ct, mtp->nVTKfld, mtp->xVTKfld );
-   }
-
-#ifdef useOMP
-   double  t1 = omp_get_wtime();
-   return ( t1- t0 );
-#else
-   double clc_sec = CLOCKS_PER_SEC;
-   t_out2 = clock();
-   return ( t_out2 -  t_out)/clc_sec;
-#endif
-
+    if(mode) {
+        if(mtp->PvSFL != S_OFF && mtp->BSF) {
+            defaults_BSF();
+        }
+        defaults_FDLi_FDLf();
+    }
 }
 
 // --------------------- end of m_gem2mtt.cpp ---------------------------

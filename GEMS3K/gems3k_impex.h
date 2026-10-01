@@ -189,6 +189,11 @@ public:
          return "";
     }
 
+    const std::vector<std::string>& dbr_names() const
+    {
+        return   databr_file_names;
+    }
+
 protected:
 
     /// IPM work structure file path&name
