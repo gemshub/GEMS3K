@@ -625,7 +625,7 @@ public:
         mtp->nto_in = val;
     }
     /// cdv:   Cutoff for IC amount differences in the node between time steps (mol), usually 1e-9
-    void setCutofffICamount(double val)
+    void setCutoffICamount(double val)
     {
         mtp->cdv = val;
     }
@@ -698,13 +698,13 @@ public:
     /// FDLi: Set Source/Receive box index in the flux definition
     void setFluxSourceReceive(size_t  pndx, long int  source, long int  receive);
 
-    /// FDLf: Set the flux defnition: flux order, flux rate, MGP quantity
-    void setFluxSourceReceive(size_t  pndx, double order, double rate, double quantity, double val);
+    /// FDLf: Set the flux definition: flux order, flux rate, MGP quantity
+    void setFluxDefinition(size_t  pndx, double order, double rate, double quantity, double val);
 
     /// FDLmp: [nFD] ID of MGP to move in this flux
     void setFluxMGPid(size_t pndx, const std::string& ids);
     /// FDLid: Set IDs of fluxes
-    void setFluxIDs(size_t pndx, const std::string& ids);
+    void setFluxID(size_t pndx, const std::string& ids);
 
     /// Set grid point location, size is nC [grid]
     /// @param pndx: index in array

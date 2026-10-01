@@ -459,7 +459,7 @@ void TGEM2MT::setICsourceQuantities(size_t gndx, size_t indx, double quantity)
     }
 }
 
-void TGEM2MT::setFluxSourceReceive(size_t pndx, double order, double rate, double quantity, double val)
+void TGEM2MT::setFluxDefinition(size_t pndx, double order, double rate, double quantity, double val)
 {
     if(mtp->FDLf && pndx<mtp->nFD) {
         mtp->FDLf[pndx][0] = order;
@@ -476,7 +476,7 @@ void TGEM2MT::setFluxMGPid(size_t pndx, const std::string &ids)
     }
 }
 
-void TGEM2MT::setFluxIDs(size_t pndx, const std::string &ids)
+void TGEM2MT::setFluxID(size_t pndx, const std::string &ids)
 {
     if(mtp->FDLid && pndx<mtp->nFD) {
         strncpy( mtp->FDLid[pndx], ids.c_str(), MAXSYMB);

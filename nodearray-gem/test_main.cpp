@@ -154,7 +154,7 @@ int task_A(const std::string& ipm_lst, const std::string& dbr_lst)
     // Set initial tortuosity factor, usually 1
     mt_task->setInitialTortuosityFactor(1.);
     // Set cutoff for IC amount differences in the node between time steps (mol), usually 1e-9
-    mt_task->setCutofffICamount(1e-9);
+    mt_task->setCutoffICamount(1e-9);
     // Set  cutoff for minimal amounts of IC in node bulk compositions (mol), usually 1e-12
     mt_task->setCutoffMinimalAmountsIC(1e-11);
 
@@ -215,7 +215,7 @@ int task_C(const std::string& ipm_lst, const std::string& dbr_lst)
     // Set initial tortuosity factor, usually 1
     mt_task->setInitialTortuosityFactor(1.);
     // Set cutoff for IC amount differences in the node between time steps (mol), usually 1e-9
-    mt_task->setCutofffICamount(1e-9);
+    mt_task->setCutoffICamount(1e-9);
     // Set  cutoff for minimal amounts of IC in node bulk compositions (mol), usually 1e-12
     mt_task->setCutoffMinimalAmountsIC(1e-11);
 
@@ -288,7 +288,7 @@ int task_W(const std::string& ipm_lst, const std::string& dbr_lst)
     // Set initial tortuosity factor, usually 1
     mt_task->setInitialTortuosityFactor(1.);
     // Set cutoff for IC amount differences in the node between time steps (mol), usually 1e-9
-    mt_task->setCutofffICamount(1e-9);
+    mt_task->setCutoffICamount(1e-9);
     // Set  cutoff for minimal amounts of IC in node bulk compositions (mol), usually 1e-12
     mt_task->setCutoffMinimalAmountsIC(1e-11);
 
@@ -360,7 +360,7 @@ int task_F(const std::string& ipm_lst, const std::string& dbr_lst)
     // Set initial effective permeability, m2, usually 1
     mt_task->setInitialEffectivePermeability(1e-12);
     // Set cutoff for IC amount differences in the node between time steps (mol), usually 1e-9
-    mt_task->setCutofffICamount(0);
+    mt_task->setCutoffICamount(0);
     // Set  cutoff for minimal amounts of IC in node bulk compositions (mol), usually 1e-12
     mt_task->setCutoffMinimalAmountsIC(0);
 
@@ -390,11 +390,11 @@ int task_F(const std::string& ipm_lst, const std::string& dbr_lst)
         // Set Source/Receive box index in the flux definition
         mt_task->setFluxSourceReceive(ii, ii, (ii<mt_task->nMGPfluxes()-1 ? ii+1: -1));
         // Set the flux defnition: flux order, flux rate, MGP quantity
-        mt_task->setFluxSourceReceive(ii, 1., 0.5, 0, 0);
+        mt_task->setFluxDefinition(ii, 1., 0.5, 0, 0);
         //  Set the ID of MGP to move in this flux
         mt_task->setFluxMGPid(ii, "phg1");
         //  Set IDs of fluxes
-        mt_task->setFluxIDs(ii, "qj");
+        mt_task->setFluxID(ii, "qj");
      }
 
     // Set list of selected fields and indexes to VTK format
@@ -445,7 +445,7 @@ int task_S(const std::string& ipm_lst, const std::string& dbr_lst)
     // ?? only to compare Set initial effective permeability, m2, usually 1
     mt_task->setInitialEffectivePermeability(1e-12);
     // Set cutoff for IC amount differences in the node between time steps (mol), usually 1e-9
-    mt_task->setCutofffICamount(0);
+    mt_task->setCutoffICamount(0);
     // Set  cutoff for minimal amounts of IC in node bulk compositions (mol), usually 1e-12
     mt_task->setCutoffMinimalAmountsIC(0);
 
@@ -460,7 +460,7 @@ int task_S(const std::string& ipm_lst, const std::string& dbr_lst)
     mt_task->setUnitsPhaseQuantities(0, 'n');
     for(long int ii=0; ii<mt_task->nMGPfluxes(); ++ii) {
         // Set the flux defnition: flux order, flux rate, MGP quantity
-        mt_task->setFluxSourceReceive(ii, 0., 1., 0, 0);
+        mt_task->setFluxDefinition(ii, 0., 1., 0, 0);
     }
 
     TGEM2MT::pm->WriteTask("gem2mt_out.dat");
@@ -507,7 +507,7 @@ int task_B(const std::string& ipm_lst, const std::string& dbr_lst)
     // Set initial effective permeability, m2, usually 1
     mt_task->setInitialEffectivePermeability(1e-12);
     // Set cutoff for IC amount differences in the node between time steps (mol), usually 1e-9
-    mt_task->setCutofffICamount(0);
+    mt_task->setCutoffICamount(0);
     // Set  cutoff for minimal amounts of IC in node bulk compositions (mol), usually 1e-12
     mt_task->setCutoffMinimalAmountsIC(0);
 
@@ -530,7 +530,7 @@ int task_B(const std::string& ipm_lst, const std::string& dbr_lst)
         mt_task->setFluxMGPid(ii, "Pg1");
     }
     // Change from default: flux order 1 (proportional to source MPG mass)
-    mt_task->setFluxSourceReceive(0, 1., 0.1, 0, 0);
+    mt_task->setFluxDefinition(0, 1., 0.1, 0, 0);
 
     TGEM2MT::pm->WriteTask("gem2mt_out.dat");
 
