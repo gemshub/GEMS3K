@@ -190,8 +190,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// slows others.
     long int OptimaMoleFracHessian = 0;
 
-    /// pa_OptimaPhaseCompaction: reserved, no effect (code removed 2026-10-01, owner; restore patch
-    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// pa_OptimaPhaseCompaction: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
     /// (used by GEMSGUI's positional serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int OptimaPhaseCompaction = 0;
@@ -224,8 +223,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// accuracy, as the method's theory suggests.
     double MbClassRule = 0.;
 
-    /// pa_MbTrendPhaseDecay: reserved, no effect (code removed 2026-10-01, owner; restore patch
-    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// pa_MbTrendPhaseDecay: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
     /// (used by GEMSGUI's positional serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int MbTrendPhaseDecay = 0;
@@ -285,8 +283,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// In plain words: how generous the first guess of "species that matter" is.
     double OptimaDimReduceTol = 10.;
 
-    /// pa_MbPivotSplit: reserved, no effect (code removed 2026-10-01, owner; restore patch
-    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// pa_MbPivotSplit: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
     /// (used by GEMSGUI's positional serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int MbPivotSplit = 0;
@@ -314,8 +311,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// amount, and fixes the element totals if needed.
     long int OptimaZeroAbsent = 2;
 
-    /// pa_OptimaReadmitSeed: reserved, no effect (code removed 2026-10-01, owner; restore patch
-    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// pa_OptimaReadmitSeed: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
     /// (used by GEMSGUI's positional serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     double OptimaReadmitSeed = 0.;
@@ -375,8 +371,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// In plain words: gives up early on a preliminary step that is going nowhere.
     long int OptimaPreSolveFirstIters = 6000;
 
-    /// pa_LpDualFillout: reserved, no effect (code removed 2026-10-01, owner; restore patch
-    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// pa_LpDualFillout: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
     /// (used by GEMSGUI's positional serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int LpDualFillout = 0;
@@ -425,8 +420,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// LU), that step is taken by the normal equations (DECIDE "ipmkkt-fallback").
     /// In plain words: a more accurate way to solve each step's equations in the original solver.
     long int IpmAugmentedKKT = 2;
-    /// pa_IpmLoopTweaks: reserved, no effect (code removed 2026-10-01, owner; restore patch
-    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// pa_IpmLoopTweaks: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
     /// (used by GEMSGUI's positional serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int IpmLoopTweaks = 0;
@@ -437,8 +431,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// Optima fork's ErrorControl::execute (error updated at the new point before comparing).
     /// In plain words: when a step makes things much worse, try a shorter one.
     double OptimaLineSearch = 1.5;
-    /// pa_OptimaFDDiagFloor: reserved, no effect (code removed 2026-10-01, owner; restore patch
-    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// pa_OptimaFDDiagFloor: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
     /// (used by GEMSGUI's positional serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int OptimaFDDiagFloor = 0;
@@ -448,8 +441,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// inert otherwise.
     /// In plain words: breaks the Optima solver out when it gets stuck at the same error.
     long int OptimaLSStallEscape = 10;
-    /// pa_OptimaLSWindow: reserved, no effect (code removed 2026-10-01, owner; restore patch
-    /// Docs/patches/2026-10-01-removed-options.patch). Kept so that the field order of BASE_PARAM
+    /// pa_OptimaLSWindow: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
     /// (used by GEMSGUI's positional serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int OptimaLSWindow = 0;
