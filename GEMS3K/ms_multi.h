@@ -1715,9 +1715,10 @@ protected:
     /// correction kept every species non-negative and strictly reduced the worst relative
     /// residual; otherwise restores the amounts and returns false.
     /// `amt` is the vector to repair - pm.X on the final answer, pm.Y after PSSC. Both are
-    /// re-synchronised on success.
+    /// re-synchronised on success. With keepPartial a repair that improves but does not fully
+    /// pass is kept (for amounts that only seed further iterations).
     /// In plain words: a final touch-up that makes the element totals add up exactly.
-    bool MassBalanceReproject( double* amt );
+    bool MassBalanceReproject( double* amt, bool keepPartial = false );
     /// Warns when a present phase's amount is not determined by the minimised energy: G is
     /// flat enough along a mass-balance-preserving direction that answers differing in that
     /// phase's amount cannot be told apart at the solver's energy resolution. Read-only.

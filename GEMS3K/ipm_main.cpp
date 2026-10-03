@@ -1429,7 +1429,7 @@ static void native_trace_mbr_exit( const MULTI& pm, const BASE_PARAM* pa_p,
 // decreasing amount, each kept only if its column raises the rank (the most abundant species
 // alone can be exactly linearly dependent, e.g. H2O = H+ + OH-). All N rows take part, the
 // charge row included, so the correction cannot introduce a charge imbalance.
-bool TMultiBase::MassBalanceReproject( double* amt )
+bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
 {
     const long int N = pm.N, L = pm.L;
     if( N < 1 || L < N || !pm.A || !pm.B || !amt ) return false;
@@ -1446,6 +1446,8 @@ bool TMultiBase::MassBalanceReproject( double* amt )
     // strictly improve the worst relative residual or it is undone and the loop stops.
     // Bounded: the extra passes are kept only if they bring the answer under its own tolerance;
     // otherwise the single-pass result is kept, since a partial repair still moves the answer.
+    // With keepPartial the multi-pass result is kept anyway (used where amt only seeds the next
+    // solver iterations and is not the returned answer).
     const long int maxPass = 8;
     long int nClamped = 0, nPass = 0;
     double relCur = relOld, absCur = absOld;
@@ -1563,8 +1565,16 @@ bool TMultiBase::MassBalanceReproject( double* amt )
     if( relCur < 1. ) break;         // the answer now passes its own mass-balance test
     }   // pass loop
 
-    // Short of a full repair, fall back to the single-pass result (see "Bounded" above).
-    if( improved && !( relCur < 1. ) && !Xsingle.empty() )
+    // Short of a full repair, fall back to the single-pass result (see "Bounded" above),
+    // unless keepPartial.
+    if( improved && !( relCur < 1. ) && !Xsingle.empty() && keepPartial )
+    {
+        if( nPass > 1 )
+            native_trace_decide( "mbreproject-partialkept species=%ld passes=%ld "
+                                 "relsingle=%.3e relkept=%.3e",
+                                 (long)N, (long)nPass, relSingle, relCur );
+    }
+    else if( improved && !( relCur < 1. ) && !Xsingle.empty() )
     {
         // Diagnostic only - this record gates nothing; the discard below is unconditional.
         // Counts, for a discarded multi-pass repair, the ICs left with a single carrier and the
@@ -2641,8 +2651,9 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
        // (k_miss < 0); with an insertion MBR must re-equilibrate. A correction that would undo a
        // phase elimination fails the method's own acceptance test and is reverted. PSSC works on
        // pm.Y, so pm.Y is repaired (pm.X and derived values re-synchronised on success).
+       // A partial repair is kept: pm.Y here is the start of the next iterations, not the answer.
        if( k_miss < 0 && base_param()->MbReproject )
-           MassBalanceReproject( pm.Y );
+           MassBalanceReproject( pm.Y, true );
 
 #ifndef NDEBUG
        if(gems_logger->should_log(spdlog::level::debug)) {
