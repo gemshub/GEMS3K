@@ -448,13 +448,13 @@ long int TNode::GEM_run_single( bool uPrimalSol )
         // Bulk composition as received, before any internal processing (debug level).
         if (node_logger->should_log(spdlog::level::debug)) {
             for (long int i = 0; i < CSD->nICb; i++)
-                node_logger->debug("bIC[{}] {} = {:.6e}", i, CSD->ICNL[i], CNode->bIC[i]);
+                node_logger->debug("bIC[{}] {} = {:.6e}", i, CSD->ICNL[CSD->xic[i]], CNode->bIC[i]);
         }
         // Warn about an IC at or below the numerical floor.
         for (long int i = 0; i < CSD->nICb; i++) {
             if (CNode->bIC[i] > 0. && CNode->bIC[i] <= pmm->DcMinM)
                 node_logger->warn("bIC[{}] {} = {:.6e} is at/below the numerical floor (DcMinM={:.3e})",
-                                   i, CSD->ICNL[i], CNode->bIC[i], pmm->DcMinM);
+                                   i, CSD->ICNL[CSD->xic[i]], CNode->bIC[i], pmm->DcMinM);
         }
 #endif
 
@@ -1428,6 +1428,5 @@ void TNode::GEM_from_MT(
 }
 
 //-----------------------End of node.cpp--------------------------
-
 
 

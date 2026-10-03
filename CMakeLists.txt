@@ -172,6 +172,10 @@ add_subdirectory(GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 
+if(BUILD_TESTING)
+   add_subdirectory(tests)
+endif()
+
 if(BUILD_GEM2MT MATCHES ON)
     add_subdirectory(nodearray-gem)
     link_directories(${CMAKE_BINARY_DIR}/nodearray-gem)
