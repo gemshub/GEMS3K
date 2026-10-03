@@ -595,7 +595,7 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
     if( !thermo_engine.get() )
         return false;
     try{
-        node_logger->info("Calc ThermoEngine T: {}  P: {}", TK, PPa);
+        node_logger->debug("Calc ThermoEngine T: {}  P: {}", TK, PPa);
         long int j, jj, k, jb, je=0;
         double G0, P = PPa/bar_to_Pa;
 

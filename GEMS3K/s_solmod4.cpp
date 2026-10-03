@@ -3596,7 +3596,7 @@ long int TELVIS::PTparam()
 
         if( R[j]<0. )
         {
-            solmod_logger->info("R[{}] = {}; A={}; B={}; C={}", j, R[j],
+            solmod_logger->debug("R[{}] = {}; A={}; B={}; C={}", j, R[j],
                                 aDCc[NP_DC*j+4] + aDCc[NP_DC*j+5]*Tk + aDCc[NP_DC*j+6]*Tk*Tk,
                                 (aDCc[NP_DC*j+7] + aDCc[NP_DC*j+8]*Tk + aDCc[NP_DC*j+9]*Tk*Tk) * (1.-Xw),
                                 (aDCc[NP_DC*j+10] + aDCc[NP_DC*j+11]*Tk + aDCc[NP_DC*j+12]*Tk*Tk) * (1.-Xw)*(1.-Xw));
@@ -3612,7 +3612,7 @@ long int TELVIS::PTparam()
 
         if( Q[j]<0. )
         {
-            solmod_logger->info("Q[{}] = {}", j, Q[j]);
+            solmod_logger->debug("Q[{}] = {}", j, Q[j]);
         }
 
 

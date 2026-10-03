@@ -17,7 +17,7 @@ std::string  home_dir()
 #ifdef _WIN32
     char homedir[1000];
     snprintf(homedir, 1000, "%s%s", getenv("HOMEDRIVE"), getenv("HOMEPATH"));
-    gems_logger->info("HOMEDRIVE: {}", homedir);
+    gems_logger->debug("HOMEDRIVE: {}", homedir);
     return  std::string(homedir);
 #else
     const char *homeDir;
@@ -28,7 +28,7 @@ std::string  home_dir()
             homeDir = pwd->pw_dir;
     }
     ErrorIf( !homeDir, "filesystem", "HOME environment variable not set.");
-    gems_logger->info("Home directory is {}", homeDir);
+    gems_logger->debug("Home directory is {}", homeDir);
     return std::string(homeDir);
 #endif
 }

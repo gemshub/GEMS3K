@@ -4932,12 +4932,12 @@ void TMultiBase::Reset_uDD( long int nr, bool trace )
     nCNud = 0;
     if ( trace )
     {
-        ipm_logger->info("UD3 trace: {}  SIA={}  Itr   C_D:  {}",
+        ipm_logger->debug("UD3 trace: {}  SIA={}  Itr   C_D:  {}",
                           char_array_to_string(pm.stkey, EQ_RKLEN), pm.pNP, char_array_to_string(pm.SB1[0],MAXICNAME));
     }
     if( base_param()->PSM >= 3 )
     {
-      TNode::ipmlog_file->info(" UD3 trace: {}  SIA= {} Itr   C_D: {}",
+      TNode::ipmlog_file->debug(" UD3 trace: {}  SIA= {} Itr   C_D: {}",
                            char_array_to_string(pm.stkey, EQ_RKLEN), pm.pNP, char_array_to_string(pm.SB1[0],MAXICNAME));
     }
 }
@@ -4952,11 +4952,11 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
         return;
     if( base_param()->PSM >= 3 )
     {
-       TNode::ipmlog_file->info("ncrement_uDD {}  {}", r, pm.PCI);
+       TNode::ipmlog_file->debug("ncrement_uDD {}  {}", r, pm.PCI);
     }
     if( trace )
     {
-        ipm_logger->info("ncrement_uDD {}  {}", r, pm.PCI);
+        ipm_logger->debug("ncrement_uDD {}  {}", r, pm.PCI);
     }
 
     for( i=0; i<nNu; i++)
@@ -4986,11 +4986,11 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
       //delta = fabs(U_CV[i] - U_CVo[i]);
       if( trace )
       {
-        ipm_logger->info("U={}  U_mean={} U_CV={}", pm.U[i],  U_mean[i], U_CV[i]);
+        ipm_logger->debug("U={}  U_mean={} U_CV={}", pm.U[i],  U_mean[i], U_CV[i]);
       }
       if( base_param()->PSM >= 3 )
       {
-         TNode::ipmlog_file->info("U={}  U_mean={} U_CV={}", pm.U[i],  U_mean[i], U_CV[i]);
+         TNode::ipmlog_file->debug("U={}  U_mean={} U_CV={}", pm.U[i],  U_mean[i], U_CV[i]);
 
       }
 //      delta = pm.U[i] - U_mean[i];
@@ -5070,22 +5070,22 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
         {
             if( trace )
             {
-                ipm_logger->info(" Tol = {} | uDD ITG = {}", tol_gen, pm.ITG);
+                ipm_logger->debug(" Tol = {} | uDD ITG = {}", tol_gen, pm.ITG);
             }
             if( base_param()->PSM >= 3 )
             {
-                TNode::ipmlog_file->info(" Tol = {} | uDD ITG = {}", tol_gen, pm.ITG);
+                TNode::ipmlog_file->debug(" Tol = {} | uDD ITG = {}", tol_gen, pm.ITG);
             }
             FirstTime = false;
         }
         if( trace )
         {
-            ipm_logger->info("Divergent ICs: {} | ln_bi= {} | Tol= {} |",
+            ipm_logger->debug("Divergent ICs: {} | ln_bi= {} | Tol= {} |",
                               char_array_to_string(pm.SB[i], MAXICNAME), log_bi, tolerance);
         }
         if( base_param()->PSM >= 3 )
         {
-            TNode::ipmlog_file->info("Divergent ICs: {} | ln_bi= {} | Tol= {} |",
+            TNode::ipmlog_file->debug("Divergent ICs: {} | ln_bi= {} | Tol= {} |",
                                     char_array_to_string(pm.SB[i], MAXICNAME), log_bi, tolerance);
         }
     } // for i

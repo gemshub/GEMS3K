@@ -1525,7 +1525,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             {
                 for( size_t k = 0; k < priced.size(); k++ )
                     if( priced[k].first < dimTol ) { act[(size_t)priced[k].second] = 1; added++; }
-                ipm_logger->info( "OptimaReducedPreSolve: LP-Gibbs pricing admitted {} extra species "
+                ipm_logger->debug( "OptimaReducedPreSolve: LP-Gibbs pricing admitted {} extra species "
                                    "(tol={} RT)", added, dimTol );
             }
             else
@@ -1536,7 +1536,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                 std::sort( priced.begin(), priced.end() );
                 for( size_t k = 0; k < priced.size() && already + added < target; k++ )
                     { act[(size_t)priced[k].second] = 1; added++; }
-                ipm_logger->info( "OptimaReducedPreSolve: LP-Gibbs rank rule admitted {} extra species "
+                ipm_logger->debug( "OptimaReducedPreSolve: LP-Gibbs rank rule admitted {} extra species "
                                    "(target {} = {} x N, seed support {})",
                                    added, target, -dimTol, already );
             }
@@ -1669,7 +1669,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
         {
             // Nothing left to omit: the reduced problem is the full one. Whatever the previous
             // pass produced (if any) stands as the warm start.
-            ipm_logger->info( "OptimaReducedPreSolve: active set reached the full species "
+            ipm_logger->debug( "OptimaReducedPreSolve: active set reached the full species "
                                "count ({}) at pass {} - no reduction available", L, pass );
             // The previous pass converged and readmission has brought every species back: that
             // answer (readmitted species at their lower bound) is the warm start for the full
@@ -2037,7 +2037,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
 
         }
 
-        ipm_logger->info( "OptimaReducedPreSolve: pass {} - {} of {} species active, "
+        ipm_logger->debug( "OptimaReducedPreSolve: pass {} - {} of {} species active, "
                            "{} Optima iterations, {} readmitted ({} seeded above the floor)",
                            pass, nS, L, result.iterations, readmitted, seeded );
         // DECIDE record per converged pass; readmit=0 marks the fixed point that ends the loop.
@@ -2260,7 +2260,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 const double fallbackTol = ( configuredTol < 0. )
                                             ? kDimReduceDefaultTol : kDimReduceFallbackRank;
                 long int fallbackIters = 0;
-                ipm_logger->info( "CalculateEquilibriumStateOptima: dimension-reduction pre-solve "
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: dimension-reduction pre-solve "
                                    "discarded at tol={} after {} iterations - retrying once at "
                                    "tol={}", configuredTol, dimReduceIters, fallbackTol );
                 // DECIDE record of the discard: a discarded first attempt can be most of a
@@ -2284,7 +2284,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
 
             if( dimReduceDone )
-                ipm_logger->info( "CalculateEquilibriumStateOptima: dimension-reduction pre-solve "
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: dimension-reduction pre-solve "
                                    "produced a warm start over {} of {} species in {} iterations",
                                    nActive, L, dimReduceIters );
             // DECIDE dimreduce: iters = wasted + productive, where wasted is a discarded
@@ -2868,7 +2868,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                             {
                                 *earlyTrend = true;
                                 *earlyStopDwRel = dwRel;
-                                ipm_logger->info( "CalculateEquilibriumStateOptima: phase {} has "
+                                ipm_logger->debug( "CalculateEquilibriumStateOptima: phase {} has "
                                                   "fallen for {} consecutive evaluations to {:.3e} "
                                                   "from a peak of {:.3e} - ending the first attempt "
                                                   "so the phase-selection loop can look "
@@ -2900,7 +2900,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         if( dwRelCap <= kEarlyTrendDualSettled )
                         {
                             *earlyCap = true;
-                            ipm_logger->info( "CalculateEquilibriumStateOptima: reached iteration {} "
+                            ipm_logger->debug( "CalculateEquilibriumStateOptima: reached iteration {} "
                                               "with the dual settled - ending the first attempt so "
                                               "the phase-selection loop can look "
                                               "(pa_OptimaEarlyStabilityAt = {}; max|dw|/max|w| = "
@@ -2909,7 +2909,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                               dwRelCap, kEarlyTrendDualSettled );
                             return true;   // folded back to a failure below
                         }
-                        ipm_logger->info( "CalculateEquilibriumStateOptima: reached iteration {} but "
+                        ipm_logger->debug( "CalculateEquilibriumStateOptima: reached iteration {} but "
                                           "the dual is still moving (max|dw|/max|w| = {:.3e} > "
                                           "{:.3e}) - NOT ending the first attempt; a stability "
                                           "verdict taken here would be read off noise "
@@ -2974,7 +2974,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // since the flag stays set during the retries.
             if( stallWatch->stalled || stallWatch->timedOut )
             {
-                ipm_logger->info( "CalculateEquilibriumStateOptima: full solve abandoned after {}"
+                ipm_logger->warn( "CalculateEquilibriumStateOptima: full solve abandoned after {}"
                                   " - pa_OptimaStallWindow={}",
                                   stallWatch->timedOut ? "the wall-clock budget"
                                                        : "a window with no meaningful progress",
@@ -3474,7 +3474,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         // twin from a genuine two-limb split that is still rebounding.
                         if( onEarlyStopPath && (*phDec)[(size_t)ka] <= 0 )
                         {
-                            ipm_logger->info( "CalculateEquilibriumStateOptima: phase {} looks like a "
+                            ipm_logger->debug( "CalculateEquilibriumStateOptima: phase {} looks like a "
                                               "vanishing twin of {} (total {:.3e} against {:.3e}) but "
                                               "is NOT falling - declining to deactivate it on a state "
                                               "the early-stability probe truncated (peak {:.3e})",
@@ -3749,7 +3749,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             native_trace_decide( "warmfailfast stalled=%d", stallWatch->stalled ? 1 : 0 );
         if( !skipFullBudgetResolves && !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
         {
-            ipm_logger->info( "CalculateEquilibriumStateOptima: every retry failed after a stall"
+            ipm_logger->warn( "CalculateEquilibriumStateOptima: every retry failed after a stall"
                                " - re-solving once with pa_OptimaStallWindow disarmed" );
             const long int savedWindow = stallWatch->window;
             stallWatch->window = 0;      // the check lambda reads this on every call
@@ -3813,7 +3813,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // restart from `initialState`, with a fresh solver and a reset stall watch.
             if( netResumeMode == 2 && epResumed && !epResult.succeeded )
             {
-                ipm_logger->info( "CalculateEquilibriumStateOptima: the resumed re-solve did not"
+                ipm_logger->warn( "CalculateEquilibriumStateOptima: the resumed re-solve did not"
                                    " converge in {} iterations - falling back to the restart",
                                    epResult.iterations );
                 Optima::Solver solverFB;
@@ -3837,7 +3837,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 netUnpinned.clear();     // this state was solved on the restored boxes; keep them
                 state  = epState;
                 result = epResult;
-                ipm_logger->info( "CalculateEquilibriumStateOptima: the full-budget re-solve"
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: the full-budget re-solve"
                                    " converged in {} iterations ({} the probe's {} iterations)",
                                    epResult.iterations,
                                    epResumed ? "resumed from" : "restarted, discarding",
@@ -3876,7 +3876,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // their turn, so `!result.succeeded` means the call has lost its answer.
             if( netResumeMode == 3 && epResumed && !result.succeeded )
             {
-                ipm_logger->info( "CalculateEquilibriumStateOptima: the resumed re-solve and its"
+                ipm_logger->warn( "CalculateEquilibriumStateOptima: the resumed re-solve and its"
                                    " rescue both failed - falling back to the restart the unarmed"
                                    " call would have used" );
                 unpinForNet();           // repinAfterNet() may have put the boxes back
@@ -3897,7 +3897,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     netUnpinned.clear();
                     state  = fbState;
                     result = fbResult;
-                    ipm_logger->info( "CalculateEquilibriumStateOptima: the restart converged in {}"
+                    ipm_logger->debug( "CalculateEquilibriumStateOptima: the restart converged in {}"
                                        " iterations where the resume did not", fbResult.iterations );
                 }
                 else if( runExtinctionTier )
@@ -3921,7 +3921,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
         }
 
-        ipm_logger->info( "CalculateEquilibriumStateOptima: pNP={} referenceMode={} succeeded={} iterations={} nConditions={}",
+        ipm_logger->debug( "CalculateEquilibriumStateOptima: pNP={} referenceMode={} succeeded={} iterations={} nConditions={}",
                            pm.pNP, referenceMode, result.succeeded, result.iterations, R );
 
         for( long int j = 0; j < L; j++ )
@@ -4375,7 +4375,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
                     CalculateActivityCoefficients( LINK_UX_MODE );
                     CalculateConcentrations( pm.X, pm.XF, pm.XFA );
-                    ipm_logger->info( "CalculateEquilibriumStateOptima: pa_OptimaZeroAbsent - "
+                    ipm_logger->debug( "CalculateEquilibriumStateOptima: pa_OptimaZeroAbsent - "
                                        "{} of {} species reported as exactly zero", nZeroed, L );
                 }
             }
@@ -4485,7 +4485,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 if( ok )
                 {
                     result.succeeded = true; kktOk = true; stabilityOk = true;
-                    ipm_logger->info( "CalculateEquilibriumStateOptima: TPD acceptance (prototype) - absent non-ideal "
+                    ipm_logger->debug( "CalculateEquilibriumStateOptima: TPD acceptance (prototype) - absent non-ideal "
                                        "phases certified by composition search ({} scanned, min TPD {:.3e})", nTpd, worstTpd );
                 }
             }

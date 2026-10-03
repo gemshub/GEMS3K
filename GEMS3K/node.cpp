@@ -100,7 +100,7 @@ TNode::TNode( const TNode& otherNode )
     pmm->Fdev2[0] = 0.;
     pmm->Fdev2[1] = 1e-6;
 
-    node_logger->info("copy constructor...");
+    node_logger->debug("copy constructor...");
 }
 
 TNode::~TNode()
@@ -201,6 +201,8 @@ long int TNode::GEM_run( bool uPrimalSol )
         { DATABR* live = CNode; CNode = lsBefore; databr_copy( live ); CNode = live; }
     }
     long int status = GEM_run_single( uPrimalSol );
+    auto isOkStatus = []( long int st ) { return st == OK_GEM_AOP || st == OK_GEM_SOP || st == OK_GEM_HOP || st == OK_GEM_SHP
+                                                || st == OK_GEM_AIA || st == OK_GEM_SIA; };
     if( lsBefore )
     {
         const bool okNow = status == OK_GEM_AOP || status == OK_GEM_SOP || status == OK_GEM_HOP || status == OK_GEM_SHP
@@ -221,6 +223,10 @@ long int TNode::GEM_run( bool uPrimalSol )
             itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
             native_trace_decide( "%s requested=%ld first=%ld second=%ld", lsRetryArmed ? "lsretry" : "escretry",
                                  (long)requested, (long)status, (long)second );
+            node_logger->info( "GEM_run(): mode {} failed ({}) - re-solved once from the same inputs with {}: {}",
+                               (long)requested, (long)status,
+                               lsRetryArmed ? "the line-search retry" : "the stall escape off",
+                               isOkStatus( second ) ? "recovered" : "still failed" );
             const bool ok2 = second == OK_GEM_AOP || second == OK_GEM_SOP || second == OK_GEM_HOP || second == OK_GEM_SHP
                           || second == OK_GEM_AIA || second == OK_GEM_SIA;
             if( !ok2 ) { databr_copy( failed ); ipmlog_error = failedError; }
@@ -301,6 +307,8 @@ long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, lon
         g_optimaLSEscapeOff = false;
         itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
         native_trace_decide( "escretry rung=%s requested=%ld first=%ld second=%ld", rung, (long)requested, (long)st, (long)second );
+        node_logger->info( "GEM_run(): {} attempt failed ({}) - re-solved with the stall escape off: {}",
+                           rung, (long)st, isOk( second ) ? "recovered" : "still failed" );
         if( !isOk( second ) ) { databr_copy( failed ); ipmlog_error = failedError; }
         databr_free( failed );
         st = CNode->NodeStatusCH;
@@ -317,6 +325,8 @@ long int TNode::GEM_run_aop_cgseed( long int& itf, long int& itg, double& second
     const long int st = GEM_run_single_legacy_retry( false, itf, itg, seconds, "cgseed" );
     g_optimaCgSeedArmed = false;
     native_trace_decide( "cgseedretry aop=%ld", (long)st );
+    node_logger->info( "GEM_run(): cold AOP failed - retried from the column-generation seed: {}",
+                       st == OK_GEM_AOP ? "recovered" : "still failed" );
     return st;
 }
 
@@ -341,6 +351,8 @@ long int TNode::GEM_run_optima_cold_retry( long int requested )
         cold = GEM_run_aop_cgseed( itf, itg, seconds );
     native_trace_decide( "optimacoldretry requested=%ld failed=%ld aop=%ld", (long)requested,
                          (long)failedStatus, (long)cold );
+    node_logger->info( "GEM_run(): warm Optima call (mode {}) failed ({}) - re-solved cold as AOP: {}",
+                       (long)requested, (long)failedStatus, cold == OK_GEM_AOP ? "recovered" : "still failed" );
     if( cold != OK_GEM_AOP )
     {
         databr_copy( failed );
@@ -399,6 +411,8 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
                              (long)( n + 1 ), k, (long)cold, (long)warm, (long)itf, (long)itg );
     }
     native_trace_quiet( false );
+    node_logger->info( "GEM_run(): cold native call failed - retried from nudged compositions (up to {}): {}",
+                       (long)maxNudges, result == ERR_GEM_AIA ? "still failed" : "recovered" );
 
     if( result == ERR_GEM_AIA )
     {
