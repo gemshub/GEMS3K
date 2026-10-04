@@ -4722,6 +4722,9 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
     }
     else
     {
+        // The Optima leg changes the bulk composition and the control results; keep them.
+        const std::vector<double> Bsave( pm.B, pm.B + pm.N );
+        const std::vector<EqControlCondition> controlsSave = optima_control_conditions;
         try
         {
             calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false,
@@ -4736,6 +4739,8 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             // pm.FX too: the Optima leg resets it to kTotalGibbsEnergyUnset. Native's value
             // was saved after its leg rescaled, so it is in external units.
             pm.FX = FXsave;
+            for( long int i = 0; i < pm.N; i++ ) pm.B[i] = Bsave[(size_t)i];
+            optima_control_conditions = controlsSave;
             TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
             CalculateActivityCoefficients( LINK_UX_MODE );
             CalculateConcentrations( pm.X, pm.XF, pm.XFA );
