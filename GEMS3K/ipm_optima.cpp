@@ -1255,7 +1255,7 @@ bool TMultiBase::LPFeasibilitySeed( std::vector<double>& nOut )
         minVal = std::min( minVal, nOut[j] );
     if( maxResid > tol || minVal < -tol )
     {
-        ipm_logger->warn( "LPFeasibilitySeed: self-check failed (maxResid={}, minVal={}, tol={}) - discarding",
+        ipm_logger->debug( "LPFeasibilitySeed: self-check failed (maxResid={}, minVal={}, tol={}) - discarding",
                            maxResid, minVal, tol );
         return false;
     }
@@ -1987,7 +1987,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                 }
                 for( long int j = 0; j < L; j++ ) { pm.F[j] = Fsave[(size_t)j]; pm.X[j] = Xsave[(size_t)j]; }
             }
-            ipm_logger->info( "OptimaReducedPreSolve: pass {} did not converge on {} of {} "
+            ipm_logger->debug( "OptimaReducedPreSolve: pass {} did not converge on {} of {} "
                                "species{} - discarding the reduced pre-solve", pass, nS, L,
                                preWatch->timedOut ? " (wall-clock budget)"
                                                   : ( preWatch->stalled ? " (stalled)" : "" ) );
@@ -2050,7 +2050,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             return true;   // fixed point: the reduced answer satisfies the full KKT conditions
     }
 
-    ipm_logger->warn( "OptimaReducedPreSolve: readmission did not settle within {} passes - "
+    ipm_logger->debug( "OptimaReducedPreSolve: readmission did not settle within {} passes - "
                        "discarding (an unsettled active set is not a fixed point, and its dual is "
                        "wrong about everything still omitted)", maxPasses );
     return discard();
@@ -2133,11 +2133,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 if( pm.U[i] != 0. ) warmStateUsable = true;
             }
             if( !warmStateUsable )
-                ipm_logger->warn( "CalculateEquilibriumStateOptima: warm start (SOP) requested but "
-                                  "this node carries no previous solution (pm.U[] is all zero) - "
-                                  "the .dbr file's stored speciation is NOT a warm start. Falling "
-                                  "back to the cold (LP-feasibility) seed. Use AOP for a first "
-                                  "solve, or SOP only on a node that has already solved." );
+                ipm_logger->warn( "Warm start (SOP) requested, but this node has no earlier solution "
+                                  "(the speciation stored in the .dbr file is not one). Solving cold. "
+                                  "Try: use AOP for a first solve, and SOP only after a solve." );
         }
 
         if( pm.pNP == 0 || !warmStateUsable )
@@ -2182,8 +2180,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
             else
             {
-                ipm_logger->warn( "CalculateEquilibriumStateOptima: LP-feasibility seed unavailable "
-                                   "(infeasible or numerical issue) - falling back to the uniform seed" );
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: the LP-feasibility seed is unavailable "
+                                   "(the LP was infeasible or failed numerically, or its self-check "
+                                   "rejected the result) - falling back to the uniform seed" );
                 const double uniformSeed = std::max( dcFloor, 1e-16 * ScFact );
                 for( long int j = 0; j < pm.L; j++ )
                     pm.Y[j] = uniformSeed;
@@ -2974,7 +2973,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // since the flag stays set during the retries.
             if( stallWatch->stalled || stallWatch->timedOut )
             {
-                ipm_logger->warn( "CalculateEquilibriumStateOptima: full solve abandoned after {}"
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: full solve abandoned after {}"
                                   " - pa_OptimaStallWindow={}",
                                   stallWatch->timedOut ? "the wall-clock budget"
                                                        : "a window with no meaningful progress",
@@ -3035,9 +3034,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 fdRequiredByModel = true;
         }
         if( kFDDelay > 0 && kFDHessian && fdRequiredByModel )
-            ipm_logger->warn( "CalculateEquilibriumStateOptima: pa_OptimaFDHessianDelay ignored - "
-                              "this system has a multisite or fluid-EoS phase, which needs the "
-                              "finite-difference Hessian columns from the first iteration" );
+            ipm_logger->warn( "pa_OptimaFDHessianDelay ignored: this system has a multisite or "
+                              "fluid-EoS phase, which needs the full Hessian from the start. "
+                              "Set it to 0 to silence this." );
         if( kFDDelay > 0 && kFDHessian && !fdRequiredByModel )
         {
             Optima::Options cheapOpts = options;
@@ -3060,7 +3059,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             if( cheapAttemptWon )
                 state = cheapState;
             else
-                ipm_logger->warn( "CalculateEquilibriumStateOptima: cheap-Hessian attempt did not "
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: cheap-Hessian attempt did not "
                                   "converge in {} iterations - discarding it and restarting with the "
                                   "finite-difference Hessian (pa_OptimaFDHessianDelay = {})",
                                   cheapResult.iterations, kFDDelay );
@@ -3308,7 +3307,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
             if( DetectPhaseCollapseAndReseed( state.x.data(), reseeds, aqueousPhaseIdx ) )
             {
-                ipm_logger->warn( "CalculateEquilibriumStateOptima: general phase-collapse retry (ROP) - "
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: general phase-collapse retry (ROP) - "
                                    "{} species reseeded", reseeds.size() );
                 Optima::State retryState = state; // build on whatever the prior attempt(s) left, not the original seed
                 for( const auto& rs : reseeds )
@@ -3341,7 +3340,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             if( DetectSolventCollapseAndReseed( state.x.data(), problem.xupper[pm.LO], waterSeed )
                 && waterSeed > initialState.x[pm.LO] )
             {
-                ipm_logger->warn( "CalculateEquilibriumStateOptima: solvent-collapse retry - "
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: solvent-collapse retry - "
                                    "Xw={}, reseeding to {}", state.x[pm.LO], waterSeed );
                 Optima::State retryState( dims );
                 for( long int j = 0; j < L; j++ )
@@ -3374,7 +3373,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
             if( DetectPhaseCollapseAndReseed( state.x.data(), reseeds, aqueousPhaseIdx ) )
             {
-                ipm_logger->warn( "CalculateEquilibriumStateOptima: general phase-collapse retry - "
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: general phase-collapse retry - "
                                    "{} species reseeded", reseeds.size() );
                 // Base this retry on the current state (including the solvent retry's fix), not
                 // the original seed.
@@ -3489,7 +3488,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 }
                 if( !deactivated.empty() )
                 {
-                    ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-extinction retry - "
+                    ipm_logger->debug( "CalculateEquilibriumStateOptima: phase-extinction retry - "
                                        "fixing {} species of a vanishing interchangeable phase at the floor",
                                        deactivated.size() );
                     // The kTwinRatio clause firing.
@@ -3565,7 +3564,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     // top. A warning is issued when most scanned phases have a saturated
                     // stability index, since the ranking is then not informative.
                     if( psCensus.clamped * 2 > psCensus.scanned && psCensus.scanned > 0 )
-                        ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
+                        ipm_logger->debug( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
                                            "{} of {} scanned phases have a SATURATED stability index "
                                            "(overflow guard, not a measured driving force); the "
                                            "ranking of {} violation(s) is not ordered by anything",
@@ -3602,7 +3601,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                             }
                             phSelState[(size_t)kBad] = 1;
                             acted = true;
-                            ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
+                            ipm_logger->debug( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
                                                "deactivating phase {} (present but unstable, logSI gap {})",
                                                psLoop, kBad, psViol );
                             native_trace_decide( "phasesel loop=%ld deactivate=%ld logsigap=%.6e",
@@ -3649,7 +3648,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                             if( nReadmit > 0 )
                             {
                                 acted = true;
-                                ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
+                                ipm_logger->debug( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
                                                    "READMITTING {} wrongly removed phase(s) (worst: phase {}, "
                                                    "absent but stable, logSI gap {})",
                                                    psLoop, nReadmit, kBad, psViol );
@@ -3659,14 +3658,14 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                             psSkipped++;
                     }   // for psIdx - fall through to the next-worst violation
                     if( acted && psSkipped > 0 )
-                        ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
+                        ipm_logger->debug( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
                                            "skipped {} unactionable violation(s) ranked ahead of the one "
                                            "acted on (worst was phase {}, gap {})",
                                            psLoop, psSkipped, psRanked[0].k, psRanked[0].viol );
                     if( !acted )
                     {
                         // Nothing in the whole ranking is actionable.
-                        ipm_logger->warn( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
+                        ipm_logger->debug( "CalculateEquilibriumStateOptima: phase-selection loop {} - "
                                            "none of {} violation(s) is actionable ({} saturated at the "
                                            "overflow guard); worst is phase {}, gap {} - leaving it to "
                                            "the final check",
@@ -3716,7 +3715,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
             if( !netUnpinned.empty() )
             {
-                ipm_logger->info( "CalculateEquilibriumStateOptima: safety net - restoring the "
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: safety net - restoring the "
                                    "original box of {} species pinned out by a probe-length look",
                                    netUnpinned.size() );
                 native_trace_decide( "netunpin sp=%ld", (long)netUnpinned.size() );
@@ -3749,8 +3748,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             native_trace_decide( "warmfailfast stalled=%d", stallWatch->stalled ? 1 : 0 );
         if( !skipFullBudgetResolves && !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
         {
-            ipm_logger->warn( "CalculateEquilibriumStateOptima: every retry failed after a stall"
-                               " - re-solving once with pa_OptimaStallWindow disarmed" );
+            ipm_logger->warn( "Optima: all retries failed after a stall. Solving once more with the "
+                               "stall guard off (pa_OptimaStallWindow)." );
             const long int savedWindow = stallWatch->window;
             stallWatch->window = 0;      // the check lambda reads this on every call
             stallWatch->reset();
@@ -3768,7 +3767,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 netUnpinned.clear();     // this state was solved on the restored boxes; keep them
                 state  = nsState;
                 result = nsResult;
-                ipm_logger->info( "CalculateEquilibriumStateOptima: the disarmed re-solve converged"
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: the disarmed re-solve converged"
                                    " in {} iterations - the stall was a false positive",
                                    nsResult.iterations );
             }
@@ -3780,7 +3779,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // nothing costs only itself.
         if( !skipFullBudgetResolves && !result.succeeded && earlyCapHit )
         {
-            ipm_logger->info( "CalculateEquilibriumStateOptima: the pa_OptimaEarlyStabilityAt probe"
+            ipm_logger->debug( "CalculateEquilibriumStateOptima: the pa_OptimaEarlyStabilityAt probe"
                                " found nothing to repair - re-solving once at the full budget" );
             Optima::Solver solverEP;     // fresh instance, per the retry-ordering note above
             solverEP.setOptions( options );   // the full budget; the cap is disarmed by now
@@ -3813,7 +3812,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // restart from `initialState`, with a fresh solver and a reset stall watch.
             if( netResumeMode == 2 && epResumed && !epResult.succeeded )
             {
-                ipm_logger->warn( "CalculateEquilibriumStateOptima: the resumed re-solve did not"
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: the resumed re-solve did not"
                                    " converge in {} iterations - falling back to the restart",
                                    epResult.iterations );
                 Optima::Solver solverFB;
@@ -3855,7 +3854,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 result = epResult;
                 runExtinctionTier( false );
                 if( result.succeeded )
-                    ipm_logger->info( "CalculateEquilibriumStateOptima: the full-budget re-solve"
+                    ipm_logger->debug( "CalculateEquilibriumStateOptima: the full-budget re-solve"
                                        " stalled at {} iterations and the phase-extinction tier"
                                        " converged it - the probe cost {} iterations and nothing else",
                                        epResult.iterations, earlyCapN > 0 ? earlyCapN : 0 );
@@ -3876,7 +3875,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // their turn, so `!result.succeeded` means the call has lost its answer.
             if( netResumeMode == 3 && epResumed && !result.succeeded )
             {
-                ipm_logger->warn( "CalculateEquilibriumStateOptima: the resumed re-solve and its"
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: the resumed re-solve and its"
                                    " rescue both failed - falling back to the restart the unarmed"
                                    " call would have used" );
                 unpinForNet();           // repinAfterNet() may have put the boxes back
@@ -4364,7 +4363,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 {
                     for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];
                     CheckMassBalanceResiduals( pm.Y );   // restore pm.C[] to the accepted state
-                    ipm_logger->info( "CalculateEquilibriumStateOptima: pa_OptimaZeroAbsent - "
+                    ipm_logger->debug( "CalculateEquilibriumStateOptima: pa_OptimaZeroAbsent - "
                                        "reverted, zeroing {} absent species would break the mass "
                                        "balance", nZeroed );
                 }
@@ -4610,10 +4609,9 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
         if( !usable )
         {
             wantWarmNative = false;
-            ipm_logger->warn( "CalculateEquilibriumStateHOP: a warm native leg (SHP) was requested "
-                              "but this node carries no previous solution (pm.U[] is all zero) - "
-                              "running the native leg cold for this call. Use HOP for a first "
-                              "solve, or SHP only on a node that has already solved." );
+            ipm_logger->warn( "Warm start (SHP) requested, but this node has no earlier solution. "
+                              "Native leg runs cold. Try: use HOP for a first solve, and SHP only "
+                              "after a solve." );
         }
     }
 
@@ -4634,8 +4632,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
         // one wasted attempt.
         if( wantWarmNative )
         {
-            ipm_logger->warn( "CalculateEquilibriumStateHOP: the warm native leg failed ({}: {}); "
-                              "retrying it cold for this node", werr.title, werr.mess );
+            ipm_logger->warn( "HOP: warm native leg failed ({}: {}); retrying it cold", werr.title, werr.mess );
             wantWarmNative = false;
             fiaN = ipmN = 0;
             try
@@ -4649,8 +4646,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             catch( TError& nerr2 )
             {
                 nativeOk = false;
-                ipm_logger->warn( "CalculateEquilibriumStateHOP: the native leg failed cold too "
-                                   "({}: {}); falling back to a cold Optima solve for this node",
+                ipm_logger->warn( "HOP: native leg failed cold too ({}: {}); solving cold with Optima",
                                    nerr2.title, nerr2.mess );
                 fiaN = ipmN = 0;
                 calcTime = 0.;
@@ -4661,8 +4657,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             // No assemblage to hand over: degrade to a plain cold Optima solve (an AOP
             // result under a HOP status) and say so.
             nativeOk = false;
-            ipm_logger->warn( "CalculateEquilibriumStateHOP: the native leg failed ({}: {}); falling "
-                               "back to a cold Optima solve for this node", werr.title, werr.mess );
+            ipm_logger->warn( "HOP: native leg failed ({}: {}); solving cold with Optima", werr.title, werr.mess );
             fiaN = ipmN = 0;
             calcTime = 0.;
         }
@@ -4752,9 +4747,9 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             setErrorMessage( 21, "W21IPM: HOP: ", buf.c_str() );
             // fiaO/ipmO were set by CalculateEquilibriumStateOptima()'s own catch before it
             // re-threw; the iterations spent are kept, only the state is discarded.
-            ipm_logger->warn( "CalculateEquilibriumStateHOP: Optima leg failed after a successful "
-                               "native solve ({}: {}) - restoring and reporting native's own answer "
-                               "as BAD_GEM_HOP", oerr.title, oerr.mess );
+            ipm_logger->warn( "HOP: Optima leg failed after a good native solve ({}: {}). Native's own "
+                               "answer is returned as BAD_GEM_HOP. Try: AOP, or check the bulk "
+                               "composition for very small amounts", oerr.title, oerr.mess );
         }
     }
 

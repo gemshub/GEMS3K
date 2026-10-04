@@ -1453,6 +1453,7 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
     double relCur = relOld, absCur = absOld;
     bool improved = false;
     std::vector<double> Xsingle; double relSingle = 0., absSingle = 0.;
+    std::vector<long int> pivKept, pivSingle;       // carrier species of the repair that is kept
 
     for( long int pass = 0; pass < maxPass; pass++ )
     {
@@ -1557,9 +1558,9 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
         break;
     }
     relCur = relNew; absCur = absNew;
-    nClamped += nClampedPass; nPass++; improved = true;
+    nClamped += nClampedPass; nPass++; improved = true; pivKept = piv;
     if( pass == 0 )                  // remember exactly what the old single pass gave
-    { Xsingle.assign( amt, amt + L ); relSingle = relNew; absSingle = absNew; }
+    { Xsingle.assign( amt, amt + L ); relSingle = relNew; absSingle = absNew; pivSingle = piv; }
 
     if( nClampedPass == 0 ) break;   // a clean solve leaves nothing for a further pass
     if( relCur < 1. ) break;         // the answer now passes its own mass-balance test
@@ -1600,7 +1601,7 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
                                  (long)N, (long)nPass, relSingle, relCur, singleS, singleK );
         }
         for( long int j = 0; j < L; j++ ) amt[j] = Xsingle[(size_t)j];
-        relCur = relSingle; absCur = absSingle; nPass = 1;
+        relCur = relSingle; absCur = absSingle; nPass = 1; pivKept = pivSingle;
     }
 
     if( !improved )
@@ -1621,10 +1622,25 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
     CalculateConcentrations( pm.X, pm.XF, pm.XFA );
 
-    gems_logger->info( "pa_MbReproject: mass balance repaired over {} species - worst "
-                       "relative residual {:.3e}x -> {:.3e}x its own tolerance, worst "
-                       "absolute {:.3e} -> {:.3e} mol",
-                       N, relOld, relNew, absOld, absNew );
+    // Names for the log: the worst element before and after, and the species that carried the repair.
+    long int j1 = -1, j2 = -1; double relChk = 0., absChk = 0.;
+    native_trace_mb_of( pm, amt, j1, relChk, j2, absChk );
+    auto icName = []( const MULTI& m, long int i ) {
+        return i >= 0 ? char_array_to_string( m.SB[i], MAXICNAME ) : std::string( "-" ); };
+    std::string carriers;
+    for( size_t t = 0; t < pivKept.size() && t < 10; t++ )
+        carriers += ( t ? ", " : "" ) + char_array_to_string( pm.SM[pivKept[t]], MAXDCNAME );
+    if( pivKept.size() > 10 ) carriers += ", ...";
+    if( !( relNew < 1. ) )
+        gems_logger->warn( "Mass balance is still off after repair (worst element {}, {:.1e}x its tolerance). "
+                           "Try: a warm restart from this result (SIA, SOP or SHP), or raise the amount of the smallest element {}.",
+                           icName( pm, j1 ), relNew, icName( pm, j1 ) );
+    else
+        gems_logger->debug( "pa_MbReproject: mass balance repaired in {} pass(es) over {} species ({}), {} "
+                            "component(s) clamped at zero. Worst relative residual {:.3e}x ({}) -> {:.3e}x "
+                            "({}) its own tolerance; worst absolute {:.3e} ({}) -> {:.3e} ({}) mol.",
+                            nPass, N, carriers, nClamped, relOld, icName( pm, i1 ), relNew, icName( pm, j1 ),
+                            absOld, icName( pm, i2 ), absNew, icName( pm, j2 ) );
     // DECIDE record of a repair that fired.
     native_trace_decide( "mbreproject species=%ld passes=%ld clamped=%ld relbefore=%.3e "
                          "relafter=%.3e absbefore=%.3e absafter=%.3e",
@@ -1694,15 +1710,10 @@ void TMultiBase::SubFloorElementCheck( double dcFloor ) const
     }
     if( !nWarn ) return;
     gems_logger->warn(
-        "Optima solver: {} element(s) have less material than the solver's minimum amounts can hold. The Optima "
-        "modes (AOP, SOP, HOP, SHP) keep every species at or above a small floor amount (pa_OptimaDcFloor if set, "
-        "otherwise pa_DHB, scaled to the size of the system via pa_DG), so the species of such an element would "
-        "together contain more of it than the system has. The calculation still runs and can report success, but "
-        "the element's mass balance cannot be met during the solve: its species amounts, and its contribution to "
-        "pH/Eh, are fixed by a correction applied afterwards rather than by the equilibrium itself, and with some "
-        "settings the reported amounts of that element are wrong. Native modes (AIA, SIA) are not affected. "
-        "Remedies: raise the element's bulk amount to about {:.1g} mol or more; remove it from the system if it is "
-        "only a placeholder; or set pa_OptimaDcFloor to {:.1g} or lower and check the result. Elements: {}",
+        "Optima: {0} element(s) have less material than the solver's floor amount allows. Their mass "
+        "balance is then fixed afterwards, so their amounts and pH/Eh may be wrong (native modes are not "
+        "affected). Try: raise the amount to about {1:.1g} mol or more, remove the element if it is a "
+        "placeholder, or set pa_OptimaDcFloor to {2:.1g} or lower. Elements: {3}",
         nWarn, bulkHint, floorHint, report );
 }
 
@@ -1996,11 +2007,9 @@ void TMultiBase::EnergyDeterminacyCheck()
             : fmt::format( "fixed only to +-{:.2g} %", 100. * worstRel );
         if( nDegenerate > 0 ) kWorst = -1;
         gems_logger->warn(
-            "GEM answer not fully determined by the energy: {} present phase(s) have amounts the "
-            "minimised Gibbs energy fixes only to worse than {:.0f} % at its own resolution - worst {}, "
-            "{}. Answers differing in these amounts are EQUALLY valid (same G to rounding), so do not "
-            "rely on them more precisely than that; a different start, setting or solver version may "
-            "legitimately return a different value. Phases: {}",
+            "Some phase amounts are not fixed by the energy: {} phase(s) are determined only to worse than "
+            "{:.0f} % (worst: {}, {}). Other values are equally valid, so treat these amounts as "
+            "approximate. Phases: {}",
             nWarn, 100. * warnRel,
             kWorst >= 0 ? trimmedPhaseName( kWorst ) : std::string( "an interchangeable phase" ), worstTxt, listed );
         native_trace_decide( "undetermined phases=%ld threshold=%.0e worst=%.2e list=%s",
@@ -2193,23 +2202,17 @@ std::vector<TMultiBase::RedundantDCHold> TMultiBase::ExcludeRedundantDCs()
     }
     if( !report.empty() )
         gems_logger->warn(
-            "Redundant species in the system definition: {} species duplicate another with identical "
-            "stoichiometry, class and standard properties (G0, H0, S0, Cp0, V0 at this T,P), in the same "
-            "phase or as single-species phases. Each copy is REMOVED from the solve (held at zero; its "
-            "amount is reported as 0 and carried by the species kept). In one phase a duplicate would "
-            "double that species' share of mixing; as pure phases their split is arbitrary. A pure phase that "
-            "duplicates another is often the single end-member left of a solid solution whose other elements "
-            "are switched off - that remnant is the copy removed. Removed>kept (and the rule that chose): {}. "
-            "Remove the duplicates from the project to silence this.", held.size(), report );
+            "Redundant species: {} duplicate(s) were removed from the solve and are reported as 0 (the "
+            "copy kept carries the amount). Removed>kept: {}. Try: delete the duplicates from the project.",
+            held.size(), report );
     if( !reportKept.empty() )
         gems_logger->warn(
-            "Redundant species NOT removed because a copy carries metastability limits (DLL/DUL): {}. "
-            "Their amounts are not independently determined unless those limits separate them.", reportKept );
+            "Redundant species kept because a copy has metastability limits (DLL/DUL): {}. Their amounts "
+            "are not fixed separately unless the limits differ. Try: remove one copy.", reportKept );
     if( !reportSuspicious.empty() )
         gems_logger->warn(
-            "Suspicious species pairs in the system definition (nothing removed): same stoichiometry and the same "
-            "G0 at this T,P, but other standard properties (H0, S0, Cp0 or V0) differ - the entries agree where "
-            "they are compared and nowhere else, which is rarely intended. Check the data: {}", reportSuspicious );
+            "Suspicious species pairs (nothing removed): same stoichiometry and G0 but different H0, S0, "
+            "Cp0 or V0. Try: check the data of these entries: {}", reportSuspicious );
     return held;
 }
 
@@ -2307,15 +2310,12 @@ void TMultiBase::StrandedElementCheck()
         if( !warned.insert( key ).second ) return;
     }
     gems_logger->warn(
-        "Fragile system definition: {} element(s) can exist ONLY in a single solution phase, and that phase "
-        "is present here in a trace amount made up largely of the element - it is kept in existence mainly to "
-        "hold it, far from the conditions its mixing model describes. Such states are numerically fragile: "
-        "answers can be lost or change under tiny input changes, and for an aqueous phase the reported pH, Eh "
-        "and ionic strength are not meaningful. Remedies: add a phase that can host the element (e.g. a solid "
-        "containing it), or remove the element from the system definition if it is not needed (a zero bulk "
-        "amount is not accepted).{} Element in phase: {}", nWarn,
-        elementsOfInterest.empty() ? "" : " An element tagged [default seed] was not marked of interest, so its "
-        "amount is a placeholder and removing it from the definition is the direct remedy.", report );
+        "Fragile system: {} element(s) exist only in one solution phase, which is present here only as a "
+        "trace made mostly of that element. Results can be lost or change under tiny input changes, and "
+        "pH/Eh/ionic strength are not meaningful. Try: add a phase that can host the element, or remove "
+        "the element.{} Element in phase: {}", nWarn,
+        elementsOfInterest.empty() ? "" : " An element tagged [default seed] is only a placeholder, so "
+        "removing it is the direct fix.", report );
 }
 
 void TMultiBase::GibbsEnergyMinimization()
@@ -2463,15 +2463,11 @@ FORCED_AIA:
 
        if( fails && iRel >= 0 )
            gems_logger->warn(
-               "GEM answer accepted with an unsatisfied mass balance: IC {} is {:.3e}x its own "
-               "tolerance (|residual| {:.3e} mol against pa_DHB*b = {:.3e}); worst absolute "
-               "|residual| {:.3e} mol at IC {}. Returned unchanged - native's cold path does "
-               "not gate on this - but a warm (SIA) re-solve of the same state will reject it. "
-               "Consider pa_DT (an absolute floor) or a tighter pa_DHB for this project.",
-               char_array_to_string( pm.SB[iRel], MAXICNAME ),
-               rel, fabs( pm.B[iRel] * pm.DHBM * rel ), pm.B[iRel] * pm.DHBM,
-               absr, iAbs >= 0 ? char_array_to_string( pm.SB[iAbs], MAXICNAME )
-                               : std::string( "-" ) );
+               "Mass balance not met: element {} is {:.1e}x its tolerance (worst absolute {:.1e} mol, "
+               "element {}). The answer is returned unchanged, but a warm (SIA) re-solve would reject it. "
+               "Try: pa_DT or a tighter pa_DHB for this project.",
+               char_array_to_string( pm.SB[iRel], MAXICNAME ), rel, absr,
+               iAbs >= 0 ? char_array_to_string( pm.SB[iAbs], MAXICNAME ) : std::string( "-" ) );
    }
 
    if( !pm.MK && !pm.PZ )
@@ -3407,7 +3403,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
 
           if( stalled || stalledIter >= 10 )
           {
-              gems_logger->warn("MBR({}): stall at IT1={} stalledIter={} "
+              gems_logger->debug("MBR({}): stall at IT1={} stalledIter={} "
                                      "maxDeltaY={:.3e} curRes={:.3e} prevRes={:.3e}",
                                      WhereCalledFrom, IT1, stalledIter,
                                      maxDeltaY, cur_maxResidual, prev_maxResidual);
@@ -3436,7 +3432,7 @@ STEP_POINT("FIA Iteration");
         double curResidualFinal = ResidualMetric();
         if( bestResidual < curResidualFinal )
         {
-            gems_logger->warn("MBR({}): restoring best-residual state (best={:.3e} vs current={:.3e})",
+            gems_logger->debug("MBR({}): restoring best-residual state (best={:.3e} vs current={:.3e})",
                                WhereCalledFrom, bestResidual, curResidualFinal);
             for( j=0; j<pm.L; j++ )
                 pm.Y[j] = bestY[j];

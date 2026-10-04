@@ -110,14 +110,9 @@ void TMultiBase::RunKineticsStep()
             if( nDegen > 24 ) list += ",...";
             // Names the two downstream error codes, so a reader who later meets one of them can
             // find this warning.
-            ipm_logger->warn( "RunKineticsStep: the kinetic rate law pinned {} species at a ZERO-WIDTH "
-                              "metastability box (dul == dll) this step - {}. Such a species cannot "
-                              "change amount at all until the rate law next rewrites its bounds. This "
-                              "step itself SUCCEEDED; the state is reported here because no later "
-                              "message names it - if a subsequent solve fails as E04IPM (mass balance, "
-                              "native) or E90IPM (did not converge, Optima), look here first. This is "
-                              "a report, NOT a diagnosis: a zero-width box is not known to cause those "
-                              "failures. First: {} at {:.6e} mol.",
+            ipm_logger->warn( "Kinetics: {} species have a zero-width metastability box (dul == dll) this step: {}. "
+                              "They cannot change until the rate law moves their bounds. The step succeeded; if the "
+                              "next solve fails (E04IPM or E90IPM), look here first. First: {} at {:.6e} mol.",
                               nDegen, list, firstName, firstVal );
             native_trace_decide( "degenbox n=%ld first=%s val=%.6e list=%s",
                                  (long)nDegen, firstName.c_str(), firstVal, list.c_str() );
