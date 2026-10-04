@@ -240,7 +240,7 @@ long int TSolMod::init_multisite()
             else {  // comparing with mns for previous end member
                 if( fabs( mns[s] - mnsj ) > 1e-6 )  // bugfix 06.06.2011 DK
                 { // error - inconsistent multiplicity number in different end members
-                    solmod_logger->warn("{} error - inconsistent multiplicity number in different end members: j = {} s= {}  mns[s]= {} mnsj={}",
+                    solmod_logger->warn("Phase {}: end member {} has a different site multiplicity for sublattice {} ({} vs {}). Try: check the end-member site-fraction definitions of this phase.",
                                         PhaseName, j, s, mns[s], mnsj);
                     //return j; // returns the end member index
                 }

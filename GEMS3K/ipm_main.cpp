@@ -2937,7 +2937,8 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
               eCode = i;  // Error state is activated
               pm.PZ = 3;
               std::string buf = "Too small input amount of independent component ";
-                          buf += char_array_to_string(pm.SB[i],3)+" = "+std::to_string(pm.B[i]);
+                          buf += char_array_to_string(pm.SB[i],3)+" = "+std::to_string(pm.B[i])
+                          +" mol. Try: raise its bulk amount, or remove it from the system.";
               setErrorMessage( 20, "W20IPM: IPM Main Descent:", buf.c_str());
     	   }
            else
@@ -3450,7 +3451,7 @@ STEP_POINT("FIA Iteration");
        iRet = 2;
        std::string buf = "(MBR("+std::to_string(WhereCalledFrom);
                    buf += ")) Maximum allowed number of MBR iterations (";
-                   buf += std::to_string(pa_p->DP) +") exceeded! ";
+                   buf += std::to_string(pa_p->DP) +") exceeded! Try: a warm (SIA) restart, or raise pa_DP.";
        setErrorMessage( 4, "E04IPM: Mass Balance Refinement: ", buf.c_str());
        native_trace_mbr_exit( pm, pa_p, "budget_strict", WhereCalledFrom, IT1, iRet, trRestored );
        return iRet; // no MBR() solution
@@ -3549,7 +3550,8 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
         {
             setErrorMessage( 7, "E07IPM: IPM Main Descent: ",
    " Degeneration in R matrix (fault in the linearized system solver).\n"
-   " It is not possible to obtain a valid GEM IPM solution.\n"  );
+   " It is not possible to obtain a valid GEM IPM solution.\n"
+   " Try: check the system for duplicate species or elements that no species contains.\n" );
           return 1;
         }
 
@@ -3726,7 +3728,8 @@ STEP_POINT( "IPM Iteration" );
     // DXM was not reached in IPM iterations
     setErrorMessage( 6, "E06IPM: IPM Main Descent: " ,
             "IPM convergence criterion tolerance (Pa_DK) could not be reached"
-    		" (more than Pa_IIM iterations done);\n" );
+    		" (more than Pa_IIM iterations done).\n"
+            " Try: raise pa_IIM, or loosen pa_DK a little.\n" );
     return 2L;  // bad convergence - too many IPM iterations or deterioration of dual solution!
 //----------------------------------------------------------------------------
 CONVERGED:

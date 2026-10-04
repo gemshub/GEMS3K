@@ -31,6 +31,17 @@
 
 #include "nodearray.h"
 #include "v_service.h"
+#include <atomic>
+
+// Particles leaving the domain can repeat every step, so the warning is given once per run.
+static void warnParticleOutsideOnce()
+{
+    static std::atomic<bool> warned{false};
+    if( !warned.exchange( true ) )
+        TNode::node_logger->warn( "A particle left the domain through a boundary that is not a sink or source; "
+                                  "its amount is lost. Try: set the boundary nodes to sink or source type. "
+                                  "(Shown once per run.)" );
+}
 
 //---------------------------------------------------------//
 
@@ -572,7 +583,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
                 }
                 else
                     if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source) {
-                        TNode::node_logger->warn("W002MTRW Warning: Particle jumped outside the domain");
+                        warnParticleOutsideOnce();
                         // 	  			  Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
                     }
             }
@@ -617,7 +628,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
             }
             else
                 if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source) {
-                    TNode::node_logger->warn("W002MTRW Warning: Particle jumped outside the domain");
+                    warnParticleOutsideOnce();
                     //        	 Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
                 }
         } // loop ie

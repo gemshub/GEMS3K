@@ -2172,7 +2172,7 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
 
      if ( i==FIRSTSEED || i==0 )
      {
-         solmod_logger->error("CG fluid: Input pressure is too high!\n");
+         solmod_logger->error("CG fluid: no solution found - the pressure is too high for this model. Try: lower the pressure or use another fluid model.");
          // exit(1);
          return (-1.0);
      }

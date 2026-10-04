@@ -114,7 +114,7 @@ long int TNode::IC_name_to_xCH(const std::string& name) const
             return ii;
         }
     }
-    gems_logger->warn("Element {} not found in the DATACH IC name list", name);
+    gems_logger->warn("Element {} not found in the project's element list. Try: check the spelling (names are case-sensitive).", name);
     return -1;
 }
 
@@ -128,7 +128,7 @@ long int TNode::DC_name_to_xCH(const std::string& name) const
             return ii;
         }
     }
-    gems_logger->warn("Substance {} not found in the DATACH DC name list", name);
+    gems_logger->warn("Substance {} not found in the project's species list. Try: check the spelling (names are case-sensitive).", name);
     return -1;
 }
 
@@ -160,7 +160,7 @@ long int TNode::Ph_name_to_xCH(const std::string& name) const
             return ii;
         }
     }
-    gems_logger->warn("Phase {} not found in the DATACH Phase name list", name);
+    gems_logger->warn("Phase {} not found in the project's phase list. Try: check the spelling (names are case-sensitive).", name);
     return -1;
 }
 
@@ -184,7 +184,7 @@ long int TNode::IC_xCH_to_xDB( const long int xCH ) const
     for(long int ii = 0; ii<CSD->nICb; ii++ )
         if( CSD->xic[ii] == xCH )
             return ii;
-    gems_logger->warn("IC index {} is not used in the data bridge", xCH);
+    gems_logger->warn("Element index {} is not in this node's data bridge, so it cannot be read or set here.", xCH);
     return -1;
 }
 
@@ -195,7 +195,7 @@ long int TNode::DC_xCH_to_xDB( const long int xCH ) const
     for(long int ii = 0; ii<CSD->nDCb; ii++ )
         if( CSD->xdc[ii] == xCH )
             return ii;
-    gems_logger->warn("DC index {} is not used in the data bridge", xCH);
+    gems_logger->warn("Species index {} is not in this node's data bridge, so it cannot be read or set here.", xCH);
     return -1;
 }
 
@@ -206,14 +206,14 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     for(long int ii = 0; ii<CSD->nPHb; ii++ )
         if( CSD->xph[ii] == xCH )
             return ii;
-    gems_logger->warn("Phase index {} is not used in the data bridge", xCH);
+    gems_logger->warn("Phase index {} is not in this node's data bridge, so it cannot be read or set here.", xCH);
     return -1;
 }
 
 bool TNode::check_IC_xCH(const long xCH) const
 {
     if(xCH>=CSD->nIC || xCH<0) {
-        gems_logger->warn("IC index {}({}) is not a valid", xCH, CSD->nIC);
+        gems_logger->warn("Element index {} is out of range (the project has {} elements; indices start at 0).", xCH, CSD->nIC);
         return false;
     }
     return true;
@@ -222,7 +222,7 @@ bool TNode::check_IC_xCH(const long xCH) const
 bool TNode::check_DC_xCH(const long xCH) const
 {
     if(xCH>=CSD->nDC || xCH<0) {
-        gems_logger->warn("DC index {}({}) is not a valid", xCH, CSD->nDC);
+        gems_logger->warn("Species index {} is out of range (the project has {} species; indices start at 0).", xCH, CSD->nDC);
         return false;
     }
     return true;
@@ -231,7 +231,7 @@ bool TNode::check_DC_xCH(const long xCH) const
 bool TNode::check_Phase_xCH(const long xCH) const
 {
     if(xCH>=CSD->nPH || xCH<0) {
-        gems_logger->warn("Phase index {}({}) is not a valid", xCH, CSD->nPH);
+        gems_logger->warn("Phase index {} is out of range (the project has {} phases; indices start at 0).", xCH, CSD->nPH);
         return false;
     }
     return true;
@@ -332,7 +332,7 @@ double TNode::Set_DC_G0(const long int xCH, const double P, const double TK, con
         load_thermodynamic_data = false;
     }
     else {
-        node_logger->error("ERROR: given P={} and TK={} pair is not provided in DATACH", P, TK);
+        node_logger->error("G0 not set: P={} Pa and T={} K are not on the project's T,P grid. Try: use a T,P point listed in the project's grid.", P, TK);
     }
     return 0;
 }
@@ -1133,9 +1133,11 @@ void TNode::Set_aIPc ( const std::vector<double> aIPc, const long int &ipaIPc, c
     NPcoef =  pmm->LsMod[ index_phase * 3 + 2 ];
     if( aIPc.size() != (unsigned int)(NPar*NPcoef) )
     {
-        node_logger->critical(" TNode::Set_aIPc() error: vector aIPc does not match the dimensions specified in the GEMS3K IPM file (NPar*NPcoef) !!!! \n"
-                              " aIPc.size() = {}, NPar*NPcoef = {} bailing out now ... \n", aIPc.size(), NPar*NPcoef);
-        exit(1);
+        Error( "Set_aIPc",
+               fmt::format( "Phase {} expects {} interaction-parameter values (NPar*NPcoef) but got {}. "
+                            "Try: pass exactly {} values for this phase.",
+                            char_array_to_string( pmm->SF[index_phase], MAXPHNAME+MAXSYMB ),
+                            NPar*NPcoef, aIPc.size(), NPar*NPcoef ) );
     }
     for ( rc=0;rc<(NPar*NPcoef);rc++ )
     {
@@ -1192,9 +1194,11 @@ void TNode::Set_aDCc( const std::vector<double> aDCc, const long int &ipaDCc, co
     NP_DC = pmm->LsMdc[ index_phase ];
     if( aDCc.size() != (unsigned int)(NComp*NP_DC) )
     {
-        node_logger->critical("TNode::Set_aDCc() error: vector aDCc does not match the dimensions specified in the GEMS3K IPM file (NComp*NP_DC) !!!! "
-                              " aDCc.size() = {}, NComp*NP_DC = {} bailing out now ... \n", aDCc.size(), NComp*NP_DC);
-        exit(1);
+        Error( "Set_aDCc",
+               fmt::format( "Phase {} expects {} species-parameter values (NComp*NP_DC) but got {}. "
+                            "Try: pass exactly {} values for this phase.",
+                            char_array_to_string( pmm->SF[index_phase], MAXPHNAME+MAXSYMB ),
+                            NComp*NP_DC, aDCc.size(), NComp*NP_DC ) );
     }
     for ( rc=0;rc<(NComp*NP_DC);rc++ )
     {
@@ -1286,7 +1290,7 @@ double TNode::DC_c(const long int xCH)
     case DC_SUR_CARRIER: DCcon =  pmm->Wx[xCH];
         break;
     default:
-        node_logger->warn(" error in DC class code {}", pmm->DCC[xCH]);
+        node_logger->warn("Unknown class code '{}' for species {}.", pmm->DCC[xCH], char_array_to_string( pmm->SM[xCH], MAXDCNAME ));
         break; // error in DC class code
     }
     return DCcon;
