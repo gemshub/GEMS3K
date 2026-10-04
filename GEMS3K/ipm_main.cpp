@@ -3451,7 +3451,7 @@ STEP_POINT("FIA Iteration");
        iRet = 2;
        std::string buf = "(MBR("+std::to_string(WhereCalledFrom);
                    buf += ")) Maximum allowed number of MBR iterations (";
-                   buf += std::to_string(pa_p->DP) +") exceeded! Try: check the species stoichiometry and the system definition; with trace elements, set pa_DT (GEMS: Pa_DPV[2]) to -6 or lower; or raise pa_DP (GEMS: Pa_DPV[0], default 130, up to 200).";
+                   buf += std::to_string(pa_p->DP) +") exceeded. Try: pa_DT (GEMS: Pa_DPV[2]) = -6 or lower for trace elements, or check the species stoichiometry.";
        setErrorMessage( 4, "E04IPM: Mass Balance Refinement: ", buf.c_str());
        native_trace_mbr_exit( pm, pa_p, "budget_strict", WhereCalledFrom, IT1, iRet, trRestored );
        return iRet; // no MBR() solution
