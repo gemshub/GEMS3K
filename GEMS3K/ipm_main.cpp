@@ -1713,7 +1713,7 @@ void TMultiBase::SubFloorElementCheck( double dcFloor ) const
         "Optima: {0} element(s) have less material than the solver's floor amount allows. Their mass "
         "balance is then fixed afterwards, so their amounts and pH/Eh may be wrong (native modes are not "
         "affected). Try: raise the amount to about {1:.1g} mol or more, remove the element if it is a "
-        "placeholder, or set pa_OptimaDcFloor to {2:.1g} or lower. Elements: {3}",
+        "placeholder, or set pa_OptimaDcFloor to {2:.1g} or lower (in the project's -ipm file; not in GEMS). Elements: {3}",
         nWarn, bulkHint, floorHint, report );
 }
 
@@ -2465,7 +2465,7 @@ FORCED_AIA:
            gems_logger->warn(
                "Mass balance not met: element {} is {:.1e}x its tolerance (worst absolute {:.1e} mol, "
                "element {}). The answer is returned unchanged, but a warm (SIA) re-solve would reject it. "
-               "Try: pa_DT or a tighter pa_DHB for this project.",
+               "Try: set pa_DT (GEMS: Pa_DPV[2]) to -6 or lower so trace elements are judged by an absolute 10^DT mol, or reduce pa_DHB (GEMS: Pa_DHB).",
                char_array_to_string( pm.SB[iRel], MAXICNAME ), rel, absr,
                iAbs >= 0 ? char_array_to_string( pm.SB[iAbs], MAXICNAME ) : std::string( "-" ) );
    }
@@ -3323,7 +3323,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
       {  // Experimental
           iRet = 3;
           std::string buf = "(MBR("+std::to_string(WhereCalledFrom);
-                      buf += ")): Too small LM step size - cannot converge (check Pa_DG?)";
+                      buf += ")): Too small LM step size - cannot converge (check pa_DG, GEMS: Pa_DG)";
           setErrorMessage( 3, "E03IPM: Mass Balance Refinement", buf.c_str() );
           break;
        }
@@ -3451,7 +3451,7 @@ STEP_POINT("FIA Iteration");
        iRet = 2;
        std::string buf = "(MBR("+std::to_string(WhereCalledFrom);
                    buf += ")) Maximum allowed number of MBR iterations (";
-                   buf += std::to_string(pa_p->DP) +") exceeded! Try: a warm (SIA) restart, or raise pa_DP.";
+                   buf += std::to_string(pa_p->DP) +") exceeded! Try: check the species stoichiometry and the system definition; with trace elements, set pa_DT (GEMS: Pa_DPV[2]) to -6 or lower; or raise pa_DP (GEMS: Pa_DPV[0], default 130, up to 200).";
        setErrorMessage( 4, "E04IPM: Mass Balance Refinement: ", buf.c_str());
        native_trace_mbr_exit( pm, pa_p, "budget_strict", WhereCalledFrom, IT1, iRet, trRestored );
        return iRet; // no MBR() solution
@@ -3727,9 +3727,9 @@ STEP_POINT( "IPM Iteration" );
     } // end of the main IPM cycle
     // DXM was not reached in IPM iterations
     setErrorMessage( 6, "E06IPM: IPM Main Descent: " ,
-            "IPM convergence criterion tolerance (Pa_DK) could not be reached"
-    		" (more than Pa_IIM iterations done).\n"
-            " Try: raise pa_IIM, or loosen pa_DK a little.\n" );
+            "IPM convergence criterion tolerance (pa_DK, GEMS: Pa_DK) could not be reached"
+    		" (more than pa_IIM iterations done, GEMS: Pa_IIM).\n"
+            " Try: raise pa_IIM (default 7000), or increase pa_DK (default 1e-6) a little.\n" );
     return 2L;  // bad convergence - too many IPM iterations or deterioration of dual solution!
 //----------------------------------------------------------------------------
 CONVERGED:

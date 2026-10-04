@@ -3036,7 +3036,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         if( kFDDelay > 0 && kFDHessian && fdRequiredByModel )
             ipm_logger->warn( "pa_OptimaFDHessianDelay ignored: this system has a multisite or "
                               "fluid-EoS phase, which needs the full Hessian from the start. "
-                              "Set it to 0 to silence this." );
+                              "Set it to 0 to silence this (in the project's -ipm file; not in GEMS)." );
         if( kFDDelay > 0 && kFDHessian && !fdRequiredByModel )
         {
             Optima::Options cheapOpts = options;
@@ -3749,7 +3749,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         if( !skipFullBudgetResolves && !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
         {
             ipm_logger->warn( "Optima: all retries failed after a stall. Solving once more with the "
-                               "stall guard off (pa_OptimaStallWindow)." );
+                               "stall guard off (pa_OptimaStallWindow, in the project's -ipm file)." );
             const long int savedWindow = stallWatch->window;
             stallWatch->window = 0;      // the check lambda reads this on every call
             stallWatch->reset();
@@ -4493,7 +4493,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         if( !result.succeeded && pa_p->DW )
         {
             // pa_DW gates the same decision for native's "MBR iterations exceeded" case.
-            Error( "E90IPM: Optima solver: ", "Optima::Solver::solve() did not converge (pa_DW forces this to a hard error)" );
+            Error( "E90IPM: Optima solver: ", "Optima::Solver::solve() did not converge (pa_DW, GEMS: Pa_DPV[1], forces this to a hard error)" );
         }
         else if( !result.succeeded || !allTargetsMet || massBalanceBadIC >= 0 || !kktOk || !stabilityOk )
         {
@@ -4537,7 +4537,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         NumIterIPM = pm.ITG;
         pm.t_end = clock();
         pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
-        Error( xcpt.title, xcpt.mess );
+        throw;      // same error, already logged once
     }
     catch( std::exception& e )
     {

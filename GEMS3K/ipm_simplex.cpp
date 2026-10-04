@@ -143,7 +143,7 @@ void TMultiBase::AutoInitialApproximation( )
         if( B1) delete[]B1;
         if( STR) delete[]STR;
         if( NMB) delete[]NMB;
-        Error( xcpt.title, xcpt.mess );
+        throw;      // same error, already logged once
     }
 }
 
@@ -494,7 +494,7 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA1, A, Q, &ITER);
         if( A) delete[]A;
         if( Q) delete[]Q;
         if( BASE) delete[]BASE;
-        Error( xcpt.title, xcpt.mess);
+        throw;      // same error, already logged once
     }
 
     // Done
@@ -582,7 +582,7 @@ try{
       pm.t_end = clock();
       pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
 
-     Error( xcpt.title, xcpt.mess);
+     throw;      // same error, already logged once
   }
 
   if( base_param()->DG > 1e-5 )
