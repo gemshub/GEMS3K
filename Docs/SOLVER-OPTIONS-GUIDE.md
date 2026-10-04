@@ -277,7 +277,7 @@ but they no longer have any effect: `pa_LpDualFillout`, `pa_OptimaLSWindow`, `pa
 
 - **Optima is slower per calculation** than the GEMS3K IPM solver, often by one to two orders of magnitude on
   large systems. Use it where it improves the answer, not by default. This will be improved in future releases. 
-- **Some strongly non-ideal systems** still may still be difficult so solve, even with Optima.
+- **Some strongly non-ideal systems** may still be difficult to solve, even with Optima.
 - **SIA along a sequence** can keep phases that are no longer stable when a phase boundary is crossed.
 - **Systems with very little water:** close to the point where water runs out, AOP and SOP can fail and SHP
   can return a wrong result. Use AIA or HOP there. Slightly further from that point, AOP and SOP work if the
