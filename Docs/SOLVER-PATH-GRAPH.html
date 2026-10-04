@@ -228,7 +228,7 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
   <h2>What every call does first</h2>
   <ol class="steps">
     <li>Reads temperature, pressure and bulk composition from the node, and checks they lie inside the data tables.</li>
-    <li>Loads the previous result (SIA, SOP) or prepares a fresh start (all other modes).</li>
+    <li>Loads the previous result (SIA, SOP). SHP uses a usable previous result for its GEMS3K IPM leg; if none is available or the warm attempt fails, it starts from scratch. All other modes prepare a fresh start.</li>
     <li>If kinetics is on, runs one kinetics time step.</li>
     <li>Holds back species that are exact copies of other species, for this call only.</li>
     <li>If <code>pa_DG</code> is above 1e-5, scales all amounts to a fixed total, and scales them back at the end.</li>

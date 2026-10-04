@@ -31,19 +31,19 @@
 
 #include "nodearray.h"
 #include "v_service.h"
-#include <atomic>
-
-// Particles leaving the domain can repeat every step, so the warning is given once per run.
-static void warnParticleOutsideOnce()
-{
-    static std::atomic<bool> warned{false};
-    if( !warned.exchange( true ) )
-        TNode::node_logger->warn( "A particle left the domain through a boundary that is not a sink or source; "
-                                  "its amount is lost. Try: set the boundary nodes to sink or source type. "
-                                  "(Shown once per run.)" );
-}
 
 //---------------------------------------------------------//
+
+// Particles leaving the domain can repeat every step, so the warning is given once per run.
+void TNodeArray::warnParticleOutsideOnce()
+{
+    if( warnedOutside )
+        return;
+    warnedOutside = true;
+    TNode::node_logger->warn( "A particle left the domain through a boundary that is not a sink or source; "
+                              "its amount is lost. Try: set the boundary nodes to sink or source type. "
+                              "(Shown once per run.)" );
+}
 
 // Copying data for node ii from node array into work DATABR structure
 //

@@ -36,7 +36,7 @@ Whatever the mode, `GEM_run()`:
 
 1. Reads the temperature, pressure and bulk composition from the node, and checks that the temperature and
    pressure lie inside the data tables.
-2. Loads the previous result (warm modes SIA, SOP) or prepares a fresh start (all others).
+2. Loads the previous result (warm modes SIA, SOP). SHP uses a usable previous result for its GEMS3K IPM leg; if none is available or the warm attempt fails, it starts from scratch. All other modes prepare a fresh start.
 3. If kinetics is switched on, runs one kinetics time step.
 4. Holds back species that are exact copies of other species, for this call only.
 5. If `pa_DG` is above 1e-5, scales all amounts to a fixed total so the numbers stay well sized, and scales
