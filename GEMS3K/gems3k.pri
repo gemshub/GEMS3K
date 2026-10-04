@@ -37,8 +37,7 @@
                     $$GEMS3K_H/v_detail.h \
                     $$GEMS3K_H/v_service.h \
                     $$GEMS3K_H/jsonconfig.h \
-                    $$GEMS3K_H/datach_api.h \
-    $$PWD/gems3k_version.h
+                    $$GEMS3K_H/datach_api.h
 
 
         SOURCES	  +=  $$GEMS3K_CPP/gdatastream.cpp  \

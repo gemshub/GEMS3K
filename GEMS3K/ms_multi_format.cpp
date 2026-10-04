@@ -399,41 +399,77 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_LogBarrierTau, pa_p->LogBarrierTau, _comment, false  );
     if(!brief_mode || !essentiallyEqual(pa_p->OptimaMaxStepRatio, pa_p_.OptimaMaxStepRatio) )
         prar.writeField(f_pa_OptimaMaxStepRatio, pa_p->OptimaMaxStepRatio, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->PhaseHessianFloor, pa_p_.PhaseHessianFloor) )
         prar.writeField(f_pa_PhaseHessianFloor, pa_p->PhaseHessianFloor, _comment, false  );
+    if(!brief_mode || pa_p->OptimaStallWindow != pa_p_.OptimaStallWindow )
         prar.writeField(f_pa_OptimaStallWindow, pa_p->OptimaStallWindow, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaMaxSeconds, pa_p_.OptimaMaxSeconds) )
         prar.writeField(f_pa_OptimaMaxSeconds, pa_p->OptimaMaxSeconds, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFDHessian != pa_p_.OptimaFDHessian )
         prar.writeField(f_pa_OptimaFDHessian, pa_p->OptimaFDHessian, _comment, false  );
+    if(!brief_mode || pa_p->OptimaMoleFracHessian != pa_p_.OptimaMoleFracHessian )
         prar.writeField(f_pa_OptimaMoleFracHessian, pa_p->OptimaMoleFracHessian, _comment, false  );
+    if(!brief_mode || pa_p->OptimaPhaseCompaction != pa_p_.OptimaPhaseCompaction )
         prar.writeField(f_pa_OptimaPhaseCompaction, pa_p->OptimaPhaseCompaction, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFDHessianDelay != pa_p_.OptimaFDHessianDelay )
         prar.writeField(f_pa_OptimaFDHessianDelay, pa_p->OptimaFDHessianDelay, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaDcFloor, pa_p_.OptimaDcFloor) )
         prar.writeField(f_pa_OptimaDcFloor, pa_p->OptimaDcFloor, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->MbClassRule, pa_p_.MbClassRule) )
         prar.writeField(f_pa_MbClassRule, pa_p->MbClassRule, _comment, false  );
+    if(!brief_mode || pa_p->MbTrendPhaseDecay != pa_p_.MbTrendPhaseDecay )
         prar.writeField(f_pa_MbTrendPhaseDecay, pa_p->MbTrendPhaseDecay, _comment, false  );
+    if(!brief_mode || pa_p->OptimaEarlyStabilityAt != pa_p_.OptimaEarlyStabilityAt )
         prar.writeField(f_pa_OptimaEarlyStabilityAt, pa_p->OptimaEarlyStabilityAt, _comment, false  );
+    if(!brief_mode || pa_p->OptimaDimReduce != pa_p_.OptimaDimReduce )
         prar.writeField(f_pa_OptimaDimReduce, pa_p->OptimaDimReduce, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaDimReduceTol, pa_p_.OptimaDimReduceTol) )
         prar.writeField(f_pa_OptimaDimReduceTol, pa_p->OptimaDimReduceTol, _comment, false  );
+    if(!brief_mode || pa_p->MbPivotSplit != pa_p_.MbPivotSplit )
         prar.writeField(f_pa_MbPivotSplit, pa_p->MbPivotSplit, _comment, false  );
+    if(!brief_mode || pa_p->OptimaZeroAbsent != pa_p_.OptimaZeroAbsent )
         prar.writeField(f_pa_OptimaZeroAbsent, pa_p->OptimaZeroAbsent, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaReadmitSeed, pa_p_.OptimaReadmitSeed) )
         prar.writeField(f_pa_OptimaReadmitSeed, pa_p->OptimaReadmitSeed, _comment, false  );
+    if(!brief_mode || pa_p->IpmStallWindow != pa_p_.IpmStallWindow )
         prar.writeField(f_pa_IpmStallWindow, pa_p->IpmStallWindow, _comment, false  );
+    if(!brief_mode || pa_p->MbReproject != pa_p_.MbReproject )
         prar.writeField(f_pa_MbReproject, pa_p->MbReproject, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->DeterminacyWarn, pa_p_.DeterminacyWarn) )
         prar.writeField(f_pa_DeterminacyWarn, pa_p->DeterminacyWarn, _comment, false  );
+    if(!brief_mode || pa_p->ColdRetryNudges != pa_p_.ColdRetryNudges )
         prar.writeField(f_pa_ColdRetryNudges, pa_p->ColdRetryNudges, _comment, false  );
+    if(!brief_mode || pa_p->OptimaPreSolveFirstIters != pa_p_.OptimaPreSolveFirstIters )
         prar.writeField(f_pa_OptimaPreSolveFirstIters, pa_p->OptimaPreSolveFirstIters, _comment, false  );
+    if(!brief_mode || pa_p->LpDualFillout != pa_p_.LpDualFillout )
         prar.writeField(f_pa_LpDualFillout, pa_p->LpDualFillout, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->FilloutBudget, pa_p_.FilloutBudget) )
         prar.writeField(f_pa_FilloutBudget, pa_p->FilloutBudget, _comment, false  );
+    if(!brief_mode || pa_p->StabTPD != pa_p_.StabTPD )
         prar.writeField(f_pa_StabTPD, pa_p->StabTPD, _comment, false  );
+    if(!brief_mode || pa_p->IpmAugmentedKKT != pa_p_.IpmAugmentedKKT )
         prar.writeField(f_pa_IpmAugmentedKKT, pa_p->IpmAugmentedKKT, _comment, false  );
+    if(!brief_mode || pa_p->IpmLoopTweaks != pa_p_.IpmLoopTweaks )
         prar.writeField(f_pa_IpmLoopTweaks, pa_p->IpmLoopTweaks, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaLineSearch, pa_p_.OptimaLineSearch) )
         prar.writeField(f_pa_OptimaLineSearch, pa_p->OptimaLineSearch, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFDDiagFloor != pa_p_.OptimaFDDiagFloor )
         prar.writeField(f_pa_OptimaFDDiagFloor, pa_p->OptimaFDDiagFloor, _comment, false  );
+    if(!brief_mode || pa_p->OptimaLSStallEscape != pa_p_.OptimaLSStallEscape )
         prar.writeField(f_pa_OptimaLSStallEscape, pa_p->OptimaLSStallEscape, _comment, false  );
+    if(!brief_mode || pa_p->OptimaLSWindow != pa_p_.OptimaLSWindow )
         prar.writeField(f_pa_OptimaLSWindow, pa_p->OptimaLSWindow, _comment, false  );
+    if(!brief_mode || pa_p->OptimaLSRejectWorse != pa_p_.OptimaLSRejectWorse )
         prar.writeField(f_pa_OptimaLSRejectWorse, pa_p->OptimaLSRejectWorse, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaTpdAccept, pa_p_.OptimaTpdAccept) )
         prar.writeField(f_pa_OptimaTpdAccept, pa_p->OptimaTpdAccept, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaCgSeed, pa_p_.OptimaCgSeed) )
         prar.writeField(f_pa_OptimaCgSeed, pa_p->OptimaCgSeed, _comment, false  );
+    if(!brief_mode || pa_p->OptimaColdRetry != pa_p_.OptimaColdRetry )
         prar.writeField(f_pa_OptimaColdRetry, pa_p->OptimaColdRetry, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFinish != pa_p_.OptimaFinish )
         prar.writeField(f_pa_OptimaFinish, pa_p->OptimaFinish, _comment, false  );
+    if(!brief_mode || pa_p->OptimaAcceptRepair != pa_p_.OptimaAcceptRepair )
         prar.writeField(f_pa_OptimaAcceptRepair, pa_p->OptimaAcceptRepair, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );

@@ -109,6 +109,7 @@ int main(int argc, char* argv[])
         }
         std::cout << "PART2: " << nOk << "/" << targets.size()
                   << " converged (GEMS3K chemistry, generalized Optima control-condition solve)" << std::endl;
+        nFail += static_cast<int>(targets.size()) - nOk;
     }
 
     return nFail;
