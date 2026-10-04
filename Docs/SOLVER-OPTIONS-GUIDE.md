@@ -1,7 +1,9 @@
 # GEMS3K 5.0.0 — options guide
 
 What is new in this version, how to choose a solver, how to run it from code, how to change a setting in the
-project file, what every setting does, and the known limitations.
+project file, what every setting does, and the known limitations. What runs, in what order, in each mode, and
+what is tried when a calculation fails, is in [Solver paths](SOLVER-PATH-GRAPH.md)
+([drawn version](SOLVER-PATH-GRAPH.html)).
 
 ## The two solvers
 
@@ -67,6 +69,9 @@ give a worse answer than the GEMS3K IPM solver alone.
 | Sequences of small changes: sweeps in temperature or composition, titrations, transport steps | **SOP** after a first point in AOP (or **SIA** after AIA) | Starting from the previous result is many times cheaper than starting from scratch. |
 | Sequences that cross phase boundaries | **AOP** or **SOP**; avoid **SIA** | SIA can keep the phases of the previous point after they stop being stable. |
 | Systems with very little water (for example nearly dry cement) | **AIA** or **HOP** | Optima can fail when water is close to running out; the GEMS3K IPM solver handles these. |
+
+The steps each mode runs, and the retries it makes before reporting a failure, are shown in
+[Solver paths](SOLVER-PATH-GRAPH.md).
 
 ## Using it from code
 

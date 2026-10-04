@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="GEMS3K 5.0.0: what runs, in what order, in each calculation mode, and what is tried when a calculation fails.">
+<title>GEMS3K Solver Paths</title>
+<style>
+:root{
+  --ground:#f4f5f4; --surface:#ffffff; --surface-2:#eceeed;
+  --ink:#16201e; --ink-2:#3e4a47; --ink-3:#6b7774;
+  --rule:#d5dcda; --rule-2:#aeb9b6;
+  --native:#2f6b52; --optima:#a3601a; --alert:#9c3b2e; --hybrid:#3d6b8c;
+  --native-wash:rgba(47,107,82,.10); --optima-wash:rgba(163,96,26,.10);
+  --alert-wash:rgba(156,59,46,.09); --hybrid-wash:rgba(61,107,140,.10);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0f1514; --surface:#161e1c; --surface-2:#1e2826;
+    --ink:#e3e9e7; --ink-2:#abb7b3; --ink-3:#7e8b87;
+    --rule:#2b3633; --rule-2:#3e4a47;
+    --native:#72bd97; --optima:#dba35f; --alert:#de8775; --hybrid:#80b2d6;
+    --native-wash:rgba(114,189,151,.13); --optima-wash:rgba(219,163,95,.13);
+    --alert-wash:rgba(222,135,117,.12); --hybrid-wash:rgba(128,178,214,.13);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0f1514; --surface:#161e1c; --surface-2:#1e2826;
+  --ink:#e3e9e7; --ink-2:#abb7b3; --ink-3:#7e8b87;
+  --rule:#2b3633; --rule-2:#3e4a47;
+  --native:#72bd97; --optima:#dba35f; --alert:#de8775; --hybrid:#80b2d6;
+  --native-wash:rgba(114,189,151,.13); --optima-wash:rgba(219,163,95,.13);
+  --alert-wash:rgba(222,135,117,.12); --hybrid-wash:rgba(128,178,214,.13);
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark;-webkit-text-size-adjust:100%}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;margin:0}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 80px}
+header{padding:56px 0 24px;border-bottom:1px solid var(--rule);margin-bottom:8px}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 .8rem}
+h1{font-size:clamp(1.8rem,4.5vw,2.6rem);line-height:1.1;margin:0 0 .6rem;letter-spacing:-.02em}
+h2{font-size:1.3rem;margin:0 0 .6rem;letter-spacing:-.01em}
+h3{font-size:1rem;margin:1.6rem 0 .4rem}
+p{margin:0 0 1rem;max-width:70ch}
+.lede{font-size:1.1rem;color:var(--ink-2)}
+a{color:var(--hybrid)}
+section{padding:36px 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:0}
+ul,ol{max-width:70ch;padding-left:1.3rem}
+li{margin:.25rem 0}
+code{font-family:var(--mono);font-size:.86em;background:var(--surface-2);padding:.08em .35em;border-radius:3px}
+.scroll{overflow-x:auto;margin:1.2rem 0;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;font-size:.9rem;min-width:100%}
+th{text-align:left;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:0 14px 8px 0;border-bottom:1px solid var(--rule-2);white-space:nowrap}
+td{padding:9px 14px 9px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;font-family:var(--mono);font-size:.78rem;font-weight:600;padding:.1em .45em;border-radius:3px}
+.t-n{color:var(--native);background:var(--native-wash)}
+.t-o{color:var(--optima);background:var(--optima-wash)}
+.t-h{color:var(--hybrid);background:var(--hybrid-wash)}
+.t-a{color:var(--alert);background:var(--alert-wash)}
+figure{margin:1.6rem 0;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:16px}
+figure svg{display:block;width:100%;height:auto;color:var(--ink)}
+figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
+.box{fill:var(--surface);stroke:var(--rule-2);stroke-width:1}
+.bn{fill:var(--native-wash);stroke:var(--native);stroke-width:1.3}
+.bo{fill:var(--optima-wash);stroke:var(--optima);stroke-width:1.3}
+.bh{fill:var(--hybrid-wash);stroke:var(--hybrid);stroke-width:1.3}
+.ba{fill:var(--alert-wash);stroke:var(--alert);stroke-width:1.3}
+.bk{fill:var(--surface-2);stroke:var(--rule-2);stroke-width:1}
+.lbl{font-family:var(--sans);font-size:13px;font-weight:600;fill:currentColor}
+.sub{font-family:var(--sans);font-size:11px;fill:currentColor;opacity:.7}
+.mode{font-family:var(--mono);font-size:13px;font-weight:700}
+.ln{stroke:currentColor;stroke-width:1.3;fill:none;opacity:.55}
+.lf{stroke:var(--alert);stroke-width:1.3;fill:none;stroke-dasharray:4 3}
+.lk{font-family:var(--sans);font-size:10.5px;fill:currentColor;opacity:.75}
+.lkf{font-family:var(--sans);font-size:10.5px;fill:var(--alert)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:1.2rem 0}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;font-size:.92rem}
+.card b{display:block;margin-bottom:.3rem}
+.card p{margin:0}
+.steps{counter-reset:s;list-style:none;padding:0;max-width:74ch}
+.steps>li{counter-increment:s;position:relative;padding:0 0 12px 40px}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:1px;font-family:var(--mono);font-size:.78rem;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--rule-2);color:var(--ink-2)}
+.steps.n>li::before{border-color:var(--native);color:var(--native)}
+.steps.o>li::before{border-color:var(--optima);color:var(--optima)}
+.steps.h>li::before{border-color:var(--hybrid);color:var(--hybrid)}
+.note{background:var(--surface);border-left:3px solid var(--hybrid);padding:12px 16px;margin:1.2rem 0;font-size:.93rem;max-width:74ch}
+.note p:last-child{margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">GEMS3K 5.0.0 · solver paths</p>
+  <h1>What runs, and in what order</h1>
+  <p class="lede">For each calculation mode: which solver runs first, what it tries when something goes
+  wrong, and when it gives up. The same content as plain text is in
+  <a href="SOLVER-PATH-GRAPH.md">SOLVER-PATH-GRAPH.md</a>; how to choose a mode and what each setting does is in
+  the <a href="SOLVER-OPTIONS-GUIDE.md">options guide</a>.</p>
+</header>
+
+<section>
+  <h2>The short version</h2>
+  <div class="cards">
+    <div class="card"><b>You choose the mode</b><p>Put a value in <code>NodeStatusCH</code> before each call.
+      GEMS3K never changes your choice, except in a build without Optima.</p></div>
+    <div class="card"><b>A failed try never makes it worse</b><p>Every extra try starts from the same inputs.
+      If it does not succeed, you get the first result back unchanged.</p></div>
+    <div class="card"><b>Every try is counted</b><p>The iteration count after the call includes all tries.</p></div>
+    <div class="card"><b>Kinetics skips the outer retries</b><p>With a time step above zero, the retries after a
+      failed call are skipped. The tries inside a solver still run.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>The six modes</h2>
+  <figure>
+    <svg viewBox="0 0 900 420" role="img" aria-label="Flow of each calculation mode">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor" opacity=".6"/></marker>
+        <marker id="arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" style="fill:var(--alert)"/></marker>
+      </defs>
+
+      <!-- column heads -->
+      <text x="110" y="22" class="sub" text-anchor="middle">MODE</text>
+      <text x="330" y="22" class="sub" text-anchor="middle">FIRST</text>
+      <text x="580" y="22" class="sub" text-anchor="middle">THEN</text>
+      <text x="800" y="22" class="sub" text-anchor="middle">IF IT FAILS</text>
+
+      <!-- AIA -->
+      <rect x="40" y="40" width="140" height="44" rx="5" class="bk"/>
+      <text x="110" y="60" class="mode" text-anchor="middle" style="fill:var(--native)">AIA · 1</text>
+      <text x="110" y="76" class="sub" text-anchor="middle">from scratch</text>
+      <rect x="230" y="40" width="200" height="44" rx="5" class="bn"/>
+      <text x="330" y="60" class="lbl" text-anchor="middle">GEMS3K IPM</text>
+      <text x="330" y="76" class="sub" text-anchor="middle">from scratch</text>
+      <line x1="180" y1="62" x2="228" y2="62" class="ln" marker-end="url(#ar)"/>
+      <rect x="710" y="40" width="180" height="44" rx="5" class="ba"/>
+      <text x="800" y="58" class="lbl" text-anchor="middle">Nudge and retry</text>
+      <text x="800" y="74" class="sub" text-anchor="middle">up to 4 tiny changes</text>
+      <path d="M430,62 L708,62" class="lf" marker-end="url(#arf)"/>
+
+      <!-- SIA -->
+      <rect x="40" y="104" width="140" height="44" rx="5" class="bk"/>
+      <text x="110" y="124" class="mode" text-anchor="middle" style="fill:var(--native)">SIA · 5</text>
+      <text x="110" y="140" class="sub" text-anchor="middle">previous result</text>
+      <rect x="230" y="104" width="200" height="44" rx="5" class="bn"/>
+      <text x="330" y="124" class="lbl" text-anchor="middle">GEMS3K IPM</text>
+      <text x="330" y="140" class="sub" text-anchor="middle">from previous result</text>
+      <line x1="180" y1="126" x2="228" y2="126" class="ln" marker-end="url(#ar)"/>
+      <rect x="710" y="104" width="180" height="44" rx="5" class="ba"/>
+      <text x="800" y="122" class="lbl" text-anchor="middle">Restart from scratch</text>
+      <text x="800" y="138" class="sub" text-anchor="middle">same call, status AIA</text>
+      <path d="M430,126 L708,126" class="lf" marker-end="url(#arf)"/>
+
+      <!-- AOP -->
+      <rect x="40" y="168" width="140" height="44" rx="5" class="bk"/>
+      <text x="110" y="188" class="mode" text-anchor="middle" style="fill:var(--optima)">AOP · 10</text>
+      <text x="110" y="204" class="sub" text-anchor="middle">from scratch</text>
+      <rect x="230" y="168" width="200" height="44" rx="5" class="bo"/>
+      <text x="330" y="188" class="lbl" text-anchor="middle">Optima</text>
+      <text x="330" y="204" class="sub" text-anchor="middle">from scratch</text>
+      <line x1="180" y1="190" x2="228" y2="190" class="ln" marker-end="url(#ar)"/>
+      <rect x="710" y="168" width="180" height="44" rx="5" class="ba"/>
+      <text x="800" y="186" class="lbl" text-anchor="middle">Retry, better guess</text>
+      <text x="800" y="202" class="sub" text-anchor="middle">steps 1 and 4 below</text>
+      <path d="M430,190 L708,190" class="lf" marker-end="url(#arf)"/>
+
+      <!-- SOP -->
+      <rect x="40" y="232" width="140" height="44" rx="5" class="bk"/>
+      <text x="110" y="252" class="mode" text-anchor="middle" style="fill:var(--optima)">SOP · 14</text>
+      <text x="110" y="268" class="sub" text-anchor="middle">previous result</text>
+      <rect x="230" y="232" width="200" height="44" rx="5" class="bo"/>
+      <text x="330" y="252" class="lbl" text-anchor="middle">Optima</text>
+      <text x="330" y="268" class="sub" text-anchor="middle">from previous result</text>
+      <line x1="180" y1="254" x2="228" y2="254" class="ln" marker-end="url(#ar)"/>
+      <rect x="710" y="232" width="180" height="44" rx="5" class="ba"/>
+      <text x="800" y="250" class="lbl" text-anchor="middle">Full AOP</text>
+      <text x="800" y="266" class="sub" text-anchor="middle">status AOP if it works</text>
+      <path d="M430,254 L708,254" class="lf" marker-end="url(#arf)"/>
+
+      <!-- HOP -->
+      <rect x="40" y="296" width="140" height="44" rx="5" class="bk"/>
+      <text x="110" y="316" class="mode" text-anchor="middle" style="fill:var(--hybrid)">HOP · 22</text>
+      <text x="110" y="332" class="sub" text-anchor="middle">hybrid</text>
+      <rect x="230" y="296" width="200" height="44" rx="5" class="bn"/>
+      <text x="330" y="316" class="lbl" text-anchor="middle">GEMS3K IPM</text>
+      <text x="330" y="332" class="sub" text-anchor="middle">from scratch</text>
+      <line x1="180" y1="318" x2="228" y2="318" class="ln" marker-end="url(#ar)"/>
+      <rect x="480" y="296" width="200" height="44" rx="5" class="bo"/>
+      <text x="580" y="316" class="lbl" text-anchor="middle">Optima</text>
+      <text x="580" y="332" class="sub" text-anchor="middle">starts from that answer</text>
+      <line x1="430" y1="318" x2="478" y2="318" class="ln" marker-end="url(#ar)"/>
+      <rect x="710" y="296" width="180" height="44" rx="5" class="ba"/>
+      <text x="800" y="314" class="lbl" text-anchor="middle">Keep IPM answer</text>
+      <text x="800" y="330" class="sub" text-anchor="middle">flagged BAD_GEM_HOP</text>
+      <path d="M680,318 L708,318" class="lf" marker-end="url(#arf)"/>
+
+      <!-- SHP -->
+      <rect x="40" y="360" width="140" height="44" rx="5" class="bk"/>
+      <text x="110" y="380" class="mode" text-anchor="middle" style="fill:var(--hybrid)">SHP · 26</text>
+      <text x="110" y="396" class="sub" text-anchor="middle">hybrid, previous result</text>
+      <rect x="230" y="360" width="200" height="44" rx="5" class="bn"/>
+      <text x="330" y="380" class="lbl" text-anchor="middle">GEMS3K IPM</text>
+      <text x="330" y="396" class="sub" text-anchor="middle">from previous result</text>
+      <line x1="180" y1="382" x2="228" y2="382" class="ln" marker-end="url(#ar)"/>
+      <rect x="480" y="360" width="200" height="44" rx="5" class="bo"/>
+      <text x="580" y="380" class="lbl" text-anchor="middle">Optima</text>
+      <text x="580" y="396" class="sub" text-anchor="middle">starts from that answer</text>
+      <line x1="430" y1="382" x2="478" y2="382" class="ln" marker-end="url(#ar)"/>
+      <rect x="710" y="360" width="180" height="44" rx="5" class="ba"/>
+      <text x="800" y="378" class="lbl" text-anchor="middle">Keep IPM answer</text>
+      <text x="800" y="394" class="sub" text-anchor="middle">then full AOP retry</text>
+      <path d="M680,382 L708,382" class="lf" marker-end="url(#arf)"/>
+    </svg>
+    <figcaption>Green: the GEMS3K IPM solver. Orange: Optima. Red dashed: what happens if the call fails.
+    ROP (18) uses the Optima library's own default choices and is kept only for development comparisons.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>What every call does first</h2>
+  <ol class="steps">
+    <li>Reads temperature, pressure and bulk composition from the node, and checks they lie inside the data tables.</li>
+    <li>Loads the previous result (SIA, SOP) or prepares a fresh start (all other modes).</li>
+    <li>If kinetics is on, runs one kinetics time step.</li>
+    <li>Holds back species that are exact copies of other species, for this call only.</li>
+    <li>If <code>pa_DG</code> is above 1e-5, scales all amounts to a fixed total, and scales them back at the end.</li>
+  </ol>
+</section>
+
+<section>
+  <h2><span class="tag t-n">GEMS3K IPM</span> Inside the GEMS3K IPM solver</h2>
+  <p>Used by AIA and SIA, and as the first part of HOP and SHP.</p>
+  <figure>
+    <svg viewBox="0 0 900 190" role="img" aria-label="Steps of the GEMS3K IPM solver">
+      <defs>
+        <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor" opacity=".6"/></marker>
+      </defs>
+      <rect x="10" y="40" width="140" height="56" rx="5" class="bn"/>
+      <text x="80" y="64" class="lbl" text-anchor="middle">First guess</text>
+      <text x="80" y="82" class="sub" text-anchor="middle">simple or previous</text>
+      <rect x="185" y="40" width="140" height="56" rx="5" class="bn"/>
+      <text x="255" y="64" class="lbl" text-anchor="middle">Mass balance fix</text>
+      <text x="255" y="82" class="sub" text-anchor="middle">elements add up</text>
+      <rect x="360" y="40" width="140" height="56" rx="5" class="bn"/>
+      <text x="430" y="64" class="lbl" text-anchor="middle">Main descent</text>
+      <text x="430" y="82" class="sub" text-anchor="middle">lower the energy</text>
+      <rect x="535" y="40" width="140" height="56" rx="5" class="bn"/>
+      <text x="605" y="64" class="lbl" text-anchor="middle">Phase check</text>
+      <text x="605" y="82" class="sub" text-anchor="middle">add / remove phases</text>
+      <rect x="710" y="40" width="180" height="56" rx="5" class="bn"/>
+      <text x="800" y="64" class="lbl" text-anchor="middle">Final fix and checks</text>
+      <text x="800" y="82" class="sub" text-anchor="middle">warn if not balanced</text>
+      <line x1="150" y1="68" x2="183" y2="68" class="ln" marker-end="url(#ar2)"/>
+      <line x1="325" y1="68" x2="358" y2="68" class="ln" marker-end="url(#ar2)"/>
+      <line x1="500" y1="68" x2="533" y2="68" class="ln" marker-end="url(#ar2)"/>
+      <line x1="675" y1="68" x2="708" y2="68" class="ln" marker-end="url(#ar2)"/>
+      <path d="M605,40 C605,8 255,8 255,38" class="ln" marker-end="url(#ar2)"/>
+      <text x="430" y="18" class="lk" text-anchor="middle">phases changed: run again (limited passes)</text>
+      <path d="M430,96 C430,160 80,160 80,98" class="lf" marker-end="url(#arf)"/>
+      <text x="255" y="170" class="lkf" text-anchor="middle">warm start fails: start again from scratch (status AIA)</text>
+    </svg>
+  </figure>
+  <ol class="steps n">
+    <li><b>First guess.</b> From scratch, a simple linear calculation gives starting amounts. From the previous
+      result, it reuses that. With only pure phases, this already gives the answer.</li>
+    <li><b>Mass balance fix.</b> Adjusts amounts so every element adds up to the bulk composition.</li>
+    <li><b>Main descent.</b> Lowers the Gibbs energy step by step until the steps become small enough.</li>
+    <li><b>Phase check</b> (<code>pa_PC</code> = 2, the default). Removes phases that should not be there, adds
+      back phases that should, and cleans up tiny amounts. It never adds a phase in a larger amount than the bulk
+      composition can supply. If phases changed, steps 2–4 run again.</li>
+    <li><b>Second mass balance fix</b>, on the final set of phases.</li>
+    <li><b>Final checks.</b> If an element still does not add up, one repair is tried (<code>pa_MbReproject</code>,
+      on). If that does not help, the answer is returned with a warning in the log.</li>
+  </ol>
+  <p>If a start from scratch fails because the numbers start to run away, it restarts once more with a simpler
+  phase check before giving up.</p>
+</section>
+
+<section>
+  <h2><span class="tag t-o">Optima</span> Inside the Optima solver</h2>
+  <p>Used by AOP and SOP, and as the second part of HOP and SHP.</p>
+  <figure>
+    <svg viewBox="0 0 900 330" role="img" aria-label="Steps of the Optima solver">
+      <defs>
+        <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor" opacity=".6"/></marker>
+      </defs>
+      <!-- row 1 -->
+      <rect x="10" y="20" width="200" height="60" rx="5" class="bo"/>
+      <text x="110" y="44" class="lbl" text-anchor="middle">1 · First guess</text>
+      <text x="110" y="62" class="sub" text-anchor="middle">scratch · previous · IPM answer</text>
+      <rect x="250" y="20" width="200" height="60" rx="5" class="bo"/>
+      <text x="350" y="44" class="lbl" text-anchor="middle">2 · Smaller problem first</text>
+      <text x="350" y="62" class="sub" text-anchor="middle">200 species or more</text>
+      <rect x="490" y="20" width="200" height="60" rx="5" class="bo"/>
+      <text x="590" y="44" class="lbl" text-anchor="middle">3 · Main solve</text>
+      <text x="590" y="62" class="sub" text-anchor="middle">stops if stuck 500 steps</text>
+      <line x1="210" y1="50" x2="248" y2="50" class="ln" marker-end="url(#ar3)"/>
+      <line x1="450" y1="50" x2="488" y2="50" class="ln" marker-end="url(#ar3)"/>
+      <!-- tries -->
+      <rect x="720" y="20" width="170" height="210" rx="5" class="ba"/>
+      <text x="805" y="44" class="lbl" text-anchor="middle">4 · Tries in the call</text>
+      <text x="732" y="72" class="sub">a. put water back</text>
+      <text x="732" y="96" class="sub">b. refill a collapsed phase</text>
+      <text x="732" y="120" class="sub">c. drop a vanishing twin</text>
+      <text x="732" y="144" class="sub">d. check every phase,</text>
+      <text x="744" y="160" class="sub">add or remove, repeat</text>
+      <text x="732" y="184" class="sub">e. last resorts: solve</text>
+      <text x="744" y="200" class="sub">without early stops</text>
+      <path d="M690,50 L718,50" class="lf" marker-end="url(#arf)"/>
+      <text x="704" y="40" class="lkf" text-anchor="middle">not good</text>
+      <!-- row 2 -->
+      <rect x="490" y="150" width="200" height="60" rx="5" class="bo"/>
+      <text x="590" y="174" class="lbl" text-anchor="middle">5 · Finish</text>
+      <text x="590" y="192" class="sub" text-anchor="middle">if it stopped just short</text>
+      <line x1="590" y1="80" x2="590" y2="148" class="ln" marker-end="url(#ar3)"/>
+      <path d="M720,180 L692,180" class="ln" marker-end="url(#ar3)"/>
+      <rect x="250" y="150" width="200" height="60" rx="5" class="bo"/>
+      <text x="350" y="174" class="lbl" text-anchor="middle">6 · Final checks</text>
+      <text x="350" y="192" class="sub" text-anchor="middle">balance · phases · pH/Eh</text>
+      <line x1="490" y1="180" x2="452" y2="180" class="ln" marker-end="url(#ar3)"/>
+      <rect x="10" y="150" width="200" height="60" rx="5" class="bo"/>
+      <text x="110" y="174" class="lbl" text-anchor="middle">7 · Accept by direct check</text>
+      <text x="110" y="192" class="sub" text-anchor="middle">no missing phase should form</text>
+      <line x1="250" y1="180" x2="212" y2="180" class="ln" marker-end="url(#ar3)"/>
+      <rect x="10" y="250" width="200" height="56" rx="5" class="bo"/>
+      <text x="110" y="274" class="lbl" text-anchor="middle">8 · Touch-up</text>
+      <text x="110" y="292" class="sub" text-anchor="middle">small balance repair</text>
+      <line x1="110" y1="210" x2="110" y2="248" class="ln" marker-end="url(#ar3)"/>
+      <rect x="250" y="250" width="200" height="56" rx="5" class="bk"/>
+      <text x="350" y="274" class="lbl" text-anchor="middle">Result</text>
+      <text x="350" y="292" class="sub" text-anchor="middle">OK · BAD · ERR</text>
+      <line x1="210" y1="278" x2="248" y2="278" class="ln" marker-end="url(#ar3)"/>
+    </svg>
+  </figure>
+  <ol class="steps o">
+    <li><b>First guess.</b> From scratch: a linear calculation that puts the mass in as few species as possible,
+      corrected first if it leaves almost no water or empties a mixed phase. From the previous result: reused; if
+      the node was never solved, a warning is written and it starts from scratch. In HOP and SHP: the GEMS3K IPM
+      answer.</li>
+    <li><b>Smaller problem first</b> (200 species or more, AOP and SOP). Solves with only the species likely to
+      matter, then adds back any that turn out to be needed. If this does not settle, it is dropped.</li>
+    <li><b>Main solve.</b> Stops early after 500 steps without progress (<code>pa_OptimaStallWindow</code>), so a
+      retry can start sooner. With a multisite solid solution it first takes a short look (200 steps from scratch,
+      25 from a previous result) to spot a phase that should disappear.</li>
+    <li><b>Tries inside the call</b>, in order, only while the answer is not good: put the water back; refill a
+      collapsed mixed phase; drop the vanishing one of two identical mixed phases; check every phase and add or
+      remove, repeating until nothing changes; and as a last resort, solve again without the early stops.</li>
+    <li><b>Finish.</b> If Optima stopped just short, a final step finishes on the phases it found
+      (<code>pa_OptimaFinish</code>, on).</li>
+    <li><b>Final checks.</b> Do the elements add up? Should a missing phase form? Were the pH and Eh targets met?</li>
+    <li><b>Accept by direct check.</b> If Optima's own stopping test was not met but the balance holds and a direct
+      test shows no missing phase should form, the answer is accepted (<code>pa_OptimaTpdAccept</code>, on).</li>
+    <li><b>Touch-up.</b> If an element does not quite add up, a small repair is kept only if it helps
+      (<code>pa_OptimaZeroAbsent</code> = 2). With 1, species of absent phases are set to exactly zero.</li>
+  </ol>
+  <p>Only the Optima modes can fix the pH or Eh.</p>
+</section>
+
+<section>
+  <h2><span class="tag t-h">Hybrid</span> HOP and SHP</h2>
+  <ol class="steps h">
+    <li>The GEMS3K IPM solver runs: from scratch in HOP, from the previous result in SHP (from scratch, with a
+      warning, if the node was never solved).</li>
+    <li>Its answer is saved.</li>
+    <li>Optima runs, starting from that answer.</li>
+    <li>Optima succeeds: you get its answer. Optima fails: the saved answer is put back and the status is BAD.
+      So HOP is never worse than the GEMS3K IPM solver alone.</li>
+  </ol>
+  <div class="note"><p>If the GEMS3K IPM part fails, SHP first reruns it from scratch. If there is still no answer,
+  Optima runs alone from scratch, as in AOP. The iteration count is the sum of both parts;
+  <code>GEM_IterationsHOP()</code> gives them apart.</p></div>
+</section>
+
+<section>
+  <h2>After a failed call: the retry ladder</h2>
+  <p>When the solver returns a failure, <code>GEM_run()</code> tries again from the same inputs. The steps run in
+  this order and stop at the first success. A step that does not succeed hands back the result as it was.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Step</th><th>Applies to</th><th>What it does</th><th>Setting (default)</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><span class="tag t-o">AOP</span> <span class="tag t-o">SOP</span> <span class="tag t-h">HOP</span> <span class="tag t-h">SHP</span></td>
+        <td>Solve once more with the line search's anti-stall step switched off</td>
+        <td><code>pa_OptimaLineSearch</code> (1.5), <code>pa_OptimaLSStallEscape</code> (10)</td></tr>
+      <tr><td>2</td><td><span class="tag t-n">AIA</span></td>
+        <td>After a failure with no result: solve from up to 4 microscopically changed compositions; the first that
+        works is the warm start for the exact one</td>
+        <td><code>pa_ColdRetryNudges</code> (4)</td></tr>
+      <tr><td>3</td><td><span class="tag t-o">SOP</span> <span class="tag t-h">SHP</span></td>
+        <td>Solve again from scratch as AOP; reported as AOP if it works</td>
+        <td><code>pa_OptimaColdRetry</code> (2)</td></tr>
+      <tr><td>4</td><td><span class="tag t-o">AOP</span>, and inside step 3</td>
+        <td>Solve from scratch once more, from a better first guess that also looks at mixed phases</td>
+        <td><code>pa_OptimaCgSeed</code> (1e-6)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>With <code>pa_OptimaColdRetry</code> = 2, a warm Optima call that is going badly gives up early and goes
+  straight to step 3, which is usually cheaper than finishing the warm try.</p>
+</section>
+
+<section>
+  <h2>Reading the result</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>OK_GEM_…</code></td><td>The answer passed all checks.</td></tr>
+      <tr><td><code>BAD_GEM_…</code></td><td>There is an answer, but not every check passed. In HOP and SHP this usually
+        means Optima failed and you have the GEMS3K IPM answer.</td></tr>
+      <tr><td><code>ERR_GEM_…</code></td><td>No answer. Values read from the node are left over from before the call.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>The status can name another mode than the one asked for: SIA becomes AIA after a restart from scratch, and SOP
+  or SHP become AOP after step 3 of the ladder.</p>
+</section>
+
+<section>
+  <h2>Which mode to choose</h2>
+  <p>The full table is in the <a href="SOLVER-OPTIONS-GUIDE.md#which-mode-to-use">options guide</a>. In short:</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Situation</th><th>Mode</th></tr></thead>
+    <tbody>
+      <tr><td>One calculation</td><td><span class="tag t-n">AIA</span> — the fastest by far on almost every system</td></tr>
+      <tr><td>A checked answer</td><td><span class="tag t-h">HOP</span> — little more than AIA, never worse</td></tr>
+      <tr><td>Solid solutions, melts, phase diagrams</td><td><span class="tag t-o">AOP</span> or <span class="tag t-h">HOP</span></td></tr>
+      <tr><td>A series of small steps</td><td>First point AIA or AOP, then <span class="tag t-n">SIA</span>, <span class="tag t-o">SOP</span> or <span class="tag t-h">SHP</span></td></tr>
+      <tr><td>A series crossing phase boundaries</td><td><span class="tag t-o">SOP</span> or <span class="tag t-h">SHP</span> rather than SIA</td></tr>
+      <tr><td>Very little water</td><td><span class="tag t-n">AIA</span> or <span class="tag t-h">HOP</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Without Optima</h2>
+  <p>In a build without Optima, AOP and ROP run as AIA, SOP as SIA, HOP as AIA and SHP as SIA, with a warning in the
+  log. The status then names the GEMS3K IPM mode.</p>
+</section>
+
+</div>
+</body>
+</html>
