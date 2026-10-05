@@ -1290,7 +1290,7 @@ double TNode::DC_c(const long int xCH)
     case DC_SUR_CARRIER: DCcon =  pmm->Wx[xCH];
         break;
     default:
-        node_logger->warn("Unknown class code '{}' for species {}.", pmm->DCC[xCH], char_array_to_string( pmm->SM[xCH], MAXDCNAME ));
+        node_logger->warn("Unknown class code '{}' for species {}.", pmm->DCC[xCH], name_for_message( pmm->SM[xCH], MAXDCNAME ));
         break; // error in DC class code
     }
     return DCcon;

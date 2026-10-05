@@ -2687,10 +2687,10 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
              {
                  std::string pmbuf = std::to_string(k_miss)+ ": ";
                  if(k_miss >=0 )
-                     pmbuf += char_array_to_string(pm.SF[k_miss],20);
+                     pmbuf += name_for_message(pm.SF[k_miss],20);
                  std::string pubuf = std::to_string(k_unst)+ ": ";
                  if(k_unst >=0 )
-                    pubuf += char_array_to_string(pm.SF[k_unst],20);
+                    pubuf += name_for_message(pm.SF[k_unst],20);
 
                  std::string buf = " Computed phase assemblage remains inconsistent after 5 phase selection loops.\n"
                                     " Problematic phase(s): ";
@@ -2770,10 +2770,10 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
               {
                   std::string pmbuf = std::to_string(k_miss)+ ": ";
                   if(k_miss >=0 )
-                       pmbuf += char_array_to_string(pm.SF[k_miss],20);
+                       pmbuf += name_for_message(pm.SF[k_miss],20);
                   std::string pubuf = std::to_string(k_unst)+ ": ";
                   if(k_unst >=0 )
-                      pubuf += char_array_to_string(pm.SF[k_unst],20);
+                      pubuf += name_for_message(pm.SF[k_unst],20);
 
                   std::string buf = " Computed phase assemblage remains inconsistent after 3 phase selection loops.\n"
                                     " Problematic phase(s): ";
@@ -2937,13 +2937,13 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
               eCode = i;  // Error state is activated
               pm.PZ = 3;
               std::string buf = "Too small input amount of independent component ";
-                          buf += char_array_to_string(pm.SB[i],3)+" = "+std::to_string(pm.B[i])
+                          buf += name_for_message(pm.SB[i],3)+" = "+std::to_string(pm.B[i])
                           +" mol. Try: raise its bulk amount, or remove it from the system.";
               setErrorMessage( 20, "W20IPM: IPM Main Descent:", buf.c_str());
     	   }
            else
            {
-              addErrorMessage((std::string(", ")+char_array_to_string(pm.SB[i],3)+" = "+std::to_string(pm.B[i])).c_str());
+              addErrorMessage((std::string(", ")+name_for_message(pm.SB[i],3)+" = "+std::to_string(pm.B[i])).c_str());
            }
            pm.B[i] = pa_p->DB;
         }
@@ -3155,7 +3155,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     {  // Experimental
         std::string buf = "(EFD("+std::to_string(WhereCalledFrom);
                     buf += ")) Invalid initial Lagrange multiplier for metastability-constrained DC ";
-                    buf += char_array_to_string( pm.SM[jK], MAXDCNAME);
+                    buf += name_for_message( pm.SM[jK], MAXDCNAME);
         setErrorMessage( 17, "E17IPM: Mass Balance Refinement: ", buf.c_str());
         native_trace_mbr_exit( pm, pa_p, "metastability", WhereCalledFrom, -1, 5, false );
         return 5;
@@ -3582,7 +3582,7 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
              "for %ld ICs:   %-6.5s", pm.ITG, DivTol, nDivIC, pm.SB[ICNud[0]] );
         setErrorMessage( 14, "W14IPM: IPM Main Descent:", buf);
         for( Z =1; Z<nCNud; Z++ ) {
-            addErrorMessage((std::string(" ")+char_array_to_string(pm.SB[ICNud[Z]],6)).c_str());
+            addErrorMessage((std::string(" ")+name_for_message(pm.SB[ICNud[Z]],6)).c_str());
         }
       }
    }
@@ -3789,12 +3789,12 @@ TMultiBase::CheckMassBalanceResiduals(double *Y )
             iRet = i;  // Error state is activated
             buf = "Mass balance is broken on iteration %ld  for ICs %-3.3s";
             buf +=  std::to_string(pm.ITG)+"  for ICs ";
-            buf +=  char_array_to_string(pm.SB[i],3);
+            buf +=  name_for_message(pm.SB[i],3);
             setErrorMessage( 2, "E02IPM: PSSC(): ", buf.c_str());
         }
         else
         {
-            addErrorMessage((std::string(", ")+char_array_to_string(pm.SB[i],3)).c_str());
+            addErrorMessage((std::string(", ")+name_for_message(pm.SB[i],3)).c_str());
         }
     } // i
     return iRet;

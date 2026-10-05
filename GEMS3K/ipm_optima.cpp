@@ -4505,7 +4505,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             if( !allTargetsMet )
                 buf += std::string("; control condition(s) not met: ") + targetMissBuf;
             if( massBalanceBadIC >= 0 )
-                buf += "; mass balance residual exceeds tolerance for IC " + char_array_to_string(pm.SB[massBalanceBadIC],3);
+                buf += "; mass balance residual exceeds tolerance for IC " + name_for_message(pm.SB[massBalanceBadIC],3);
             if( !kktOk )
                 buf += "; KKT stationarity residual " + std::to_string(maxKKTResidual)
                      + " exceeds tolerance " + std::to_string(kktTol) + " at species "

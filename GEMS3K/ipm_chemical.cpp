@@ -658,7 +658,7 @@ TMultiBase::PrimalChemicalPotentials( double F[], double Y[], double YF[], doubl
         {                 // error - will result in zerodivide!
            Error( "E13IPM: PrimalChemicalPotentials():",
                   std::string("Broken phase amount from primal approximation: Phase "+
-                  char_array_to_string(pm.SF[k],20)+"  Yf= "+std::to_string(Yf)));
+                  name_for_message(pm.SF[k],20)+" Yf= "+std::to_string(Yf)));
 //           Yf = pm.YFk;
         }
 //        if( pm.YFk > pm.lowPosNum*10. )

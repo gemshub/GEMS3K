@@ -148,6 +148,19 @@ inline void trim(std::string &s )
     rtrim(s);
 }
 
+/// Fixed-width record name (space padded, e.g. "a   aq") as readable text for messages:
+/// trailing padding removed and runs of spaces collapsed to one.
+inline std::string name_for_message(const char* data_ptr, size_t max_size)
+{
+    std::string in = char_array_to_string(data_ptr, max_size), out;
+    for( char c: in )
+        if( c != ' ' || (!out.empty() && out.back() != ' ') )
+            out += c;
+    while( !out.empty() && out.back() == ' ' )
+        out.pop_back();
+    return out;
+}
+
 /// Trim characters from start (in place).
 inline void ltrim(std::string &s, const std::string &characters )
 {
