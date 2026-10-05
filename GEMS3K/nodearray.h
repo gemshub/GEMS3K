@@ -522,6 +522,10 @@ public:
     /// Warn once per run that a particle left the domain
     void warnParticleOutsideOnce();
 
+    /// Allow the outside-domain warning to be shown again (new run on a reused array)
+    void resetOutsideWarning()
+    { warnedOutside = false; }
+
     /// Move a mass m_v from node ndx_from to node ind_to, for particle type
     void MoveParticleMass( long int ndx_from, long int ind_to, char type, char ComponentMode,
                            char tcode, unsigned char ips, double m_v );
