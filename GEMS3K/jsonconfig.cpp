@@ -10,6 +10,7 @@
 #include "v_service.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
+#include "lazy_file_sink.h"
 
 // Get home directory in Linux, C++
 std::string  home_dir()
@@ -357,7 +358,7 @@ bool GemsSettings::update_logger()
         stdout_sink->set_pattern(gems3k_logger_pattern);
     }
 
-    std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
+    std::shared_ptr<spdlog::sinks::sink> file_sink;
     std::set<std::string> file_module_names;
     auto file_section = log_section->section("file");
     if(file_section)
@@ -366,7 +367,7 @@ bool GemsSettings::update_logger()
         auto logfile_path = file_section->value_or_default<std::string>("path", "gems_log.txt");
         auto logfile_size =file_section->value_or_default<size_t>("size", GemsSettings::log_file_size);
         auto logfile_count = file_section->value_or_default<size_t>("count", GemsSettings::log_file_count);
-        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+        file_sink = gems3k_detail::make_lazy_file_sink(
                     with_directory(logfile_path), logfile_size, logfile_count);
         auto logfile_pattern = file_section->value_or_default<std::string>("pattern", gems3k_logger_pattern);
         file_sink->set_pattern(logfile_pattern);
@@ -398,11 +399,11 @@ void GemsSettings::gems3k_update_loggers(bool use_stdout, const std::string& log
 
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     stdout_sink->set_pattern(gems3k_logger_pattern);
-    std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
+    std::shared_ptr<spdlog::sinks::sink> file_sink;
     if(!logfile_name.empty()) {
-        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(with_directory(logfile_name),
-                                                                           GemsSettings::log_file_size,
-                                                                           GemsSettings::log_file_count);
+        file_sink = gems3k_detail::make_lazy_file_sink(with_directory(logfile_name),
+                                                       GemsSettings::log_file_size,
+                                                       GemsSettings::log_file_count);
         file_sink->set_pattern(gems3k_logger_pattern);
     }
 
@@ -451,11 +452,11 @@ void GemsSettings::gems3k_update_log_level(size_t log_level)
 
 void GemsSettings::gems3k_clear_loggers(const std::string& logfile_name)
 {
-    std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
+    std::shared_ptr<spdlog::sinks::sink> file_sink;
     if(!logfile_name.empty()) {
-        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(with_directory(logfile_name),
-                                                                           GemsSettings::log_file_size,
-                                                                           GemsSettings::log_file_count);
+        file_sink = gems3k_detail::make_lazy_file_sink(with_directory(logfile_name),
+                                                       GemsSettings::log_file_size,
+                                                       GemsSettings::log_file_count);
     }
     for(const auto& lname: gems3k_loggers) {
         auto logger = spdlog::get(lname);

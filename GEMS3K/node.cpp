@@ -34,6 +34,10 @@
 #include "jsonconfig.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
+#include "lazy_file_sink.h"
+#ifdef USE_OPTIMA_SOLVER
+#include <Optima/Exception.hpp>
+#endif
 
 
 // Thread-safe logger to stdout with colors
@@ -58,11 +62,20 @@ TNode::TNode()
     std::call_once(once_flag, [](){
         // Thread-safe one-time operation
     if(!ipmlog_file) {
-        ipmlog_file = spdlog::rotating_logger_mt("ipmlog", GemsSettings::with_directory("ipmlog.txt"),
-                                                 GemsSettings::log_file_size,
-                                                 GemsSettings::log_file_count);
-
+        // ipmlog.txt is created when the first message is written, not here
+        ipmlog_file = std::make_shared<spdlog::logger>("ipmlog",
+                          gems3k_detail::make_lazy_file_sink(GemsSettings::with_directory("ipmlog.txt"),
+                                                             GemsSettings::log_file_size,
+                                                             GemsSettings::log_file_count));
+        spdlog::register_logger(ipmlog_file);
     }
+#ifdef USE_OPTIMA_SOLVER
+    // Optima prints its warnings to std::cout unless told otherwise: send them to the "tnode" logger, so that
+    // update_loggers(use_stdout, logfile, level) decides whether they reach the console, the log file, or nowhere
+    Optima::setWarningHandler([](const std::string& message) {
+        if(node_logger) node_logger->warn("Optima: {}", message);
+    });
+#endif
     });
     CSD = NULL;
     CNode = NULL;
