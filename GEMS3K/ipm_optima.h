@@ -92,6 +92,10 @@ struct EqControlCondition
     /// own units, for the post-solve "was the target actually met" check.
     std::function<double(double achievedMuj)> achievedValueFn;
 
+    /// True for a property of the water phase (pH, Eh): the target counts as met only
+    /// if water is still present after the solve.
+    bool needsAqueousPhase = false;
+
     long int slot = -1;  ///< assigned unknown index (L + k) once active - filled in by CalculateEquilibriumStateOptima(), not by the caller
 
     // Outputs, filled in by CalculateEquilibriumStateOptima() after solving -

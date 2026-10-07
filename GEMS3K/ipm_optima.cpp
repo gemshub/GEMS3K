@@ -451,6 +451,7 @@ void TMultiBase::SetControlCondition_pH( double pH_target, double tolerance )
     { return pm.G0[xHplusDC] - kLnFmol - target / ln_to_lg; };
     c.achievedValueFn = [this, xHplusDC]( double achievedMuj )
     { return -ln_to_lg * ( achievedMuj - pm.G0[xHplusDC] + kLnFmol ); };
+    c.needsAqueousPhase = true;
 
     optima_control_conditions.push_back( c );
 }
@@ -490,6 +491,7 @@ void TMultiBase::SetControlCondition_Eh( double Eh_target, double tolerance )
     { return -( target / ( 0.000086 * pm.T ) ); };
     c.achievedValueFn = [this]( double achievedMuj )
     { return 0.000086 * ( -achievedMuj ) * pm.T; };
+    c.needsAqueousPhase = true;
 
     optima_control_conditions.push_back( c );
 }
@@ -4174,11 +4176,19 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             if( tol < 0. && conditions[k].defaultToleranceFn )
                 tol = conditions[k].defaultToleranceFn();
             conditions[k].targetMet = std::fabs( conditions[k].achievedValue - conditions[k].target ) <= tol;
+            // A pH or Eh with no water left is not an answer: the value above then describes
+            // nothing, and the reported pH/Eh would be left over from before. Same water test
+            // as the molality calculation.
+            const bool aqueousGone = conditions[k].needsAqueousPhase
+                && !( pm.FIs > 0 && pm.PHC[0] == PH_AQUEL && pm.XF[0] > pm.DSM && pm.XFA[0] > pm.XwMinM );
+            if( aqueousGone )
+                conditions[k].targetMet = false;
             if( !conditions[k].targetMet )
             {
                 allTargetsMet = false;
                 targetMissBuf += conditions[k].name + ": target=" + std::to_string(conditions[k].target)
-                               + " achieved=" + std::to_string(conditions[k].achievedValue) + "; ";
+                               + " achieved=" + std::to_string(conditions[k].achievedValue)
+                               + ( aqueousGone ? " (no water left)" : "" ) + "; ";
             }
         }
 
