@@ -1632,9 +1632,14 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
         carriers += ( t ? ", " : "" ) + char_array_to_string( pm.SM[pivKept[t]], MAXDCNAME );
     if( pivKept.size() > 10 ) carriers += ", ...";
     if( !( relNew < 1. ) )
-        gems_logger->warn( "Mass balance is still off after repair (worst element {}, {:.1e}x its tolerance). "
-                           "Try: a warm restart from this result (SIA, SOP or SHP), or raise the amount of the smallest element {}.",
-                           icName( pm, j1 ), relNew, icName( pm, j1 ) );
+        gems_logger->warn( "Mass balance is still off after repair (worst element {0}, {1:.1e}x its tolerance). "
+                           "Try: a warm restart from this result (SIA, SOP or SHP), or raise the amount of the smallest "
+                           "element {0} (xGEMS: Material.min_amount or the min_amount argument). The test allows a residual of "
+                           "pa_DHB = {2:.0e} times the element's own amount, so a very small element is checked very strictly: "
+                           "an element that is only a placeholder can be raised until the check passes, as long as the amount "
+                           "stays negligible next to the real components. The 'less material than the floor' warning "
+                           "(Optima modes) gives the smallest amount that clears the solver's floor.",
+                           icName( pm, j1 ), relNew, pm.DHBM );
     else
         gems_logger->debug( "pa_MbReproject: mass balance repaired in {} pass(es) over {} species ({}), {} "
                             "component(s) clamped at zero. Worst relative residual {:.3e}x ({}) -> {:.3e}x "
@@ -1709,12 +1714,22 @@ void TMultiBase::SubFloorElementCheck( double dcFloor ) const
         nWarn++;
     }
     if( !nWarn ) return;
+    // The suggested amount as a fraction of everything in the system, so the user can judge that it is insignificant.
+    double totalReal = 0.;
+    for( long int i = 0; i < N; i++ )
+        if( pm.B[i] > 0. && !( pm.ICC && ( pm.ICC[i] == IC_CHARGE || pm.ICC[i] == IC_VOLUME ) ) )
+            totalReal += pm.B[i] * toReal;
+    const double fraction = totalReal > 0. ? bulkHint / totalReal : 0.;
     gems_logger->warn(
         "Optima: {0} element(s) have less material than the solver's floor amount allows. Their mass "
         "balance is then fixed afterwards, so their amounts and pH/Eh may be wrong (native modes are not "
-        "affected). Try: raise the amount to about {1:.1g} mol or more, remove the element if it is a "
-        "placeholder, or set pa_OptimaDcFloor to {2:.1g} or lower (in the project's -ipm file; not in GEMS). Elements: {3}",
-        nWarn, bulkHint, floorHint, report );
+        "affected). To avoid it, raise the amount of each of these elements to about {1:.1g} mol or more: that "
+        "is the smallest amount that clears the floor, and it is only {4:.0e} of the {5:.3g} mol in the whole system. "
+        "If the amount is a minimum that the program added for an element you did not specify, raise that minimum "
+        "(xGEMS: Material.min_amount or the min_amount argument of equilibrate/setB/clear, default 1e-11 mol); "
+        "or remove the element if it is a placeholder; or set pa_OptimaDcFloor to {2:.1g} or lower (in the "
+        "project's -ipm file; not in GEMS). Elements: {3}",
+        nWarn, bulkHint, floorHint, report, fraction, totalReal );
 }
 
 // EnergyDeterminacyCheck: is each present phase's amount actually fixed by the energy?
