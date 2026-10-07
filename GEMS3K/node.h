@@ -253,7 +253,7 @@ public:
 
 #ifdef USE_OPTIMA_SOLVER
     /// Registers (or replaces) a pH control condition for the next GEM_run() call in
-    /// NEED_GEM_AOP/SOP mode. Persists until Clear_ControlConditions(). `tolerance < 0` (the
+    /// NEED_GEM_AOP/SOP/HOP/SHP mode. Persists until Clear_ControlConditions(). `tolerance < 0` (the
     /// default) derives the tolerance from pa_p->GAS.
     /// In plain words: asks the Optima solver to reach a given pH.
     void Set_pH_target( double pH_target, double tolerance = -1. )
@@ -266,7 +266,7 @@ public:
     /// Removes every registered control condition.
     void Clear_ControlConditions()
     { multi_ptr()->ClearControlConditions(); }
-    /// Titrant amount solved for the given condition ("pH"/"Eh") in the last AOP/SOP GEM_run()
+    /// Titrant amount solved for the given condition ("pH"/"Eh") in the last Optima-mode GEM_run()
     /// call, or 0 if that condition was not active. Real moles; the input bulk composition
     /// gained -stoich*xi (pH: -xi mol H+; Eh: xi mol of electrons removed), and the returned
     /// bIC already includes it. See EqControlCondition (ipm_optima.h) for the full result.

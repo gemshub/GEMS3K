@@ -110,16 +110,17 @@ A complete working example is `tools/optima_test.cpp`.
 
 ## Fixing the pH or Eh (Optima modes only)
 
-In the Optima modes AOP and SOP you can ask for a given pH, a given Eh (in volts), or both. The solver adds
-whatever acid, base or electron donor the target needs, and reports how much it added. This is not available
-in AIA, SIA, HOP or SHP, and only in a build with Optima.
+In the Optima modes AOP, SOP, HOP and SHP you can ask for a given pH, a given Eh (in volts), or both. The
+solver adds whatever acid, base or electron donor the target needs, and reports how much it added. In HOP and
+SHP the target is met by the Optima part; the GEMS3K IPM part that runs first ignores it. This is not available
+in AIA or SIA, and only in a build with Optima.
 
 ```cpp
 node.Clear_ControlConditions();           // targets stay set until cleared
 node.Set_pH_target(7.0);                  // pH 7
 node.Set_Eh_target(0.2);                  // Eh 0.2 V (optional; may be used alone)
 
-node.pCNode()->NodeStatusCH = NEED_GEM_AOP;   // or NEED_GEM_SOP; set before every call
+node.pCNode()->NodeStatusCH = NEED_GEM_AOP;   // or SOP, HOP, SHP; set before every call
 long status = node.GEM_run(false);
 
 if (status == OK_GEM_AOP)
@@ -135,6 +136,11 @@ if (status == OK_GEM_AOP)
 - Targets stay active for every later call until `Clear_ControlConditions()`.
 - A target may not be reachable (for example Eh in a system with no redox couple). Check
   the status, and do not rely on the Eh in such a system.
+- A target that would use up all the water (an extreme pH, for example) is reported as not fully
+  trustworthy (`BAD_GEM_...`). A failed SOP or SHP call is then re-solved from scratch and may come back as
+  `OK_GEM_AOP` (see `pa_OptimaColdRetry`); a failed HOP call returns the GEMS3K IPM answer, without the target.
+- An `OK` status means the solver met the target in its own model. An extreme target can still give a
+  result with no physical meaning (a pH far outside 0–14); judge the target, not only the status.
 
 ## Settings
 
