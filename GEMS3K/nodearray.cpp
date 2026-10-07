@@ -342,6 +342,7 @@ void TNodeArray::RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long i
 long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
                                 const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
 {
+    resetOutsideWarning();
     auto ret = calcNode->GEM_init( ipmfiles_lst_name );
     if( ret )
         return ret;
@@ -396,6 +397,7 @@ long TNodeArray::GEM_init(std::string dch_json, std::string ipm_json, std::vecto
         calcNode->ipmlog_error = "empty input dbr data";
         return 1;
     }
+    resetOutsideWarning();
     auto ret = calcNode->GEM_init(dch_json, ipm_json, dbr_json[0]);
     if( ret )
         return ret;

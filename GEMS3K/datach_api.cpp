@@ -43,16 +43,38 @@ long int gridTP(const DATACH* pCSD)
         return (pCSD->nPp * pCSD->nTp);
 }
 
+/// A Pval[] entry of 0 is the GEMS "at saturated vapour pressure" marker, not a pressure.
+/// Same 1.1e-5 Pa threshold that get_Ppa_sat() uses to tell a real Psat from the marker.
+static const double Psat_marker_Pa = 1.1e-5;
+
+bool is_Psat_grid(const DATACH* CSD)
+{
+    if( CSD->nPp < 1 )
+        return false;
+    for( long int jj=0; jj<CSD->nPp; jj++ )
+        if( CSD->Pval[jj] >= Psat_marker_Pa )
+            return false;   // a real pressure axis, even if it starts at 0 (T11: nPp=26, Pval[0]=0)
+    return true;
+}
+
+double grid_P(const DATACH* CSD, double P)
+{
+    return is_Psat_grid(CSD) ? 0. : P;
+}
+
 std::string check_TP(const DATACH* CSD, double TK, double P)
 {
     std::string error_msg;
     bool okT = true, okP = true;
     double T_=TK, P_=P;
+    const bool PsatGrid = is_Psat_grid(CSD);
 
     if( CSD->mLook == 1 )
     {
         for(long int  jj=0; jj<CSD->nPp; jj++) {
-            if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) ) {
+            // on an all-marker axis P is not a coordinate and the node carries Psat(T)
+            bool okPjj = PsatGrid || fabs( P - CSD->Pval[jj] ) < CSD->Ptol;
+            if( okPjj && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) ) {
                 return error_msg;
             }
         }
@@ -79,13 +101,19 @@ std::string check_TP(const DATACH* CSD, double TK, double P)
             error_msg += std::to_string(T_);
         }
 
-        if( P <= CSD->Pval[0] - CSD->Ptol ) {
-            okP = false;
-            P_ = CSD->Pval[0] - CSD->Ptol;
-        }
-        if( P >= CSD->Pval[CSD->nPp-1] + CSD->Ptol ) {
-            okP = false;
-            P_ = CSD->Pval[CSD->nPp-1] + CSD->Ptol;
+        // On a saturated-vapour-pressure grid the pressure axis is degenerate: the node carries
+        // Psat(T), the axis carries the 0 marker, and range-testing one against the other rejects
+        // every node above ~100 C. Only T is a real coordinate there.
+        if( !PsatGrid )
+        {
+            if( P <= CSD->Pval[0] - CSD->Ptol ) {
+                okP = false;
+                P_ = CSD->Pval[0] - CSD->Ptol;
+            }
+            if( P >= CSD->Pval[CSD->nPp-1] + CSD->Ptol ) {
+                okP = false;
+                P_ = CSD->Pval[CSD->nPp-1] + CSD->Ptol;
+            }
         }
         if( !okP ) {
             error_msg += "Given P=" + std::to_string(P);
@@ -101,9 +129,12 @@ bool change_TP(const DATACH* CSD, double& TK, double& P)
 {
     bool ok = false;
 
+    const bool PsatGrid = is_Psat_grid(CSD);
+
     if( CSD->mLook==1 ) {
         for(long int jj=0; jj<CSD->nPp; jj++) {
-            if( (fabs(P-CSD->Pval[jj]) < CSD->Ptol) && (fabs(TK-CSD->TKval[jj]) < CSD->Ttol) ) {
+            bool okPjj = PsatGrid || fabs(P-CSD->Pval[jj]) < CSD->Ptol;
+            if( okPjj && (fabs(TK-CSD->TKval[jj]) < CSD->Ttol) ) {
                 return ok;
             }
         }
@@ -120,13 +151,16 @@ bool change_TP(const DATACH* CSD, double& TK, double& P)
             ok= true;
             TK = CSD->TKval[CSD->nTp-1];
         }
-        if( P <= CSD->Pval[0]-CSD->Ptol ) {
-            ok = true;
-            P = CSD->Pval[0];
-        }
-        else if( P >= CSD->Pval[CSD->nPp-1]+CSD->Ptol ) {
-            ok = true;
-            P = CSD->Pval[CSD->nPp-1];
+        if( !PsatGrid )
+        {   // clamping to a Psat grid would overwrite the node's resolved Psat(T) with the 0 marker
+            if( P <= CSD->Pval[0]-CSD->Ptol ) {
+                ok = true;
+                P = CSD->Pval[0];
+            }
+            else if( P >= CSD->Pval[CSD->nPp-1]+CSD->Ptol ) {
+                ok = true;
+                P = CSD->Pval[CSD->nPp-1];
+            }
         }
     }
     return ok;
@@ -144,6 +178,8 @@ long int check_grid_T(const DATACH* CSD, double TK)
 long int check_grid_P(const DATACH* CSD, double P)
 {
     long int jj;
+    if( is_Psat_grid(CSD) )
+        return 0;   // pressure is not a coordinate here: the single column IS "at Psat(T)"
     for( jj=0; jj<CSD->nPp; jj++)
         if( fabs( P - CSD->Pval[jj] ) < CSD->Ptol )
             return jj;
@@ -153,11 +189,13 @@ long int check_grid_P(const DATACH* CSD, double P)
 long int check_grid_TP(const DATACH* CSD, double TK, double P)
 {
     long int xT, xP, ndx=-1;
+    const bool PsatGrid = is_Psat_grid(CSD);
 
     if( CSD->mLook == 1 )
     {
         for(long int  jj=0; jj<CSD->nPp; jj++)
-            if( (fabs( P - CSD->Pval[jj] ) < CSD->Ptol ) && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) )
+            if( ( PsatGrid || fabs( P - CSD->Pval[jj] ) < CSD->Ptol )
+                && ( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol ) )
                 return jj;
         Error( "check_grid_TP: " , std::string("Temperature ")+std::to_string(TK)+
                " and pressure "+std::to_string(P)+" out of grid" );

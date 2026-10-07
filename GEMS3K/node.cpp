@@ -27,12 +27,17 @@
 //-------------------------------------------------------------------
 
 #include "node.h"
+#include "datach_api.h"
 #include "num_methods.h"
 #include "kinetics.h"
 #include "v_service.h"
 #include "jsonconfig.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
+#include "lazy_file_sink.h"
+#ifdef USE_OPTIMA_SOLVER
+#include <Optima/Exception.hpp>
+#endif
 
 
 // Thread-safe logger to stdout with colors
@@ -57,11 +62,20 @@ TNode::TNode()
     std::call_once(once_flag, [](){
         // Thread-safe one-time operation
     if(!ipmlog_file) {
-        ipmlog_file = spdlog::rotating_logger_mt("ipmlog", GemsSettings::with_directory("ipmlog.txt"),
-                                                 GemsSettings::log_file_size,
-                                                 GemsSettings::log_file_count);
-
+        // ipmlog.txt is created when the first message is written, not here
+        ipmlog_file = std::make_shared<spdlog::logger>("ipmlog",
+                          gems3k_detail::make_lazy_file_sink(GemsSettings::with_directory("ipmlog.txt"),
+                                                             GemsSettings::log_file_size,
+                                                             GemsSettings::log_file_count));
+        spdlog::register_logger(ipmlog_file);
     }
+#ifdef USE_OPTIMA_SOLVER
+    // Optima prints its warnings to std::cout unless told otherwise: send them to the "tnode" logger, so that
+    // update_loggers(use_stdout, logfile, level) decides whether they reach the console, the log file, or nowhere
+    Optima::setWarningHandler([](const std::string& message) {
+        if(node_logger) node_logger->warn("Optima: {}", message);
+    });
+#endif
     });
     CSD = NULL;
     CNode = NULL;
@@ -99,7 +113,7 @@ TNode::TNode( const TNode& otherNode )
     pmm->Fdev2[0] = 0.;
     pmm->Fdev2[1] = 1e-6;
 
-    node_logger->info("copy constructor...");
+    node_logger->debug("copy constructor...");
 }
 
 TNode::~TNode()
@@ -172,7 +186,268 @@ void TNode::Get_sMod(int ndx, std::string &sMod)
 //               false  (0) -  use speciation and activity coefficients from previous GEM_run() calculation
 //               true  (1)  -  use speciation provided in the DATABR memory structure (e.g. after reading the DBR file)
 //  Return values:    NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
+// Defined here, not in ipm_optima.cpp, so a build without USE_OPTIMA_SOLVER still links.
+thread_local bool g_optimaLineSearchRetry = false;
+thread_local bool g_optimaLSEscapeOff = false;
+thread_local bool g_optimaCgSeedArmed = false;
 long int TNode::GEM_run( bool uPrimalSol )
+{
+    const long int requested = CNode->NodeStatusCH;
+    const bool kinetics = CNode->dt > 0.;
+    // pa_OptimaLineSearch < 0: an Optima call that fails without the line search is re-run once
+    // with it (g_optimaLineSearchRetry). The DATABR is snapshotted before the first attempt; a
+    // retry that does not return OK hands the first failure back unchanged. DECIDE lsretry.
+    // pa_OptimaLSStallEscape > 0 with the line search on: a failed call is re-run once with the
+    // escape off (g_optimaLSEscapeOff), same snapshot/restore. DECIDE escretry.
+    const bool optimaReq = !kinetics &&
+        ( requested == NEED_GEM_AOP || requested == NEED_GEM_SOP || requested == NEED_GEM_HOP || requested == NEED_GEM_SHP );
+    const bool lsRetryArmed = optimaReq && multi_ptr()->base_param()->OptimaLineSearch < 0.;
+    // With the line search on, the objective memo is always active, so the legacy retry -
+    // escape off and memo off - is armed whenever the line search is on.
+    const bool escRetryArmed = optimaReq && !lsRetryArmed && multi_ptr()->base_param()->OptimaLineSearch > 0.;
+    DATABR* lsBefore = nullptr;
+    if( lsRetryArmed || escRetryArmed )
+    {
+        lsBefore = new DATABR;
+        dbr_dch_api::databr_reset( lsBefore, 1 );
+        dbr_dch_api::databr_realloc( CSD, lsBefore );
+        { DATABR* live = CNode; CNode = lsBefore; databr_copy( live ); CNode = live; }
+    }
+    long int status = GEM_run_single( uPrimalSol );
+    auto isOkStatus = []( long int st ) { return st == OK_GEM_AOP || st == OK_GEM_SOP || st == OK_GEM_HOP || st == OK_GEM_SHP
+                                                || st == OK_GEM_AIA || st == OK_GEM_SIA; };
+    if( lsBefore )
+    {
+        const bool okNow = status == OK_GEM_AOP || status == OK_GEM_SOP || status == OK_GEM_HOP || status == OK_GEM_SHP
+                        || status == OK_GEM_AIA || status == OK_GEM_SIA;
+        if( !okNow )
+        {
+            DATABR* failed = new DATABR;
+            dbr_dch_api::databr_reset( failed, 1 );
+            dbr_dch_api::databr_realloc( CSD, failed );
+            { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+            const std::string failedError = ipmlog_error;
+            long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
+            databr_copy( lsBefore );                  // the first attempt's INPUTS
+            CNode->NodeStatusCH = requested;
+            if( lsRetryArmed ) g_optimaLineSearchRetry = true; else g_optimaLSEscapeOff = true;
+            const long int second = GEM_run_single( uPrimalSol );
+            g_optimaLineSearchRetry = false; g_optimaLSEscapeOff = false;
+            itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+            native_trace_decide( "%s requested=%ld first=%ld second=%ld", lsRetryArmed ? "lsretry" : "escretry",
+                                 (long)requested, (long)status, (long)second );
+            node_logger->info( "GEM_run(): mode {} failed ({}) - re-solved once from the same inputs with {}: {}",
+                               (long)requested, (long)status,
+                               lsRetryArmed ? "the line-search retry" : "the stall escape off",
+                               isOkStatus( second ) ? "recovered" : "still failed" );
+            const bool ok2 = second == OK_GEM_AOP || second == OK_GEM_SOP || second == OK_GEM_HOP || second == OK_GEM_SHP
+                          || second == OK_GEM_AIA || second == OK_GEM_SIA;
+            if( !ok2 ) { databr_copy( failed ); ipmlog_error = failedError; }
+            databr_free( failed );
+            pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
+            CNode->IterDone = itf + itg; CalcTime = seconds;
+            status = CNode->NodeStatusCH;
+        }
+        databr_free( lsBefore );
+    }
+    if( requested == NEED_GEM_AIA && status == ERR_GEM_AIA && !kinetics )
+    {
+        const long int nudges = multi_ptr()->base_param()->ColdRetryNudges;
+        if( nudges > 0 )
+            status = GEM_run_cold_retry( nudges );
+    }
+    // pa_OptimaColdRetry > 0: a warm Optima call (SOP, or SHP whose Optima leg failed) that did
+    // not return OK is re-solved cold as AOP from the same inputs. With pa_OptimaCgSeed > 0 a
+    // failed cold call is tried once more from the column-generation seed. A retry that is not OK
+    // hands the failed call back exactly as it was.
+    const bool optimaColdRetry = ( multi_ptr()->base_param()->OptimaColdRetry > 0 );   // pa_OptimaColdRetry
+    if( optimaColdRetry && !kinetics && ( requested == NEED_GEM_SOP || requested == NEED_GEM_SHP )
+        && status != OK_GEM_SOP && status != OK_GEM_SHP && status != OK_GEM_AOP
+        && status != OK_GEM_SIA && status != OK_GEM_AIA )
+        status = GEM_run_optima_cold_retry( requested );
+    // pa_OptimaCgSeed is used only as a second attempt of a failed cold AOP call (see
+    // g_optimaCgSeedArmed). A retry that is not OK hands the first failure back unchanged.
+    if( multi_ptr()->base_param()->OptimaCgSeed > 0. && !kinetics && requested == NEED_GEM_AOP && status != OK_GEM_AOP )
+    {
+        DATABR* failed = new DATABR;
+        dbr_dch_api::databr_reset( failed, 1 );
+        dbr_dch_api::databr_realloc( CSD, failed );
+        { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+        const std::string failedError = ipmlog_error;
+        long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
+        const long int second = GEM_run_aop_cgseed( itf, itg, seconds );
+        if( second != OK_GEM_AOP ) { databr_copy( failed ); ipmlog_error = failedError; }
+        databr_free( failed );
+        pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
+        CNode->IterDone = itf + itg; CalcTime = seconds;
+        status = CNode->NodeStatusCH;
+    }
+    return status;
+}
+
+// One GEM_run_single() with the legacy retry: with the line search on, a failed call is re-run
+// once from the same inputs with the stall escape, the objective memo and reject_if_worse off
+// (g_optimaLSEscapeOff); a retry that is not OK hands the first failure back. Used by the later
+// retry rungs (the warm->cold leg, the column-generation seed). Accumulates into the caller's
+// totals.
+long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* rung )
+{
+    const long int requested = CNode->NodeStatusCH;
+    auto isOk = []( long int st ) { return st == OK_GEM_AOP || st == OK_GEM_SOP || st == OK_GEM_HOP || st == OK_GEM_SHP
+                                           || st == OK_GEM_AIA || st == OK_GEM_SIA; };
+    const bool armed = multi_ptr()->base_param()->OptimaLineSearch > 0. && !g_optimaLSEscapeOff;
+    DATABR* before = nullptr;
+    if( armed )
+    {
+        before = new DATABR;
+        dbr_dch_api::databr_reset( before, 1 );
+        dbr_dch_api::databr_realloc( CSD, before );
+        { DATABR* live = CNode; CNode = before; databr_copy( live ); CNode = live; }
+    }
+    long int st = GEM_run_single( uPrimalSol );
+    itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+    if( armed && !isOk( st ) )
+    {
+        DATABR* failed = new DATABR;
+        dbr_dch_api::databr_reset( failed, 1 );
+        dbr_dch_api::databr_realloc( CSD, failed );
+        { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+        const std::string failedError = ipmlog_error;
+        databr_copy( before );
+        CNode->NodeStatusCH = requested;
+        g_optimaLSEscapeOff = true;
+        const long int second = GEM_run_single( uPrimalSol );
+        g_optimaLSEscapeOff = false;
+        itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+        native_trace_decide( "escretry rung=%s requested=%ld first=%ld second=%ld", rung, (long)requested, (long)st, (long)second );
+        node_logger->info( "GEM_run(): {} attempt failed ({}) - re-solved with the stall escape off: {}",
+                           rung, (long)st, isOk( second ) ? "recovered" : "still failed" );
+        if( !isOk( second ) ) { databr_copy( failed ); ipmlog_error = failedError; }
+        databr_free( failed );
+        st = CNode->NodeStatusCH;
+    }
+    if( before ) databr_free( before );
+    return st;
+}
+
+// Cold AOP with the column-generation seed armed (one call); accumulates iterations/time into the caller's totals.
+long int TNode::GEM_run_aop_cgseed( long int& itf, long int& itg, double& seconds )
+{
+    CNode->NodeStatusCH = NEED_GEM_AOP;
+    g_optimaCgSeedArmed = true;
+    const long int st = GEM_run_single_legacy_retry( false, itf, itg, seconds, "cgseed" );
+    g_optimaCgSeedArmed = false;
+    native_trace_decide( "cgseedretry aop=%ld", (long)st );
+    node_logger->info( "GEM_run(): cold AOP failed - retried from the column-generation seed: {}",
+                       st == OK_GEM_AOP ? "recovered" : "still failed" );
+    return st;
+}
+
+// Cold AOP re-solve of a failed warm Optima call (pa_OptimaColdRetry). The inputs (bIC, T, P,
+// dll/dul) are still in CNode, since packDataBr() writes only outputs. An OK_GEM_AOP result is
+// reported under the cold code (as SIA's switch to OK_GEM_AIA); anything else restores the
+// failed call's DATABR, status and error message.
+long int TNode::GEM_run_optima_cold_retry( long int requested )
+{
+    DATABR* failed = new DATABR;
+    dbr_dch_api::databr_reset( failed, 1 );
+    dbr_dch_api::databr_realloc( CSD, failed );
+    { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+    const std::string failedError = ipmlog_error;
+    const long int failedStatus = failed->NodeStatusCH;
+    long int itf = pmm->ITF, itg = pmm->ITG;
+    double seconds = CalcTime;
+
+    CNode->NodeStatusCH = NEED_GEM_AOP;
+    long int cold = GEM_run_single_legacy_retry( false, itf, itg, seconds, "coldleg" );
+    if( cold != OK_GEM_AOP && multi_ptr()->base_param()->OptimaCgSeed > 0. )   // the column-generation seed as a second attempt here too
+        cold = GEM_run_aop_cgseed( itf, itg, seconds );
+    native_trace_decide( "optimacoldretry requested=%ld failed=%ld aop=%ld", (long)requested,
+                         (long)failedStatus, (long)cold );
+    node_logger->info( "GEM_run(): warm Optima call (mode {}) failed ({}) - re-solved cold as AOP: {}",
+                       (long)requested, (long)failedStatus, cold == OK_GEM_AOP ? "recovered" : "still failed" );
+    if( cold != OK_GEM_AOP )
+    {
+        databr_copy( failed );
+        ipmlog_error = failedError;
+    }
+    databr_free( failed );
+    pmm->ITF = itf;
+    pmm->ITG = itg;
+    NumIterFIA = itf;
+    NumIterIPM = itg;
+    CNode->IterDone = itf + itg;
+    CalcTime = seconds;
+    return CNode->NodeStatusCH;
+}
+
+// Recovery of a failed cold native call (pa_ColdRetryNudges): a converged solve one 1e-15 nudge
+// away is a warm start from which SIA reaches the equilibrium at the exact composition. Every
+// nudge is undone before the warm solve, and a call that no nudge recovers is handed back
+// exactly as it failed.
+long int TNode::GEM_run_cold_retry( long int maxNudges )
+{
+    const long int nIC = CSD->nICb;
+    DATABR* failed = new DATABR;
+    dbr_dch_api::databr_reset( failed, 1 );
+    dbr_dch_api::databr_realloc( CSD, failed );
+    { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+    const std::string failedError = ipmlog_error;
+    const std::vector<double> b0( CNode->bIC, CNode->bIC + nIC );
+    long int itf = pmm->ITF, itg = pmm->ITG;
+    double seconds = CalcTime;
+
+    native_trace_quiet( true );
+    long int result = ERR_GEM_AIA;
+    for( long int n = 0; n < maxNudges && result == ERR_GEM_AIA; n++ )
+    {
+        const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
+        for( long int i = 0; i < nIC; i++ )
+            CNode->bIC[i] = b0[(size_t)i] * ( 1. + ( ( i % 2 ) ? -1. : 1. ) * k * 1e-15 );
+        CNode->NodeStatusCH = NEED_GEM_AIA;
+        const long int cold = GEM_run_single( false );
+        itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+        long int warm = -1;
+        if( cold == OK_GEM_AIA )
+        {
+            for( long int i = 0; i < nIC; i++ )
+                CNode->bIC[i] = b0[(size_t)i];
+            CNode->NodeStatusCH = NEED_GEM_SIA;
+            warm = GEM_run_single( false );
+            itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+            if( warm == OK_GEM_SIA || warm == OK_GEM_AIA )
+                result = OK_GEM_AIA;
+            else if( warm == BAD_GEM_SIA || warm == BAD_GEM_AIA )
+                result = BAD_GEM_AIA;
+        }
+        native_trace_decide( "coldretry attempt=%ld nudge=%+g aia=%ld sia=%ld itf=%ld itg=%ld",
+                             (long)( n + 1 ), k, (long)cold, (long)warm, (long)itf, (long)itg );
+    }
+    native_trace_quiet( false );
+    node_logger->info( "GEM_run(): cold native call failed - retried from nudged compositions (up to {}): {}",
+                       (long)maxNudges, result == ERR_GEM_AIA ? "still failed" : "recovered" );
+
+    if( result == ERR_GEM_AIA )
+    {
+        databr_copy( failed );            // the failed call as it was, status ERR_GEM_AIA
+        ipmlog_error = failedError;
+    }
+    else
+    {
+        CNode->NodeStatusCH = result;
+        native_trace_run_result( *pmm, NEED_GEM_AIA, result, multi_base );
+    }
+    databr_free( failed );
+    pmm->ITF = itf;
+    pmm->ITG = itg;
+    NumIterFIA = itf;
+    NumIterIPM = itg;
+    CNode->IterDone = itf + itg;
+    CalcTime = seconds;
+    return CNode->NodeStatusCH;
+}
+
+long int TNode::GEM_run_single( bool uPrimalSol )
 {
     CalcTime = 0.0;
     PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;
@@ -183,14 +458,12 @@ long int TNode::GEM_run( bool uPrimalSol )
         ipmlog_file->debug(" GEM_run() begin Mode= {}", CNode->NodeStatusCH);
 
 #ifndef NDEBUG
-        // Bulk composition (IC amounts) as received, before any internal processing --
-        // makes a caller-side bulk-composition bug visible without a second historical build.
+        // Bulk composition as received, before any internal processing (debug level).
         if (node_logger->should_log(spdlog::level::debug)) {
             for (long int i = 0; i < CSD->nICb; i++)
                 node_logger->debug("bIC[{}] {} = {:.6e}", i, CSD->ICNL[CSD->xic[i]], CNode->bIC[i]);
         }
-        // Cheap sanity warning: an IC pinned at/below the numerical floor is exactly the
-        // symptom that once took hours of manual instrumentation to spot by hand.
+        // Warn about an IC at or below the numerical floor.
         for (long int i = 0; i < CSD->nICb; i++) {
             if (CNode->bIC[i] > 0. && CNode->bIC[i] <= pmm->DcMinM)
                 node_logger->warn("bIC[{}] {} = {:.6e} is at/below the numerical floor (DcMinM={:.3e})",
@@ -202,20 +475,33 @@ long int TNode::GEM_run( bool uPrimalSol )
         check_TP( CNode->TK, CNode->P);
         // Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
         // setting up up PIA or AIA mode
-        if( CNode->NodeStatusCH == NEED_GEM_SIA )
+        if( CNode->NodeStatusCH == NEED_GEM_SIA || CNode->NodeStatusCH == NEED_GEM_SOP )
         {
             pmm->pNP = 1;
             unpackDataBr( uPrimalSol );
         }
-        else if( CNode->NodeStatusCH == NEED_GEM_AIA )
+        else if( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_AOP
+                 || CNode->NodeStatusCH == NEED_GEM_ROP || CNode->NodeStatusCH == NEED_GEM_HOP
+                 || CNode->NodeStatusCH == NEED_GEM_SHP )
         {
-            pmm->pNP = 0; // As default setting AIA mode
+            pmm->pNP = 0; // As default setting AIA/AOP/ROP/HOP/SHP mode - ROP is a single mode
+                          // (no warm pair), HOP's first leg is the cold native solve, and
+                          // SHP's warm native leg sets pmm->pNP = 1 itself inside
+                          // CalculateEquilibriumStateHOP().
             if (CNode->dt > 0.)
                 uPrimalSol = true;
             unpackDataBr( uPrimalSol );
         }
         else
             return CNode->NodeStatusCH;
+
+        // Complete run configuration into the trace, once per call and for every mode: after
+        // unpackDataBr() (pmm->B[] holds the caller's bulk vector) and before the dispatch
+        // (NodeStatusCH is still the request). No-op unless GEMS3K_NATIVE_TRACE_FILE is set.
+        native_trace_run_header( *pmm, multi_ptr()->base_param(), CNode->NodeStatusCH );
+        // The mode as requested, kept for the result record below (the dispatch and
+        // packDataBr() overwrite NodeStatusCH with the outcome).
+        const long int traceRequestedMode = CNode->NodeStatusCH;
 
         // added 18.12.14 DK : setting chemical kinetics time counter and variables
         node_logger->debug("GEM_run dTime:{}, TimeStep: {} Time: {}", CNode->dt, CNode->NodeStatusFMT, CNode->Tm);
@@ -238,8 +524,45 @@ long int TNode::GEM_run( bool uPrimalSol )
                 pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
         }
 
-        // GEM IPM calculation of equilibrium state
-        CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
+        // Invalidate the previous call's per-leg split before the dispatch, so only a mode that
+        // actually ran two legs reports one.
+        multi_ptr()->hop_split = TMultiBase::HopLegSplit();
+
+        // Optima modes dispatch to ipm_optima.cpp. Without USE_OPTIMA_SOLVER they fall back to the
+        // equivalent native AIA/SIA solve rather than failing.
+        if( CNode->NodeStatusCH == NEED_GEM_HOP || CNode->NodeStatusCH == NEED_GEM_SHP )
+        {
+#ifdef USE_OPTIMA_SOLVER
+            // Hybrid: native selects the phases, then a warm Optima leg finishes (restoring
+            // native's answer as BAD_GEM_HOP if it fails) - TMultiBase::CalculateEquilibriumStateHOP().
+            // SHP is HOP with a warm native leg (with a cold fallback inside).
+            CalcTime = multi_ptr()->CalculateEquilibriumStateHOP( NumIterFIA, NumIterIPM,
+                                       CNode->NodeStatusCH == NEED_GEM_SHP );
+#else
+            node_logger->warn("GEM_run(): NEED_GEM_HOP/SHP requested but GEMS3K was not built with "
+                               "USE_OPTIMA_SOLVER - falling back to the equivalent native {} solve",
+                               CNode->NodeStatusCH == NEED_GEM_SHP ? "SIA" : "AIA");
+            CNode->NodeStatusCH = ( CNode->NodeStatusCH == NEED_GEM_SHP ) ? NEED_GEM_SIA : NEED_GEM_AIA;
+            pmm->pNP = ( CNode->NodeStatusCH == NEED_GEM_SIA ) ? 1 : 0;
+            CalcTime = multi_ptr()->CalculateEquilibriumState( NumIterFIA, NumIterIPM );
+#endif
+        }
+        else if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP
+            || CNode->NodeStatusCH == NEED_GEM_ROP )
+        {
+#ifdef USE_OPTIMA_SOLVER
+            CalcTime = multi_ptr()->CalculateEquilibriumStateOptima( NumIterFIA, NumIterIPM,
+                                       CNode->NodeStatusCH == NEED_GEM_ROP );
+#else
+            node_logger->warn("GEM_run(): NEED_GEM_AOP/SOP/ROP requested but GEMS3K was not built with "
+                               "USE_OPTIMA_SOLVER - falling back to the equivalent native {} solve",
+                               CNode->NodeStatusCH == NEED_GEM_SOP ? "SIA" : "AIA");
+            CNode->NodeStatusCH = ( CNode->NodeStatusCH == NEED_GEM_SOP ) ? NEED_GEM_SIA : NEED_GEM_AIA;
+            CalcTime = multi_ptr()->CalculateEquilibriumState( NumIterFIA, NumIterIPM );
+#endif
+        }
+        else
+            CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
 
         // Extracting and packing GEM IPM results into work DATABR structure
         packDataBr();
@@ -257,19 +580,46 @@ long int TNode::GEM_run( bool uPrimalSol )
         {
             if( CNode->NodeStatusCH  == NEED_GEM_AIA )
                 CNode->NodeStatusCH = BAD_GEM_AIA;
+            else if( CNode->NodeStatusCH == NEED_GEM_AOP )
+                CNode->NodeStatusCH = BAD_GEM_AOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_SOP )
+                CNode->NodeStatusCH = BAD_GEM_SOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_ROP )
+                CNode->NodeStatusCH = BAD_GEM_ROP;
+            else if( CNode->NodeStatusCH == NEED_GEM_HOP )
+                CNode->NodeStatusCH = BAD_GEM_HOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_SHP )
+                CNode->NodeStatusCH = BAD_GEM_SHP;
             else
                 CNode->NodeStatusCH = BAD_GEM_SIA;
 
             // internal multi error
             ipmlog_error = pmm->errorCode+ std::string(": ") +  pmm->errorBuf;
+            // A thrown error was already logged by Error(); this status path throws nothing.
+            node_logger->error( "{}", ipmlog_error );
         }
         else
         {
             if( CNode->NodeStatusCH  == NEED_GEM_AIA )
                 CNode->NodeStatusCH = OK_GEM_AIA;
+            else if( CNode->NodeStatusCH == NEED_GEM_AOP )
+                CNode->NodeStatusCH = OK_GEM_AOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_SOP )
+                CNode->NodeStatusCH = OK_GEM_SOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_ROP )
+                CNode->NodeStatusCH = OK_GEM_ROP;
+            else if( CNode->NodeStatusCH == NEED_GEM_HOP )
+                CNode->NodeStatusCH = OK_GEM_HOP;
+            else if( CNode->NodeStatusCH == NEED_GEM_SHP )
+                CNode->NodeStatusCH = OK_GEM_SHP;
             else
                 CNode->NodeStatusCH = OK_GEM_SIA;
         }
+
+        // The regime this call reached, into the trace (after the status has settled). Not
+        // emitted from the catch blocks: a thrown call's reported values are stale. No-op unless
+        // GEMS3K_NATIVE_TRACE_FILE is set.
+        native_trace_run_result( *pmm, traceRequestedMode, CNode->NodeStatusCH, multi_base );
 
         return CNode->NodeStatusCH;
     }
@@ -278,6 +628,16 @@ long int TNode::GEM_run( bool uPrimalSol )
         ipmlog_error = err.title + std::string(": ") + err.mess;
         if( CNode->NodeStatusCH  == NEED_GEM_AIA )
             CNode->NodeStatusCH = ERR_GEM_AIA;
+        else if( CNode->NodeStatusCH == NEED_GEM_AOP )
+            CNode->NodeStatusCH = ERR_GEM_AOP;
+        else if( CNode->NodeStatusCH == NEED_GEM_SOP )
+            CNode->NodeStatusCH = ERR_GEM_SOP;
+        else if( CNode->NodeStatusCH == NEED_GEM_ROP )
+            CNode->NodeStatusCH = ERR_GEM_ROP;
+        else if( CNode->NodeStatusCH == NEED_GEM_HOP )
+            CNode->NodeStatusCH = ERR_GEM_HOP;
+        else if( CNode->NodeStatusCH == NEED_GEM_SHP )
+            CNode->NodeStatusCH = ERR_GEM_SHP;
         else
             CNode->NodeStatusCH = ERR_GEM_SIA;
     }
@@ -326,6 +686,26 @@ long int TNode::GEM_Iterations( long int& PrecLoops_, long int& NumIterFIA_, lon
     return NumIterFIA+NumIterIPM;
 }
 
+// The last two-leg (HOP/SHP) call's cost, native leg and Optima leg apart - see the
+// declaration in node.h and TMultiBase::HopLegSplit.
+bool TNode::GEM_IterationsHOP( long int& NumIterFIANative, long int& NumIterIPMNative,
+                               long int& NumIterFIAOptima, long int& NumIterIPMOptima,
+                               double& TimeNative, double& TimeOptima,
+                               bool* Failed ) const
+{
+    const TMultiBase::HopLegSplit& s = multi_ptr()->hop_split;
+    if( !s.valid )
+        return false;               // the last solve was not two-leg - leave the outputs alone
+    NumIterFIANative = s.fiaNative;
+    NumIterIPMNative = s.ipmNative;
+    NumIterFIAOptima = s.fiaOptima;
+    NumIterIPMOptima = s.ipmOptima;
+    TimeNative = s.timeNative;
+    TimeOptima = s.timeOptima;
+    if( Failed ) *Failed = s.failed;
+    return true;
+}
+
 // Extracting and packing GEM IPM results into work DATABR structure
 void TNode::packDataBr()
 {
@@ -333,10 +713,29 @@ void TNode::packDataBr()
 
     // set default data to DataBr
     //   CNode->NodeStatusCH = NEED_GEM_AIA;
-    if( pmm->pNP == 0 )
-        CNode->NodeStatusCH = NEED_GEM_AIA;
+    // pmm->pNP (0 = cold, 1 = warm) selects AIA/SIA vs. AOP/SOP; which pair is read from the
+    // still unmodified NodeStatusCH.
+    if( CNode->NodeStatusCH == NEED_GEM_ROP || CNode->NodeStatusCH == NEED_GEM_HOP
+        || CNode->NodeStatusCH == NEED_GEM_SHP )
+    {
+        ; // ROP is a single mode, and HOP/SHP are told apart by the caller, not by pmm->pNP
+          // (both legs set it themselves). They must be listed here, or the generic branch
+          // below would rewrite the node to NEED_GEM_SIA.
+    }
+    else if( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP )
+    {
+        if( pmm->pNP == 0 )
+            CNode->NodeStatusCH = NEED_GEM_AOP;
+        else
+            CNode->NodeStatusCH = NEED_GEM_SOP;
+    }
     else
-        CNode->NodeStatusCH = NEED_GEM_SIA;
+    {
+        if( pmm->pNP == 0 )
+            CNode->NodeStatusCH = NEED_GEM_AIA;
+        else
+            CNode->NodeStatusCH = NEED_GEM_SIA;
+    }
 
     CNode->TK = pmm->TCc+C_to_K; //25
     CNode->P = pmm->Pc*bar_to_Pa; //1
@@ -344,6 +743,16 @@ void TNode::packDataBr()
     CNode->IterDone = /*pmm->ITF+*/pmm->IT;   // Now complete number of FIA and IPM iterations
     // values
     CNode->Vs = pmm->VXc*1.e-6; // from cm3 to m3
+    // pm.FX is seeded each call with kTotalGibbsEnergyUnset and both solver paths overwrite it,
+    // so this branch should be unreachable: it reports an answer whose Gibbs energy was never
+    // computed instead of publishing the marker. Checked with == because the marker is assigned
+    // verbatim.
+    if( pmm->FX == kTotalGibbsEnergyUnset )
+        node_logger->error( "packDataBr(): total Gibbs energy is still kTotalGibbsEnergyUnset - the "
+                           "solver path that produced NodeStatusCH={} did not set pm.FX, so "
+                           "DATABR.Gs, GEM_to_MT()'s p_Gs and any exported -dbr carry a sentinel and "
+                           "not an energy. Use TNode::Get_GibbsEnergy() meanwhile; this is a bug.",
+                           CNode->NodeStatusCH );
     CNode->Gs = pmm->FX;
     CNode->Hs = pmm->HXc;
     CNode->IC = pmm->IC;

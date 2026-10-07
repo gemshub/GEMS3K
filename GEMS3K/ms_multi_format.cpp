@@ -118,8 +118,8 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_AG" ,  0 , 0, 0, "\n# AG: Smoothing parameter 1 for non-ideal primal chemical potential increments (-1 to +1) { 1.0 }" },
     { "pa_DGC" , 0 , 0, 0, "\n# DGC: Smoothing parameter 2- exponent in smoothing function (-1 to +1) { 0 or 0.001 for adsorption }" },
     { "pa_PSM" , 0 , 0, 0, "\n# PSM: Level of diagnostic messages { 0- disabled (no ipmlog file); 1- default; 2-including warnings }" },
-    { "pa_GAR" , 0 , 0, 0, "# GAR: Activity coefficient for major (M) species in solution phases at Simplex LP AIA { 1 }"  },
-    { "pa_GAH" , 0 , 0, 0, "# GAH: Activity coefficient for minor (J) species in solution phases at Simplex LP AIA { 1000 }" },
+    { "pa_GAR", 0 , 0, 0, "# GAR: reserved, no effect { 1 }" },
+    { "pa_GAH", 0 , 0, 0, "# GAH: reserved, no effect { 1000 }" },
     { "pa_DS",   0 , 0, 0, "\n# DS: Cutoff minimum amount of stable phase in GEM IPM primal solution, moles { 1e-20 }" },
     { "pa_XwMin" , 0 , 0, 0, "# XwMin: Cutoff mole amount of water-solvent for aqueous phase elimination { 1e-13 }" },
     { "pa_ScMin" , 0 , 0, 0, "# ScMin: Cutoff mole amount of solid sorbent for sorption phase elimination { 1e-13 }" },
@@ -165,7 +165,46 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     // TSolMod stuff
     { "LsMdc2",    0 , 0, 0,  "# LsMdc2: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member" },
     { "LsPhl",    0 , 0, 0,  "# LsPhl: Number of phase links; number of link parameters; [Fi][2]" },
-    { "pa_PSTALL", 0 , 0, 0, "# pa_PSTALL: Enable (1) or disable (0) stall detection in MassBalanceRefinement { 1 }" }
+    { "pa_PSTALL", 0 , 0, 0, "# pa_PSTALL: Enable (1) or disable (0) stall detection in MassBalanceRefinement { 1 }" },
+    { "pa_OptimaTol", 0 , 0, 0, "# pa_OptimaTol: Optima solver convergence tolerance (optimality error) { 1e-8 }" },
+    { "pa_LogBarrierTau", 0 , 0, 0, "# pa_LogBarrierTau: Optima solver: log-barrier weight for pure single-species phases { 1e-16 }" },
+    { "pa_OptimaMaxStepRatio", 0 , 0, 0, "# pa_OptimaMaxStepRatio: reserved, no effect { 0 }" },
+    { "pa_PhaseHessianFloor", 0 , 0, 0, "# pa_PhaseHessianFloor: Optima solver: eigenvalue floor (fraction of the largest) for the exact curvature block of non-aqueous solution phases; 0 disables it { 0.01 }" },
+    { "pa_OptimaStallWindow", 0 , 0, 0, "# pa_OptimaStallWindow: Optima solver: abandon a solve when the best error has not improved over this many iterations; 0 = off { 500 }" },
+    { "pa_OptimaMaxSeconds", 0 , 0, 0, "# pa_OptimaMaxSeconds: Optima solver: time limit in seconds for one solve including retries; 0 = off. Results then depend on the machine { 0 }" },
+    { "pa_OptimaFDHessian", 0 , 0, 0, "# pa_OptimaFDHessian: Optima solver: 1 = finite-difference Hessian columns, 0 = skip them (cheaper) { 1 }" },
+    { "pa_OptimaMoleFracHessian", 0 , 0, 0, "# pa_OptimaMoleFracHessian: Optima solver: ideal-mixing Hessian of non-aqueous solution phases; 0 = diag(1/X), 1 = full mole-fraction Jacobian { 0 }" },
+    { "pa_OptimaPhaseCompaction", 0 , 0, 0, "# pa_OptimaPhaseCompaction: reserved, no effect { 0 }" },
+    { "pa_OptimaFDHessianDelay", 0 , 0, 0, "# pa_OptimaFDHessianDelay: Optima solver: iterations with the cheap Hessian before the finite-difference columns are used; 0 = no delay { 0 }" },
+    { "pa_OptimaDcFloor", 0 , 0, 0, "# pa_OptimaDcFloor: Optima solver: lower bound on species amounts; 0 = derive it from pa_DHB { 0 }" },
+    { "pa_MbClassRule", 0 , 0, 0, "# pa_MbClassRule: MassBalanceRefinement: trace/major ratio for a per-class test (relative for trace, absolute for major ICs); 0 = off { 0 }" },
+    { "pa_MbTrendPhaseDecay", 0 , 0, 0, "# pa_MbTrendPhaseDecay: reserved, no effect { 0 }" },
+    { "pa_OptimaEarlyStabilityAt", 0 , 0, 0, "# pa_OptimaEarlyStabilityAt: Optima solver: end the first attempt early for a phase-stability check; >0 = at that iteration, <0 = after -N consecutive falls of a phase, 0 = auto { 0 }" },
+    { "pa_OptimaDimReduce", 0 , 0, 0, "# pa_OptimaDimReduce: Optima solver: species-level dimension reduction; >0 = max passes, 0 = auto (on from 200 species), <0 = off { 0 }" },
+    { "pa_OptimaDimReduceTol", 0 , 0, 0, "# pa_OptimaDimReduceTol: Optima solver: initial species set of the dimension reduction; >0 = RT threshold, <0 = -m (m x N cheapest species) { 10 }" },
+    { "pa_MbPivotSplit", 0 , 0, 0, "# pa_MbPivotSplit: reserved, no effect { 0 }" },
+    { "pa_OptimaZeroAbsent", 0 , 0, 0, "# pa_OptimaZeroAbsent: Optima solver: absent species in the answer; 0 = floor amounts, 1 = zero absent phases and rebalance, 2 = floor amounts and repair a failing mass balance { 2 }" },
+    { "pa_OptimaReadmitSeed", 0 , 0, 0, "# pa_OptimaReadmitSeed: reserved, no effect { 0 }" },
+    { "pa_IpmStallWindow", 0 , 0, 0, "# pa_IpmStallWindow: IPM: accept convergence when energy and composition have stopped changing over this many iterations; 0 = off { 30 }" },
+    { "pa_MbReproject", 0 , 0, 0, "# pa_MbReproject: Native solver: repair an unsatisfied mass balance of the answer by projection; 0 = off, 1 = on { 1 }" },
+    { "pa_DeterminacyWarn", 0 , 0, 0, "# pa_DeterminacyWarn: Native solver: warn when a phase amount is determined by the energy only to worse than this relative uncertainty; 0 = off { 0.01 }" },
+    { "pa_ColdRetryNudges", 0 , 0, 0, "# pa_ColdRetryNudges: Native solver: retry a failed cold (AIA) call at up to this many 1e-15 nudges of the bulk composition, then finish at the exact one; 0 = off { 4 }" },
+    { "pa_OptimaPreSolveFirstIters", 0 , 0, 0, "# pa_OptimaPreSolveFirstIters: Optima solver: iteration budget per pass of the dimension reduction first attempt; 0 = off { 6000 }" },
+    { "pa_LpDualFillout", 0 , 0, 0, "# pa_LpDualFillout: reserved, no effect { 0 }" },
+    { "pa_FilloutBudget", 0 , 0, 0, "# pa_FilloutBudget: Native solver, cold start: max change of each element mass balance by the initial fill-out, as a fraction of its bulk amount; 0 = off { 0 }" },
+    { "pa_StabTPD", 0 , 0, 0, "# pa_StabTPD: Tangent-plane stability check of absent solution phases, reported in the trace only; 0 = off, 1 = report { 1 }" },
+    { "pa_IpmAugmentedKKT", 0 , 0, 0, "# pa_IpmAugmentedKKT: IPM main loop linear solve; 0 = normal equations, 1 = augmented system by LU, 2 = same by QR least squares { 2 }" },
+    { "pa_IpmLoopTweaks", 0 , 0, 0, "# pa_IpmLoopTweaks: reserved, no effect { 0 }" },
+    { "pa_OptimaLineSearch", 0 , 0, 0, "# pa_OptimaLineSearch: Optima solver: line search trigger factor; 0 = off, <0 = only when re-running a failed call { 1.5 }" },
+    { "pa_OptimaFDDiagFloor", 0 , 0, 0, "# pa_OptimaFDDiagFloor: reserved, no effect { 0 }" },
+    { "pa_OptimaLSStallEscape", 0 , 0, 0, "# pa_OptimaLSStallEscape: Optima solver: with the line search on, take the full step after this many line searches without progress; 0 = off { 10 }" },
+    { "pa_OptimaLSWindow", 0 , 0, 0, "# pa_OptimaLSWindow: reserved, no effect { 0 }" },
+    { "pa_OptimaLSRejectWorse", 0 , 0, 0, "# pa_OptimaLSRejectWorse: Optima solver: discard a line search that ends no better than it started and take the full step; 0 = off, 1 = on { 0 }" },
+    { "pa_OptimaTpdAccept", 0 , 0, 0, "# pa_OptimaTpdAccept: Optima solver: accept a non-converged state when no absent phase fails a tangent-plane check by more than this; 0 = off { 1e-6 }" },
+    { "pa_OptimaCgSeed", 0 , 0, 0, "# pa_OptimaCgSeed: Optima solver: cold-start guess by column generation, value = tangent-plane tolerance; 0 = off { 1e-6 }" },
+    { "pa_OptimaColdRetry", 0 , 0, 0, "# pa_OptimaColdRetry: Optima solver: re-solve a failed warm call (SOP/SHP) cold; 0 = off, 1 = after the full budget, 2 = fail fast { 2 }" },
+    { "pa_OptimaFinish", 0 , 0, 0, "# pa_OptimaFinish: Optima solver: finish a non-converged call by Newton on the fixed phase set; 0 = off, 1 = on { 1 }" },
+    { "pa_OptimaAcceptRepair", 0 , 0, 0, "# pa_OptimaAcceptRepair: Optima solver: with pa_OptimaTpdAccept, repair a failing mass balance and re-test; 0 = off, 1 = on { 0 }" },
 };
 
 
@@ -184,7 +223,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 81, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 120, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -354,6 +393,84 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_PLLG, pa_p->PLLG, _comment, false  );
     if(!brief_mode || pa_p->PSTALL != pa_p_.PSTALL )
         prar.writeField(f_pa_PSTALL, pa_p->PSTALL, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaTol, pa_p_.OptimaTol) )
+        prar.writeField(f_pa_OptimaTol, pa_p->OptimaTol, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->LogBarrierTau, pa_p_.LogBarrierTau) )
+        prar.writeField(f_pa_LogBarrierTau, pa_p->LogBarrierTau, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaMaxStepRatio, pa_p_.OptimaMaxStepRatio) )
+        prar.writeField(f_pa_OptimaMaxStepRatio, pa_p->OptimaMaxStepRatio, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->PhaseHessianFloor, pa_p_.PhaseHessianFloor) )
+        prar.writeField(f_pa_PhaseHessianFloor, pa_p->PhaseHessianFloor, _comment, false  );
+    if(!brief_mode || pa_p->OptimaStallWindow != pa_p_.OptimaStallWindow )
+        prar.writeField(f_pa_OptimaStallWindow, pa_p->OptimaStallWindow, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaMaxSeconds, pa_p_.OptimaMaxSeconds) )
+        prar.writeField(f_pa_OptimaMaxSeconds, pa_p->OptimaMaxSeconds, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFDHessian != pa_p_.OptimaFDHessian )
+        prar.writeField(f_pa_OptimaFDHessian, pa_p->OptimaFDHessian, _comment, false  );
+    if(!brief_mode || pa_p->OptimaMoleFracHessian != pa_p_.OptimaMoleFracHessian )
+        prar.writeField(f_pa_OptimaMoleFracHessian, pa_p->OptimaMoleFracHessian, _comment, false  );
+    if(!brief_mode || pa_p->OptimaPhaseCompaction != pa_p_.OptimaPhaseCompaction )
+        prar.writeField(f_pa_OptimaPhaseCompaction, pa_p->OptimaPhaseCompaction, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFDHessianDelay != pa_p_.OptimaFDHessianDelay )
+        prar.writeField(f_pa_OptimaFDHessianDelay, pa_p->OptimaFDHessianDelay, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaDcFloor, pa_p_.OptimaDcFloor) )
+        prar.writeField(f_pa_OptimaDcFloor, pa_p->OptimaDcFloor, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->MbClassRule, pa_p_.MbClassRule) )
+        prar.writeField(f_pa_MbClassRule, pa_p->MbClassRule, _comment, false  );
+    if(!brief_mode || pa_p->MbTrendPhaseDecay != pa_p_.MbTrendPhaseDecay )
+        prar.writeField(f_pa_MbTrendPhaseDecay, pa_p->MbTrendPhaseDecay, _comment, false  );
+    if(!brief_mode || pa_p->OptimaEarlyStabilityAt != pa_p_.OptimaEarlyStabilityAt )
+        prar.writeField(f_pa_OptimaEarlyStabilityAt, pa_p->OptimaEarlyStabilityAt, _comment, false  );
+    if(!brief_mode || pa_p->OptimaDimReduce != pa_p_.OptimaDimReduce )
+        prar.writeField(f_pa_OptimaDimReduce, pa_p->OptimaDimReduce, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaDimReduceTol, pa_p_.OptimaDimReduceTol) )
+        prar.writeField(f_pa_OptimaDimReduceTol, pa_p->OptimaDimReduceTol, _comment, false  );
+    if(!brief_mode || pa_p->MbPivotSplit != pa_p_.MbPivotSplit )
+        prar.writeField(f_pa_MbPivotSplit, pa_p->MbPivotSplit, _comment, false  );
+    if(!brief_mode || pa_p->OptimaZeroAbsent != pa_p_.OptimaZeroAbsent )
+        prar.writeField(f_pa_OptimaZeroAbsent, pa_p->OptimaZeroAbsent, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaReadmitSeed, pa_p_.OptimaReadmitSeed) )
+        prar.writeField(f_pa_OptimaReadmitSeed, pa_p->OptimaReadmitSeed, _comment, false  );
+    if(!brief_mode || pa_p->IpmStallWindow != pa_p_.IpmStallWindow )
+        prar.writeField(f_pa_IpmStallWindow, pa_p->IpmStallWindow, _comment, false  );
+    if(!brief_mode || pa_p->MbReproject != pa_p_.MbReproject )
+        prar.writeField(f_pa_MbReproject, pa_p->MbReproject, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->DeterminacyWarn, pa_p_.DeterminacyWarn) )
+        prar.writeField(f_pa_DeterminacyWarn, pa_p->DeterminacyWarn, _comment, false  );
+    if(!brief_mode || pa_p->ColdRetryNudges != pa_p_.ColdRetryNudges )
+        prar.writeField(f_pa_ColdRetryNudges, pa_p->ColdRetryNudges, _comment, false  );
+    if(!brief_mode || pa_p->OptimaPreSolveFirstIters != pa_p_.OptimaPreSolveFirstIters )
+        prar.writeField(f_pa_OptimaPreSolveFirstIters, pa_p->OptimaPreSolveFirstIters, _comment, false  );
+    if(!brief_mode || pa_p->LpDualFillout != pa_p_.LpDualFillout )
+        prar.writeField(f_pa_LpDualFillout, pa_p->LpDualFillout, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->FilloutBudget, pa_p_.FilloutBudget) )
+        prar.writeField(f_pa_FilloutBudget, pa_p->FilloutBudget, _comment, false  );
+    if(!brief_mode || pa_p->StabTPD != pa_p_.StabTPD )
+        prar.writeField(f_pa_StabTPD, pa_p->StabTPD, _comment, false  );
+    if(!brief_mode || pa_p->IpmAugmentedKKT != pa_p_.IpmAugmentedKKT )
+        prar.writeField(f_pa_IpmAugmentedKKT, pa_p->IpmAugmentedKKT, _comment, false  );
+    if(!brief_mode || pa_p->IpmLoopTweaks != pa_p_.IpmLoopTweaks )
+        prar.writeField(f_pa_IpmLoopTweaks, pa_p->IpmLoopTweaks, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaLineSearch, pa_p_.OptimaLineSearch) )
+        prar.writeField(f_pa_OptimaLineSearch, pa_p->OptimaLineSearch, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFDDiagFloor != pa_p_.OptimaFDDiagFloor )
+        prar.writeField(f_pa_OptimaFDDiagFloor, pa_p->OptimaFDDiagFloor, _comment, false  );
+    if(!brief_mode || pa_p->OptimaLSStallEscape != pa_p_.OptimaLSStallEscape )
+        prar.writeField(f_pa_OptimaLSStallEscape, pa_p->OptimaLSStallEscape, _comment, false  );
+    if(!brief_mode || pa_p->OptimaLSWindow != pa_p_.OptimaLSWindow )
+        prar.writeField(f_pa_OptimaLSWindow, pa_p->OptimaLSWindow, _comment, false  );
+    if(!brief_mode || pa_p->OptimaLSRejectWorse != pa_p_.OptimaLSRejectWorse )
+        prar.writeField(f_pa_OptimaLSRejectWorse, pa_p->OptimaLSRejectWorse, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaTpdAccept, pa_p_.OptimaTpdAccept) )
+        prar.writeField(f_pa_OptimaTpdAccept, pa_p->OptimaTpdAccept, _comment, false  );
+    if(!brief_mode || !essentiallyEqual(pa_p->OptimaCgSeed, pa_p_.OptimaCgSeed) )
+        prar.writeField(f_pa_OptimaCgSeed, pa_p->OptimaCgSeed, _comment, false  );
+    if(!brief_mode || pa_p->OptimaColdRetry != pa_p_.OptimaColdRetry )
+        prar.writeField(f_pa_OptimaColdRetry, pa_p->OptimaColdRetry, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFinish != pa_p_.OptimaFinish )
+        prar.writeField(f_pa_OptimaFinish, pa_p->OptimaFinish, _comment, false  );
+    if(!brief_mode || pa_p->OptimaAcceptRepair != pa_p_.OptimaAcceptRepair )
+        prar.writeField(f_pa_OptimaAcceptRepair, pa_p->OptimaAcceptRepair, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -688,7 +805,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     std::string ret = rdar.testRead();
     if( !ret.empty() )
     { ret += " - fields must be read from the MULTI structure";
-        Error( "Error", ret);
+        Error( "Reading project file", ret );
     }
 
     // Try fix error 09.12.2025 lost pm.E after reading gems3k files
@@ -759,7 +876,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 81, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 120, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -795,11 +912,11 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     {
         switch( nfild )
         { case f_sMod: if( !pm.sMod )
-                Error( "Error", "Array sMod is not used in this problem");
+                Error( "Reading IPM file", "Array sMod is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "sMod" , pm.sMod[0], pm.FIs, 8 );
             break;
         case f_LsMod:{ if( !pm.LsMod )
-                Error( "Error", "Array LsMod is not used in this problem");
+                Error( "Reading IPM file", "Array LsMod is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "LsMod" , pm.LsMod, pm.FIs*3) ;
             long int LsModSum;
             long int LsIPxSum;
@@ -819,7 +936,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         }
         case f_LsMdc: { if( !pm.LsMdc )
-                Error( "Error", "Array LsMdc not used in this problem");
+                Error( "Reading IPM file", "Array LsMdc is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "LsMdc" , pm.LsMdc, pm.FIs*3 );
             long int LsMdcSum;
             long int LsMsnSum;
@@ -845,7 +962,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_LsMdc2:
         {
             if( !pm.LsMdc2 )
-                Error( "Error", "Array LsMdc2 not used in this problem");
+                Error( "Reading IPM file", "Array LsMdc2 is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray(  "LsMdc2", pm.LsMdc2, pm.FIs*3);
             long int DQFcSum, rcpcSum;
             getLsMdc2sum( DQFcSum, rcpcSum );
@@ -859,7 +976,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         }
         case f_LsPhl:
         { if( !pm.LsPhl )
-                Error( "Error", "Array LsPhl not used in this problem");
+                Error( "Reading IPM file", "Array LsPhl is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray(  "LsPhl",  pm.LsPhl, pm.FI*2);
             long int PhLinSum, lPhcSum;
             getLsPhlsum( PhLinSum,lPhcSum );
@@ -884,7 +1001,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             // TSorpMod stuff
         case f_LsISmo:
         { if( !pm.LsISmo )
-                Error( "Error", "Array LsISmo not used in this problem");
+                Error( "Reading IPM file", "Array LsISmo is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray(  "LsISmo",  pm.LsISmo, pm.FIs*4);
 
             long int IsoCtSum, IsoScSum;
@@ -920,7 +1037,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_LsESmo:
         {
             if( !pm.LsESmo )
-                Error( "Error", "Array LsESmo not used in this problem");
+                Error( "Reading IPM file", "Array LsESmo is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray(  "LsESmo",  pm.LsESmo, pm.FIs*4);
             long int EImcSum, mCDcSum;
             getLsESmosum( EImcSum, mCDcSum );
@@ -946,7 +1063,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_LsKin:
         {
             if( !pm.LsKin )
-                Error( "Error", "Array LsKin not used in this problem");
+                Error( "Reading IPM file", "Array LsKin is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray(  "LsKin",  pm.LsKin, pm.FI*6);
 
             long int xSKrCSum, ocPRkC_feSArC_Sum;
@@ -990,7 +1107,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_LsUpt:
         {
             if( !pm.LsUpt )
-                Error( "Error", "Array LsUpt not used in this problem");
+                Error( "Reading IPM file", "Array LsUpt is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray(  "LsUpt",  pm.LsUpt, pm.FIs*2);
 
             long int UMpcSum, xICuCSum;
@@ -1034,57 +1151,57 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_Aalp: rddar.readArray( "Aalp", pm.Aalp,  pm.FI);
             break;
         case f_Sigw: if( !pm.Sigw )
-                Error( "Error", "Array Sigw not used in this problem");
+                Error( "Reading IPM file", "Array Sigw is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "Sigw", pm.Sigw,  pm.FI);
             break;
         case f_Sigg: if( !pm.Sigg )
-                Error( "Error", "Array Sigg not used in this problem");
+                Error( "Reading IPM file", "Array Sigg is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "Sigg", pm.Sigg,  pm.FI);
             break;
         case f_YOF: rddar.readArray( "YOF", pm.YOF,  pm.FI);
             break;
         case f_Nfsp: if( !pm.Nfsp )
-                Error( "Error", "Array Nfsp not used in this problem");
+                Error( "Reading IPM file", "Array Nfsp is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "Nfsp", &pm.Nfsp[0][0], pm.FIs*pm.FIat);
             break;
         case f_MASDT: if( !pm.MASDT )
-                Error( "Error", "Array MASDT not used in this problem");
+                Error( "Reading IPM file", "Array MASDT is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "MASDT", &pm.MASDT[0][0], pm.FIs*pm.FIat);
             break;
         case f_C1: if( !pm.XcapA )
-                Error( "Error", "Array XcapA not used in this problem");
+                Error( "Reading IPM file", "Array XcapA is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "C1", &pm.XcapA[0][0], pm.FIs*pm.FIat);
             break;
         case f_C2: if( !pm.XcapB )
-                Error( "Error", "Array XcapB not used in this problem");
+                Error( "Reading IPM file", "Array XcapB is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "C2", &pm.XcapB[0][0], pm.FIs*pm.FIat);
             break;
         case f_C3: if( !pm.XcapF )
-                Error( "Error", "Array XcapF not used in this problem");
+                Error( "Reading IPM file", "Array XcapF is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "C3", &pm.XcapF[0][0], pm.FIs*pm.FIat);
             break;
         case f_pCh: if( !pm.Xetaf )
-                Error( "Error", "Array Xetaf not used in this problem");
+                Error( "Reading IPM file", "Array Xetaf is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "pCh", &pm.Xetaf[0][0], pm.FIs*pm.FIat);
             break;
         case f_SATX: if( !pm.SATX )
-                Error( "Error", "Array SATX not used in this problem");
+                Error( "Reading IPM file", "Array SATX is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "SATX", &pm.SATX[0][0], pm.Lads*4);
             break;
         case f_MASDJ: if( !pm.MASDJ )
-                Error( "Error", "Array MASDJ not used in this problem");
+                Error( "Reading IPM file", "Array MASDJ is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "MASDJ", &pm.MASDJ[0][0], pm.Lads*DFCN);
             break;
         case f_SCM: if( !pm.SCM )
-                Error( "Error", "Array SCM not used in this problem");
+                Error( "Reading IPM file", "Array SCM is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "SCM", pm.SCM[0], pm.FIs, pm.FIat );
             break;
         case f_SACT: if( !pm.SATT )
-                Error( "Error", "Array SATT not used in this problem");
+                Error( "Reading IPM file", "Array SATT is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "SACT", pm.SATT, pm.Lads, 1 );
             break;
         case f_DCads: if( !pm.DCC3 )
-                Error( "Error", "Array DCC3 not used in this problem");
+                Error( "Reading IPM file", "Array DCC3 is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "DCads", pm.DCC3, pm.Lads, 1 );
             break;
         case f_pa_DB: rddar.readArray( "pa_DB" , &pa_p->DB, 1);
@@ -1171,6 +1288,84 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_pa_PSTALL: rddar.readArray("pa_PSTALL" , &pa_p->PSTALL, 1);
             break;
+        case f_pa_OptimaTol: rddar.readArray("pa_OptimaTol" , &pa_p->OptimaTol, 1);
+            break;
+        case f_pa_LogBarrierTau: rddar.readArray("pa_LogBarrierTau" , &pa_p->LogBarrierTau, 1);
+            break;
+        case f_pa_OptimaMaxStepRatio: rddar.readArray("pa_OptimaMaxStepRatio" , &pa_p->OptimaMaxStepRatio, 1);
+            break;
+        case f_pa_PhaseHessianFloor: rddar.readArray("pa_PhaseHessianFloor" , &pa_p->PhaseHessianFloor, 1);
+            break;
+        case f_pa_OptimaStallWindow: rddar.readArray("pa_OptimaStallWindow" , &pa_p->OptimaStallWindow, 1);
+                break;
+        case f_pa_OptimaMaxSeconds: rddar.readArray("pa_OptimaMaxSeconds" , &pa_p->OptimaMaxSeconds, 1);
+                break;
+        case f_pa_OptimaFDHessian: rddar.readArray("pa_OptimaFDHessian" , &pa_p->OptimaFDHessian, 1);
+                break;
+        case f_pa_OptimaMoleFracHessian: rddar.readArray("pa_OptimaMoleFracHessian" , &pa_p->OptimaMoleFracHessian, 1);
+                break;
+        case f_pa_OptimaPhaseCompaction: rddar.readArray("pa_OptimaPhaseCompaction" , &pa_p->OptimaPhaseCompaction, 1);
+                break;
+        case f_pa_OptimaFDHessianDelay: rddar.readArray("pa_OptimaFDHessianDelay" , &pa_p->OptimaFDHessianDelay, 1);
+                break;
+        case f_pa_OptimaDcFloor: rddar.readArray("pa_OptimaDcFloor" , &pa_p->OptimaDcFloor, 1);
+                break;
+        case f_pa_MbClassRule: rddar.readArray("pa_MbClassRule" , &pa_p->MbClassRule, 1);
+                break;
+        case f_pa_OptimaEarlyStabilityAt: rddar.readArray("pa_OptimaEarlyStabilityAt" , &pa_p->OptimaEarlyStabilityAt, 1);
+                break;
+        case f_pa_OptimaDimReduceTol: rddar.readArray("pa_OptimaDimReduceTol" , &pa_p->OptimaDimReduceTol, 1);
+                    break;
+        case f_pa_OptimaZeroAbsent: rddar.readArray("pa_OptimaZeroAbsent" , &pa_p->OptimaZeroAbsent, 1);
+                break;
+        case f_pa_OptimaReadmitSeed: rddar.readArray("pa_OptimaReadmitSeed" , &pa_p->OptimaReadmitSeed, 1);
+                break;
+        case f_pa_IpmStallWindow: rddar.readArray("pa_IpmStallWindow" , &pa_p->IpmStallWindow, 1);
+                break;
+        case f_pa_MbReproject: rddar.readArray("pa_MbReproject" , &pa_p->MbReproject, 1);
+                break;
+        case f_pa_DeterminacyWarn: rddar.readArray("pa_DeterminacyWarn" , &pa_p->DeterminacyWarn, 1);
+                break;
+        case f_pa_ColdRetryNudges: rddar.readArray("pa_ColdRetryNudges" , &pa_p->ColdRetryNudges, 1);
+                break;
+        case f_pa_OptimaPreSolveFirstIters: rddar.readArray("pa_OptimaPreSolveFirstIters" , &pa_p->OptimaPreSolveFirstIters, 1);
+                break;
+        case f_pa_LpDualFillout: rddar.readArray("pa_LpDualFillout" , &pa_p->LpDualFillout, 1);
+            break;
+        case f_pa_FilloutBudget: rddar.readArray("pa_FilloutBudget" , &pa_p->FilloutBudget, 1);
+            break;
+        case f_pa_StabTPD: rddar.readArray("pa_StabTPD" , &pa_p->StabTPD, 1);
+            break;
+        case f_pa_IpmAugmentedKKT: rddar.readArray("pa_IpmAugmentedKKT" , &pa_p->IpmAugmentedKKT, 1);
+            break;
+        case f_pa_IpmLoopTweaks: rddar.readArray("pa_IpmLoopTweaks" , &pa_p->IpmLoopTweaks, 1);
+            break;
+        case f_pa_OptimaLineSearch: rddar.readArray("pa_OptimaLineSearch" , &pa_p->OptimaLineSearch, 1);
+            break;
+        case f_pa_OptimaFDDiagFloor: rddar.readArray("pa_OptimaFDDiagFloor" , &pa_p->OptimaFDDiagFloor, 1);
+            break;
+        case f_pa_OptimaLSStallEscape: rddar.readArray("pa_OptimaLSStallEscape" , &pa_p->OptimaLSStallEscape, 1);
+            break;
+        case f_pa_OptimaLSWindow: rddar.readArray("pa_OptimaLSWindow" , &pa_p->OptimaLSWindow, 1);
+            break;
+        case f_pa_OptimaLSRejectWorse: rddar.readArray("pa_OptimaLSRejectWorse" , &pa_p->OptimaLSRejectWorse, 1);
+            break;
+        case f_pa_OptimaTpdAccept: rddar.readArray("pa_OptimaTpdAccept" , &pa_p->OptimaTpdAccept, 1);
+            break;
+        case f_pa_OptimaCgSeed: rddar.readArray("pa_OptimaCgSeed" , &pa_p->OptimaCgSeed, 1);
+            break;
+        case f_pa_OptimaColdRetry: rddar.readArray("pa_OptimaColdRetry" , &pa_p->OptimaColdRetry, 1);
+            break;
+        case f_pa_OptimaFinish: rddar.readArray("pa_OptimaFinish" , &pa_p->OptimaFinish, 1);
+            break;
+        case f_pa_OptimaAcceptRepair: rddar.readArray("pa_OptimaAcceptRepair" , &pa_p->OptimaAcceptRepair, 1);
+            break;
+        case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
+                break;
+        case f_pa_OptimaDimReduce: rddar.readArray("pa_OptimaDimReduce" , &pa_p->OptimaDimReduce, 1);
+                break;
+        case f_pa_MbTrendPhaseDecay: rddar.readArray("pa_MbTrendPhaseDecay" , &pa_p->MbTrendPhaseDecay, 1);
+                break;
         case f_tMin: rddar.readArray("tMin" , &pm.tMin, 1);
             break;
         case f_dcMod:   rddar.readArray( "dcMod" , pm.dcMod[0], pm.L, 6 );
@@ -1182,7 +1377,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ret = rddar.testRead();
     if( !ret.empty() )
     { ret += " - fields must be read from the MULTY structure";
-        Error( "Error", ret);
+        Error( "Reading project file", ret );
     }
 }
 

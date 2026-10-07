@@ -28,6 +28,13 @@
 //
 
 #include "ms_multi.h"
+#include "v_service.h"
+
+// Phase name for the surface-model debug messages.
+static std::string edlPhaseName( const MULTI& pm, long int k )
+{
+    return char_array_to_string( pm.SF[k], MAXPHNAME+MAXSYMB );
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculating bulk stoichiometry of a multicomponent phase
@@ -671,19 +678,19 @@ TMultiBase::GouyChapman(  long int, long int, long int k )
         // Limit maximum charge densities to prevent divergence
         if( fabs(XetaA[ist]) > 1.4 )
         {
-            ipm_logger->debug("EDL charge density A {} truncated to +- 0.7 C/m2  IT={} k= {} ist= {}", XetaA[ist], pm.IT, k, ist);
+            ipm_logger->debug("EDL charge density A {} C/m2 limited to +-1.4 C/m2 (phase {}, surface type {}, IT={}).", XetaA[ist], char_array_to_string( pm.SF[k], MAXPHNAME+MAXSYMB ), ist, pm.IT);
             XetaA[ist] = XetaA[ist] < 0.0 ? -1.4: 1.4;
             status = 60;
         }
         if( fabs(XetaB[ist]) > 2.0 )
         {
-            ipm_logger->debug("EDL charge density B {} truncated to +- 1.7 C/m2  IT={} k= {} ist= {}", XetaB[ist], pm.IT, k, ist);
+            ipm_logger->debug("EDL charge density B {} C/m2 limited to +-2.0 C/m2 (phase {}, surface type {}, IT={}).", XetaB[ist], char_array_to_string( pm.SF[k], MAXPHNAME+MAXSYMB ), ist, pm.IT);
             XetaB[ist] = XetaB[ist] < 0.0 ? -2.0: 2.0;
             status = 61;
         }
         if( fabs(XetaD[ist]) > 1.4 )
         {
-            ipm_logger->debug("EDL charge density D {} truncated to +- 0.7 C/m2  IT={} k= {} ist= {}", XetaD[ist], pm.IT, k, ist);
+            ipm_logger->debug("EDL charge density D {} C/m2 limited to +-1.4 C/m2 (phase {}, surface type {}, IT={}).", XetaD[ist], char_array_to_string( pm.SF[k], MAXPHNAME+MAXSYMB ), ist, pm.IT);
             XetaD[ist] = XetaD[ist] < 0.0 ? -1.4: 1.4;
             status = 62;
         }
@@ -785,7 +792,7 @@ TMultiBase::GouyChapman(  long int, long int, long int k )
         // Truncating diffuse plane potential to avoid divergence
         if( fabs( PsiD ) > 0.4 )
         {
-            ipm_logger->debug("All EDL models: PsiD ={} truncated to +- 0.4 V IT={} k= {} ist= {}", PsiD, pm.IT, k, ist);
+            ipm_logger->debug("All EDL models: PsiD ={} truncated to +- 0.4 V (phase {}, surface type {}, IT={})", PsiD, edlPhaseName( pm, k ), ist, pm.IT);
             PsiD = PsiD<0? -0.4: 0.4;
             status = 63;
         }
@@ -816,7 +823,7 @@ GEMU_CALC:
             { // Extended CCM model [Nilsson ea 1996] as TLM with PsiD = 0
                 if( approximatelyZero(pm.XcapB[k][ist])) {
                     PsiB = 0.0; //-SigB<0? -0.3: 0.3;
-                    ipm_logger->debug("Extended CCM model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
+                    ipm_logger->debug("Extended CCM model XcapB = {} (phase {}, surface type {}, IT={})", pm.XcapB[k][ist], edlPhaseName( pm, k ), ist, pm.IT);
                 }
                 else {
                     if (pm.SCM[k][ist] == SC_ISCCM)
@@ -831,7 +838,7 @@ GEMU_CALC:
                }
                if( approximatelyZero(pm.XcapA[k][ist])) {
                    PsiA = 0.0; // SigA<0? -0.7: 0.7;
-                   ipm_logger->debug("Extended CCM model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+                   ipm_logger->debug("Extended CCM model XcapA = {} (phase {}, surface type {}, IT={})", pm.XcapA[k][ist], edlPhaseName( pm, k ), ist, pm.IT);
                }
                else {
                    if (pm.SCM[k][ist] == SC_ISCCM)
@@ -852,27 +859,27 @@ GEMU_CALC:
 // PsiD = 0.0; // test
             if( approximatelyZero(pm.XcapB[k][ist])) {
                 PsiB = 0.0; //SigB<0 ? -0.6: 0.6;
-                ipm_logger->debug("Modified Triple Layer Model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
+                ipm_logger->debug("Modified Triple Layer Model XcapB = {} (phase {}, surface type {}, IT={})", pm.XcapB[k][ist], edlPhaseName( pm, k ), ist, pm.IT);
             }
             else {
                 PsiB = PsiD - SigDDL / pm.XcapB[k][ist];
             }
             if( fabs( PsiB ) > 0.6)  // truncated B-plane potential
             {
-                ipm_logger->debug("EDL (MTL) PsiB = {} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
+                ipm_logger->debug("EDL (MTL) PsiB = {} truncated to +- 0.6 V (phase {}, surface type {}, IT={})", PsiB, edlPhaseName( pm, k ), ist, pm.IT);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 67;
             }
             if( approximatelyZero(pm.XcapA[k][ist])) {
                 PsiA = 0.0; //SigA<0? -1.1: 1.1;
-                ipm_logger->debug("Modified Triple Layer Model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+                ipm_logger->debug("Modified Triple Layer Model XcapA = {} (phase {}, surface type {}, IT={})", pm.XcapA[k][ist], edlPhaseName( pm, k ), ist, pm.IT);
             }
             else {
                 PsiA = PsiB + SigA / pm.XcapA[k][ist];
             }
             if( fabs( PsiA ) > 1.1 )  // truncated 0 plane potential
             {
-                ipm_logger->debug("EDL (MTL) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
+                ipm_logger->debug("EDL (MTL) PsiA ={} truncated to +- 1.1 V (phase {}, surface type {}, IT={})", PsiA, edlPhaseName( pm, k ), ist, pm.IT);
                 PsiA = PsiA<0? -1.1: 1.1;
                 status = 68;
             }
@@ -882,27 +889,27 @@ GEMU_CALC:
         case SC_TLM:  // Triple-Layer Model   [Hayes 1987]
             if( approximatelyZero(pm.XcapB[k][ist])) {
                 PsiB = 0.0; // SigB<0 ? -0.6: 0.6;
-                ipm_logger->debug("Triple-Layer Model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
+                ipm_logger->debug("Triple-Layer Model XcapB = {} (phase {}, surface type {}, IT={})", pm.XcapB[k][ist], edlPhaseName( pm, k ), ist, pm.IT);
             }
             else {
                 PsiB = PsiD - SigDDL / pm.XcapB[k][ist];
             }
             if( fabs( PsiB ) > 0.6 )  // // truncated B-plane potential
             {
-                ipm_logger->debug("EDL (TLM) PsiB ={} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
+                ipm_logger->debug("EDL (TLM) PsiB ={} truncated to +- 0.6 V (phase {}, surface type {}, IT={})", PsiB, edlPhaseName( pm, k ), ist, pm.IT);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 69;
             }
             if( approximatelyZero(pm.XcapA[k][ist])) {
                 PsiA = 0.0; // SigA<0? -1.1: 1.1;
-                ipm_logger->debug("Triple-Layer Model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+                ipm_logger->debug("Triple-Layer Model XcapA = {} (phase {}, surface type {}, IT={})", pm.XcapA[k][ist], edlPhaseName( pm, k ), ist, pm.IT);
             }
             else {
                 PsiA = PsiB + SigA / pm.XcapA[k][ist];
             }
             if( fabs( PsiA ) > 1.1 )  // truncated 0-plane potential
             {
-                ipm_logger->debug("EDL (TLM) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
+                ipm_logger->debug("EDL (TLM) PsiA ={} truncated to +- 1.1 V (phase {}, surface type {}, IT={})", PsiA, edlPhaseName( pm, k ), ist, pm.IT);
                 PsiA = PsiA<0? -1.1: 1.1;
                 status = 70;
             }
@@ -911,31 +918,31 @@ GEMU_CALC:
             break;
         case SC_3LM: // Three-Layer Model [Hiemstra & van Riemsdijk 1996]
 //            PsiB = PsiD + SigD / pm.XcapB[k][ist];
-            ipm_logger->debug("EDL (3LM) PsiB(D) ={} IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
+            ipm_logger->debug("EDL (3LM) PsiB(D) ={} (phase {}, surface type {}, IT={})", PsiB, edlPhaseName( pm, k ), ist, pm.IT);
             if( approximatelyZero(pm.XcapB[k][ist])) {
                 PsiB = 0.0; //SigA<0 ? -0.6: 0.6;
-                ipm_logger->debug("Three-Layer Model XcapB = {} IT={} k= {} ist= {}", pm.XcapB[k][ist], pm.IT, k, ist);
+                ipm_logger->debug("Three-Layer Model XcapB = {} (phase {}, surface type {}, IT={})", pm.XcapB[k][ist], edlPhaseName( pm, k ), ist, pm.IT);
             }
             else {
                 PsiB = PsiD + ( SigA + SigB ) / pm.XcapB[k][ist];  // Compare!
             }
-            ipm_logger->debug("EDL (3LM) PsiB(AB) ={} IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
+            ipm_logger->debug("EDL (3LM) PsiB(AB) ={} (phase {}, surface type {}, IT={})", PsiB, edlPhaseName( pm, k ), ist, pm.IT);
             if( fabs( PsiB ) > 0.6 )  // truncated B-plane potential
             {
-               ipm_logger->debug("EDL (3LM) PsiB ={} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
+               ipm_logger->debug("EDL (3LM) PsiB ={} truncated to +- 0.6 V (phase {}, surface type {}, IT={})", PsiB, edlPhaseName( pm, k ), ist, pm.IT);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 71;
             }
             if( approximatelyZero(pm.XcapA[k][ist])) {
                 PsiA = 0.0; // SigA<0? -1.1: 1.1;
-                ipm_logger->debug("Three-Layer Model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+                ipm_logger->debug("Three-Layer Model XcapA = {} (phase {}, surface type {}, IT={})", pm.XcapA[k][ist], edlPhaseName( pm, k ), ist, pm.IT);
             }
             else {
                 PsiA = PsiB + SigA / pm.XcapA[k][ist];
             }
             if( fabs( PsiA ) > 1.1 )   // truncated 0-plane potential
             {
-               ipm_logger->debug("EDL (3LM) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
+               ipm_logger->debug("EDL (3LM) PsiA ={} truncated to +- 1.1 V (phase {}, surface type {}, IT={})", PsiA, edlPhaseName( pm, k ), ist, pm.IT);
                PsiA = PsiA<0? -1.1: 1.1;
                status = 72;
             }
@@ -946,20 +953,20 @@ GEMU_CALC:
             PsiB = PsiD;
             if( fabs( PsiB ) > 0.6 )  // truncated B-plane potential
             {
-               ipm_logger->debug("EDL (BSM) PsiB ={} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
+               ipm_logger->debug("EDL (BSM) PsiB ={} truncated to +- 0.6 V (phase {}, surface type {}, IT={})", PsiB, edlPhaseName( pm, k ), ist, pm.IT);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 73;
             }
             if( approximatelyZero(pm.XcapA[k][ist])) {
                 PsiA = 0.0; // SigA<0? -1.1: 1.1;
-                ipm_logger->debug("Basic Stern model XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+                ipm_logger->debug("Basic Stern model XcapA = {} (phase {}, surface type {}, IT={})", pm.XcapA[k][ist], edlPhaseName( pm, k ), ist, pm.IT);
             }
             else {
                 PsiA = PsiB + SigA / pm.XcapA[k][ist];
             }
             if( fabs( PsiA ) > 1.1 )  // truncated 0-plane potential
             {
-                ipm_logger->debug("EDL (BSM) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
+                ipm_logger->debug("EDL (BSM) PsiA ={} truncated to +- 1.1 V (phase {}, surface type {}, IT={})", PsiA, edlPhaseName( pm, k ), ist, pm.IT);
                 PsiA = PsiA<0? -1.1: 1.1;
                 status = 74;
             }
@@ -970,20 +977,20 @@ GEMU_CALC:
             PsiB = PsiD;
             if( fabs( PsiB ) > 0.6 )  // truncated B-plane potential
             {
-                ipm_logger->debug("EDL (MXC) PsiB ={} truncated to +- 0.6 V IT={} k= {} ist= {}", PsiB, pm.IT, k, ist);
+                ipm_logger->debug("EDL (MXC) PsiB ={} truncated to +- 0.6 V (phase {}, surface type {}, IT={})", PsiB, edlPhaseName( pm, k ), ist, pm.IT);
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 75;
             }
             if( approximatelyZero(pm.XcapA[k][ist])) {
                 PsiA = 0.0; // SigA<0? -1.1: 1.1;
-                ipm_logger->debug("BSM for permanent charge surfaces XcapA = {} IT={} k= {} ist= {}", pm.XcapA[k][ist], pm.IT, k, ist);
+                ipm_logger->debug("BSM for permanent charge surfaces XcapA = {} (phase {}, surface type {}, IT={})", pm.XcapA[k][ist], edlPhaseName( pm, k ), ist, pm.IT);
             }
             else {
                 PsiA = PsiB + SigA / pm.XcapA[k][ist];
             }
             if( fabs( PsiA ) > 1.1 ) // truncated 0-plane potential
             {
-                ipm_logger->debug("EDL (MXC) PsiA ={} truncated to +- 1.1 V IT={} k= {} ist= {}", PsiA, pm.IT, k, ist);
+                ipm_logger->debug("EDL (MXC) PsiA ={} truncated to +- 1.1 V (phase {}, surface type {}, IT={})", PsiA, edlPhaseName( pm, k ), ist, pm.IT);
                 PsiA = PsiA<0? -1.1: 1.1;
                 status = 76;
             }

@@ -16,9 +16,18 @@ if(USE_SPDLOG_PRECOMPILED)
    endif()
 endif()
 
-# Gate for benchmark/diagnostics-only instrumentation (condition-number
-# estimation, per-phase timing) in the IPM solver. Adds real overhead per
-# linear solve, so it is OFF by default for normal/production builds.
+# Equilibrium via the Optima library's primal-dual interior-point NLP solver, as an alternative
+# to GEMS3K's own IPM/MBR loop (solver modes AOP, SOP, ROP, HOP, SHP; see NODECODECH in databr.h
+# and ipm_optima.cpp). OFF by default; without it the native AIA/SIA paths are unchanged and the
+# Optima modes fall back to native. Requires Optima to be findable via CMAKE_PREFIX_PATH.
+option(USE_OPTIMA_SOLVER "Enable the Optima-based equilibrium solver (AOP/SOP modes, requires Optima to be installed)" OFF)
+if(USE_OPTIMA_SOLVER)
+    find_package(Optima REQUIRED)
+endif()
+
+# Benchmark/diagnostics-only instrumentation (condition-number estimation, per-phase timing).
+# It adds overhead to every linear solve, so it is OFF by default; gems-benchmark turns it ON.
+# Further instrumentation of this kind should use the same option.
 option(ENABLE_BENCHMARK_DIAGNOSTICS "Enable benchmark/diagnostics-only instrumentation (condition-number estimation, per-phase timing, etc.) in the IPM solver (adds overhead; for benchmarking/diagnostics only)" OFF)
 
 # Check if a shared library is to be built
@@ -28,6 +37,10 @@ if(BUILD_SHARED_LIBS)
 
    add_library(GEMS3K ${HEADER_FILES} ${SOURCE_FILES})
    add_library(GEMS3K::GEMS3K ALIAS GEMS3K)
+   if(USE_OPTIMA_SOLVER)
+       target_compile_definitions(GEMS3K PUBLIC USE_OPTIMA_SOLVER)
+       target_link_libraries(GEMS3K PUBLIC Optima::Optima)
+   endif()
    if(ENABLE_BENCHMARK_DIAGNOSTICS)
        target_compile_definitions(GEMS3K PRIVATE GEMS3K_BENCHMARK_DIAGNOSTICS)
    endif()
@@ -61,6 +74,10 @@ endif()
 if(BUILD_STATIC_LIBS)
    add_library(GEMS3K-static STATIC ${HEADER_FILES} ${SOURCE_FILES})
     add_library(GEMS3K::GEMS3K-static ALIAS GEMS3K-static)
+   if(USE_OPTIMA_SOLVER)
+       target_compile_definitions(GEMS3K-static PUBLIC USE_OPTIMA_SOLVER)
+       target_link_libraries(GEMS3K-static PUBLIC Optima::Optima)
+   endif()
    if(ENABLE_BENCHMARK_DIAGNOSTICS)
        target_compile_definitions(GEMS3K-static PRIVATE GEMS3K_BENCHMARK_DIAGNOSTICS)
    endif()

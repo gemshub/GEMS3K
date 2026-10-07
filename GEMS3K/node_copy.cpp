@@ -595,14 +595,21 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
     if( !thermo_engine.get() )
         return false;
     try{
-        node_logger->info("Calc ThermoEngine T: {}  P: {}", TK, PPa);
+        node_logger->debug("Calc ThermoEngine T: {}  P: {}", TK, PPa);
         long int j, jj, k, jb, je=0;
         double G0, P = PPa/bar_to_Pa;
 
         pmm->T = pmm->Tc = TK;
         pmm->TC = pmm->TCc = TK-C_to_K;
         // new API
-        double funT = TK, funP=P*bar_to_Pa;   // T in K, P in Pa
+        double funT = TK;
+        // ThermoFun's property-cache key holds a reference to the P lvalue passed here
+        // (std::tuple<double,double,double&,std::string>), so a plain local would leave cached
+        // keys dangling once this function returns, and a later lookup could return another
+        // substance's properties. Static storage keeps the referent alive at one address; P is
+        // also passed by value, so the ordering stays correct.
+        static thread_local double funP;
+        funP = P*bar_to_Pa;   // T in K, P in Pa
 
         DATACH  *dCH = pCSD();
 

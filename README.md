@@ -6,6 +6,8 @@ Just extended with an alternative Activity C++ API as the basis for a new Python
 Main version use [ThermoFun](https://bitbucket.org/gems4/thermofun/src/master/) - a code for calculating the standard state thermodynamic properties of substances and reactions at a given temperature and pressure. 
 
 
+**Choosing a solver and its settings:** see [Docs/SOLVER-OPTIONS-GUIDE.md](Docs/SOLVER-OPTIONS-GUIDE.md) — the two solvers (GEMS3K IPM and Optima), the six calculation modes, every `pa_` setting, and the known limitations.
+
 ## Briefly about GEMS3K
 
 The code Implements the improved GEM IPM-3 algorithm with excellent mass balance precision and fast convergence to Gibbs energy minimum even in very complex non-ideal chemical systems with two-sided metastability constraints (learn more on GEMS3K web page).

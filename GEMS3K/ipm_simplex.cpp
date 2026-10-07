@@ -143,7 +143,7 @@ void TMultiBase::AutoInitialApproximation( )
         if( B1) delete[]B1;
         if( STR) delete[]STR;
         if( NMB) delete[]NMB;
-        Error( xcpt.title, xcpt.mess );
+        throw;      // same error, already logged once
     }
 }
 
@@ -494,7 +494,7 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA1, A, Q, &ITER);
         if( A) delete[]A;
         if( Q) delete[]Q;
         if( BASE) delete[]BASE;
-        Error( xcpt.title, xcpt.mess);
+        throw;      // same error, already logged once
     }
 
     // Done
@@ -511,35 +511,22 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
 
   InitalizeGEM_IPM_Data();
 
+    // Redundant species are held at zero for this call only (ExcludeRedundantDCs, ipm_main.cpp);
+    // the guard restores their metastability settings on every exit, exceptions included.
+    const std::vector<RedundantDCHold> redundantHeld = ExcludeRedundantDCs();
+    struct RedundantRestore {
+        TMultiBase* self; const std::vector<RedundantDCHold>& held;
+        ~RedundantRestore() { self->RestoreRedundantDCs( held ); }
+    } redundantRestore{ this, redundantHeld };
+
   pm.t_start = clock();
   pm.t_end = pm.t_start;
   pm.t_elap_sec = 0.0;
   pm.ITF = pm.ITG = 0;
 
- // New: Run of TKinMet class library
-  ipm_logger->trace("kMM: {}  ITau: {}   kTau: {}   kdT: {}", pm.pKMM, pm.ITau, pm.kTau, pm.kdT);
-  if( pm.pKMM < 2 )
-  {
-    if( pm.ITau < 0 || pm.pKMM != 1 )
-    {
-      /*  KMretCode = */ CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
-        pm.ITau = 0; pm.pKMM = 1;
-      /*  KMretCode = */ CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
-    }
-//    if( pm.ITau == 0 )
-//    {
-//        KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
-//    }
-    else if( pm.ITau >= 0 ) {
-      /*  KMretCode = */ CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
-    }
-//  switch(KMretCode)
-//  {
-//        case 0L:
-//
-//  }
-//  to_text_file( "MultiDump1.txt" );   // Debugging
-  }
+  // One kinetics/metastability time step (RunKineticsStep(), ipm_chemical4.cpp), shared with
+  // the Optima entry point.
+  RunKineticsStep();
 
     if( base_param()->DG > 1e-5 )
     {
@@ -595,7 +582,7 @@ try{
       pm.t_end = clock();
       pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
 
-     Error( xcpt.title, xcpt.mess);
+     throw;      // same error, already logged once
   }
 
   if( base_param()->DG > 1e-5 )
@@ -642,13 +629,26 @@ void TMultiBase::ScaleSystemToInternal(  double ScFact )
   pm.FX  *= ScFact;
   pm.Yw  *= ScFact;  // added 08.06.10 DK
 
+  // Record the pre-scale value and the value this call leaves, per index, so
+  // RescaleSystemFromInternal() replays this decision (see DUL_preScale_).
+  DUL_preScale_.assign( (size_t)pm.L, 0. );
+  DUL_postScale_.assign( (size_t)pm.L, 0. );
+  DLL_preScale_.assign( (size_t)pm.L, 0. );
+  DLL_postScale_.assign( (size_t)pm.L, 0. );
   for( j=0; j<pm.L; j++ )
   {
+    DUL_preScale_[(size_t)j] = pm.DUL[j];
     if(	pm.DUL[j] < 1e6  )
        pm.DUL[j] *= ScFact;
+    DUL_postScale_[(size_t)j] = pm.DUL[j];
 
+    // The lower bound is recorded and restored the same way as the upper one: if only DUL were
+    // restored exactly, a caller's dul == dll pin could come back one ULP apart and be rejected
+    // by unpackDataBr() on the next call.
+    DLL_preScale_[(size_t)j] = pm.DLL[j];
     // if( pm.DLL[j] > 0.0  )
        pm.DLL[j] *= ScFact;
+    DLL_postScale_[(size_t)j] = pm.DLL[j];
 
         pm.Y[j] *= ScFact;
         pm.X[j] *= ScFact;
@@ -672,14 +672,20 @@ void TMultiBase::ScaleSystemToInternal(  double ScFact )
     pm.FWGT[k] *= ScFact;
   }
 
+  PUL_preScale_.assign( (size_t)pm.FIs, 0. );
+  PUL_postScale_.assign( (size_t)pm.FIs, 0. );
   for( k=0; k<pm.FIs; k++ )
   {
       pm.XFA[k] *= ScFact;
       pm.YFA[k] *= ScFact;
 
       if( pm.PUL )
+      {
+        PUL_preScale_[(size_t)k] = pm.PUL[k];
         if( pm.PUL[k] < 1e6  )
          pm.PUL[k] *= ScFact;
+        PUL_postScale_[(size_t)k] = pm.PUL[k];
+      }
 
       if( pm.PLL )
       // if( pm.PLL[k] > 0.0  )
@@ -721,10 +727,19 @@ void TMultiBase::RescaleSystemFromInternal(  double ScFact )
 
   for( j=0; j<pm.L; j++ )
   {
-    if(	pm.DUL[j] < 1e6  ) {
+    // An entry still holding exactly what scale-in left is restored verbatim (no
+    // multiply-then-divide rounding). An entry that has moved was written inside the scaled
+    // region (Set_DC_limits() on the warm path), in internal units, and takes the original test,
+    // as does an entry with no record.
+    if( (size_t)j < DUL_postScale_.size() && pm.DUL[j] == DUL_postScale_[(size_t)j] ) {
+       pm.DUL[j] = DUL_preScale_[(size_t)j];
+    }
+    else if(	pm.DUL[j] < 1e6  ) {
        pm.DUL[j] /= ScFact;
     }
-    // if( pm.DLL[j] > 0.0  )
+    if( (size_t)j < DLL_postScale_.size() && pm.DLL[j] == DLL_postScale_[(size_t)j] )
+       pm.DLL[j] = DLL_preScale_[(size_t)j];   // symmetric with DUL above - see the note there
+    else
        pm.DLL[j] /= ScFact;
 
         pm.Y[j] /= ScFact;
@@ -757,8 +772,12 @@ void TMultiBase::RescaleSystemFromInternal(  double ScFact )
       pm.YFA[k] /= ScFact;
 
       if( pm.PUL )
-        if( pm.PUL[k] < 1e6  )
-         pm.PUL[k] /= ScFact;
+      {
+        if( (size_t)k < PUL_postScale_.size() && pm.PUL[k] == PUL_postScale_[(size_t)k] )
+         pm.PUL[k] = PUL_preScale_[(size_t)k];     // untouched since scale-in: exact restore
+        else if( pm.PUL[k] < 1e6  )
+         pm.PUL[k] /= ScFact;                      // rewritten mid-solve, in internal units
+      }
 
       if( pm.PLL )
       // if( pm.PLL[k] > 0.0  )
@@ -777,6 +796,11 @@ void TMultiBase::RescaleSystemFromInternal(  double ScFact )
               pm.XetaD[k][j] /= ScFact;
               pm.XFTS[k][j]  /= ScFact;
           }
+
+  // Single-use records: cleared, so an unpaired call falls back to the original test.
+  DUL_preScale_.clear();  DUL_postScale_.clear();
+  DLL_preScale_.clear();  DLL_postScale_.clear();
+  PUL_preScale_.clear();  PUL_postScale_.clear();
 
   pm.SizeFactor = 1.;   // using in TNode class
 }
@@ -871,8 +895,8 @@ void TMultiBase::MultiConstInit() // from MultiRemake
   pm.logYFk = -9.;
   pm.DXM = base_param()->DK;
 
-  //  ???????
-  pm.FX = 7777777.;
+  // "Total Gibbs energy not computed yet" - see kTotalGibbsEnergyUnset (ms_multi.h).
+  pm.FX = kTotalGibbsEnergyUnset;
   if( pm.pH < -15. || pm.pH > 16.  )   // Check for trash in pH - bugfix 19.06.2013
       pm.pH = pm.Eh = pm.pe = 0.0;
   pm.YMET = 0;                      // always 0.0 ????
