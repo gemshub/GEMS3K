@@ -386,8 +386,8 @@ long int TNode::GEM_run_optima_cold_retry( long int requested )
 
 // Recovery of a failed cold native call (pa_ColdRetryNudges): a converged solve one 1e-15 nudge
 // away is a warm start from which SIA reaches the equilibrium at the exact composition. Every
-// nudge is undone before the warm solve, and a call that no nudge recovers is handed back
-// exactly as it failed.
+// nudge is undone before the warm solve. If that warm solve fails, the nudged answer is returned
+// instead. A call that no nudge recovers is handed back exactly as it failed.
 long int TNode::GEM_run_cold_retry( long int maxNudges )
 {
     const long int nIC = CSD->nICb;
@@ -402,6 +402,9 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
 
     native_trace_quiet( true );
     long int result = ERR_GEM_AIA;
+    // The first nudged cold answer, kept in case the warm re-solve at the exact composition fails.
+    DATABR* nudgedOk = nullptr;
+    double nudgedK = 0.;
     for( long int n = 0; n < maxNudges && result == ERR_GEM_AIA; n++ )
     {
         const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
@@ -413,6 +416,14 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
         long int warm = -1;
         if( cold == OK_GEM_AIA )
         {
+            if( !nudgedOk )
+            {
+                nudgedOk = new DATABR;
+                dbr_dch_api::databr_reset( nudgedOk, 1 );
+                dbr_dch_api::databr_realloc( CSD, nudgedOk );
+                { DATABR* live = CNode; CNode = nudgedOk; databr_copy( live ); CNode = live; }
+                nudgedK = k;
+            }
             for( long int i = 0; i < nIC; i++ )
                 CNode->bIC[i] = b0[(size_t)i];
             CNode->NodeStatusCH = NEED_GEM_SIA;
@@ -422,11 +433,21 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
                 result = OK_GEM_AIA;
             else if( warm == BAD_GEM_SIA || warm == BAD_GEM_AIA )
                 result = BAD_GEM_AIA;
+            else if( nudgedOk )
+            {   // the nudged answer is off the exact composition by only |k|*1e-15 of each amount
+                databr_copy( nudgedOk );
+                for( long int i = 0; i < nIC; i++ )
+                    CNode->bIC[i] = b0[(size_t)i];
+                result = OK_GEM_AIA;
+                native_trace_decide( "coldretry-keepnudged nudge=%+g", nudgedK );
+            }
         }
         native_trace_decide( "coldretry attempt=%ld nudge=%+g aia=%ld sia=%ld itf=%ld itg=%ld",
                              (long)( n + 1 ), k, (long)cold, (long)warm, (long)itf, (long)itg );
     }
     native_trace_quiet( false );
+    if( nudgedOk )
+        databr_free( nudgedOk );
     node_logger->info( "GEM_run(): cold native call failed - retried from nudged compositions (up to {}): {}",
                        (long)maxNudges, result == ERR_GEM_AIA ? "still failed" : "recovered" );
 
