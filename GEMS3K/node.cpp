@@ -440,6 +440,8 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
                     CNode->bIC[i] = b0[(size_t)i];
                 result = OK_GEM_AIA;
                 native_trace_decide( "coldretry-keepnudged nudge=%+g", nudgedK );
+                node_logger->info( "GEM_run(): the warm check at the exact composition failed; kept the answer "
+                                   "solved at a composition nudged by {:g}e-15 of each amount", nudgedK );
             }
         }
         native_trace_decide( "coldretry attempt=%ld nudge=%+g aia=%ld sia=%ld itf=%ld itg=%ld",
