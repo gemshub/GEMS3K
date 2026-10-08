@@ -58,6 +58,13 @@ Each mode name says how the calculation starts and which solver does the work.
 In HOP the GEMS3K IPM answer is kept, and the result is flagged, if the Optima part fails, so HOP does not
 give a worse answer than the GEMS3K IPM solver alone.
 
+### Older programs that use the raw numbers 10 and 11
+
+In some older versions, status 10 meant "an external solver succeeded" and 11 meant "it failed". Now 10 requests
+an Optima solve from scratch (AOP), and 11 means that solve succeeded. An old program that reads 11 as a failure
+would therefore treat an Optima success as an error. Use the named constants from `databr.h` (`NEED_GEM_AOP`,
+`OK_GEM_AOP`, and so on) instead of raw numbers, and check any old code that compares a status with 10 or 11.
+
 ## Which mode to use
 
 | Situation | Recommended mode | Why |
