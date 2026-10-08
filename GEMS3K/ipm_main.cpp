@@ -3801,7 +3801,7 @@ STEP_POINT( "IPM Iteration" );
     setErrorMessage( 6, "E06IPM: IPM Main Descent: " ,
             "IPM convergence criterion tolerance (pa_DK, GEMS: Pa_DK) could not be reached"
     		" (more than pa_IIM iterations done, GEMS: Pa_IIM).\n"
-            " Try: raise pa_IIM (default 7000), or increase pa_DK (default 1e-6) a little.\n" );
+            " Try: raise pa_IIM (default 7000, at most 32767), or increase pa_DK (default 1e-6) a little.\n" );
     return 2L;  // bad convergence - too many IPM iterations or deterioration of dual solution!
 //----------------------------------------------------------------------------
 CONVERGED:

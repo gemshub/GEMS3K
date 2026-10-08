@@ -1217,10 +1217,24 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_pa_DF: rddar.readArray("pa_DF" , &pa_p->DF, 1);
             break;
-        case f_pa_DP: rddar.readArray("pa_DP", &pa_p->DP, 1);
+        case f_pa_DP: {   // stored as short: a larger value would wrap round silently
+            long int v = pa_p->DP;
+            rddar.readArray("pa_DP", &v, 1);
+            if( v > 32767 || v < 1 )
+                ipm_logger->warn( "pa_DP = {} is outside 1..32767; using {}.", v, v > 32767 ? 32767 : pa_p->DP );
+            if( v > 32767 ) v = 32767;
+            if( v >= 1 ) pa_p->DP = static_cast<short>( v );
             break;
-        case f_pa_IIM: rddar.readArray("pa_IIM", &pa_p->IIM, 1);
+        }
+        case f_pa_IIM: {   // stored as short: a larger value would wrap round silently
+            long int v = pa_p->IIM;
+            rddar.readArray("pa_IIM", &v, 1);
+            if( v > 32767 || v < 1 )
+                ipm_logger->warn( "pa_IIM = {} is outside 1..32767; using {}.", v, v > 32767 ? 32767 : pa_p->IIM );
+            if( v > 32767 ) v = 32767;
+            if( v >= 1 ) pa_p->IIM = static_cast<short>( v );
             break;
+        }
         case f_pa_PD: rddar.readArray("pa_PD" , &pa_p->PD, 1);
             break;
         case f_pa_PRD: rddar.readArray("pa_PRD" , &pa_p->PRD, 1);

@@ -76,7 +76,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
            DT,   ///< Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }
            PLLG, ///< IPM tolerance for detecting divergence in dual solution { 30000 }; 1 to 1000 is the working range, 0 disables the detection, |PLLG| >= 30000 also allows complete tracing
            PE,   ///< Flag for using electroneutrality condition in GEM IPM calculations ( 0 or 1 ) { 1 }
-           IIM   ///< Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 7000 }
+           IIM   ///< Maximum allowed number of iterations in the MainIPM_Descent() procedure, at most 32767 { 7000 }
            ;
          double DG,   ///< Standart total moles { 1000. }
            DHB,  ///< Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-13 }
