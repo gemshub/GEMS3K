@@ -174,7 +174,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_IpmAugmentedKKT=%ld pa_IpmLoopTweaks=%ld"
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
-             " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld\n",
+             " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -200,7 +200,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaLSStallEscape, (long)pa->OptimaLSWindow,
              (long)pa->OptimaLSRejectWorse,
              pa->OptimaTpdAccept, pa->OptimaCgSeed, (long)pa->OptimaColdRetry, (long)pa->OptimaFinish,
-             (long)pa->OptimaAcceptRepair );
+             (long)pa->OptimaAcceptRepair, (long)pa->NativeOptimaFinish );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -2077,11 +2077,16 @@ void TMultiBase::TraceGrowthCheck()
         if( gain > worst ) { worst = gain; kWorst = k; }
     }
     if( nFound == 0 ) return;
-    gems_logger->warn( "{} is present only in a trace amount but still tends to grow, so the result may stop short of "
+    trace_growth_stuck = true;
+    trace_growth_note = fmt::format( "{} is present only in a trace amount but still tends to grow, so the result may stop short of "
                        "equilibrium{}. Try HOP or AOP for this system.",
                        trace_safe_name( char_array_to_string( pm.SF[kWorst] + MAXSYMB, MAXPHNAME ) ),
                        nFound > 1 ? fmt::format( " ({} such phases: {})", nFound, listed ) : std::string() );
     native_trace_decide( "tracegrowth phases=%ld worstgain=%.3e tol=%.1e list=%s", (long)nFound, worst, tol, listed.c_str() );
+#ifdef USE_OPTIMA_SOLVER
+    if( base_param()->NativeOptimaFinish > 0 ) return;   // the Optima finish reports instead
+#endif
+    gems_logger->warn( "{}", trace_growth_note );
 }
 
 // ExcludeRedundantDCs: a species entered twice is removed from the solve.

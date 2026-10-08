@@ -59,6 +59,7 @@
 // arms it for the retry of a cold AOP call that failed from the ordinary LP-feasibility seed.
 extern thread_local bool g_optimaCgSeedArmed;   // defined in node.cpp (needed without USE_OPTIMA_SOLVER)
 extern thread_local bool g_optimaTargetWarned;  // defined in node.cpp
+extern thread_local long int g_optimaIterBudget;  // defined in node.cpp; -1 = no limit
 // Set by the caller when PotentialSpaceFinish() starts from a call Optima reported OK. From
 // such a start the finish may only improve: it must not raise G, worsen the mass balance or
 // drop a present phase.
@@ -1590,6 +1591,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             run = 0; stalled = false;
         }
         bool overBudget() const {
+            if( g_optimaIterBudget == 0 ) return true;   // the call's iteration budget is used up
             if( maxSeconds <= 0. ) return false;
             return std::chrono::duration<double>(
                        std::chrono::steady_clock::now() - started ).count() > maxSeconds;
@@ -1600,10 +1602,11 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     preWatch->maxSeconds = pa_p->OptimaMaxSeconds;
     preWatch->started    = std::chrono::steady_clock::now();
     preWatch->reset();
-    if( preWatch->window > 0 || preWatch->maxSeconds > 0. )
+    if( preWatch->window > 0 || preWatch->maxSeconds > 0. || g_optimaIterBudget >= 0 )
         options.convergence.check =
             [preWatch]( Optima::ConvergenceCheckArgs const& args ) -> bool
             {
+                if( g_optimaIterBudget > 0 ) --g_optimaIterBudget;
                 if( preWatch->overBudget() ) { preWatch->timedOut = true; return true; }
                 if( preWatch->window <= 0 ) return false;
                 const double e = args.E.errorx();
@@ -1992,7 +1995,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             }
             ipm_logger->debug( "OptimaReducedPreSolve: pass {} did not converge on {} of {} "
                                "species{} - discarding the reduced pre-solve", pass, nS, L,
-                               preWatch->timedOut ? " (wall-clock budget)"
+                               preWatch->timedOut ? " (time or iteration budget)"
                                                   : ( preWatch->stalled ? " (stalled)" : "" ) );
             // DECIDE record per failed pass (the caller's `dimreduce` record carries only the
             // total). `tol` identifies which attempt the pass belongs to.
@@ -2729,6 +2732,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 run = 0; stalled = false;
             }
             bool overBudget() const {
+                if( g_optimaIterBudget == 0 ) return true;   // the call's iteration budget is used up
                 if( maxSeconds <= 0. ) return false;
                 return std::chrono::duration<double>(
                            std::chrono::steady_clock::now() - started ).count() > maxSeconds;
@@ -2804,7 +2808,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
         }
         if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. || earlyTrendN > 0
-            || earlyCapN > 0 )
+            || earlyCapN > 0 || g_optimaIterBudget >= 0 )
             options.convergence.check =
                 [stallWatch, earlyTrendN, kEarlyTrendDropRatio, kEarlyTrendDualSettled,
                  kEarlyTrendMinRate,
@@ -2813,6 +2817,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                  aqPhaseIdxTrend, phDec, phMax, phLast]
                 ( Optima::ConvergenceCheckArgs const& args ) -> bool
                 {
+                    if( g_optimaIterBudget > 0 ) --g_optimaIterBudget;
+                    if( g_optimaIterBudget == 0 ) { stallWatch->timedOut = true; return true; }   // budget used up
                     // The dual's relative movement over the last step, max|dw|/max|w| on
                     // u = (x, p, w); the hook receives both iterates. One definition for the
                     // probe, the trend trigger and the cap.
@@ -2978,7 +2984,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             {
                 ipm_logger->debug( "CalculateEquilibriumStateOptima: full solve abandoned after {}"
                                   " - pa_OptimaStallWindow={}",
-                                  stallWatch->timedOut ? "the wall-clock budget"
+                                  stallWatch->timedOut ? "the time or iteration budget"
                                                        : "a window with no meaningful progress",
                                   stallWatch->window );
                 // DECIDE record: this site abandons a solve and hands it to the retry tiers.
@@ -4793,6 +4799,77 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
 
     legRecorder.completed = true;       // see HopLegRecorder above - the record is written
     return calcTime;                    // by its DESTRUCTOR, on this path and on a throw alike
+}
+
+// Native left a trace solid phase that still tends to grow (TraceGrowthCheck). Optima, started from
+// native's answer, can move it; its answer is kept only if it is better, otherwise native's is put back.
+double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIPM )
+{
+    const long int cap = base_param()->NativeOptimaFinish;
+    if( cap <= 0 || !trace_growth_stuck || pm.MK || pm.PZ || !optima_control_conditions.empty() )
+        return 0.;
+    const long int savedPNP = pm.pNP, savedMK = pm.MK, savedPZ = pm.PZ;
+    auto snap = [&]( const double* p, long int n ) { return std::vector<double>( p, p + n ); };
+    // Native's total G, without disturbing the phase totals it recomputes.
+    const std::vector<double> X0 = snap( pm.X, pm.L ), XF0 = snap( pm.XF, pm.FI ), XFA0 = snap( pm.XFA, pm.FIs );
+    const double Gnat = TotalGibbsEnergy();
+    for( long int j = 0; j < pm.L; j++ )   pm.X[j]   = X0[(size_t)j];
+    for( long int k = 0; k < pm.FI; k++ )  pm.XF[k]  = XF0[(size_t)k];
+    for( long int k = 0; k < pm.FIs; k++ ) pm.XFA[k] = XFA0[(size_t)k];
+    // Everything the Optima leg may change, to put native's answer back exactly.
+    const std::vector<double> Ys = snap( pm.Y, pm.L ), Xs = snap( pm.X, pm.L ), Us = snap( pm.U, pm.N ),
+        Bs = snap( pm.B, pm.N ), G0s = snap( pm.G0, pm.L ), fDQFs = snap( pm.fDQF, pm.L ), F0s = snap( pm.F0, pm.L ),
+        Gs = snap( pm.G, pm.L ), Fs = snap( pm.F, pm.L ), lnGams = snap( pm.lnGam, pm.L ), Gammas = snap( pm.Gamma, pm.L ),
+        DULs = snap( pm.DUL, pm.L ), DLLs = snap( pm.DLL, pm.L );
+    const double FXs = pm.FX;
+    long int fiaO = 0, ipmO = 0;
+    double dt = 0., Gopt = 0.;
+    bool accept = false;
+    std::string why;
+    struct Budget {   // the Optima leg's iteration cap; always lifted again, also on a throw
+        explicit Budget( long int n ) { g_optimaIterBudget = n; }
+        ~Budget() { g_optimaIterBudget = -1; }
+    } budget( cap );
+    pm.pNP = 1;
+    try
+    {
+        optima_hop_leg = true;
+        dt = CalculateEquilibriumStateOptima( fiaO, ipmO, false, /* runKinetics */ false );
+        optima_hop_leg = false;
+        Gopt = pm.FX;
+        if( pm.MK || pm.PZ ) why = "notclean";
+        else if( !( Gopt < Gnat - 1e-8 ) ) why = "notlower";
+        else accept = true;
+    }
+    catch( TError& )
+    {
+        optima_hop_leg = false;
+        why = "failed";
+    }
+    if( !accept )
+    {
+        for( long int j = 0; j < pm.L; j++ )
+        {
+            pm.Y[j] = Ys[(size_t)j]; pm.X[j] = Xs[(size_t)j];
+            pm.G0[j] = G0s[(size_t)j]; pm.fDQF[j] = fDQFs[(size_t)j]; pm.F0[j] = F0s[(size_t)j];
+            pm.G[j] = Gs[(size_t)j]; pm.F[j] = Fs[(size_t)j]; pm.lnGam[j] = lnGams[(size_t)j];
+            pm.Gamma[j] = Gammas[(size_t)j]; pm.DUL[j] = DULs[(size_t)j]; pm.DLL[j] = DLLs[(size_t)j];
+        }
+        for( long int i = 0; i < pm.N; i++ ) { pm.U[i] = Us[(size_t)i]; pm.B[i] = Bs[(size_t)i]; }
+        pm.FX = FXs;
+        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+        CalculateConcentrations( pm.X, pm.XF, pm.XFA );   // activity coefficients were put back above
+        pm.MK = savedMK; pm.PZ = savedPZ;
+        ipm_logger->warn( "{}", trace_growth_note );
+    }
+    else
+        ipm_logger->info( "Native solver left a trace phase that still tends to grow; finished with Optima, "
+                          "which lowered the energy by {:.3g} RT", Gnat - Gopt );
+    pm.pNP = savedPNP;
+    native_trace_decide( "nativefinish ok=%d why=%s gnat=%.10f gopt=%.10f fiao=%ld ipmo=%ld cap=%ld",
+                         accept ? 1 : 0, accept ? "-" : why.c_str(), Gnat, Gopt, (long)fiaO, (long)ipmO, (long)cap );
+    NumIterFIA += fiaO; NumIterIPM += ipmO;
+    return dt;
 }
 
 #endif // USE_OPTIMA_SOLVER

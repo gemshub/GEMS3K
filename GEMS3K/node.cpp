@@ -191,6 +191,7 @@ thread_local bool g_optimaLineSearchRetry = false;
 thread_local bool g_optimaLSEscapeOff = false;
 thread_local bool g_optimaCgSeedArmed = false;
 thread_local bool g_optimaTargetWarned = false;   // the unusual-target warning is shown once per GEM_run()
+thread_local long int g_optimaIterBudget = -1;     // Optima iterations left for this call; -1 = no limit
 long int TNode::GEM_run( bool uPrimalSol )
 {
     const long int requested = CNode->NodeStatusCH;
@@ -564,7 +565,14 @@ long int TNode::GEM_run_single( bool uPrimalSol )
 #endif
         }
         else
+        {
             CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
+#ifdef USE_OPTIMA_SOLVER
+            // A trace solid phase that still tends to grow: let Optima finish, keep only a better answer.
+            if( ( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_SIA ) && CNode->dt <= 0. )
+                CalcTime += multi_ptr()->NativeOptimaFinish( NumIterFIA, NumIterIPM );
+#endif
+        }
 
         // Extracting and packing GEM IPM results into work DATABR structure
         packDataBr();

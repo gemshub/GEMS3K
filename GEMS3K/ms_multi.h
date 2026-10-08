@@ -495,6 +495,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// In plain words: lets a nearly finished Optima answer be accepted after a small fix of
     /// the element totals.
     long int OptimaAcceptRepair = 0;
+    /// pa_NativeOptimaFinish: after a native solve (AIA/SIA) where a trace solid phase still tends to grow,
+    /// finish with Optima from native's answer and keep the result only if it is better; the value is the
+    /// most Optima iterations allowed. 0 = off, default 500.
+    long int NativeOptimaFinish = 500;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -1342,6 +1346,10 @@ public:
     /// its answer, keeping the original answer if the polish fails.
     double CalculateEquilibriumStateHOP( long int& NumIterFIA, long int& NumIterIPM,
                                          bool warmNative = false );
+    /// After a native solve that left a trace solid phase still tending to grow, finishes with Optima
+    /// from native's answer (at most pa_NativeOptimaFinish Optima iterations) and keeps the result only
+    /// if it is better; otherwise native's answer is put back unchanged. Adds the iterations used.
+    double NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIPM );
 
     /// Registers (or replaces, by name) a pH control condition for the next
     /// CalculateEquilibriumStateOptima() call. Persists until ClearControlConditions().
@@ -1743,6 +1751,10 @@ protected:
     /// Warns when a solid phase is present only in a trace amount but still tends to grow:
     /// the answer may stop short of equilibrium. Read-only.
     void TraceGrowthCheck();
+    /// Set by TraceGrowthCheck() when a trace phase still tends to grow, with its warning text;
+    /// cleared at the start of each native solve.
+    bool trace_growth_stuck = false;
+    std::string trace_growth_note;
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
     void AutoInitialApproximation( );
 
@@ -1938,7 +1950,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaLineSearch, f_pa_OptimaFDDiagFloor, f_pa_OptimaLSStallEscape, f_pa_OptimaLSWindow,
     f_pa_OptimaLSRejectWorse,
     f_pa_OptimaTpdAccept, f_pa_OptimaCgSeed, f_pa_OptimaColdRetry, f_pa_OptimaFinish,
-    f_pa_OptimaAcceptRepair
+    f_pa_OptimaAcceptRepair, f_pa_NativeOptimaFinish
 
 } MULTI_DYNAMIC_FIELDS;
 

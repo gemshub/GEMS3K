@@ -205,6 +205,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaColdRetry", 0 , 0, 0, "# pa_OptimaColdRetry: Optima solver: re-solve a failed warm call (SOP/SHP) cold; 0 = off, 1 = after the full budget, 2 = fail fast { 2 }" },
     { "pa_OptimaFinish", 0 , 0, 0, "# pa_OptimaFinish: Optima solver: finish a non-converged call by Newton on the fixed phase set; 0 = off, 1 = on { 1 }" },
     { "pa_OptimaAcceptRepair", 0 , 0, 0, "# pa_OptimaAcceptRepair: Optima solver: with pa_OptimaTpdAccept, repair a failing mass balance and re-test; 0 = off, 1 = on { 0 }" },
+    { "pa_NativeOptimaFinish", 0 , 0, 0, "# pa_NativeOptimaFinish: native solver: when a trace solid phase still tends to grow, finish with Optima and keep the better answer; most Optima iterations allowed, 0 = off { 500 }" },
 };
 
 
@@ -223,7 +224,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 120, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 121, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -471,6 +472,8 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_OptimaFinish, pa_p->OptimaFinish, _comment, false  );
     if(!brief_mode || pa_p->OptimaAcceptRepair != pa_p_.OptimaAcceptRepair )
         prar.writeField(f_pa_OptimaAcceptRepair, pa_p->OptimaAcceptRepair, _comment, false  );
+    if(!brief_mode || pa_p->NativeOptimaFinish != pa_p_.NativeOptimaFinish )
+        prar.writeField(f_pa_NativeOptimaFinish, pa_p->NativeOptimaFinish, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -876,7 +879,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 120, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 121, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1359,6 +1362,8 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_OptimaFinish: rddar.readArray("pa_OptimaFinish" , &pa_p->OptimaFinish, 1);
             break;
         case f_pa_OptimaAcceptRepair: rddar.readArray("pa_OptimaAcceptRepair" , &pa_p->OptimaAcceptRepair, 1);
+            break;
+        case f_pa_NativeOptimaFinish: rddar.readArray("pa_NativeOptimaFinish" , &pa_p->NativeOptimaFinish, 1);
             break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;

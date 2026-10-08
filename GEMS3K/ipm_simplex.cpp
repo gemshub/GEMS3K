@@ -510,6 +510,7 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
   double ScFact=1.;
 
   InitalizeGEM_IPM_Data();
+  trace_growth_stuck = false;
 
     // Redundant species are held at zero for this call only (ExcludeRedundantDCs, ipm_main.cpp);
     // the guard restores their metastability settings on every exit, exceptions included.
