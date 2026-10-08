@@ -3459,10 +3459,8 @@ STEP_POINT("FIA Iteration");
 
     //  Prescribed mass balance precision cannot be reached
                     // Temporary workaround for pathological systems 06.05.2010 DK
-   const bool dpExhaustedWithoutStallDetection = !pa_p->PSTALL && IT1 == pa_p->DP;
-   if( (pa_p->DW && ( WhereCalledFrom == 0L || pm.pNP )) ||
-       dpExhaustedWithoutStallDetection )  // DW behavior plus mandatory failure on PSTALL=0 exhaustion
-   {
+   if( pa_p->DW && ( WhereCalledFrom == 0L || pm.pNP ) )  // Now controlled by DW flag
+   {  // Strict mode of mass balance control
        iRet = 2;
        std::string buf = "(MBR("+std::to_string(WhereCalledFrom);
                    buf += ")) Maximum allowed number of MBR iterations (";
