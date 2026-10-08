@@ -131,9 +131,10 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
       default: mname = "?";    break;
     }
 
+    // The requested T and P: pm.T and pm.P are set later, when the thermodynamic data are loaded.
     fprintf( ntf, "RUN   mode=%s(%ld) pNP=%ld TK=%.4f Pbar=%.6e"
                   " N=%ld L=%ld Ls=%ld FI=%ld FIs=%ld LO=%ld\n",
-             mname, (long)mode, (long)pm.pNP, pm.T, pm.P,
+             mname, (long)mode, (long)pm.pNP, pm.Tc, pm.Pc,
              (long)pm.N, (long)pm.L, (long)pm.Ls,
              (long)pm.FI, (long)pm.FIs, (long)pm.LO );
 
