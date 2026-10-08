@@ -58,6 +58,7 @@
 // pa_OptimaCgSeed is a second attempt: the column-generation seed is used only while TNode
 // arms it for the retry of a cold AOP call that failed from the ordinary LP-feasibility seed.
 extern thread_local bool g_optimaCgSeedArmed;   // defined in node.cpp (needed without USE_OPTIMA_SOLVER)
+extern thread_local bool g_optimaTargetWarned;  // defined in node.cpp
 // Set by the caller when PotentialSpaceFinish() starts from a call Optima reported OK. From
 // such a start the finish may only improve: it must not raise G, worsen the mass balance or
 // drop a present phase.
@@ -4154,11 +4155,33 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // bulk is B - sum_k stoich_k*xi_k. The system is still in pa_DG's internal scale and
         // RescaleSystemFromInternal() does not know the titrant: pm.B is committed in
         // internal units, titrantAmount is stored in real moles (xi / ScFact).
+        double bulkTotal = 0.;   // all element amounts before titration, internal units
+        for( long int i = 0; i < N; i++ )
+            if( !pm.ICC || ( pm.ICC[i] != IC_CHARGE && pm.ICC[i] != IC_VOLUME ) )
+                bulkTotal += fabs( pm.B[i] );
         for( long int k = 0; k < R; k++ )
         {
             for( const auto& rc : conditions[k].stoich )
                 pm.B[ rc.first ] -= rc.second * state.x[L+k];
             conditions[k].titrantAmount = state.x[L+k] / ScFact;
+        }
+        // An unusual target, or one that needs more titrant than the whole system, is only reported:
+        // the answer may be right for the model but mean little physically.
+        for( long int k = 0; k < R; k++ )
+        {
+            const auto& c = conditions[k];
+            const bool farTarget = ( c.name == "pH" && ( c.target < -2. || c.target > 16. ) )
+                                || ( c.name == "Eh" && fabs( c.target ) > 2. );
+            const bool hugeTitrant = bulkTotal > 0. && fabs( state.x[L+k] ) > bulkTotal;
+            if( ( farTarget || hugeTitrant ) && !g_optimaTargetWarned )
+            {
+                g_optimaTargetWarned = true;
+                ipm_logger->warn( "{} target {} {}. Check that the target is meant; the result may have little physical meaning.",
+                                  c.name, c.target,
+                                  hugeTitrant ? fmt::format( "needs {:.3g} mol of titrant, more than the whole system holds",
+                                                             fabs( c.titrantAmount ) )
+                                              : std::string( "is outside the usual range" ) );
+            }
         }
 
         // Verify each active condition actually reached its target. At a bound-active

@@ -190,10 +190,12 @@ void TNode::Get_sMod(int ndx, std::string &sMod)
 thread_local bool g_optimaLineSearchRetry = false;
 thread_local bool g_optimaLSEscapeOff = false;
 thread_local bool g_optimaCgSeedArmed = false;
+thread_local bool g_optimaTargetWarned = false;   // the unusual-target warning is shown once per GEM_run()
 long int TNode::GEM_run( bool uPrimalSol )
 {
     const long int requested = CNode->NodeStatusCH;
     const bool kinetics = CNode->dt > 0.;
+    g_optimaTargetWarned = false;
     // pa_OptimaLineSearch < 0: an Optima call that fails without the line search is re-run once
     // with it (g_optimaLineSearchRetry). The DATABR is snapshotted before the first attempt; a
     // retry that does not return OK hands the first failure back unchanged. DECIDE lsretry.

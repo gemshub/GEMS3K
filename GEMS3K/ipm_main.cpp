@@ -2032,6 +2032,58 @@ void TMultiBase::EnergyDeterminacyCheck()
     }
 }
 
+// A solid phase at a trace amount barely moves, because each step is scaled by the amount itself.
+// If it still tends to grow at the end, the answer may stop short of equilibrium: say so.
+void TMultiBase::TraceGrowthCheck()
+{
+    const long int N = pm.N, L = pm.L;
+    if( N < 1 || L < 1 || !pm.A || !pm.X || !pm.U || !pm.F || !pm.L1 || !pm.XF || !pm.PHC ) return;
+    const double tol = base_param()->GAS;
+    if( !( tol > 0. ) ) return;
+    double total = 0.;
+    for( long int j = 0; j < L; j++ )
+        if( pm.X[j] > 0. ) total += pm.X[j];
+    const double traceAmount = 1e-6 * total;   // "trace": under a millionth of the system
+    long int nFound = 0; double worst = 0.; long int kWorst = -1;
+    std::string listed;
+    for( long int k = 0, jb = 0; k < pm.FI; jb += pm.L1[k], k++ )
+    {
+        const char ph = pm.PHC[k];
+        if( ph == PH_AQUEL || ph == PH_GASMIX || ph == PH_FLUID || ph == PH_PLASMA ) continue;
+        if( !( pm.XF[k] > pm.DSM ) || !( pm.XF[k] < traceAmount ) ) continue;
+        double pull = 0., gain = 0.;
+        for( long int j = jb; j < jb + pm.L1[k] && j < L; j++ )
+        {
+            if( !( pm.X[j] > 0. ) ) continue;
+            if( pm.DUL && pm.DUL[j] < 1e6 && pm.X[j] >= pm.DUL[j] * ( 1. - 1e-9 ) ) continue;  // held at its upper limit
+            double s = pm.F[j];
+            for( long int i = 0; i < N; i++ ) s -= pm.U[i] * pm.A[i + j*N];
+            if( !( -s > tol ) ) continue;         // the species tends to grow
+            double room = 1e300;                  // most it could grow: limited by its scarcest element
+            for( long int i = 0; i < N; i++ )
+            {
+                const double a = pm.A[i + j*N];
+                if( a > 0. && ( !pm.ICC || ( pm.ICC[i] != IC_CHARGE && pm.ICC[i] != IC_VOLUME ) ) )
+                    room = std::min( room, fabs( pm.B[i] ) / a );
+            }
+            pull = std::max( pull, -s );
+            if( room < 1e300 ) gain = std::max( gain, 0.5 * ( -s ) * room );   // rough energy that could be gained
+        }
+        // Only when the possible gain matters next to the whole system's energy; a trace mineral of a
+        // scarce element cannot change the answer even if it tends to grow.
+        if( !( pull > tol ) || !( gain > 1e-8 * fabs( pm.FX ) ) ) continue;
+        const std::string name = trace_safe_name( char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME ) );
+        if( nFound++ < 8 ) listed += ( listed.empty() ? "" : ", " ) + name;
+        if( gain > worst ) { worst = gain; kWorst = k; }
+    }
+    if( nFound == 0 ) return;
+    gems_logger->warn( "{} is present only in a trace amount but still tends to grow, so the result may stop short of "
+                       "equilibrium{}. Try HOP or AOP for this system.",
+                       trace_safe_name( char_array_to_string( pm.SF[kWorst] + MAXSYMB, MAXPHNAME ) ),
+                       nFound > 1 ? fmt::format( " ({} such phases: {})", nFound, listed ) : std::string() );
+    native_trace_decide( "tracegrowth phases=%ld worstgain=%.3e tol=%.1e list=%s", (long)nFound, worst, tol, listed.c_str() );
+}
+
 // ExcludeRedundantDCs: a species entered twice is removed from the solve.
 //
 // Redundant means thermodynamically indistinguishable: identical stoichiometry (all N rows,
@@ -2489,6 +2541,7 @@ FORCED_AIA:
    {
        EnergyDeterminacyCheck();
        StrandedElementCheck();
+       TraceGrowthCheck();
    }
 
    if( pm.MK || pm.PZ ) // no good solution

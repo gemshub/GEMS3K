@@ -1740,6 +1740,9 @@ protected:
     /// In plain words: flags a fragile system definition, where a phase exists only to host
     /// one element.
     void StrandedElementCheck();
+    /// Warns when a solid phase is present only in a trace amount but still tends to grow:
+    /// the answer may stop short of equilibrium. Read-only.
+    void TraceGrowthCheck();
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
     void AutoInitialApproximation( );
 
