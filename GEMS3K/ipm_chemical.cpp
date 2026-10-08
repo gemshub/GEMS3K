@@ -1219,7 +1219,8 @@ else  { // if phase is removed then a saved copy of activity coefficients is use
         pm.Falp[k] = sumWx - 1.;  // generalized Karpov critetion with metastable components
         if( fabs( pm.Falp[k] ) < pm.DSM )
             pm.Falp[k] = 0.;
-if( pm.L1[k] > 1 && YF <= pm.DSM && fRestore == false )
+// Cold start only, so after a warm start an absent mixture can come back
+if( pm.L1[k] > 1 && YF <= pm.DSM && fRestore == false && !pm.pNP )
     pm.Falp[k] = -1.;   // provisional - set to
     }  // k
 }
@@ -1950,7 +1951,9 @@ else fRestore = true;
        if( fabs( logSI ) < log10( pm.DSM ) )
            logSI = 0.;
        pm.Falp[k] = logSI; // NormDoubleRound( logSI, 3 );
-       if( L1k > 1 && fRestore == false && YFk < pm.DSM )
+       // Cold start only: an absent mixture with no activity coefficients of its own is not
+       // inserted on a rough guess. A warm start keeps the real index, so it can come back.
+       if( L1k > 1 && fRestore == false && YFk < pm.DSM && !pm.pNP )
            pm.Falp[k] = -1.; // provisional - to indicate impossibility to restore
        jb += pm.L1[k];
     }  // for k
