@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.16..4.2)
 
 # Set the name of the project
-project(GEMS3K VERSION 4.6.1 LANGUAGES CXX C)
+project(GEMS3K VERSION 4.6.2 LANGUAGES CXX C)
 
 include(CTest)
 
@@ -35,7 +35,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
 option(USE_THERMOFUN "Use ThermoFun" ON)
-option(BUILD_GEM2MT "Install GEM2MT lib." ON)
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
 option(BUILD_TOOLS "Build tools" ON)
 option(BUILD_SOLMOD "Build isolate TSolMod " ON)
@@ -161,13 +160,6 @@ endif()
 if(BUILD_NLOHMANNJSON MATCHES ON)
   add_definitions(-DUSE_NLOHMANNJSON)
 endif()
-
-if(BUILD_GEM2MT MATCHES ON)
-  set(GEM2MT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/nodearray-gem)
-  set(GEM2MT_HEADER_DIR ${CMAKE_SOURCE_DIR}/nodearray-gem)
-  include_directories(${GEM2MT_HEADER_DIR})
-endif()
-
 
 # Compile GEMS3K
 add_subdirectory(GEMS3K)
