@@ -162,6 +162,7 @@ if(BUILD_NLOHMANNJSON MATCHES ON)
 endif()
 
 # Compile GEMS3K
+include_directories("/usr/local/include/eigen3")
 add_subdirectory(GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/lib)
