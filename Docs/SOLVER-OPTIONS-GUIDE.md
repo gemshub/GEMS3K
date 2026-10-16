@@ -58,6 +58,13 @@ Each mode name says how the calculation starts and which solver does the work.
 In HOP the GEMS3K IPM answer is kept, and the result is flagged, if the Optima part fails, so HOP does not
 give a worse answer than the GEMS3K IPM solver alone.
 
+### Older programs that use the raw numbers 10 and 11
+
+In some older versions, status 10 meant "an external solver succeeded" and 11 meant "it failed". Now 10 requests
+an Optima solve from scratch (AOP), and 11 means that solve succeeded. An old program that reads 11 as a failure
+would therefore treat an Optima success as an error. Use the named constants from `databr.h` (`NEED_GEM_AOP`,
+`OK_GEM_AOP`, and so on) instead of raw numbers, and check any old code that compares a status with 10 or 11.
+
 ## Which mode to use
 
 | Situation | Recommended mode | Why |
@@ -110,16 +117,17 @@ A complete working example is `tools/optima_test.cpp`.
 
 ## Fixing the pH or Eh (Optima modes only)
 
-In the Optima modes AOP and SOP you can ask for a given pH, a given Eh (in volts), or both. The solver adds
-whatever acid, base or electron donor the target needs, and reports how much it added. This is not available
-in AIA, SIA, HOP or SHP, and only in a build with Optima.
+In the Optima modes AOP, SOP, HOP and SHP you can ask for a given pH, a given Eh (in volts), or both. The
+solver adds whatever acid, base or electron donor the target needs, and reports how much it added. In HOP and
+SHP the target is met by the Optima part; the GEMS3K IPM part that runs first ignores it. This is not available
+in AIA or SIA, and only in a build with Optima.
 
 ```cpp
 node.Clear_ControlConditions();           // targets stay set until cleared
 node.Set_pH_target(7.0);                  // pH 7
 node.Set_Eh_target(0.2);                  // Eh 0.2 V (optional; may be used alone)
 
-node.pCNode()->NodeStatusCH = NEED_GEM_AOP;   // or NEED_GEM_SOP; set before every call
+node.pCNode()->NodeStatusCH = NEED_GEM_AOP;   // or SOP, HOP, SHP; set before every call
 long status = node.GEM_run(false);
 
 if (status == OK_GEM_AOP)
@@ -135,6 +143,11 @@ if (status == OK_GEM_AOP)
 - Targets stay active for every later call until `Clear_ControlConditions()`.
 - A target may not be reachable (for example Eh in a system with no redox couple). Check
   the status, and do not rely on the Eh in such a system.
+- A target that would use up all the water (an extreme pH, for example) is reported as not fully
+  trustworthy (`BAD_GEM_...`). A failed SOP or SHP call is then re-solved from scratch and may come back as
+  `OK_GEM_AOP` (see `pa_OptimaColdRetry`); a failed HOP call returns the GEMS3K IPM answer, without the target.
+- An `OK` status means the solver met the target in its own model. An extreme target can still give a
+  result with no physical meaning (a pH far outside 0–14); judge the target, not only the status.
 
 ## Settings
 
@@ -172,13 +185,14 @@ These are the settings most users may want to adjust.
 | `pa_OptimaTol` | 1e-8 | How precisely Optima must converge. | Raise it slightly to trade accuracy for speed on large systems; lower it only if an answer looks insufficiently converged. | Any positive number; smaller is stricter. |
 | `pa_OptimaMaxSeconds` | 0 (off) | A time limit in seconds for one calculation, including retries. Results then depend on the speed of the computer. | Long batch or transport runs where one stuck calculation must not hold up the rest. | Any positive number of seconds. |
 | `pa_OptimaDimReduce` | 0 (automatic) | For large systems, first solves with only the species that matter, then adds the rest. Automatic means on from 200 species. | Switch it on for a system just under 200 species that is slow; switch it off if a large system gives a different answer with it. | A positive number = on, with at most that many passes; a negative number = off. |
-| `pa_OptimaColdRetry` | 2 | If a calculation started from the previous result (SOP, SHP) fails, start again from scratch. 2 gives up on the first attempt quickly. | Use 1 if the warm start usually succeeds but needs many iterations; 0 only when testing. | 0 = no retry; 1 = retry only after the first attempt used its full budget. |
+| `pa_OptimaColdRetry` | 2 (fail fast) | If a calculation started from the previous result (SOP, SHP) fails, start again from scratch. 2 gives up on the first attempt quickly. | Use 1 if the warm start usually succeeds but needs many iterations; 0 only when testing. | 0 = no retry; 1 = retry only after the first attempt used its full budget; 2 = give up on the first attempt quickly. |
 | `pa_OptimaFinish` | 1 (on) | If Optima stops just short of converging, finish the job using the phases it has found. | Leave on. Turn off only to see what Optima alone returns. | 0 = off. |
-| `pa_OptimaTpdAccept` | 1e-6 | Accepts a not-quite-converged answer when a direct check shows that no missing phase should be present (within this tolerance). | Leave on. Systems where Optima gets very close but does not meet its own tolerance. | 0 = off. |
+| `pa_OptimaTpdAccept` | 1e-6 (on) | Accepts a not-quite-converged answer when a direct check shows that no missing phase should be present (within this tolerance). | Leave on. Systems where Optima gets very close but does not meet its own tolerance. | 0 = off. |
 | `pa_OptimaAcceptRepair` | 0 (off) | With the setting above, also corrects a small error in the element totals before accepting. | Systems with very little water, or other cases where Optima ends close to the answer with slightly unbalanced element totals. | 1 = on. |
-| `pa_OptimaStallWindow` | 500 | Stops a calculation that has not improved for this many iterations, so a retry can start sooner. | Lower it to save time on systems that often get stuck; raise it if slow but steady systems are stopped too early. | 0 = never stop early. |
+| `pa_OptimaStallWindow` | 200 (on) | Stops a calculation that has not improved for this many iterations, so a retry can start sooner. | Raise it (for example to 500) if a system that pauses for a long time and then converges is stopped too early; lower it (not below 100) to save time on systems that often get stuck. | 0 = never stop early. |
 | `pa_OptimaZeroAbsent` | 2 | How absent species are reported: as a tiny amount, with the element totals corrected if needed. | Use 1 if you need absent phases to read exactly zero in the output. | 0 = tiny amounts as they are; 1 = absent phases set to exactly zero. |
 | `pa_OptimaLineSearch` | 1.5 | When a step makes the result much worse (by more than this factor), try a shorter step. | Leave on. A negative value can save time on easy systems that rarely need it. | 0 = off; a negative value = use it only when retrying a failed calculation. |
+| `pa_OptimaRedoxFree` | 1 (log it) | Before a calculation, checks whether anything in the bulk fixes the redox level (every element in one oxidation state and no spare oxidant or reductant); if not, says so in the log. | Systems with no redox buffer, where Eh and the species that depend on it are not determined by the input. | 0 = off; 2 = also aim the calculation at pe 4 when no pH or Eh target is given. |
 
 ### Optima solver — supplemental settings
 
@@ -187,17 +201,41 @@ investigating a difficult case.
 
 | Setting | Default | What it does | When it can be useful | Other values |
 |---|---|---|---|---|
-| `pa_OptimaLSStallEscape` | 10 | If shorter steps keep getting nowhere this many times in a row, take one full step to break out. | Systems where Optima gets stuck at the same error for many iterations. | 0 = off. |
+| `pa_OptimaLSStallEscape` | 10 (on) | If shorter steps keep getting nowhere this many times in a row, take one full step to break out. | Systems where Optima gets stuck at the same error for many iterations. | 0 = off. |
 | `pa_OptimaLSRejectWorse` | 0 (off) | If a shorter step did not help, use the full step instead. | A few difficult systems where the shorter steps keep making tiny progress; it can slow others. | 1 = on. |
-| `pa_OptimaCgSeed` | 1e-6 | A better starting point for a retry from scratch, which considers which phases are likely to be stable. | Leave on. Systems with many competing phases where the first start from scratch fails. | 0 = off. |
+| `pa_OptimaCgSeed` | 1e-6 (on) | A better starting point for a retry from scratch, which considers which phases are likely to be stable. | Leave on. Systems with many competing phases where the first start from scratch fails. | 0 = off. |
 | `pa_OptimaDimReduceTol` | 10 | How generous the first guess of "species that matter" is (larger includes more). | Raise it if the reduced first solve misses species that end up present. | A negative value −m = start with the m×N cheapest species. |
 | `pa_OptimaPreSolveFirstIters` | 6000 | Iteration limit for each pass of the reduced first solve, so a pass that goes nowhere is abandoned. | Large systems where the reduced first solve takes long without converging. | 0 = no limit. |
 | `pa_OptimaEarlyStabilityAt` | 0 (automatic) | Lets Optima notice early that a phase should disappear, instead of shrinking it slowly. | Systems where a phase disappears slowly over hundreds of iterations. | A positive number = check at that iteration; a negative number −N = check after a phase has shrunk N times in a row. |
 | `pa_OptimaDcFloor` | 0 (automatic) | The smallest amount Optima can represent for an absent species. Automatic derives it from the mass-balance tolerance `pa_DHB`. | Systems with elements present only in traces, where the automatic value is too coarse. | Any positive amount in moles. |
-| `pa_PhaseHessianFloor` | 0.01 | Keeps the curvature of mixed phases well-behaved. | Solid solutions or melts that tend to split into two phases (miscibility gaps). | 0 = off. |
+| `pa_PhaseHessianFloor` | 0.01 (on) | Keeps the curvature of mixed phases well-behaved. | Solid solutions or melts that tend to split into two phases (miscibility gaps). | 0 = off. |
 | `pa_OptimaFDHessian` | 1 (on) | Computes a more exact curvature for non-ideal phases, at extra cost. | Turn off to speed up systems with weakly non-ideal phases; keep on for strongly non-ideal ones. | 0 = off (faster, sometimes less robust). |
 | `pa_OptimaFDHessianDelay` | 0 | Uses the cheaper approximate curvature for this many iterations first. | Large non-ideal systems where the early iterations are expensive. | Any positive number of iterations. |
 | `pa_OptimaMoleFracHessian` | 0 (off) | A more exact curvature for ideal mixed phases. | Try it if a system with ideal solid solutions converges slowly; it helps some systems and slows others. | 1 = on. |
+| `pa_OptimaFastRises` | 10 (on) | The quick first try of a calculation from scratch stops after this many steps on which its energy went up by more than 1 %; the full calculation then runs. | Leave on. | 0 = off. |
+| `pa_OptimaFastCollapse` | 1000 (on) | The quick first try stops at once when its energy has grown to more than this many times its starting value. | Leave on. | 0 = off. |
+| `pa_OptimaFrozenCut` | 20 (on) | Stops a calculation whose energy and error have not changed at all for this many iterations, so the finishing step and retries can take over. Not used when Optima starts from a native answer (HOP, SHP), and only when `pa_OptimaStallWindow` is on. | Leave on. | 0 = off. |
+| `pa_OptimaDryOut` | 0 (off) | When the water runs out during a calculation, takes the water phase out and solves the solids alone, then checks that answer against one solve that keeps the water and keeps the lower energy. If the dry solve fails, the calculation goes on with the water back. Not used when an element can only be held by the water. Needs `pa_OptimaStallWindow` on. | Turn on (1) for systems where water is used up by design, such as cement hydration at low water. Off by default: where the water only dips during a calculation, the dry answer can be wrong. | 0 = off, 1 = on. |
+| `pa_OptimaTailStop` | 100 (on) | Stops a calculation whose energy has not changed for this many iterations while the remaining error sits only on trace amounts; the stop point is checked for phase stability and, if it passes, taken as the answer. Needs `pa_OptimaStallWindow` on. | Leave on. | 0 = off. |
+| `pa_OptimaTailStopWarm` | 10 (on) | The same on a warm calculation (SOP, SHP). | Leave on. | 0 = off. |
+| `pa_OptimaTailDryOnly` | 1 (on) | The tail stop acts only after `pa_OptimaDryOut` has taken the water phase out. | Leave on: used in every calculation, the tail stop can give wrong answers on some solid-solution systems. | 1 = only after the dry-out (default); 0 = in every calculation. |
+| `pa_OptimaWaterKeep` | 2 (on) | 1: a converged answer is kept when the retry with more water fails. 2: also, a dry answer that passed the tail-stop check is not retried with more water. | Leave at 2. | 0 = off; 1 = keep a converged answer; 2 = also keep a dry answer that passed the tail-stop check. |
+| `pa_OptimaFastFirst` | 60 (on) | A calculation from scratch (AOP) first tries a quick solve that takes full steps; if it does not end well, the normal calculation runs from the same start. The value is the most iterations the quick try may use. | Leave on. | 0 = off. |
+| `pa_OptimaFastFrozen` | 3 (on) | The quick first try stops when this many steps in a row change almost nothing. | Leave on. | 0 = off. |
+| `pa_OptimaFastDiverge` | 10 (on) | The quick first try stops when its energy has jumped far above its start and its error is still not getting better by this factor. | Leave on. | 0 = off. |
+| `pa_OptimaColdLevel` | 1 (on) | Where the reduced first solve is not used, a calculation from scratch starts from a simple energy-minimising estimate, and two copies of one solid solution start at different compositions. | Leave on. | 0 = off. |
+| `pa_OptimaLevelStart` | 1 (on) | For systems with only solids and other mixed condensed phases, a calculation from scratch first works out which mixed phases form and at what composition, and starts from that. | Leave on. | 0 = off. |
+| `pa_OptimaPreSolveSeed` | 1 (on) | The first pass of the reduced first solve starts from the simple energy-minimising estimate; a pass that needs more than 300 steps drops the reduced first solve for that calculation. | Leave on. | 0 = off. |
+| `pa_OptimaEmptyPreSolveSkip` | 1 (on) | Once the reduced first solve has found no usable set of species in a calculation, its retries skip it. | Leave on. | 0 = off. |
+| `pa_OptimaCallCap` | 0 (no cap) | The most iterations one calculation (AOP, SOP) may use before it is repeated with the amounts changed by a tiny amount. | Batch runs where an occasional calculation runs for a very long time. | -1 = chosen from the system size; a positive number = that many iterations. |
+| `pa_OptimaCapNudges` | 3 (used only with pa_OptimaCallCap) | How many tiny changes of the amounts a calculation that hit its cap is retried with. If none works, it is run once more without the cap. | Leave. Used only with `pa_OptimaCallCap`. | 0 = no retries. |
+| `pa_OptimaFinishFirst` | 1 (on) | When a stuck calculation has failed, first tries the finishing step on where it stopped, and keeps that if no phase wants to form. Only otherwise are the full retries run. | Leave on. | 0 = off. |
+| `pa_OptimaCollapseCheck` | 1 (on) | When checking an answer, judges a phase that has vanished by its pure species, so a phase that should come back is not taken as correctly absent. | Leave on. | 0 = off. |
+| `pa_OptimaTpdVeto` | 1 (on) | The direct check that accepts a not-quite-converged answer (`pa_OptimaTpdAccept`) may not overrule the phase stability check for a mixed phase it cannot test itself, such as a vanished water phase. | Leave on. | 0 = off. |
+| `pa_OptimaTwinReadmit` | 1 (on) | A mixed phase that was switched off because a second copy of it took over is tried again after the calculation if the phase stability check says it should form. | Leave on. | 0 = off. |
+| `pa_OptimaFloorCurvature` | 3 (on) | Uses the exact curvature of the logarithm term for each species in a mixed phase, which the numerical estimate under-states for very small amounts. | Systems where a mixed phase takes many iterations to disappear. | 0 = off; 1 = exact term only; 2 = also a step size fitted to the phase and the full mixing curvature of solid and gas solutions; 3 = 1, plus the full mixing curvature for a nearly vanished gas or fluid phase and for a vanishing copy of a pair. |
+| `pa_OptimaEmptySolvent` | 1 (on) | A calculation from scratch whose water is at or below its minimum amount gets water added, as when the dissolved amounts outweigh it. | Leave on. | 0 = off. |
+| `pa_OptimaDryRetry` | 0 (off) | A calculation that ends with almost no liquid water, while the bulk could form much more, is solved once more from a start that first puts hydrogen and oxygen into water. | Systems that wrongly end dry. | 1 = on. |
 | `pa_LogBarrierTau` | 1e-16 | A tiny numerical push that keeps pure minerals away from exactly zero. | Rarely needs changing. | Any small positive number. |
 
 ### GEMS3K IPM solver — long-standing settings
@@ -263,9 +301,9 @@ the project; change them only by exporting the project again from GEMS.
 
 | Setting | Default | What it does | When it can be useful | Other values |
 |---|---|---|---|---|
-| `pa_ColdRetryNudges` | 4 | If a calculation from scratch (AIA) fails, retry up to this many times with a microscopically changed composition, then finish at the exact one. | Leave on. Systems where AIA fails occasionally. | 0 = no retry. |
-| `pa_IpmStallWindow` | 30 | Stops once the energy and composition have clearly stopped changing for this many iterations. | Leave on. Saves iterations on systems that converge slowly at the end. | 0 = off. |
-| `pa_IpmAugmentedKKT` | 2 | How each step's equations are solved. 2 is the most accurate. | Leave at 2; other values only to compare with older results. | 0 = the original method; 1 = an intermediate method. |
+| `pa_ColdRetryNudges` | 4 (on) | If a calculation from scratch (AIA) fails, retry up to this many times with a microscopically changed composition, then finish at the exact one. | Leave on. Systems where AIA fails occasionally. | 0 = no retry. |
+| `pa_IpmStallWindow` | 30 (on) | Stops once the energy and composition have clearly stopped changing for this many iterations. | Leave on. Saves iterations on systems that converge slowly at the end. | 0 = off. |
+| `pa_IpmAugmentedKKT` | 2 | How each step's equations are solved. 2 is the most accurate. | Leave at 2; other values only to compare with older results. | 0 = the original method; 1 = an intermediate method; 2 = the current method. |
 | `pa_MbReproject` | 1 (on) | A final touch-up that makes the element totals add up exactly. Also used after phase selection, where a partly successful touch-up is now kept because it only seeds the next iterations. | Leave on. Turn off only to see the raw result. | 0 = off. |
 | `pa_PSTALL` | 1 (on) | Lets the mass-balance step give up early when it stops improving. | Leave on. Saves time on systems where that step stalls. | 0 = off. |
 | `pa_MbClassRule` | 0 (off) | Checks the totals of major elements in absolute terms and of trace elements in relative terms; the value is the trace/major ratio. | Systems with trace elements at very low amounts. | A positive ratio = on. |

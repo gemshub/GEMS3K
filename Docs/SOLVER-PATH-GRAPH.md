@@ -65,37 +65,66 @@ to run away, it restarts once more with a simpler phase check before giving up.
 
 ## Inside the Optima solver (AOP, SOP, and the second part of HOP and SHP)
 
-1. **First guess.**
+1. **Quick first try** (AOP only, `pa_OptimaFastFirst`, on by default). A short, plain solve that takes full
+   steps. It gives up early if its energy keeps rising or blows up, if its steps stop changing anything, or if
+   its error stops improving after a jump in energy. If it does not end OK, the normal solve below starts from
+   the same inputs, and the iterations of both are counted.
+2. **First guess.**
    - From scratch: a linear calculation that puts the mass into as few species as possible. If that leaves
      almost no water, or empties a mixed phase, the guess is corrected first. On a second try (see below) a
      better guess is used that also looks at mixed phases.
+   - Leveled start (`pa_OptimaColdLevel`, `pa_OptimaLevelStart`, on by default; the quick try and the first
+     full attempt only): the first guess also takes the mixed phases into account. In a system with only
+     solids and other mixed condensed phases, the mixed phases that form, and their compositions, are worked
+     out first; if none forms, Optima only confirms that answer. Where the smaller problem (next step) is not
+     used, the start is the linear-calculation answer and its element potentials, with two copies of one solid
+     solution starting at different compositions.
    - From the previous result: that result is reused. If the node has never been solved, a warning is
      written and the call starts from scratch instead.
    - In HOP and SHP: the GEMS3K IPM answer is the starting point.
-2. **Smaller problem first** (systems with 200 species or more, AOP and SOP). Solves a smaller problem with
+3. **Smaller problem first** (systems with 200 species or more, AOP and SOP). Solves a smaller problem with
    only the species likely to matter, then adds back any species that turns out to be needed. If this does
    not settle, it is dropped and the full problem is solved.
-3. **Main solve.** Optima lowers the Gibbs energy. It stops early if it has made no progress for 500 steps
-   (`pa_OptimaStallWindow`), so a retry can start sooner. On systems with a multisite solid solution it
+4. **Main solve.** Optima lowers the Gibbs energy. It stops early if it has made no progress for 200 steps
+   (`pa_OptimaStallWindow`), so a retry can start sooner. It also stops, so the finishing step and the retries
+   can take over, when its energy and error have not changed at all for 20 steps (`pa_OptimaFrozenCut`; not
+   in HOP and SHP). On systems with a multisite solid solution it
    takes a short first look (200 steps from scratch, 25 from a previous result) to spot a phase that should
    disappear.
-4. **Tries inside the call**, in this order, only while the answer is not yet good:
+5. **Tries inside the call**, in this order, only while the answer is not yet good:
    1. Put the water back, if the result left almost none.
    2. Put back a mixed phase that collapsed to nothing.
    3. If two identical mixed phases compete, remove the one that is disappearing.
    4. Check every phase: remove one that should not be there, or bring back one that should, and solve
       again. Repeated until nothing changes.
    5. Last resorts: solve once more without the early stop, or without the short first look.
-5. **Finish.** If Optima stopped just short, a final step finishes the job on the phases it found
+   6. After a stuck solve has failed, the finishing step is tried first on where it stopped, and its answer
+      is kept if no phase wants to form; the full re-solves run only otherwise (`pa_OptimaFinishFirst`).
+6. **Finish.** If Optima stopped just short, a final step finishes the job on the phases it found
    (`pa_OptimaFinish`, on by default).
-6. **Final checks.** Does every element add up? Should a missing phase form? Were the pH and Eh targets
+7. **Final checks.** Does every element add up? Should a missing phase form? Were the pH and Eh targets
    met? An answer that fails a check is reported as not fully trustworthy.
-7. **Accept by direct check.** If Optima's own stopping test was not met but the mass balance holds and a
+8. **Accept by direct check.** If Optima's own stopping test was not met but the mass balance holds and a
    direct test shows that no missing phase should form, the answer is accepted (`pa_OptimaTpdAccept`, on by
    default).
-8. **Touch-up.** If an element does not quite add up in an accepted answer, a small repair is tried and
+9. **Touch-up.** If an element does not quite add up in an accepted answer, a small repair is tried and
    kept only if it helps (`pa_OptimaZeroAbsent` = 2, the default). With the value 1, species of absent
    phases are instead set to exactly zero.
+
+**Cap on one call** (AOP and SOP, `pa_OptimaCallCap`, off by default). The whole call, with all its tries,
+may use only a set number of iterations. A call that fails with the cap used up is repeated with the bulk
+composition changed by a tiny amount, up to `pa_OptimaCapNudges` times, each with a fresh cap; an answer found
+this way is finished at the exact composition. If none works, the call is run once more without the cap, so the
+cap never loses an answer.
+
+**Dry-out path** (optional, `pa_OptimaDryOut`, off by default). When the water runs out during the main
+solve, the solve stops, the water phase is taken out and the solids are solved alone. That answer is then
+compared with a solve that keeps the water, and the one with the lower energy is kept. If the dry solve
+fails, the ordinary solve goes on with the water back. It is not used when an element can only be held by the
+water. Two further settings act after the water has been taken out: the tail stop (`pa_OptimaTailStop`,
+`pa_OptimaTailStopWarm`, `pa_OptimaTailDryOnly`) ends a solve whose energy no longer changes while the
+remaining error sits only on trace amounts, after a phase stability check; and `pa_OptimaWaterKeep` keeps a
+converged or tail-stopped dry answer instead of retrying it with more water.
 
 Only the Optima modes can fix the pH or Eh (see the options guide).
 

@@ -297,13 +297,13 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
       <!-- row 1 -->
       <rect x="10" y="20" width="200" height="60" rx="5" class="bo"/>
       <text x="110" y="44" class="lbl" text-anchor="middle">1 · First guess</text>
-      <text x="110" y="62" class="sub" text-anchor="middle">scratch · previous · IPM answer</text>
+      <text x="110" y="62" class="sub" text-anchor="middle">quick try · scratch · previous</text>
       <rect x="250" y="20" width="200" height="60" rx="5" class="bo"/>
       <text x="350" y="44" class="lbl" text-anchor="middle">2 · Smaller problem first</text>
       <text x="350" y="62" class="sub" text-anchor="middle">200 species or more</text>
       <rect x="490" y="20" width="200" height="60" rx="5" class="bo"/>
       <text x="590" y="44" class="lbl" text-anchor="middle">3 · Main solve</text>
-      <text x="590" y="62" class="sub" text-anchor="middle">stops if stuck 500 steps</text>
+      <text x="590" y="62" class="sub" text-anchor="middle">stops if stuck 200 steps</text>
       <line x1="210" y1="50" x2="248" y2="50" class="ln" marker-end="url(#ar3)"/>
       <line x1="450" y1="50" x2="488" y2="50" class="ln" marker-end="url(#ar3)"/>
       <!-- tries -->
@@ -343,18 +343,28 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
     </svg>
   </figure>
   <ol class="steps o">
-    <li><b>First guess.</b> From scratch: a linear calculation that puts the mass in as few species as possible,
+    <li><b>First guess.</b> In AOP, a quick try comes first: a short, plain solve with full steps
+      (<code>pa_OptimaFastFirst</code>, on). It gives up early if its energy keeps rising or blows up, if its
+      steps stop changing anything, or if its error stops improving after a jump in energy; the normal solve then
+      starts from the same inputs. From scratch: a linear calculation that puts the mass in as few species as possible,
       corrected first if it leaves almost no water or empties a mixed phase. From the previous result: reused; if
       the node was never solved, a warning is written and it starts from scratch. In HOP and SHP: the GEMS3K IPM
-      answer.</li>
+      answer. In the quick try and the first full attempt the guess also takes the mixed phases into account
+      (<code>pa_OptimaColdLevel</code>, <code>pa_OptimaLevelStart</code>, on): with only solids and other mixed
+      condensed phases, it first works out which mixed phases form and at what composition, and if none forms
+      Optima only confirms that answer; where the smaller problem is not used, the start is the linear-calculation
+      answer with its element potentials, and two copies of one solid solution start at different
+      compositions.</li>
     <li><b>Smaller problem first</b> (200 species or more, AOP and SOP). Solves with only the species likely to
       matter, then adds back any that turn out to be needed. If this does not settle, it is dropped.</li>
-    <li><b>Main solve.</b> Stops early after 500 steps without progress (<code>pa_OptimaStallWindow</code>), so a
-      retry can start sooner. With a multisite solid solution it first takes a short look (200 steps from scratch,
+    <li><b>Main solve.</b> Stops early after 200 steps without progress (<code>pa_OptimaStallWindow</code>), so a
+      retry can start sooner, and when energy and error have not changed at all for 20 steps
+      (<code>pa_OptimaFrozenCut</code>; not in HOP and SHP). With a multisite solid solution it first takes a short look (200 steps from scratch,
       25 from a previous result) to spot a phase that should disappear.</li>
     <li><b>Tries inside the call</b>, in order, only while the answer is not good: put the water back; refill a
       collapsed mixed phase; drop the vanishing one of two identical mixed phases; check every phase and add or
-      remove, repeating until nothing changes; and as a last resort, solve again without the early stops.</li>
+      remove, repeating until nothing changes; and as a last resort, solve again without the early stops. After a stuck solve has failed, the finishing step
+      is tried first on where it stopped and kept if no phase wants to form (<code>pa_OptimaFinishFirst</code>).</li>
     <li><b>Finish.</b> If Optima stopped just short, a final step finishes on the phases it found
       (<code>pa_OptimaFinish</code>, on).</li>
     <li><b>Final checks.</b> Do the elements add up? Should a missing phase form? Were the pH and Eh targets met?</li>
@@ -363,6 +373,20 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
     <li><b>Touch-up.</b> If an element does not quite add up, a small repair is kept only if it helps
       (<code>pa_OptimaZeroAbsent</code> = 2). With 1, species of absent phases are set to exactly zero.</li>
   </ol>
+  <div class="note"><p><b>Cap on one call</b> (AOP and SOP, <code>pa_OptimaCallCap</code>, off by default). The
+  whole call, with all its tries, may use only a set number of iterations. A call that fails with the cap used up
+  is repeated with the bulk composition changed by a tiny amount, up to <code>pa_OptimaCapNudges</code> times,
+  each with a fresh cap; an answer found this way is finished at the exact composition. If none works, the call
+  is run once more without the cap, so the cap never loses an answer.</p></div>
+  <div class="note"><p><b>Dry-out path</b> (optional, <code>pa_OptimaDryOut</code>, off by default). When the water
+  runs out during the main solve, the solve stops, the water phase is taken out and the solids are solved alone.
+  That answer is compared with a solve that keeps the water, and the one with the lower energy is kept. If the dry
+  solve fails, the ordinary solve goes on with the water back. It is not used when an element can only be held by
+  the water. Two further settings act after the water has been taken out: the tail stop
+  (<code>pa_OptimaTailStop</code>, <code>pa_OptimaTailStopWarm</code>, <code>pa_OptimaTailDryOnly</code>) ends a
+  solve whose energy no longer changes while the remaining error sits only on trace amounts, after a phase
+  stability check; and <code>pa_OptimaWaterKeep</code> keeps a converged or tail-stopped dry answer instead of
+  retrying it with more water.</p></div>
   <p>Only the Optima modes can fix the pH or Eh.</p>
 </section>
 

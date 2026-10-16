@@ -30,6 +30,9 @@
 #include "ms_multi.h"
 #include "v_service.h"
 
+// Set when the last concentration pass found the aqueous phase without water.
+thread_local bool g_aqueousAbsent = false;
+
 // Phase name for the surface-model debug messages.
 static std::string edlPhaseName( const MULTI& pm, long int k )
 {
@@ -305,6 +308,7 @@ void TMultiBase::CalculateConcentrations( double X[], double XF[], double XFA[])
     long int k, ii, i, j, ist, jj, jja;
     double Factor=0.0, Dsur=0.0, MMC=0.0;
     const BASE_PARAM *pa_p = base_param();
+    g_aqueousAbsent = false;
 
 //    if( pm.Ls < 2 || !pm.FIs )  Temporary disabled  09.03.2010 DK
 //        return;
@@ -369,6 +373,12 @@ void TMultiBase::CalculateConcentrations( double X[], double XF[], double XFA[])
             (pm.PHC[k] == PH_AQUEL && ( XFA[k] <= pm.XwMinM || XF[k] <= pm.DSM ) )
                 || ( pm.PHC[k] == PH_SORPTION && XFA[k] <= pm.ScMinM ))
         {
+            // No water left: there is no pH or pe to report, so do not keep old values.
+            if( pm.PHC[k] == PH_AQUEL )
+            {
+                pm.pH = pm.pe = pm.Eh = 0.;
+                g_aqueousAbsent = true;
+            }
             for( jj=0; jj<pm.N; jj++)
              pm.BF[k*pm.N+jj] = 0.;
 

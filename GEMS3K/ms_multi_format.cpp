@@ -170,7 +170,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_LogBarrierTau", 0 , 0, 0, "# pa_LogBarrierTau: Optima solver: log-barrier weight for pure single-species phases { 1e-16 }" },
     { "pa_OptimaMaxStepRatio", 0 , 0, 0, "# pa_OptimaMaxStepRatio: reserved, no effect { 0 }" },
     { "pa_PhaseHessianFloor", 0 , 0, 0, "# pa_PhaseHessianFloor: Optima solver: eigenvalue floor (fraction of the largest) for the exact curvature block of non-aqueous solution phases; 0 disables it { 0.01 }" },
-    { "pa_OptimaStallWindow", 0 , 0, 0, "# pa_OptimaStallWindow: Optima solver: abandon a solve when the best error has not improved over this many iterations; 0 = off { 500 }" },
+    { "pa_OptimaStallWindow", 0 , 0, 0, "# pa_OptimaStallWindow: Optima solver: abandon a solve when the best error has not improved over this many iterations; 0 = off { 200 }" },
     { "pa_OptimaMaxSeconds", 0 , 0, 0, "# pa_OptimaMaxSeconds: Optima solver: time limit in seconds for one solve including retries; 0 = off. Results then depend on the machine { 0 }" },
     { "pa_OptimaFDHessian", 0 , 0, 0, "# pa_OptimaFDHessian: Optima solver: 1 = finite-difference Hessian columns, 0 = skip them (cheaper) { 1 }" },
     { "pa_OptimaMoleFracHessian", 0 , 0, 0, "# pa_OptimaMoleFracHessian: Optima solver: ideal-mixing Hessian of non-aqueous solution phases; 0 = diag(1/X), 1 = full mole-fraction Jacobian { 0 }" },
@@ -205,6 +205,32 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaColdRetry", 0 , 0, 0, "# pa_OptimaColdRetry: Optima solver: re-solve a failed warm call (SOP/SHP) cold; 0 = off, 1 = after the full budget, 2 = fail fast { 2 }" },
     { "pa_OptimaFinish", 0 , 0, 0, "# pa_OptimaFinish: Optima solver: finish a non-converged call by Newton on the fixed phase set; 0 = off, 1 = on { 1 }" },
     { "pa_OptimaAcceptRepair", 0 , 0, 0, "# pa_OptimaAcceptRepair: Optima solver: with pa_OptimaTpdAccept, repair a failing mass balance and re-test; 0 = off, 1 = on { 0 }" },
+    { "pa_NativeOptimaFinish", 0 , 0, 0, "# pa_NativeOptimaFinish: native solver: when a trace solid phase still tends to grow, finish with Optima and keep the better answer; most Optima iterations allowed, 0 = off { 500 }" },
+    { "pa_OptimaCollapseCheck", 0 , 0, 0, "# pa_OptimaCollapseCheck: Optima solver: when checking the answer, judge a vanished phase by its pure species; 0 = off, 1 = on { 1 }" },
+    { "pa_OptimaFastFirst", 0 , 0, 0, "# pa_OptimaFastFirst: Optima solver: a cold call first tries a quick solve, then the normal one if needed; most iterations of the quick try, 0 = off { 60 }" },
+    { "pa_OptimaFloorCurvature", 0 , 0, 0, "# pa_OptimaFloorCurvature: Optima solver: exact curvature of ln(amount) for solution species near the floor; 0 = off, 1 = on, 2 = full mixing block, 3 = on, plus the full block on vanishing phases { 3 }" },
+    { "pa_OptimaEmptySolvent", 0 , 0, 0, "# pa_OptimaEmptySolvent: Optima solver: a cold start with no water gets water added; 0 = off, 1 = on { 1 }" },
+    { "pa_OptimaTpdVeto", 0 , 0, 0, "# pa_OptimaTpdVeto: Optima solver: an answer is not accepted while a vanished solution phase should form; 0 = off, 1 = on { 1 }" },
+    { "pa_OptimaEmptyPreSolveSkip", 0 , 0, 0, "# pa_OptimaEmptyPreSolveSkip: Optima solver: retries of a call skip the reduced pre-solve once it found nothing; 0 = off, 1 = on { 1 }" },
+    { "pa_OptimaTwinReadmit", 0 , 0, 0, "# pa_OptimaTwinReadmit: Optima solver: a twin phase switched off during the solve is tried again if it should form; 0 = off, 1 = on { 1 }" },
+    { "pa_OptimaDryRetry", 0 , 0, 0, "# pa_OptimaDryRetry: Optima solver: a solve that dries out the aqueous phase is retried from a water-first start; 0 = off, 1 = on { 0 }" },
+    { "pa_OptimaCallCap", 0 , 0, 0, "# pa_OptimaCallCap: Optima solver: most iterations one call may use before it is retried at nudged compositions; 0 = no cap, -1 = by system size, N = N { 0 }" },
+    { "pa_OptimaCapNudges", 0 , 0, 0, "# pa_OptimaCapNudges: Optima solver: nudged retries of a call that hit its cap, then one try without the cap { 3 }" },
+    { "pa_OptimaFinishFirst", 0 , 0, 0, "# pa_OptimaFinishFirst: Optima solver: a stalled failed solve first tries the Newton finish before re-solving; 0 = off, 1 = on { 1 }" },
+    { "pa_OptimaFastFrozen", 0 , 0, 0, "# pa_OptimaFastFrozen: Optima solver: the quick first try stops after this many steps that moved only at rounding level; 0 = off { 3 }" },
+    { "pa_OptimaFastDiverge", 0 , 0, 0, "# pa_OptimaFastDiverge: Optima solver: the quick first try stops when its energy jumped and its error stays this many times above its earlier low; 0 = off { 10 }" },
+    { "pa_OptimaRedoxFree", 0 , 0, 0, "# pa_OptimaRedoxFree: Optima solver: check whether nothing in the bulk fixes the redox level; 0 = off, 1 = log it, 2 = also aim at pe 4 when no pH/Eh target is set { 1 }" },
+    { "pa_OptimaFastRises", 0 , 0, 0, "# pa_OptimaFastRises: Optima solver: the quick first try stops once its energy went up by more than 1 % on this many steps; 0 = off { 10 }" },
+    { "pa_OptimaPreSolveSeed", 0 , 0, 0, "# pa_OptimaPreSolveSeed: Optima solver: start the pre-solve from the linear-Gibbs solution, capped; 0 = off, 1 = on { 1 }" },
+    { "pa_OptimaColdLevel", 0 , 0, 0, "# pa_OptimaColdLevel: Optima solver: without a pre-solve, start a cold call from the linear-Gibbs solution; 0 = off, 1 = on { 1 }" },
+    { "pa_OptimaLevelStart", 0 , 0, 0, "# pa_OptimaLevelStart: Optima solver: level systems of condensed phases first and start from that answer; 0 = off, 1 = on { 1 }" },
+    { "pa_OptimaFastCollapse", 0 , 0, 0, "# pa_OptimaFastCollapse: Optima solver: the quick first try stops at once when its energy grew to more than this many times its start; 0 = off { 1000 }" },
+    { "pa_OptimaFrozenCut", 0 , 0, 0, "# pa_OptimaFrozenCut: Optima solver: the full solve hands over to the finish once energy and error stayed unchanged for this many steps; 0 = off { 20 }" },
+    { "pa_OptimaDryOut", 0 , 0, 0, "# pa_OptimaDryOut: Optima solver: when the water runs out, take the water phase out and solve the solids alone; 0 = off, 1 = on { 0 }" },
+    { "pa_OptimaTailStop", 0 , 0, 0, "# pa_OptimaTailStop: Optima solver: stop after this many steps with unchanged energy and only trace error left, then check the point; 0 = off { 100 }" },
+    { "pa_OptimaTailStopWarm", 0 , 0, 0, "# pa_OptimaTailStopWarm: Optima solver: the same on a warm call; 0 = off { 10 }" },
+    { "pa_OptimaTailDryOnly", 0 , 0, 0, "# pa_OptimaTailDryOnly: Optima solver: the tail stop acts only after the water phase was taken out; 0 = always, 1 = only then { 1 }" },
+    { "pa_OptimaWaterKeep", 0 , 0, 0, "# pa_OptimaWaterKeep: Optima solver: 1 = keep a converged answer when the water retry fails; 2 = also skip that retry after a checked dry answer; 0 = off { 2 }" },
 };
 
 
@@ -223,7 +249,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 120, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 146, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -471,6 +497,58 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_OptimaFinish, pa_p->OptimaFinish, _comment, false  );
     if(!brief_mode || pa_p->OptimaAcceptRepair != pa_p_.OptimaAcceptRepair )
         prar.writeField(f_pa_OptimaAcceptRepair, pa_p->OptimaAcceptRepair, _comment, false  );
+    if(!brief_mode || pa_p->NativeOptimaFinish != pa_p_.NativeOptimaFinish )
+        prar.writeField(f_pa_NativeOptimaFinish, pa_p->NativeOptimaFinish, _comment, false  );
+    if(!brief_mode || pa_p->OptimaCollapseCheck != pa_p_.OptimaCollapseCheck )
+        prar.writeField(f_pa_OptimaCollapseCheck, pa_p->OptimaCollapseCheck, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFastFirst != pa_p_.OptimaFastFirst )
+        prar.writeField(f_pa_OptimaFastFirst, pa_p->OptimaFastFirst, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFloorCurvature != pa_p_.OptimaFloorCurvature )
+        prar.writeField(f_pa_OptimaFloorCurvature, pa_p->OptimaFloorCurvature, _comment, false  );
+    if(!brief_mode || pa_p->OptimaEmptySolvent != pa_p_.OptimaEmptySolvent )
+        prar.writeField(f_pa_OptimaEmptySolvent, pa_p->OptimaEmptySolvent, _comment, false  );
+    if(!brief_mode || pa_p->OptimaTpdVeto != pa_p_.OptimaTpdVeto )
+        prar.writeField(f_pa_OptimaTpdVeto, pa_p->OptimaTpdVeto, _comment, false  );
+    if(!brief_mode || pa_p->OptimaEmptyPreSolveSkip != pa_p_.OptimaEmptyPreSolveSkip )
+        prar.writeField(f_pa_OptimaEmptyPreSolveSkip, pa_p->OptimaEmptyPreSolveSkip, _comment, false  );
+    if(!brief_mode || pa_p->OptimaTwinReadmit != pa_p_.OptimaTwinReadmit )
+        prar.writeField(f_pa_OptimaTwinReadmit, pa_p->OptimaTwinReadmit, _comment, false  );
+    if(!brief_mode || pa_p->OptimaDryRetry != pa_p_.OptimaDryRetry )
+        prar.writeField(f_pa_OptimaDryRetry, pa_p->OptimaDryRetry, _comment, false  );
+    if(!brief_mode || pa_p->OptimaCallCap != pa_p_.OptimaCallCap )
+        prar.writeField(f_pa_OptimaCallCap, pa_p->OptimaCallCap, _comment, false  );
+    if(!brief_mode || pa_p->OptimaCapNudges != pa_p_.OptimaCapNudges )
+        prar.writeField(f_pa_OptimaCapNudges, pa_p->OptimaCapNudges, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFinishFirst != pa_p_.OptimaFinishFirst )
+        prar.writeField(f_pa_OptimaFinishFirst, pa_p->OptimaFinishFirst, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFastFrozen != pa_p_.OptimaFastFrozen )
+        prar.writeField(f_pa_OptimaFastFrozen, pa_p->OptimaFastFrozen, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFastDiverge != pa_p_.OptimaFastDiverge )
+        prar.writeField(f_pa_OptimaFastDiverge, pa_p->OptimaFastDiverge, _comment, false  );
+    if(!brief_mode || pa_p->OptimaRedoxFree != pa_p_.OptimaRedoxFree )
+        prar.writeField(f_pa_OptimaRedoxFree, pa_p->OptimaRedoxFree, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFastRises != pa_p_.OptimaFastRises )
+        prar.writeField(f_pa_OptimaFastRises, pa_p->OptimaFastRises, _comment, false  );
+    if(!brief_mode || pa_p->OptimaPreSolveSeed != pa_p_.OptimaPreSolveSeed )
+        prar.writeField(f_pa_OptimaPreSolveSeed, pa_p->OptimaPreSolveSeed, _comment, false  );
+    if(!brief_mode || pa_p->OptimaColdLevel != pa_p_.OptimaColdLevel )
+        prar.writeField(f_pa_OptimaColdLevel, pa_p->OptimaColdLevel, _comment, false  );
+    if(!brief_mode || pa_p->OptimaLevelStart != pa_p_.OptimaLevelStart )
+        prar.writeField(f_pa_OptimaLevelStart, pa_p->OptimaLevelStart, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFastCollapse != pa_p_.OptimaFastCollapse )
+        prar.writeField(f_pa_OptimaFastCollapse, pa_p->OptimaFastCollapse, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFrozenCut != pa_p_.OptimaFrozenCut )
+        prar.writeField(f_pa_OptimaFrozenCut, pa_p->OptimaFrozenCut, _comment, false  );
+    if(!brief_mode || pa_p->OptimaDryOut != pa_p_.OptimaDryOut )
+        prar.writeField(f_pa_OptimaDryOut, pa_p->OptimaDryOut, _comment, false  );
+    if(!brief_mode || pa_p->OptimaTailStop != pa_p_.OptimaTailStop )
+        prar.writeField(f_pa_OptimaTailStop, pa_p->OptimaTailStop, _comment, false  );
+    if(!brief_mode || pa_p->OptimaTailStopWarm != pa_p_.OptimaTailStopWarm )
+        prar.writeField(f_pa_OptimaTailStopWarm, pa_p->OptimaTailStopWarm, _comment, false  );
+    if(!brief_mode || pa_p->OptimaTailDryOnly != pa_p_.OptimaTailDryOnly )
+        prar.writeField(f_pa_OptimaTailDryOnly, pa_p->OptimaTailDryOnly, _comment, false  );
+    if(!brief_mode || pa_p->OptimaWaterKeep != pa_p_.OptimaWaterKeep )
+        prar.writeField(f_pa_OptimaWaterKeep, pa_p->OptimaWaterKeep, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -876,7 +954,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 120, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 146, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1214,10 +1292,24 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             break;
         case f_pa_DF: rddar.readArray("pa_DF" , &pa_p->DF, 1);
             break;
-        case f_pa_DP: rddar.readArray("pa_DP", &pa_p->DP, 1);
+        case f_pa_DP: {   // stored as short: a larger value would wrap round silently
+            long int v = pa_p->DP;
+            rddar.readArray("pa_DP", &v, 1);
+            if( v > 32767 || v < 1 )
+                ipm_logger->warn( "pa_DP = {} is outside 1..32767; using {}.", v, v > 32767 ? 32767 : pa_p->DP );
+            if( v > 32767 ) v = 32767;
+            if( v >= 1 ) pa_p->DP = static_cast<short>( v );
             break;
-        case f_pa_IIM: rddar.readArray("pa_IIM", &pa_p->IIM, 1);
+        }
+        case f_pa_IIM: {   // stored as short: a larger value would wrap round silently
+            long int v = pa_p->IIM;
+            rddar.readArray("pa_IIM", &v, 1);
+            if( v > 32767 || v < 1 )
+                ipm_logger->warn( "pa_IIM = {} is outside 1..32767; using {}.", v, v > 32767 ? 32767 : pa_p->IIM );
+            if( v > 32767 ) v = 32767;
+            if( v >= 1 ) pa_p->IIM = static_cast<short>( v );
             break;
+        }
         case f_pa_PD: rddar.readArray("pa_PD" , &pa_p->PD, 1);
             break;
         case f_pa_PRD: rddar.readArray("pa_PRD" , &pa_p->PRD, 1);
@@ -1359,6 +1451,58 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_OptimaFinish: rddar.readArray("pa_OptimaFinish" , &pa_p->OptimaFinish, 1);
             break;
         case f_pa_OptimaAcceptRepair: rddar.readArray("pa_OptimaAcceptRepair" , &pa_p->OptimaAcceptRepair, 1);
+            break;
+        case f_pa_NativeOptimaFinish: rddar.readArray("pa_NativeOptimaFinish" , &pa_p->NativeOptimaFinish, 1);
+            break;
+        case f_pa_OptimaCollapseCheck: rddar.readArray("pa_OptimaCollapseCheck" , &pa_p->OptimaCollapseCheck, 1);
+            break;
+        case f_pa_OptimaFastFirst: rddar.readArray("pa_OptimaFastFirst" , &pa_p->OptimaFastFirst, 1);
+            break;
+        case f_pa_OptimaFloorCurvature: rddar.readArray("pa_OptimaFloorCurvature" , &pa_p->OptimaFloorCurvature, 1);
+            break;
+        case f_pa_OptimaEmptySolvent: rddar.readArray("pa_OptimaEmptySolvent" , &pa_p->OptimaEmptySolvent, 1);
+            break;
+        case f_pa_OptimaTpdVeto: rddar.readArray("pa_OptimaTpdVeto" , &pa_p->OptimaTpdVeto, 1);
+            break;
+        case f_pa_OptimaEmptyPreSolveSkip: rddar.readArray("pa_OptimaEmptyPreSolveSkip" , &pa_p->OptimaEmptyPreSolveSkip, 1);
+            break;
+        case f_pa_OptimaTwinReadmit: rddar.readArray("pa_OptimaTwinReadmit" , &pa_p->OptimaTwinReadmit, 1);
+            break;
+        case f_pa_OptimaDryRetry: rddar.readArray("pa_OptimaDryRetry" , &pa_p->OptimaDryRetry, 1);
+            break;
+        case f_pa_OptimaCallCap: rddar.readArray("pa_OptimaCallCap" , &pa_p->OptimaCallCap, 1);
+            break;
+        case f_pa_OptimaCapNudges: rddar.readArray("pa_OptimaCapNudges" , &pa_p->OptimaCapNudges, 1);
+            break;
+        case f_pa_OptimaFinishFirst: rddar.readArray("pa_OptimaFinishFirst" , &pa_p->OptimaFinishFirst, 1);
+            break;
+        case f_pa_OptimaFastFrozen: rddar.readArray("pa_OptimaFastFrozen" , &pa_p->OptimaFastFrozen, 1);
+            break;
+        case f_pa_OptimaFastDiverge: rddar.readArray("pa_OptimaFastDiverge" , &pa_p->OptimaFastDiverge, 1);
+            break;
+        case f_pa_OptimaRedoxFree: rddar.readArray("pa_OptimaRedoxFree" , &pa_p->OptimaRedoxFree, 1);
+            break;
+        case f_pa_OptimaFastRises: rddar.readArray("pa_OptimaFastRises" , &pa_p->OptimaFastRises, 1);
+            break;
+        case f_pa_OptimaPreSolveSeed: rddar.readArray("pa_OptimaPreSolveSeed" , &pa_p->OptimaPreSolveSeed, 1);
+            break;
+        case f_pa_OptimaColdLevel: rddar.readArray("pa_OptimaColdLevel" , &pa_p->OptimaColdLevel, 1);
+            break;
+        case f_pa_OptimaLevelStart: rddar.readArray("pa_OptimaLevelStart" , &pa_p->OptimaLevelStart, 1);
+            break;
+        case f_pa_OptimaFastCollapse: rddar.readArray("pa_OptimaFastCollapse" , &pa_p->OptimaFastCollapse, 1);
+            break;
+        case f_pa_OptimaFrozenCut: rddar.readArray("pa_OptimaFrozenCut" , &pa_p->OptimaFrozenCut, 1);
+            break;
+        case f_pa_OptimaDryOut: rddar.readArray("pa_OptimaDryOut" , &pa_p->OptimaDryOut, 1);
+            break;
+        case f_pa_OptimaTailStop: rddar.readArray("pa_OptimaTailStop" , &pa_p->OptimaTailStop, 1);
+            break;
+        case f_pa_OptimaTailStopWarm: rddar.readArray("pa_OptimaTailStopWarm" , &pa_p->OptimaTailStopWarm, 1);
+            break;
+        case f_pa_OptimaTailDryOnly: rddar.readArray("pa_OptimaTailDryOnly" , &pa_p->OptimaTailDryOnly, 1);
+            break;
+        case f_pa_OptimaWaterKeep: rddar.readArray("pa_OptimaWaterKeep" , &pa_p->OptimaWaterKeep, 1);
             break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;
