@@ -18,4 +18,5 @@ dependencies:
   - pybind11
   - autodiff
   - nlohmann_json
-  - thermofun>=0.6.3
+  - thermofun>=0.7.1
+  - autodiff

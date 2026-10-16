@@ -88,9 +88,43 @@ std::shared_ptr<spdlog::logger> chfun_logger = spdlog::stdout_color_mt("chemical
 Only file logger ( old ipmlog.txt file)
 
 ```c++
-std::shared_ptr<spdlog::logger> TNode::ipmlog_file = spdlog::rotating_logger_mt("ipmlog", "ipmlog.txt", 1048576, 2);
+// a rotating file sink (default 1 MiB, 1 file) that creates ipmlog.txt when the first message is written
+std::shared_ptr<spdlog::logger> TNode::ipmlog_file;   // logger name "ipmlog"
 ```
 
+
+### `update_loggers` — what each value means
+
+`GemsSettings::gems3k_update_loggers(use_stdout, logfile_name, log_level)` is the call behind `xGEMS::update_loggers(...)` and
+`xgems.update_loggers(...)` in Python. It applies to every logger listed above (`gems3k`, `ipm`, `tnode`, `kinmet`, `solmod`,
+`thermofun`, `chemicalfun`), and it also sets the level of the `ipmlog` file logger.
+
+| Argument | Value | Effect |
+|---|---|---|
+| `use_stdout` (xGEMS: `use_cout`) | `true` | Messages are also written to the console (stdout), coloured, with pattern `[%n] [%^%l%$] %v` (logger name, level, text). |
+| | `false` | Nothing is written to the console. |
+| `logfile_name` | a name, e.g. `"xGEMS.log"` | Messages are also written to this rotating file (default size 1 MiB, 1 file), in `GemsSettings::data_logger_directory` (the working directory by default). The file is created when the **first message** is written, so no empty file is left when nothing is logged. |
+| | `""` (empty) | No log file. |
+| `log_level` | 0 `trace` | Everything, including solver path decisions, for example `ITF=.. IT=..  ! PIA->AIA on E04IPM` in `ipmlog`. |
+| | 1 `debug` | Plus one line per equilibrium run, for example `GEMIPM TC=..`. |
+| | 2 `info` | Plus general progress messages. |
+| | 3 `warn` | Warnings only and above: failed or doubtful calculations (error code and text), and the warnings of the **Optima** solver (see below). xGEMS starts with this level (`update_loggers(false, "xGEMS.log", 3)` at import). |
+| | 4 `err` | Errors and above. Optima warnings are no longer logged. |
+| | 5 `critical` | Only critical errors. |
+| | 6 `off` | Nothing is logged. |
+
+A message is shown only if its level is at least `log_level`. Changing the level does not change where messages go, and the
+call replaces the sinks of all loggers, so call it once with all three values.
+
+**Optima warnings.** In builds with the Optima solver, warnings printed by Optima (for example *"Proceeding with linear-search
+algorithm even though current Newton step is not a descent direction"*) are sent to the `tnode` logger at level `warn`, so
+they follow `update_loggers`: on the console only if `use_stdout` is true and `log_level <= 3`, in the log file if a file is
+given, nowhere if `log_level >= 4`. (Optima itself prints to `std::cout` when it is used without GEMS3K; see
+`optima/.claude/docs/GEMS3K-MODIFICATIONS.md`, section 8.)
+
+**`ipmlog.txt` and `pa_PSM`.** The IPM solver writes its own diagnostics to `ipmlog.txt` (logger `ipmlog`). How much it writes
+is set by the project setting `pa_PSM` (0 = nothing, 2 = also warnings, 3 = detailed trace) *and* by the logger level above; the
+file is created when the first message is written.
 
 ### API for changing loggers settings in source code
 

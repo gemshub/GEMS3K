@@ -76,4 +76,8 @@ lib-gems3k/release/libgems3k3.a
 .qmake.stash
 CLAUDE.md
 environment.yml
-
+*build*/
+*debug*/
+.claude
+tmp/
+GEMS3K.code-workspace

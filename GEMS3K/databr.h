@@ -141,7 +141,54 @@ typedef DATABR*  DATABRPTR;
  OK_GEM_SIA   = 6,   ///< OK after GEM calculation with SIA
  BAD_GEM_SIA  = 7,   ///< Bad (not fully trustful) result after GEM calculation with SIA
  ERR_GEM_SIA  = 8,   ///< Failure (no result) in GEM calculation with SIA
- T_ERROR_GEM  = 9    ///< Terminal error has occurred in GEMS3K (e.g. memory corruption). Restart is required.
+ T_ERROR_GEM  = 9,   ///< Terminal error has occurred in GEMS3K (e.g. memory corruption). Restart is required.
+ // "Optima" modes: equilibrium via the Optima library's primal-dual interior-point NLP solver
+ // (TMultiBase::CalculateEquilibriumStateOptima(), ipm_optima.cpp) instead of GEMS3K's own
+ // IPM/MBR loop. Only with USE_OPTIMA_SOLVER; otherwise TNode::GEM_run() logs a warning and
+ // falls back to native AIA/SIA (returning OK/BAD/ERR_GEM_AIA/SIA). AOP mirrors AIA (cold
+ // start), SOP mirrors SIA (warm start from the previous speciation).
+ // In plain words: AOP and SOP solve the same problem with a different, modern solver.
+ NEED_GEM_AOP = 10,  ///< Need GEM calculation via Optima with cold (AIA-equivalent) initial approximation
+ OK_GEM_AOP   = 11,  ///< OK after GEM calculation via Optima with cold initial approximation
+ BAD_GEM_AOP  = 12,  ///< Bad (not fully trustful) result after GEM calculation via Optima with cold initial approximation
+ ERR_GEM_AOP  = 13,  ///< Failure (no result) in GEM calculation via Optima with cold initial approximation
+ NEED_GEM_SOP = 14,  ///< Need GEM calculation via Optima with warm (SIA-equivalent) initial approximation
+                     ///<   using the previous speciation (full DATABR lists only)
+ OK_GEM_SOP   = 15,  ///< OK after GEM calculation via Optima with warm initial approximation
+ BAD_GEM_SOP  = 16,  ///< Bad (not fully trustful) result after GEM calculation via Optima with warm initial approximation
+ ERR_GEM_SOP  = 17,  ///< Failure (no result) in GEM calculation via Optima with warm initial approximation
+ // "ROP" mode: Optima in a fixed reference setup, for comparison only - a uniform tiny initial
+ // guess, the PartiallyExact Hessian, Optima's default options, and one retry from the original
+ // state with apply_min_max_fix_and_accept toggled (CalculateEquilibriumStateOptima() with
+ // referenceMode). A single mode, always cold. Without USE_OPTIMA_SOLVER it falls back to AIA.
+ // In plain words: a plain, untuned Optima run used as a yardstick, not for production.
+ NEED_GEM_ROP = 18,  ///< Need GEM calculation via Optima in the reference setup (uniform seed, PartiallyExact Hessian, default Optima options)
+ OK_GEM_ROP   = 19,  ///< OK after GEM calculation via the ROP mechanism
+ BAD_GEM_ROP  = 20,  ///< Bad (not fully trustful) result after GEM calculation via the ROP mechanism
+ ERR_GEM_ROP  = 21,  ///< Failure (no result) in GEM calculation via the ROP mechanism
+ // "HOP" mode: hybrid - native GEMS3K IPM/MBR first (which selects the phases), then Optima
+ // warm-started from its primal and dual. A separate, caller-selected mode: AOP/SOP stay a
+ // standalone alternative to native. If native fails, this degrades to a plain cold Optima
+ // solve (with a logged warning); if the Optima leg fails, native's answer is restored and
+ // reported as BAD_GEM_HOP. Without USE_OPTIMA_SOLVER it falls back to native AIA.
+ // In plain words: the original solver finds the answer, then the Optima solver polishes it.
+ NEED_GEM_HOP = 22,  ///< Need GEM calculation via native IPM/MBR first, then Optima warm-started from its result
+ OK_GEM_HOP   = 23,  ///< OK after the hybrid native-then-Optima calculation
+ BAD_GEM_HOP  = 24,  ///< Bad (not fully trustful) result after the hybrid native-then-Optima calculation
+ ERR_GEM_HOP  = 25,  ///< Failure (no result) in the hybrid native-then-Optima calculation
+
+ // SHP - the warm counterpart of HOP (as SIA is to AIA and SOP to AOP): the native leg starts
+ // warm (pm.pNP = 1, native's SIA) from the state already on the node, then the same warm
+ // Optima leg as HOP runs. For sequential work (sweeps, transport loops). If the warm native leg
+ // fails it is retried cold on the same node, so the mode degrades to exactly HOP; with HOP's own
+ // restore, SHP >= HOP >= native. A node that has never solved (pm.U[] all zero) runs the native
+ // leg cold, with a logged warning.
+ // In plain words: like HOP, but each step starts from the previous answer, which is faster
+ // in a series of similar calculations.
+ NEED_GEM_SHP = 26,  ///< Need the hybrid native-then-Optima calculation with a WARM (SIA) native leg
+ OK_GEM_SHP   = 27,  ///< OK after the hybrid calculation with a warm native leg
+ BAD_GEM_SHP  = 28,  ///< Bad (not fully trustful) result after the hybrid calculation with a warm native leg
+ ERR_GEM_SHP  = 29   ///< Failure (no result) in the hybrid calculation with a warm native leg
 } /*NODECODECH*/;
 
 

@@ -27,9 +27,99 @@
 //
 
 #include "ms_multi.h"
+#include "v_service.h"   // char_array_to_string(), for the degenerate-box DECIDE payload
 
 /// \return status code (0 if o.k., non-zero values if there were problems
 ///     with kinetic/metastability models)
+/// One kinetics/metastability time step, for every solver path (formerly inside
+/// CalculateEquilibriumState()). Both entry points call it after InitalizeGEM_IPM_Data() and
+/// ExcludeRedundantDCs() - so redundant species are already held at DUL = DLL = 0 - and before
+/// ScaleSystemToInternal(), so the metastability restrictions are computed in the caller's real
+/// units. Once per GEM_run() call: the HOP Optima leg passes runKinetics = false, since its
+/// native leg already advanced the step. (SHP's cold-native retry after a failed warm leg calls
+/// CalculateEquilibriumState() a second time and so advances it twice.)
+/// Separator-safe name for a comma-joined DECIDE payload (same substitution as ipm_main.cpp's
+/// trace_safe_name(), kept separate so the scored trace lines stay unchanged).
+static std::string kinm_safe_name( std::string s )
+{
+    while( !s.empty() && ( s.back() == ' ' || s.back() == '\t' || s.back() == '\0' ) ) s.pop_back();
+    std::string t; bool sp = false;
+    for( char c : s )
+    {
+        if( c == ' ' || c == '\t' ) { sp = true; continue; }
+        if( sp && !t.empty() ) t += '_';
+        sp = false;
+        t += ( c == ',' || c == ':' || c == '=' ) ? '/' : c;
+    }
+    return t.empty() ? std::string( "-" ) : t;
+}
+
+void TMultiBase::RunKineticsStep()
+{
+    // New: Run of TKinMet class library
+    ipm_logger->trace("kMM: {}  ITau: {}   kTau: {}   kdT: {}", pm.pKMM, pm.ITau, pm.kTau, pm.kdT);
+
+    // Degenerate-box detection (report-only): the kinetic rate law (TKinMet::SetMetCon(), which
+    // sets nPll = nPul and writes them into pm.DUL/pm.DLL) can collapse a species' box to zero
+    // width without reporting anything; a later failing solve then shows only as E04IPM (native
+    // MBR) or E90IPM (Optima), neither naming the box. This is not claimed to be the cause of
+    // such failures. A collapsed box can come from the project file, ExcludeRedundantDCs() or the
+    // rate law; the first two have run before this function, so differencing the bounds across
+    // this one call identifies the rate law's boxes. Zero width is tested exactly (SetMetCon()
+    // assigns the same double); a narrow nonzero box is not flagged. The snapshot is taken only
+    // when the kinetics body below will run, so this costs nothing with kinetics off.
+    // In plain words: warns when the kinetic limits squeeze a mineral to a fixed amount.
+    const bool kinmWillRun = ( pm.pKMM < 2 ) && pm.DUL && pm.DLL && pm.L > 0;
+    std::vector<double> kinmUl0, kinmLl0;
+    if( kinmWillRun )
+    {
+        kinmUl0.assign( pm.DUL, pm.DUL + pm.L );
+        kinmLl0.assign( pm.DLL, pm.DLL + pm.L );
+    }
+
+    if( pm.pKMM < 2 )
+    {
+        if( pm.ITau < 0 || pm.pKMM != 1 )
+        {
+            CalculateKinMet( LINK_TP_MODE );   // Re-create TKinMet class instances
+            pm.ITau = 0; pm.pKMM = 1;
+            CalculateKinMet( LINK_IN_MODE );   // Initial state calculation of rates
+        }
+        else if( pm.ITau >= 0 ) {
+            CalculateKinMet( LINK_PP_MODE );   // Rates and metast. constraints at time step
+        }
+    }
+
+    if( kinmWillRun )
+    {
+        std::string list; long int nDegen = 0; double firstVal = 0.; std::string firstName;
+        for( long int j = 0; j < pm.L; j++ )
+        {
+            const double u = pm.DUL[j], l = pm.DLL[j];
+            if( u != l )
+                continue;                                   // not a zero-width box
+            if( u == kinmUl0[(size_t)j] && l == kinmLl0[(size_t)j] )
+                continue;                                   // collapsed before this call - not ours
+            const std::string nm = kinm_safe_name( char_array_to_string( pm.SM[j], MAXDCNAME ) );
+            if( nDegen == 0 ) { firstName = nm; firstVal = u; }
+            if( nDegen < 24 ) { if( !list.empty() ) list += ','; list += nm; }
+            nDegen++;
+        }
+        if( nDegen > 0 )
+        {
+            if( nDegen > 24 ) list += ",...";
+            // Names the two downstream error codes, so a reader who later meets one of them can
+            // find this warning.
+            ipm_logger->warn( "Kinetics: {} species have a zero-width metastability box (dul == dll) this step: {}. "
+                              "They cannot change until the rate law moves their bounds. The step succeeded; if the "
+                              "next solve fails (E04IPM or E90IPM), look here first. First: {} at {:.6e} mol.",
+                              nDegen, list, firstName, firstVal );
+            native_trace_decide( "degenbox n=%ld first=%s val=%.6e list=%s",
+                                 (long)nDegen, firstName.c_str(), firstVal, list.c_str() );
+        }
+    }
+}
+
 long int
 TMultiBase::CalculateKinMet( long int LinkMode  )
 {

@@ -512,6 +512,7 @@ void TActivity::SolModCreate( long int jb, long int jmb, long int jsb, long int 
     sd.arlnCnft = act.lnCnft+jb; // End member ln activity coeffs
 
     sd.aphVOL = act.FVOL+k;
+    sd.aphXF = act.XF+k;   // see ipm_chemical3.cpp
     sd.DC_Codes = act.DCC+jb;  // pointer to Dcomp class codes (added 02.05.2010 TW)
     sd.arMoiSN = act.MoiSN+jmb;  // Pointer to sublattice-moiety multiplicity array
     sd.arSitFr = act.SitFr+jsb;  // Pointer to sublattice-moiety multiplicity array
