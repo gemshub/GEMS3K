@@ -1,5 +1,0 @@
-exec gprof ./nodearrs > a
-
-
-
-
