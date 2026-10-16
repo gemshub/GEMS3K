@@ -1950,6 +1950,11 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
 
     GM6 = 2*GM6a + GM6c;
 
+    // Neutral-cation-anion term (zeta), as in the neutral and water terms
+    for( n=0; n<Nn; n++)
+        for( a=0; a<Na; a++)
+            GM6 += pmn[n]*pma[a]*Zeta[n][M][a];
+
     // Term GM
     GM = GM1+GM2+GM3+GM4+GM5+GM6;
 
@@ -2057,6 +2062,11 @@ double TPitzer::lnGammaX( long int X, double DH_term )
     }
 
     GX6 = 2.*GX6a + GX6b;
+
+    // Neutral-cation-anion term (zeta), as in the neutral and water terms
+    for( n=0; n<Nn; n++)
+        for( c=0; c<Nc; c++)
+            GX6 += pmn[n]*pmc[c]*Zeta[n][c][X];
 
     // Term GX
     GX = GX1+GX2+GX3+GX4+GX5+GX6;

@@ -192,11 +192,234 @@ thread_local bool g_optimaLSEscapeOff = false;
 thread_local bool g_optimaCgSeedArmed = false;
 thread_local bool g_optimaTargetWarned = false;   // the unusual-target warning is shown once per GEM_run()
 thread_local long int g_optimaIterBudget = -1;     // Optima iterations left for this call; -1 = no limit
+thread_local bool g_optimaFixAccept = false;     // Optima takes the full step, clipped to the bounds
+thread_local OptimaQuickTryWatch g_optimaQuickTry;   // the quick first try's frozen and divergence checks
+extern thread_local bool g_aqueousAbsent;
+thread_local bool g_optimaPreSolveEmpty = false; // the reduced pre-solve found nothing earlier in this GEM_run()
+thread_local long int g_lvlFullCalls = 0;   // pa_OptimaColdLevel / pa_OptimaLevelStart: cold Optima calls past the quick try in this GEM_run()
+thread_local bool g_optimaCapCall = false;   // inside a capped Optima call (pa_OptimaCallCap)
+thread_local long int g_optimaCapAllowance = 0;   // extra iterations for the repair step once the cap is used up; -1 = used
+thread_local bool g_optimaDryRedoCall = false;   // inside the dry-retry redo (pa_OptimaDryRetry)
+thread_local bool g_optimaDryFailed = false;     // the dry stop fired and the water-first retry failed
+thread_local bool g_optimaDryOff = false;        // the dry stop and its retry are off for this call
 long int TNode::GEM_run( bool uPrimalSol )
 {
+    // Warn once when the system holds more than 1e6 mol of elements, more than the solvers are tested for.
+    // Checked on the outer call only; the retries below call GEM_run() again.
+    static thread_local int bigDepth = 0;
+    if( bigDepth == 0 )
+    {
+        const double bigLimit = 1e6;
+        double total = 0., largest = 0.;
+        long int iLargest = -1;
+        for( long int i = 0; i < CSD->nICb; i++ )
+        {
+            if( CSD->ccIC[ IC_xDB_to_xCH( i ) ] == IC_CHARGE ) continue;
+            total += CNode->bIC[i];
+            if( CNode->bIC[i] > largest ) { largest = CNode->bIC[i]; iLargest = i; }
+        }
+        if( total > bigLimit )
+        {
+            native_trace_decide( "bigsystem total=%.3e limit=%.3e", total, bigLimit );
+            static thread_local bool bigWarned = false;
+            if( !bigWarned && iLargest >= 0 )
+                node_logger->warn( "GEM_run(): the system holds {:.3g} mol of elements ({:.3g} mol of {}), more than the {:.3g} mol "
+                                   "the solvers are tested for; the answer may be inaccurate", total, largest,
+                                   CSD->ICNL[ IC_xDB_to_xCH( iLargest ) ], bigLimit );
+            bigWarned = true;
+        }
+    }
+    struct BigDepthGuard { int& d; BigDepthGuard( int& x ) : d( x ) { d++; } ~BigDepthGuard() { d--; } } bigGuard( bigDepth );
+
+    // pa_OptimaCallCap: an AOP or SOP call gets a whole-call iteration cap. A call that fails with
+    // the cap used up is re-solved at up to pa_OptimaCapNudges 1e-15 nudges of the bulk
+    // composition, each with a fresh cap; a nudged answer is finished warm at the exact
+    // composition. If no nudge solves, the call is run once more without the cap, so the cap
+    // never loses an answer. DECIDE callcap, capretry, caplast.
+    const BASE_PARAM* capPa = multi_ptr()->base_param();
+    const long int cap = optima_call_cap( capPa->OptimaCallCap, pmm->L );
+    if( cap > 0 && !g_optimaCapCall && CNode->dt <= 0.
+        && ( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP ) )
+    {
+        const long int req = CNode->NodeStatusCH;
+        const long int capNudges = capPa->OptimaCapNudges;
+        g_optimaCapCall = true;
+        g_optimaIterBudget = cap;
+        g_optimaCapAllowance = cap / 2;
+        long int st = GEM_run( uPrimalSol );
+        long int total = CNode->IterDone;
+        const bool capHit = ( g_optimaIterBudget == 0 || g_optimaCapAllowance < 0 );
+        const bool okFirst = ( st == OK_GEM_AOP || st == OK_GEM_SOP );
+        native_trace_decide( "callcap cap=%ld status=%ld it=%ld hit=%d", cap, (long)st, (long)total, capHit ? 1 : 0 );
+        if( !okFirst && capHit )
+        {
+            const long int nIC = CSD->nICb;
+            DATABR* failed = new DATABR;
+            dbr_dch_api::databr_reset( failed, 1 );
+            dbr_dch_api::databr_realloc( CSD, failed );
+            { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+            const std::string failedError = ipmlog_error;
+            const std::vector<double> b0( CNode->bIC, CNode->bIC + nIC );
+            long int result = st;
+            bool recovered = false;
+            for( long int n = 0; n < capNudges && !recovered; n++ )
+            {
+                const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
+                databr_copy( failed );
+                for( long int i = 0; i < nIC; i++ )
+                    CNode->bIC[i] = b0[(size_t)i] * ( 1. + ( ( i % 2 ) ? -1. : 1. ) * k * 1e-15 );
+                CNode->NodeStatusCH = NEED_GEM_AOP;
+                g_optimaIterBudget = cap;
+                g_optimaCapAllowance = cap / 2;
+                const long int cold = GEM_run( uPrimalSol );
+                total += CNode->IterDone;
+                long int warm = -1;
+                if( cold == OK_GEM_AOP )
+                {
+                    DATABR* nudgedOk = new DATABR;
+                    dbr_dch_api::databr_reset( nudgedOk, 1 );
+                    dbr_dch_api::databr_realloc( CSD, nudgedOk );
+                    { DATABR* live = CNode; CNode = nudgedOk; databr_copy( live ); CNode = live; }
+                    for( long int i = 0; i < nIC; i++ )
+                        CNode->bIC[i] = b0[(size_t)i];
+                    CNode->NodeStatusCH = NEED_GEM_SOP;
+                    g_optimaIterBudget = cap;
+                    g_optimaCapAllowance = cap / 2;
+                    warm = GEM_run( uPrimalSol );
+                    total += CNode->IterDone;
+                    if( warm != OK_GEM_SOP && warm != OK_GEM_AOP )
+                    {   // keep the nudged answer, reported at the exact composition
+                        databr_copy( nudgedOk );
+                        for( long int i = 0; i < nIC; i++ )
+                            CNode->bIC[i] = b0[(size_t)i];
+                        native_trace_decide( "capretry-keepnudged nudge=%+g", k );
+                    }
+                    result = ( req == NEED_GEM_AOP ) ? OK_GEM_AOP : OK_GEM_SOP;
+                    databr_free( nudgedOk );
+                    recovered = true;
+                }
+                native_trace_decide( "capretry attempt=%ld nudge=%+g aop=%ld sop=%ld it=%ld",
+                                     (long)( n + 1 ), k, (long)cold, (long)warm, (long)total );
+            }
+            if( !recovered )
+            {   // last try: the original call without the cap
+                databr_copy( failed );
+                for( long int i = 0; i < nIC; i++ )
+                    CNode->bIC[i] = b0[(size_t)i];
+                CNode->NodeStatusCH = req;
+                g_optimaIterBudget = -1;
+                g_optimaCapAllowance = 0;
+                const long int last = GEM_run( uPrimalSol );
+                total += CNode->IterDone;
+                native_trace_decide( "caplast status=%ld it=%ld", (long)last, (long)total );
+                if( last == OK_GEM_AOP || last == OK_GEM_SOP )
+                {
+                    result = last;
+                    recovered = true;
+                }
+            }
+            if( !recovered )
+            {
+                databr_copy( failed );
+                ipmlog_error = failedError;
+                result = st;
+            }
+            CNode->NodeStatusCH = result;
+            st = result;
+            databr_free( failed );
+            node_logger->info( "GEM_run(): Optima call reached its iteration cap ({}) - retried at nudged compositions"
+                               " and without the cap: {}", cap, recovered ? "recovered" : "still failed" );
+        }
+        CNode->IterDone = total;
+        g_optimaIterBudget = -1;
+        g_optimaCapAllowance = 0;
+        g_optimaCapCall = false;
+        return st;
+    }
+    // pa_OptimaDryRetry: if the dry stop fired and the water-first retry failed, the low water may be
+    // the real answer, so the call is run again with the dry stop and its retry off. DECIDE dryredo.
+    if( multi_ptr()->base_param()->OptimaDryRetry && !g_optimaDryRedoCall && !g_optimaDryOff && CNode->dt <= 0.
+        && ( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP ) )
+    {
+        const long int req = CNode->NodeStatusCH;
+        g_optimaDryRedoCall = true;
+        g_optimaDryFailed = false;
+        const long int budget0 = g_optimaIterBudget;
+        const long int allowance0 = g_optimaCapAllowance;
+        long int st = GEM_run( uPrimalSol );
+        long int total = CNode->IterDone;
+        if( st != OK_GEM_AOP && st != OK_GEM_SOP && g_optimaDryFailed )
+        {
+            g_optimaIterBudget = budget0 < 0 ? -1 : std::max( 0L, budget0 - total );
+            g_optimaCapAllowance = allowance0;
+            g_optimaDryOff = true;
+            CNode->NodeStatusCH = req;
+            st = GEM_run( uPrimalSol );
+            total += CNode->IterDone;
+            g_optimaDryOff = false;
+            native_trace_decide( "dryredo status=%ld it=%ld", (long)st, (long)total );
+        }
+        CNode->IterDone = total;
+        g_optimaIterBudget = budget0 < 0 ? -1 : std::max( 0L, budget0 - total );   // undo the forced stop
+        g_optimaDryRedoCall = false;
+        return st;
+    }
     const long int requested = CNode->NodeStatusCH;
     const bool kinetics = CNode->dt > 0.;
     g_optimaTargetWarned = false;
+    g_optimaPreSolveEmpty = false;
+    g_lvlFullCalls = 0;
+    // pa_OptimaFastFirst > 0: a cold Optima call first tries a quick solve - the full step clipped to the
+    // bounds, plain settings and a small iteration cap. Anything but OK sends the call back to its inputs
+    // for the normal solve, and both tries' iterations are counted. DECIDE fastfirst.
+    long int fastF = 0, fastG = 0;
+    double fastSec = 0.;
+    bool fastFailed = false;
+    const long int fastCap = multi_ptr()->base_param()->OptimaFastFirst;
+    if( requested == NEED_GEM_AOP && !kinetics && fastCap > 0 )
+    {
+        DATABR* fastBefore = new DATABR;
+        dbr_dch_api::databr_reset( fastBefore, 1 );
+        dbr_dch_api::databr_realloc( CSD, fastBefore );
+        { DATABR* live = CNode; CNode = fastBefore; databr_copy( live ); CNode = live; }
+        BASE_PARAM* bp = multi_ptr()->base_param();
+        const BASE_PARAM saved = *bp;
+        bp->DG = 1e-5;                  // no rescaling
+        bp->OptimaDcFloor = 1e-16;
+        bp->LogBarrierTau = 1e-16;
+        bp->OptimaLineSearch = 0.;
+        bp->OptimaStallWindow = 0;
+        bp->OptimaDimReduce = -1;
+        bp->OptimaFDHessianDelay = 0;
+        const long int budget0 = g_optimaIterBudget;
+        g_optimaQuickTry = OptimaQuickTryWatch();
+        g_optimaIterBudget = budget0 < 0 ? fastCap : std::min( fastCap, budget0 );
+        const long int budgetSet = g_optimaIterBudget;
+        const long int allowance0 = g_optimaCapAllowance;   // the repair allowance is not for this attempt
+        g_optimaCapAllowance = 0;
+        g_optimaFixAccept = true;
+        const long int fast = GEM_run_single( uPrimalSol );
+        g_optimaFixAccept = false;
+        g_optimaCapAllowance = allowance0;
+        *bp = saved;
+        const long int used = budgetSet - g_optimaIterBudget;
+        // Only a quick try that finished within its cap counts; one cut at the cap goes to the normal solve.
+        const bool fastCut = ( used >= budgetSet );
+        native_trace_decide( "fastfirst cap=%ld status=%ld it=%ld used=%ld cut=%d", fastCap, (long)fast,
+                             (long)( pmm->ITF + pmm->ITG ), used, fastCut ? 1 : 0 );
+        if( fast == OK_GEM_AOP && !fastCut )
+        {
+            g_optimaIterBudget = budget0;
+            databr_free( fastBefore );
+            return fast;
+        }
+        fastF = pmm->ITF; fastG = pmm->ITG; fastSec = CalcTime; fastFailed = true;
+        g_optimaIterBudget = budget0 < 0 ? -1 : std::max( 0L, budget0 - used );
+        databr_copy( fastBefore );
+        databr_free( fastBefore );
+        CNode->NodeStatusCH = requested;
+        clearipmLogError();
+    }
     // pa_OptimaLineSearch < 0: an Optima call that fails without the line search is re-run once
     // with it (g_optimaLineSearchRetry). The DATABR is snapshotted before the first attempt; a
     // retry that does not return OK hands the first failure back unchanged. DECIDE lsretry.
@@ -207,7 +430,10 @@ long int TNode::GEM_run( bool uPrimalSol )
     const bool lsRetryArmed = optimaReq && multi_ptr()->base_param()->OptimaLineSearch < 0.;
     // With the line search on, the objective memo is always active, so the legacy retry -
     // escape off and memo off - is armed whenever the line search is on.
-    const bool escRetryArmed = optimaReq && !lsRetryArmed && multi_ptr()->base_param()->OptimaLineSearch > 0.;
+    // With pa_OptimaColdRetry = 2 a failed warm call goes straight to the cold retry, so it gets no second warm try.
+    const bool warmGoesCold = ( requested == NEED_GEM_SOP || requested == NEED_GEM_SHP )
+                              && multi_ptr()->base_param()->OptimaColdRetry == 2;
+    const bool escRetryArmed = optimaReq && !lsRetryArmed && !warmGoesCold && multi_ptr()->base_param()->OptimaLineSearch > 0.;
     DATABR* lsBefore = nullptr;
     if( lsRetryArmed || escRetryArmed )
     {
@@ -217,7 +443,10 @@ long int TNode::GEM_run( bool uPrimalSol )
         { DATABR* live = CNode; CNode = lsBefore; databr_copy( live ); CNode = live; }
     }
     long int status = GEM_run_single( uPrimalSol );
-    auto isOkStatus = []( long int st ) { return st == OK_GEM_AOP || st == OK_GEM_SOP || st == OK_GEM_HOP || st == OK_GEM_SHP
+    if( warmGoesCold && optimaReq && !lsRetryArmed && multi_ptr()->base_param()->OptimaLineSearch > 0.
+        && status != OK_GEM_SOP && status != OK_GEM_SHP )
+        native_trace_decide( "escretry skipped=warm requested=%ld first=%ld", (long)requested, (long)status );
+    auto isOkStatus =[]( long int st ) { return st == OK_GEM_AOP || st == OK_GEM_SOP || st == OK_GEM_HOP || st == OK_GEM_SHP
                                                 || st == OK_GEM_AIA || st == OK_GEM_SIA; };
     if( lsBefore )
     {
@@ -284,6 +513,26 @@ long int TNode::GEM_run( bool uPrimalSol )
         pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
         CNode->IterDone = itf + itg; CalcTime = seconds;
         status = CNode->NodeStatusCH;
+    }
+    if( fastFailed )
+    {
+        pmm->ITF += fastF; pmm->ITG += fastG;
+        NumIterFIA = pmm->ITF; NumIterIPM = pmm->ITG;
+        CNode->IterDone = pmm->ITF + pmm->ITG;
+        CalcTime += fastSec;
+    }
+#ifdef USE_OPTIMA_SOLVER
+    if( isOkStatus( status ) )
+        multi_ptr()->WarnCollapsedTwins();
+#endif
+    // The answer has an aqueous phase with no water: pH, pe and ionic strength are reported as 0.
+    if( isOkStatus( status ) && g_aqueousAbsent )
+    {
+        native_trace_decide( "aqgone status=%ld", (long)status );
+        static thread_local bool warned = false;
+        if( !warned )
+            node_logger->warn( "GEM_run(): the aqueous phase has no water left, so pH, pe and ionic strength are reported as 0" );
+        warned = true;
     }
     return status;
 }

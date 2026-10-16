@@ -66,6 +66,7 @@ FILE* native_trace_file()
 /// native_trace_run_result() write nothing (DECIDE and event records are unaffected). Used for
 /// inner solves that belong to one GEM_run() call (e.g. pa_ColdRetryNudges), since the RUN/KEY
 /// records are attributed to modes by position.
+extern thread_local bool g_aqueousAbsent; // set by the concentration pass when the aqueous phase has no water
 static thread_local int native_trace_quiet_depth = 0;
 void native_trace_quiet( bool on )
 {
@@ -175,7 +176,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_IpmAugmentedKKT=%ld pa_IpmLoopTweaks=%ld"
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
-             " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld\n",
+             " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -201,7 +203,11 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaLSStallEscape, (long)pa->OptimaLSWindow,
              (long)pa->OptimaLSRejectWorse,
              pa->OptimaTpdAccept, pa->OptimaCgSeed, (long)pa->OptimaColdRetry, (long)pa->OptimaFinish,
-             (long)pa->OptimaAcceptRepair, (long)pa->NativeOptimaFinish );
+             (long)pa->OptimaAcceptRepair, (long)pa->NativeOptimaFinish, (long)pa->OptimaCollapseCheck,
+             (long)pa->OptimaFastFirst, (long)pa->OptimaFloorCurvature, (long)pa->OptimaEmptySolvent, (long)pa->OptimaTpdVeto, (long)pa->OptimaEmptyPreSolveSkip, (long)pa->OptimaTwinReadmit, (long)pa->OptimaDryRetry, (long)pa->OptimaCallCap, (long)pa->OptimaCapNudges, (long)pa->OptimaFinishFirst, (long)pa->OptimaFastFrozen, pa->OptimaFastDiverge, (long)pa->OptimaRedoxFree, (long)pa->OptimaFastRises,
+             (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
+             (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
+             (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -248,7 +254,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
                  " earlystability_autoCap=%ld earlystability_autoWarmCap=%ld"
                  " earlystability_warmLeg=%d earlystability_reached=%s"
                  " optima_netresume_eff=%d optima_netresume_src=%s"
-                 " presolve_firstbudget_eff=%ld presolve_passbudget_full=%ld\n",
+                 " presolve_firstbudget_eff=%ld presolve_passbudget_full=%ld"
+                 " pa_OptimaCallCap_cfg=%ld pa_OptimaCallCap_eff=%ld callcap_L=%ld\n",
                  drCfg, drEff, drGate, (long)pm.L,
                  (long)kOptimaDimReduceAutoMinDC, drReached,
                  esCfg, esEff, esGate, esMulti,
@@ -257,7 +264,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
                  optima_net_resume_mode(),
                  std::getenv( "GEMS3K_OPTIMA_NET_RESUME" ) ? "env" : "default",
                  optima_presolve_pass_budget( (long)pa->OptimaPreSolveFirstIters, (long)pa->IIM, true ),
-                 optima_presolve_pass_budget( (long)pa->OptimaPreSolveFirstIters, (long)pa->IIM, false ) );
+                 optima_presolve_pass_budget( (long)pa->OptimaPreSolveFirstIters, (long)pa->IIM, false ),
+                 (long)pa->OptimaCallCap, optima_call_cap( (long)pa->OptimaCallCap, (long)pm.L ), (long)pm.L );
     }
     fflush( ntf );
 }
@@ -471,8 +479,9 @@ double TMultiBase::CertKktMax( const std::vector<double>& F, long int& worstJ ) 
     return worst;
 }
 
-long int TMultiBase::CertDualFreeDirs( const std::vector<double>& F, long int& rank, long int& nIC ) const
+long int TMultiBase::CertDualFreeDirs( const std::vector<double>& F, long int& rank, long int& nIC, double* zzFree ) const
 {
+    if( zzFree ) *zzFree = -1.;
     rank = 0;
     nIC = pm.N;
     if( !pm.X || !pm.A || pm.N <= 0 || (long int)F.size() != pm.L )
@@ -507,6 +516,14 @@ long int TMultiBase::CertDualFreeDirs( const std::vector<double>& F, long int& r
         Q.resize( (size_t)((rank+1)*N) );
         for( long int i = 0; i < N; i++ ) Q[(size_t)(rank*N + i)] = r[(size_t)i] / nrm;
         rank++;
+    }
+    // How far the charge direction lies outside the span of the interior species: 0 when every free
+    // direction leaves the charge potential alone (redox fixed), up to 1 when one moves it (redox free).
+    if( zzFree && pm.E > 0 )
+    {
+        for( long int i = 0; i < N; i++ ) r[(size_t)i] = 0.;
+        r[(size_t)(N - 1)] = 1.;
+        *zzFree = orthogonalize( Q, rank );
     }
     return N - rank;
 }
@@ -1039,6 +1056,8 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
 // evaluated.
 // In plain words: searches for the composition at which a missing mixed phase would be most
 // stable, and says whether it should form.
+// pa_OptimaLevelStart: set while the leveled start is certified; widens the composition search.
+thread_local bool g_tpdStrongSearch = false;
 double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
 {
     const long int n = pm.L1[k], p1 = p0 + n, N = pm.N;
@@ -1097,8 +1116,26 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
             starts.push_back( v );
         }
         starts.push_back( std::vector<double>( (size_t)n, 1.0 / n ) );
+        if( g_tpdStrongSearch && n >= 3 && n <= 4 )
+        {
+            // A full composition grid as starts (5 % steps for 3 members, 10 % for 4), for a certificate.
+            const int m = ( n == 3 ) ? 20 : 10;
+            std::vector<int> c( (size_t)n, 0 );
+            std::function<void(long int,int)> rec = [&]( long int a, int left ) {
+                if( a == n - 1 ) { c[(size_t)a] = left; std::vector<double> v( (size_t)n );
+                    for( long int q = 0; q < n; q++ ) v[(size_t)q] = std::max( (double)c[(size_t)q] / m, 1e-6 );
+                    double t = 0.; for( double x : v ) t += x; for( double& x : v ) x /= t; starts.push_back( v ); return; }
+                for( int q = 0; q <= left; q++ ) { c[(size_t)a] = q; rec( a + 1, left - q ); } };
+            rec( 0, m );
+        }
         if( n == 2 )
             for( int g = 1; g < 20; g++ ) starts.push_back( { g / 20., 1. - g / 20. } );
+        if( g_tpdStrongSearch && n == 2 )
+        {
+            // 1 % steps, and points close to either end, for a certificate.
+            for( int g = 1; g < 100; g++ ) starts.push_back( { g / 100., 1. - g / 100. } );
+            for( double e : { 1e-4, 3e-4, 1e-3, 3e-3, 0.02, 0.05 } ) { starts.push_back( { e, 1. - e } ); starts.push_back( { 1. - e, e } ); }
+        }
         else
             for( long int a = 0; a < n && starts.size() < 64; a++ )
                 for( long int b2 = a + 1; b2 < n && starts.size() < 64; b2++ )
@@ -1197,7 +1234,7 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
         fprintf( ntf, "%s%s:%.6e:%.6e", ( nPresent ? "," : "" ), pn.c_str(), pm.XF[k], vmol );
         nPresent++;
     }
-    fprintf( ntf, " nph=%ld akey=%016llx names=2\n", (long)nPresent, akey );
+    fprintf( ntf, " nph=%ld akey=%016llx names=2%s\n", (long)nPresent, akey, g_aqueousAbsent ? " aq=absent" : "" );
 
     // CERT record - the answer certificate, computed on the returned amounts pm.X for every mode:
     //   mb_rel  worst |C_i| / (B_i * DHBM) over the ordinary ICs [0, N-E); > 1 fails the relative
@@ -1226,12 +1263,14 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
     // it, how many were scanned, and how many the single-point index misclassifies.
     double certStab = 1e300;
     long int certStabK = -1, certStabN = 0, certStabDis = 0;
+    // dual_zz - how far the charge direction lies outside the interior species' span (-1 = no charge).
+    double certZz = -1.;
     if( mb )
     {
         std::vector<double> certF;
         mb->CertPrimalPotentials( certF );
         certKkt  = mb->CertKktMax( certF, certKktJ );
-        certDirs = mb->CertDualFreeDirs( certF, certRank, certNic );
+        certDirs = mb->CertDualFreeDirs( certF, certRank, certNic, &certZz );
         certCurv = mb->CertCurvMin( certCurvK );
         certStab = mb->CertStabTPD( certStabK, certStabN, certStabDis );
     }
@@ -1251,6 +1290,11 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
     };
     const std::string certKktName  = certKktJ  >= 0 ? certSafeName( pm.SM[certKktJ], MAXDCNAME )
                                                     : std::string( "-" );
+    // The phase of the kkt_species: several phases can share end-member names.
+    std::string certKktPhase = "-";
+    if( certKktJ >= 0 )
+        for( long int k = 0, j0 = 0; k < pm.FI; j0 += pm.L1[k], k++ )
+            if( certKktJ < j0 + pm.L1[k] ) { certKktPhase = certSafeName( pm.SF[k], MAXSYMB + MAXPHNAME ); break; }
     const std::string certCurvName = certCurvK >= 0 ? certSafeName( pm.SF[certCurvK], MAXSYMB + MAXPHNAME )
                                                     : std::string( "-" );
     const std::string certStabName = certStabK >= 0 ? certSafeName( pm.SF[certStabK], MAXSYMB + MAXPHNAME )
@@ -1298,13 +1342,13 @@ void native_trace_run_result( const MULTI& pm, long int mode, long int status, T
                       " mb_abs_ic=%s chg_abs=%.3e chg_ic=%s mb_pass=%d mb_seed_rel=%.3e mb_seed_ic=%s"
                       " kkt_max=%.3e kkt_species=%s curv_min=%.6e curv_phase=%s"
                       " dual_dirs=%ld dual_rank=%ld dual_of=%ld dual_resolved=%d"
-                      " stab_ss=%.6e stab_ph=%s stab_n=%ld stab_dis=%ld\n",
+                      " stab_ss=%.6e stab_ph=%s stab_n=%ld stab_dis=%ld kkt_phase=%s dual_zz=%.3e\n",
                  mname, (long)status, rel, icName( iRel ).c_str(), iRel >= 0 ? pm.B[iRel] : 0.,
                  absr, icName( iAbs ).c_str(), chg, icName( iChg ).c_str(), rel <= 1. ? 1 : 0,
                  relSeed, icName( iSeed ).c_str(),
                  certKkt, certKktName.c_str(), certCurv, certCurvName.c_str(),
                  (long)certDirs, (long)certRank, (long)certNic, native_cert_dualfree_get(),
-                 certStab, certStabName.c_str(), (long)certStabN, (long)certStabDis );
+                 certStab, certStabName.c_str(), (long)certStabN, (long)certStabDis, certKktPhase.c_str(), certZz );
     }
 
     // RANK record: the geometry and conditioning of the present species' stoichiometry at the

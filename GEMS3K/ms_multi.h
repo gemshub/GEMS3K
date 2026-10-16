@@ -140,24 +140,27 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     double OptimaMaxStepRatio = 0.0;
 
     /// pa_PhaseHessianFloor: eigenvalue floor, as a fraction of the block's own largest
-    /// |eigenvalue|, applied to the exact (finite-differenced, symmetrised) curvature block of
-    /// every non-aqueous multicomponent phase with at least two present end-members, in the
-    /// Optima solver. 0 disables the exact block (analytic ideal-mixing curvature plus FD
-    /// columns for Optima's basic set only). Inside a miscibility gap the true curvature is
-    /// indefinite; the floor keeps the Newton model positive definite and sets how far it steps
-    /// along the unmixing direction. Default 0.01.
+    /// |eigenvalue|, for the exact curvature block of every non-aqueous multicomponent phase
+    /// with at least two present end-members, in the Optima solver. The floor is never larger
+    /// than the same fraction of the phase's natural curvature, (number of present end-members)
+    /// / (their total amount), so a trace member does not stiffen the others.
+    /// 0 turns the exact block off (analytic ideal-mixing curvature plus FD columns for Optima's
+    /// basic set only). Inside a miscibility gap the true curvature is negative; the floor keeps
+    /// the Newton model positive definite. Default 0.01.
     /// In plain words: helps the Optima solver handle mixed phases that tend to split in two.
     double PhaseHessianFloor = 0.01;
 
     /// pa_OptimaStallWindow: stall limit for the Optima solver (AOP/SOP/ROP). A solve is
     /// abandoned when, over a window of this many Newton iterations, the best-so-far
-    /// optimality error has not fallen by a relative 1e-8. 0 = off. Default 500. The test is
-    /// cumulative over the window, not per step. If every other retry then fails, the last
-    /// retry re-solves once with the window disarmed. The pre-solve in
-    /// OptimaReducedPreSolve() uses this field with an additional "has the live error moved"
-    /// clause. Values below 500 are not recommended.
+    /// optimality error has not fallen by a relative 1e-8. 0 = off. Default 200. The test is
+    /// cumulative over the window, not per step, so a solve stuck from step k stops between
+    /// k + window and k + 2 x window. If every other retry then fails, the last retry re-solves
+    /// once with the window disarmed. The pre-solve in OptimaReducedPreSolve() uses this field
+    /// with an additional "has the live error moved" clause. Raise it (e.g. 500) for a system
+    /// whose solve pauses for long stretches and then still converges; values below 100 are not
+    /// recommended.
     /// In plain words: stops a solve that has stopped making progress, so a retry can start sooner.
-    long int OptimaStallWindow = 500;
+    long int OptimaStallWindow = 200;
 
     /// pa_OptimaMaxSeconds: wall-clock budget in seconds for one Optima (AOP/SOP/ROP) solve,
     /// including its retries. 0 = off (default). A time limit makes results depend on the
@@ -499,10 +502,117 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// finish with Optima from native's answer and keep the result only if it is better; the value is the
     /// most Optima iterations allowed. 0 = off, default 500.
     long int NativeOptimaFinish = 500;
+    /// pa_OptimaCollapseCheck: when checking an Optima answer, judge a phase that has vanished by its pure
+    /// species, so a phase that should come back is not taken as correctly absent. 0 = off, 1 = on (default).
+    long int OptimaCollapseCheck = 1;
+    /// pa_OptimaFastFirst: a cold Optima call (AOP) first tries a quick solve that takes the full step and
+    /// clips each amount to its bounds; if that does not end OK, the normal solve runs from the same inputs.
+    /// The value is the most Optima iterations the quick try may use. 0 = off, default 60.
+    long int OptimaFastFirst = 60;
+    /// pa_OptimaFloorCurvature: for a species in a solution phase, use the exact curvature of its ln(amount)
+    /// term in the finite-difference Hessian, which the difference step under-states near the floor.
+    /// 0 = off, 1 = on, 2 = also a difference step sized to the phase, the ideal-mixing block over all
+    /// members of a solid or gas solution, and the barrier curvature of pure phases.
+    /// 3 (default) = 1, plus the full mixing block on a nearly vanished gas or fluid phase, or on a vanishing copy
+    /// of a twin pair whose other copy is present, so it leaves in a few steps.
+    long int OptimaFloorCurvature = 3;
+    /// pa_OptimaEmptySolvent: a cold start whose water is at or below its minimum amount gets water added,
+    /// as when the solutes outweigh it. 0 = off, 1 = on (default).
+    long int OptimaEmptySolvent = 1;
+    /// pa_OptimaTpdVeto: the TPD acceptance may not overrule the phase stability check for a solution phase
+    /// it cannot test itself, such as a vanished aqueous phase. 0 = off, 1 = on (default).
+    long int OptimaTpdVeto = 1;
+    /// pa_OptimaEmptyPreSolveSkip: once the reduced pre-solve (pa_OptimaDimReduce) finds no usable species set
+    /// in a call, the retries of that same call skip it. 0 = off, 1 = on (default).
+    long int OptimaEmptyPreSolveSkip = 1;
+    /// pa_OptimaTwinReadmit: a solution phase that the twin-extinction step switched off is tried again after
+    /// the solve when the phase stability test says it should form. 0 = off, 1 = on (default).
+    long int OptimaTwinReadmit = 1;
+    /// pa_OptimaDryRetry: a solve that leaves almost no liquid water, while the bulk could form much more,
+    /// is stopped and solved once more from a start that puts hydrogen and oxygen into water first; 0 = off (default), 1 = on
+    long int OptimaDryRetry = 0;
+    /// pa_OptimaCallCap: most Optima iterations one AOP/SOP call may use before it is retried at nudged
+    /// compositions; 0 = no cap, -1 = by system size (optima_call_cap()), N > 0 = N. Default 0.
+    long int OptimaCallCap = 0;
+    /// pa_OptimaCapNudges: how many 1e-15 nudges of the bulk composition a call that hit its cap is retried at;
+    /// if none solves, the call is run once more without the cap. Default 3.
+    long int OptimaCapNudges = 3;
+    /// pa_OptimaFinishFirst: when a stalled Optima solve has failed, first try the Newton finish on its end point
+    /// and keep it if no phase then wants to form; the full re-solves run only otherwise. 0 = off, 1 = on (default).
+    long int OptimaFinishFirst = 1;
+    /// pa_OptimaFastFrozen: the quick first try of a cold call stops after this many steps in a row that moved
+    /// the state and the error only at rounding level. 0 = off, default 3.
+    long int OptimaFastFrozen = 3;
+    /// pa_OptimaFastDiverge: the quick first try stops 10 steps after its energy jumped above 10 times its start,
+    /// if its lowest error since then is still above this many times the lowest before. 0 = off, default 10.
+    double OptimaFastDiverge = 10.;
+    /// pa_OptimaRedoxFree: before an Optima solve, check whether nothing in the bulk fixes the redox level (every
+    /// element in one valence and no spare oxidant or reductant). 0 = off, 1 = log it (default), 2 = also aim the
+    /// solve at pe 4 when the caller set no pH or Eh target.
+    long int OptimaRedoxFree = 1;
+    /// pa_OptimaFastRises: the quick first try of a cold call stops once its energy has gone up by more than 1 %
+    /// on this many steps; a try that keeps climbing back rarely finishes. 0 = off, default 10.
+    long int OptimaFastRises = 10;
+    /// pa_OptimaPreSolveSeed: the first pass of the reduced pre-solve starts from the linear-Gibbs solution and its
+    /// element potentials, each amount capped at what its elements allow; a pass that misses 300 steps drops the
+    /// pre-solve for that call. 0 = off, 1 = on (default).
+    long int OptimaPreSolveSeed = 1;
+    /// pa_OptimaColdLevel: where no pre-solve runs, a cold Optima call starts from the linear-Gibbs solution and its
+    /// element potentials, and two copies of one solid solution start at different compositions. 0 = off, 1 = on (default).
+    long int OptimaColdLevel = 1;
+    /// pa_OptimaLevelStart: with only condensed mixed phases, a cold Optima call first levels the system with mixed
+    /// phases priced by composition search. If no mixed phase forms, Optima only confirms that answer; otherwise each
+    /// mixed phase starts at the composition found. 0 = off, 1 = on (default).
+    long int OptimaLevelStart = 1;
+    /// pa_OptimaFastCollapse: the quick first try of a cold call stops at once when its energy has grown to more
+    /// than this many times its starting value. 0 = off, default 1000.
+    long int OptimaFastCollapse = 1000;
+    /// pa_OptimaFrozenCut: the full Optima solve stops and hands over to the finish and retries once its energy
+    /// and error have not changed at all for this many steps. Needs pa_OptimaStallWindow on; not used when Optima
+    /// starts from a native answer (HOP, SHP). 0 = off, default 20.
+    long int OptimaFrozenCut = 20;
+    /// pa_OptimaDryOut: when the water runs out during an Optima solve, the water phase is taken out and the
+    /// solids are solved alone; if that fails, the ordinary solve goes on with the water back. Off when an
+    /// element can only be held by the water. Needs pa_OptimaStallWindow on. For systems where water is
+    /// used up by design (e.g. cement hydration); it can return a wrong dry answer where the water only
+    /// dips during the solve. 0 = off (default), 1 = on.
+    long int OptimaDryOut = 0;
+    /// pa_OptimaTailStop: an Optima solve whose energy has not changed for this many steps, with all the error
+    /// left on trace species, stops and its point is checked for stability and taken as the answer.
+    /// Needs pa_OptimaStallWindow on. 0 = off, default 100.
+    long int OptimaTailStop = 100;
+    /// pa_OptimaTailStopWarm: the same, on a warm call. 0 = off, default 10.
+    long int OptimaTailStopWarm = 10;
+    /// pa_OptimaTailDryOnly: the tail stop acts only after pa_OptimaDryOut took the water phase out.
+    /// 0 = in every solve, 1 = only there (default).
+    long int OptimaTailDryOnly = 1;
+    /// pa_OptimaWaterKeep: 1 = a converged answer is kept when the retry with water put back fails;
+    /// 2 = also, a dry answer that passed the tail-stop check is not retried with water (default); 0 = off.
+    long int OptimaWaterKeep = 2;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
 };
+
+/// What the quick first try of a cold Optima call has seen so far (pa_OptimaFastFrozen, pa_OptimaFastDiverge,
+/// pa_OptimaFastRises, pa_OptimaFastCollapse);
+/// reset at the start of each quick try.
+struct OptimaQuickTryWatch
+{
+    int frozenRun = 0;          ///< steps in a row that moved only at rounding level
+    double errPrev = -1.;       ///< error at the previous step; < 0 before the first
+    long int step = 0;          ///< steps seen by the divergence check
+    double f0 = 0.;             ///< energy at the first step
+    double preMin = 0.;         ///< lowest error before the energy jump
+    double postMin = 0.;        ///< lowest error since the jump
+    long int jumpAt = -1;       ///< step of the jump; -1 = none yet
+    long int rises = 0;         ///< steps whose energy went up by more than 1 %
+    long int riseSteps = 0;     ///< steps seen by the rise count
+    double fPrev = 0.;          ///< energy at the previous step
+    double cf0 = 0.;            ///< energy at the first step, for the collapse check
+    long int cstep = 0;         ///< steps seen by the collapse check
+};
+extern thread_local OptimaQuickTryWatch g_optimaQuickTry;   // defined in node.cpp
 
 // ---------------------------------------------------------------------------
 // Effective values of auto-gated settings
@@ -528,6 +638,15 @@ constexpr long int kOptimaDimReduceAutoPasses = 8;
 /// attempts: > 0 explicit count, < 0 off, 0 AUTO. `nDC` is the species count (pm.L).
 /// Whether the pre-solve is reached also depends on the call: it runs on a cold Optima
 /// leg (pm.pNP == 0), and on a HOP leg only under an explicit positive setting.
+/// Iteration cap of one Optima call (pa_OptimaCallCap): -1 = max(1000, 20 per species), 0 = none.
+/// Used by both the solver and the EFF trace line.
+inline long int optima_call_cap( long int configured, long int nDC )
+{
+    if( configured < 0 )
+        return ( 20L * nDC > 1000L ) ? 20L * nDC : 1000L;
+    return configured;
+}
+
 inline long int optima_dimreduce_passes( long int configured, long int nDC )
 {
     if( configured == 0 && nDC >= kOptimaDimReduceAutoMinDC )
@@ -1223,7 +1342,7 @@ public:
     /// relative rank tolerance as the free-dual search in ipm_optima.cpp.
     /// \return N - rank, with rank and N returned in the out parameters.
     /// In plain words: tells whether some element potentials are not pinned down by the answer.
-    long int CertDualFreeDirs( const std::vector<double>& F, long int& rank, long int& nIC ) const;
+    long int CertDualFreeDirs( const std::vector<double>& F, long int& rank, long int& nIC, double* zzFree = nullptr ) const;
 
     /// The RANK trace record: the present species' stoichiometry and the two normal-equation
     /// matrices each solver stage forms from it, at the returned answer pm.X[].
@@ -1382,6 +1501,29 @@ public:
     /// True when the system contains an aqueous phase. Tests the phase classifier, not pm.LO.
     bool HasAqueousPhase() const;
 
+    /// Result of CheckRedoxFree(): `free` when, for some choice of one valence per element among those its
+    /// species have, the bulk carries no spare electrons, so nothing but traces sets the redox level.
+    struct RedoxFreeCheck {
+        bool checked = false;     ///< the system has an aqueous phase and a charge element
+        bool consistent = false;  ///< every element in the bulk has only one valence
+        bool determined = false;  ///< every element's valences are known and the search finished
+        bool free = false;
+        double excess = 0.;       ///< electron excess of the bulk for the closest choice, mol
+        double rel = 0.;          ///< excess over the bulk's total valence amount
+    };
+    /// Checks whether nothing in the bulk fixes the redox level (pa_OptimaRedoxFree).
+    RedoxFreeCheck CheckRedoxFree() const;
+
+    /// Per phase: 1 if another phase has the same end-members (a miscibility gap needs two copies).
+    std::vector<char> PhaseHessianTwins() const;
+    /// Per-run record of the curvature floor (twin flags, times it fired); see ipm_optima.cpp.
+    void PhaseHessianBegin();
+    void PhaseHessianEnd();
+    /// Warns about copies of a solid solution that ended with the same composition (final answer only).
+    void WarnCollapsedTwins();
+    std::vector<char> phfTwin;
+    std::vector<long int> phfFired;
+
     bool DetectSolventCollapseAndReseed( const double* x, double upperBound, double& waterSeedOut );
 
     /// Extends DetectSolventCollapseAndReseed() to every multicomponent phase (0..pm.FIs-1
@@ -1395,9 +1537,12 @@ public:
     /// `excludePhaseIdx` (default -1, none): a phase to skip, used for the aqueous phase,
     /// which DetectSolventCollapseAndReseed() handles.
     /// In plain words: rescues a phase that the starting guess has almost emptied.
+    /// `stabilityGated` (cold seed only): refill a phase, gas and fluid included, only if the
+    /// linearised-Gibbs LP says it should form, split by how favourable each end-member is.
     bool DetectPhaseCollapseAndReseed( const double* x,
                                         std::vector<std::pair<long int,double>>& reseedsOut,
-                                        long int excludePhaseIdx = -1 );
+                                        long int excludePhaseIdx = -1,
+                                        bool stabilityGated = false );
 
     /// LP-feasibility seed: solves min sum_j(n_j) s.t. pm.A*n = pm.B, n >= 0 with a small
     /// self-contained two-phase dense simplex (TwoPhaseSimplexMinSum(), ipm_optima.cpp).
@@ -1950,7 +2095,11 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaLineSearch, f_pa_OptimaFDDiagFloor, f_pa_OptimaLSStallEscape, f_pa_OptimaLSWindow,
     f_pa_OptimaLSRejectWorse,
     f_pa_OptimaTpdAccept, f_pa_OptimaCgSeed, f_pa_OptimaColdRetry, f_pa_OptimaFinish,
-    f_pa_OptimaAcceptRepair, f_pa_NativeOptimaFinish
+    f_pa_OptimaAcceptRepair, f_pa_NativeOptimaFinish, f_pa_OptimaCollapseCheck,
+    f_pa_OptimaFastFirst, f_pa_OptimaFloorCurvature, f_pa_OptimaEmptySolvent, f_pa_OptimaTpdVeto, f_pa_OptimaEmptyPreSolveSkip, f_pa_OptimaTwinReadmit, f_pa_OptimaDryRetry, f_pa_OptimaCallCap, f_pa_OptimaCapNudges,
+    f_pa_OptimaFinishFirst, f_pa_OptimaFastFrozen, f_pa_OptimaFastDiverge, f_pa_OptimaRedoxFree, f_pa_OptimaFastRises,
+    f_pa_OptimaPreSolveSeed, f_pa_OptimaColdLevel, f_pa_OptimaLevelStart, f_pa_OptimaFastCollapse, f_pa_OptimaFrozenCut,
+    f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep
 
 } MULTI_DYNAMIC_FIELDS;
 
