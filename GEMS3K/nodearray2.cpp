@@ -31,6 +31,9 @@
 
 #include "nodearray.h"
 #include "v_service.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/fmt.h>
+#include <spdlog/fmt/ranges.h>
 
 //---------------------------------------------------------//
 
@@ -629,163 +632,143 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
 // Data collection for monitoring differences
 
 // Prints difference increments in a all nodes (cells) for time point t / at
-//
-void TNodeArray::logDiffsIC( FILE* diffile, long int t, double at, long int nx, long int every_t )
+void TNodeArray::logDiffsIC(spdlog::logger* logfile, long int t, double at, long int nx, long int every_t)
 {
-    double dc;
-    long int i, ie;
-
-    if( t % every_t )
+    if(!logfile || !logfile->should_log(spdlog::level::info) || t%every_t) {
         return;
-
-    fprintf( diffile, "\nStep= %-8ld  Time= %-12.4g\nNode#   ", t, at );
-    for( ie=0; ie < (pCSD()->nICb); ie++ )
-        fprintf( diffile, "%-12.4s ", pCSD()->ICNL[ie].c_str() );
-    for (i=0; i<nx; i++)    // node iteration
-    {
-        fprintf( diffile, "\n%5ld   ", i );
-        for( ie=0; ie < (pCSD()->nICb); ie++ )
-        {
-            dc = NodT1[i]->bIC[ie] - NodT0[i]->bIC[ie];
-            fprintf( diffile, "%-12.4g ", dc );
-        }
     }
-    fprintf( diffile, "\n" );
+    long int i, ie;
+    std::vector<double> values;
+
+    logfile->info("Step= {}  Time= {}", t, at);
+    logfile->info("Node#   {:>12s}", fmt::join(pCSD()->ICNL, " "));
+
+    for(i=0; i<nx; i++) {    // node iteration
+        values.clear();
+        for(ie=0; ie<pCSD()->nICb; ++ie) {
+            values.push_back(NodT1[i]->bIC[ie] - NodT0[i]->bIC[ie]);
+        }
+        logfile->info("{:5}   {:-12.4g}", i, fmt::join(values, " "));
+    }
+    logfile->info(" ");
 }
 
-// Data collection for monitoring 1D profiles in debugging FMT models
-//
 // Prints dissolved species molarities in all cells for time point t / at
-//
-void TNodeArray::logProfileAqDC( FILE* logfile, long int t, double at, long int nx, long int every_t )
+void TNodeArray::logProfileAqDC(spdlog::logger* logfile, long int t, double at, long int nx, long int every_t)
 {
-    double pm;
-    long int i, is;
-    if( t % every_t )
+    if(!logfile || !logfile->should_log(spdlog::level::info) || t%every_t) {
         return;
-    fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g, s\tDissolved species concentrations, M\n", t, at );
-    fprintf(logfile, "%s","Node#   ");
-    for( is=0; is < (pCSD()->nDCb); is++ )
-        fprintf( logfile, "%-12.4s ", pCSD()->DCNL[is].c_str() );
-    for (i=0; i<nx; i++)    // node iteration
-    {
-        fprintf( logfile, "\n%5ld   ", i );
-        for( is=0; is < (pCSD()->nDCinPH[0]); is++ )
-        {
-            pm = NodT1[i]->xDC[is]/NodT1[i]->vPS[0]/1000.;  // Assumes there is aq phase!
-            // dissolved species molarity
-            fprintf( logfile, "%-12.4g ", pm );
-        }
     }
-    fprintf( logfile, "\n" );
+    long int ii, is;
+    std::vector<double> values;
+
+    logfile->info("Step= {}  Time= {}, \tDissolved species concentrations, M", t, at);
+    logfile->info("Node#   {:>12s}", fmt::join(pCSD()->DCNL, " "));
+
+    for(ii=0; ii<nx; ii++) {    // node iteration
+        values.clear();
+        for(is=0; is<pCSD()->nDCinPH[0]; ++is) {
+            values.push_back(NodT1[ii]->xDC[is]/NodT1[ii]->vPS[0]/1000.);  // Assumes there is aq phase!
+        }
+        logfile->info("{:5}   {:-12.4g}", ii, fmt::join(values, " "));
+    }
+    logfile->info(" ");
 }
 
 // Prints dissolved elemental molarities in all cells for time point t / at
-//
-void TNodeArray::logProfileAqIC( FILE* logfile, long int t, double at, long int nx, long int every_t )
+void TNodeArray::logProfileAqIC(spdlog::logger* logfile, long int t, double at, long int nx, long int every_t)
 {
-    double pm;
-    long int i, ie;
-    if( t % every_t )
+    if(!logfile || !logfile->should_log(spdlog::level::info) || t%every_t) {
         return;
-    fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tDissolved IC total concentrations, M\n", t, at );
-    fprintf(logfile, "%s","Node#   ");
-    for( ie=0; ie < (pCSD()->nICb); ie++ )
-        fprintf( logfile, "%-12.4s ", pCSD()->ICNL[ie].c_str() );
-    for (i=0; i<nx; i++)    // node iteration
-    {
-        fprintf( logfile, "\n%5ld   ", i );
-        for( ie=0; ie < (pCSD()->nICb); ie++ )
-        {
-            pm = NodT1[i]->bPS[ie]/NodT1[i]->vPS[0]/1000.;  // Assumes there is aq phase!
-            // total dissolved element molarity
-            fprintf( logfile, "%-12.4g ", pm );
-        }
     }
-    fprintf( logfile, "\n" );
+    long int i, ie;
+    std::vector<double> values;
+
+    logfile->info("Step= {}  Time= {},\tDissolved IC total concentrations, M", t, at);
+    logfile->info("Node#   {:>12s}", fmt::join(pCSD()->ICNL, " "));
+
+    for(i=0; i<nx; i++) {    // node iteration
+        values.clear();
+        for(ie=0; ie<pCSD()->nICb; ++ie) {
+            values.push_back(NodT1[i]->bPS[ie]/NodT1[i]->vPS[0]/1000.);
+        }
+        logfile->info("{:5}   {:-12.4g}", i, fmt::join(values, " "));
+    }
+    logfile->info(" ");
 }
 
-// Data collection for monitoring 1D profiles
 // Prints total elemental amounts in all cells for time point t / at
-//
-void TNodeArray::logProfileTotIC( FILE* logfile, long int t, double at, long int nx, long int every_t )
+void TNodeArray::logProfileTotIC(spdlog::logger* logfile, long int t, double at, long int nx, long int every_t)
 {
-    double pm;
-    long int i, ie;
-    if( t % every_t )
+    if(!logfile || !logfile->should_log(spdlog::level::info) || t%every_t) {
         return;
-    fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tBulk IC amounts, moles\n", t, at );
-    fprintf(logfile, "%s","Node#   ");
-    for( ie=0; ie < (pCSD()->nICb); ie++ )
-        fprintf( logfile, "%-12.4s ", pCSD()->ICNL[ie].c_str() );
-    for (i=0; i<nx; i++)    // node iteration
-    {
-        fprintf( logfile, "\n%5ld   ", i );
-        for( ie=0; ie < (pCSD()->nICb); ie++ )
-        {
-            pm = NodT1[i]->bIC[ie];
-            fprintf( logfile, "%-12.4g ", pm );
-        }
     }
-    fprintf( logfile, "\n" );
+    long int i, ie;
+    std::vector<double> values;
+
+    logfile->info("Step= {}  Time= {},\tBulk IC amounts, moles", t, at);
+    logfile->info("Node#   {:>12s}", fmt::join(pCSD()->ICNL, " "));
+
+    for(i=0; i<nx; i++) {    // node iteration
+        values.clear();
+        for(ie=0; ie<pCSD()->nICb; ++ie) {
+            values.push_back(NodT1[i]->bIC[ie]);
+        }
+        logfile->info("{:5}   {:-12.4g}", i, fmt::join(values, " "));
+    }
+    logfile->info(" ");
 }
 
 // Prints amounts of reactive phases in all cells for time point t / at
-void TNodeArray::logProfilePhMol( FILE* logfile, PhaseDataLogFunction phLog, long int t, double at, long int nx, long int every_t )
+void TNodeArray::logProfilePhMol(spdlog::logger* logfile, PhaseDataLogFunction ph_log, long int t, double at, long int nx, long int every_t)
 {
-    double pm;
-    long int i, ip;
-    if( t % every_t )
+    if(!logfile || !logfile->should_log(spdlog::level::info) || t%every_t) {
         return;
-    fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tAmounts of reactive phases, moles\n", t, at );
-    fprintf(logfile, "%s","Node#   ");
-    for( ip=0; ip < (pCSD()->nPHb); ip++ )
-        fprintf( logfile, "%-12.12s ", pCSD()->PHNL[ip].c_str() );
-    for (i=0; i<nx; i++)    // node iteration
-    {
-        fprintf( logfile, "\n%5ld   ", i );
-        for( ip=0; ip < (pCSD()->nPHb); ip++ )
-        {
-            //       pm = NodT1[i]->xPH[ip];
-            pm = node1_xPH( i, ip );
-            fprintf( logfile, "%-12.4g ", pm );
-        }
-        phLog( logfile, i );
     }
-    fprintf( logfile, "\n" );
+    long int i, ip;
+    std::vector<double> values;
+
+    logfile->info("Step= {}  Time= {},\tAmounts of reactive phases, moles", t, at);
+    logfile->info("Node#   {:>12s}", fmt::join(pCSD()->PHNL, " "));
+
+    for(i=0; i<nx; i++) {    // node iteration
+        values.clear();
+        for(ip=0; ip<pCSD()->nPHb; ++ip) {
+            values.push_back(node1_xPH( i, ip ));
+        }
+        logfile->info("{:5}   {:-12.4g}", i, fmt::join(values, " "));
+        ph_log(logfile, i);
+    }
+    logfile->info(" ");
 }
 
 // Prints volumes of reactive phases in all cells for time point t / at
 // in nodearray layer C1
-//
-void TNodeArray::logProfilePhVol( FILE* logfile, long int t, double at, long int nx, long int every_t )
+void TNodeArray::logProfilePhVol(spdlog::logger* logfile, long int t, double at, long int nx, long int every_t)
 {
-    double pm;
-    long int i, ip;
-    if( t % every_t )
+    if(!logfile || !logfile->should_log(spdlog::level::info) || t%every_t) {
         return;
-    fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tVolumes of reactive phases, moles\n", t, at );
-    fprintf(logfile, "%s","Node#   ");
-    for( ip=0; ip < (pCSD()->nPHb); ip++ )
-        fprintf( logfile, "%-12.12s ", pCSD()->PHNL[ip].c_str() );
-    for (i=0; i<nx; i++)    // node iteration
-    {
-        fprintf( logfile, "\n%5ld  ", i );
-        for( ip=0; ip < (pCSD()->nPSb); ip++ )
-        {   // Multi-component phases
-            pm = node1_vPS( i, ip );
-            fprintf( logfile, "%-12.4g ", pm );
-        }
-        for( ip=(pCSD()->nPSb); ip < (pCSD()->nPHb); ip++ )
-        {  // Single-component phases
-            pm = node1_vPH( i, ip );
-            fprintf( logfile, "%-12.4g ", pm );
-        }
     }
-    fprintf( logfile, "\n" );
+    long int i, ip;
+    std::vector<double> values;
+
+    logfile->info("Step= {}  Time= {},\tVolumes of reactive phases, moles", t, at);
+    logfile->info("Node#   {:>12s}", fmt::join(pCSD()->PHNL, " "));
+
+    for(i=0; i<nx; i++) {    // node iteration
+        values.clear();
+        for(ip=0; ip<pCSD()->nPSb; ++ip) {   // Multi-component phases
+            values.push_back(node1_vPS( i, ip ));
+        }
+        for(ip=pCSD()->nPSb; ip<pCSD()->nPHb; ip++ ) {  // Single-component phases
+            values.push_back(node1_vPH( i, ip ));
+        }
+        logfile->info("{:5}   {:-12.4g}", i, fmt::join(values, " "));
+    }
+    logfile->info(" ");
 }
 
-void TNodeArray::databr_to_vtk( std::fstream& ff, const char*name, double time, long int  cycle,
+void TNodeArray::databr_to_vtk(std::fstream& ff, const std::string& name, double time, long int  cycle,
                                 long int  nFilds, long int  (*Flds)[2])
 {
     bool all = false;
@@ -796,7 +779,7 @@ void TNodeArray::databr_to_vtk( std::fstream& ff, const char*name, double time, 
     kk = sizeM;
     if(sizeM==1 && sizeK==1) // 05.12.2012 workaround for 2D paraview
         kk=2;
-    calcNode->databr_head_to_vtk( ff, name, time, cycle, sizeN, kk, sizeK );
+    calcNode->databr_head_to_vtk(ff, name, time, cycle, sizeN, kk, sizeK);
 
     if( nFilds < 1 || !Flds )
     {  all = true;

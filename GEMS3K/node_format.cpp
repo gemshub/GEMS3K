@@ -233,7 +233,7 @@ void TNode::databr_size_to_vtk(  long int nfild, long int& nel, long int& nel2 )
 
 }
 
-void TNode::databr_head_to_vtk( std::fstream& ff, const char*name, double time, long cycle,
+void TNode::databr_head_to_vtk( std::fstream& ff, const std::string& name, double time, long cycle,
                                long nx, long ny, long nz )
 {
  ff << "# vtk DataFile Version 3.0" <<  std::endl;
@@ -250,14 +250,14 @@ void TNode::databr_head_to_vtk( std::fstream& ff, const char*name, double time, 
  ff << "POINT_DATA " << nx*ny*nz << std::endl;
 }
 
-void TNode::databr_to_vtk( std::fstream& ff, const char*name, double time, long int  cycle,
+void TNode::databr_to_vtk( std::fstream& ff, const std::string& name, double time, long int  cycle,
                           long int  nFilds, long int  (*Flds)[2])
 {
    bool all = false;
    long int kk, ii, nf, nel, nel2;
 
    // write header of file
-   databr_head_to_vtk( ff, name, time, cycle, 1, 1, 1 );
+   databr_head_to_vtk(ff, name, time, cycle, 1, 1, 1);
 
    if( nFilds < 1 || !Flds )
    {
