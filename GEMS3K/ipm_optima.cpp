@@ -143,15 +143,23 @@ static void memoize_objective_if_linesearch( Optima::Problem& problem, double fa
     };
 }
 
-// Debug trace, off unless the environment variable REAKTORO_TRACE_FILE is set. True when the Hessian
-// matrices are to be written for the current Optima iteration (REAKTORO_TRACE_HESSIAN=<iteration>,
-// REAKTORO_TRACE_HESSIAN_SOLVE=<solve>, default 1).
+// The debug-trace setting GEMS3K_OPTIMA_TRACE_<name>, or its old name REAKTORO_TRACE_<name>; null when unset.
+static const char* optima_trace_env( const char* name )
+{
+    if( const char* e = std::getenv( ( std::string( "GEMS3K_OPTIMA_TRACE_" ) + name ).c_str() ) )
+        return e;
+    return std::getenv( ( std::string( "REAKTORO_TRACE_" ) + name ).c_str() );
+}
+
+// Debug trace, off unless GEMS3K_OPTIMA_TRACE_FILE is set. True when the Hessian matrices are to be
+// written for the current Optima iteration (GEMS3K_OPTIMA_TRACE_HESSIAN=<iteration>,
+// GEMS3K_OPTIMA_TRACE_HESSIAN_SOLVE=<solve>, default 1).
 static bool optima_trace_hessian_dump_now()
 {
-    static const long it = []{ const char* e = std::getenv("REAKTORO_TRACE_HESSIAN"); return e ? std::atol(e) : -1L; }();
-    static const long solve = []{ const char* e = std::getenv("REAKTORO_TRACE_HESSIAN_SOLVE"); return e ? std::atol(e) : 1L; }();
+    static const long it = []{ const char* e = optima_trace_env( "HESSIAN" ); return e ? std::atol(e) : -1L; }();
+    static const long solve = []{ const char* e = optima_trace_env( "HESSIAN_SOLVE" ); return e ? std::atol(e) : 1L; }();
     const auto& ts = Optima::trace::state();
-    static const int attempt = []{ const char* e = std::getenv("REAKTORO_TRACE_HESSIAN_ATTEMPT"); return e ? std::atoi(e) : 1; }();
+    static const int attempt = []{ const char* e = optima_trace_env( "HESSIAN_ATTEMPT" ); return e ? std::atoi(e) : 1; }();
     return Optima::trace::file() && it == ts.iter && solve == ts.solve && ts.attempt == attempt;
 }
 
@@ -160,7 +168,7 @@ template<class M>
 static void optima_trace_write_matrix( const char* tag, const M& m, long n )
 {
     const auto& ts = Optima::trace::state();
-    const std::string path = std::string( std::getenv("REAKTORO_TRACE_FILE") ) + ".hess." + std::to_string(ts.solve)
+    const std::string path = std::string( optima_trace_env( "FILE" ) ) + ".hess." + std::to_string(ts.solve)
                            + "." + std::to_string(ts.iter) + "." + tag + ".csv";
     std::ofstream f( path );
     f.precision( 17 );
@@ -3381,7 +3389,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                             (*nzSeen)[k] = 1;
                             native_trace_decide( "nearzeroblock phase=%s amount=%.3e peak=%.3e",
                                                  char_array_to_string( pm.SF[k], MAXPHNAME ).c_str(), Xf, (*phMax)[k] );
-                            ipm_logger->debug( "Optima: full mixing curvature for the nearly vanished phase {}",
+                            ipm_logger->info( "Optima: full mixing curvature for the nearly vanished phase {}",
                                                char_array_to_string( pm.SF[k], MAXPHNAME ) );
                         }
                         for( long int j = j0; j < j1; j++ )
@@ -3606,7 +3614,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                             for( long int j = 0; j < L; j++ ) pm.F[j] = Fbase[j];
                             optima_trace_write_matrix( "exact", [&]( long r, long c ) { return ex[(size_t)r*L+c]; }, L );
                             optima_trace_write_matrix( "ideal", [&]( long r, long c ) { return traceIdeal[(size_t)r*L+c]; }, L );
-                            std::ofstream f( std::string( std::getenv("REAKTORO_TRACE_FILE") ) + ".hess." + std::to_string(ts.solve)
+                            std::ofstream f( std::string( optima_trace_env( "FILE" ) ) + ".hess." + std::to_string(ts.solve)
                                              + "." + std::to_string(ts.iter) + ".state.csv" );
                             f.precision( 17 );
                             f << "index,name,n,basic\n";
@@ -3793,7 +3801,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             if( onlyAq.empty() ) { stallWatch->wLO = pm.LO; stallWatch->wSeenWet = dryWarmStart; }
             else native_trace_decide( "dryoff onlyaq=%s", onlyAq.c_str() );
             if( !onlyAq.empty() )
-                ipm_logger->debug( "Optima: water-only elements ({}), the dry-out is off (pa_OptimaDryOut)", onlyAq );
+                ipm_logger->info( "Optima: water-only elements ({}), the dry-out is off (pa_OptimaDryOut)", onlyAq );
         }
         stallWatch->reset();
         if( pa_p->OptimaDryRetry && !g_optimaDryOff && pm.LO >= 0 && pm.LO < pm.L && node1 != nullptr )
@@ -3901,7 +3909,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         else if( cw.cf0 != 0. && std::fabs( fNow ) > ffCollapseR * std::fabs( cw.cf0 ) )
                         {
                             native_trace_decide( "fastcollapse step=%ld ratio=%.3e", cw.cstep, std::fabs( fNow / cw.cf0 ) );
-                            ipm_logger->debug( "Optima: the quick first try stopped at step {}: energy grew to {:.3g} times its start",
+                            ipm_logger->info( "Optima: the quick first try stopped at step {}: energy grew to {:.3g} times its start",
                                                cw.cstep, std::fabs( fNow / cw.cf0 ) );
                             cw.cstep++;
                             g_optimaIterBudget = 0; stallWatch->timedOut = true; return true;
@@ -3967,7 +3975,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         if( rs.rises >= ffRisesN )
                         {
                             native_trace_decide( "fastrises rises=%ld step=%ld", rs.rises, rs.riseSteps );
-                            ipm_logger->debug( "Optima: the quick first try stopped after its energy went up on {} steps (step {})",
+                            ipm_logger->info( "Optima: the quick first try stopped after its energy went up on {} steps (step {})",
                                                rs.rises, rs.riseSteps );
                             g_optimaIterBudget = 0; stallWatch->timedOut = true; return true;
                         }
@@ -4121,7 +4129,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         {
                             native_trace_decide( "frozencut steps=%ld it=%ld err=%.6e", stallWatch->fzRun,
                                                  (long)args.result.iterations, eNow );
-                            ipm_logger->debug( "Optima: solve stopped at step {}: energy and error unchanged for {} steps",
+                            ipm_logger->info( "Optima: solve stopped at step {}: energy and error unchanged for {} steps",
                                                (long)args.result.iterations, stallWatch->fzRun );
                             stallWatch->stalled = true;
                             return true;   // folded back to a failure below
@@ -4259,7 +4267,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // nets). Saved before the first solve modifies `state`.
         const Optima::State initialState = state;
 
-        // Debug trace (REAKTORO_TRACE_FILE, off unless set): the per-solve setup records.
+        // Debug trace (GEMS3K_OPTIMA_TRACE_FILE, off unless set): the per-solve setup records.
         long int traceFirstIt = 0, traceFupFirst = 0, traceFxFirst = 0;
         bool traceFirstOk = false;
         std::vector<double> traceX0;
@@ -4568,7 +4576,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             optimaIterTotal += result.iterations;
             native_trace_decide( "dryout at=%ld water=%.3e fixed=%ld zz=%.3e ok=%d it=%ld", at, wAt, (long)( j1 - j0 ), zz,
                                  result.succeeded ? 1 : 0, (long)result.iterations );
-            ipm_logger->debug( "Optima: the water ran out at step {}; the solids were solved alone, ok={} (pa_OptimaDryOut)",
+            ipm_logger->info( "Optima: the water ran out at step {}; the solids were solved alone, ok={} (pa_OptimaDryOut)",
                                at, result.succeeded ? 1 : 0 );
             dryJ0 = j0; dryJ1 = j1;
         }
@@ -4613,7 +4621,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                  tWorst < 0 ? 1 : 0, tWorst, tViol, tAbsent ? 1 : 0, tNtpd, tTpd,
                                  tTpdPh >= 0 ? char_array_to_string( pm.SF[tTpdPh], MAXPHNAME ).c_str() : "-" );
             if( tWorst < 0 && tTpdOk ) { result.succeeded = true; tailAccepted = true; }
-            ipm_logger->debug( "Optima: stopped on a flat tail; the stop point was {} (pa_OptimaTailStop)",
+            ipm_logger->info( "Optima: stopped on a flat tail; the stop point was {} (pa_OptimaTailStop)",
                                tailAccepted ? "checked and taken as the answer" : "rejected by the stability check" );
         }
         // pa_OptimaDryOut: a dry solve that failed (the tail-stop check included) must not cost the
@@ -4634,7 +4642,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             applyStall( result );
             optimaIterTotal += result.iterations;
             native_trace_decide( "dryback ok=%d it=%ld", result.succeeded ? 1 : 0, (long)result.iterations );
-            ipm_logger->debug( "Optima: the dry solve failed; solved again with the water back, ok={} (pa_OptimaDryOut)",
+            ipm_logger->info( "Optima: the dry solve failed; solved again with the water back, ok={} (pa_OptimaDryOut)",
                                result.succeeded ? 1 : 0 );
         }
         // pa_OptimaDryOut: after a dry solve, check the dry answer against a solve that keeps the water.
@@ -4704,7 +4712,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 const bool wetWins = result.succeeded && gWet < gDry - 1e-9 * ( 1. + std::fabs( gDry ) );
                 native_trace_decide( "drywet ok=%d it=%ld g_dry=%.12g g_wet=%.12g chosen=%s", result.succeeded ? 1 : 0,
                                      (long)result.iterations, gDry, result.succeeded ? gWet : 0., wetWins ? "wet" : "dry" );
-                ipm_logger->debug( "Optima: dry answer compared with a solve keeping the water: the {} answer is kept (pa_OptimaDryOut)",
+                ipm_logger->info( "Optima: dry answer compared with a solve keeping the water: the {} answer is kept (pa_OptimaDryOut)",
                                    wetWins ? "wet" : "dry" );
                 if( !wetWins )
                 {
@@ -4888,7 +4896,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 if( pa_p->OptimaWaterKeep > 0 && result.succeeded && !retryResult.succeeded )
                 {
                     native_trace_decide( "waterkeep water=%.3e retry_it=%ld", state.x[pm.LO], (long)retryResult.iterations );
-                    ipm_logger->debug( "Optima: the retry with water put back failed; the converged answer is kept (pa_OptimaWaterKeep)" );
+                    ipm_logger->info( "Optima: the retry with water put back failed; the converged answer is kept (pa_OptimaWaterKeep)" );
                 }
                 else
                 {
@@ -6337,8 +6345,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         }
 
         // An answer whose water phase is reported must look like water: a pH far off the water scale or an
-        // absurd ionic strength means the solve stopped on a wrong state, so it is not accepted.
-        if( result.succeeded && pm.LO >= 0 && HasAqueousPhase() )
+        // absurd ionic strength means the solve stopped on a wrong state, so it is not accepted. Not checked
+        // when a pH or Eh target is set: the target sets the state then.
+        if( result.succeeded && R == 0 && pm.LO >= 0 && HasAqueousPhase() )
         {
             CalculateConcentrations( pm.X, pm.XF, pm.XFA );
             const bool insane = !g_aqueousAbsent && ( pm.pH < -2. || pm.pH > 16. || pm.IC > 100. );

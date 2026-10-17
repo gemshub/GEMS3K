@@ -425,7 +425,9 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         const long int allowance0 = g_optimaCapAllowance;   // the repair allowance is not for this attempt
         g_optimaCapAllowance = 0;
         g_optimaFixAccept = true;
+        g_errorsHandledByCaller++;   // a failed quick try is followed by the full solve
         const long int fast = GEM_run_single( uPrimalSol );
+        g_errorsHandledByCaller--;
         g_optimaFixAccept = false;
         g_optimaCapAllowance = allowance0;
         *bp = saved;
