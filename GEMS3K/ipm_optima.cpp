@@ -178,6 +178,16 @@ static void optima_trace_write_matrix( const char* tag, const M& m, long n )
             f << m(r,c) << ( c + 1 < n ? "," : "\n" );
 }
 
+// pa_OptimaSnapLeaving: how many limited steps in a row before a species heading to zero is put on its floor.
+static void apply_optima_snap( Optima::Options& o, long int snapAfter )
+{
+#ifdef OPTIMA_BACKTRACK_SNAP_LEAVING   // needs an Optima build with this option
+    o.backtracksearch.snap_leaving_after = snapAfter > 0 ? snapAfter : 0;
+#else
+    (void)o; (void)snapAfter;
+#endif
+}
+
 static void apply_optima_linesearch( Optima::Options& o, double factor, long int stallEscape = 0,
                                      long int rejectWorse = 0 )
 {
@@ -2619,6 +2629,14 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         ~FloorRecordGuard() { m->PhaseHessianEnd(); }
     } floorRecordGuard{ this };
 
+#ifdef OPTIMA_BACKTRACK_SNAP_LEAVING
+    // pa_OptimaSnapLeaving: how many species this call put on their floor, for the trace.
+    struct SnapRecord {
+        long n0 = Optima::trace::state().snaps;
+        ~SnapRecord() { const long n = Optima::trace::state().snaps - n0; if( n > 0 ) native_trace_decide( "snapleaving n=%ld", n ); }
+    } snapRecord;
+#endif
+
     double ScFact = 1.;
     const BASE_PARAM* pa_p = base_param();
     // dcFloor, the species lower bound: pa_OptimaDcFloor if set, else pa_DHB.
@@ -3697,6 +3715,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             options.convergence.tolerance = pa_p->OptimaTol;
             apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
+            // Plain warm calls only: on a cold start, or on a leg that starts from native's answer, a species
+            // far from its answer can limit the step many times on its way to a value that is not zero.
+            if( !referenceMode && pm.pNP != 0 && !optima_hop_leg )
+                apply_optima_snap( options, pa_p->OptimaSnapLeaving );
             // The quick first try of a cold call (pa_OptimaFastFirst): full step, each amount clipped to its bounds.
             // Not from a certified leveled start (pa_OptimaLevelStart): there the ordinary step only has to confirm it.
             if( g_optimaFixAccept && !g_lvlShortcut )

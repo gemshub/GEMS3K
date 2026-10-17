@@ -590,6 +590,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_OptimaWaterKeep: 1 = a converged answer is kept when the retry with water put back fails;
     /// 2 = also, a dry answer that passed the tail-stop check is not retried with water (default); 0 = off.
     long int OptimaWaterKeep = 2;
+    /// pa_OptimaSnapLeaving: in a warm Optima solve, a species that has limited the step this many times in a
+    /// row on its way to zero (its target well below its floor) is put on its floor, so it stops creeping down
+    /// a little each step. 0 = off, default 2.
+    long int OptimaSnapLeaving = 2;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2103,7 +2107,8 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaFastFirst, f_pa_OptimaFloorCurvature, f_pa_OptimaEmptySolvent, f_pa_OptimaTpdVeto, f_pa_OptimaEmptyPreSolveSkip, f_pa_OptimaTwinReadmit, f_pa_OptimaDryRetry, f_pa_OptimaCallCap, f_pa_OptimaCapNudges,
     f_pa_OptimaFinishFirst, f_pa_OptimaFastFrozen, f_pa_OptimaFastDiverge, f_pa_OptimaRedoxFree, f_pa_OptimaFastRises,
     f_pa_OptimaPreSolveSeed, f_pa_OptimaColdLevel, f_pa_OptimaLevelStart, f_pa_OptimaFastCollapse, f_pa_OptimaFrozenCut,
-    f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep
+    f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
+    f_pa_OptimaSnapLeaving
 
 } MULTI_DYNAMIC_FIELDS;
 
