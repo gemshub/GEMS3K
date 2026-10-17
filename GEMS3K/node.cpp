@@ -202,40 +202,45 @@ thread_local long int g_optimaCapAllowance = 0;   // extra iterations for the re
 thread_local bool g_optimaDryRedoCall = false;   // inside the dry-retry redo (pa_OptimaDryRetry)
 thread_local bool g_optimaDryFailed = false;     // the dry stop fired and the water-first retry failed
 thread_local bool g_optimaDryOff = false;        // the dry stop and its retry are off for this call
+// Warn once when the system holds more than 1e6 mol of elements, more than the solvers are tested for.
+void TNode::WarnIfSystemTooLarge()
+{
+    const double bigLimit = 1e6;
+    double total = 0., largest = 0.;
+    long int iLargest = -1;
+    for( long int i = 0; i < CSD->nICb; i++ )
+    {
+        if( CSD->ccIC[ IC_xDB_to_xCH( i ) ] == IC_CHARGE ) continue;
+        total += CNode->bIC[i];
+        if( CNode->bIC[i] > largest ) { largest = CNode->bIC[i]; iLargest = i; }
+    }
+    if( total > bigLimit )
+    {
+        native_trace_decide( "bigsystem total=%.3e limit=%.3e", total, bigLimit );
+        static thread_local bool bigWarned = false;
+        if( !bigWarned && iLargest >= 0 )
+            node_logger->warn( "GEM_run(): the system holds {:.3g} mol of elements ({:.3g} mol of {}), more than the {:.3g} mol "
+                               "the solvers are tested for; the answer may be inaccurate", total, largest,
+                               CSD->ICNL[ IC_xDB_to_xCH( iLargest ) ], bigLimit );
+        bigWarned = true;
+    }
+}
+
+// The layers of one call, outermost first: the call cap, the dry redo, then the quick first try and the
+// solve with its retries. Each layer calls the next one.
 long int TNode::GEM_run( bool uPrimalSol )
 {
-    // Warn once when the system holds more than 1e6 mol of elements, more than the solvers are tested for.
-    // Checked on the outer call only; the retries below call GEM_run() again.
-    static thread_local int bigDepth = 0;
-    if( bigDepth == 0 )
-    {
-        const double bigLimit = 1e6;
-        double total = 0., largest = 0.;
-        long int iLargest = -1;
-        for( long int i = 0; i < CSD->nICb; i++ )
-        {
-            if( CSD->ccIC[ IC_xDB_to_xCH( i ) ] == IC_CHARGE ) continue;
-            total += CNode->bIC[i];
-            if( CNode->bIC[i] > largest ) { largest = CNode->bIC[i]; iLargest = i; }
-        }
-        if( total > bigLimit )
-        {
-            native_trace_decide( "bigsystem total=%.3e limit=%.3e", total, bigLimit );
-            static thread_local bool bigWarned = false;
-            if( !bigWarned && iLargest >= 0 )
-                node_logger->warn( "GEM_run(): the system holds {:.3g} mol of elements ({:.3g} mol of {}), more than the {:.3g} mol "
-                                   "the solvers are tested for; the answer may be inaccurate", total, largest,
-                                   CSD->ICNL[ IC_xDB_to_xCH( iLargest ) ], bigLimit );
-            bigWarned = true;
-        }
-    }
-    struct BigDepthGuard { int& d; BigDepthGuard( int& x ) : d( x ) { d++; } ~BigDepthGuard() { d--; } } bigGuard( bigDepth );
+    WarnIfSystemTooLarge();
+    return GEM_run_capped( uPrimalSol );
+}
 
-    // pa_OptimaCallCap: an AOP or SOP call gets a whole-call iteration cap. A call that fails with
-    // the cap used up is re-solved at up to pa_OptimaCapNudges 1e-15 nudges of the bulk
-    // composition, each with a fresh cap; a nudged answer is finished warm at the exact
-    // composition. If no nudge solves, the call is run once more without the cap, so the cap
-    // never loses an answer. DECIDE callcap, capretry, caplast.
+// pa_OptimaCallCap: an AOP or SOP call gets a whole-call iteration cap. A call that fails with
+// the cap used up is re-solved at up to pa_OptimaCapNudges 1e-15 nudges of the bulk
+// composition, each with a fresh cap; a nudged answer is finished warm at the exact
+// composition. If no nudge solves, the call is run once more without the cap, so the cap
+// never loses an answer. DECIDE callcap, capretry, caplast.
+long int TNode::GEM_run_capped( bool uPrimalSol )
+{
     const BASE_PARAM* capPa = multi_ptr()->base_param();
     const long int cap = optima_call_cap( capPa->OptimaCallCap, pmm->L );
     if( cap > 0 && !g_optimaCapCall && CNode->dt <= 0.
@@ -246,7 +251,7 @@ long int TNode::GEM_run( bool uPrimalSol )
         g_optimaCapCall = true;
         g_optimaIterBudget = cap;
         g_optimaCapAllowance = cap / 2;
-        long int st = GEM_run( uPrimalSol );
+        long int st = GEM_run_dry_redo( uPrimalSol );
         long int total = CNode->IterDone;
         const bool capHit = ( g_optimaIterBudget == 0 || g_optimaCapAllowance < 0 );
         const bool okFirst = ( st == OK_GEM_AOP || st == OK_GEM_SOP );
@@ -271,7 +276,7 @@ long int TNode::GEM_run( bool uPrimalSol )
                 CNode->NodeStatusCH = NEED_GEM_AOP;
                 g_optimaIterBudget = cap;
                 g_optimaCapAllowance = cap / 2;
-                const long int cold = GEM_run( uPrimalSol );
+                const long int cold = GEM_run_dry_redo( uPrimalSol );
                 total += CNode->IterDone;
                 long int warm = -1;
                 if( cold == OK_GEM_AOP )
@@ -285,7 +290,7 @@ long int TNode::GEM_run( bool uPrimalSol )
                     CNode->NodeStatusCH = NEED_GEM_SOP;
                     g_optimaIterBudget = cap;
                     g_optimaCapAllowance = cap / 2;
-                    warm = GEM_run( uPrimalSol );
+                    warm = GEM_run_dry_redo( uPrimalSol );
                     total += CNode->IterDone;
                     bool keep = true;
                     if( warm != OK_GEM_SOP && warm != OK_GEM_AOP )
@@ -320,7 +325,7 @@ long int TNode::GEM_run( bool uPrimalSol )
                 CNode->NodeStatusCH = req;
                 g_optimaIterBudget = -1;
                 g_optimaCapAllowance = 0;
-                const long int last = GEM_run( uPrimalSol );
+                const long int last = GEM_run_dry_redo( uPrimalSol );
                 total += CNode->IterDone;
                 native_trace_decide( "caplast status=%ld it=%ld", (long)last, (long)total );
                 if( last == OK_GEM_AOP || last == OK_GEM_SOP )
@@ -347,8 +352,13 @@ long int TNode::GEM_run( bool uPrimalSol )
         g_optimaCapCall = false;
         return st;
     }
-    // pa_OptimaDryRetry: if the dry stop fired and the water-first retry failed, the low water may be
-    // the real answer, so the call is run again with the dry stop and its retry off. DECIDE dryredo.
+    return GEM_run_dry_redo( uPrimalSol );
+}
+
+// pa_OptimaDryRetry: if the dry stop fired and the water-first retry failed, the low water may be
+// the real answer, so the call is run again with the dry stop and its retry off. DECIDE dryredo.
+long int TNode::GEM_run_dry_redo( bool uPrimalSol )
+{
     if( multi_ptr()->base_param()->OptimaDryRetry && !g_optimaDryRedoCall && !g_optimaDryOff && CNode->dt <= 0.
         && ( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP ) )
     {
@@ -357,7 +367,7 @@ long int TNode::GEM_run( bool uPrimalSol )
         g_optimaDryFailed = false;
         const long int budget0 = g_optimaIterBudget;
         const long int allowance0 = g_optimaCapAllowance;
-        long int st = GEM_run( uPrimalSol );
+        long int st = GEM_run_tries( uPrimalSol );
         long int total = CNode->IterDone;
         if( st != OK_GEM_AOP && st != OK_GEM_SOP && g_optimaDryFailed )
         {
@@ -365,7 +375,7 @@ long int TNode::GEM_run( bool uPrimalSol )
             g_optimaCapAllowance = allowance0;
             g_optimaDryOff = true;
             CNode->NodeStatusCH = req;
-            st = GEM_run( uPrimalSol );
+            st = GEM_run_tries( uPrimalSol );
             total += CNode->IterDone;
             g_optimaDryOff = false;
             native_trace_decide( "dryredo status=%ld it=%ld", (long)st, (long)total );
@@ -375,6 +385,12 @@ long int TNode::GEM_run( bool uPrimalSol )
         g_optimaDryRedoCall = false;
         return st;
     }
+    return GEM_run_tries( uPrimalSol );
+}
+
+// The quick first try, then the solve with its retries, then the notes on the answer.
+long int TNode::GEM_run_tries( bool uPrimalSol )
+{
     const long int requested = CNode->NodeStatusCH;
     const bool kinetics = CNode->dt > 0.;
     g_optimaTargetWarned = false;

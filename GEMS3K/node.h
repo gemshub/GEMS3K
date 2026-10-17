@@ -1401,6 +1401,11 @@ public:
 protected:
     /// One GEM_run() attempt, without the cold-call recovery (GEM_run() is this plus pa_ColdRetryNudges).
     long int GEM_run_single( bool uPrimalSol );
+    /// The layers of GEM_run(), outermost first; each calls the next.
+    void WarnIfSystemTooLarge();
+    long int GEM_run_capped( bool uPrimalSol );     // pa_OptimaCallCap
+    long int GEM_run_dry_redo( bool uPrimalSol );   // pa_OptimaDryRetry
+    long int GEM_run_tries( bool uPrimalSol );      // pa_OptimaFastFirst, the solve and its retries
     /// pa_ColdRetryNudges' recovery of a failed NEED_GEM_AIA call; see BASE_PARAM::ColdRetryNudges.
     long int GEM_run_cold_retry( long int maxNudges );
     /// Whether a saved answer's amounts balance the bulk b under the solve's own per-element test.
