@@ -6707,9 +6707,9 @@ double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIP
     return dt;
 }
 
-// Native stopped at its iteration limit. Optima solves from native's last state, then once from scratch;
-// a clean answer is kept, otherwise the caller reports native's failure.
-bool TMultiBase::NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM, double& seconds )
+// Native stopped at its iteration limit, or (broken) its linear system broke down. Optima solves from native's
+// last state, then once from scratch; a clean answer is kept, otherwise the caller reports native's failure.
+bool TMultiBase::NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM, double& seconds, bool broken )
 {
     const long int cap = base_param()->NativeOptimaFinish;
     if( cap <= 0 || !optima_control_conditions.empty() )
@@ -6737,9 +6737,10 @@ bool TMultiBase::NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM,
         fiaO += fia; ipmO += ipm;
     }
     pm.pNP = savedPNP;
-    native_trace_decide( "nativerescue ok=%d attempts=%d fiao=%ld ipmo=%ld cap=%ld", ok ? 1 : 0, attempt,
-                         (long)fiaO, (long)ipmO, (long)cap );
-    ipm_logger->info( "Native solver stopped at its iteration limit; Optima {} the answer",
+    native_trace_decide( "nativerescue ok=%d why=%s attempts=%d fiao=%ld ipmo=%ld cap=%ld", ok ? 1 : 0,
+                         broken ? "E07" : "E06", attempt, (long)fiaO, (long)ipmO, (long)cap );
+    ipm_logger->info( "Native solver {}; Optima {} the answer",
+                      broken ? "could not solve its linear system" : "stopped at its iteration limit",
                       ok ? ( attempt == 1 ? "finished" : "found" ) : "did not find" );
     NumIterFIA += fiaO; NumIterIPM += ipmO;
     return ok;

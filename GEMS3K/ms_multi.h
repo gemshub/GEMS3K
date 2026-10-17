@@ -499,8 +499,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// the element totals.
     long int OptimaAcceptRepair = 0;
     /// pa_NativeOptimaFinish: after a native solve (AIA/SIA) where a trace solid phase still tends to grow,
-    /// finish with Optima from native's answer and keep the result only if it is better; the value is the
-    /// most Optima iterations allowed. 0 = off, default 500.
+    /// finish with Optima from native's answer and keep the result only if it is better; also when native
+    /// stops at its iteration limit or its linear system breaks down. The value is the most Optima
+    /// iterations allowed. 0 = off, default 500.
     long int NativeOptimaFinish = 500;
     /// pa_OptimaCollapseCheck: when checking an Optima answer, judge a phase that has vanished by its pure
     /// species, so a phase that should come back is not taken as correctly absent. 0 = off, 1 = on (default).
@@ -1471,7 +1472,7 @@ public:
     double NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIPM );
     /// After a native solve that stopped at its iteration limit (E06IPM): Optima solves from native's last state
     /// (then once from scratch), at most pa_NativeOptimaFinish iterations each. True if it found a clean answer.
-    bool NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM, double& seconds );
+    bool NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM, double& seconds, bool broken = false );
 
     /// Registers (or replaces, by name) a pH control condition for the next
     /// CalculateEquilibriumStateOptima() call. Persists until ClearControlConditions().

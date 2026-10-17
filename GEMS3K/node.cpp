@@ -915,11 +915,14 @@ long int TNode::GEM_run_single( bool uPrimalSol )
             }
             catch( TError& nerr )
             {
-                // Native stopped at its iteration limit: let Optima find the answer; otherwise report the failure.
+                // Native stopped at its iteration limit, or its linear system broke down: let Optima find the
+                // answer; otherwise report the failure.
                 double optSec = 0.;
-                if( !( nerr.title.rfind( "E06IPM", 0 ) == 0 && CNode->dt <= 0.
+                const bool limit = nerr.title.rfind( "E06IPM", 0 ) == 0;
+                const bool broken = nerr.title.rfind( "E07IPM", 0 ) == 0;
+                if( !( ( limit || broken ) && CNode->dt <= 0.
                        && ( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_SIA )
-                       && multi_ptr()->NativeOptimaRescue( NumIterFIA, NumIterIPM, optSec ) ) )
+                       && multi_ptr()->NativeOptimaRescue( NumIterFIA, NumIterIPM, optSec, broken ) ) )
                     throw;
                 CalcTime = multi_ptr()->GetPM()->t_elap_sec + optSec;
             }
