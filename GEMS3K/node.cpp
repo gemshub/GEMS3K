@@ -905,7 +905,24 @@ long int TNode::GEM_run_single( bool uPrimalSol )
         }
         else
         {
+#ifdef USE_OPTIMA_SOLVER
+            try
+            {
+                CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
+            }
+            catch( TError& nerr )
+            {
+                // Native stopped at its iteration limit: let Optima find the answer; otherwise report the failure.
+                double optSec = 0.;
+                if( !( nerr.title.rfind( "E06IPM", 0 ) == 0 && CNode->dt <= 0.
+                       && ( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_SIA )
+                       && multi_ptr()->NativeOptimaRescue( NumIterFIA, NumIterIPM, optSec ) ) )
+                    throw;
+                CalcTime = multi_ptr()->GetPM()->t_elap_sec + optSec;
+            }
+#else
             CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
+#endif
 #ifdef USE_OPTIMA_SOLVER
             // A trace solid phase that still tends to grow: let Optima finish, keep only a better answer.
             if( ( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_SIA ) && CNode->dt <= 0. )

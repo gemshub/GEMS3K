@@ -6702,4 +6702,42 @@ double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIP
     return dt;
 }
 
+// Native stopped at its iteration limit. Optima solves from native's last state, then once from scratch;
+// a clean answer is kept, otherwise the caller reports native's failure.
+bool TMultiBase::NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM, double& seconds )
+{
+    const long int cap = base_param()->NativeOptimaFinish;
+    if( cap <= 0 || !optima_control_conditions.empty() )
+        return false;
+    const long int savedPNP = pm.pNP;
+    long int fiaO = 0, ipmO = 0;
+    bool ok = false;
+    int attempt = 0;
+    for( ; attempt < 2 && !ok; attempt++ )
+    {
+        struct Budget {   // each attempt's iteration cap; always lifted again, also on a throw
+            explicit Budget( long int n ) { g_optimaIterBudget = n; }
+            ~Budget() { g_optimaIterBudget = -1; }
+        } budget( cap );
+        long int fia = 0, ipm = 0;
+        pm.pNP = ( attempt == 0 ) ? 1 : 0;
+        try
+        {
+            optima_hop_leg = ( attempt == 0 );
+            seconds += CalculateEquilibriumStateOptima( fia, ipm, false, /* runKinetics */ false );
+            ok = !( pm.MK || pm.PZ );
+        }
+        catch( TError& ) {}
+        optima_hop_leg = false;
+        fiaO += fia; ipmO += ipm;
+    }
+    pm.pNP = savedPNP;
+    native_trace_decide( "nativerescue ok=%d attempts=%d fiao=%ld ipmo=%ld cap=%ld", ok ? 1 : 0, attempt,
+                         (long)fiaO, (long)ipmO, (long)cap );
+    ipm_logger->info( "Native solver stopped at its iteration limit; Optima {} the answer",
+                      ok ? ( attempt == 1 ? "finished" : "found" ) : "did not find" );
+    NumIterFIA += fiaO; NumIterIPM += ipmO;
+    return ok;
+}
+
 #endif // USE_OPTIMA_SOLVER

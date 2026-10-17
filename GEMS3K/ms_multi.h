@@ -1469,6 +1469,9 @@ public:
     /// from native's answer (at most pa_NativeOptimaFinish Optima iterations) and keeps the result only
     /// if it is better; otherwise native's answer is put back unchanged. Adds the iterations used.
     double NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIPM );
+    /// After a native solve that stopped at its iteration limit (E06IPM): Optima solves from native's last state
+    /// (then once from scratch), at most pa_NativeOptimaFinish iterations each. True if it found a clean answer.
+    bool NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM, double& seconds );
 
     /// Registers (or replaces, by name) a pH control condition for the next
     /// CalculateEquilibriumStateOptima() call. Persists until ClearControlConditions().
