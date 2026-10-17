@@ -115,6 +115,25 @@ of two settings, make two nodes from two copies of the project, one per `-ipm` f
 
 A complete working example is `tools/optima_test.cpp`.
 
+### Which phases are present
+
+The Optima solver never puts an amount exactly to zero: a phase that is not formed is left at a tiny floor
+amount (about the size of `pa_DHB` per species, e.g. 1e-13 mol). The native solver removes such phases. So the
+same answer can list many more phases with an amount above zero in an Optima mode than in a native mode.
+
+- **Old rule, `pa_DS`.** A phase counts as present when its amount is above `pa_DS` (default 1e-20 mol). The
+  native solver uses it to drop phases, and GEMSGUI uses it to show which phases are present. It is far below
+  Optima's floor, so with Optima every floor phase still passes it.
+- **New rule, `Ph_Present(k)`.** A phase is present when it holds more than 1e-9 of the total amount of all
+  phases (a second argument changes that share). The amounts are not changed. With it, Optima and native modes
+  report the same present phases.
+
+```cpp
+for (long k = 0; k < node.pCSD()->nPHb; k++)
+    if (node.Ph_Present(k))
+        std::cout << "phase " << k << ": " << node.Ph_Moles(k) << " mol\n";
+```
+
 ## Fixing the pH or Eh (Optima modes only)
 
 In the Optima modes AOP, SOP, HOP and SHP you can ask for a given pH, a given Eh (in volts), or both. The
@@ -262,7 +281,7 @@ in their file already.
 | `pa_DGC` | 0 | A second damping setting that works together with the one above. | Use 0.001 for systems with sorption. | From −1 to 1. |
 | `pa_PRD` | −5 | A final clean-up that removes tiny amounts of species left over at the end of the calculation. −5 means amounts below 1e-5 are cleaned up. | Make it more negative if real trace amounts are being removed; 0 to see the raw result. | 0 = off; −6 or less = clean up only smaller amounts. |
 | `pa_GAS` | 0.001 | How strict the final clean-up is. A larger value keeps more trace amounts in the answer. | Systems with very little water (0.002 together with `pa_OptimaAcceptRepair`), or when trace phases matter. | Any small positive number. |
-| `pa_DS` | 1e-20 | Smallest amount of a phase, in moles, that is still reported as present. | Raise it to hide meaningless trace phases in the output. | Any small positive amount. |
+| `pa_DS` | 1e-20 | Smallest amount of a phase, in moles, that is still reported as present (the old rule; see "Which phases are present"). | Raise it to hide meaningless trace phases in the output. With Optima, use `Ph_Present()` instead. | Any small positive amount. |
 | `pa_XwMin` | 1e-13 | If the amount of water falls below this (moles), the aqueous solution is removed from the answer. | Drying or nearly dry systems, to control when the aqueous solution disappears. | Any small positive amount. |
 | `pa_ScMin` | 1e-13 | If the amount of a solid that carries a sorption surface falls below this (moles), the sorption phase is removed. | Sorption systems where the sorbent dissolves almost completely. | Any small positive amount. |
 | `pa_PhMin` | 1e-20 | If a solution phase other than the aqueous one falls below this amount (moles), it is removed with all its species. | Systems with many solid solutions or melts present in trace amounts. | Any small positive amount. |
