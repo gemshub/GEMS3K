@@ -2099,7 +2099,8 @@ void TMultiBase::EnergyDeterminacyCheck()
 }
 
 // A solid phase at a trace amount barely moves, because each step is scaled by the amount itself.
-// If it still tends to grow at the end, the answer may stop short of equilibrium: say so.
+// If it still tends to grow at the end, the answer may stop short of equilibrium: say so. A single solid
+// left out while it would form (stability index below the insertion threshold) is treated the same way.
 void TMultiBase::TraceGrowthCheck()
 {
     const long int N = pm.N, L = pm.L;
@@ -2116,13 +2117,15 @@ void TMultiBase::TraceGrowthCheck()
     {
         const char ph = pm.PHC[k];
         if( ph == PH_AQUEL || ph == PH_GASMIX || ph == PH_FLUID || ph == PH_PLASMA ) continue;
-        if( !( pm.XF[k] > pm.DSM ) || !( pm.XF[k] < traceAmount ) ) continue;
+        const bool absentSolid = pm.L1[k] == 1 && !( pm.XF[k] > pm.DSM ) && jb < L
+                                 && !( pm.DUL && pm.DUL[jb] <= 0. );   // not held out by the input
+        if( !absentSolid && ( !( pm.XF[k] > pm.DSM ) || !( pm.XF[k] < traceAmount ) ) ) continue;
         double pull = 0., gain = 0.;
         for( long int j = jb; j < jb + pm.L1[k] && j < L; j++ )
         {
-            if( !( pm.X[j] > 0. ) ) continue;
+            if( !absentSolid && !( pm.X[j] > 0. ) ) continue;
             if( pm.DUL && pm.DUL[j] < 1e6 && pm.X[j] >= pm.DUL[j] * ( 1. - 1e-9 ) ) continue;  // held at its upper limit
-            double s = pm.F[j];
+            double s = absentSolid ? pm.G0[j] + ( pm.fDQF ? pm.fDQF[j] : 0. ) : pm.F[j];
             for( long int i = 0; i < N; i++ ) s -= pm.U[i] * pm.A[i + j*N];
             if( !( -s > tol ) ) continue;         // the species tends to grow
             double room = 1e300;                  // most it could grow: limited by its scarcest element
@@ -2144,7 +2147,7 @@ void TMultiBase::TraceGrowthCheck()
     }
     if( nFound == 0 ) return;
     trace_growth_stuck = true;
-    trace_growth_note = fmt::format( "{} is present only in a trace amount but still tends to grow, so the result may stop short of "
+    trace_growth_note = fmt::format( "{} is absent or only in a trace amount but still tends to form, so the result may stop short of "
                        "equilibrium{}. Try HOP or AOP for this system.",
                        trace_safe_name( char_array_to_string( pm.SF[kWorst] + MAXSYMB, MAXPHNAME ) ),
                        nFound > 1 ? fmt::format( " ({} such phases: {})", nFound, listed ) : std::string() );
