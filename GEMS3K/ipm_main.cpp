@@ -177,7 +177,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -207,7 +207,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaFastFirst, (long)pa->OptimaFloorCurvature, (long)pa->OptimaEmptySolvent, (long)pa->OptimaTpdVeto, (long)pa->OptimaEmptyPreSolveSkip, (long)pa->OptimaTwinReadmit, (long)pa->OptimaDryRetry, (long)pa->OptimaCallCap, (long)pa->OptimaCapNudges, (long)pa->OptimaFinishFirst, (long)pa->OptimaFastFrozen, pa->OptimaFastDiverge, (long)pa->OptimaRedoxFree, (long)pa->OptimaFastRises,
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
-             (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving );
+             (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a

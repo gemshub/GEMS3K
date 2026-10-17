@@ -594,6 +594,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// row on its way to zero (its target well below its floor) is put on its floor, so it stops creeping down
     /// a little each step. 0 = off, default 2.
     long int OptimaSnapLeaving = 2;
+    /// pa_OptimaPartialPivLU: Optima's linear solve uses the faster partial-pivot LU for a matrix of at least this
+    /// size, and redoes a step with today's full-pivot LU only when an equation would be dropped. 0 = off, default 100.
+    long int OptimaPartialPivLU = 100;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2109,7 +2112,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaFinishFirst, f_pa_OptimaFastFrozen, f_pa_OptimaFastDiverge, f_pa_OptimaRedoxFree, f_pa_OptimaFastRises,
     f_pa_OptimaPreSolveSeed, f_pa_OptimaColdLevel, f_pa_OptimaLevelStart, f_pa_OptimaFastCollapse, f_pa_OptimaFrozenCut,
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
-    f_pa_OptimaSnapLeaving
+    f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU
 
 } MULTI_DYNAMIC_FIELDS;
 

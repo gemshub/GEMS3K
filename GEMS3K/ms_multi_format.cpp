@@ -232,6 +232,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaTailDryOnly", 0 , 0, 0, "# pa_OptimaTailDryOnly: Optima solver: the tail stop acts only after the water phase was taken out; 0 = always, 1 = only then { 1 }" },
     { "pa_OptimaWaterKeep", 0 , 0, 0, "# pa_OptimaWaterKeep: Optima solver: 1 = keep a converged answer when the water retry fails; 2 = also skip that retry after a checked dry answer; 0 = off { 2 }" },
     { "pa_OptimaSnapLeaving", 0 , 0, 0, "# pa_OptimaSnapLeaving: Optima solver, warm calls: put a species on its floor after it has limited the step this many times in a row on its way to zero; 0 = off { 2 }" },
+    { "pa_OptimaPartialPivLU", 0 , 0, 0, "# pa_OptimaPartialPivLU: Optima solver: use the faster partial-pivot LU for a linear system of at least this size, falling back to full pivoting when an equation would be dropped; 0 = off { 100 }" },
 };
 
 
@@ -250,7 +251,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 147, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 148, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -552,6 +553,8 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_OptimaWaterKeep, pa_p->OptimaWaterKeep, _comment, false  );
     if(!brief_mode || pa_p->OptimaSnapLeaving != pa_p_.OptimaSnapLeaving )
         prar.writeField(f_pa_OptimaSnapLeaving, pa_p->OptimaSnapLeaving, _comment, false  );
+    if(!brief_mode || pa_p->OptimaPartialPivLU != pa_p_.OptimaPartialPivLU )
+        prar.writeField(f_pa_OptimaPartialPivLU, pa_p->OptimaPartialPivLU, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -957,7 +960,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 147, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 148, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1508,6 +1511,8 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_OptimaWaterKeep: rddar.readArray("pa_OptimaWaterKeep" , &pa_p->OptimaWaterKeep, 1);
             break;
         case f_pa_OptimaSnapLeaving: rddar.readArray("pa_OptimaSnapLeaving" , &pa_p->OptimaSnapLeaving, 1);
+            break;
+        case f_pa_OptimaPartialPivLU: rddar.readArray("pa_OptimaPartialPivLU" , &pa_p->OptimaPartialPivLU, 1);
             break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;

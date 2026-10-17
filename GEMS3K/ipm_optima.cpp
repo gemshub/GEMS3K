@@ -178,6 +178,16 @@ static void optima_trace_write_matrix( const char* tag, const M& m, long n )
             f << m(r,c) << ( c + 1 < n ? "," : "\n" );
 }
 
+// pa_OptimaPartialPivLU: the smallest linear system Optima factorises with partial pivoting (0 = never).
+static void apply_optima_lu( Optima::Options& o, long int minSize )
+{
+#ifdef OPTIMA_LU_PARTIAL_PIVOT   // needs an Optima build with this option
+    o.newtonstep.linearsolver.lu_partial_min_size = minSize > 0 ? minSize : 0;
+#else
+    (void)o; (void)minSize;
+#endif
+}
+
 // pa_OptimaSnapLeaving: how many limited steps in a row before a species heading to zero is put on its floor.
 static void apply_optima_snap( Optima::Options& o, long int snapAfter )
 {
@@ -2002,6 +2012,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     options.convergence.tolerance = pa_p->OptimaTol;
     apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
+    apply_optima_lu( options, pa_p->OptimaPartialPivLU );
 
         // ---- Stall / wall-clock guard for the pre-solve ----
         // A pass that has stopped improving is discarded early instead of running to its full
@@ -2630,6 +2641,15 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         TMultiBase* m;
         ~FloorRecordGuard() { m->PhaseHessianEnd(); }
     } floorRecordGuard{ this };
+
+#ifdef OPTIMA_LU_PARTIAL_PIVOT
+    // pa_OptimaPartialPivLU: how many linear solves of this call used partial pivoting, and how many of them fell back.
+    struct LuRecord {
+        long p0 = Optima::trace::state().lupartial, f0 = Optima::trace::state().lufallbacks;
+        ~LuRecord() { const long p = Optima::trace::state().lupartial - p0, f = Optima::trace::state().lufallbacks - f0;
+                      if( p > 0 ) native_trace_decide( "lupartial n=%ld fallback=%ld", p, f ); }
+    } luRecord;
+#endif
 
 #ifdef OPTIMA_BACKTRACK_SNAP_LEAVING
     // pa_OptimaSnapLeaving: how many species this call put on their floor, for the trace.
@@ -3717,6 +3737,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             options.convergence.tolerance = pa_p->OptimaTol;
             apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
+            apply_optima_lu( options, pa_p->OptimaPartialPivLU );
             // Plain warm calls only: on a cold start, or on a leg that starts from native's answer, a species
             // far from its answer can limit the step many times on its way to a value that is not zero.
             if( !referenceMode && pm.pNP != 0 && !optima_hop_leg )
