@@ -4365,7 +4365,10 @@ long int TMultiBase::SolveIpmAugmented( long int N )
     const long int mode = base_param()->IpmAugmentedKKT;
     const double kRescueRel = 1e-12;
 
-    std::vector<long int> act;
+    // Working arrays reused between calls (one set per thread); this runs on every IPM iteration.
+    thread_local std::vector<long int> act;
+    thread_local std::vector<double> dreg, Q, b, Rd, v;
+    act.clear();
     for( long int jj = 0; jj < pm.L; jj++ )
         if( pm.Y[jj] > min( pm.lowPosNum, pm.DcMinM ) )
             act.push_back( jj );
@@ -4374,13 +4377,14 @@ long int TMultiBase::SolveIpmAugmented( long int N )
     // D is zero on every row some active species carries, and 1e-12 * max_i d_i on a row none
     // does (d_i = sum_j W_j a_ji^2, the normal matrix's own diagonal). A uniform D would move
     // the weak directions of u in this badly conditioned system.
-    std::vector<double> dreg( (size_t)N, 0. );
+    dreg.assign( (size_t)N, 0. );
     for( long int r = 0; r < La; r++ )
     {
         const long int j = act[(size_t)r];
+        const double* Aj = pm.A + j*Na;
         for( long int i = 0; i < N; i++ )
-        {   const double v = a(j,i);
-            dreg[(size_t)i] += pm.W[j] * v * v; }
+        {   const double aji = Aj[i];
+            dreg[(size_t)i] += pm.W[j] * aji * aji; }
     }
     double dmax = 0.;
     for( long int i = 0; i < N; i++ )
@@ -4442,22 +4446,34 @@ long int TMultiBase::SolveIpmAugmented( long int N )
     // mode 2: least squares  min |W^1/2 (A u - F)|^2 + u^T D u  by Householder QR of the
     // (La+N) x N stack [W^1/2 A_act ; D^1/2], right-hand side [W^1/2 F ; 0]. Column-major.
     const long int M = La + N;
-    std::vector<double> Q( (size_t)M * (size_t)N, 0. ), b( (size_t)M, 0. );
+    // The top La rows of Q and b are overwritten in full below; only the bottom N rows need clearing.
+    Q.resize( (size_t)M * (size_t)N );
+    b.resize( (size_t)M );
+    Rd.resize( (size_t)N );
+    v.resize( (size_t)M );
+    double* const Qd = Q.data();
+    double* const bd = b.data();
+    double* const vd = v.data();
     for( long int r = 0; r < La; r++ )
     {
         const long int j = act[(size_t)r];
+        const double* Aj = pm.A + j*Na;
         const double sw = sqrt( std::max( pm.W[j], 0. ) );
         for( long int c = 0; c < N; c++ )
-            Q[(size_t)c * M + r] = sw * a(j,c);
-        b[(size_t)r] = sw * pm.F[j];
+            Qd[(size_t)c * M + r] = sw * Aj[c];
+        bd[r] = sw * pm.F[j];
     }
     for( long int i = 0; i < N; i++ )
-        Q[(size_t)i * M + La + i] = sqrt( dreg[(size_t)i] );
+    {
+        double* qi = Qd + (size_t)i * M + La;
+        std::fill( qi, qi + N, 0. );
+        qi[i] = sqrt( dreg[(size_t)i] );
+        bd[La + i] = 0.;
+    }
 
-    std::vector<double> Rd( (size_t)N, 0. ), v( (size_t)M, 0. );
     for( long int k = 0; k < N; k++ )
     {
-        double* qk = &Q[(size_t)k * M];
+        double* qk = Qd + (size_t)k * M;
         double nrm = 0.;
         for( long int r = k; r < M; r++ ) nrm += qk[r] * qk[r];
         nrm = sqrt( nrm );
@@ -4468,23 +4484,23 @@ long int TMultiBase::SolveIpmAugmented( long int N )
         }
         const double alpha = ( qk[k] > 0. ) ? -nrm : nrm;
         double vn2 = 0.;
-        for( long int r = k; r < M; r++ ) { v[(size_t)r] = qk[r]; }
-        v[(size_t)k] -= alpha;
-        for( long int r = k; r < M; r++ ) vn2 += v[(size_t)r] * v[(size_t)r];
+        for( long int r = k; r < M; r++ ) { vd[r] = qk[r]; }
+        vd[k] -= alpha;
+        for( long int r = k; r < M; r++ ) vn2 += vd[r] * vd[r];
         if( vn2 > 0. )
         {
             for( long int c = k; c < N; c++ )
             {
-                double* qc = &Q[(size_t)c * M];
+                double* qc = Qd + (size_t)c * M;
                 double s = 0.;
-                for( long int r = k; r < M; r++ ) s += v[(size_t)r] * qc[r];
+                for( long int r = k; r < M; r++ ) s += vd[r] * qc[r];
                 s *= 2. / vn2;
-                for( long int r = k; r < M; r++ ) qc[r] -= s * v[(size_t)r];
+                for( long int r = k; r < M; r++ ) qc[r] -= s * vd[r];
             }
             double s = 0.;
-            for( long int r = k; r < M; r++ ) s += v[(size_t)r] * b[(size_t)r];
+            for( long int r = k; r < M; r++ ) s += vd[r] * bd[r];
             s *= 2. / vn2;
-            for( long int r = k; r < M; r++ ) b[(size_t)r] -= s * v[(size_t)r];
+            for( long int r = k; r < M; r++ ) bd[r] -= s * vd[r];
         }
         Rd[(size_t)k] = qk[k];
     }
@@ -4500,7 +4516,7 @@ long int TMultiBase::SolveIpmAugmented( long int N )
     {
         double s = b[(size_t)k];
         for( long int c = k + 1; c < N; c++ )
-            s -= Q[(size_t)c * M + k] * pm.U[c];
+            s -= Qd[(size_t)c * M + k] * pm.U[c];
         pm.U[k] = s / Rd[(size_t)k];
     }
     return 0;
