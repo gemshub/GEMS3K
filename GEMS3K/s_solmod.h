@@ -1192,6 +1192,8 @@ class TBerman: public TSolMod
 
                 double *Grc;  ///< standard molar reciprocal energies (constant)
                 double *oGf;   ///< molar Gibbs energies of end-member compounds
+                std::vector<long int> emCount;   ///< em_howmany() for every site and moiety, filled on first use
+                std::vector<double> refSumM;     ///< per-site moiety sum of RefFrameTerm(), the same for every end member; set in ReciprocalPart()
                 double *G0f;   ///< standard molar Gibbs energies of end members (constant)
             double *DGrc; ///< molar effects of reciprocal reactions [NrecR]
             double *pyp;  ///< Products of site fractions for end members (CEF mod.) [NComp]
