@@ -5469,7 +5469,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             native_trace_decide( "stallnet skipped=escretry" );
         if( !skipFullBudgetResolves && !netLeftToRetry && !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
         {
-            ipm_logger->warn( "Optima: all retries failed after a stall. Solving once more with the "
+            ipm_logger->info( "Optima: all retries failed after a stall. Solving once more with the "
                                "stall guard off (pa_OptimaStallWindow, in the project's -ipm file)." );
             const long int savedWindow = stallWatch->window;
             stallWatch->window = 0;      // the check lambda reads this on every call
@@ -6506,7 +6506,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
         // one wasted attempt.
         if( wantWarmNative )
         {
-            ipm_logger->warn( "HOP: warm native leg failed ({}: {}); retrying it cold", werr.title, werr.mess );
+            ipm_logger->info( "HOP: warm native leg failed ({}: {}); retrying it cold", werr.title, werr.mess );
             wantWarmNative = false;
             fiaN = ipmN = 0;
             try
@@ -6520,7 +6520,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             catch( TError& nerr2 )
             {
                 nativeOk = false;
-                ipm_logger->warn( "HOP: native leg failed cold too ({}: {}); solving cold with Optima",
+                ipm_logger->info( "HOP: native leg failed cold too ({}: {}); solving cold with Optima",
                                    nerr2.title, nerr2.mess );
                 fiaN = ipmN = 0;
                 calcTime = 0.;
@@ -6531,7 +6531,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             // No assemblage to hand over: degrade to a plain cold Optima solve (an AOP
             // result under a HOP status) and say so.
             nativeOk = false;
-            ipm_logger->warn( "HOP: native leg failed ({}: {}); solving cold with Optima", werr.title, werr.mess );
+            ipm_logger->info( "HOP: native leg failed ({}: {}); solving cold with Optima", werr.title, werr.mess );
             fiaN = ipmN = 0;
             calcTime = 0.;
         }
