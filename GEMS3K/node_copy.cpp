@@ -201,6 +201,29 @@ void TNode::init_into_gems3k()
     //InitReadActivities( mult_in.c_str(),CSD ); // from DCH file in future?
     multi_ptr()->InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
     this->InitCopyActivities( CSD, pmm, CNode );
+    WarnSolidsCodedAqueous();
+}
+
+// A single-species phase outside the aqueous phase whose species is coded as a dissolved species gets the
+// energy terms of a solute, which gives wrong answers: warn once per such phase when the system is loaded.
+void TNode::WarnSolidsCodedAqueous()
+{
+    if( !pmm || !pmm->DCC || !pmm->PHC || !pmm->L1 )
+        return;
+    for( long int k = 0, j = 0; k < pmm->FI; j += pmm->L1[k], k++ )
+    {
+        if( pmm->L1[k] != 1 || pmm->PHC[k] == PH_AQUEL || j >= pmm->L )
+            continue;
+        const char c = pmm->DCC[j];
+        if( c != DC_AQ_SPECIES && c != DC_AQ_PROTON && c != DC_AQ_ELECTRON && c != DC_AQ_SURCOMP
+            && c != DC_AQ_SOLVENT && c != DC_AQ_SOLVCOM )
+            continue;
+        auto trim = []( std::string s ) { s.erase( s.find_last_not_of( ' ' ) + 1 ); return s; };
+        node_logger->warn( "Phase {} has one species, {}, coded '{}' as a dissolved species, so its energy is taken as "
+                           "that of a solute and the results will be wrong. Try: code it 'O' (single-component phase).",
+                           trim( char_array_to_string( pmm->SF[k] + MAXSYMB, MAXPHNAME ) ),
+                           trim( char_array_to_string( pmm->SM[j], MAXDCNAME ) ), c );
+    }
 }
 
 //  Parameters:

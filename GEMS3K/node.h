@@ -1463,6 +1463,8 @@ protected:
     /// Test to reload thermodynamic data from grid
     void CheckMtparam();
     virtual void init_into_gems3k();
+    /// Warns about single-species phases whose species is coded as a dissolved species.
+    void WarnSolidsCodedAqueous();
 
 public:
 
