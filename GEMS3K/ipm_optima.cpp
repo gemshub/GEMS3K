@@ -1724,7 +1724,7 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
                                                    const char* exemptSpecies,
                                                    double& violOut, bool& wasAbsentOut,
                                                    std::vector<PhStabViolation>* rankedOut,
-                                                   PhStabCensus* censusOut )
+                                                   PhStabCensus* censusOut, const char* probeStage )
 {
     const BASE_PARAM *pa_p = base_param();
     const long int L = pm.L;
@@ -1857,11 +1857,13 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
             const char* fn = std::getenv( "GEMS3K_PHSTAB_PROBE" );
             return fn ? fopen( fn, "a" ) : nullptr; }();
         if( dbg )
+            // stage: which step asked; try: whether the quick first try of a cold call is running
             fprintf( dbg, "CENSUS phases=%ld exempt=%ld scanned=%ld clamped=%ld "
-                          "absent-but-stable=%ld present-but-unstable=%ld worst=%ld\n",
+                          "absent-but-stable=%ld present-but-unstable=%ld worst=%ld stage=%s try=%s\n",
                      (long)census.phases, (long)census.exempt, (long)census.scanned,
                      (long)census.clamped, (long)census.absentStable,
-                     (long)census.presentUnstable, (long)worstStabilityPhase );
+                     (long)census.presentUnstable, (long)worstStabilityPhase,
+                     probeStage ? probeStage : "check", g_optimaFixAccept ? "quick" : "full" );
     }
     if( rankedOut != nullptr ) rankedOut->swap( ranked );
     if( censusOut != nullptr ) *censusOut = census;
@@ -4454,7 +4456,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 PhStabCensus preCensus;
                 const long int preWorst = WorstPhaseStabilityViolation(
                             presenceThreshold, dcFloor, nullptr,
-                            preViol, preAbsent, &preRanked, &preCensus );
+                            preViol, preAbsent, &preRanked, &preCensus, "presolve" );
                 fprintf( preDbg,
                          "PRESOLVE pNP=%ld warm=%d capN=%ld trendN=%ld "
                          "worst=%ld viol=%.6e absent=%d "
@@ -4614,7 +4616,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             CalculateConcentrations( pm.X, pm.XF, pm.XFA );
             double tViol = 0.; bool tAbsent = false;
             const long int tWorst = WorstPhaseStabilityViolation( presenceThreshold, dcFloor,
-                        extinctFixed.empty() ? nullptr : extinctFixed.data(), tViol, tAbsent, nullptr );
+                        extinctFixed.empty() ? nullptr : extinctFixed.data(), tViol, tAbsent, nullptr, nullptr, "accept" );
             // Every absent mixed solid must also pass the composition search: a near-degenerate swap
             // (a solid solution replaced by a pure phase of almost the same energy) passes the check above.
             double tTpd = 1e300; long int tTpdPh = -1, tNtpd = 0;
@@ -4686,7 +4688,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             for( long int j = j0; j < j1; j++ ) exempt[(size_t)j] = 0;
             double dViol = 0.; bool dAbsent = false;
             std::vector<PhStabViolation> dRanked;
-            WorstPhaseStabilityViolation( presenceThreshold, dcFloor, exempt.data(), dViol, dAbsent, &dRanked );
+            WorstPhaseStabilityViolation( presenceThreshold, dcFloor, exempt.data(), dViol, dAbsent, &dRanked, nullptr, "dryout" );
             double aqViol = 0.; bool aqPhaseWants = false;
             for( const auto& v : dRanked )
                 if( v.k == kAq && v.wasAbsent && !v.clamped ) { aqPhaseWants = true; aqViol = v.viol; }
@@ -5190,7 +5192,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     WorstPhaseStabilityViolation(
                                 presenceThreshold, dcFloor,
                                 extinctFixed.empty() ? nullptr : extinctFixed.data(),
-                                psViol, psAbsent, &psRanked, &psCensus );
+                                psViol, psAbsent, &psRanked, &psCensus, "phasesel" );
                     if( psRanked.empty() )
                         break;                       // assemblage is self-consistent
 
@@ -5458,7 +5460,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 CalculateActivityCoefficients( LINK_UX_MODE );
                 CalculateConcentrations( pm.X, pm.XF, pm.XFA );
                 ffWorst = WorstPhaseStabilityViolation( presenceThreshold, dcFloor,
-                            extinctFixed.empty() ? nullptr : extinctFixed.data(), ffViol, ffAbsent, nullptr );
+                            extinctFixed.empty() ? nullptr : extinctFixed.data(), ffViol, ffAbsent, nullptr, nullptr, "finishfirst" );
             }
             native_trace_decide( "finishfirst ok=%d stable=%d worst=%ld viol=%.3e absent=%d",
                                  ok ? 1 : 0, ffWorst < 0 ? 1 : 0, ffWorst, ffViol, ffAbsent ? 1 : 0 );
@@ -5946,7 +5948,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         long int worstStabilityPhase = WorstPhaseStabilityViolation(
                     presenceThreshold, dcFloor,
                     extinctFixed.empty() ? nullptr : extinctFixed.data(),
-                    worstStabilityViol, worstStabilityWasAbsent, &stabRanked );
+                    worstStabilityViol, worstStabilityWasAbsent, &stabRanked, nullptr, "final" );
         bool stabilityOk = ( worstStabilityPhase < 0 );
 
         // Commit each active condition's titrant into pm.B[], so that the mass-balance check

@@ -1605,7 +1605,8 @@ public:
                                            const char* exemptSpecies,
                                            double& violOut, bool& wasAbsentOut,
                                            std::vector<PhStabViolation>* rankedOut = nullptr,
-                                           PhStabCensus* censusOut = nullptr );
+                                           PhStabCensus* censusOut = nullptr,
+                                           const char* probeStage = "check" );
 
     /// Species-level dimension-reduction pre-solve (pa_OptimaDimReduce). Solves the
     /// equilibrium over a reduced set of species, growing the set by pricing the omitted
