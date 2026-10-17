@@ -83,6 +83,7 @@ static thread_local bool g_lvlShortcut = false;
 // The leveled answer holds mixed phases: start from it, but solve it the ordinary way.
 static thread_local bool g_lvlCgStart = false;
 extern thread_local bool g_tpdStrongSearch;   // defined in ipm_main.cpp
+extern thread_local bool g_aqueousAbsent;     // defined in ipm_chemical2.cpp; set when the aqueous phase has no water
 extern thread_local long int g_lvlFullCalls;  // defined in node.cpp
 extern thread_local bool g_optimaFixAccept;       // defined in node.cpp
 // Set by the caller when PotentialSpaceFinish() starts from a call Optima reported OK. From
@@ -6335,6 +6336,20 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
         }
 
+        // An answer whose water phase is reported must look like water: a pH far off the water scale or an
+        // absurd ionic strength means the solve stopped on a wrong state, so it is not accepted.
+        if( result.succeeded && pm.LO >= 0 && HasAqueousPhase() )
+        {
+            CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+            const bool insane = !g_aqueousAbsent && ( pm.pH < -2. || pm.pH > 16. || pm.IC > 100. );
+            if( insane )
+            {
+                result.succeeded = false;
+                native_trace_decide( "aqsanity pH=%.3f IS=%.3e", pm.pH, pm.IC );
+                ipm_logger->info( "Optima: the answer was refused: its water phase has pH {:.2f} and ionic strength {:.3g}",
+                                  pm.pH, pm.IC );
+            }
+        }
         if( !result.succeeded && pa_p->DW )
         {
             // pa_DW gates the same decision for native's "MBR iterations exceeded" case.
