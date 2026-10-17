@@ -5722,13 +5722,18 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         long int worstKKTSpecies = -1;
         std::vector<double> gradSaved( (size_t)L, 0. );   // for pa_OptimaZeroAbsent below
         const double kktTol = std::max( pa_p->GAS, 1e-300 );
+        long int nBarrierPassed = 0;   // species the barrier term alone would have failed
         for( long int j = 0; j < L; j++ )
         {
             // The gradient Optima minimised includes, for pure-phase species, the
             // log-barrier term -tau/X[j]; stationarity is checked for that objective.
             double gradJ = pm.F[j];
-            if( j >= pm.Ls )
-                gradJ -= kLogBarrierTau / std::max( pm.X[j], dcFloor );
+            // A pure-phase species whose barrier term exceeds the tolerance is held there by the barrier:
+            // it is judged as sitting on its floor, on its gradient without that term (a tie then passes).
+            const double barrier = ( j >= pm.Ls ) ? kLogBarrierTau / std::max( pm.X[j], dcFloor ) : 0.;
+            const bool barrierHeld = barrier > kktTol;
+            if( !barrierHeld )
+                gradJ -= barrier;
             for( long int i = 0; i < N; i++ )
                 gradJ -= pm.U[i] * pm.A[ i + j*N ];
             gradSaved[(size_t)j] = gradJ;
@@ -5737,6 +5742,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // constraint: its multiplier is unrestricted in sign, so no one-sided test applies.
             if( problem.xupper[j] <= problem.xlower[j] + std::max( dcFloor, problem.xlower[j]*1e-6 ) )
                 resid = 0.;                        // fixed (degenerate box): no sign test applies
+            else if( barrierHeld )
+            {
+                resid = std::max( -gradJ, 0. );   // held at its floor by the barrier: gradJ should be >= 0
+                if( resid <= kktTol && std::max( barrier - gradJ, 0. ) > kktTol ) nBarrierPassed++;
+            }
             else if( pm.X[j] <= problem.xlower[j] + std::max( dcFloor, problem.xlower[j]*1e-6 ) )
                 resid = std::max( -gradJ, 0. );   // at lower bound: gradJ should be >= 0
             else if( pm.X[j] >= problem.xupper[j] * ( 1. - 1e-6 ) )
@@ -5749,6 +5759,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 worstKKTSpecies = j;
             }
         }
+        if( nBarrierPassed > 0 )
+            native_trace_decide( "kktbarrier passed=%ld tau=%.1e tol=%.1e", (long)nBarrierPassed, kLogBarrierTau, kktTol );
         // pa_OptimaTailStop: after a tail-stop answer, a species holding under 1e-9 of the total amount is not
         // held to the stationarity test, as the stop itself did not; recorded with the largest skipped residual.
         if( tailAccepted && maxKKTResidual > kktTol )
