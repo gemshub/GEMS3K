@@ -144,17 +144,17 @@ static void memoize_objective_if_linesearch( Optima::Problem& problem, double fa
     };
 }
 
-// The debug-trace setting GEMS3K_OPTIMA_TRACE_<name>, or its old name REAKTORO_TRACE_<name>; null when unset.
+// The debug-trace setting GEMS3K_OPTIMA_STEPTRACE_<name>, or its old name REAKTORO_TRACE_<name>; null when unset.
 static const char* optima_trace_env( const char* name )
 {
-    if( const char* e = std::getenv( ( std::string( "GEMS3K_OPTIMA_TRACE_" ) + name ).c_str() ) )
+    if( const char* e = std::getenv( ( std::string( "GEMS3K_OPTIMA_STEPTRACE_" ) + name ).c_str() ) )
         return e;
     return std::getenv( ( std::string( "REAKTORO_TRACE_" ) + name ).c_str() );
 }
 
-// Debug trace, off unless GEMS3K_OPTIMA_TRACE_FILE is set. True when the Hessian matrices are to be
-// written for the current Optima iteration (GEMS3K_OPTIMA_TRACE_HESSIAN=<iteration>,
-// GEMS3K_OPTIMA_TRACE_HESSIAN_SOLVE=<solve>, default 1).
+// Debug trace, off unless GEMS3K_OPTIMA_STEPTRACE_FILE is set. True when the Hessian matrices are to be
+// written for the current Optima iteration (GEMS3K_OPTIMA_STEPTRACE_HESSIAN=<iteration>,
+// GEMS3K_OPTIMA_STEPTRACE_HESSIAN_SOLVE=<solve>, default 1).
 static bool optima_trace_hessian_dump_now()
 {
     static const long it = []{ const char* e = optima_trace_env( "HESSIAN" ); return e ? std::atol(e) : -1L; }();
@@ -4268,7 +4268,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // nets). Saved before the first solve modifies `state`.
         const Optima::State initialState = state;
 
-        // Debug trace (GEMS3K_OPTIMA_TRACE_FILE, off unless set): the per-solve setup records.
+        // Debug trace (GEMS3K_OPTIMA_STEPTRACE_FILE, off unless set): the per-solve setup records.
         long int traceFirstIt = 0, traceFupFirst = 0, traceFxFirst = 0;
         bool traceFirstOk = false;
         std::vector<double> traceX0;
