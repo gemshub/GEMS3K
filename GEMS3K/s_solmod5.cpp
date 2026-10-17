@@ -1450,6 +1450,31 @@ void TPitzer::calcSizes()
 void TPitzer::Ecalc( double z, double z1, double I1, double DH_term,
         double& Etheta, double& Ethetap)
 {
+    // The result depends only on the four inputs, and a call repeats the same few charge pairs many times:
+    // keep the results for the current ionic strength and Debye-Hueckel term.
+    struct EcalcMemo { double z, z1, Et, Etp; };
+    thread_local std::vector<EcalcMemo> memo;
+    thread_local double memoI = -1., memoDH = 0.;
+    if( I1 != memoI || DH_term != memoDH )
+    {
+        memo.clear();
+        memoI = I1;
+        memoDH = DH_term;
+    }
+    for( const auto& e : memo )
+        if( e.z == z && e.z1 == z1 )
+        {
+            Etheta = e.Et;
+            Ethetap = e.Etp;
+            return;
+        }
+    EcalcRaw( z, z1, I1, DH_term, Etheta, Ethetap );
+    memo.push_back( { z, z1, Etheta, Ethetap } );
+}
+
+void TPitzer::EcalcRaw( double z, double z1, double I1, double DH_term,
+        double& Etheta, double& Ethetap)
+{
     long int k, m;
     double xMN, xMM, xNN,  x1;
     double zet=0., dzdx=0.;

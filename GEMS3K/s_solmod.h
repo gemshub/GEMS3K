@@ -1526,6 +1526,8 @@ private:
     /// Calculation of Etheta and Ethetap values
 	void Ecalc( double z, double z1, double I, double DH_term,
 					double& Etheta, double& Ethetap );
+	void EcalcRaw( double z, double z1, double I, double DH_term,
+					double& Etheta, double& Ethetap );
 
 	inline long int getN() const
 	{
