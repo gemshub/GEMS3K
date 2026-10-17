@@ -100,6 +100,7 @@ extern thread_local bool g_optimaLineSearchRetry;   // defined in node.cpp (need
 // Set by TNode::GEM_run() for the re-run of a failed Optima call with pa_OptimaLSStallEscape
 // switched off (DECIDE escretry).
 extern thread_local bool g_optimaLSEscapeOff;   // defined in node.cpp (needed without USE_OPTIMA_SOLVER)
+extern thread_local bool g_optimaEscRetryNext;   // defined in node.cpp
 // Objective memo for the line search. Optima's line-search trigger evaluates the objective at
 // the new point, and the solver then evaluates it again at the same point. GEMS3K's objective
 // is not a pure function: CalculateActivityCoefficients(LINK_UX_MODE) accumulates lnGmo and
@@ -5462,7 +5463,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const bool skipFullBudgetResolves = warmFailFast && pm.pNP == 1;
         if( skipFullBudgetResolves && !result.succeeded )
             native_trace_decide( "warmfailfast stalled=%d", stallWatch->stalled ? 1 : 0 );
-        if( !skipFullBudgetResolves && !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
+        // When the call will be re-run with the stall escape off (escretry), that attempt carries the net instead.
+        const bool netLeftToRetry = g_optimaEscRetryNext && !g_optimaLSEscapeOff;
+        if( netLeftToRetry && !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
+            native_trace_decide( "stallnet skipped=escretry" );
+        if( !skipFullBudgetResolves && !netLeftToRetry && !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
         {
             ipm_logger->warn( "Optima: all retries failed after a stall. Solving once more with the "
                                "stall guard off (pa_OptimaStallWindow, in the project's -ipm file)." );

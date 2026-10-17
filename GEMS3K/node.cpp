@@ -189,6 +189,7 @@ void TNode::Get_sMod(int ndx, std::string &sMod)
 // Defined here, not in ipm_optima.cpp, so a build without USE_OPTIMA_SOLVER still links.
 thread_local bool g_optimaLineSearchRetry = false;
 thread_local bool g_optimaLSEscapeOff = false;
+thread_local bool g_optimaEscRetryNext = false;   // a failed attempt is re-run with the stall escape off (escretry)
 thread_local bool g_optimaCgSeedArmed = false;
 thread_local bool g_optimaTargetWarned = false;   // the unusual-target warning is shown once per GEM_run()
 thread_local long int g_optimaIterBudget = -1;     // Optima iterations left for this call; -1 = no limit
@@ -471,7 +472,9 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         dbr_dch_api::databr_realloc( CSD, lsBefore );
         { DATABR* live = CNode; CNode = lsBefore; databr_copy( live ); CNode = live; }
     }
+    g_optimaEscRetryNext = escRetryArmed;   // the first attempt leaves its last-resort re-solve to that retry
     long int status = GEM_run_single( uPrimalSol );
+    g_optimaEscRetryNext = false;
     if( warmGoesCold && optimaReq && !lsRetryArmed && multi_ptr()->base_param()->OptimaLineSearch > 0.
         && status != OK_GEM_SOP && status != OK_GEM_SHP )
         native_trace_decide( "escretry skipped=warm requested=%ld first=%ld", (long)requested, (long)status );
