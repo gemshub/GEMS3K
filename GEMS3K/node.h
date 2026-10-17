@@ -1072,6 +1072,12 @@ public:
     double  Ph_Moles( const long int xBR ) const; // Added for consistency on Oct 1, 2020
     double  Ph_Mole( const long int xBR ) const; // obsolete, not recommended to use in new coupled codes
 
+    /// Tells whether a phase is really present: its amount is above relFloor times the total amount of all
+    /// phases. A phase left at the solver's tiny floor amount is reported as not present; amounts are not changed.
+    /// \param xBR is DBR phase index
+    /// \param relFloor is the share of the total amount below which a phase counts as absent (default 1e-9)
+    bool    Ph_Present( const long int xBR, const double relFloor = 1e-9 ) const;
+
     /// Retrieves the phase mass in kg.
     /// Works for multicomponent and for single-component phases.
     /// \param xph is DBR phase index

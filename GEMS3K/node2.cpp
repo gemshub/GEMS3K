@@ -817,6 +817,16 @@ double  TNode::Ph_Moles( const long int xBR ) const
     return mol;
 }
 
+// A phase is present when its amount is above relFloor times the total amount of all phases.
+bool  TNode::Ph_Present( const long int xBR, const double relFloor ) const
+{
+    double total = 0.;
+    for( long int k = 0; k < CSD->nPHb; k++ )
+        if( CNode->xPH[k] > 0. )
+            total += CNode->xPH[k];
+    return total > 0. && CNode->xPH[xBR] > relFloor * total;
+}
+
 //Obsolete: Retrieves the current phase amount in moles ( xph is DBR phase index) in the reactive sub-system.
 double  TNode::Ph_Mole( const long int xBR ) const
 {
