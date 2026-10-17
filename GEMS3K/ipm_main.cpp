@@ -1081,7 +1081,7 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
         c0[(size_t)(j-p0)] = au - ( pm.G0[j] + pm.fDQF[j] );
     }
     double tpdMin = 1e300;
-    auto evalY = [&]( const std::vector<double>& y, std::vector<double>& ynew ) {
+    auto evalY = [&]( const std::vector<double>& y, std::vector<double>& ynew ) -> double {
         restoreBase();
         for( long int j = p0; j < p1; j++ ) pm.X[j] = std::max( y[(size_t)(j-p0)], 1e-300 );
         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
@@ -1097,6 +1097,7 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
         for( long int a = 0; a < n; a++ )
             if( y[(size_t)a] > 0. ) tpd += y[(size_t)a] * ( log( y[(size_t)a] ) - lw[(size_t)a] );
         if( tpd < tpdMin ) { tpdMin = tpd; ybest = y; }
+        return tpd;
     };
     try
     {
@@ -1154,6 +1155,26 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
                 y = tmp;
                 if( d < 1e-11 ) break;
             }
+        if( n == 2 )
+        {
+            // A strongly non-ideal phase can have a narrow dip that lies between the starts and that the
+            // steps above do not reach: scan in 1 % steps, then narrow the best interval.
+            double xb = 0.5, tb = 1e300;
+            for( int g = 1; g < 100; g++ )
+            {
+                const double t = evalY( { g / 100., 1. - g / 100. }, tmp );
+                if( t < tb ) { tb = t; xb = g / 100.; }
+            }
+            double lo = std::max( xb - 0.01, 1e-9 ), hi = std::min( xb + 0.01, 1. - 1e-9 );
+            const double r = 0.5 * ( sqrt( 5. ) - 1. );
+            double x1 = hi - r * ( hi - lo ), x2 = lo + r * ( hi - lo );
+            double t1 = evalY( { x1, 1. - x1 }, tmp ), t2 = evalY( { x2, 1. - x2 }, tmp );
+            for( int it = 0; it < 30; it++ )
+            {
+                if( t1 < t2 ) { hi = x2; x2 = x1; t2 = t1; x1 = hi - r * ( hi - lo ); t1 = evalY( { x1, 1. - x1 }, tmp ); }
+                else          { lo = x1; x1 = x2; t1 = t2; x2 = lo + r * ( hi - lo ); t2 = evalY( { x2, 1. - x2 }, tmp ); }
+            }
+        }
     }
     catch( ... ) { tpdMin = 1e300; }
     try
