@@ -1403,6 +1403,8 @@ protected:
     long int GEM_run_single( bool uPrimalSol );
     /// pa_ColdRetryNudges' recovery of a failed NEED_GEM_AIA call; see BASE_PARAM::ColdRetryNudges.
     long int GEM_run_cold_retry( long int maxNudges );
+    /// Whether a saved answer's amounts balance the bulk b under the solve's own per-element test.
+    bool NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b, double& worstRel ) const;
     long int GEM_run_optima_cold_retry( long int requested );   // pa_OptimaColdRetry
     long int GEM_run_aop_cgseed( long int& itf, long int& itg, double& seconds );
     long int GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* rung );   // cold AOP retry, with the column-generation seed as the second attempt

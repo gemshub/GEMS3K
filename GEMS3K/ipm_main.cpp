@@ -2573,6 +2573,10 @@ FORCED_AIA:
    }
 
 
+   // Before the mass-balance repair below: it moves pm.X but not pm.F or pm.U.
+   if( !pm.MK && !pm.PZ )
+       TraceGrowthCheck();
+
    // ---- Mass-balance check of the answer this call returns: warn only. Native's cold path
    // does not check the state it returns (a cold call's second MBR is exempt from the strict
    // guard), so the fact is reported instead of changing the verdict. Not NDEBUG-gated.
@@ -2612,7 +2616,6 @@ FORCED_AIA:
    {
        EnergyDeterminacyCheck();
        StrandedElementCheck();
-       TraceGrowthCheck();
    }
 
    if( pm.MK || pm.PZ ) // no good solution

@@ -287,16 +287,27 @@ long int TNode::GEM_run( bool uPrimalSol )
                     g_optimaCapAllowance = cap / 2;
                     warm = GEM_run( uPrimalSol );
                     total += CNode->IterDone;
+                    bool keep = true;
                     if( warm != OK_GEM_SOP && warm != OK_GEM_AOP )
-                    {   // keep the nudged answer, reported at the exact composition
-                        databr_copy( nudgedOk );
-                        for( long int i = 0; i < nIC; i++ )
-                            CNode->bIC[i] = b0[(size_t)i];
-                        native_trace_decide( "capretry-keepnudged nudge=%+g", k );
+                    {   // keep the nudged answer, reported at the exact composition, if it balances that composition
+                        double worstRel = 0.;
+                        keep = NudgedAnswerBalances( nudgedOk, b0, worstRel );
+                        if( keep )
+                        {
+                            databr_copy( nudgedOk );
+                            for( long int i = 0; i < nIC; i++ )
+                                CNode->bIC[i] = b0[(size_t)i];
+                            native_trace_decide( "capretry-keepnudged nudge=%+g mb_rel=%.3e", k, worstRel );
+                        }
+                        else
+                            native_trace_decide( "capretry-keepnudged-refused nudge=%+g mb_rel=%.3e", k, worstRel );
                     }
-                    result = ( req == NEED_GEM_AOP ) ? OK_GEM_AOP : OK_GEM_SOP;
+                    if( keep )
+                    {
+                        result = ( req == NEED_GEM_AOP ) ? OK_GEM_AOP : OK_GEM_SOP;
+                        recovered = true;
+                    }
                     databr_free( nudgedOk );
-                    recovered = true;
                 }
                 native_trace_decide( "capretry attempt=%ld nudge=%+g aop=%ld sop=%ld it=%ld",
                                      (long)( n + 1 ), k, (long)cold, (long)warm, (long)total );
@@ -633,6 +644,34 @@ long int TNode::GEM_run_optima_cold_retry( long int requested )
     return CNode->NodeStatusCH;
 }
 
+// Whether the amounts of a saved answer balance the bulk composition b (one value per IC of the DATABR) under the
+// per-element test of the solve itself (relative to DHBM, or also absolute with pa_DT); the charge row is left out.
+// True when not every species or element is in the DATABR, as the balance cannot be computed here.
+bool TNode::NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b, double& worstRel ) const
+{
+    worstRel = 0.;
+    if( CSD->nDCb != CSD->nDC || CSD->nICb != CSD->nIC || (long int)b.size() < CSD->nICb )
+        return true;
+    const double dtExp = fabs( (double)multi_ptr()->base_param()->DT );
+    const double absCut = ( dtExp < 2. ) ? pmm->DHBM : pow( 10., -dtExp );
+    bool ok = true;
+    for( long int i = 0; i < CSD->nICb; i++ )
+    {
+        const long int ic = CSD->xic[i];
+        if( CSD->ccIC[ic] == IC_CHARGE )
+            continue;
+        double c = b[(size_t)i];
+        for( long int jj = 0; jj < CSD->nDCb; jj++ )
+            c -= CSD->A[ CSD->xdc[jj] * CSD->nIC + ic ] * d->xDC[jj];
+        const double a = fabs( c ), bar = b[(size_t)i] * pmm->DHBM;
+        const double r = bar > 0. ? a / bar : ( a > 0. ? 1e300 : 0. );
+        worstRel = std::max( worstRel, r );
+        if( !multi_ptr()->base_param()->DT ? ( r > 1. ) : ( r > 1. && a > absCut ) )
+            ok = false;
+    }
+    return ok;
+}
+
 // Recovery of a failed cold native call (pa_ColdRetryNudges): a converged solve one 1e-15 nudge
 // away is a warm start from which SIA reaches the equilibrium at the exact composition. Every
 // nudge is undone before the warm solve. If that warm solve fails, the nudged answer is returned
@@ -684,13 +723,23 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
                 result = BAD_GEM_AIA;
             else if( nudgedOk )
             {   // the nudged answer is off the exact composition by only |k|*1e-15 of each amount
-                databr_copy( nudgedOk );
-                for( long int i = 0; i < nIC; i++ )
-                    CNode->bIC[i] = b0[(size_t)i];
-                result = OK_GEM_AIA;
-                native_trace_decide( "coldretry-keepnudged nudge=%+g", nudgedK );
-                node_logger->info( "GEM_run(): the warm check at the exact composition failed; kept the answer "
-                                   "solved at a composition nudged by {:g}e-15 of each amount", nudgedK );
+                double worstRel = 0.;
+                if( NudgedAnswerBalances( nudgedOk, b0, worstRel ) )
+                {
+                    databr_copy( nudgedOk );
+                    for( long int i = 0; i < nIC; i++ )
+                        CNode->bIC[i] = b0[(size_t)i];
+                    result = OK_GEM_AIA;
+                    native_trace_decide( "coldretry-keepnudged nudge=%+g mb_rel=%.3e", nudgedK, worstRel );
+                    node_logger->info( "GEM_run(): the warm check at the exact composition failed; kept the answer "
+                                       "solved at a composition nudged by {:g}e-15 of each amount", nudgedK );
+                }
+                else
+                {
+                    native_trace_decide( "coldretry-keepnudged-refused nudge=%+g mb_rel=%.3e", nudgedK, worstRel );
+                    node_logger->info( "GEM_run(): the answer solved at a nudged composition does not balance the exact "
+                                       "composition, so it is not kept" );
+                }
             }
         }
         native_trace_decide( "coldretry attempt=%ld nudge=%+g aia=%ld sia=%ld itf=%ld itg=%ld",
