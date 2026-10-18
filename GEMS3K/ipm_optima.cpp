@@ -3067,8 +3067,13 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const long int kFDDelay = ( !referenceMode && pm.pNP == 0 && pa_p->OptimaFDHessianDelay > 0 )
                                   ? pa_p->OptimaFDHessianDelay : 0;
         const bool kMoleFracHessian = ( pa_p->OptimaMoleFracHessian != 0 );
+        // pa_OptimaFDPureSkip; not with electrostatic phases, which couple potentials across phases.
+        bool fdPureSkip = ( pa_p->OptimaFDPureSkip > 0 );
+        for( long int k = 0; k < pm.FI; k++ )
+            if( pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL ) fdPureSkip = false;
+        if( fdPureSkip ) native_trace_decide( "fdpureskip on=1" );
         const long int kFloorCurvature = pa_p->OptimaFloorCurvature;   // 0 off, 1 floor diagonal, 2 phase-sized step and full block, 3 = 1 + near-zero block
-        problem.f = [this, L, R, dcFloor, &fixedGrad, kLogBarrierTau, kPhaseHessianFloor, phTwin, kFDHessian, kMoleFracHessian, kFloorCurvature, fdSuppress, hasAq, phLast, phDec, phMax, nzSeen, phStart, twinCopies, traceLastF]
+        problem.f = [this, L, R, dcFloor, &fixedGrad, fdPureSkip, kLogBarrierTau, kPhaseHessianFloor, phTwin, kFDHessian, kMoleFracHessian, kFloorCurvature, fdSuppress, hasAq, phLast, phDec, phMax, nzSeen, phStart, twinCopies, traceLastF]
                     ( Optima::ObjectiveResultRef res, Optima::VectorView x,
                       Optima::VectorView /*p*/, Optima::VectorView /*c*/,
                       Optima::ObjectiveOptions opts )
@@ -3253,6 +3258,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                 if( i >= jj && i < jj + pm.L1[kk] ) { hPhase = pm.XF[kk] * 1e-7; break; }
                         }
                         const double h = std::max( { std::fabs(Xi) * 1e-7, dcFloor * 10., hPhase } );
+                        if( fdPureSkip && i >= pm.Ls )
+                        {   // a pure phase's amount changes no potential: its column is zero
+                            for( long int j = 0; j < L; j++ ) res.fxx(j,i) = 0.;
+                            if( kFloorCurvature == 2 )
+                            {
+                                const double Xb = std::max( Xi, dcFloor );
+                                res.fxx(i,i) += kLogBarrierTau / ( Xb * Xb );
+                            }
+                            continue;
+                        }
                         pm.X[i] = Xi + h;
                         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
                         CalculateActivityCoefficients( LINK_UX_MODE );

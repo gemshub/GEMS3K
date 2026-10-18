@@ -621,6 +621,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_IpmNoProgress: native solver (AIA, SIA): when the energy has not improved over this many iterations, stop and let
     /// the Optima finish take over; if that finish fails, the call is solved again cold without this stop. 0 = off (default).
     long int IpmNoProgress = 0;
+    /// pa_OptimaFDPureSkip: Optima solver: the Hessian column of a pure-phase species is set to zero without an activity
+    /// call (its amount changes no potential). 0 = off (default), 1 = on.
+    long int OptimaFDPureSkip = 0;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2139,7 +2142,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaPreSolveSeed, f_pa_OptimaColdLevel, f_pa_OptimaLevelStart, f_pa_OptimaFastCollapse, f_pa_OptimaFrozenCut,
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
-    f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress
+    f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip
 
 } MULTI_DYNAMIC_FIELDS;
 
