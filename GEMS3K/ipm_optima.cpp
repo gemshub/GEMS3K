@@ -2945,6 +2945,33 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
             native_trace_decide( "lvlpin species=%ld", nPin );
         }
+        // pa_OptimaLevelFinish: a leveled start with mixed phases is first finished by Newton on its own phases;
+        // Optima then starts from that point and its potentials. A finish that fails leaves the start as it was.
+        if( pa_p->OptimaLevelFinish > 0 && pm.pNP == 0 && g_lvlCgStart && g_cgDual.size() == (size_t)pm.N && R == 0 )
+        {
+            const std::vector<double> sx( pm.X, pm.X + pm.L ), sy( pm.Y, pm.Y + pm.L ), su( pm.U, pm.U + pm.N );
+            for( long int j = 0; j < pm.L; j++ ) pm.X[j] = std::max( pm.Y[j], problem.xlower[j] );
+            for( long int i = 0; i < pm.N; i++ ) pm.U[i] = g_cgDual[(size_t)i];
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );
+            std::vector<double> xlo( (size_t)pm.L ), xhi( (size_t)pm.L );
+            for( long int j = 0; j < pm.L; j++ ) { xlo[(size_t)j] = problem.xlower[j]; xhi[(size_t)j] = problem.xupper[j]; }
+            const bool ok = PotentialSpaceFinish( dcFloor, xlo, xhi );
+            if( ok )
+            {
+                for( long int j = 0; j < pm.L; j++ ) pm.Y[j] = pm.X[j];
+                for( long int i = 0; i < pm.N; i++ ) g_cgDual[(size_t)i] = pm.U[i];
+            }
+            else
+            {
+                for( long int j = 0; j < pm.L; j++ ) { pm.X[j] = sx[(size_t)j]; pm.Y[j] = sy[(size_t)j]; }
+                for( long int i = 0; i < pm.N; i++ ) pm.U[i] = su[(size_t)i];
+            }
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );
+            native_trace_decide( "lvlfinish ok=%d", ok ? 1 : 0 );
+            ipm_logger->debug( "Optima leveled start finished by Newton first: {}", ok ? "converged" : "did not converge" );
+        }
         // Titrant unknowns are free in sign, bounded only generously as a numerical safety net.
         const double titrantBound = std::max( optima_default_box_moles( pm, pa_p->DG ), 1.0 ) * 2.0;
         for( long int k = 0; k < R; k++ )

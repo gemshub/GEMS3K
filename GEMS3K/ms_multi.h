@@ -615,6 +615,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// no missing pure phase and no missing solid or liquid mixture would form (thorough check); else the full solve runs.
     /// 0 = off, 1 = on (default).
     long int OptimaFastAcceptCut = 1;
+    /// pa_OptimaLevelFinish: a cold Optima call whose leveled start holds mixed phases first runs the Newton finish on that
+    /// start, and Optima starts from the finished point when it converges. 0 = off, 1 = on (default).
+    long int OptimaLevelFinish = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2133,7 +2136,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaPreSolveSeed, f_pa_OptimaColdLevel, f_pa_OptimaLevelStart, f_pa_OptimaFastCollapse, f_pa_OptimaFrozenCut,
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
-    f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut
+    f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish
 
 } MULTI_DYNAMIC_FIELDS;
 
