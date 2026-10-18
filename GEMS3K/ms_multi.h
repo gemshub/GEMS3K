@@ -611,6 +611,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// leveled solution (the linear solve with mixed phases at their best compositions); 2 = also leave out the mixed
     /// phases it shows cannot form. A call that then fails is solved again from the ordinary start. 0 = off, default 2.
     long int IpmLevelStart = 2;
+    /// pa_OptimaFastAcceptCut: a quick first try of a cold Optima call that used up its step cap but ended OK is kept when
+    /// no missing pure phase and no missing solid or liquid mixture would form (thorough check); else the full solve runs.
+    /// 0 = off, 1 = on (default).
+    long int OptimaFastAcceptCut = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -1428,6 +1432,10 @@ public:
     /// The leveled solution: species Gibbs LP plus mixed phases at their best compositions,
     /// priced by a tangent-plane search (ipm_level.cpp). Used by the native start and by Optima.
     bool ColumnGenerationSeed( std::vector<double>& nOut, double tol );
+    /// The strongest drive of a missing phase to form at the current answer (RT per mole, < 0: it would form): a
+    /// missing pure phase by its reduced energy, a missing solid or liquid mixture by the thorough search
+    /// (ipm_level.cpp). worstPhase is the phase, -1 if none.
+    double AbsentPhaseWorstDrive( long int& worstPhase );
 
     double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
@@ -2125,7 +2133,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaPreSolveSeed, f_pa_OptimaColdLevel, f_pa_OptimaLevelStart, f_pa_OptimaFastCollapse, f_pa_OptimaFrozenCut,
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
-    f_pa_TpdStrongBasins, f_pa_IpmLevelStart
+    f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut
 
 } MULTI_DYNAMIC_FIELDS;
 

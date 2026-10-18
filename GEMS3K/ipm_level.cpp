@@ -347,3 +347,36 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
         return false;
     return true;
 }
+
+// pa_OptimaFastAcceptCut: checks a finished answer for a missing phase that would form.
+double TMultiBase::AbsentPhaseWorstDrive( long int& worstPhase )
+{
+    worstPhase = -1;
+    double worst = 0., tot = 0.;
+    for( long int k = 0; k < pm.FI; k++ ) tot += pm.XF[k];
+    long int jb = 0;
+    for( long int k = 0; k < pm.FI; k++ )
+    {
+        const long int n = pm.L1[k];
+        const char ph = pm.PHC[k];
+        const bool absent = pm.XF[k] <= 1e-9 * tot;
+        if( absent && n == 1 )
+        {
+            double au = 0.;
+            for( long int i = 0; i < pm.N; i++ ) au += pm.A[ i + jb*pm.N ] * pm.U[i];
+            const double g = pm.G0[jb] + ( pm.fDQF ? pm.fDQF[jb] : 0. ) - au;
+            if( g < worst ) { worst = g; worstPhase = k; }
+        }
+        else if( absent && k < pm.FIs && ph != PH_AQUEL && ph != PH_GASMIX && ph != PH_PLASMA && ph != PH_FLUID
+                 && ph != PH_SORPTION && ph != PH_POLYEL && ph != PH_ADSORPT && ph != PH_IONEX )
+        {
+            std::vector<double> yb;
+            g_tpdStrongSearch = true;
+            const double t = NativeTpdPhase( k, jb, yb );
+            g_tpdStrongSearch = false;
+            if( t < worst ) { worst = t; worstPhase = k; }
+        }
+        jb += n;
+    }
+    return worst;
+}

@@ -435,8 +435,17 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         g_optimaCapAllowance = allowance0;
         *bp = saved;
         const long int used = budgetSet - g_optimaIterBudget;
-        // Only a quick try that finished within its cap counts; one cut at the cap goes to the normal solve.
-        const bool fastCut = ( used >= budgetSet );
+        // Only a quick try that finished within its cap counts; one cut at the cap goes to the normal solve,
+        // unless it ended OK and no missing phase would form (pa_OptimaFastAcceptCut).
+        bool fastCut = ( used >= budgetSet );
+        if( fastCut && fast == OK_GEM_AOP && saved.OptimaFastAcceptCut > 0 )
+        {
+            long int wk = -1;
+            const double worst = multi_ptr()->AbsentPhaseWorstDrive( wk );
+            const bool keep = !( worst < -1e-6 );
+            native_trace_decide( "fastcutaccept keep=%d worst=%.3e phase=%ld", keep ? 1 : 0, worst, wk );
+            if( keep ) fastCut = false;
+        }
         native_trace_decide( "fastfirst cap=%ld status=%ld it=%ld used=%ld cut=%d", fastCap, (long)fast,
                              (long)( pmm->ITF + pmm->ITG ), used, fastCut ? 1 : 0 );
         if( fast == OK_GEM_AOP && !fastCut )

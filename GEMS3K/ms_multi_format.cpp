@@ -237,6 +237,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaLSWarmTrials", 0 , 0, 0, "# pa_OptimaLSWarmTrials: Optima solver, warm calls: the line search tries at most this many step lengths; 0 = off (Optima's own 20) { 5 }" },
     { "pa_TpdStrongBasins", 0 , 0, 0, "# pa_TpdStrongBasins: phase-stability check, thorough search: try every start once and follow only the corner, ideal and uniform starts and this many best separate ones; 0 = follow every start { 4 }" },
     { "pa_IpmLevelStart", 0 , 0, 0, "# pa_IpmLevelStart: native solver, cold calls without aqueous, gas or sorption mixtures: start from the leveled solution; 2 = also leave out mixed phases it shows cannot form; a failed call is solved again from the ordinary start; 0 = off { 2 }" },
+    { "pa_OptimaFastAcceptCut", 0 , 0, 0, "# pa_OptimaFastAcceptCut: Optima solver, cold calls: keep a quick first try that used up its step cap but ended OK, when no missing phase would form; 0 = off { 1 }" },
 };
 
 
@@ -255,7 +256,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 152, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 153, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -567,6 +568,8 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_TpdStrongBasins, pa_p->TpdStrongBasins, _comment, false  );
     if(!brief_mode || pa_p->IpmLevelStart != pa_p_.IpmLevelStart )
         prar.writeField(f_pa_IpmLevelStart, pa_p->IpmLevelStart, _comment, false  );
+    if(!brief_mode || pa_p->OptimaFastAcceptCut != pa_p_.OptimaFastAcceptCut )
+        prar.writeField(f_pa_OptimaFastAcceptCut, pa_p->OptimaFastAcceptCut, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -972,7 +975,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 152, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 153, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1533,6 +1536,8 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_TpdStrongBasins: rddar.readArray("pa_TpdStrongBasins" , &pa_p->TpdStrongBasins, 1);
             break;
         case f_pa_IpmLevelStart: rddar.readArray("pa_IpmLevelStart" , &pa_p->IpmLevelStart, 1);
+            break;
+        case f_pa_OptimaFastAcceptCut: rddar.readArray("pa_OptimaFastAcceptCut" , &pa_p->OptimaFastAcceptCut, 1);
             break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;
