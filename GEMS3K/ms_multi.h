@@ -1699,6 +1699,8 @@ protected:
     /// gradients Optima's own test may reject). Takes effect only for pa_OptimaDimReduce > 0;
     /// AUTO (0) does not reach it.
     bool optima_hop_leg = false;
+    /// Scale factor of this node's previous solve (native or Optima); 0 before the first one.
+    double prev_scfact = 0.;
 
     /// Per-leg cost of the last two-leg (HOP/SHP) solve. NumIterFIA/NumIterIPM report the
     /// sum of both legs; this keeps the legs apart. Recorded only - nothing in the solver

@@ -2487,10 +2487,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     // After rescaling, so pm.B, pm.DLL and dcFloor are in the same internal units.
     SubFloorElementCheck( dcFloor );
 
-    // Scale of the previous call, so a warm call can tell which species it left at the floor.
-    static thread_local double prevScFact = 0.;
-    const double prevScFactIn = prevScFact;
-    struct PrevScFactGuard { double& r; const double& v; ~PrevScFactGuard() { r = v; } } prevScFactGuard{ prevScFact, ScFact };
+    // Scale of this node's previous solve, so a warm call can tell which species it left at the floor.
+    const double prevScFactIn = prev_scfact;
+    struct PrevScFactGuard { double& r; const double& v; ~PrevScFactGuard() { r = v; } } prevScFactGuard{ prev_scfact, ScFact };
 
     // Trace bookkeeping: one traced solve per call; each Optima solve inside it is an attempt.
     static thread_local std::vector<double> traceXPrev;
