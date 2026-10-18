@@ -180,7 +180,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -210,7 +210,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaFastFirst, (long)pa->OptimaFloorCurvature, (long)pa->OptimaEmptySolvent, (long)pa->OptimaTpdVeto, (long)pa->OptimaEmptyPreSolveSkip, (long)pa->OptimaTwinReadmit, (long)pa->OptimaDryRetry, (long)pa->OptimaCallCap, (long)pa->OptimaCapNudges, (long)pa->OptimaFinishFirst, (long)pa->OptimaFastFrozen, pa->OptimaFastDiverge, (long)pa->OptimaRedoxFree, (long)pa->OptimaFastRises,
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
-             (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot, (long)pa->OptimaLSWarmTrials );
+             (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot, (long)pa->OptimaLSWarmTrials,
+             (long)pa->TpdStrongBasins );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -1149,7 +1150,7 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
                     starts.push_back( v );
                 }
         std::vector<double> tmp;
-        for( auto y : starts )
+        auto follow = [&]( std::vector<double> y ) {
             for( int it = 0; it < 300; it++ )
             {
                 evalY( y, tmp );
@@ -1158,6 +1159,37 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
                 y = tmp;
                 if( d < 1e-11 ) break;
             }
+        };
+        // pa_TpdStrongBasins: on the thorough search, try every start once and follow only the corner, ideal and
+        // uniform starts and the best few starts that lie apart from each other.
+        const long int basins = base_param()->TpdStrongBasins;
+        if( g_tpdStrongSearch && basins > 0 )
+        {
+            const size_t nBase = (size_t)n + 2;
+            std::vector<double> t0( starts.size() );
+            for( size_t q = 0; q < starts.size(); q++ ) t0[q] = evalY( starts[q], tmp );
+            std::vector<size_t> ord;
+            for( size_t q = nBase; q < starts.size(); q++ ) ord.push_back( q );
+            std::sort( ord.begin(), ord.end(), [&t0]( size_t a, size_t b ) { return t0[a] < t0[b]; } );
+            std::vector<size_t> chosen;
+            for( size_t q : ord )
+            {
+                if( (long int)chosen.size() >= basins ) break;
+                bool near = false;
+                for( size_t c : chosen )
+                {
+                    double d = 0.;
+                    for( long int a = 0; a < n; a++ ) d = std::max( d, fabs( starts[q][(size_t)a] - starts[c][(size_t)a] ) );
+                    if( d < 0.15 ) { near = true; break; }
+                }
+                if( !near ) chosen.push_back( q );
+            }
+            for( size_t q = 0; q < nBase && q < starts.size(); q++ ) follow( starts[q] );
+            for( size_t q : chosen ) follow( starts[q] );
+        }
+        else
+            for( const auto& y : starts )
+                follow( y );
         if( n == 2 )
         {
             // A strongly non-ideal phase can have a narrow dip that lies between the starts and that the

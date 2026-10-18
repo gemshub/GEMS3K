@@ -604,6 +604,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_OptimaLSWarmTrials: on a warm Optima call, the line search tries at most this many step lengths
     /// (cold calls keep Optima's own limit of 20). 0 = off, default 5.
     long int OptimaLSWarmTrials = 5;
+    /// pa_TpdStrongBasins: the thorough check of whether a mixed phase can form tries every start composition once
+    /// and follows only the corner, ideal and uniform starts and this many best separate ones. 0 = follow every start, default 4.
+    long int TpdStrongBasins = 4;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2119,7 +2122,8 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaFinishFirst, f_pa_OptimaFastFrozen, f_pa_OptimaFastDiverge, f_pa_OptimaRedoxFree, f_pa_OptimaFastRises,
     f_pa_OptimaPreSolveSeed, f_pa_OptimaColdLevel, f_pa_OptimaLevelStart, f_pa_OptimaFastCollapse, f_pa_OptimaFrozenCut,
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
-    f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials
+    f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
+    f_pa_TpdStrongBasins
 
 } MULTI_DYNAMIC_FIELDS;
 

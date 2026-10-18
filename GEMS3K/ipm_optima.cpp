@@ -1166,6 +1166,8 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
     g_cgConverged = ( lastAdded == 0 );
     g_cgPseudo = nPseudoUsed;
     g_cgDual = y;
+    if( g_tpdStrongSearch && base_param()->TpdStrongBasins > 0 )
+        native_trace_decide( "tpdscreen basins=%ld", (long)base_param()->TpdStrongBasins );
     native_trace_decide( "cgseed rounds=%d columns_added=%ld pseudo_in_vertex=%ld mb_resid=%.3e tol=%.1e",
                          rounds + 1, (long)added, (long)nPseudoUsed, maxResid, tol );
     if( maxResid > std::max( 1e-6, 1e-8 * bScale ) )
