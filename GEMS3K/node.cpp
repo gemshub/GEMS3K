@@ -442,8 +442,15 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         {
             long int wk = -1;
             const double worst = multi_ptr()->AbsentPhaseWorstDrive( wk );
-            const bool keep = !( worst < -1e-6 );
-            native_trace_decide( "fastcutaccept keep=%d worst=%.3e phase=%ld", keep ? 1 : 0, worst, wk );
+            // Two present copies of one mixed phase (a miscibility gap) are left to the full solve.
+            const std::vector<char> twin = multi_ptr()->PhaseHessianTwins();
+            long int twinsPresent = 0;
+            double tot = 0.;
+            for( long int k = 0; k < pmm->FI; k++ ) tot += pmm->XF[k];
+            for( long int k = 0; k < pmm->FIs && k < (long int)twin.size(); k++ )
+                if( twin[(size_t)k] && pmm->XF[k] > 1e-9 * tot ) twinsPresent++;
+            const bool keep = !( worst < -1e-6 ) && twinsPresent < 2;
+            native_trace_decide( "fastcutaccept keep=%d worst=%.3e phase=%ld twins=%ld", keep ? 1 : 0, worst, wk, twinsPresent );
             if( keep ) fastCut = false;
         }
         native_trace_decide( "fastfirst cap=%ld status=%ld it=%ld used=%ld cut=%d", fastCap, (long)fast,
