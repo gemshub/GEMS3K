@@ -1411,7 +1411,6 @@ protected:
     void WarnIfSystemTooLarge();
     long int GEM_run_capped( bool uPrimalSol );     // pa_OptimaCallCap
     long int GEM_run_dry_redo( bool uPrimalSol );   // pa_OptimaDryRetry
-    long int GEM_run_noprog_redo( bool uPrimalSol ); // pa_IpmNoProgress
     long int GEM_run_tries( bool uPrimalSol );      // pa_OptimaFastFirst, the solve and its retries
     /// pa_ColdRetryNudges' recovery of a failed NEED_GEM_AIA call; see BASE_PARAM::ColdRetryNudges.
     long int GEM_run_cold_retry( long int maxNudges );

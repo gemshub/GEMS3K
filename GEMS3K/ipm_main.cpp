@@ -1067,8 +1067,6 @@ thread_local bool g_tpdStrongSearch = false;
 thread_local bool g_ipmLevelUsed = false;
 thread_local bool g_ipmNoProgArmed = false;   // pa_IpmNoProgress: set by the caller where the Optima finish follows
 thread_local bool g_ipmNoProgFired = false;   // pa_IpmNoProgress stopped the loop in this call
-thread_local bool g_ipmNoProgFiredCall = false;   // ... somewhere in this GEM_run() call
-thread_local bool g_ipmNoProgOff = false;   // pa_IpmNoProgress is off for this call
 thread_local bool g_ipmLevelOff = false;
 double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
 {
@@ -3983,7 +3981,6 @@ STEP_POINT( "IPM Iteration" );
             if( n > w && npBest[(size_t)( n - 1 )] >= npBest[(size_t)( n - 1 - w )] - 1e-10 * std::fabs( pm.FX ) )
             {
                 g_ipmNoProgFired = true;
-                g_ipmNoProgFiredCall = true;
                 native_trace_decide( "ipmnoprog it=%ld window=%ld fx=%.12e", (long)IT1, (long)w, npBest.back() );
                 ipm_logger->info( "Native solver: no progress over {} iterations at iteration {}; handing over to the Optima finish", w, IT1 );
                 break;
