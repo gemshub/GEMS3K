@@ -966,6 +966,8 @@ long int TNode::GEM_run_single( bool uPrimalSol )
             // Hybrid: native selects the phases, then a warm Optima leg finishes (restoring
             // native's answer as BAD_GEM_HOP if it fails) - TMultiBase::CalculateEquilibriumStateHOP().
             // SHP is HOP with a warm native leg (with a cold fallback inside).
+            // A native leg stopped by pa_IpmNoProgress hands its last state to the Optima leg.
+            NoProgArm arm( CNode->dt <= 0. && multi_ptr()->GetControlConditions().empty() );
             CalcTime = multi_ptr()->CalculateEquilibriumStateHOP( NumIterFIA, NumIterIPM,
                                        CNode->NodeStatusCH == NEED_GEM_SHP );
 #else

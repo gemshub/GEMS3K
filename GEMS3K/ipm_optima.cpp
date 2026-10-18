@@ -70,6 +70,7 @@ static Optima::Result timed_solve( S& solver, A&&... args )
     return solver.solve( std::forward<A>( args )... );
 }
 
+extern thread_local bool g_ipmNoProgFired;   // pa_IpmNoProgress (ipm_main.cpp)
 extern thread_local bool g_optimaCgSeedArmed;   // defined in node.cpp (needed without USE_OPTIMA_SOLVER)
 extern thread_local bool g_optimaTargetWarned;  // defined in node.cpp
 extern thread_local long int g_optimaIterBudget;  // defined in node.cpp; -1 = no limit
@@ -6304,6 +6305,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
 {
     long int fiaN = 0, ipmN = 0;
     bool nativeOk = true;
+    bool noProgWarm = false;   // pa_IpmNoProgress stopped the native leg: Optima starts warm from its last state
     double calcTime = 0.;
     std::vector<double> Ysave, Usave;
     double FXsave = kTotalGibbsEnergyUnset;   // native's total G, external units (restored below)
@@ -6342,10 +6344,16 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
     }
     catch( TError& werr )
     {
+        if( g_ipmNoProgFired && werr.title.rfind( "E06IPM", 0 ) == 0 )
+        {
+            noProgWarm = true;
+            nativeOk = false;
+            ipm_logger->info( "HOP: native leg stopped without progress; the Optima leg starts from its last state" );
+        }
         // Cold fallback for the warm native leg: native SIA can refuse a state its own
         // cold path returned. Retry the leg cold, so SHP degrades to HOP at the cost of
         // one wasted attempt.
-        if( wantWarmNative )
+        else if( wantWarmNative )
         {
             ipm_logger->info( "HOP: warm native leg failed ({}: {}); retrying it cold", werr.title, werr.mess );
             wantWarmNative = false;
@@ -6423,7 +6431,30 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
         }
     } legRecorder{ this, warmNative, nativeOk, fiaN, ipmN, fiaO, ipmO, calcTime, timeNativeLeg };
 
-    if( !nativeOk )
+    if( noProgWarm )
+    {
+        // Warm from the stopped native state, as the native rescue does; cold if that fails.
+        bool ok = false;
+        try
+        {
+            pm.pNP = 1;
+            optima_hop_leg = true;
+            calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false, /* runKinetics */ false );
+            optima_hop_leg = false;
+            ok = !( pm.MK || pm.PZ );
+        }
+        catch( TError& ) { optima_hop_leg = false; }
+        native_trace_decide( "ipmnoprog-hop warm=%d", ok ? 1 : 0 );
+        if( !ok )
+        {
+            long int fiaC = 0, ipmC = 0;
+            pm.pNP = 0;
+            try { calcTime += CalculateEquilibriumStateOptima( fiaC, ipmC, false, false ); }
+            catch( TError& ) { fiaO += fiaC; ipmO += ipmC; NumIterFIA = fiaN + fiaO; NumIterIPM = ipmN + ipmO; throw; }
+            fiaO += fiaC; ipmO += ipmC;
+        }
+    }
+    else if( !nativeOk )
     {
         // No native answer to fall back to: a failure propagates as a plain cold AOP
         // call's would.
