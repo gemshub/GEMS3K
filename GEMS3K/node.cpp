@@ -442,15 +442,25 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         {
             long int wk = -1;
             const double worst = multi_ptr()->AbsentPhaseWorstDrive( wk );
-            // Two present copies of one mixed phase (a miscibility gap) are left to the full solve.
+            // A mixed phase with a twin copy (a possible miscibility gap): two copies present, or an absent copy with
+            // any drive to form, is left to the full solve.
             const std::vector<char> twin = multi_ptr()->PhaseHessianTwins();
             long int twinsPresent = 0;
-            double tot = 0.;
+            double tot = 0., twinDrive = 0.;
             for( long int k = 0; k < pmm->FI; k++ ) tot += pmm->XF[k];
-            for( long int k = 0; k < pmm->FIs && k < (long int)twin.size(); k++ )
-                if( twin[(size_t)k] && pmm->XF[k] > 1e-9 * tot ) twinsPresent++;
-            const bool keep = !( worst < -1e-6 ) && twinsPresent < 2;
-            native_trace_decide( "fastcutaccept keep=%d worst=%.3e phase=%ld twins=%ld", keep ? 1 : 0, worst, wk, twinsPresent );
+            for( long int k = 0, jb = 0; k < pmm->FIs && k < (long int)twin.size(); jb += pmm->L1[k], k++ )
+            {
+                if( !twin[(size_t)k] ) continue;
+                if( pmm->XF[k] > 1e-9 * tot ) { twinsPresent++; continue; }
+                extern thread_local bool g_tpdStrongSearch;
+                std::vector<double> yb;
+                g_tpdStrongSearch = true;
+                twinDrive = std::min( twinDrive, multi_ptr()->NativeTpdPhase( k, jb, yb ) );
+                g_tpdStrongSearch = false;
+            }
+            const bool keep = !( worst < -1e-6 ) && twinsPresent < 2 && !( twinsPresent > 0 && twinDrive < -1e-10 );
+            native_trace_decide( "fastcutaccept keep=%d worst=%.3e phase=%ld twins=%ld twindrive=%.3e", keep ? 1 : 0, worst, wk,
+                                 twinsPresent, twinDrive );
             if( keep ) fastCut = false;
         }
         native_trace_decide( "fastfirst cap=%ld status=%ld it=%ld used=%ld cut=%d", fastCap, (long)fast,
