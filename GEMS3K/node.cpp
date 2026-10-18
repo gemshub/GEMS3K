@@ -26,6 +26,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include "gems3k_timing.h"
 #include "node.h"
 #include "datach_api.h"
 #include "num_methods.h"
@@ -234,7 +235,14 @@ void TNode::WarnIfSystemTooLarge()
 long int TNode::GEM_run( bool uPrimalSol )
 {
     WarnIfSystemTooLarge();
-    return GEM_run_capped( uPrimalSol );
+    const long int requested = CNode->NodeStatusCH;
+    long int st;
+    {
+        gems3k_timing::Scope t( gems3k_timing::Call );
+        st = GEM_run_capped( uPrimalSol );
+    }
+    gems3k_timing::flush( requested, st, CNode->IterDone );
+    return st;
 }
 
 // pa_OptimaCallCap: an AOP or SOP call gets a whole-call iteration cap. A call that fails with

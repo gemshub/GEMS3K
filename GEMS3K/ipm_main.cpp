@@ -29,6 +29,7 @@
 //-------------------------------------------------------------------
 //
 
+#include "gems3k_timing.h"
 #include <cstdlib>
 #include <Eigen/QR>
 #include <cstdarg>
@@ -1067,6 +1068,7 @@ thread_local bool g_ipmLevelUsed = false;
 thread_local bool g_ipmLevelOff = false;
 double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
 {
+    gems3k_timing::Scope timing( gems3k_timing::Tpd );
     const long int n = pm.L1[k], p1 = p0 + n, N = pm.N;
     ybest.assign( (size_t)n, 1.0 / std::max( 1L, n ) );
     if( n <= 1 || p1 > pm.L || !pm.X || !pm.U || !pm.A || !pm.lnGam )

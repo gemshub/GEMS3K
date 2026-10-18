@@ -37,6 +37,7 @@
 //-------------------------------------------------------------------
 //
 
+#include "gems3k_timing.h"
 #include <chrono>
 #include "ms_multi.h"
 
@@ -61,6 +62,14 @@
 
 // pa_OptimaCgSeed is a second attempt: the column-generation seed is used only while TNode
 // arms it for the retry of a cold AOP call that failed from the ordinary LP-feasibility seed.
+// Optima's solve(), timed when GEMS3K_TIMING_FILE is set.
+template<class S, class... A>
+static Optima::Result timed_solve( S& solver, A&&... args )
+{
+    gems3k_timing::Scope timing( gems3k_timing::OSolve );
+    return solver.solve( std::forward<A>( args )... );
+}
+
 extern thread_local bool g_optimaCgSeedArmed;   // defined in node.cpp (needed without USE_OPTIMA_SOLVER)
 extern thread_local bool g_optimaTargetWarned;  // defined in node.cpp
 extern thread_local long int g_optimaIterBudget;  // defined in node.cpp; -1 = no limit
@@ -887,6 +896,7 @@ bool TMultiBase::DetectPhaseCollapseAndReseed( const double* x,
 // In plain words: if Optima stops just short, finish the job with the phases it found.
 bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>& xlo, const std::vector<double>& xhi )
 {
+    gems3k_timing::Scope timing( gems3k_timing::Psf );
     const long int L = pm.L, N = pm.N;
     if( L <= 0 || N <= 0 || !pm.A || !pm.B || !pm.F || !pm.U )
         return false;
@@ -1435,6 +1445,7 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
                                                    std::vector<PhStabViolation>* rankedOut,
                                                    PhStabCensus* censusOut, const char* probeStage )
 {
+    gems3k_timing::Scope timing( gems3k_timing::Wpsv );
     const BASE_PARAM *pa_p = base_param();
     const long int L = pm.L;
     std::vector<PhStabViolation> ranked;
@@ -1609,6 +1620,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                                         long int passBudget,
                                         long int& iterationsOut, long int& activeOut )
 {
+    gems3k_timing::Scope timing( gems3k_timing::PreSolve );
     iterationsOut = 0;
     activeOut = 0;
     const long int N = pm.N;
@@ -1866,6 +1878,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                       Optima::VectorView /*p*/, Optima::VectorView /*c*/,
                       Optima::ObjectiveOptions opts )
         {
+            gems3k_timing::Scope timingObj( gems3k_timing::Obj );
             for( long int j = 0; j < L; j++ )
                 pm.X[j] = act[(size_t)j] ? x[ jToNx[(size_t)j] ] : xlo[(size_t)j];
             TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
@@ -2167,7 +2180,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             trialOpts.maxiters = (unsigned)ps0Trial;
             solver.setOptions( trialOpts );
         }
-        Optima::Result result = solver.solve( problem, state );
+        Optima::Result result = timed_solve( solver, problem, state );
         if( ps0Trial > 0 && ps0Trial < passBudget )
         {
             const bool trialOk = result.succeeded && !preWatch->stalled && !preWatch->timedOut;
@@ -2195,7 +2208,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                 Optima::Solver solver2;
                 solver2.setOptions( options );
                 preWatch->reset();
-                result = solver2.solve( problem, state );
+                result = timed_solve( solver2, problem, state );
             }
             else
                 solver.setOptions( options );
@@ -2324,6 +2337,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
 double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool referenceMode,
                                                     bool runKinetics )
 {
+    gems3k_timing::Scope timing( gems3k_timing::OptimaCall );
     // Disable the IPM-2 chemical-potential smoothing for this call (see
     // optima_disable_smoothing). RAII, so the flag is restored on every exit.
     struct SmoothingGuard {
@@ -3044,6 +3058,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                       Optima::VectorView /*p*/, Optima::VectorView /*c*/,
                       Optima::ObjectiveOptions opts )
         {
+            gems3k_timing::Scope timingObj( gems3k_timing::Obj );
             for( long int j = 0; j < L; j++ )
                 pm.X[j] = x[j];
             TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
@@ -3071,6 +3086,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             *traceLastF = fval;
             if( opts.eval.fxx )
             {
+                gems3k_timing::Scope timingFxx( gems3k_timing::ObjFxx );
                 res.fxx.setZero();
                 // Ideal-mixing curvature per multicomponent phase (j < pm.Ls). Single-species
                 // (pure) phases get no 1/X[j] term: their chemical potential does not depend on
@@ -3211,6 +3227,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         const long int i = (long int)opts.ibasicvars[bk];
                         if( i >= L ) continue; // a control-condition virtual slot, not a species
                         const double Xi = pm.X[i];
+                        gems3k_timing::Scope timingCol( i < pm.Ls ? gems3k_timing::FdMix : gems3k_timing::FdPure );
                         // pa_OptimaFloorCurvature 2: for a species of a solution phase the step is also at least
                         // 1e-7 of the phase amount, so the other potentials change well above round-off.
                         double hPhase = 0.;
@@ -3254,6 +3271,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     if( regRatio > 0. )
                     {
                         long int p0 = 0;
+                        gems3k_timing::Scope timingBlock( gems3k_timing::FdBlock );
                         for( long int k = 0; k < pm.FIs; k++ )
                         {
                             const long int p1 = p0 + pm.L1[k];
@@ -3313,8 +3331,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
                     // Restore the base state: XF/XFA, activity coefficients and pm.F were left
                     // at the last perturbation's values.
-                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    {
+                        gems3k_timing::Scope timingRestore( gems3k_timing::ObjRestore );
+                        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                        CalculateActivityCoefficients( LINK_UX_MODE );
+                    }
                     for( long int j = 0; j < L; j++ )
                         pm.F[j] = Fbase[j];
 
@@ -4164,7 +4185,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // primary solve below as failed. The cheap attempt is itself a discarded probe.
             const bool trendWasArmed = *earlyTrendArmed;
             *earlyTrendArmed = false;
-            Optima::Result cheapResult = cheapSolver.solve( problem, cheapState );
+            Optima::Result cheapResult = timed_solve( cheapSolver, problem, cheapState );
             *earlyTrendArmed = trendWasArmed;
             *earlyTrend = false;
             *fdSuppress = false;
@@ -4246,8 +4267,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         Optima::Sensitivity sensitivity( dims );
         // Arm the cap here and nowhere earlier: late arming scopes it to the first attempt.
         *earlyCapArmed = ( earlyCapN > 0 );
-        Optima::Result result = wantSens ? solver.solve( problem, state, sensitivity )
-                                         : solver.solve( problem, state );
+        Optima::Result result = wantSens ? timed_solve( solver, problem, state, sensitivity )
+                                         : timed_solve( solver, problem, state );
         // Returning true from convergence.check means "stop", and Optima reports that as
         // success, so an early stop is folded back to a failure here, before anything reads
         // result.succeeded.
@@ -4350,7 +4371,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             Optima::Solver solverDryOut;
             solverDryOut.setOptions( options );
             stallWatch->reset();
-            result = solverDryOut.solve( problem, state );
+            result = timed_solve( solverDryOut, problem, state );
             applyStall( result );
             optimaIterTotal += result.iterations;
             native_trace_decide( "dryout at=%ld water=%.3e fixed=%ld zz=%.3e ok=%d it=%ld", at, wAt, (long)( j1 - j0 ), zz,
@@ -4417,7 +4438,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             Optima::Solver solverBack;
             solverBack.setOptions( options );
             stallWatch->reset();
-            result = solverBack.solve( problem, state );
+            result = timed_solve( solverBack, problem, state );
             applyStall( result );
             optimaIterTotal += result.iterations;
             native_trace_decide( "dryback ok=%d it=%ld", result.succeeded ? 1 : 0, (long)result.iterations );
@@ -4483,7 +4504,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverWet;
                 solverWet.setOptions( options );
                 stallWatch->reset();
-                result = solverWet.solve( problem, state );
+                result = timed_solve( solverWet, problem, state );
                 applyStall( result );
                 optimaIterTotal += result.iterations;
                 tailAccepted = false;
@@ -4530,7 +4551,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 solverToggle.setOptions( toggled );
                 state = initialState;
                 stallWatch->reset();
-                result = solverToggle.solve( problem, state );
+                result = timed_solve( solverToggle, problem, state );
                 applyStall( result );
                 optimaIterTotal += result.iterations;
             };
@@ -4585,7 +4606,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         Optima::Solver solverWater;
                         solverWater.setOptions( options );
                         stallWatch->reset();
-                        Optima::Result waterResult = solverWater.solve( problem, waterState );
+                        Optima::Result waterResult = timed_solve( solverWater, problem, waterState );
                         applyStall( waterResult );
                         optimaIterTotal += waterResult.iterations;
                         state = waterState;
@@ -4627,7 +4648,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverPhase; // fresh instance - see the note above tryToggleRetry's own solver
                 solverPhase.setOptions( options );
                 stallWatch->reset();
-                Optima::Result retryResult = solverPhase.solve( problem, retryState );
+                Optima::Result retryResult = timed_solve( solverPhase, problem, retryState );
                 applyStall( retryResult );
                 optimaIterTotal += retryResult.iterations;
                 state = retryState;
@@ -4667,7 +4688,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverWater; // fresh instance - see the note above tryToggleRetry's own solver
                 solverWater.setOptions( options );
                 stallWatch->reset();
-                Optima::Result retryResult = solverWater.solve( problem, retryState );
+                Optima::Result retryResult = timed_solve( solverWater, problem, retryState );
                 applyStall( retryResult );
                 optimaIterTotal += retryResult.iterations;
                 // pa_OptimaWaterKeep: a converged answer is kept when the water retry fails;
@@ -4709,7 +4730,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverPhase; // fresh instance - see the note above tryToggleRetry's own solver
                 solverPhase.setOptions( options );
                 stallWatch->reset();
-                Optima::Result retryResult = solverPhase.solve( problem, retryState );
+                Optima::Result retryResult = timed_solve( solverPhase, problem, retryState );
                 applyStall( retryResult );
                 optimaIterTotal += retryResult.iterations;
                 state = retryState;
@@ -4749,7 +4770,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     Optima::Solver solverDry;   // fresh instance, as for the retries above
                     solverDry.setOptions( options );
                     stallWatch->reset();
-                    Optima::Result dryResult = solverDry.solve( problem, retryState );
+                    Optima::Result dryResult = timed_solve( solverDry, problem, retryState );
                     applyStall( dryResult );
                     optimaIterTotal += dryResult.iterations;
                     native_trace_decide( "dryretry water=%.6g cap=%.6g drystop=%d seedwater=%.6g ok=%d it=%ld",
@@ -4898,7 +4919,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         stallWatch->timedOut = false;
                         native_trace_decide( "extallow budget=%ld", g_optimaIterBudget );
                     }
-                    Optima::Result retryResult = solverExt.solve( problem, retryState );
+                    Optima::Result retryResult = timed_solve( solverExt, problem, retryState );
                     applyStall( retryResult );
                     optimaIterTotal += retryResult.iterations;
                     state = retryState;
@@ -5071,7 +5092,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     solverPS.setOptions( options );
                     stallWatch->reset();
                     Optima::State psState = state;
-                    Optima::Result psResult = solverPS.solve( problem, psState );
+                    Optima::Result psResult = timed_solve( solverPS, problem, psState );
                     applyStall( psResult );
                     optimaIterTotal += psResult.iterations;
                     state = psState;
@@ -5136,7 +5157,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverTR;
                 solverTR.setOptions( options );
                 stallWatch->reset();
-                Optima::Result trResult = solverTR.solve( problem, trial );
+                Optima::Result trResult = timed_solve( solverTR, problem, trial );
                 applyStall( trResult );
                 optimaIterTotal += trResult.iterations;
                 native_trace_decide( "twinreadmit solved=%d it=%ld", trResult.succeeded ? 1 : 0, (long)trResult.iterations );
@@ -5256,7 +5277,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             Optima::Solver solverNS;     // fresh instance, per the retry-ordering note above
             solverNS.setOptions( options );
             Optima::State  nsState  = initialState;
-            Optima::Result nsResult = solverNS.solve( problem, nsState );
+            Optima::Result nsResult = timed_solve( solverNS, problem, nsState );
             optimaIterTotal += nsResult.iterations;
             native_trace_decide( "stallnet outcome=%s it=%ld", nsResult.succeeded ? "converged" : "failed", (long int)nsResult.iterations );
             stallWatch->window = savedWindow;
@@ -5298,7 +5319,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 epStartDx = std::max( epStartDx, std::fabs( epState.x[j] - initialState.x[j] ) );
             native_trace_decide( "netresume from=%s probeat=%ld dx=%.6e",
                                  epResumed ? "probe" : "initial", earlyProbeIters, epStartDx );
-            Optima::Result epResult = solverEP.solve( problem, epState );
+            Optima::Result epResult = timed_solve( solverEP, problem, epState );
             optimaIterTotal += epResult.iterations;
             const bool epStalled = ( stallWatch->stalled || stallWatch->timedOut );
             if( epStalled ) epResult.succeeded = false;
@@ -5319,7 +5340,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 solverFB.setOptions( options );
                 stallWatch->reset();
                 Optima::State  fbState  = initialState;
-                Optima::Result fbResult = solverFB.solve( problem, fbState );
+                Optima::Result fbResult = timed_solve( solverFB, problem, fbState );
                 optimaIterTotal += fbResult.iterations;
                 const bool fbStalled = ( stallWatch->stalled || stallWatch->timedOut );
                 if( fbStalled ) fbResult.succeeded = false;
@@ -5383,7 +5404,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverFB;
                 solverFB.setOptions( options );
                 Optima::State  fbState  = initialState;
-                Optima::Result fbResult = solverFB.solve( problem, fbState );
+                Optima::Result fbResult = timed_solve( solverFB, problem, fbState );
                 optimaIterTotal += fbResult.iterations;
                 const bool fbStalled = ( stallWatch->stalled || stallWatch->timedOut );
                 if( fbStalled ) fbResult.succeeded = false;

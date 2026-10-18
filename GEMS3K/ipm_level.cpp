@@ -23,6 +23,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include "gems3k_timing.h"
 #include <algorithm>
 #include <cmath>
 #include <functional>
@@ -241,6 +242,7 @@ bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
 // In plain words: a first guess that already considers mixed phases at sensible compositions.
 bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
 {
+    gems3k_timing::Scope timing( gems3k_timing::Level );
     const long int N = pm.N, L = pm.L;
     if( N <= 0 || L <= 0 || !pm.G0 || !pm.U || !pm.A || !pm.B )
         return false;

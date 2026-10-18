@@ -27,6 +27,7 @@
 //-------------------------------------------------------------------
 //
 
+#include "gems3k_timing.h"
 #include "ms_multi.h"
 #include "activities.h"
 #include "kinetics.h"
@@ -507,6 +508,7 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA1, A, Q, &ITER);
 //
 double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM )
 {
+  gems3k_timing::Scope timing( gems3k_timing::Native );
   double ScFact=1.;
 
   InitalizeGEM_IPM_Data();
