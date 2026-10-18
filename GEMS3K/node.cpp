@@ -200,10 +200,12 @@ extern thread_local bool g_aqueousAbsent;
 extern thread_local bool g_ipmLevelUsed;   // pa_IpmLevelStart (ipm_main.cpp)
 extern thread_local bool g_ipmNoProgArmed;   // pa_IpmNoProgress (ipm_main.cpp)
 extern thread_local bool g_ipmNoProgFired;
+extern thread_local bool g_ipmNoProgFiredCall;   // the stop fired somewhere in this call
+extern thread_local bool g_ipmNoProgOff;         // the stop is off for this call (redo)
 // Arms pa_IpmNoProgress for one native solve.
 struct NoProgArm
 {
-    explicit NoProgArm( bool on ) { g_ipmNoProgArmed = on; g_ipmNoProgFired = false; }
+    explicit NoProgArm( bool on ) { g_ipmNoProgArmed = on && !g_ipmNoProgOff; g_ipmNoProgFired = false; }
     ~NoProgArm() { g_ipmNoProgArmed = false; }
 };
 extern thread_local bool g_ipmLevelOff;
@@ -404,7 +406,29 @@ long int TNode::GEM_run_dry_redo( bool uPrimalSol )
         g_optimaDryRedoCall = false;
         return st;
     }
-    return GEM_run_tries( uPrimalSol );
+    return GEM_run_noprog_redo( uPrimalSol );
+}
+
+// pa_IpmNoProgress: a HOP or SHP call that stopped its native leg early and did not end OK is run again
+// with the stop off. DECIDE ipmnoprog-redo.
+long int TNode::GEM_run_noprog_redo( bool uPrimalSol )
+{
+    const long int req = CNode->NodeStatusCH;
+    g_ipmNoProgFiredCall = false;
+    long int st = GEM_run_tries( uPrimalSol );
+    if( ( req == NEED_GEM_HOP || req == NEED_GEM_SHP ) && g_ipmNoProgFiredCall && !g_ipmNoProgOff
+        && st != OK_GEM_HOP && st != OK_GEM_SHP )
+    {
+        long int total = CNode->IterDone;
+        g_ipmNoProgOff = true;
+        CNode->NodeStatusCH = req;
+        st = GEM_run_tries( uPrimalSol );
+        total += CNode->IterDone;
+        g_ipmNoProgOff = false;
+        CNode->IterDone = total;
+        native_trace_decide( "ipmnoprog-redo status=%ld it=%ld", (long)st, (long)total );
+    }
+    return st;
 }
 
 // The quick first try, then the solve with its retries, then the notes on the answer.
