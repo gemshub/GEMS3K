@@ -1088,11 +1088,28 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
         c0[(size_t)(j-p0)] = au - ( pm.G0[j] + pm.fDQF[j] );
     }
     double tpdMin = 1e300;
+    // A solid or liquid mixture with a built-in model is evaluated alone: only its own model sees the trial composition.
+    const char phc = pm.PHC[k], smod = pm.sMod[k][SPHAS_TYP];
+    const bool alone = phSolMod && phSolMod[k] && pm.sMod[k][SGM_MODE] == SM_STNGAM
+        && ( phc == PH_LIQUID || phc == PH_SIMELT || phc == PH_SINCOND || phc == PH_SINDIS || phc == PH_HCARBL )
+        && ( smod == SM_IDEAL || smod == SM_BERMAN || smod == SM_CEF || smod == SM_MBW || smod == SM_REDKIS || smod == SM_MARGB
+             || smod == SM_MARGT || smod == SM_GUGGENM || smod == SM_VANLAAR || smod == SM_REGULAR || smod == SM_NRTLLIQ
+             || smod == SM_WILSLIQ );
     auto evalY = [&]( const std::vector<double>& y, std::vector<double>& ynew ) -> double {
         restoreBase();
-        for( long int j = p0; j < p1; j++ ) pm.X[j] = std::max( y[(size_t)(j-p0)], 1e-300 );
-        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-        CalculateActivityCoefficients( LINK_UX_MODE );
+        if( alone )
+        {
+            double sy = 0.;
+            for( long int a = 0; a < n; a++ ) sy += std::max( y[(size_t)a], 1e-300 );
+            for( long int a = 0; a < n; a++ ) { pm.Wx[p0+a] = std::max( y[(size_t)a], 1e-300 ) / sy; pm.lnGam[p0+a] = 0.; }
+            SolModActCoeff( k, smod );
+        }
+        else
+        {
+            for( long int j = p0; j < p1; j++ ) pm.X[j] = std::max( y[(size_t)(j-p0)], 1e-300 );
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );
+        }
         double mx = -1e300;
         std::vector<double> lw( (size_t)n );
         for( long int a = 0; a < n; a++ ) { lw[(size_t)a] = c0[(size_t)a] - pm.lnGam[p0+a]; mx = std::max( mx, lw[(size_t)a] ); }
@@ -1153,16 +1170,17 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
                     starts.push_back( v );
                 }
         std::vector<double> tmp;
-        auto follow = [&]( std::vector<double> y ) {
-            for( int it = 0; it < 300; it++ )
+        auto follow = [&]( std::vector<double> y, double tol, int maxit ) {
+            for( int it = 0; it < maxit; it++ )
             {
                 evalY( y, tmp );
                 double d = 0.;
                 for( long int a = 0; a < n; a++ ) d = std::max( d, fabs( tmp[(size_t)a] - y[(size_t)a] ) );
                 y = tmp;
-                if( d < 1e-11 ) break;
+                if( d < tol ) break;
             }
         };
+        double xbGrid = -1., tbGrid = 1e300;   // best 1 % point of a two-member phase, from the screen
         // pa_TpdStrongBasins: on the thorough search, try every start once and follow only the corner, ideal and
         // uniform starts and the best few starts that lie apart from each other.
         const long int basins = base_param()->TpdStrongBasins;
@@ -1170,7 +1188,15 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
         {
             const size_t nBase = (size_t)n + 2;
             std::vector<double> t0( starts.size() );
-            for( size_t q = 0; q < starts.size(); q++ ) t0[q] = evalY( starts[q], tmp );
+            for( size_t q = 0; q < starts.size(); q++ )
+            {
+                t0[q] = evalY( starts[q], tmp );
+                if( n == 2 )
+                {
+                    const double g = starts[q][0] * 100., gr = std::round( g );
+                    if( gr >= 1. && gr <= 99. && fabs( g - gr ) < 1e-9 && t0[q] < tbGrid ) { tbGrid = t0[q]; xbGrid = gr / 100.; }
+                }
+            }
             std::vector<size_t> ord;
             for( size_t q = nBase; q < starts.size(); q++ ) ord.push_back( q );
             std::sort( ord.begin(), ord.end(), [&t0]( size_t a, size_t b ) { return t0[a] < t0[b]; } );
@@ -1187,17 +1213,21 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
                 }
                 if( !near ) chosen.push_back( q );
             }
-            for( size_t q = 0; q < nBase && q < starts.size(); q++ ) follow( starts[q] );
-            for( size_t q : chosen ) follow( starts[q] );
+            // A two-member phase gets its interior from the scan below; the others follow the chosen starts.
+            for( size_t q = 0; q < nBase && q < starts.size(); q++ ) follow( starts[q], 1e-8, 60 );
+            if( n != 2 )
+                for( size_t q : chosen ) follow( starts[q], 1e-8, 60 );
         }
         else
             for( const auto& y : starts )
-                follow( y );
+                follow( y, 1e-11, 300 );
         if( n == 2 )
         {
             // A strongly non-ideal phase can have a narrow dip that lies between the starts and that the
             // steps above do not reach: scan in 1 % steps, then narrow the best interval.
             double xb = 0.5, tb = 1e300;
+            if( xbGrid > 0. ) { xb = xbGrid; tb = tbGrid; }   // the screen already tried the 1 % points
+            else
             for( int g = 1; g < 100; g++ )
             {
                 const double t = evalY( { g / 100., 1. - g / 100. }, tmp );
