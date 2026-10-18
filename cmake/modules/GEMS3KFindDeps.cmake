@@ -16,6 +16,10 @@ if(BUILD_SOLMOD_PYTHON)
     endif()
 endif()
 
+# Eigen (header-only) is needed by the native solver's linear algebra.
+find_package(Eigen3 REQUIRED NO_MODULE)
+message(STATUS "Found Eigen3 v${Eigen3_VERSION}")
+
 if(USE_THERMOFUN MATCHES ON)
   find_package(ThermoFun REQUIRED)
   if(NOT ThermoFun_FOUND)

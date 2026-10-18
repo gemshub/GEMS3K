@@ -30,6 +30,7 @@
 //
 
 #include <cstdlib>
+#include <Eigen/QR>
 #include <cstdarg>
 #include "ms_multi.h"
 #include "jama_lu.h"
@@ -90,6 +91,8 @@ FILE* ipm_probe_file()
 /// call (reset at its entry); only the first emits DECIDE "ipmkkt-fallback". thread_local
 /// because nodes may be solved concurrently on separate threads.
 static thread_local long int s_ipmKktFallbacks = 0;
+/// pa_IpmQrSortPivot: solves in the current InteriorPointsMethod() call; the first emits DECIDE "ipmqr-sortpivot".
+static thread_local long int s_ipmQrSortPivot = 0;
 
 void native_trace_decide( const char* fmt, ... )
 {
@@ -177,7 +180,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -207,7 +210,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaFastFirst, (long)pa->OptimaFloorCurvature, (long)pa->OptimaEmptySolvent, (long)pa->OptimaTpdVeto, (long)pa->OptimaEmptyPreSolveSkip, (long)pa->OptimaTwinReadmit, (long)pa->OptimaDryRetry, (long)pa->OptimaCallCap, (long)pa->OptimaCapNudges, (long)pa->OptimaFinishFirst, (long)pa->OptimaFastFrozen, pa->OptimaFastDiverge, (long)pa->OptimaRedoxFree, (long)pa->OptimaFastRises,
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
-             (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU );
+             (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -3647,6 +3650,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     const BASE_PARAM *pa_p = base_param();
     ipmKktRescues = 0;
     s_ipmKktFallbacks = 0;
+    s_ipmQrSortPivot = 0;
 
     status = 0;
     if( pm.FIs )
@@ -4446,6 +4450,72 @@ long int TMultiBase::SolveIpmAugmented( long int N )
     // mode 2: least squares  min |W^1/2 (A u - F)|^2 + u^T D u  by Householder QR of the
     // (La+N) x N stack [W^1/2 A_act ; D^1/2], right-hand side [W^1/2 F ; 0]. Column-major.
     const long int M = La + N;
+
+    // pa_IpmQrSortPivot: on a large step, the same stack with its rows in decreasing order of size,
+    // factorised with column pivoting. Rows of very different size (W_j follows the species amounts)
+    // need both for the factorisation to be accurate on every row. Same rank test and fallback as below.
+    if( base_param()->IpmQrSortPivot > 0 && La >= base_param()->IpmQrSortPivot )
+    {
+        thread_local Eigen::MatrixXd S;
+        thread_local Eigen::VectorXd sb, su;
+        thread_local std::vector<double> rsize, rscale;
+        thread_local std::vector<long int> ord;
+        thread_local Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr;
+        rsize.resize( (size_t)M );
+        rscale.resize( (size_t)La );
+        for( long int r = 0; r < La; r++ )
+        {
+            const long int j = act[(size_t)r];
+            const double* Aj = pm.A + j*Na;
+            const double sw = sqrt( std::max( pm.W[j], 0. ) );
+            double amax = 0.;
+            for( long int c = 0; c < N; c++ )
+                amax = std::max( amax, fabs( sw * Aj[c] ) );
+            rscale[(size_t)r] = sw;
+            rsize[(size_t)r] = amax;
+        }
+        for( long int i = 0; i < N; i++ )
+            rsize[(size_t)(La + i)] = sqrt( dreg[(size_t)i] );
+        ord.resize( (size_t)M );
+        for( long int r = 0; r < M; r++ ) ord[(size_t)r] = r;
+        std::stable_sort( ord.begin(), ord.end(),
+                          [&]( long int x, long int y ) { return rsize[(size_t)x] > rsize[(size_t)y]; } );
+        S.resize( M, N );
+        sb.resize( M );
+        for( long int t = 0; t < M; t++ )
+        {
+            const long int r = ord[(size_t)t];
+            if( r < La )
+            {
+                const long int j = act[(size_t)r];
+                const double* Aj = pm.A + j*Na;
+                const double sw = rscale[(size_t)r];
+                for( long int c = 0; c < N; c++ )
+                    S(t, c) = sw * Aj[c];
+                sb[t] = sw * pm.F[j];
+            }
+            else
+            {
+                const long int i = r - La;
+                S.row(t).setZero();
+                S(t, i) = rsize[(size_t)r];
+                sb[t] = 0.;
+            }
+        }
+        qr.setThreshold( 1e-14 );
+        qr.compute( S );
+        if( s_ipmQrSortPivot++ == 0 )
+            native_trace_decide( "ipmqr-sortpivot La=%ld N=%ld itg=%ld", (long)La, (long)N, (long)pm.ITG );
+        if( qr.rank() < N )
+        {
+            ipm_logger->warn("SolveIpmAugmented (pa_IpmQrSortPivot): rank-deficient, rank {} of {}", (long)qr.rank(), N);
+            return 2;
+        }
+        su = qr.solve( sb );
+        for( long int i = 0; i < N; i++ )
+            pm.U[i] = su[i];
+        return 0;
+    }
     // The top La rows of Q and b are overwritten in full below; only the bottom N rows need clearing.
     Q.resize( (size_t)M * (size_t)N );
     b.resize( (size_t)M );
