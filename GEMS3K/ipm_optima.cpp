@@ -1057,38 +1057,52 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
         double r1 = 0.; for( long int i = 0; i < N; i++ ) r1 += rex( r[(size_t)i], rFloor );
         bool solved = false;
         double dual = 1e-16;
-        auto solveDense = [&]( std::vector<double> K, std::vector<double> x ) -> bool
+        // LU of the KKT matrix with partial pivoting; one factorisation serves the solve and its refinement steps.
+        std::vector<double> KF;
+        std::vector<long int> piv;
+        auto factorDense = [&]( const std::vector<double>& K ) -> bool
         {
+            KF = K;
+            piv.assign( (size_t)M, 0 );
             for( long int c = 0; c < M; c++ )
             {
-                long int p = c; double pv = std::fabs( K[(size_t)c*(size_t)M + (size_t)c] );
+                long int p = c; double pv = std::fabs( KF[(size_t)c*(size_t)M + (size_t)c] );
                 for( long int q = c + 1; q < M; q++ )
                 {
-                    const double v = std::fabs( K[(size_t)q*(size_t)M + (size_t)c] );
+                    const double v = std::fabs( KF[(size_t)q*(size_t)M + (size_t)c] );
                     if( v > pv ) { pv = v; p = q; }
                 }
                 if( !( pv > 1e-300 ) ) return false;
+                piv[(size_t)c] = p;
                 if( p != c )
-                {
-                    for( long int q = 0; q < M; q++ ) std::swap( K[(size_t)c*(size_t)M + (size_t)q], K[(size_t)p*(size_t)M + (size_t)q] );
-                    std::swap( x[(size_t)c], x[(size_t)p] );
-                }
+                    for( long int q = 0; q < M; q++ ) std::swap( KF[(size_t)c*(size_t)M + (size_t)q], KF[(size_t)p*(size_t)M + (size_t)q] );
                 for( long int q = c + 1; q < M; q++ )
                 {
-                    const double f = K[(size_t)q*(size_t)M + (size_t)c] / K[(size_t)c*(size_t)M + (size_t)c];
+                    const double f = KF[(size_t)q*(size_t)M + (size_t)c] / KF[(size_t)c*(size_t)M + (size_t)c];
+                    KF[(size_t)q*(size_t)M + (size_t)c] = f;
                     if( f == 0. ) continue;
-                    for( long int t = c; t < M; t++ ) K[(size_t)q*(size_t)M + (size_t)t] -= f * K[(size_t)c*(size_t)M + (size_t)t];
-                    x[(size_t)q] -= f * x[(size_t)c];
+                    for( long int t = c + 1; t < M; t++ ) KF[(size_t)q*(size_t)M + (size_t)t] -= f * KF[(size_t)c*(size_t)M + (size_t)t];
                 }
             }
+            return true;
+        };
+        auto solveFactored = [&]( std::vector<double> x )
+        {
+            for( long int c = 0; c < M; c++ )
+                if( piv[(size_t)c] != c ) std::swap( x[(size_t)c], x[(size_t)piv[(size_t)c]] );
+            for( long int c = 0; c < M; c++ )
+                for( long int q = c + 1; q < M; q++ )
+                {
+                    const double f = KF[(size_t)q*(size_t)M + (size_t)c];
+                    if( f != 0. ) x[(size_t)q] -= f * x[(size_t)c];
+                }
             for( long int c = M - 1; c >= 0; c-- )
             {
                 double v = x[(size_t)c];
-                for( long int t = c + 1; t < M; t++ ) v -= K[(size_t)c*(size_t)M + (size_t)t] * x[(size_t)t];
-                x[(size_t)c] = v / K[(size_t)c*(size_t)M + (size_t)c];
+                for( long int t = c + 1; t < M; t++ ) v -= KF[(size_t)c*(size_t)M + (size_t)t] * x[(size_t)t];
+                x[(size_t)c] = v / KF[(size_t)c*(size_t)M + (size_t)c];
             }
             xsol = x;
-            return true;
         };
         const double mu0 = mu;
         bool ignoreFloorRows = false;
@@ -1121,14 +1135,15 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
                 rhs[(size_t)( nf + q )] = ( ignoreFloorRows && std::fabs( r[(size_t)i] ) <= rFloor ) ? 0. : -rho[(size_t)i] * r[(size_t)i];   // a row inside the floor is left alone: chasing it raises G for nothing
             }
             for( long int a = 0; a < nf; a++ ) rhs[(size_t)a] = -gt[(size_t)a];
-            if( !solveDense( K, rhs ) ) { dual = std::min( dual * 100., 1e-10 ); continue; }
+            if( !factorDense( K ) ) { dual = std::min( dual * 100., 1e-10 ); continue; }
+            solveFactored( rhs );
             std::vector<double> x = xsol;
             for( int ref = 0; ref < 2; ref++ )   // iterative refinement
             {
                 std::vector<double> res( rhs );
                 for( long int a = 0; a < M; a++ )
                     for( long int b = 0; b < M; b++ ) res[(size_t)a] -= K[(size_t)a*(size_t)M + (size_t)b] * x[(size_t)b];
-                if( !solveDense( K, res ) ) break;
+                solveFactored( res );
                 for( long int a = 0; a < M; a++ ) x[(size_t)a] += xsol[(size_t)a];
             }
             gDotDn = 0.; dMaxRel = 0.;
