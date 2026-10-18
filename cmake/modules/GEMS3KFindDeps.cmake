@@ -17,7 +17,12 @@ if(BUILD_SOLMOD_PYTHON)
 endif()
 
 # Eigen (header-only) is needed by the native solver's linear algebra.
-find_package(Eigen3 REQUIRED NO_MODULE)
+# With Optima, Optima is found first and brings the Eigen it was built with.
+if(USE_OPTIMA_SOLVER)
+  find_package(Optima REQUIRED)
+else()
+  find_package(Eigen3 REQUIRED NO_MODULE)
+endif()
 message(STATUS "Found Eigen3 v${Eigen3_VERSION}")
 
 if(USE_THERMOFUN MATCHES ON)

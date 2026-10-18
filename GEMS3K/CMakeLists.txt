@@ -21,9 +21,7 @@ endif()
 # and ipm_optima.cpp). OFF by default; without it the native AIA/SIA paths are unchanged and the
 # Optima modes fall back to native. Requires Optima to be findable via CMAKE_PREFIX_PATH.
 option(USE_OPTIMA_SOLVER "Enable the Optima-based equilibrium solver (AOP/SOP modes, requires Optima to be installed)" OFF)
-if(USE_OPTIMA_SOLVER)
-    find_package(Optima REQUIRED)
-endif()
+# (Optima itself is found in cmake/modules/GEMS3KFindDeps.cmake, before Eigen.)
 
 # Benchmark/diagnostics-only instrumentation (condition-number estimation, per-phase timing).
 # It adds overhead to every linear solve, so it is OFF by default; gems-benchmark turns it ON.
