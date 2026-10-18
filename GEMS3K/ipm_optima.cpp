@@ -996,6 +996,9 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
     bool converged = false;
     const long int kMaxIt = 60, kMaxChanges = 6, kMaxSize = 900;
     std::string why = "maxit";
+    // pa_OptimaFinishStall: the lowest reduced gradient so far, and the step it was reached at.
+    const long int kStall = base_param()->OptimaFinishStall;
+    double bestRed = 1e300; long int bestRedIt = 0, bestRedChanges = 0;
     for( ; it < kMaxIt; it++ )
     {
         std::vector<long int> fr;
@@ -1191,7 +1194,15 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
             redMax = std::max( redMax, std::fabs( g ) );
         }
         const double rMax = massResid( n, r );
-        if( ( dMaxRel <= 1e-8 || std::fabs( gDotDn ) <= 1e-10 * ( 1. + std::fabs( G ) ) ) && redMax <= ( nullStep ? 1e-5 : 1e-7 ) && rMax <= rFloor )
+        const bool stationary = ( dMaxRel <= 1e-8 || std::fabs( gDotDn ) <= 1e-10 * ( 1. + std::fabs( G ) ) )
+                                && redMax <= ( nullStep ? 1e-5 : 1e-7 ) && rMax <= rFloor;
+        if( kStall > 0 && !stationary )
+        {
+            if( changes != bestRedChanges ) { bestRed = 1e300; bestRedIt = it; bestRedChanges = changes; }
+            if( redMax < 0.5 * bestRed ) { bestRed = redMax; bestRedIt = it; }
+            else if( it - bestRedIt >= kStall ) { why = "stall"; break; }
+        }
+        if( stationary )
         {
             // stationary on this set: does any species outside it want in?
             long int best = -1; double bestG = -1e-6;
