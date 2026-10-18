@@ -3738,6 +3738,13 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
             apply_optima_lu( options, pa_p->OptimaPartialPivLU );
+            // pa_OptimaLSWarmTrials: a warm call starts near the answer, where the full line search costs many
+            // evaluations per step for little gain; cap its trials there.
+            if( pm.pNP != 0 && pa_p->OptimaLSWarmTrials > 0 && options.linesearch.enabled )
+            {
+                options.linesearch.maxiterations = (unsigned)pa_p->OptimaLSWarmTrials;
+                native_trace_decide( "lswarmcap trials=%ld", (long)pa_p->OptimaLSWarmTrials );
+            }
             // Plain warm calls only: on a cold start, or on a leg that starts from native's answer, a species
             // far from its answer can limit the step many times on its way to a value that is not zero.
             if( !referenceMode && pm.pNP != 0 && !optima_hop_leg )
