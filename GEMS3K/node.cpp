@@ -476,7 +476,6 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     }
     // pa_IpmLevelStart: keep the inputs of a call with a native part, in case its start from the leveled solution fails.
     DATABR* lvlBefore = nullptr;
-#ifdef USE_OPTIMA_SOLVER
     g_ipmLevelUsed = false;
     if( !kinetics && ( requested == NEED_GEM_AIA || requested == NEED_GEM_SIA || requested == NEED_GEM_HOP || requested == NEED_GEM_SHP )
         && multi_ptr()->base_param()->IpmLevelStart > 0 )
@@ -486,7 +485,6 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         dbr_dch_api::databr_realloc( CSD, lvlBefore );
         { DATABR* live = CNode; CNode = lvlBefore; databr_copy( live ); CNode = live; }
     }
-#endif
     g_optimaEscRetryNext = escRetryArmed;   // the first attempt leaves its last-resort re-solve to that retry
     long int status = GEM_run_single( uPrimalSol );
     g_optimaEscRetryNext = false;
@@ -529,7 +527,6 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         }
         databr_free( lsBefore );
     }
-#ifdef USE_OPTIMA_SOLVER
     // pa_IpmLevelStart: a call whose native part started from the leveled solution and did not end OK is solved
     // again once from the ordinary start; if that fails too, the first result is kept.
     if( lvlBefore )
@@ -560,7 +557,6 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         }
         databr_free( lvlBefore );
     }
-#endif
     if( requested == NEED_GEM_AIA && status == ERR_GEM_AIA && !kinetics )
     {
         const long int nudges = multi_ptr()->base_param()->ColdRetryNudges;

@@ -3235,7 +3235,6 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
         // pa_IpmLevelStart: when every mixed phase can be checked for stability, start from the leveled
         // solution (mixed phases at their best compositions) instead of the simplex vertex.
         bool lvlLeaveOut = false;
-#ifdef USE_OPTIMA_SOLVER
         if( pa_p->IpmLevelStart > 0 && !g_ipmLevelOff && !AllPhasesPure )
         {
             bool checkable = true;
@@ -3266,7 +3265,6 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
                                    cgOk, inSoln, lvlLeaveOut );
             }
         }
-#endif
 // experimental 15.03.10 (probably correct)
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
         for( j=0; j< pm.L; j++ )

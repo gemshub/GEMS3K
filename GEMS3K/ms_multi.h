@@ -1425,6 +1425,9 @@ public:
     double CertStabTPD( long int& worstPhase, long int& nScanned, long int& nDisagree );
     /// Prototype: composition search for one absent non-ideal phase; see ipm_main.cpp.
     double NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest );
+    /// The leveled solution: species Gibbs LP plus mixed phases at their best compositions,
+    /// priced by a tangent-plane search (ipm_level.cpp). Used by the native start and by Optima.
+    bool ColumnGenerationSeed( std::vector<double>& nOut, double tol );
 
     double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
@@ -1578,11 +1581,6 @@ public:
     /// the result through DetectSolventCollapseAndReseed()/DetectPhaseCollapseAndReseed().
     /// In plain words: finds a starting point that satisfies the element totals exactly.
     bool LPFeasibilitySeed( std::vector<double>& nOut );
-    /// pa_OptimaCgSeed: cold Optima seed by column generation - species Gibbs LP plus
-    /// pseudo-compounds priced by a tangent-plane search; see ipm_optima.cpp.
-    /// In plain words: a better first guess for the Optima solver, which also considers
-    /// mixed (solution) phases.
-    bool ColumnGenerationSeed( std::vector<double>& nOut, double tol );
     bool PotentialSpaceFinish( double dcFloor, const std::vector<double>& xlower, const std::vector<double>& xupper );
 
     /// Dual of the linearised-Gibbs LP (min sum_j G0[j]*n_j s.t. A n = b, n >= 0), computed
