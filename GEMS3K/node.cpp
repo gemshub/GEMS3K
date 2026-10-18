@@ -474,11 +474,12 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         dbr_dch_api::databr_realloc( CSD, lsBefore );
         { DATABR* live = CNode; CNode = lsBefore; databr_copy( live ); CNode = live; }
     }
-    // pa_IpmLevelStart: keep the inputs of a native call, in case its start from the leveled solution fails.
+    // pa_IpmLevelStart: keep the inputs of a call with a native part, in case its start from the leveled solution fails.
     DATABR* lvlBefore = nullptr;
 #ifdef USE_OPTIMA_SOLVER
     g_ipmLevelUsed = false;
-    if( !kinetics && ( requested == NEED_GEM_AIA || requested == NEED_GEM_SIA ) && multi_ptr()->base_param()->IpmLevelStart > 0 )
+    if( !kinetics && ( requested == NEED_GEM_AIA || requested == NEED_GEM_SIA || requested == NEED_GEM_HOP || requested == NEED_GEM_SHP )
+        && multi_ptr()->base_param()->IpmLevelStart > 0 )
     {
         lvlBefore = new DATABR;
         dbr_dch_api::databr_reset( lvlBefore, 1 );
@@ -529,8 +530,8 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         databr_free( lsBefore );
     }
 #ifdef USE_OPTIMA_SOLVER
-    // pa_IpmLevelStart: a native call that started from the leveled solution and did not end OK is solved again
-    // once from the ordinary start; if that fails too, the first result is kept.
+    // pa_IpmLevelStart: a call whose native part started from the leveled solution and did not end OK is solved
+    // again once from the ordinary start; if that fails too, the first result is kept.
     if( lvlBefore )
     {
         if( g_ipmLevelUsed && !isOkStatus( status ) )
