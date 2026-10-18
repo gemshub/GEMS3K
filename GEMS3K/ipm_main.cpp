@@ -180,7 +180,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -211,7 +211,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
              (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot, (long)pa->OptimaLSWarmTrials,
-             (long)pa->TpdStrongBasins );
+             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -1062,6 +1062,9 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
 // stable, and says whether it should form.
 // pa_OptimaLevelStart: set while the leveled start is certified; widens the composition search.
 thread_local bool g_tpdStrongSearch = false;
+// pa_IpmLevelStart: set when this call's native start came from the leveled solution; the second flag turns the start off for a retry.
+thread_local bool g_ipmLevelUsed = false;
+thread_local bool g_ipmLevelOff = false;
 double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
 {
     const long int n = pm.L1[k], p1 = p0 + n, N = pm.N;
@@ -3199,6 +3202,41 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 //        pm.PCI = 0.0;
      // Calling the simplex LP approximation here
         AutoInitialApproximation( );
+        // pa_IpmLevelStart: when every mixed phase can be checked for stability, start from the leveled
+        // solution (mixed phases at their best compositions) instead of the simplex vertex.
+        bool lvlLeaveOut = false;
+#ifdef USE_OPTIMA_SOLVER
+        if( pa_p->IpmLevelStart > 0 && !g_ipmLevelOff && !AllPhasesPure )
+        {
+            bool checkable = true;
+            for( k = 0; k < pm.FIs && checkable; k++ )
+            {
+                const char ph = pm.PHC[k];
+                if( pm.L1[k] > 1 && ( ph == PH_AQUEL || ph == PH_GASMIX || ph == PH_PLASMA || ph == PH_FLUID || ph == PH_SORPTION
+                                      || ph == PH_POLYEL || ph == PH_ADSORPT || ph == PH_IONEX ) )
+                    checkable = false;
+            }
+            if( checkable )
+            {
+                std::vector<double> nCg;
+                g_tpdStrongSearch = true;
+                const bool cgOk = ColumnGenerationSeed( nCg, 1e-6 ) && nCg.size() == (size_t)pm.L;
+                g_tpdStrongSearch = false;
+                long int inSoln = 0;
+                if( cgOk )
+                {
+                    for( j = 0; j < pm.Ls; j++ ) if( nCg[(size_t)j] > 0. ) inSoln++;
+                    for( j = 0; j < pm.L; j++ ) pm.Y[j] = nCg[(size_t)j];
+                    // A leveled solution without mixed-phase members shows they cannot form; leave them out.
+                    lvlLeaveOut = ( pa_p->IpmLevelStart >= 2 && inSoln == 0 );
+                    g_ipmLevelUsed = true;
+                }
+                native_trace_decide( "natlvl used=%d insoln=%ld leftout=%d", cgOk ? 1 : 0, inSoln, lvlLeaveOut ? 1 : 0 );
+                ipm_logger->debug( "Native start from the leveled solution: used={} mixed-phase members={} left out={}",
+                                   cgOk, inSoln, lvlLeaveOut );
+            }
+        }
+#endif
 // experimental 15.03.10 (probably correct)
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
         for( j=0; j< pm.L; j++ )
@@ -3237,7 +3275,7 @@ to_text_file( "MultiDumpLP.txt" );   // Debugging
         std::vector<double> yLpFill;
         if( FilloutBudgetValue() > 0. )
             yLpFill.assign( pm.Y, pm.Y + pm.L );
-        DC_RaiseZeroedOff( 0, pm.L );
+        DC_RaiseZeroedOff( lvlLeaveOut ? pm.Ls : 0, pm.L );
         // pa_FilloutBudget: the class constants can ask for more of an element than the system
         // holds. Applied after any fill-out, so it bounds whatever was written.
         ApplyFilloutBudget( yLpFill );

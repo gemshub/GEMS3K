@@ -196,6 +196,8 @@ thread_local long int g_optimaIterBudget = -1;     // Optima iterations left for
 thread_local bool g_optimaFixAccept = false;     // Optima takes the full step, clipped to the bounds
 thread_local OptimaQuickTryWatch g_optimaQuickTry;   // the quick first try's frozen and divergence checks
 extern thread_local bool g_aqueousAbsent;
+extern thread_local bool g_ipmLevelUsed;   // pa_IpmLevelStart (ipm_main.cpp)
+extern thread_local bool g_ipmLevelOff;
 thread_local bool g_optimaPreSolveEmpty = false; // the reduced pre-solve found nothing earlier in this GEM_run()
 thread_local long int g_lvlFullCalls = 0;   // pa_OptimaColdLevel / pa_OptimaLevelStart: cold Optima calls past the quick try in this GEM_run()
 thread_local bool g_optimaCapCall = false;   // inside a capped Optima call (pa_OptimaCallCap)
@@ -472,6 +474,18 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         dbr_dch_api::databr_realloc( CSD, lsBefore );
         { DATABR* live = CNode; CNode = lsBefore; databr_copy( live ); CNode = live; }
     }
+    // pa_IpmLevelStart: keep the inputs of a native call, in case its start from the leveled solution fails.
+    DATABR* lvlBefore = nullptr;
+#ifdef USE_OPTIMA_SOLVER
+    g_ipmLevelUsed = false;
+    if( !kinetics && ( requested == NEED_GEM_AIA || requested == NEED_GEM_SIA ) && multi_ptr()->base_param()->IpmLevelStart > 0 )
+    {
+        lvlBefore = new DATABR;
+        dbr_dch_api::databr_reset( lvlBefore, 1 );
+        dbr_dch_api::databr_realloc( CSD, lvlBefore );
+        { DATABR* live = CNode; CNode = lvlBefore; databr_copy( live ); CNode = live; }
+    }
+#endif
     g_optimaEscRetryNext = escRetryArmed;   // the first attempt leaves its last-resort re-solve to that retry
     long int status = GEM_run_single( uPrimalSol );
     g_optimaEscRetryNext = false;
@@ -514,6 +528,38 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         }
         databr_free( lsBefore );
     }
+#ifdef USE_OPTIMA_SOLVER
+    // pa_IpmLevelStart: a native call that started from the leveled solution and did not end OK is solved again
+    // once from the ordinary start; if that fails too, the first result is kept.
+    if( lvlBefore )
+    {
+        if( g_ipmLevelUsed && !isOkStatus( status ) )
+        {
+            DATABR* failed = new DATABR;
+            dbr_dch_api::databr_reset( failed, 1 );
+            dbr_dch_api::databr_realloc( CSD, failed );
+            { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+            const std::string failedError = ipmlog_error;
+            long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
+            databr_copy( lvlBefore );
+            CNode->NodeStatusCH = requested;
+            clearipmLogError();
+            g_ipmLevelOff = true;
+            const long int second = GEM_run_single( uPrimalSol );
+            g_ipmLevelOff = false;
+            itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+            native_trace_decide( "natlvlretry requested=%ld first=%ld second=%ld", (long)requested, (long)status, (long)second );
+            node_logger->info( "GEM_run(): mode {} failed ({}) after the leveled start - solved again from the ordinary start: {}",
+                               (long)requested, (long)status, isOkStatus( second ) ? "recovered" : "still failed" );
+            if( !isOkStatus( second ) ) { databr_copy( failed ); ipmlog_error = failedError; }
+            databr_free( failed );
+            pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
+            CNode->IterDone = itf + itg; CalcTime = seconds;
+            status = CNode->NodeStatusCH;
+        }
+        databr_free( lvlBefore );
+    }
+#endif
     if( requested == NEED_GEM_AIA && status == ERR_GEM_AIA && !kinetics )
     {
         const long int nudges = multi_ptr()->base_param()->ColdRetryNudges;

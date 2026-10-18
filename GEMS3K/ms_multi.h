@@ -607,6 +607,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_TpdStrongBasins: the thorough check of whether a mixed phase can form tries every start composition once
     /// and follows only the corner, ideal and uniform starts and this many best separate ones. 0 = follow every start, default 4.
     long int TpdStrongBasins = 4;
+    /// pa_IpmLevelStart: a cold native call on a system without aqueous, gas or sorption mixtures starts from the
+    /// leveled solution (the linear solve with mixed phases at their best compositions); 2 = also leave out the mixed
+    /// phases it shows cannot form. A call that then fails is solved again from the ordinary start. 0 = off, default 2.
+    long int IpmLevelStart = 2;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2123,7 +2127,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaPreSolveSeed, f_pa_OptimaColdLevel, f_pa_OptimaLevelStart, f_pa_OptimaFastCollapse, f_pa_OptimaFrozenCut,
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
-    f_pa_TpdStrongBasins
+    f_pa_TpdStrongBasins, f_pa_IpmLevelStart
 
 } MULTI_DYNAMIC_FIELDS;
 
