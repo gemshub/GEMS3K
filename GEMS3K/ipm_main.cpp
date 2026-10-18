@@ -181,7 +181,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -212,7 +212,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
              (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot, (long)pa->OptimaLSWarmTrials,
-             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish );
+             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -1065,6 +1065,8 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
 thread_local bool g_tpdStrongSearch = false;
 // pa_IpmLevelStart: set when this call's native start came from the leveled solution; the second flag turns the start off for a retry.
 thread_local bool g_ipmLevelUsed = false;
+thread_local bool g_ipmNoProgArmed = false;   // pa_IpmNoProgress: set by the caller where the Optima finish follows
+thread_local bool g_ipmNoProgFired = false;   // pa_IpmNoProgress stopped the loop in this call
 thread_local bool g_ipmLevelOff = false;
 double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
 {
@@ -3744,6 +3746,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     const double kIpmStallIncLo   = 0.35;   // PCI increases on 35-65 % of steps,
     const double kIpmStallIncHi   = 0.65;   //   i.e. it is bouncing, not moving
     std::vector<double> stW_pci, stW_fx, stW_sum, stW_max;
+    std::vector<double> npBest;   // pa_IpmNoProgress: lowest energy so far, per iteration
     // One row of pm.X[] per iteration, held in a ring buffer.
     std::vector<double> stW_xf;
     long int stW_n = 0, stW_head = 0;
@@ -3965,6 +3968,22 @@ STEP_POINT( "IPM Iteration" );
                  && spreadOK( stW_max, kIpmStallCompTol )
                  && inc >= kIpmStallIncLo && inc <= kIpmStallIncHi )
                     goto CONVERGED;   // the criterion is noise; the state is not moving
+            }
+        }
+        // pa_IpmNoProgress: once the lowest energy has not improved over the window, stop as at the iteration limit;
+        // the caller then lets the Optima finish take over. Armed only where that finish follows.
+        if( g_ipmNoProgArmed && pa_p->IpmNoProgress > 0 )
+        {
+            const long int w = pa_p->IpmNoProgress;
+            if( IT1 == 0 ) npBest.clear();
+            npBest.push_back( npBest.empty() ? pm.FX : std::min( npBest.back(), pm.FX ) );
+            const long int n = (long int)npBest.size();
+            if( n > w && npBest[(size_t)( n - 1 )] >= npBest[(size_t)( n - 1 - w )] - 1e-10 * std::fabs( pm.FX ) )
+            {
+                g_ipmNoProgFired = true;
+                native_trace_decide( "ipmnoprog it=%ld window=%ld fx=%.12e", (long)IT1, (long)w, npBest.back() );
+                ipm_logger->info( "Native solver: no progress over {} iterations at iteration {}; handing over to the Optima finish", w, IT1 );
+                break;
             }
         }
         if( nCNud > 0L && (IT1 >= cnr-2 && IT1 >= 2 ) )  // finish here because u vector diverges at further IPM iterations

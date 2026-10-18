@@ -198,6 +198,14 @@ thread_local bool g_optimaFixAccept = false;     // Optima takes the full step, 
 thread_local OptimaQuickTryWatch g_optimaQuickTry;   // the quick first try's frozen and divergence checks
 extern thread_local bool g_aqueousAbsent;
 extern thread_local bool g_ipmLevelUsed;   // pa_IpmLevelStart (ipm_main.cpp)
+extern thread_local bool g_ipmNoProgArmed;   // pa_IpmNoProgress (ipm_main.cpp)
+extern thread_local bool g_ipmNoProgFired;
+// Arms pa_IpmNoProgress for one native solve.
+struct NoProgArm
+{
+    explicit NoProgArm( bool on ) { g_ipmNoProgArmed = on; g_ipmNoProgFired = false; }
+    ~NoProgArm() { g_ipmNoProgArmed = false; }
+};
 extern thread_local bool g_ipmLevelOff;
 thread_local bool g_optimaPreSolveEmpty = false; // the reduced pre-solve found nothing earlier in this GEM_run()
 thread_local long int g_lvlFullCalls = 0;   // pa_OptimaColdLevel / pa_OptimaLevelStart: cold Optima calls past the quick try in this GEM_run()
@@ -958,6 +966,8 @@ long int TNode::GEM_run_single( bool uPrimalSol )
             // Hybrid: native selects the phases, then a warm Optima leg finishes (restoring
             // native's answer as BAD_GEM_HOP if it fails) - TMultiBase::CalculateEquilibriumStateHOP().
             // SHP is HOP with a warm native leg (with a cold fallback inside).
+            // A native leg stopped by pa_IpmNoProgress is finished by the Optima leg.
+            NoProgArm arm( CNode->dt <= 0. && multi_ptr()->GetControlConditions().empty() );
             CalcTime = multi_ptr()->CalculateEquilibriumStateHOP( NumIterFIA, NumIterIPM,
                                        CNode->NodeStatusCH == NEED_GEM_SHP );
 #else
@@ -986,6 +996,8 @@ long int TNode::GEM_run_single( bool uPrimalSol )
         else
         {
 #ifdef USE_OPTIMA_SOLVER
+            NoProgArm arm( CNode->dt <= 0. && multi_ptr()->GetControlConditions().empty()
+                           && multi_ptr()->base_param()->NativeOptimaFinish > 0 );
             try
             {
                 CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
@@ -1000,8 +1012,27 @@ long int TNode::GEM_run_single( bool uPrimalSol )
                 if( !( ( limit || broken ) && CNode->dt <= 0.
                        && ( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_SIA )
                        && multi_ptr()->NativeOptimaRescue( NumIterFIA, NumIterIPM, optSec, broken ) ) )
-                    throw;
-                CalcTime = multi_ptr()->GetPM()->t_elap_sec + optSec;
+                {
+                    // pa_IpmNoProgress stopped native and the finish failed: solve again cold without the stop.
+                    if( !( limit && g_ipmNoProgFired ) )
+                        throw;
+                    g_ipmNoProgArmed = false;
+                    pmm->pNP = 0;
+                    const long int fia0 = NumIterFIA, ipm0 = NumIterIPM;
+                    try
+                    {
+                        CalcTime = multi_ptr()->CalculateEquilibriumState( NumIterFIA, NumIterIPM );
+                        NumIterFIA += fia0; NumIterIPM += ipm0;
+                        native_trace_decide( "ipmnoprog-retry ok=1" );
+                    }
+                    catch( TError& )
+                    {
+                        native_trace_decide( "ipmnoprog-retry ok=0" );
+                        throw nerr;
+                    }
+                }
+                else
+                    CalcTime = multi_ptr()->GetPM()->t_elap_sec + optSec;
             }
 #else
             CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );

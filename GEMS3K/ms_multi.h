@@ -618,6 +618,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_OptimaLevelFinish: a cold Optima call whose leveled start holds mixed phases first runs the Newton finish on that
     /// start, and Optima starts from the finished point when it converges. 0 = off, 1 = on (default).
     long int OptimaLevelFinish = 1;
+    /// pa_IpmNoProgress: native solver: when the energy has not improved over this many iterations, stop and let the
+    /// Optima finish take over; if that finish fails, the call is solved again cold without this stop. 0 = off (default).
+    long int IpmNoProgress = 0;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2136,7 +2139,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaPreSolveSeed, f_pa_OptimaColdLevel, f_pa_OptimaLevelStart, f_pa_OptimaFastCollapse, f_pa_OptimaFrozenCut,
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
-    f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish
+    f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress
 
 } MULTI_DYNAMIC_FIELDS;
 
