@@ -302,19 +302,24 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
                             : ( requested == NEED_GEM_AOP || requested == NEED_GEM_SOP ) ? NEED_GEM_SOP : NEED_GEM_SHP;
     DATABR* failed = snap();
     const std::string failedError = ipmlog_error;
+    // pH/Eh control results live outside the DATABR, so they are saved with every answer that may be returned
+    const std::vector<EqControlCondition> failedCC = multi_ptr()->GetControlConditions();
     long int itf = pmm->ITF, itg = pmm->ITG;
     long int itTotal = isErr ? pmm->ITF + pmm->ITG : CNode->IterDone;
     double seconds = CalcTime;
     long int nAttempts = 0;
 
-    struct Entry { DATABR* d; double rel; double G; long int rung; };
+    struct Entry { DATABR* d; double rel; double G; long int rung; std::vector<EqControlCondition> cc; bool targetsMet; };
     std::vector<Entry> pool;
     auto addToPool = [&]( long int s, long int rung ) {
         if( !isOk( s ) && !isBad( s ) )
             return;   // an error leaves no packed answer
         double rel = 0.;
         NudgedAnswerBalances( CNode, b0, rel );
-        pool.push_back( { snap(), rel, CNode->Gs, rung } ); };
+        // under pH/Eh control an attempt counts only if it met every target
+        bool met = true;
+        for( const auto& c : multi_ptr()->GetControlConditions() ) met = met && c.targetMet;
+        pool.push_back( { snap(), rel, CNode->Gs, rung, multi_ptr()->GetControlConditions(), met } ); };
     if( isBad( st ) )
         addToPool( st, 0 );
 
@@ -470,7 +475,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         long int best = -1;
         for( size_t e = 0; e < pool.size(); e++ )
         {
-            if( pool[e].rel > 1. ) continue;
+            if( pool[e].rel > 1. || !pool[e].targetsMet ) continue;
             if( best < 0 || pool[e].G < pool[(size_t)best].G ) best = (long int)e;
         }
         return best; };
@@ -519,6 +524,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         if( bi >= 0 )
         {
             databr_copy( pool[(size_t)bi].d );
+            multi_ptr()->RestoreControlConditions( pool[(size_t)bi].cc );
             setB( b0 );
             CNode->dt = dt0;
             result = requested + 2;
@@ -530,6 +536,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         else
         {
             databr_copy( failed );
+            multi_ptr()->RestoreControlConditions( failedCC );
             ipmlog_error = failedError;
             result = st;
         }

@@ -1546,6 +1546,10 @@ public:
     /// targetMet hold that call's result.
     const std::vector<EqControlCondition>& GetControlConditions() const
     { return optima_control_conditions; }
+    /// Puts back control conditions saved with GetControlConditions(), results included (used when a
+    /// caller returns an earlier solve's answer).
+    void RestoreControlConditions( const std::vector<EqControlCondition>& saved )
+    { optima_control_conditions = saved; }
 
     /// Worst-case (infinity-norm) mass-balance residual |A*Y - B| over pm.Y[]/pm.B[]. A
     /// diagnostic for callers and tests; the solver's own check is CheckMassBalanceResiduals().
