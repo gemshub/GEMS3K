@@ -620,11 +620,11 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     long int OptimaLevelFinish = 1;
     /// pa_IpmNoProgress: native solver: when the energy has not improved over this many iterations, stop and let Optima take
     /// over from that state (AIA/SIA: the Optima finish, then a cold re-solve without the stop if it fails; HOP/SHP: the
-    /// Optima leg, warm, then cold). 0 = off (default).
-    long int IpmNoProgress = 0;
+    /// Optima leg, warm, then cold). 0 = off; default 500.
+    long int IpmNoProgress = 500;
     /// pa_OptimaFDPureSkip: Optima solver: the Hessian column of a pure-phase species is set to zero without an activity
-    /// call (its amount changes no potential). 0 = off (default), 1 = on.
-    long int OptimaFDPureSkip = 0;
+    /// call (its amount changes no potential). 0 = off, 1 = on (default).
+    long int OptimaFDPureSkip = 1;
     /// pa_OptimaFinishStall: the Newton finish gives up when its largest reduced gradient has not fallen over this many
     /// steps (it then reports no convergence, as at its step limit). 0 = off (default).
     long int OptimaFinishStall = 0;
