@@ -77,6 +77,21 @@ void TMultiBase::RunKineticsStep()
         kinmLl0.assign( pm.DLL, pm.DLL + pm.L );
     }
 
+    // pa_KinColdAmounts: the rate law reads the species amounts in pm.X. A warm call has just copied the amounts
+    // handed in (pm.Y) there; a cold call has not, so pm.X still holds the previous solve's answer, which on a
+    // shared solver can be another node's. The cold call is shown the amounts handed in, and pm.X is put back after.
+    const bool coldAmounts = kinmWillRun && !pm.pNP && base_param()->KinColdAmounts > 0;
+    std::vector<double> coldX, coldXF, coldXFA;
+    if( coldAmounts )
+    {
+        coldX.assign( pm.X, pm.X + pm.L );
+        coldXF.assign( pm.XF, pm.XF + pm.FI );
+        coldXFA.assign( pm.XFA, pm.XFA + pm.FIs );
+        for( long int j = 0; j < pm.L; j++ ) pm.X[j] = pm.Y[j];
+        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+        native_trace_decide( "kincold amounts=handed-in" );
+    }
+
     if( pm.pKMM < 2 )
     {
         if( pm.ITau < 0 || pm.pKMM != 1 )
@@ -88,6 +103,12 @@ void TMultiBase::RunKineticsStep()
         else if( pm.ITau >= 0 ) {
             CalculateKinMet( LINK_PP_MODE );   // Rates and metast. constraints at time step
         }
+    }
+    if( coldAmounts )
+    {
+        for( long int j = 0; j < pm.L; j++ ) pm.X[j] = coldX[(size_t)j];
+        for( long int k = 0; k < pm.FI; k++ ) pm.XF[k] = coldXF[(size_t)k];
+        for( long int k = 0; k < pm.FIs; k++ ) pm.XFA[k] = coldXFA[(size_t)k];
     }
 
     if( kinmWillRun )
