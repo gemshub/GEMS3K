@@ -634,8 +634,8 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_FailRescue: a call that ends with an error or a bad result is tried again in steps - warm from the node's previous
     /// answer, nudged compositions, a walk from the previous answer, looser settings, the other solver - each finished at the
     /// exact composition with the normal settings; with 2, if none passes, the best balanced attempt is returned as a bad
-    /// result (GEM_rescue_rung() = 6). 0 = off (default), 1 = steps 1-5, 2 = steps 1-6.
-    long int FailRescue = 0;
+    /// result (GEM_rescue_rung() = 6). 0 = off, 1 = steps 1-5, 2 = steps 1-6 (default).
+    long int FailRescue = 2;
     /// pa_RescueWalkSteps: number of equal steps of the walk in pa_FailRescue; 0 = no walk. Default 8.
     long int RescueWalkSteps = 8;
 
