@@ -438,8 +438,14 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             native_trace_decide( "rescue rung=3 skipped prev=%d dist=%.3e box=%d", xSum > 0. ? 1 : 0, dist, boxFrom ? 1 : 0 );
     }
 
+    // A kinetic node where no attempt so far produced any result: its kinetic limits are likely not reachable
+    // from this composition, which neither looser settings nor the other solver change, so steps 4 and 5 are skipped.
+    const bool noResultKinetic = kinetics && pool.empty();
+    if( !passed && noResultKinetic )
+        native_trace_decide( "rescue skip=4,5 reason=kinetic-no-result attempts=%ld", nAttempts );
+
     // (4) one solve with looser settings, then the finish with the normal ones.
-    if( !passed )
+    if( !passed && !noResultKinetic )
     {
         databr_copy( D0 );
         const BASE_PARAM saved = *bp;
@@ -468,7 +474,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             if( best < 0 || pool[e].G < pool[(size_t)best].G ) best = (long int)e;
         }
         return best; };
-    if( !passed )
+    if( !passed && !noResultKinetic )
     {
         std::vector<long int> others;
         // native does not apply pH/Eh control conditions, so a controlled call never goes to it
