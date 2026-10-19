@@ -302,7 +302,8 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
                             : ( requested == NEED_GEM_AOP || requested == NEED_GEM_SOP ) ? NEED_GEM_SOP : NEED_GEM_SHP;
     DATABR* failed = snap();
     const std::string failedError = ipmlog_error;
-    long int itf = pmm->ITF, itg = pmm->ITG, itTotal = CNode->IterDone;
+    long int itf = pmm->ITF, itg = pmm->ITG;
+    long int itTotal = isErr ? pmm->ITF + pmm->ITG : CNode->IterDone;
     double seconds = CalcTime;
     long int nAttempts = 0;
 
@@ -324,13 +325,15 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         const double kTau = pmm->kTau, kdT = pmm->kdT;
         if( kinetics && frozenBox ) CNode->dt = 0.;
         CNode->NodeStatusCH = mode;
+        CNode->IterDone = 0;   // a failed solve does not write it, so a loaded count is not counted again
         const long int s = GEM_run_capped( primal );
         if( kinetics && frozenBox )
         {
             CNode->dt = dt0;
             pmm->ITau = ITau; pmm->pKMM = pKMM; pmm->kTau = kTau; pmm->kdT = kdT;
         }
-        itf += pmm->ITF; itg += pmm->ITG; itTotal += CNode->IterDone; seconds += CalcTime;
+        itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
+        itTotal += CNode->IterDone > 0 ? CNode->IterDone : pmm->ITF + pmm->ITG;
         nAttempts++;
         return s; };
     auto setB = [&]( const std::vector<double>& b ) {
