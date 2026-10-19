@@ -490,6 +490,10 @@ public:
     ///                     true  (1)  -  use speciation provided in the DATABR memory structure (e.g. after reading the DBR file)
     ///  \return NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
     long int  GEM_run( bool uPrimalSol );   // calls GEM for a work node
+    /// Which pa_FailRescue step produced the last GEM_run() result: 0 = none (the call itself), 1 = warm from the
+    /// previous answer, 2 = a nudged composition, 3 = the walk, 4 = looser settings, 5 = the other solver,
+    /// 6 = the best attempt (returned as bad).
+    long int GEM_rescue_rung() const { return rescueRung; }
 
     /// One trace element's verdict from GEM_trace_regimes().
     struct TraceRegime
@@ -1405,10 +1409,12 @@ public:
     DATABR* databr_free(DATABR* data_BR_);
 
 protected:
+    long int rescueRung = 0;   // see GEM_rescue_rung()
     /// One GEM_run() attempt, without the cold-call recovery (GEM_run() is this plus pa_ColdRetryNudges).
     long int GEM_run_single( bool uPrimalSol );
     /// The layers of GEM_run(), outermost first; each calls the next.
     void WarnIfSystemTooLarge();
+    long int GEM_run_rescue( bool uPrimalSol );     // pa_FailRescue
     long int GEM_run_capped( bool uPrimalSol );     // pa_OptimaCallCap
     long int GEM_run_dry_redo( bool uPrimalSol );   // pa_OptimaDryRetry
     long int GEM_run_tries( bool uPrimalSol );      // pa_OptimaFastFirst, the solve and its retries

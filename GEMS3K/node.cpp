@@ -247,10 +247,294 @@ long int TNode::GEM_run( bool uPrimalSol )
     long int st;
     {
         gems3k_timing::Scope t( gems3k_timing::Call );
-        st = GEM_run_capped( uPrimalSol );
+        st = GEM_run_rescue( uPrimalSol );
     }
     gems3k_timing::flush( requested, st, CNode->IterDone );
     return st;
+}
+
+// pa_FailRescue: a call that ends with an error or a bad result is tried again in steps, stopping at the
+// first that passes: (1) a cold call solved warm from the node's previous answer, (2) nudged compositions,
+// (3) a walk from the node's previous answer to the new composition, (4) looser settings, (5) the other
+// solver from the best point so far. Each passing answer comes from a solve at the exact composition with
+// the normal settings. With pa_FailRescue = 2, if none passes, the attempt that best balances the
+// composition (then lowest G) is returned as a bad result; if
+// none balances, the original failure is returned. A kinetic node is finished with this step's kinetic
+// limits held fixed, so the kinetics are not applied twice. DECIDE rescue, rescue-result.
+long int TNode::GEM_run_rescue( bool uPrimalSol )
+{
+    rescueRung = 0;
+    BASE_PARAM* bp = multi_ptr()->base_param();
+    const long int requested = CNode->NodeStatusCH;
+    const long int level = bp->FailRescue;
+    const bool sixModes = requested == NEED_GEM_AIA || requested == NEED_GEM_SIA || requested == NEED_GEM_AOP
+                       || requested == NEED_GEM_SOP || requested == NEED_GEM_HOP || requested == NEED_GEM_SHP;
+    if( level <= 0 || !sixModes )
+        return GEM_run_capped( uPrimalSol );
+
+    auto snap = [this]() {
+        DATABR* d = new DATABR;
+        dbr_dch_api::databr_reset( d, 1 );
+        dbr_dch_api::databr_realloc( CSD, d );
+        { DATABR* live = CNode; CNode = d; databr_copy( live ); CNode = live; }
+        return d; };
+    auto isOk = []( long int s ) { return s == OK_GEM_AIA || s == OK_GEM_SIA || s == OK_GEM_AOP || s == OK_GEM_SOP
+                                          || s == OK_GEM_HOP || s == OK_GEM_SHP; };
+    auto isBad = []( long int s ) { return s == BAD_GEM_AIA || s == BAD_GEM_SIA || s == BAD_GEM_AOP || s == BAD_GEM_SOP
+                                           || s == BAD_GEM_HOP || s == BAD_GEM_SHP; };
+
+    DATABR* D0 = snap();   // the call's inputs
+    long int st = GEM_run_capped( uPrimalSol );
+    // a warm call may report its outcome under the cold code of its solver, so any bad or error code counts
+    const bool isErr = st == ERR_GEM_AIA || st == ERR_GEM_SIA || st == ERR_GEM_AOP || st == ERR_GEM_SOP
+                    || st == ERR_GEM_HOP || st == ERR_GEM_SHP;
+    if( !isBad( st ) && !isErr )
+    {
+        databr_free( D0 );
+        return st;
+    }
+
+    const long int nIC = CSD->nICb;
+    const std::vector<double> b0( CNode->bIC, CNode->bIC + nIC );
+    const bool kinetics = D0->dt > 0.;
+    const double dt0 = D0->dt;
+    const long int warmMode = ( requested == NEED_GEM_AIA || requested == NEED_GEM_SIA ) ? NEED_GEM_SIA
+                            : ( requested == NEED_GEM_AOP || requested == NEED_GEM_SOP ) ? NEED_GEM_SOP : NEED_GEM_SHP;
+    DATABR* failed = snap();
+    const std::string failedError = ipmlog_error;
+    long int itf = pmm->ITF, itg = pmm->ITG, itTotal = CNode->IterDone;
+    double seconds = CalcTime;
+    long int nAttempts = 0;
+
+    struct Entry { DATABR* d; double rel; double G; long int rung; };
+    std::vector<Entry> pool;
+    auto addToPool = [&]( long int s, long int rung ) {
+        if( !isOk( s ) && !isBad( s ) )
+            return;   // an error leaves no packed answer
+        double rel = 0.;
+        NudgedAnswerBalances( CNode, b0, rel );
+        pool.push_back( { snap(), rel, CNode->Gs, rung } ); };
+    if( isBad( st ) )
+        addToPool( st, 0 );
+
+    // One solve of the current CNode; a kinetic node with frozenBox is solved without the kinetics step,
+    // inside the kinetic limits already in CNode.
+    auto run = [&]( long int mode, bool primal, bool frozenBox ) {
+        const long int ITau = pmm->ITau, pKMM = pmm->pKMM;
+        const double kTau = pmm->kTau, kdT = pmm->kdT;
+        if( kinetics && frozenBox ) CNode->dt = 0.;
+        CNode->NodeStatusCH = mode;
+        const long int s = GEM_run_capped( primal );
+        if( kinetics && frozenBox )
+        {
+            CNode->dt = dt0;
+            pmm->ITau = ITau; pmm->pKMM = pKMM; pmm->kTau = kTau; pmm->kdT = kdT;
+        }
+        itf += pmm->ITF; itg += pmm->ITG; itTotal += CNode->IterDone; seconds += CalcTime;
+        nAttempts++;
+        return s; };
+    auto setB = [&]( const std::vector<double>& b ) {
+        for( long int i = 0; i < nIC; i++ ) CNode->bIC[i] = b[(size_t)i]; };
+    // The answer now in CNode, finished warm at the exact composition with the normal settings.
+    auto finish = [&]( long int rung ) {
+        setB( b0 );
+        const long int s = run( warmMode, true, true );
+        addToPool( s, rung );
+        return isOk( s ); };
+
+    native_trace_quiet( true );
+    bool passed = false;
+
+    // (1) a cold call with a previous answer in its inputs is solved warm from it, as a transport code would
+    double xPrev = 0.;
+    for( long int jj = 0; jj < CSD->nDCb; jj++ ) xPrev += D0->xDC[jj];
+    const bool coldReq = requested == NEED_GEM_AIA || requested == NEED_GEM_AOP || requested == NEED_GEM_HOP;
+    if( coldReq && xPrev > 0. )
+    {
+        databr_copy( D0 );
+        const long int s = run( warmMode, true, false );
+        addToPool( s, 1 );
+        if( isOk( s ) ) { passed = true; rescueRung = 1; }
+        native_trace_decide( "rescue rung=1 mode=%ld status=%ld it=%ld", warmMode, s, itTotal );
+    }
+
+    // (2) nudged compositions, as pa_ColdRetryNudges: bIC[i] x (1 + s_i k 1e-15), k = +1, -1, +2, -2, ...
+    for( long int n = 0; n < bp->ColdRetryNudges && !passed; n++ )
+    {
+        const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
+        databr_copy( D0 );
+        for( long int i = 0; i < nIC; i++ )
+            CNode->bIC[i] = b0[(size_t)i] * ( 1. + ( ( i % 2 ) ? -1. : 1. ) * k * 1e-15 );
+        const long int s = run( requested, uPrimalSol, false );
+        long int f = -1;
+        if( isOk( s ) )
+        {
+            addToPool( s, 2 );
+            passed = finish( 2 );
+            f = CNode->NodeStatusCH;
+            if( passed ) rescueRung = 2;
+        }
+        native_trace_decide( "rescue rung=2 attempt=%ld nudge=%+g status=%ld finish=%ld it=%ld", n + 1, k, s, f, itTotal );
+    }
+
+    // (3) walk from the bulk the previous answer balances to the new one, in equal warm steps; a failed step
+    // is halved, at most three times. A kinetic node walks inside the kinetic limits of the first attempt
+    // that produced them, and skips the walk if none did.
+    if( !passed && bp->RescueWalkSteps > 0 && CSD->nDCb == CSD->nDC && CSD->nICb == CSD->nIC )
+    {
+        std::vector<double> bPrev( (size_t)nIC, 0. );
+        double xSum = 0.;
+        for( long int jj = 0; jj < CSD->nDCb; jj++ ) xSum += D0->xDC[jj];
+        for( long int i = 0; i < nIC; i++ )
+            for( long int jj = 0; jj < CSD->nDCb; jj++ )
+                bPrev[(size_t)i] += CSD->A[ CSD->xdc[jj] * CSD->nIC + CSD->xic[i] ] * D0->xDC[jj];
+        double dist = 0.;
+        for( long int i = 0; i < nIC; i++ )
+            if( CSD->ccIC[ CSD->xic[i] ] != IC_CHARGE )
+                dist = std::max( dist, fabs( b0[(size_t)i] - bPrev[(size_t)i] ) / std::max( fabs( b0[(size_t)i] ), 1e-300 ) );
+        const DATABR* boxFrom = kinetics ? ( pool.empty() ? nullptr : pool.back().d ) : D0;
+        if( xSum > 0. && dist > 1e-12 && boxFrom )
+        {
+            DATABR* good = snap();
+            databr_copy( D0 );
+            for( long int jj = 0; jj < CSD->nDCb; jj++ ) { CNode->dul[jj] = boxFrom->dul[jj]; CNode->dll[jj] = boxFrom->dll[jj]; }
+            { DATABR* live = CNode; CNode = good; databr_copy( live ); CNode = live; }
+            double tGood = 0., h = 1. / (double)bp->RescueWalkSteps;
+            long int halvings = 0, steps = 0, s = -1;
+            while( tGood < 1. )
+            {
+                const double t = std::min( 1., tGood + h );
+                databr_copy( good );
+                std::vector<double> b( (size_t)nIC );
+                for( long int i = 0; i < nIC; i++ )
+                    b[(size_t)i] = ( t >= 1. ) ? b0[(size_t)i] : bPrev[(size_t)i] + t * ( b0[(size_t)i] - bPrev[(size_t)i] );
+                setB( b );
+                s = run( warmMode, true, true );
+                steps++;
+                if( isOk( s ) )
+                {
+                    tGood = t;
+                    { DATABR* live = CNode; CNode = good; databr_copy( live ); CNode = live; }
+                }
+                else if( t >= 1. && isBad( s ) )
+                {
+                    addToPool( s, 3 );
+                    break;
+                }
+                else if( ++halvings > 3 )
+                    break;
+                else
+                    h *= 0.5;
+            }
+            if( tGood >= 1. ) { passed = true; rescueRung = 3; }
+            databr_free( good );
+            native_trace_decide( "rescue rung=3 steps=%ld halvings=%ld reached=%.4f dist=%.3e status=%ld it=%ld",
+                                 steps, halvings, tGood, dist, s, itTotal );
+        }
+        else
+            native_trace_decide( "rescue rung=3 skipped prev=%d dist=%.3e box=%d", xSum > 0. ? 1 : 0, dist, boxFrom ? 1 : 0 );
+    }
+
+    // (4) one solve with looser settings, then the finish with the normal ones.
+    if( !passed )
+    {
+        databr_copy( D0 );
+        const BASE_PARAM saved = *bp;
+        bp->DK *= 10.;
+        bp->OptimaTol = 1e-6;
+        bp->OptimaDcFloor = 1e-12;
+        bp->LogBarrierTau = 1e-12;
+        const long int s = run( requested, uPrimalSol, false );
+        *bp = saved;
+        long int f = -1;
+        if( isOk( s ) || isBad( s ) )
+        {
+            passed = finish( 4 );
+            f = CNode->NodeStatusCH;
+            if( passed ) rescueRung = 4;
+        }
+        native_trace_decide( "rescue rung=4 status=%ld finish=%ld it=%ld", s, f, itTotal );
+    }
+
+    // (5) the other solver, warm at the exact composition from the best balanced answer so far (or from the inputs).
+    auto bestIndex = [&]() {
+        long int best = -1;
+        for( size_t e = 0; e < pool.size(); e++ )
+        {
+            if( pool[e].rel > 1. ) continue;
+            if( best < 0 || pool[e].G < pool[(size_t)best].G ) best = (long int)e;
+        }
+        return best; };
+    if( !passed )
+    {
+        std::vector<long int> others;
+        // native does not apply pH/Eh control conditions, so a controlled call never goes to it
+        const bool controlled = !multi_ptr()->GetControlConditions().empty();
+        if( warmMode == NEED_GEM_SIA ) others.push_back( NEED_GEM_SOP );
+        else if( warmMode == NEED_GEM_SOP ) { if( !controlled ) others.push_back( NEED_GEM_SIA ); }
+        else { if( !controlled ) others.push_back( NEED_GEM_SIA ); others.push_back( NEED_GEM_SOP ); }
+        for( long int code : others )
+        {
+            if( passed ) break;
+            const long int other = code;
+            const long int bi = bestIndex();
+            long int s;
+            if( bi >= 0 )
+            {
+                databr_copy( pool[(size_t)bi].d );
+                setB( b0 );
+                s = run( other, true, true );
+            }
+            else
+            {
+                databr_copy( D0 );
+                s = run( other, uPrimalSol, false );
+            }
+            addToPool( s, 5 );
+            if( isOk( s ) ) { passed = true; rescueRung = 5; }
+            native_trace_decide( "rescue rung=5 solver=%ld from=%s status=%ld it=%ld", other, bi >= 0 ? "best" : "inputs", s, itTotal );
+        }
+    }
+    native_trace_quiet( false );
+
+    long int result;
+    if( passed )
+    {
+        result = requested + 1;
+        CNode->NodeStatusCH = result;
+        native_trace_run_result( *pmm, requested, result, multi_base );
+    }
+    else
+    {
+        const long int bi = ( level >= 2 ) ? bestIndex() : -1;
+        if( bi >= 0 )
+        {
+            databr_copy( pool[(size_t)bi].d );
+            setB( b0 );
+            CNode->dt = dt0;
+            result = requested + 2;
+            CNode->NodeStatusCH = result;
+            rescueRung = 6;
+            node_logger->warn( "GEM_run(): mode {} failed ({}); every rescue step failed, returned the best balanced attempt "
+                               "(mass balance {:.3g} of the tolerance) as a bad result", requested, st, pool[(size_t)bi].rel );
+        }
+        else
+        {
+            databr_copy( failed );
+            ipmlog_error = failedError;
+            result = st;
+        }
+    }
+    native_trace_decide( "rescue-result requested=%ld first=%ld rung=%ld status=%ld attempts=%ld pool=%ld it=%ld",
+                         requested, st, rescueRung, result, nAttempts, (long)pool.size(), itTotal );
+    node_logger->info( "GEM_run(): mode {} failed ({}) - rescue: {}", requested, st,
+                       passed ? "recovered" : ( rescueRung == 6 ? "best attempt returned" : "still failed" ) );
+    for( auto& e : pool ) databr_free( e.d );
+    databr_free( failed );
+    databr_free( D0 );
+    pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
+    CNode->IterDone = itTotal; CalcTime = seconds;
+    return result;
 }
 
 // pa_OptimaCallCap: an AOP or SOP call gets a whole-call iteration cap. A call that fails with
@@ -599,7 +883,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         }
         databr_free( lvlBefore );
     }
-    if( requested == NEED_GEM_AIA && status == ERR_GEM_AIA && !kinetics )
+    if( requested == NEED_GEM_AIA && status == ERR_GEM_AIA && !kinetics && multi_ptr()->base_param()->FailRescue <= 0 )
     {
         const long int nudges = multi_ptr()->base_param()->ColdRetryNudges;
         if( nudges > 0 )

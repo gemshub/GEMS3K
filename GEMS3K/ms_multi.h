@@ -631,6 +631,13 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_OptimaTraceRespread: Optima solver: when the species floors of an element add up to more than its amount, its
     /// true amount is spread over its solution species from the converged potentials. 0 = off, 1 = on (default).
     long int OptimaTraceRespread = 1;
+    /// pa_FailRescue: a call that ends with an error or a bad result is tried again in steps - warm from the node's previous
+    /// answer, nudged compositions, a walk from the previous answer, looser settings, the other solver - each finished at the
+    /// exact composition with the normal settings; with 2, if none passes, the best balanced attempt is returned as a bad
+    /// result (GEM_rescue_rung() = 6). 0 = off (default), 1 = steps 1-5, 2 = steps 1-6.
+    long int FailRescue = 0;
+    /// pa_RescueWalkSteps: number of equal steps of the walk in pa_FailRescue; 0 = no walk. Default 8.
+    long int RescueWalkSteps = 8;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2152,7 +2159,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps
 
 } MULTI_DYNAMIC_FIELDS;
 
