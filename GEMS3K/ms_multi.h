@@ -628,6 +628,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_OptimaFinishStall: the Newton finish gives up when its largest reduced gradient has not fallen over this many
     /// steps (it then reports no convergence, as at its step limit). 0 = off (default).
     long int OptimaFinishStall = 0;
+    /// pa_OptimaTraceRespread: Optima solver: when the species floors of an element add up to more than its amount, its
+    /// true amount is spread over its solution species from the converged potentials. 0 = off, 1 = on (default).
+    long int OptimaTraceRespread = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2148,7 +2151,8 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaPreSolveSeed, f_pa_OptimaColdLevel, f_pa_OptimaLevelStart, f_pa_OptimaFastCollapse, f_pa_OptimaFrozenCut,
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
-    f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall
+    f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
+    f_pa_OptimaTraceRespread
 
 } MULTI_DYNAMIC_FIELDS;
 

@@ -5493,6 +5493,72 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // Optima's multipliers ye have the opposite sign convention from U[].
         for( long int i = 0; i < N; i++ )
             pm.U[i] = -state.ye[i];
+        // pa_OptimaTraceRespread: an element all of whose species sit at their floors, and whose floors add up to more than
+        // its amount, gets its true amount spread over its solution species, x_j * exp(-s_j + a_ij * d), s_j the reduced gradient, d set so it balances.
+        if( pa_p->OptimaTraceRespread > 0 && result.succeeded )
+        {
+            bool changed = false, potentials = false;
+            for( long int i = 0; i < N - pm.E; i++ )
+            {
+                if( !( pm.B[i] > 0. ) ) continue;
+                double tot = 0., fixedPart = 0.;
+                bool present = false;   // a species of this element above its floor fixes its potential: leave it alone
+                std::vector<long int> fl;
+                for( long int j = 0; j < L; j++ )
+                {
+                    const double a = pm.A[ i + j*N ];
+                    if( !( a > 0. ) ) continue;
+                    tot += a * pm.X[j];
+                    if( pm.X[j] <= problem.xlower[j] * 10. && pm.DLL[j] <= 0. ) fl.push_back( j );
+                    else { fixedPart += a * pm.X[j]; present = true; }
+                }
+                if( present ) continue;
+                for( long int k = 0; k < R; k++ ) { const double t = problem.Aex( i, L+k ) * state.x[L+k]; tot += t; fixedPart += t; }
+                if( !( tot - pm.B[i] > 1e-6 * pm.B[i] ) || fl.empty() ) continue;   // the balance holds
+                const double target = pm.B[i] - fixedPart;
+                if( !( target > 0. ) ) continue;
+                if( !potentials )   // only when some element needs it
+                {
+                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
+                    potentials = true;
+                }
+                std::vector<double> lnx0( fl.size() ), aa( fl.size() );
+                std::vector<char> sol( fl.size() );
+                for( size_t q = 0; q < fl.size(); q++ )
+                {
+                    const long int j = fl[q];
+                    double mu = 0.;
+                    for( long int k = 0; k < N; k++ ) mu += pm.A[ k + j*N ] * pm.U[k];
+                    sol[q] = j < pm.Ls;
+                    lnx0[q] = std::log( pm.X[j] ) - ( pm.F[j] - mu );
+                    aa[q] = pm.A[ i + j*N ];
+                }
+                auto mass = [&]( double d ) {
+                    double m = 0.;
+                    for( size_t q = 0; q < fl.size(); q++ )
+                        if( sol[q] ) m += aa[q] * std::exp( std::min( lnx0[q] + aa[q] * d, 700. ) );
+                    return m; };
+                double lo = -2000., hi = 2000.;
+                if( !( mass( lo ) < target && mass( hi ) > target ) ) continue;
+                for( int it = 0; it < 200; it++ ) { const double mid = 0.5 * ( lo + hi ); ( mass( mid ) < target ? lo : hi ) = mid; }
+                const double d = 0.5 * ( lo + hi );
+                for( size_t q = 0; q < fl.size(); q++ )
+                {
+                    const long int j = fl[q];
+                    pm.X[j] = sol[q] ? std::exp( lnx0[q] + aa[q] * d ) : 0.;
+                    state.x[j] = pm.X[j];
+                }
+                pm.U[i] += d;
+                state.ye[i] = -pm.U[i];
+                changed = true;
+                native_trace_decide( "tracerespread ic=%ld species=%ld delta=%.6g before=%.3e target=%.3e", (long)i,
+                                     (long)fl.size(), d, tot - fixedPart, target );
+            }
+            if( changed )
+                for( long int j = 0; j < L; j++ ) pm.Y[j] = pm.X[j];
+        }
 
         // pa_OptimaFinish: Newton finish on the fixed phase set from Optima's last point; the
         // checks below judge its result like Optima's own.
