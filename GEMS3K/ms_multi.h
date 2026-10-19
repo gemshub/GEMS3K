@@ -638,9 +638,6 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     long int FailRescue = 0;
     /// pa_RescueWalkSteps: number of equal steps of the walk in pa_FailRescue; 0 = no walk. Default 8.
     long int RescueWalkSteps = 8;
-    /// pa_KinColdAmounts: in a cold call with kinetics, the rate law sets its limits from the amounts handed in, not from
-    /// the amounts the previous solve left in the solver. 0 = off (default), 1 = on.
-    long int KinColdAmounts = 0;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2162,7 +2159,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_KinColdAmounts
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps
 
 } MULTI_DYNAMIC_FIELDS;
 

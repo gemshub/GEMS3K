@@ -77,10 +77,10 @@ void TMultiBase::RunKineticsStep()
         kinmLl0.assign( pm.DLL, pm.DLL + pm.L );
     }
 
-    // pa_KinColdAmounts: the rate law reads the species amounts in pm.X. A warm call has just copied the amounts
-    // handed in (pm.Y) there; a cold call has not, so pm.X still holds the previous solve's answer, which on a
-    // shared solver can be another node's. The cold call is shown the amounts handed in, and pm.X is put back after.
-    const bool coldAmounts = kinmWillRun && !pm.pNP && base_param()->KinColdAmounts > 0;
+    // The rate law reads the species amounts in pm.X. A warm call has just copied the amounts handed in (pm.Y)
+    // there; a cold call has not, so pm.X still holds the previous solve's answer, which on a shared solver can
+    // be another node's. The cold call is shown the amounts handed in, and pm.X is put back after.
+    const bool coldAmounts = kinmWillRun && !pm.pNP;
     std::vector<double> coldX, coldXF, coldXFA;
     if( coldAmounts )
     {
