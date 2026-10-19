@@ -316,9 +316,16 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             return;   // an error leaves no packed answer
         double rel = 0.;
         NudgedAnswerBalances( CNode, b0, rel );
-        // under pH/Eh control an attempt counts only if it met every target
+        // under pH/Eh control an attempt counts only if the answer itself meets every target (a hybrid's BAD answer is
+        // native's, while the control record is its Optima leg's, so the record alone cannot tell)
         bool met = true;
-        for( const auto& c : multi_ptr()->GetControlConditions() ) met = met && c.targetMet;
+        for( const auto& c : multi_ptr()->GetControlConditions() )
+        {
+            const double tol = c.tolerance > 0. ? c.tolerance : ( c.defaultToleranceFn ? c.defaultToleranceFn() : 1e-3 );
+            if( c.name == "pH" ) met = met && fabs( CNode->pH - c.target ) <= tol;
+            else if( c.name == "Eh" ) met = met && fabs( CNode->Eh - c.target ) <= tol;
+            else met = met && c.targetMet;
+        }
         pool.push_back( { snap(), rel, CNode->Gs, rung, multi_ptr()->GetControlConditions(), met } ); };
     if( isBad( st ) )
         addToPool( st, 0 );
