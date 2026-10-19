@@ -81,16 +81,36 @@ void TMultiBase::RunKineticsStep()
     // there; a cold call has not, so pm.X still holds the previous solve's answer, which on a shared solver can
     // be another node's. The cold call is shown the amounts handed in, and pm.X is put back after.
     const bool coldAmounts = kinmWillRun && !pm.pNP;
-    std::vector<double> coldX, coldXF, coldXFA;
+    // The concentrations and ionic strength likewise: a warm setup recomputes them from the amounts
+    // (CalculateConcentrations()), a cold one keeps the previous solve's, so the cold call recomputes them here.
+    std::vector<double> coldX, coldXF, coldXFA, coldFVOL;
+    double coldPH = 0., coldPE = 0., coldEH = 0., coldIC = 0.;
     if( coldAmounts )
     {
         coldX.assign( pm.X, pm.X + pm.L );
         coldXF.assign( pm.XF, pm.XF + pm.FI );
         coldXFA.assign( pm.XFA, pm.XFA + pm.FIs );
+        coldFVOL.assign( pm.FVOL, pm.FVOL + pm.FI );
+        coldPH = pm.pH; coldPE = pm.pe; coldEH = pm.Eh; coldIC = pm.IC;
         for( long int j = 0; j < pm.L; j++ ) pm.X[j] = pm.Y[j];
         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-        native_trace_decide( "kincold amounts=handed-in" );
+        CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+        native_trace_decide( "kincold amounts=handed-in IC=%.4e IC_before=%.4e", pm.IC, coldIC );
     }
+    // pH for the rate law, in every kinetic call: CalculateConcentrations() takes it from the dual potentials,
+    // which the node's inputs do not carry (they are the previous solve's), so it is computed from the node's
+    // own H+ molality and activity coefficient instead, and put back after the kinetics step.
+    double kinPHsaved = 0.;
+    bool kinPHset = false;
+    if( kinmWillRun )
+        for( long int j = 0; j < pm.L; j++ )
+            if( pm.DCC[j] == DC_AQ_PROTON && pm.Y_m[j] > 0. && pm.Gamma[j] > 0. )
+            {
+                kinPHsaved = pm.pH; kinPHset = true;
+                pm.pH = -log10( pm.Y_m[j] * pm.Gamma[j] );
+                native_trace_decide( "kinph pH=%.6f pH_before=%.6f", pm.pH, kinPHsaved );
+                break;
+            }
 
     if( pm.pKMM < 2 )
     {
@@ -109,7 +129,11 @@ void TMultiBase::RunKineticsStep()
         for( long int j = 0; j < pm.L; j++ ) pm.X[j] = coldX[(size_t)j];
         for( long int k = 0; k < pm.FI; k++ ) pm.XF[k] = coldXF[(size_t)k];
         for( long int k = 0; k < pm.FIs; k++ ) pm.XFA[k] = coldXFA[(size_t)k];
+        for( long int k = 0; k < pm.FI; k++ ) pm.FVOL[k] = coldFVOL[(size_t)k];
+        pm.pH = coldPH; pm.pe = coldPE; pm.Eh = coldEH; pm.IC = coldIC;
     }
+    if( kinPHset && !coldAmounts )
+        pm.pH = kinPHsaved;
 
     if( kinmWillRun )
     {
