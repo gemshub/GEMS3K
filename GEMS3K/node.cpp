@@ -263,7 +263,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 // limits held fixed, so the kinetics are not applied twice. DECIDE rescue, rescue-result.
 long int TNode::GEM_run_rescue( bool uPrimalSol )
 {
-    rescueRung = 0;
+    rescueStep = 0;
     BASE_PARAM* bp = multi_ptr()->base_param();
     const long int requested = CNode->NodeStatusCH;
     const long int level = bp->FailRescue;
@@ -309,9 +309,9 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     double seconds = CalcTime;
     long int nAttempts = 0;
 
-    struct Entry { DATABR* d; double rel; double G; long int rung; std::vector<EqControlCondition> cc; bool targetsMet; };
+    struct Entry { DATABR* d; double rel; double G; long int step; std::vector<EqControlCondition> cc; bool targetsMet; };
     std::vector<Entry> pool;
-    auto addToPool = [&]( long int s, long int rung ) {
+    auto addToPool = [&]( long int s, long int step ) {
         if( !isOk( s ) && !isBad( s ) )
             return;   // an error leaves no packed answer
         double rel = 0.;
@@ -326,7 +326,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             else if( c.name == "Eh" ) met = met && fabs( CNode->Eh - c.target ) <= tol;
             else met = met && c.targetMet;
         }
-        pool.push_back( { snap(), rel, CNode->Gs, rung, multi_ptr()->GetControlConditions(), met } ); };
+        pool.push_back( { snap(), rel, CNode->Gs, step, multi_ptr()->GetControlConditions(), met } ); };
     if( isBad( st ) )
         addToPool( st, 0 );
 
@@ -351,10 +351,10 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     auto setB = [&]( const std::vector<double>& b ) {
         for( long int i = 0; i < nIC; i++ ) CNode->bIC[i] = b[(size_t)i]; };
     // The answer now in CNode, finished warm at the exact composition with the normal settings.
-    auto finish = [&]( long int rung ) {
+    auto finish = [&]( long int step ) {
         setB( b0 );
         const long int s = run( warmMode, true, true );
-        addToPool( s, rung );
+        addToPool( s, step );
         return isOk( s ); };
 
     native_trace_quiet( true );
@@ -369,8 +369,8 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         databr_copy( D0 );
         const long int s = run( warmMode, true, false );
         addToPool( s, 1 );
-        if( isOk( s ) ) { passed = true; rescueRung = 1; }
-        native_trace_decide( "rescue rung=1 mode=%ld status=%ld it=%ld", warmMode, s, itTotal );
+        if( isOk( s ) ) { passed = true; rescueStep = 1; }
+        native_trace_decide( "rescue step=1 mode=%ld status=%ld it=%ld", warmMode, s, itTotal );
     }
 
     // (2) nudged compositions, as pa_ColdRetryNudges: bIC[i] x (1 + s_i k 1e-15), k = +1, -1, +2, -2, ...
@@ -387,9 +387,9 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             addToPool( s, 2 );
             passed = finish( 2 );
             f = CNode->NodeStatusCH;
-            if( passed ) rescueRung = 2;
+            if( passed ) rescueStep = 2;
         }
-        native_trace_decide( "rescue rung=2 attempt=%ld nudge=%+g status=%ld finish=%ld it=%ld", n + 1, k, s, f, itTotal );
+        native_trace_decide( "rescue step=2 attempt=%ld nudge=%+g status=%ld finish=%ld it=%ld", n + 1, k, s, f, itTotal );
     }
 
     // (3) walk from the bulk the previous answer balances to the new one, in equal warm steps; a failed step
@@ -441,13 +441,13 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
                 else
                     h *= 0.5;
             }
-            if( tGood >= 1. ) { passed = true; rescueRung = 3; }
+            if( tGood >= 1. ) { passed = true; rescueStep = 3; }
             databr_free( good );
-            native_trace_decide( "rescue rung=3 steps=%ld halvings=%ld reached=%.4f dist=%.3e status=%ld it=%ld",
+            native_trace_decide( "rescue step=3 steps=%ld halvings=%ld reached=%.4f dist=%.3e status=%ld it=%ld",
                                  steps, halvings, tGood, dist, s, itTotal );
         }
         else
-            native_trace_decide( "rescue rung=3 skipped prev=%d dist=%.3e box=%d", xSum > 0. ? 1 : 0, dist, boxFrom ? 1 : 0 );
+            native_trace_decide( "rescue step=3 skipped prev=%d dist=%.3e box=%d", xSum > 0. ? 1 : 0, dist, boxFrom ? 1 : 0 );
     }
 
     // A kinetic node where no attempt so far produced any result: its kinetic limits are likely not reachable
@@ -472,9 +472,9 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         {
             passed = finish( 4 );
             f = CNode->NodeStatusCH;
-            if( passed ) rescueRung = 4;
+            if( passed ) rescueStep = 4;
         }
-        native_trace_decide( "rescue rung=4 status=%ld finish=%ld it=%ld", s, f, itTotal );
+        native_trace_decide( "rescue step=4 status=%ld finish=%ld it=%ld", s, f, itTotal );
     }
 
     // (5) the other solver, warm at the exact composition from the best balanced answer so far (or from the inputs).
@@ -512,8 +512,8 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
                 s = run( other, uPrimalSol, false );
             }
             addToPool( s, 5 );
-            if( isOk( s ) ) { passed = true; rescueRung = 5; }
-            native_trace_decide( "rescue rung=5 solver=%ld from=%s status=%ld it=%ld", other, bi >= 0 ? "best" : "inputs", s, itTotal );
+            if( isOk( s ) ) { passed = true; rescueStep = 5; }
+            native_trace_decide( "rescue step=5 solver=%ld from=%s status=%ld it=%ld", other, bi >= 0 ? "best" : "inputs", s, itTotal );
         }
     }
     native_trace_quiet( false );
@@ -536,7 +536,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             CNode->dt = dt0;
             result = requested + 2;
             CNode->NodeStatusCH = result;
-            rescueRung = 6;
+            rescueStep = 6;
             node_logger->warn( "GEM_run(): mode {} failed ({}); every rescue step failed, returned the best balanced attempt "
                                "(mass balance {:.3g} of the tolerance) as a bad result", requested, st, pool[(size_t)bi].rel );
         }
@@ -548,10 +548,10 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             result = st;
         }
     }
-    native_trace_decide( "rescue-result requested=%ld first=%ld rung=%ld status=%ld attempts=%ld pool=%ld it=%ld",
-                         requested, st, rescueRung, result, nAttempts, (long)pool.size(), itTotal );
+    native_trace_decide( "rescue-result requested=%ld first=%ld step=%ld status=%ld attempts=%ld pool=%ld it=%ld",
+                         requested, st, rescueStep, result, nAttempts, (long)pool.size(), itTotal );
     node_logger->info( "GEM_run(): mode {} failed ({}) - rescue: {}", requested, st,
-                       passed ? "recovered" : ( rescueRung == 6 ? "best attempt returned" : "still failed" ) );
+                       passed ? "recovered" : ( rescueStep == 6 ? "best attempt returned" : "still failed" ) );
     for( auto& e : pool ) databr_free( e.d );
     databr_free( failed );
     databr_free( D0 );
@@ -964,9 +964,9 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
 // One GEM_run_single() with the legacy retry: with the line search on, a failed call is re-run
 // once from the same inputs with the stall escape, the objective memo and reject_if_worse off
 // (g_optimaLSEscapeOff); a retry that is not OK hands the first failure back. Used by the later
-// retry rungs (the warm->cold leg, the column-generation seed). Accumulates into the caller's
+// retry steps (the warm->cold leg, the column-generation seed). Accumulates into the caller's
 // totals.
-long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* rung )
+long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* step )
 {
     const long int requested = CNode->NodeStatusCH;
     auto isOk = []( long int st ) { return st == OK_GEM_AOP || st == OK_GEM_SOP || st == OK_GEM_HOP || st == OK_GEM_SHP
@@ -995,9 +995,9 @@ long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, lon
         const long int second = GEM_run_single( uPrimalSol );
         g_optimaLSEscapeOff = false;
         itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
-        native_trace_decide( "escretry rung=%s requested=%ld first=%ld second=%ld", rung, (long)requested, (long)st, (long)second );
+        native_trace_decide( "escretry step=%s requested=%ld first=%ld second=%ld", step, (long)requested, (long)st, (long)second );
         node_logger->info( "GEM_run(): {} attempt failed ({}) - re-solved with the stall escape off: {}",
-                           rung, (long)st, isOk( second ) ? "recovered" : "still failed" );
+                           step, (long)st, isOk( second ) ? "recovered" : "still failed" );
         if( !isOk( second ) ) { databr_copy( failed ); ipmlog_error = failedError; }
         databr_free( failed );
         st = CNode->NodeStatusCH;

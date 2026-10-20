@@ -493,7 +493,7 @@ public:
     /// Which pa_FailRescue step produced the last GEM_run() result: 0 = none (the call itself), 1 = warm from the
     /// previous answer, 2 = a nudged composition, 3 = the walk, 4 = looser settings, 5 = the other solver,
     /// 6 = the best attempt (returned as bad).
-    long int GEM_rescue_rung() const { return rescueRung; }
+    long int GEM_rescue_step() const { return rescueStep; }
 
     /// One trace element's verdict from GEM_trace_regimes().
     struct TraceRegime
@@ -1409,7 +1409,7 @@ public:
     DATABR* databr_free(DATABR* data_BR_);
 
 protected:
-    long int rescueRung = 0;   // see GEM_rescue_rung()
+    long int rescueStep = 0;   // see GEM_rescue_step()
     /// One GEM_run() attempt, without the cold-call recovery (GEM_run() is this plus pa_ColdRetryNudges).
     long int GEM_run_single( bool uPrimalSol );
     /// The layers of GEM_run(), outermost first; each calls the next.
@@ -1424,7 +1424,7 @@ protected:
     bool NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b, double& worstRel ) const;
     long int GEM_run_optima_cold_retry( long int requested );   // pa_OptimaColdRetry
     long int GEM_run_aop_cgseed( long int& itf, long int& itg, double& seconds );
-    long int GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* rung );   // cold AOP retry, with the column-generation seed as the second attempt
+    long int GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* step );   // cold AOP retry, with the column-generation seed as the second attempt
 
     void allocMemory();
     void freeMemory();

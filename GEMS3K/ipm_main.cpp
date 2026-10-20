@@ -3741,7 +3741,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     long int N, IT1,J,Z,iRet,i,  nDivIC;
     double LM=0., LM1=1., FX1,    DivTol;
     // Noise-stall accept, pa_IpmStallWindow (see the field in ms_multi.h). All signals are
-    // required, and none references pa_DK; each alone was found unsafe.
+    // required, and none references pa_DK; each alone is unsafe.
     const long int kIpmStallMaxW = 200;
     const double kIpmStallFXTol   = 1.e-9;  // energy flat over the window
     const double kIpmStallCompTol = 1.e-6;  // sumX and maxX flat over the window
@@ -4205,7 +4205,7 @@ case DC_SCM_SPECIES:
 }
 
 /// The effective budget: GEMS3K_FILLOUT_BUDGET if set (negative = unset), else the field. The
-/// environment override is kept for the CTest case fillout.budget. Not cached, so it can be
+/// environment override is kept for a test case. Not cached, so it can be
 /// changed within one process. Read by both the call site (which must snapshot pm.Y before
 /// DC_RaiseZeroedOff()) and ApplyFilloutBudget(), so they agree.
 double TMultiBase::FilloutBudgetValue() const

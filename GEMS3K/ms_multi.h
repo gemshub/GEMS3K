@@ -94,8 +94,8 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
            DB,   ///< Minimum amount of Independent Component in the bulk system composition (except charge "Zz") (moles) (1e-17)
            AG,   ///< Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { 1. }
            DGC,  ///< Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { 0. }
-           GAR,  ///< reserved, no effect (not read by GEMS3K; kept for the field order and GEMSGUI) { 1 }
-           GAH,  ///< reserved, no effect (not read by GEMS3K; kept for the field order and GEMSGUI) { 1000 }
+           GAR,  ///< reserved, no effect (not read by GEMS3K; kept for the field order) { 1 }
+           GAH,  ///< reserved, no effect (not read by GEMS3K; kept for the field order) { 1000 }
            GAS,  ///< Since r1583/r409: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup() { 1e-3 }.
                  ///< before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }
            DNS,  ///< Standard surface density (nm-2) for calculating activity of surface species (12.05)
@@ -109,14 +109,11 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
            DKIN; ///< Tolerance on the amount of DC with two-side metastability constraints  { 1e-10 }
     char *tprn;       ///< internal
 
-    /// pa_PSTALL: enable (1, default) or disable (0) stall detection in
-    /// MassBalanceRefinement(). With 0, a stalled MBR run keeps iterating until pa_DP is
-    /// exhausted and then fails with "Maximum allowed number of MBR iterations exceeded".
-    /// Fields from here on are GEMS3K additions: placed after every other member, with default
-    /// member initializers, so GEMSGUI's positional BASE_PARAM initializers and binary
-    /// project-file serialisation are unaffected; only GEMS3K's keyword-based ipm-dat I/O
-    /// (ms_multi_format.cpp) reads them. Adding one also requires both counts in
-    /// ms_multi_format.cpp and the SET line in native_trace_run_header().
+    /// pa_PSTALL: 1 (default) = MassBalanceRefinement() stops when it stalls; 0 = it keeps
+    /// iterating until pa_DP is used up and then fails.
+    /// Fields from here on are GEMS3K additions: they come after every other member and have
+    /// default initializers, so the order of the older members is unchanged. Adding one also
+    /// needs both counts in ms_multi_format.cpp and the SET line in native_trace_run_header().
     /// In plain words: lets the mass-balance step give up early when it stops improving.
     short PSTALL = 1;
 
@@ -135,296 +132,171 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     double LogBarrierTau = 1.0e-16;
 
     /// pa_OptimaMaxStepRatio: reserved, no effect. Kept so that the field order of BASE_PARAM
-    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// (used by positional project-file serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     double OptimaMaxStepRatio = 0.0;
 
-    /// pa_PhaseHessianFloor: eigenvalue floor, as a fraction of the block's own largest
-    /// |eigenvalue|, for the exact curvature block of every non-aqueous multicomponent phase
-    /// with at least two present end-members, in the Optima solver. The floor is never larger
-    /// than the same fraction of the phase's natural curvature, (number of present end-members)
-    /// / (their total amount), so a trace member does not stiffen the others.
-    /// 0 turns the exact block off (analytic ideal-mixing curvature plus FD columns for Optima's
-    /// basic set only). Inside a miscibility gap the true curvature is negative; the floor keeps
-    /// the Newton model positive definite. Default 0.01.
+    /// pa_PhaseHessianFloor: lowest allowed curvature of a mixed (non-aqueous) phase in the Optima
+    /// solver, as a fraction of its largest curvature. 0 = off. Default 0.01.
     /// In plain words: helps the Optima solver handle mixed phases that tend to split in two.
     double PhaseHessianFloor = 0.01;
 
-    /// pa_OptimaStallWindow: stall limit for the Optima solver (AOP/SOP/ROP). A solve is
-    /// abandoned when, over a window of this many Newton iterations, the best-so-far
-    /// optimality error has not fallen by a relative 1e-8. 0 = off. Default 200. The test is
-    /// cumulative over the window, not per step, so a solve stuck from step k stops between
-    /// k + window and k + 2 x window. If every other retry then fails, the last retry re-solves
-    /// once with the window disarmed. The pre-solve in OptimaReducedPreSolve() uses this field
-    /// with an additional "has the live error moved" clause. Raise it (e.g. 500) for a system
-    /// whose solve pauses for long stretches and then still converges; values below 100 are not
-    /// recommended.
+    /// pa_OptimaStallWindow: an Optima solve is given up when its best error has not fallen
+    /// (relative 1e-8) over this many iterations. 0 = off. Default 200. Values below 100 are
+    /// not recommended.
     /// In plain words: stops a solve that has stopped making progress, so a retry can start sooner.
     long int OptimaStallWindow = 200;
 
-    /// pa_OptimaMaxSeconds: wall-clock budget in seconds for one Optima (AOP/SOP/ROP) solve,
-    /// including its retries. 0 = off (default). A time limit makes results depend on the
-    /// machine, so set it only per project, as a guard for a known pathological system.
-    /// Checked once per Newton iteration.
+    /// pa_OptimaMaxSeconds: time limit in seconds for one Optima solve with its retries.
+    /// 0 = off (default). A limit makes results depend on the machine, so set it per project only.
     /// In plain words: a time limit for the Optima solver, off unless you set it.
     double OptimaMaxSeconds = 0.0;
 
-    /// pa_OptimaFDHessian: whether the Optima path computes the finite-difference
-    /// PartiallyExact Hessian columns. 1 = yes (default), 0 = skip them and rely on the
-    /// analytic ideal-mixing block plus the regularised exact per-phase block
-    /// (pa_PhaseHessianFloor). The FD loop runs once per Optima basic variable per iteration,
-    /// each pass a full CalculateActivityCoefficients(LINK_UX_MODE) + PrimalChemicalPotentials
-    /// over all species, so its cost grows as N x L. Turning it off is much cheaper and
-    /// usually gives the same answer, but a few projects need it.
+    /// pa_OptimaFDHessian: 1 (default) = the Optima path computes the finite-difference
+    /// curvature columns; 0 = skip them (much cheaper, usually the same answer).
     /// In plain words: computes a more exact curvature at extra cost; usually optional.
     long int OptimaFDHessian = 1;
 
-    /// pa_OptimaMoleFracHessian: form of the ideal-mixing Hessian block for non-aqueous
-    /// multicomponent (solution) phases in the Optima path.
-    ///   0 (default) - diag(1/X[j]), no off-diagonal.
-    ///   1           - the full ideal mole-fraction Jacobian
-    ///                 d ln x_j/d n_i = delta_ij/X[j] - 1/Xf, the exact derivative of
-    ///                 DC_SYMMETRIC's F = G + ln n_j - ln nSum, applied only over the
-    ///                 end-members that are present.
-    /// The extra rank-1 term is zero along the unmixing direction and governs only how freely
-    /// a phase's total amount moves. Set it per project for cases limited by a vestigial
-    /// phase decaying slowly toward its floor.
+    /// pa_OptimaMoleFracHessian: curvature of the ideal-mixing part of a mixed phase in the Optima
+    /// path. 0 (default) = diagonal 1/X[j] only; 1 = the full mole-fraction form.
     /// In plain words: a more exact curvature for mixed phases, which helps some projects and
     /// slows others.
     long int OptimaMoleFracHessian = 0;
 
-    /// pa_OptimaPhaseCompaction: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
-    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// pa_OptimaPhaseCompaction: reserved, no effect. Kept so that the field order of BASE_PARAM
+    /// (used by positional project-file serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int OptimaPhaseCompaction = 0;
 
-    /// pa_OptimaFDHessianDelay: iterations of the cheap Hessian to attempt before falling back
-    /// to the finite-difference PartiallyExact columns. 0 (default) = off: pa_OptimaFDHessian
-    /// decides from the first iteration. N > 0 makes one attempt of up to N iterations with
-    /// the FD loop suppressed. If it converges, its state is adopted and the primary solve
-    /// re-runs from it, still cheap; if not, that trajectory is discarded and the primary solve
-    /// restarts from the original seed with the FD columns on. Every retry uses FD. Cold starts
-    /// only (pm.pNP == 0). Set it per project.
+    /// pa_OptimaFDHessianDelay: number of first iterations that skip the finite-difference
+    /// curvature columns; if that attempt does not converge, the solve restarts with them on.
+    /// 0 = off (default). Cold starts only.
     /// In plain words: try the fast, approximate method first and switch to the exact one
     /// only if needed.
     long int OptimaFDHessianDelay = 0;
 
-    /// pa_OptimaDcFloor: lower bound on species amounts in the Optima path ("dcFloor"), in the
-    /// same internally rescaled units as pm.X. 0 (default) = derive it from pa_DHB; > 0 = use
-    /// this value. Separates the Optima floor from pa_DHB, which is also native's relative
-    /// mass-balance tolerance and (x10) the phase presence threshold.
+    /// pa_OptimaDcFloor: lowest species amount in the Optima path, in the solver's internal
+    /// (rescaled) units. 0 (default) = derive it from pa_DHB; > 0 = use this value.
     /// In plain words: how small an amount the Optima solver can represent for an absent species.
     double OptimaDcFloor = 0.;
 
-    /// pa_MbClassRule: per-IC-class mass-balance convergence rule in MassBalanceRefinement().
-    /// 0 = off (default), existing code path unchanged. When > 0, the value is the
-    /// trace/major ratio: IC i is trace when B[i] < MbClassRule * max_k B[k], major otherwise.
-    /// Trace ICs get the relative test, major ICs the absolute one. The major absolute cutoff
-    /// is 10^-|DT| when |DT| >= 2, otherwise DHBM*1e5. This relaxes a native convergence test
-    /// for major ICs; set it per project.
-    /// In plain words: checks major elements by absolute and trace elements by relative
-    /// accuracy, as the method's theory suggests.
+    /// pa_MbClassRule: 0 = off (default). Above 0, mass balance in MassBalanceRefinement() is
+    /// checked in absolute terms for major elements and in relative terms for trace elements;
+    /// the value is the trace/major ratio. Set it per project.
+    /// In plain words: checks major elements by absolute and trace elements by relative accuracy.
     double MbClassRule = 0.;
 
-    /// pa_MbTrendPhaseDecay: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
-    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// pa_MbTrendPhaseDecay: reserved, no effect. Kept so that the field order of BASE_PARAM
+    /// (used by positional project-file serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int MbTrendPhaseDecay = 0;
 
     /// pa_OptimaEarlyStabilityAt: ends the first Optima attempt early so the phase-selection
-    /// repair loop can act before the primary solve has run to convergence.
-    ///   > 0  at iteration N, evaluated once in the convergence hook: if the dual has settled
-    ///        (max|dw|/max|w| <= pa_OptimaTol), end the first attempt there; otherwise leave
-    ///        the call alone.
-    ///   < 0  trend form: -N ends the first attempt once some non-solvent multicomponent phase
-    ///        has fallen monotonically for N consecutive objective evaluations (reusing
-    ///        pa_MbTrendPhaseDecay's counters), also gated on the dual having settled.
-    ///   0    AUTO (default), resolved by optima_earlystability_at(): a cap at
-    ///        kOptimaEarlyStabilityAutoCap (cold leg) or kOptimaEarlyStabilityAutoWarmCap (warm
-    ///        leg) when the system carries a multisite solid solution, off otherwise.
-    /// A safety net treats the shortened attempt as a probe: if the cap stopped it and nothing
-    /// downstream recovered, the call is re-solved at the full budget (strategy:
-    /// optima_net_resume_mode()). There is no "off" value; to disable it on a multisite system,
-    /// set a cap larger than pa_IIM.
+    /// repair can act before the solve has fully converged.
+    ///   > 0  stop at iteration N if the dual has settled.
+    ///   < 0  stop once a non-solvent mixed phase has fallen for -N evaluations in a row.
+    ///   0    AUTO (default): a cap when the system has a multisite solid solution, else off
+    ///        (optima_earlystability_at()).
+    /// If the cap stopped the attempt and nothing recovered, the call is re-solved in full. To
+    /// switch it off, set a cap larger than pa_IIM.
     /// In plain words: lets the solver notice a phase that should disappear early, instead of
     /// after a long, slow dissolution.
     long int OptimaEarlyStabilityAt = 0;
 
-    /// pa_OptimaDimReduce: species-level dimension reduction for the Optima path. A
-    /// pre-solve over a reduced set of species runs before the ordinary full solve:
-    ///   - the initial set is the LP-feasibility seed's support widened by pricing every
-    ///     species against the linearised-Gibbs LP's dual (pa_OptimaDimReduceTol); both LPs
-    ///     use pm.A/pm.B only, independent of any solver state;
-    ///   - omitted species are held at their lower bound, their contribution moved into the
-    ///     right-hand side (be[i] -= sum over omitted j of A[i,j]*xlower[j]);
-    ///   - the omitted columns are priced on the resulting dual and every one with a negative
-    ///     reduced gradient s_j = F[j] - sum_i U[i]*A[i,j] is readmitted; repeat. Readmission
-    ///     is monotone, which bounds the loop.
-    /// At a fixed point the full problem's KKT conditions hold. The pre-solve only writes
-    /// pm.Y[] and pm.U[]; the full solve then runs warm from them with every check at full
-    /// dimension. A pre-solve that fails or gains nothing is discarded.
-    /// Values: > 0 the readmission-pass limit; 0 AUTO - kOptimaDimReduceAutoPasses passes
-    /// when the system has at least kOptimaDimReduceAutoMinDC species, off below
-    /// (optima_dimreduce_passes()); < 0 off. Not applied with control conditions or in ROP.
-    /// Runs on cold Optima solves; on the HOP leg only under an explicit positive value.
+    /// pa_OptimaDimReduce: before the full Optima solve, solve a reduced problem with only the
+    /// species likely to be present, add back any that want to form, then use the result as the
+    /// start of the full solve. > 0 = limit on add-back passes; 0 = AUTO, on for large systems
+    /// (optima_dimreduce_passes()); < 0 = off. Not used with control conditions or in ROP; on the
+    /// HOP leg only for an explicit positive value.
     /// In plain words: makes large systems much faster by first solving with only the
     /// species that are likely to be present.
     long int OptimaDimReduce = 0;
 
-    /// pa_OptimaDimReduceTol: rule for pa_OptimaDimReduce's initial active set. Read
-    /// whenever the reduction runs (including AUTO). Default 10.
-    /// Every species is priced against the dual of the linearised-Gibbs LP (LPGibbsDual():
-    /// min sum G0[j]*n_j s.t. A n = b, n >= 0), and a species is active when
-    ///     s_j = G0[j] - sum_i y_i A[i,j]  <  value   (RT units).
-    ///   > 0  the RT threshold above;
-    ///   < 0  value -m: the rank rule - admit the cheapest-priced species until the active set
-    ///        reaches m x N;
-    ///   0    the LP-feasibility seed's own support only.
-    /// The initial set affects cost, not correctness: a missed species is priced back in on
-    /// the next pass. The rank rule can help large projects individually, but its response
-    /// is not monotone, so set it per project only.
+    /// pa_OptimaDimReduceTol: which species the reduced problem of pa_OptimaDimReduce starts with.
+    ///   > 0  species whose reduced cost in the linear Gibbs problem is below this value (RT).
+    ///   < 0  the cheapest species until the set holds |value| x N of them.
+    ///   0    only the support of the starting guess.
+    /// Default 10. It affects cost, not the answer.
     /// In plain words: how generous the first guess of "species that matter" is.
     double OptimaDimReduceTol = 10.;
 
-    /// pa_MbPivotSplit: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
-    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// pa_MbPivotSplit: reserved, no effect. Kept so that the field order of BASE_PARAM
+    /// (used by positional project-file serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int MbPivotSplit = 0;
 
-    /// pa_OptimaZeroAbsent: how species that are absent in an Optima answer are reported.
-    /// A box-constrained solver holds every species above a floor (dcFloor), so an absent
-    /// species ends at the floor rather than at 0.
-    ///   0  floor values, nothing else.
-    ///   1  zero absent phases and rebalance: after every check has passed, a phase is set to
-    ///      exactly 0 as a whole if all its species are not kinetically required (DLL <= 0),
-    ///      sit on the floor and have a non-negative reduced gradient (or a degenerate box). If
-    ///      that leaves an IC or the charge row past both its residual before zeroing and its
-    ///      tolerance (B_i*DHBM; charge: DHBM times the total charge carried), the removed
-    ///      amount is put back onto present carriers by MassBalanceReproject(); if that fails,
-    ///      the zeroing is undone. DECIDE `zeroabsent phases= species= rebalanced= reverted= of=`.
-    ///   2  floor values plus a bounded repair (default): if any ordinary IC fails
-    ///      |C_i| <= B_i*DHBM on the accepted answer, project it back onto A.x = b
-    ///      (MassBalanceReproject()) and keep the projection only if every ordinary IC then
-    ///      passes and the charge row is no worse than max(its residual before, DHBM x total
-    ///      charge carried); otherwise restore the answer exactly. DECIDE `optimarepair
-    ///      relbefore= relafter= chgbefore= chgafter= kept=`, only when attempted.
-    /// Any other non-zero value behaves as 1. With 1, a consumer that divides by a species
-    /// amount meets 0 where it would otherwise meet the floor value.
+    /// pa_OptimaZeroAbsent: how species absent from an Optima answer are reported.
+    ///   0  at the floor amount.
+    ///   1  absent phases are set to exactly 0 and the element totals are rebalanced; the zeroing
+    ///      is undone if the rebalance fails.
+    ///   2  (default) floor amounts, plus a repair that projects the answer back onto the mass
+    ///      balance if it fails the per-element test; the repair is dropped if it does not help.
+    /// Any other non-zero value behaves as 1.
     /// In plain words: decides whether absent species are shown as exactly zero or as a tiny
     /// amount, and fixes the element totals if needed.
     long int OptimaZeroAbsent = 2;
 
-    /// pa_OptimaReadmitSeed: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
-    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// pa_OptimaReadmitSeed: reserved, no effect. Kept so that the field order of BASE_PARAM
+    /// (used by positional project-file serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     double OptimaReadmitSeed = 0.;
 
-    /// pa_IpmStallWindow: window (in IPM iterations) for the noise-stall test; 0 = off.
-    /// Default 30. IPM convergence is accepted once, over a whole window, all of these hold:
-    ///   - the energy pm.FX is flat to kIpmStallFXTol,
-    ///   - the composition is flat: sum(X) and max(X) to kIpmStallCompTol, and every species
-    ///     both to kIpmStallCompTol of the system total and to kIpmStallSpRel of its own
-    ///     window maximum (a species below kIpmStallSpNegl of the total is exempt from the
-    ///     second clause),
-    ///   - pm.PCI increased on kIpmStallIncLo..kIpmStallIncHi of the steps, i.e. it bounces
-    ///     rather than moves.
-    /// Once the composition has settled, pm.PCI is a difference of nearly equal numbers and
-    /// may wander above pm.DXM for a long time; this test stops the loop then. None of the
-    /// signals is safe alone, and the composition test needs both normalisers.
+    /// pa_IpmStallWindow: the native IPM loop is accepted as converged when, over this many
+    /// iterations, the energy and composition stay flat and pm.PCI only bounces. 0 = off.
+    /// Default 30.
     /// In plain words: stops the original solver once the answer has clearly stopped changing.
     short IpmStallWindow = 30;
 
-    /// pa_MbReproject: repairs an unsatisfied mass balance on the answer native is about to
-    /// return. Projects Y back onto A.Y = b with one solve over a rank-revealing pivot set:
-    /// species taken in decreasing amount, each kept only if it raises the rank. Native path
-    /// only; applied only when the answer fails its per-IC test, and kept only if every species
-    /// stays non-negative and the worst relative residual falls. 0 = off, 1 = on (default).
-    /// A residual on a trace element is repaired by a trace species, so that species can move
-    /// by several percent of itself (about 1e-10 mol absolute).
+    /// pa_MbReproject: repairs an answer that fails the per-element mass-balance test by
+    /// projecting it back onto A.Y = b; kept only if every species stays non-negative and the
+    /// worst residual falls. Native path only. 0 = off, 1 = on (default).
     /// In plain words: a final touch-up that makes the element totals add up exactly.
     short MbReproject = 1;
 
-    /// pa_DeterminacyWarn: relative-uncertainty threshold for the "answer not determined by
-    /// the energy" warning (EnergyDeterminacyCheck(), native path, converged calls). A present
-    /// phase whose amount the minimised G fixes only to worse than this - sqrt(2 eps_G c_k)/n_k,
-    /// eps_G the rounding floor of G, c_k the phase's least-energy compliance under A dn = 0 -
-    /// is listed in a warning and a DECIDE `undetermined` record. 0 or negative = off.
-    /// Read-only. Default 1e-2.
+    /// pa_DeterminacyWarn: warn when the energy fixes a present phase's amount only to worse than
+    /// this relative uncertainty (native path, converged calls). 0 or negative = off. Default 1e-2.
     /// In plain words: warns when tiny amounts of a solid in the answer are not reliable.
     double DeterminacyWarn = 1e-2;
 
-    /// pa_ColdRetryNudges: recovery of a failed cold native call. When TNode::GEM_run() is
-    /// asked for NEED_GEM_AIA (no kinetics) and ends in ERR_GEM_AIA, it re-solves cold at up
-    /// to this many nudged bulk compositions, bIC[i] x (1 + s_i k 1e-15), s_i alternating in
-    /// sign over the ICs and k = +1, -1, +2, -2, ...; the first nudge that returns OK becomes
-    /// the warm start of an SIA solve at the exact bIC, whose outcome is returned as
-    /// OK_GEM_AIA or BAD_GEM_AIA. If none recovers, the original ERR_GEM_AIA is returned with
-    /// its DATABR restored. ITF/ITG and IterDone count every attempt; each attempt leaves a
-    /// DECIDE `coldretry` record. 0 = off. Default 4.
+    /// pa_ColdRetryNudges: a failed cold native call (NEED_GEM_AIA) is re-solved cold at up to
+    /// this many bulk compositions nudged by about 1e-15; the first that works seeds a warm solve
+    /// at the exact composition. 0 = off. Default 4.
     /// In plain words: if the original solver fails, retry with a microscopically changed
     /// composition and then return to the exact one.
     long int ColdRetryNudges = 4;
 
-    /// pa_OptimaPreSolveFirstIters: Optima iteration budget for each pass of the
-    /// dimension-reduction pre-solve's first attempt. A pass otherwise gets max(2000, pa_IIM)
-    /// iterations; this lowers that to min(max(2000, pa_IIM), value), never raises it. A pass
-    /// that reaches the budget without converging is discarded and the fallback attempt runs
-    /// at the full budget. 0 = off. Default 6000. Resolved by optima_presolve_pass_budget();
-    /// each `dimreducepass` DECIDE record carries the `budget=` it ran at.
+    /// pa_OptimaPreSolveFirstIters: iteration limit for each pass of the reduced pre-solve's first
+    /// attempt (never above the normal limit); a pass that hits it is discarded and the full
+    /// budget is used instead. 0 = off. Default 6000.
     /// In plain words: gives up early on a preliminary step that is going nowhere.
     long int OptimaPreSolveFirstIters = 6000;
 
-    /// pa_LpDualFillout: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
-    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// pa_LpDualFillout: reserved, no effect. Kept so that the field order of BASE_PARAM
+    /// (used by positional project-file serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int LpDualFillout = 0;
 
-    /// pa_FilloutBudget: caps how much the class fill-out may change the mass balance, as a
-    /// fraction f of each element's own bulk amount. Native cold (AIA) path, right after
-    /// DC_RaiseZeroedOff(); the native leg of HOP/SHP inherits it. 0 = off (default).
-    /// With raised_i = sum_j (Y_j - Y_lp_j) * a(j,i), each raised species is scaled by the
-    /// tightest element it consumes, s_j = min_i( f * B_i / raised_i ), capped at 1, which
-    /// guarantees sum_j s_j * raised_ji <= f * B_i. GEMS3K_FILLOUT_BUDGET overrides the field
-    /// (negative = unset).
+    /// pa_FilloutBudget: limits how far the class fill-out may change an element's mass balance, as a
+    /// fraction of that element's bulk amount. Native cold path only. 0 = off (default). The
+    /// environment variable GEMS3K_FILLOUT_BUDGET overrides it.
     /// In plain words: limits how much the starting guess may disturb the element totals.
     double FilloutBudget = 0.;
-    /// pa_StabTPD: the tangent-plane (TPD) stability scan of ABSENT multicomponent phases, reported on
-    /// pa_StabTPD: tangent-plane (TPD) stability scan of absent multicomponent phases,
-    /// reported on the trace's CERT line.
-    ///   0  off - the CERT fields read stab_ss=1e300 stab_ph=- stab_n=0 stab_dis=0.
-    ///   1  compute and report (default). Runs only when GEMS3K_NATIVE_TRACE_FILE is set,
-    ///      after the answer has been packed, so it cannot change what the call returns.
-    ///   2  reserved (gate the certificate on it) - not implemented.
-    /// For each absent non-aqueous multicomponent phase: successive substitution
-    /// y <- W(y)/sum W(y), W_j = exp(a_j.u - G0_j - fDQF_j - lnGam_j(y)), from every vertex,
-    /// the ideal closed form, the current composition, the centroid and a grid (binary) or
-    /// edge midpoints. stab_ss = min over phases of the smallest TPD(y) =
-    /// sum_j y_j (mu_j(y) - a_j.u) at any evaluated composition (< 0: the phase would lower
-    /// G). stab_dis counts phases the single-point index (pm.Falp <= 0) calls stable while
-    /// stab_ss < 0 for them.
+    /// pa_StabTPD: tangent-plane (TPD) stability scan of absent mixed phases, reported on the
+    /// trace's CERT line only. 0 = off, 1 = on (default; runs only when GEMS3K_NATIVE_TRACE_FILE
+    /// is set and cannot change the answer), 2 = reserved.
     /// In plain words: a report-only check of whether a mixed phase left out of the answer
     /// should in fact form.
     long int StabTPD = 1;
-    /// pa_IpmAugmentedKKT: how the main IPM loop solves its linear system for the dual u
-    /// (MakeAndSolveSystemOfLinearEquations(), initAppr = false only; MBR is untouched).
-    ///   0  normal equations (A_act^T W A_act) u = A_act^T W F, Cholesky then LU.
-    ///   1  augmented (saddle-point) system, dense LU of size L_act + N:
-    ///          [ I          -W A_act ] [ x ]   [ -W F ]
-    ///          [ -A_act^T   -D       ] [ u ] = [  0   ]
-    ///      Eliminating x gives (A^T W A + D) u = A^T W F, but A^T W A is never formed.
-    ///      Dense O((L_act+N)^3) per iteration; use 2 on large systems.
-    ///   2  (default) the same regularised least-squares problem,
-    ///      min |W^1/2 (A u - F)|^2 + u^T D u, by Householder QR of [W^1/2 A_act ; D^1/2],
-    ///      O(L_act N^2).
-    /// D = 0 except on a zero row: an IC no active species carries has d_i = sum_j W_j a_ji^2
-    /// = 0, on which the normal equations fail (E07IPM). Modes 1 and 2 set D_ii =
-    /// 1e-12 * max_i d_i there, which sets that u_i to 0 (DECIDE "ipmkkt-zerorow", first per
-    /// call). Where the augmented solve finds its system singular (QR rank test 1e-14, or
-    /// LU), that step is taken by the normal equations (DECIDE "ipmkkt-fallback").
+    /// pa_IpmAugmentedKKT: how the native IPM loop solves its linear system for the dual u.
+    ///   0  normal equations.
+    ///   1  augmented (saddle-point) system, dense LU; slow on large systems.
+    ///   2  (default) regularised least squares by QR.
+    /// In modes 1 and 2 a small regularisation is added for an element no active species carries.
+    /// If the augmented solve is singular, that step uses the normal equations.
     /// In plain words: a more accurate way to solve each step's equations in the original solver.
     long int IpmAugmentedKKT = 2;
-    /// pa_IpmLoopTweaks: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
-    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// pa_IpmLoopTweaks: reserved, no effect. Kept so that the field order of BASE_PARAM
+    /// (used by positional project-file serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int IpmLoopTweaks = 0;
     /// pa_OptimaLineSearch: Optima's merit line search on the unmasked error, with this
@@ -434,8 +306,8 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// Optima fork's ErrorControl::execute (error updated at the new point before comparing).
     /// In plain words: when a step makes things much worse, try a shorter one.
     double OptimaLineSearch = 1.5;
-    /// pa_OptimaFDDiagFloor: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
-    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// pa_OptimaFDDiagFloor: reserved, no effect. Kept so that the field order of BASE_PARAM
+    /// (used by positional project-file serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int OptimaFDDiagFloor = 0;
     /// pa_OptimaLSStallEscape: with the line search on, after this many consecutive line
@@ -444,8 +316,8 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// inert otherwise.
     /// In plain words: breaks the Optima solver out when it gets stuck at the same error.
     long int OptimaLSStallEscape = 10;
-    /// pa_OptimaLSWindow: reserved, no effect (code removed 2026-10-01, owner). Kept so that the field order of BASE_PARAM
-    /// (used by GEMSGUI's positional serialisation) does not change.
+    /// pa_OptimaLSWindow: reserved, no effect. Kept so that the field order of BASE_PARAM
+    /// (used by positional project-file serialisation) does not change.
     /// In plain words: an old setting that no longer does anything.
     long int OptimaLSWindow = 0;
     /// pa_OptimaLSRejectWorse: with the Optima line search on, a line search that ends at or
@@ -636,7 +508,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_FailRescue: a call that ends with an error or a bad result is tried again in steps - warm from the node's previous
     /// answer, nudged compositions, a walk from the previous answer, looser settings, the other solver - each finished at the
     /// exact composition with the normal settings; with 2, if none passes, the best balanced attempt is returned as a bad
-    /// result (GEM_rescue_rung() = 6). 0 = off, 1 = steps 1-5, 2 = steps 1-6 (default).
+    /// result (GEM_rescue_step() = 6). 0 = off, 1 = steps 1-5, 2 = steps 1-6 (default).
     long int FailRescue = 2;
     /// pa_RescueWalkSteps: number of equal steps of the walk in pa_FailRescue; 0 = no walk. Default 8.
     long int RescueWalkSteps = 8;
@@ -1415,41 +1287,27 @@ public:
     };
 
     /// Fills a CertRankReport at the returned pm.X[] (see CertRank() in ipm_main.cpp).
-    /// Report-only: reads pm.A/pm.X/pm.DLL/pm.DUL/pm.RLC and writes nothing, including pm.W[]
-    /// (the weight is a local copy of WeightMultipliers()' arithmetic). Leaves `r` at its
-    /// defaults (1e300/-1) if the guard at the top of the implementation fails.
+    /// Report-only: it changes no solver state. Leaves `r` at its defaults if it cannot run.
     /// In plain words: measures how well-posed the final linear equations are.
     void CertRank( CertRankReport& r ) const;
 
-    /// curv_min: the smallest eigenvalue, over every present multicomponent non-aqueous
-    /// solution phase, of that phase's symmetrised finite-difference curvature block at the
-    /// answer. A negative value means the phase converged inside its own spinodal - a point
-    /// that is stationary and mass-balanced but a maximum along the unmixing direction.
-    /// The block, the present-end-member test and the step h are the same as at the
-    /// pa_PhaseHessianFloor site in ipm_optima.cpp, without the floor; the smallest
-    /// eigenvalue comes from a sweep-only Jacobi. The aqueous phase is excluded.
-    /// Mutates and restores: each column perturbs pm.X[i] by h and re-runs
-    /// TotalPhasesAmounts() + CalculateActivityCoefficients(LINK_UX_MODE); pm.X[i],
-    /// XF/XFA/lnGam/Gamma/fDQF/F0 and pm.G[] are restored. Called after packDataBr(), so it
-    /// cannot change what this call returns.
+    /// curv_min: the smallest curvature, over every present mixed non-aqueous phase, of that
+    /// phase's finite-difference curvature block at the answer. A negative value means the phase
+    /// sits at a maximum along the unmixing direction. Report-only: it restores everything it
+    /// touches and runs after packDataBr().
     /// \param worstPhase index of the phase carrying the minimum, -1 if none.
     /// \return the minimum, or +1e300 if no phase qualified.
     /// In plain words: checks that each mixed phase in the answer is truly stable and not
     /// sitting where it would rather split in two.
     double CertCurvMin( long int& worstPhase );
 
-    /// pa_StabTPD = 1: tangent-plane stability scan of every absent or trace non-aqueous
-    /// multicomponent phase at the returned answer. Absent = XF <= DSM, or XF < 1e-6 of the
-    /// summed phase amounts, or every end-member at or below 1e3 x the certificate's species
-    /// floor (so Optima's floor-held phases count as absent). Sorption, ion-exchange and
-    /// polyelectrolyte phases are skipped. Search: successive substitution from every vertex,
-    /// the ideal closed form and the current composition; every evaluated composition is
-    /// scored by its TPD directly.
+    /// pa_StabTPD = 1: tangent-plane stability scan of every absent or trace non-aqueous mixed
+    /// phase at the returned answer. Sorption, ion-exchange and polyelectrolyte phases are
+    /// skipped. Report-only: restores what it touches.
     /// \param worstPhase phase carrying the minimum, -1 if none.
     /// \param nScanned   absent phases scanned.
     /// \param nDisagree  phases the single-point index calls stable while the search finds them unstable.
-    /// \return min over scanned phases of the smallest TPD(y) evaluated, in RT (< 0: unstable), +1e300 if none.
-    /// Mutates and restores by copy, as CertCurvMin() does.
+    /// \return min over scanned phases of the smallest TPD(y) in RT (< 0: unstable), +1e300 if none.
     /// In plain words: checks whether a mixed phase left out of the answer should in fact form.
     double CertStabTPD( long int& worstPhase, long int& nScanned, long int& nDisagree );
     /// Prototype: composition search for one absent non-ideal phase; see ipm_main.cpp.
@@ -1490,20 +1348,12 @@ public:
     /// the member's position in the class).
     std::vector<char> insBudgetTried;
 #ifdef USE_OPTIMA_SOLVER
-    // Equilibrium via the Optima interior-point NLP solver, as an alternative to the
-    // IPM/MBR loop (ipm_optima.cpp). Dispatched from TNode::GEM_run() for NEED_GEM_AOP/SOP.
-    // pm.pNP selects a cold start (AutoInitialApproximation(), pNP == 0, AOP) or a warm one
-    // (the existing pm.Y[], pNP == 1, SOP). Registered control conditions
-    // (SetControlCondition_pH()/_Eh() or custom EqControlCondition entries) are solved in the
-    // same Newton system; with none it is a plain equilibrium solve.
-    //
-    // `referenceMode` (default false): dispatched for NEED_GEM_ROP, a reference control
-    // configuration that differs from AOP/SOP in: (1) a uniform tiny seed for every species,
-    // no AutoInitialApproximation(); (2) the PartiallyExact Hessian - the approximate
-    // Hessian with the columns of Optima's basic variables replaced by finite differences of
-    // the chemical potentials; (3) Optima::Options left at the library defaults, not
-    // pa_p->IIM/OptimaTol; (4) one retry from the original state with
-    // backtracksearch.apply_min_max_fix_and_accept toggled. Always cold.
+    // Equilibrium via the Optima interior-point solver, as an alternative to the IPM/MBR loop
+    // (ipm_optima.cpp). Dispatched from TNode::GEM_run() for NEED_GEM_AOP/SOP: pm.pNP == 0 is a
+    // cold start, 1 a warm start from the existing pm.Y[]. Registered control conditions
+    // (pH, Eh or custom) are solved in the same Newton system.
+    // `referenceMode` (default false) is for NEED_GEM_ROP, a fixed reference setup: uniform
+    // tiny seed, PartiallyExact Hessian, Optima's own default options, always cold.
     // In plain words: AOP is the Optima solver from scratch, SOP is the same starting from
     // the previous answer, and ROP is a plain reference setup used only for comparison.
     /// \param runKinetics run the kinetics/metastability step (RunKineticsStep()): true for
@@ -1591,16 +1441,9 @@ public:
 
     bool DetectSolventCollapseAndReseed( const double* x, double upperBound, double& waterSeedOut );
 
-    /// Extends DetectSolventCollapseAndReseed() to every multicomponent phase (0..pm.FIs-1
-    /// with more than one species). Scans the trial amounts `x` (length pm.L) for a phase
-    /// whose total sits too close to its "phase absent" threshold (pm.DSM, or
-    /// max(pm.DSM, pm.XwMinM) for the aqueous phase) and computes a reseed bound,
-    /// min over the ICs the phase's end-members contain of bIC[i] / (largest stoichiometric
-    /// coefficient of IC i in that phase), spread evenly over the phase's end-members.
-    /// Appends (species index, reseed value) pairs to `reseedsOut` where the value exceeds
-    /// the trial amount, and returns true if any was appended.
-    /// `excludePhaseIdx` (default -1, none): a phase to skip, used for the aqueous phase,
-    /// which DetectSolventCollapseAndReseed() handles.
+    /// Like DetectSolventCollapseAndReseed(), for every mixed phase (not `excludePhaseIdx`, default
+    /// -1 = none): finds phases in the trial amounts `x` that are almost empty and appends
+    /// (species index, reseed value) pairs to `reseedsOut`. Returns true if any was appended.
     /// In plain words: rescues a phase that the starting guess has almost emptied.
     /// `stabilityGated` (cold seed only): refill a phase, gas and fluid included, only if the
     /// linearised-Gibbs LP says it should form, split by how favourable each end-member is.
@@ -1609,22 +1452,16 @@ public:
                                         long int excludePhaseIdx = -1,
                                         bool stabilityGated = false );
 
-    /// LP-feasibility seed: solves min sum_j(n_j) s.t. pm.A*n = pm.B, n >= 0 with a small
-    /// self-contained two-phase dense simplex (TwoPhaseSimplexMinSum(), ipm_optima.cpp).
-    /// Gives one deterministic starting point instead of a uniform seed plus retries.
-    /// Returns false (nOut unspecified) if the LP is infeasible, hits its iteration cap, or
-    /// its result fails the self-check A*n = b, n >= 0; the caller then uses a simpler seed.
-    /// A min-sum vertex puts the mass in as few species as possible, so the caller passes
-    /// the result through DetectSolventCollapseAndReseed()/DetectPhaseCollapseAndReseed().
+    /// LP-feasibility seed: a starting point that satisfies pm.A*n = pm.B, n >= 0, found with a
+    /// small dense simplex. Returns false (nOut unspecified) if the LP fails or its result does
+    /// not verify; the caller then uses a simpler seed.
     /// In plain words: finds a starting point that satisfies the element totals exactly.
     bool LPFeasibilitySeed( std::vector<double>& nOut );
     bool PotentialSpaceFinish( double dcFloor, const std::vector<double>& xlower, const std::vector<double>& xupper );
 
-    /// Dual of the linearised-Gibbs LP (min sum_j G0[j]*n_j s.t. A n = b, n >= 0), computed
-    /// with the same simplex as LPFeasibilitySeed(). Pricing a species against it,
-    /// s_j = G0[j] - sum_i y_i A[i,j], measures how far the species is from being stable.
-    /// Used by OptimaReducedPreSolve() to choose the initial active set. Returns false
-    /// (leaving yOut untouched) if the LP fails or its dual does not verify.
+    /// Dual of the linearised-Gibbs LP (min sum_j G0[j]*n_j s.t. A n = b, n >= 0). Used by
+    /// OptimaReducedPreSolve() to choose the initial species set. Returns false (yOut untouched)
+    /// if the LP fails or its dual does not verify.
     /// In plain words: a quick rough estimate of which species are likely to matter.
     bool LPGibbsDual( std::vector<double>& yOut, const double* cost = nullptr );
 

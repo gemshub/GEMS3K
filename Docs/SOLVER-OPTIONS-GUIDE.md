@@ -1,89 +1,110 @@
-# GEMS3K 5.0.0 — options guide
+# GEMS3K 5.2.0 — options guide
 
-What is new in this version, how to choose a solver, how to run it from code, how to change a setting in the
-project file, what every setting does, and the known limitations. What runs, in what order, in each mode, and
-what is tried when a calculation fails, is in [Solver paths](SOLVER-PATH-GRAPH.md)
-([drawn version](SOLVER-PATH-GRAPH.html)).
+This guide tells you what is new in this version. It tells you how to choose a solver and how to run it from
+code. It tells you how to change a setting in the project file. It describes each setting and the known
+limits.
+
+Words with a special meaning are in the [Glossary](#glossary). To see what runs in each mode, in which order, and what GEMS3K tries when a calculation fails, read
+[Solver paths](SOLVER-PATH-GRAPH.md) ([drawn version](SOLVER-PATH-GRAPH.html)).
 
 ## The two solvers
 
-GEMS3K computes chemical equilibrium by minimising the Gibbs energy of the system. It has two solvers, and
-you choose one for each calculation (see [The calculation modes](#the-calculation-modes)).
+GEMS3K calculates chemical equilibrium. It finds the lowest Gibbs energy of the system. GEMS3K has two
+solvers. You choose one for each calculation (see [The calculation modes](#the-calculation-modes)).
 
-**The GEMS3K IPM solver** is the solver GEMS3K has always had: an interior-point method (IPM) followed by a
-refinement of the mass balance. It is fast on almost every system and is the default (modes AIA and SIA).
-Its settings are the `pa_...` entries of the project's `-ipm` file:
-[long-standing settings](#gems3k-ipm-solver--long-standing-settings),
-[original settings](#original-settings-not-listed-above) and
-[settings added in this version](#gems3k-ipm-solver--settings-added-in-this-version).
+**The GEMS3K IPM solver** is the solver that GEMS3K always had. It uses an interior-point method (IPM). A
+refinement of the mass balance follows. This solver is fast on almost all systems. It is the default (modes
+AIA and SIA). Its settings are the `pa_...` entries in the `-ipm` file of the project:
+- [long-standing settings](#gems3k-ipm-solver--long-standing-settings)
+- [original settings](#original-settings-not-listed-above)
+- [settings added in this version](#gems3k-ipm-solver--user-setting-added-in-this-version)
 
-**The Optima solver** is a second solver, based on the open-source Optima optimisation library
-([github.com/gemshub/optima](https://github.com/gemshub/optima)) with changes made for GEMS3K. It is more
-robust for solid solutions, melts and other systems where several mixing phases compete (modes AOP and SOP),
-and it can also check the answer of the GEMS3K IPM solver (modes HOP and SHP). It can also fix the pH or Eh
-([Fixing the pH or Eh](#fixing-the-ph-or-eh-optima-modes-only)). Its settings are also `pa_...` entries of the
-`-ipm` file, with names starting `pa_Optima`: [main settings](#optima-solver--main-settings) and
-[supplemental settings](#optima-solver--supplemental-settings). The Optima library has further options of its
-own; they are not set in GEMS3K project files, and GEMS3K chooses them. They are described in the Optima
-library's own options guide (`docs/OPTIONS-GUIDE.md` in its repository).
+**The Optima solver** is a second solver. It is based on the open-source Optima optimisation library
+([github.com/gemshub/optima](https://github.com/gemshub/optima)). The GEMS3K team made changes for GEMS3K.
+- Optima is more robust for solid solutions, melts and other systems where several mixing phases compete
+  (modes AOP and SOP).
+- Optima can also check the result of the GEMS3K IPM solver (modes HOP and SHP).
+- Optima can fix the pH or the Eh. See [Fixing the pH or Eh](#fixing-the-ph-or-eh-optima-modes-only).
 
-Some general settings, such as `pa_PE`, `pa_DHB` and `pa_DG`, apply to both solvers. All settings are in
-[Settings](#settings), which also shows how to add one to a project file.
+The settings of Optima are also `pa_...` entries in the `-ipm` file. Their names start with `pa_Optima`. See
+[user settings](#optima-solver--user-settings). Settings for tests are in
+[Advanced settings](SOLVER-ADVANCED-SETTINGS.md).
+
+The Optima library has more options. You cannot set them in the GEMS3K project files. GEMS3K chooses them.
+The options guide of the Optima library describes them (`docs/OPTIONS-GUIDE.md` in its repository).
+
+Some general settings apply to both solvers. Examples are `pa_PE`, `pa_DHB` and `pa_DG`. See
+[Settings](#settings). That section also shows how to add a setting to a project file.
 
 ## What is new
 
-**A second equilibrium solver.** Besides the GEMS3K IPM solver (interior-point method with mass-balance
-refinement), GEMS3K can now compute equilibrium with the Optima solver. Optima is more robust for solid
-solutions, melts and other systems where several mixing phases compete. You choose the solver for each
-calculation by the value you put in `NodeStatusCH` before calling `GEM_run()`. The GEMS3K IPM modes remain the
-default.
+**A second equilibrium solver.** GEMS3K can now calculate equilibrium with the Optima solver. Optima is more
+robust for solid solutions, melts and other systems where several mixing phases compete. You choose the
+solver for each calculation. Put a value in `NodeStatusCH` before you call `GEM_run()`. The GEMS3K IPM modes
+are still the default.
 
-**Fewer failed calculations.** When a calculation does not converge, GEMS3K now retries automatically —
-from a slightly changed start, from scratch instead of from the previous result, or by finishing the
-calculation on the phases already found — before it reports a failure.
+**Fewer failed calculations.** A calculation can fail to converge. Before GEMS3K reports a failure, it now
+tries again automatically. It uses one of these methods:
+- a start that is changed by a very small amount
+- a start from scratch instead of from the previous result
+- a finish on the phases that it already found
+
+**A rescue for failed calls.** A call can still fail. Then GEMS3K tries it again in steps (`pa_FailRescue`).
+If no step gives a good result, you get the best attempt that keeps the element totals. Its status is BAD.
+`GEM_rescue_step()` tells you which step gave the result. See [Reading the result](#reading-the-result).
+
+**Faster calculations.**
+- The GEMS3K IPM solver stops when its energy does not improve. Optima then finishes the result.
+- A cold call without aqueous, gas or sorption phases starts from a better estimate.
+- Optima uses faster linear algebra on large systems. It does fewer steps that are not necessary.
+
+The results do not change. These changes are on by default. The switches are in
+[Advanced settings](SOLVER-ADVANCED-SETTINGS.md).
 
 ## The calculation modes
 
-Each mode name says how the calculation starts and which solver does the work.
+The name of each mode tells you how the calculation starts and which solver does the work.
 
 | Value | Mode | Stands for | What it does |
 |---|---|---|---|
-| 1 | AIA | **A**utomatic **I**nitial **A**pproximation | GEMS3K IPM solver. Builds its own starting point from scratch. |
-| 5 | SIA | **S**mart **I**nitial **A**pproximation | GEMS3K IPM solver. Starts from the previous result held in the node. |
-| 10 | AOP | **A**utomatic initial approximation with **OP**tima | Optima solver, starting from scratch. |
-| 14 | SOP | **S**mart initial approximation with **OP**tima | Optima solver, starting from the previous result. |
-| 22 | HOP | **H**ybrid with **OP**tima | GEMS3K IPM solver from scratch, then Optima refines and checks its answer. |
-| 26 | SHP | **S**mart **H**ybrid with o**P**tima | As HOP, but the GEMS3K IPM part starts from the previous result. |
+| 1 | AIA | **A**utomatic **I**nitial **A**pproximation | GEMS3K IPM solver. It makes its own start from scratch. |
+| 5 | SIA | **S**mart **I**nitial **A**pproximation | GEMS3K IPM solver. It starts from the previous result in the node. |
+| 10 | AOP | **A**utomatic initial approximation with **OP**tima | Optima solver. It starts from scratch. |
+| 14 | SOP | **S**mart initial approximation with **OP**tima | Optima solver. It starts from the previous result. |
+| 22 | HOP | **H**ybrid with **OP**tima | GEMS3K IPM solver from scratch. Then Optima refines and checks the result. |
+| 26 | SHP | **S**mart **H**ybrid with o**P**tima | The same as HOP. The GEMS3K IPM part starts from the previous result. |
 
-In HOP the GEMS3K IPM answer is kept, and the result is flagged, if the Optima part fails, so HOP does not
-give a worse answer than the GEMS3K IPM solver alone.
+In HOP, the Optima part can fail. Then GEMS3K keeps the GEMS3K IPM result and marks it. For this reason, HOP
+does not give a worse result than the GEMS3K IPM solver alone.
 
-### Older programs that use the raw numbers 10 and 11
+### Older programs that use the numbers 10 and 11
 
-In some older versions, status 10 meant "an external solver succeeded" and 11 meant "it failed". Now 10 requests
-an Optima solve from scratch (AOP), and 11 means that solve succeeded. An old program that reads 11 as a failure
-would therefore treat an Optima success as an error. Use the named constants from `databr.h` (`NEED_GEM_AOP`,
-`OK_GEM_AOP`, and so on) instead of raw numbers, and check any old code that compares a status with 10 or 11.
+In some older versions, status 10 meant "an external solver succeeded". Status 11 meant "it failed". In this
+version, 10 requests an Optima solve from scratch (AOP). Status 11 means that this solve succeeded.
+
+An old program can read 11 as a failure. That program then treats a success of Optima as an error. Use the
+named constants from `databr.h` (`NEED_GEM_AOP`, `OK_GEM_AOP` and so on). Do not use the raw numbers. Check
+all old code that compares a status with 10 or 11.
 
 ## Which mode to use
 
-| Situation | Recommended mode | Why |
+| Situation | Mode | Reason |
 |---|---|---|
-| Most systems, single calculations | **AIA** | The GEMS3K IPM solver is the fastest on almost every system it can solve, often by a large margin. |
-| Systems with many species (hundreds or more) | **AIA**, or **HOP** if you want a checked answer | Optima alone is much slower on large systems; HOP gets Optima's check for little more than the GEMS3K IPM solver. |
-| Strongly non-ideal systems: solid solutions, melts, miscibility gaps, phase diagrams | **AOP**, or **HOP** | Optima finds the correct set of stable phases far more often where several mixing phases compete. |
-| The GEMS3K IPM solver fails, or warns that its answer does not satisfy the mass balance | **AOP** or **HOP** | Optima solves most of these cases. |
-| Sequences of small changes: sweeps in temperature or composition, titrations, transport steps | **SOP** after a first point in AOP (or **SIA** after AIA) | Starting from the previous result is many times cheaper than starting from scratch. |
-| Sequences that cross phase boundaries | **AOP** or **SOP**; avoid **SIA** | SIA can keep the phases of the previous point after they stop being stable. |
-| Systems with very little water (for example nearly dry cement) | **AIA** or **HOP** | Optima can fail when water is close to running out; the GEMS3K IPM solver handles these. |
+| Most systems, single calculations | **AIA** | The GEMS3K IPM solver is the fastest on almost all systems that it can solve. It is often much faster. |
+| Systems with many species (hundreds or more) | **AIA**, or **HOP** if you want a checked result | Optima alone is much slower on large systems. HOP gives the check of Optima. It costs a little more than the GEMS3K IPM solver. |
+| Strongly non-ideal systems: solid solutions, melts, miscibility gaps, phase diagrams | **AOP**, or **HOP** | Optima finds the correct set of stable phases more often when several mixing phases compete. |
+| The GEMS3K IPM solver fails, or warns that its result does not satisfy the mass balance | **AOP** or **HOP** | Optima solves most of these cases. |
+| Series of small changes: sweeps in temperature or composition, titrations, transport steps | **SOP** after a first point in AOP (or **SIA** after AIA) | A start from the previous result costs much less than a start from scratch. |
+| Series that cross phase boundaries | **AOP** or **SOP**. Do not use **SIA**. | SIA can keep the phases of the previous point after they are not stable. |
+| Systems with very little water (for example, nearly dry cement) | **AIA** or **HOP** | Optima can fail when the water is almost gone. The GEMS3K IPM solver handles these systems. |
 
-The steps each mode runs, and the retries it makes before reporting a failure, are shown in
-[Solver paths](SOLVER-PATH-GRAPH.md).
+[Solver paths](SOLVER-PATH-GRAPH.md) shows the steps that each mode runs. It also shows the tries that each
+mode makes before it reports a failure.
 
-## Using it from code
+## Use from code
 
-The project files are read once, in `GEM_init()`. There is no call that changes a setting afterwards, so
-to try another value, edit the `-ipm` file (see "Settings" below) and initialise a new node.
+GEMS3K reads the project files one time, in `GEM_init()`. No call changes a setting after that. To try
+another value, edit the `-ipm` file (see [Settings](#settings)). Then initialise a new node.
 
 ```cpp
 #include "node.h"
@@ -99,34 +120,57 @@ if (status != OK_GEM_AOP)
     std::cerr << "not fully trustworthy, status " << status << "\n";
 std::cout << "pH " << node.Get_pH() << "  Eh " << node.Get_Eh() << "\n";
 
-// A second, similar calculation: start from the previous answer (warm start).
+// A second, similar calculation: start from the previous result (warm start).
 node.pCNode()->NodeStatusCH = NEED_GEM_SOP;    // set it again before EVERY call
 status = node.GEM_run(false);
 
-// Fix the pH and let the solver add the acid or base needed (Optima modes only).
+// Fix the pH and let the solver add the acid or base that it needs (Optima modes only).
 node.Set_pH_target(7.0);
 node.pCNode()->NodeStatusCH = NEED_GEM_SOP;
 status = node.GEM_run(false);
 ```
 
-Two things to remember. `GEM_run()` does nothing unless `NodeStatusCH` was set to a `NEED_GEM_...` value
-just before it, so set it before every call. And the same node can be used for any mode; for a comparison
-of two settings, make two nodes from two copies of the project, one per `-ipm` file.
+Remember these two points:
+- `GEM_run()` does nothing unless `NodeStatusCH` has a `NEED_GEM_...` value. Set the value just before each
+  call.
+- You can use the same node for all modes. To compare two settings, make two nodes from two copies of the
+  project. Use one `-ipm` file for each node.
 
-A complete working example is `tools/optima_test.cpp`.
+A complete example is `tools/optima_test.cpp`.
+
+### Reading the result
+
+- `OK_GEM_...`: the result passed all checks.
+- `BAD_GEM_...`: there is a result, but it did not pass all checks. Read the log.
+- `ERR_GEM_...`: there is no result. The values in the node are from before the call.
+- `GEM_rescue_step()` gives the rescue step that made the result:
+  - 0: the call itself
+  - 1: a warm restart from the previous result
+  - 2: a composition changed by a very small amount
+  - 3: a walk from the previous result
+  - 4: looser settings
+  - 5: the other solver
+  - 6: the best attempt (the status is always BAD)
+
+```cpp
+long status = node.GEM_run(false);
+if (node.GEM_rescue_step() == 6)
+    std::cerr << "no good result; best balanced attempt returned\n";
+```
 
 ### Which phases are present
 
-The Optima solver never puts an amount exactly to zero: a phase that is not formed is left at a tiny floor
-amount (about the size of `pa_DHB` per species, e.g. 1e-13 mol). The native solver removes such phases. So the
-same answer can list many more phases with an amount above zero in an Optima mode than in a native mode.
+The Optima solver never sets an amount to exactly zero. A phase that does not form stays at a very small floor
+amount. The floor is about the size of `pa_DHB` for each species (for example, 1e-13 mol). The GEMS3K IPM
+solver removes such phases. For this reason, one result can show more phases with an amount above zero in an
+Optima mode than in a GEMS3K IPM mode.
 
-- **Old rule, `pa_DS`.** A phase counts as present when its amount is above `pa_DS` (default 1e-20 mol). The
-  native solver uses it to drop phases, and GEMSGUI uses it to show which phases are present. It is far below
-  Optima's floor, so with Optima every floor phase still passes it.
+- **Old rule, `pa_DS`.** A phase is present when its amount is more than `pa_DS` (default 1e-20 mol). The
+  GEMS3K IPM solver uses this rule to remove phases. Graphical front ends use it to show the phases that are
+  present. The value is much lower than the floor of Optima. With Optima, each floor phase passes this rule.
 - **New rule, `Ph_Present(k)`.** A phase is present when it holds more than 1e-9 of the total amount of all
-  phases (a second argument changes that share). The amounts are not changed. With it, Optima and native modes
-  report the same present phases.
+  phases. A second argument changes this share. The amounts do not change. With this rule, the Optima modes
+  and the GEMS3K IPM modes show the same phases.
 
 ```cpp
 for (long k = 0; k < node.pCSD()->nPHb; k++)
@@ -136,15 +180,17 @@ for (long k = 0; k < node.pCSD()->nPHb; k++)
 
 ## Fixing the pH or Eh (Optima modes only)
 
-In the Optima modes AOP, SOP, HOP and SHP you can ask for a given pH, a given Eh (in volts), or both. The
-solver adds whatever acid, base or electron donor the target needs, and reports how much it added. In HOP and
-SHP the target is met by the Optima part; the GEMS3K IPM part that runs first ignores it. This is not available
-in AIA or SIA, and only in a build with Optima.
+In the Optima modes AOP, SOP, HOP and SHP, you can request a pH, an Eh (in volts), or both. The solver adds
+the acid, base or electron donor that the target needs. It reports how much it added.
+
+- In HOP and SHP, the Optima part meets the target. The GEMS3K IPM part runs first and ignores the target.
+- This function is not available in AIA or SIA.
+- This function needs a build with Optima.
 
 ```cpp
 node.Clear_ControlConditions();           // targets stay set until cleared
 node.Set_pH_target(7.0);                  // pH 7
-node.Set_Eh_target(0.2);                  // Eh 0.2 V (optional; may be used alone)
+node.Set_Eh_target(0.2);                  // Eh 0.2 V (optional; can be used alone)
 
 node.pCNode()->NodeStatusCH = NEED_GEM_AOP;   // or SOP, HOP, SHP; set before every call
 long status = node.GEM_run(false);
@@ -155,28 +201,34 @@ if (status == OK_GEM_AOP)
               << "  electrons removed (mol) " << node.Get_ControlCondition_titrant("Eh") << "\n";
 ```
 
-- The tolerance is an optional second argument, `Set_pH_target(7.0, 1e-3)`. Without it, it is derived from
-  `pa_GAS`.
-- The amount added is part of the answer: the bulk composition returned by the node already contains it.
-  To start the next point from the original composition, write the original bulk composition back first.
-- Targets stay active for every later call until `Clear_ControlConditions()`.
-- A target may not be reachable (for example Eh in a system with no redox couple). Check
-  the status, and do not rely on the Eh in such a system.
-- A target that would use up all the water (an extreme pH, for example) is reported as not fully
-  trustworthy (`BAD_GEM_...`). A failed SOP or SHP call is then re-solved from scratch and may come back as
-  `OK_GEM_AOP` (see `pa_OptimaColdRetry`); a failed HOP call returns the GEMS3K IPM answer, without the target.
-- An `OK` status means the solver met the target in its own model. An extreme target can still give a
-  result with no physical meaning (a pH far outside 0–14); judge the target, not only the status.
+- The tolerance is an optional second argument: `Set_pH_target(7.0, 1e-3)`. If you do not give it, GEMS3K
+  derives it from `pa_GAS`.
+- The amount that the solver added is part of the result. The bulk composition that the node returns
+  includes it. To start the next point from the original composition, first write the original bulk
+  composition back.
+- A target stays active for each later call until you use `Clear_ControlConditions()`.
+- A target can be impossible to reach. An example is an Eh in a system with no redox couple. Check the
+  status. Do not trust the Eh in such a system.
+- A target can use all the water (for example, an extreme pH). GEMS3K then reports the result as not fully
+  trustworthy (`BAD_GEM_...`).
+  - A failed SOP or SHP call is solved again from scratch. It can return `OK_GEM_AOP` (see
+    `pa_OptimaColdRetry`).
+  - A failed HOP call returns the GEMS3K IPM result without the target.
+- An `OK` status means that the solver met the target in its own model. An extreme target can still give a
+  result that has no physical meaning (for example, a pH far outside 0 to 14). Judge the target. Do not
+  only look at the status.
 
 ## Settings
 
-Settings are read from the project's `-ipm` file (`pa_...` entries). Settings that are not in the file
-keep their default. The table lists the settings that are new or changed in this version.
+GEMS3K reads the settings from the `pa_...` entries in the `-ipm` file of the project. A setting that is not
+in the file keeps its default value. The tables list the settings that a user can change. Settings for tests
+are in [Advanced settings](SOLVER-ADVANCED-SETTINGS.md).
 
-**Adding a setting that is not in the file.** Files exported by earlier versions do not contain the new
-settings. To use a value other than the default, add the line yourself, next to the other `pa_` entries.
+**How to add a setting that is not in the file.** Files that earlier versions exported do not contain the new
+settings. To use a value other than the default, add the line to the file. Put it next to the other `pa_`
+entries.
 
-In a JSON file (`…-ipm.json`), add it inside the `"ipm"` block, for example right after `"pa_PLLG"`:
+In a JSON file (`…-ipm.json`), add the setting in the `"ipm"` block. For example, add it after `"pa_PLLG"`:
 
 ```json
     "pa_PLLG": 10000,
@@ -185,195 +237,154 @@ In a JSON file (`…-ipm.json`), add it inside the `"ipm"` block, for example ri
     "tMin": 0,
 ```
 
-In a text file (`…-ipm.dat`), add it after the `<END_DIM>` line, for example right after `<pa_PLLG>`:
+In a text file (`…-ipm.dat`), add the setting after the `<END_DIM>` line. For example, add it after
+`<pa_PLLG>`:
 
 ```
 <pa_PLLG>  30000
 <pa_OptimaTol>  1e-09
 ```
 
-Keep each setting only once in the file: if a name appears twice, the later value is used. A setting
-placed before `<END_DIM>` in a text file is not read.
+Put each setting in the file one time only. If a name is in the file two times, GEMS3K uses the later value.
+GEMS3K does not read a setting that is before `<END_DIM>` in a text file.
 
-### Optima solver — main settings
+### Optima solver — user settings
 
-These are the settings most users may want to adjust.
+These are the Optima settings that a user can change. Advanced settings has all other Optima settings
+([Advanced settings](SOLVER-ADVANCED-SETTINGS.md)).
 
-| Setting | Default | What it does | When it can be useful | Other values |
+| Setting | Default | What it does | When it can help | Other values |
 |---|---|---|---|---|
-| `pa_OptimaTol` | 1e-8 | How precisely Optima must converge. | Raise it slightly to trade accuracy for speed on large systems; lower it only if an answer looks insufficiently converged. | Any positive number; smaller is stricter. |
-| `pa_OptimaMaxSeconds` | 0 (off) | A time limit in seconds for one calculation, including retries. Results then depend on the speed of the computer. | Long batch or transport runs where one stuck calculation must not hold up the rest. | Any positive number of seconds. |
-| `pa_OptimaDimReduce` | 0 (automatic) | For large systems, first solves with only the species that matter, then adds the rest. Automatic means on from 200 species. | Switch it on for a system just under 200 species that is slow; switch it off if a large system gives a different answer with it. | A positive number = on, with at most that many passes; a negative number = off. |
-| `pa_OptimaColdRetry` | 2 (fail fast) | If a calculation started from the previous result (SOP, SHP) fails, start again from scratch. 2 gives up on the first attempt quickly. | Use 1 if the warm start usually succeeds but needs many iterations; 0 only when testing. | 0 = no retry; 1 = retry only after the first attempt used its full budget; 2 = give up on the first attempt quickly. |
-| `pa_OptimaFinish` | 1 (on) | If Optima stops just short of converging, finish the job using the phases it has found. | Leave on. Turn off only to see what Optima alone returns. | 0 = off. |
-| `pa_OptimaTpdAccept` | 1e-6 (on) | Accepts a not-quite-converged answer when a direct check shows that no missing phase should be present (within this tolerance). | Leave on. Systems where Optima gets very close but does not meet its own tolerance. | 0 = off. |
-| `pa_OptimaAcceptRepair` | 0 (off) | With the setting above, also corrects a small error in the element totals before accepting. | Systems with very little water, or other cases where Optima ends close to the answer with slightly unbalanced element totals. | 1 = on. |
-| `pa_OptimaStallWindow` | 200 (on) | Stops a calculation that has not improved for this many iterations, so a retry can start sooner. | Raise it (for example to 500) if a system that pauses for a long time and then converges is stopped too early; lower it (not below 100) to save time on systems that often get stuck. | 0 = never stop early. |
-| `pa_OptimaZeroAbsent` | 2 | How absent species are reported: as a tiny amount, with the element totals corrected if needed. | Use 1 if you need absent phases to read exactly zero in the output. | 0 = tiny amounts as they are; 1 = absent phases set to exactly zero. |
-| `pa_OptimaLineSearch` | 1.5 | When a step makes the result much worse (by more than this factor), try a shorter step. | Leave on. A negative value can save time on easy systems that rarely need it. | 0 = off; a negative value = use it only when retrying a failed calculation. |
-| `pa_OptimaRedoxFree` | 1 (log it) | Before a calculation, checks whether anything in the bulk fixes the redox level (every element in one oxidation state and no spare oxidant or reductant); if not, says so in the log. | Systems with no redox buffer, where Eh and the species that depend on it are not determined by the input. | 0 = off; 2 = also aim the calculation at pe 4 when no pH or Eh target is given. |
-
-### Optima solver — supplemental settings
-
-Fine-tuning of the solver. The defaults suit almost all systems; change these only when
-investigating a difficult case.
-
-| Setting | Default | What it does | When it can be useful | Other values |
-|---|---|---|---|---|
-| `pa_OptimaLSStallEscape` | 10 (on) | If shorter steps keep getting nowhere this many times in a row, take one full step to break out. | Systems where Optima gets stuck at the same error for many iterations. | 0 = off. |
-| `pa_OptimaLSRejectWorse` | 0 (off) | If a shorter step did not help, use the full step instead. | A few difficult systems where the shorter steps keep making tiny progress; it can slow others. | 1 = on. |
-| `pa_OptimaCgSeed` | 1e-6 (on) | A better starting point for a retry from scratch, which considers which phases are likely to be stable. | Leave on. Systems with many competing phases where the first start from scratch fails. | 0 = off. |
-| `pa_OptimaDimReduceTol` | 10 | How generous the first guess of "species that matter" is (larger includes more). | Raise it if the reduced first solve misses species that end up present. | A negative value −m = start with the m×N cheapest species. |
-| `pa_OptimaPreSolveFirstIters` | 6000 | Iteration limit for each pass of the reduced first solve, so a pass that goes nowhere is abandoned. | Large systems where the reduced first solve takes long without converging. | 0 = no limit. |
-| `pa_OptimaEarlyStabilityAt` | 0 (automatic) | Lets Optima notice early that a phase should disappear, instead of shrinking it slowly. | Systems where a phase disappears slowly over hundreds of iterations. | A positive number = check at that iteration; a negative number −N = check after a phase has shrunk N times in a row. |
-| `pa_OptimaDcFloor` | 0 (automatic) | The smallest amount Optima can represent for an absent species. Automatic derives it from the mass-balance tolerance `pa_DHB`. | Systems with elements present only in traces, where the automatic value is too coarse. | Any positive amount in moles. |
-| `pa_PhaseHessianFloor` | 0.01 (on) | Keeps the curvature of mixed phases well-behaved. | Solid solutions or melts that tend to split into two phases (miscibility gaps). | 0 = off. |
-| `pa_OptimaFDHessian` | 1 (on) | Computes a more exact curvature for non-ideal phases, at extra cost. | Turn off to speed up systems with weakly non-ideal phases; keep on for strongly non-ideal ones. | 0 = off (faster, sometimes less robust). |
-| `pa_OptimaFDHessianDelay` | 0 | Uses the cheaper approximate curvature for this many iterations first. | Large non-ideal systems where the early iterations are expensive. | Any positive number of iterations. |
-| `pa_OptimaMoleFracHessian` | 0 (off) | A more exact curvature for ideal mixed phases. | Try it if a system with ideal solid solutions converges slowly; it helps some systems and slows others. | 1 = on. |
-| `pa_OptimaFastRises` | 10 (on) | The quick first try of a calculation from scratch stops after this many steps on which its energy went up by more than 1 %; the full calculation then runs. | Leave on. | 0 = off. |
-| `pa_OptimaFastCollapse` | 1000 (on) | The quick first try stops at once when its energy has grown to more than this many times its starting value. | Leave on. | 0 = off. |
-| `pa_OptimaFrozenCut` | 20 (on) | Stops a calculation whose energy and error have not changed at all for this many iterations, so the finishing step and retries can take over. Not used when Optima starts from a native answer (HOP, SHP), and only when `pa_OptimaStallWindow` is on. | Leave on. | 0 = off. |
-| `pa_OptimaDryOut` | 0 (off) | When the water runs out during a calculation, takes the water phase out and solves the solids alone, then checks that answer against one solve that keeps the water and keeps the lower energy. If the dry solve fails, the calculation goes on with the water back. Not used when an element can only be held by the water. Needs `pa_OptimaStallWindow` on. | Turn on (1) for systems where water is used up by design, such as cement hydration at low water. Off by default: where the water only dips during a calculation, the dry answer can be wrong. | 0 = off, 1 = on. |
-| `pa_OptimaTailStop` | 100 (on) | Stops a calculation whose energy has not changed for this many iterations while the remaining error sits only on trace amounts; the stop point is checked for phase stability and, if it passes, taken as the answer. Needs `pa_OptimaStallWindow` on. | Leave on. | 0 = off. |
-| `pa_OptimaTailStopWarm` | 10 (on) | The same on a warm calculation (SOP, SHP). | Leave on. | 0 = off. |
-| `pa_OptimaTailDryOnly` | 1 (on) | The tail stop acts only after `pa_OptimaDryOut` has taken the water phase out. | Leave on: used in every calculation, the tail stop can give wrong answers on some solid-solution systems. | 1 = only after the dry-out (default); 0 = in every calculation. |
-| `pa_OptimaWaterKeep` | 2 (on) | 1: a converged answer is kept when the retry with more water fails. 2: also, a dry answer that passed the tail-stop check is not retried with more water. | Leave at 2. | 0 = off; 1 = keep a converged answer; 2 = also keep a dry answer that passed the tail-stop check. |
-| `pa_OptimaSnapLeaving` | 2 (on) | In a warm restart, when a species heading to zero holds back every step, it is put on its floor after this many steps in a row, so it does not creep down a little at a time. | Leave at 2. | 0 = off. |
-| `pa_OptimaFastFirst` | 60 (on) | A calculation from scratch (AOP) first tries a quick solve that takes full steps; if it does not end well, the normal calculation runs from the same start. The value is the most iterations the quick try may use. | Leave on. | 0 = off. |
-| `pa_OptimaFastFrozen` | 3 (on) | The quick first try stops when this many steps in a row change almost nothing. | Leave on. | 0 = off. |
-| `pa_OptimaFastDiverge` | 10 (on) | The quick first try stops when its energy has jumped far above its start and its error is still not getting better by this factor. | Leave on. | 0 = off. |
-| `pa_OptimaColdLevel` | 1 (on) | Where the reduced first solve is not used, a calculation from scratch starts from a simple energy-minimising estimate, and two copies of one solid solution start at different compositions. | Leave on. | 0 = off. |
-| `pa_OptimaLevelStart` | 1 (on) | For systems with only solids and other mixed condensed phases, a calculation from scratch first works out which mixed phases form and at what composition, and starts from that. | Leave on. | 0 = off. |
-| `pa_OptimaPreSolveSeed` | 1 (on) | The first pass of the reduced first solve starts from the simple energy-minimising estimate; a pass that needs more than 300 steps drops the reduced first solve for that calculation. | Leave on. | 0 = off. |
-| `pa_OptimaEmptyPreSolveSkip` | 1 (on) | Once the reduced first solve has found no usable set of species in a calculation, its retries skip it. | Leave on. | 0 = off. |
-| `pa_OptimaCallCap` | 0 (no cap) | The most iterations one calculation (AOP, SOP) may use before it is repeated with the amounts changed by a tiny amount. | Batch runs where an occasional calculation runs for a very long time. | -1 = chosen from the system size; a positive number = that many iterations. |
-| `pa_OptimaCapNudges` | 3 (used only with pa_OptimaCallCap) | How many tiny changes of the amounts a calculation that hit its cap is retried with. If none works, it is run once more without the cap. | Leave. Used only with `pa_OptimaCallCap`. | 0 = no retries. |
-| `pa_OptimaFinishFirst` | 1 (on) | When a stuck calculation has failed, first tries the finishing step on where it stopped, and keeps that if no phase wants to form. Only otherwise are the full retries run. | Leave on. | 0 = off. |
-| `pa_OptimaCollapseCheck` | 1 (on) | When checking an answer, judges a phase that has vanished by its pure species, so a phase that should come back is not taken as correctly absent. | Leave on. | 0 = off. |
-| `pa_OptimaTpdVeto` | 1 (on) | The direct check that accepts a not-quite-converged answer (`pa_OptimaTpdAccept`) may not overrule the phase stability check for a mixed phase it cannot test itself, such as a vanished water phase. | Leave on. | 0 = off. |
-| `pa_OptimaTwinReadmit` | 1 (on) | A mixed phase that was switched off because a second copy of it took over is tried again after the calculation if the phase stability check says it should form. | Leave on. | 0 = off. |
-| `pa_OptimaFloorCurvature` | 3 (on) | Uses the exact curvature of the logarithm term for each species in a mixed phase, which the numerical estimate under-states for very small amounts. | Systems where a mixed phase takes many iterations to disappear. | 0 = off; 1 = exact term only; 2 = also a step size fitted to the phase and the full mixing curvature of solid and gas solutions; 3 = 1, plus the full mixing curvature for a nearly vanished gas or fluid phase and for a vanishing copy of a pair. |
-| `pa_OptimaEmptySolvent` | 1 (on) | A calculation from scratch whose water is at or below its minimum amount gets water added, as when the dissolved amounts outweigh it. | Leave on. | 0 = off. |
-| `pa_OptimaDryRetry` | 0 (off) | A calculation that ends with almost no liquid water, while the bulk could form much more, is solved once more from a start that first puts hydrogen and oxygen into water. | Systems that wrongly end dry. | 1 = on. |
-| `pa_LogBarrierTau` | 1e-16 | A tiny numerical push that keeps pure minerals away from exactly zero. | Rarely needs changing. | Any small positive number. |
+| `pa_OptimaTol` | 1e-8 | Sets how precisely Optima must converge. | Make it a little larger to get more speed and less accuracy on large systems. Make it smaller only if a result is not converged enough. | Any positive number. A smaller number is stricter. |
+| `pa_OptimaMaxSeconds` | 0 (off) | Sets a time limit in seconds for one calculation with its tries. The results then depend on the speed of the computer. | Long batch runs or transport runs. One stuck calculation must not stop the other calculations. | Any positive number of seconds. |
+| `pa_OptimaDimReduce` | 0 (automatic) | For large systems, the solver first solves with only the important species. Then it adds the other species. Automatic means that it is on from 200 species. | Switch it on for a slow system with fewer than 200 species. Switch it off if a large system gives a different result with it. | A positive number = on, with at most that number of passes. A negative number = off. |
+| `pa_OptimaColdRetry` | 2 (fail fast) | A calculation that starts from the previous result (SOP, SHP) can fail. Then the solver starts again from scratch. The value 2 stops the first attempt early. | Use 1 if the warm start usually succeeds but needs many iterations. Use 0 only for tests. | 0 = no new try. 1 = a new try only after the first attempt used its full budget. 2 = the first attempt stops early. |
+| `pa_OptimaAcceptRepair` | 0 (off) | Optima can accept a result that is almost converged. Then the solver first corrects a small error in the element totals. | Systems with very little water. Other cases where Optima ends near the result with element totals that are not exactly balanced. | 1 = on. |
+| `pa_OptimaZeroAbsent` | 2 | Sets how absent species are shown. They are shown as a very small amount. If necessary, the solver corrects the element totals. | Use 1 if absent phases must show exactly zero in the output. | 0 = very small amounts without a change. 1 = absent phases set to exactly zero. |
+| `pa_OptimaRedoxFree` | 1 (write to the log) | Checks before the calculation if the bulk fixes the redox level. This is the case if each element has one oxidation state and no spare oxidant or reductant exists. If the bulk does not fix the level, the solver writes this in the log. | Systems with no redox buffer. In these systems, the input does not fix Eh and the species that depend on it. | 0 = off. 2 = also aim the calculation at pe 4 when you give no pH target or Eh target. |
+| `pa_OptimaCallCap` | 0 (no cap) | Sets the largest number of iterations for one calculation (AOP, SOP). After that number, the solver repeats the calculation with amounts that are changed by a very small amount. | Batch runs where a calculation sometimes runs for a very long time. | -1 = chosen from the size of the system. A positive number = that number of iterations. |
+| `pa_OptimaDryOut` | 0 (off) | The water can run out during a calculation. Then the solver takes the water phase out and solves the solids alone. It compares this result with a solve that keeps the water. It keeps the result with the lower energy. If the dry solve fails, the calculation continues with the water back. The solver does not use this if an element can only be in the water. It needs `pa_OptimaStallWindow` to be on. | Use 1 for systems where the water is used up by design, for example cement hydration with little water. It is off by default. If the water only becomes low during a calculation, the dry result can be wrong. | 0 = off. 1 = on. |
 
 ### GEMS3K IPM solver — long-standing settings
 
-These settings existed before this version and keep their meaning. Most projects carry them
-in their file already.
+These settings were in earlier versions. They have the same meaning. Most projects have them in the file.
 
-| Setting | Default | What it does | When it can be useful | Other values |
+| Setting | Default | What it does | When it can help | Other values |
 |---|---|---|---|---|
-| `pa_DK` | 1e-6 | How precisely the GEMS3K IPM solver must converge. Smaller gives a more precise answer at the cost of more iterations. | Solid solutions whose end-members are nearly alike: 1e-7 gives a noticeably more accurate composition. | Any small positive number. |
-| `pa_DHB` | 1e-13 | How closely the amount of each element in the answer must match the amount put in, as a fraction of that amount. | Loosen it slightly if a calculation fails only because of this check; tighten it for systems with trace elements. | Usually between 1e-9 (looser) and 1e-15 (stricter). |
-| `pa_DT` | 0 | How the check above is applied. 0 applies it the same way to every element. | Systems mixing major and trace elements where the relative check is too strict for the major ones. | A value of −6 or less = for major elements, use a fixed amount instead of a fraction. |
-| `pa_IIM` | 7000 | Maximum number of iterations of the main calculation before it gives up. | Raise it for large or difficult systems that run out of iterations. | Up to 32767; a larger value is reduced to 32767 with a warning. |
-| `pa_NativeOptimaFinish` | 500 (on) | With Optima built in: if a solid is left out or in a trace amount but still tends to form, Optima finishes the answer and the result is kept only if it is better; if the calculation stops at its iteration limit or cannot solve its equations, Optima finishes it from where it stopped. The value is the most Optima iterations allowed. The status stays that of the native mode. | Leave on. | 0 = off. |
-| `pa_DP` | 130 | Maximum number of iterations of the step that makes the element totals add up. | Raise it if that step runs out of iterations on a difficult system. | Any positive number. |
-| `pa_DW` | 1 (on) | Treats running out of the iterations above as an error. | Turn off only to inspect a result that would otherwise be rejected. | 0 = do not treat it as an error. |
-| `pa_PE` | 1 (on) | Requires the answer to be electrically neutral. | Leave on for any system with ions; off only for systems with no charged species. | 0 = off. |
-| `pa_PC` | 2 | How the solver decides which phases are present. 2 is the current method, which also adds back phases that were wrongly left out. | Leave at 2. The old method is kept for comparison with old results. | 1 = the old method. |
-| `pa_DF` | 0.01 | How clearly a missing phase must be stable before it is added to the answer. | Lower it if phases that should appear are missed; raise it if phases flicker in and out along a sweep. | Any small positive number; smaller adds phases more readily. |
-| `pa_DFM` | 0.01 | How clearly a present phase must be unstable before it is removed from the answer. | Adjust together with `pa_DF` when phases flicker in and out along a sweep. | Any small positive number. |
-| `pa_PD` | 2 | How often activity coefficients (the corrections for non-ideal behaviour) are recalculated. 2 = at every iteration. | Leave at 2. Lower values can save time on nearly ideal systems. | 0 = once at the start; 1 = only while fixing the element totals; 3 = only in the main calculation. |
-| `pa_AG` | 1 | Damping of the non-ideal corrections between iterations. | Lower it if a strongly non-ideal system oscillates and fails to converge. | From −1 to 1. |
-| `pa_DGC` | 0 | A second damping setting that works together with the one above. | Use 0.001 for systems with sorption. | From −1 to 1. |
-| `pa_PRD` | −5 | A final clean-up that removes tiny amounts of species left over at the end of the calculation. −5 means amounts below 1e-5 are cleaned up. | Make it more negative if real trace amounts are being removed; 0 to see the raw result. | 0 = off; −6 or less = clean up only smaller amounts. |
-| `pa_GAS` | 0.001 | How strict the final clean-up is. A larger value keeps more trace amounts in the answer. | Systems with very little water (0.002 together with `pa_OptimaAcceptRepair`), or when trace phases matter. | Any small positive number. |
-| `pa_DS` | 1e-20 | Smallest amount of a phase, in moles, that is still reported as present (the old rule; see "Which phases are present"). | Raise it to hide meaningless trace phases in the output. With Optima, use `Ph_Present()` instead. | Any small positive amount. |
-| `pa_XwMin` | 1e-13 | If the amount of water falls below this (moles), the aqueous solution is removed from the answer. | Drying or nearly dry systems, to control when the aqueous solution disappears. | Any small positive amount. |
-| `pa_ScMin` | 1e-13 | If the amount of a solid that carries a sorption surface falls below this (moles), the sorption phase is removed. | Sorption systems where the sorbent dissolves almost completely. | Any small positive amount. |
-| `pa_PhMin` | 1e-20 | If a solution phase other than the aqueous one falls below this amount (moles), it is removed with all its species. | Systems with many solid solutions or melts present in trace amounts. | Any small positive amount. |
-| `pa_DcMin` | 1e-33 | If a species inside a mixed phase falls below this amount (moles), it is removed. | Rarely needs changing. | Any small positive amount. |
-| `pa_DB` | 1e-17 | Smallest amount of an element, in moles, that the solver works with in the bulk composition (charge excluded). | Systems with elements at extremely low amounts. | Any small positive amount. |
-| `pa_ICmin` | 1e-5 | Below this ionic strength (molal), activity coefficients of aqueous species are taken as 1, i.e. the solution is treated as ideal. | Very dilute waters, if the ideal treatment starts too early or too late. | Any small positive number. |
-| `pa_DG` | 1000 | The solver internally scales the whole system to this total number of moles. Results are reported in the original amounts. | Very small or very large systems; switch off only to compare with unscaled results. | Below 1e-4 = no scaling. |
-| `pa_EPS` | 1e-10 | How precisely the automatic starting point (used by AIA) is computed. | Loosen it if the starting point cannot be found; tighten it for systems with trace elements. | From 1e-6 (looser) to 1e-14 (stricter). |
-| `pa_DFYw`, `pa_DFYaq`, `pa_DFYid`, `pa_DFYr`, `pa_DFYh`, `pa_DFYc` | 1e-5 | Small amounts (moles) given to water, aqueous species, species of ideal and non-ideal mixed phases, and pure phases that are zero in the automatic starting point, so the main calculation can work with them. | Lower them for systems with elements in traces, so the start does not disturb the element totals. | Any small positive amount. |
-| `pa_DFYs` | 1e-6 | Amount (moles) at which a pure phase is added back when the solver decides it was wrongly left out. It is never more than the bulk composition can supply. | Rarely needs changing. | Any small positive amount. |
-| `pa_PLLG` | 30000 | Checks whether the calculation is drifting off in the wrong direction and stops it if so. 1 to 1000 is the useful range for this check. | Lower it to catch failing calculations earlier; 0 if the check stops calculations that would succeed. | 0 = no check; 30000 or more also allows full diagnostic tracing. |
-| `pa_PSM` | 1 | How many diagnostic messages are written. | Use 2 or 3 when investigating a failed calculation; 0 for large batch runs. | 0 = none (no log file); 2 = also warnings; 3 = detailed trace. |
-| `pa_DNS` | 12.05 | Standard density of surface sites (per nm²), used for the activity of surface species in sorption models. | Sorption models that use a different standard site density. | Any positive number. |
-| `pa_IEPS` | 0.001 | How precisely the surface terms of sorption models are computed. | Tighten it for sorption systems that converge poorly. | From 0.01 to 1e-6. |
-| `pa_DKIN` | 1e-10 | Tolerance on species amounts that are held between an upper and a lower limit (for example in kinetic or metastability calculations). | Kinetic or metastability calculations with very small allowed ranges. | Any small positive amount. |
+| `pa_DK` | 1e-6 | Sets how precisely the GEMS3K IPM solver must converge. A smaller value gives a more precise result. It needs more iterations. | Solid solutions with end-members that are almost the same. The value 1e-7 gives a clearly more accurate composition. | Any small positive number. |
+| `pa_DHB` | 1e-13 | Sets how closely the amount of each element in the result must agree with the input amount. The value is a fraction of that amount. | Make it a little looser if a calculation fails only because of this check. Make it stricter for systems with trace elements. | Usually from 1e-9 (looser) to 1e-15 (stricter). |
+| `pa_DT` | 0 | Sets how the check above is used. The value 0 uses it in the same way for each element. | Systems with major elements and trace elements. The relative check can be too strict for the major elements. | A value of −6 or less = for major elements, use a fixed amount instead of a fraction. |
+| `pa_IIM` | 7000 | Sets the largest number of iterations of the main calculation. After that number, the calculation stops. | Make it larger for large or difficult systems that use all their iterations. | Up to 32767. A larger value becomes 32767, with a warning. |
+| `pa_DP` | 130 | Sets the largest number of iterations of the step that makes the element totals agree. | Make it larger if that step uses all its iterations on a difficult system. | Any positive number. |
+| `pa_DW` | 1 (on) | Treats the use of all the iterations above as an error. | Switch it off only to look at a result that GEMS3K would reject. | 0 = not an error. |
+| `pa_PE` | 1 (on) | Requires that the result has no electric charge. | Keep it on for each system with ions. Switch it off only for systems with no charged species. | 0 = off. |
+| `pa_PC` | 2 | Sets how the solver decides which phases are present. The value 2 is the current method. It also adds phases that the solver wrongly left out. | Keep the value 2. The old method is only for the comparison with old results. | 1 = the old method. |
+| `pa_DF` | 0.01 | Sets how clearly stable a missing phase must be before the solver adds it. | Make it smaller if phases that must appear are missing. Make it larger if phases go in and out along a sweep. | Any small positive number. A smaller number adds phases more easily. |
+| `pa_DFM` | 0.01 | Sets how clearly unstable a present phase must be before the solver removes it. | Change it together with `pa_DF` if phases go in and out along a sweep. | Any small positive number. |
+| `pa_PD` | 2 | Sets how often the solver calculates the activity coefficients again. These coefficients correct for non-ideal behaviour. The value 2 means at each iteration. | Keep the value 2. Lower values can save time on systems that are almost ideal. | 0 = one time at the start. 1 = only when it fixes the element totals. 3 = only in the main calculation. |
+| `pa_AG` | 1 | Sets the damping of the non-ideal corrections between iterations. | Make it smaller if a strongly non-ideal system oscillates and does not converge. | From −1 to 1. |
+| `pa_DGC` | 0 | A second damping setting. It works together with the setting above. | Use 0.001 for systems with sorption. | From −1 to 1. |
+| `pa_PRD` | −5 | A final clean-up. It removes very small amounts of species that stay at the end of the calculation. The value −5 means that it cleans up amounts below 1e-5. | Make it more negative if real trace amounts are removed. Use 0 to see the raw result. | 0 = off. −6 or less = clean up only smaller amounts. |
+| `pa_GAS` | 0.001 | Sets how strict the final clean-up is. A larger value keeps more trace amounts in the result. | Systems with very little water (0.002 together with `pa_OptimaAcceptRepair`). Cases where trace phases are important. | Any small positive number. |
+| `pa_DS` | 1e-20 | Sets the smallest amount of a phase, in moles, that is still shown as present (the old rule, see [Which phases are present](#which-phases-are-present)). | Make it larger to hide trace phases that have no meaning. With Optima, use `Ph_Present()`. | Any small positive amount. |
+| `pa_XwMin` | 1e-13 | The amount of water can become less than this value (moles). Then the solver removes the aqueous solution from the result. | Drying systems or almost dry systems. Use it to control when the aqueous solution goes away. | Any small positive amount. |
+| `pa_ScMin` | 1e-13 | The amount of a solid with a sorption surface can become less than this value (moles). Then the solver removes the sorption phase. | Sorption systems where the sorbent almost fully dissolves. | Any small positive amount. |
+| `pa_PhMin` | 1e-20 | A solution phase other than the aqueous phase can become less than this amount (moles). Then the solver removes it with all its species. | Systems with many solid solutions or melts in trace amounts. | Any small positive amount. |
+| `pa_DcMin` | 1e-33 | A species in a mixed phase can become less than this amount (moles). Then the solver removes it. | You almost never need to change it. | Any small positive amount. |
+| `pa_DB` | 1e-17 | Sets the smallest amount of an element, in moles, that the solver uses in the bulk composition (not the charge). | Systems with elements at extremely low amounts. | Any small positive amount. |
+| `pa_ICmin` | 1e-5 | Below this ionic strength (molal), the solver sets the activity coefficients of aqueous species to 1. The solution is then ideal. | Very dilute waters, if the ideal treatment starts too early or too late. | Any small positive number. |
+| `pa_DG` | 1000 | The solver scales the whole system internally to this total number of moles. It shows the results in the original amounts. | Very small or very large systems. Switch it off only to compare with results that are not scaled. | Below 1e-4 = no scaling. |
+| `pa_EPS` | 1e-10 | Sets how precisely the solver calculates the automatic start (used by AIA). | Make it looser if the solver cannot find the start. Make it stricter for systems with trace elements. | From 1e-6 (looser) to 1e-14 (stricter). |
+| `pa_DFYw`, `pa_DFYaq`, `pa_DFYid`, `pa_DFYr`, `pa_DFYh`, `pa_DFYc` | 1e-5 | Small amounts (moles). The solver gives them to water, to aqueous species, to species of ideal and non-ideal mixed phases, and to pure phases that are zero in the automatic start. The main calculation can then use them. | Make them smaller for systems with elements in traces. The start then does not disturb the element totals. | Any small positive amount. |
+| `pa_DFYs` | 1e-6 | Sets the amount (moles) at which the solver adds a pure phase again when it decides that the phase was wrongly left out. The amount is never more than the bulk composition can supply. | You almost never need to change it. | Any small positive amount. |
+| `pa_PLLG` | 30000 | The solver checks if the calculation goes in the wrong direction. It stops the calculation if it does. The useful range for this check is 1 to 1000. | Make it smaller to find failing calculations sooner. Use 0 if the check stops calculations that would succeed. | 0 = no check. 30000 or more also allows full diagnostic tracing. |
+| `pa_PSM` | 1 | Sets how many diagnostic messages the solver writes. | Use 2 or 3 to find the cause of a failed calculation. Use 0 for large batch runs. | 0 = none (no log file). 2 = also warnings. 3 = detailed trace. |
+| `pa_DNS` | 12.05 | Sets the standard density of surface sites (per nm²). The sorption models use it for the activity of surface species. | Sorption models that use a different standard site density. | Any positive number. |
+| `pa_IEPS` | 0.001 | Sets how precisely the solver calculates the surface terms of sorption models. | Make it stricter for sorption systems that converge badly. | From 0.01 to 1e-6. |
+| `pa_DKIN` | 1e-10 | Sets the tolerance on species amounts that stay between an upper limit and a lower limit (for example, in kinetic or metastability calculations). | Kinetic or metastability calculations with very small allowed ranges. | Any small positive amount. |
 
 ### Original settings not listed above
 
-These settings come from earlier versions and are unchanged. Most are written by GEMS when it exports a
-project, and are best left as exported.
+These settings are from earlier versions. They did not change. GEMS writes most of them when it exports a
+project. Keep them as exported.
 
-| Setting | Typical value | What it does | When it can be useful | Other values |
+| Setting | Typical value | What it does | When it can help | Other values |
 |---|---|---|---|---|
-| `pKin` | 1 | Lets the solver apply the limits on species amounts that come from the kinetics and metastability constraints of the project. | Set 0 to ignore all such limits and compute the full equilibrium. | 0 = ignore the limits. |
-| `PV` | 1 | Adds the volume as a balance constraint, used for indifferent equilibria at saturated vapour pressure. | Leave as exported; relevant only for systems with a gas or fluid at saturation pressure. | 0 = off. |
-| `PAalp` | `+` | Uses the specific surface area of phases in the calculation. | Set `-` to ignore surface areas, for example to compare with a run that has none. | `+` = use, `-` = ignore. |
-| `PSigm` | `+` | Uses the specific surface free energy of phases in the calculation. | Set `-` to ignore it. | `+` = use, `-` = ignore. |
-| `tMin` | 0 | Reserved for choosing which thermodynamic potential is minimised. Only the Gibbs energy is in use. | Do not change. | — |
-| `PSOL` | 0 | Reserved (number of species in liquid hydrocarbon phases). | Do not change. | — |
-| `pa_GAR`, `pa_GAH` | 1, 1000 | Reserved, no effect. | Do not change. | — |
+| `pKin` | 1 | Lets the solver use the limits on species amounts from the kinetics and metastability constraints of the project. | Use 0 to ignore all such limits and calculate the full equilibrium. | 0 = ignore the limits. |
+| `PV` | 1 | Adds the volume as a balance constraint. It is for indifferent equilibria at saturated vapour pressure. | Keep it as exported. It is only for systems with a gas or fluid at saturation pressure. | 0 = off. |
+| `PAalp` | `+` | Uses the specific surface area of phases in the calculation. | Use `-` to ignore surface areas, for example to compare with a run that has none. | `+` = use. `-` = ignore. |
+| `PSigm` | `+` | Uses the specific surface free energy of phases in the calculation. | Use `-` to ignore it. | `+` = use. `-` = ignore. |
+| `tMin` | 0 | Reserved. It is for the choice of the thermodynamic potential that the solver minimises. Only the Gibbs energy is in use. | Do not change it. | — |
+| `PSOL` | 0 | Reserved (number of species in liquid hydrocarbon phases). | Do not change it. | — |
+| `pa_GAR`, `pa_GAH` | 1, 1000 | Reserved. They have no effect. | Do not change them. | — |
 
-Also in the file, and not settings to tune: `Lads`, `FIa` and `FIat` (sizes of the sorption part of the
-system), `sMod`, `LsMod`, `IPxPH` and `PMc` (which mixing model each phase uses, and its parameters), and
-`ID_key` (the name of the system). They describe the project's contents. Changing them by hand corrupts
-the project; change them only by exporting the project again from GEMS.
+The file also has `Lads`, `FIa` and `FIat` (sizes of the sorption part of the system). It has `sMod`,
+`LsMod`, `IPxPH` and `PMc` (the mixing model of each phase and its parameters). It has `ID_key` (the name of
+the system). Do not tune these entries. They describe the contents of the project. If you change them by
+hand, the project is not correct. To change them, export the project again from GEMS.
 
-### GEMS3K IPM solver — settings added in this version
+### GEMS3K IPM solver — user setting added in this version
 
-| Setting | Default | What it does | When it can be useful | Other values |
+| Setting | Default | What it does | When it can help | Other values |
 |---|---|---|---|---|
-| `pa_ColdRetryNudges` | 4 (on) | If a calculation from scratch (AIA) fails, retry up to this many times with a microscopically changed composition, then finish at the exact one. | Leave on. Systems where AIA fails occasionally. | 0 = no retry. |
-| `pa_IpmStallWindow` | 30 (on) | Stops once the energy and composition have clearly stopped changing for this many iterations. | Leave on. Saves iterations on systems that converge slowly at the end. | 0 = off. |
-| `pa_IpmAugmentedKKT` | 2 | How each step's equations are solved. 2 is the most accurate. | Leave at 2; other values only to compare with older results. | 0 = the original method; 1 = an intermediate method; 2 = the current method. |
-| `pa_MbReproject` | 1 (on) | A final touch-up that makes the element totals add up exactly. Also used after phase selection, where a partly successful touch-up is now kept because it only seeds the next iterations. | Leave on. Turn off only to see the raw result. | 0 = off. |
-| `pa_PSTALL` | 1 (on) | Lets the mass-balance step give up early when it stops improving. | Leave on. Saves time on systems where that step stalls. | 0 = off. |
-| `pa_MbClassRule` | 0 (off) | Checks the totals of major elements in absolute terms and of trace elements in relative terms; the value is the trace/major ratio. | Systems with trace elements at very low amounts. | A positive ratio = on. |
-| `pa_FilloutBudget` | 0 (off) | Limits how much the starting guess may disturb the element totals, as a fraction of each element's amount. | Systems with elements present only in traces. | A positive fraction = on. |
-| `pa_DeterminacyWarn` | 0.01 | Warns when the amount of a phase in the answer is fixed by the energy only to worse than this relative uncertainty, i.e. when small amounts are not reliable. | Leave on; it tells you when reported small amounts should not be relied on. | 0 = no warning. |
-| `pa_StabTPD` | 1 (on) | Reports, in the diagnostic trace only, whether a mixed phase left out of the answer should have been present. Does not change the answer. | Investigating whether a solid solution or melt was wrongly left out. | 0 = off. |
+| `pa_DeterminacyWarn` | 0.01 | Writes a warning when the energy fixes the amount of a phase in the result only to worse than this relative uncertainty. Small amounts are then not reliable. | Keep it on. It tells you when you must not trust the reported small amounts. | 0 = no warning. |
 
-**Removed settings.** These names are still accepted in project files, so existing files load unchanged,
-but they no longer have any effect: `pa_LpDualFillout`, `pa_OptimaLSWindow`, `pa_IpmLoopTweaks`,
-`pa_OptimaFDDiagFloor`, `pa_MbPivotSplit`, `pa_OptimaPhaseCompaction`, `pa_OptimaReadmitSeed`,
-`pa_MbTrendPhaseDecay`, `pa_OptimaMaxStepRatio`, `pa_GAR`, `pa_GAH`.
+### Both solvers — rescue of failed calls
 
-## Known limitations
+| Setting | Default | What it does | When it can help | Other values |
+|---|---|---|---|---|
+| `pa_FailRescue` | 2 (on) | A call can end with an error or a BAD result. Then GEMS3K tries it again in steps. The steps are: a warm restart from the previous result, compositions that are changed by a very small amount, a walk from the previous result, looser settings, and the other solver. GEMS3K finishes each successful step at the exact composition with the normal settings. With the value 2, you get the best attempt that keeps the element totals if no step succeeds. Its status is BAD. If there is a pH target or an Eh target, GEMS3K keeps only an attempt that meets the target. | Keep the value 2. This is important for transport codes, which need a result for each node. It costs more iterations only on calls that fail. | 0 = off. 1 = steps 1 to 5 only. |
 
-- **Optima is slower per calculation** than the GEMS3K IPM solver, often by one to two orders of magnitude on
-  large systems. Use it where it improves the answer, not by default. This will be improved in future releases. 
-- **Some strongly non-ideal systems** may still be difficult to solve, even with Optima.
-- **SIA along a sequence** can keep phases that are no longer stable when a phase boundary is crossed.
-- **Systems with very little water:** close to the point where water runs out, AOP and SOP can fail and SHP
-  can return a wrong result. Use AIA or HOP there. Slightly further from that point, AOP and SOP work if the
-  project sets `pa_OptimaAcceptRepair = 1` and `pa_GAS = 0.002`.
-- **Redox not fixed by the system.** Without a redox couple, the energy and amounts are well defined but Eh
-  is not, and it can differ between runs and modes. Compare solvers on energy and phases, not Eh.
-- **Eh and pH can be unstable** under tiny input changes while the phases and energy stay the same.
-- **No free water solution** (very dry systems): pH, Eh and ionic strength are not meaningful and can differ
-  widely between solvers. The phases are still correct.
-- **Trace elements:** their mass balance can be relatively off in the Optima modes while the energy and the
-  main elements are exact.
-- **Solid solutions near a miscibility gap** and duplicated twin phases cost many more iterations, and the
-  twin labels can swap between modes. The energy is the same.
-- **GEMS3K IPM solver iteration counts** vary on many systems with tiny input changes. The answer does not.
-- **Trace phases:** the GEMS3K IPM solver can leave out a slightly supersaturated phase that Optima finds.
-- **Large systems** can cost tens of seconds per point in the Optima modes, and some fail where the GEMS3K IPM
-  solver succeeds.
+## Known limits
+
+- **Optima is slower for each calculation** than the GEMS3K IPM solver. It is typically 2 times slower. It
+  can be up to 10 times slower on large systems with many solid solutions. Use it where it gives a better
+  result. Do not use it by default.
+- **Some strongly non-ideal systems** can be difficult to solve, also with Optima.
+- **SIA in a series** can keep phases that are not stable when the series crosses a phase boundary.
+- **Systems with very little water.** Near the point where the water runs out, the modes can give different
+  trace phases. Optima can need many more iterations.
+  - For systems where the design uses up the water, set `pa_OptimaDryOut = 1`.
+  - If AOP or SOP fails there, set `pa_OptimaAcceptRepair = 1` and `pa_GAS = 0.002`. You can also use AIA or
+    HOP.
+- **Redox not fixed by the system.** A system can have no redox couple. Then the energy and the amounts are
+  well defined, but the Eh is not. The Eh can be different between runs and between modes. Compare solvers
+  on energy and phases, not on Eh. To get a defined Eh, set `pa_OptimaRedoxFree = 2` (it aims at pe 4) or
+  give an Eh target.
+- **Eh and pH can be unstable** when the input changes by a very small amount. The phases and the energy do
+  not change.
+- **No free water solution** (very dry systems). The pH, the Eh and the ionic strength have no meaning. They
+  can be very different between solvers. The phases are correct.
+- **Trace elements.** In a few cases, the relative mass balance is not good in the Optima modes. The energy
+  and the main elements are exact.
+- **Solid solutions near a miscibility gap and twin phases that are duplicates** need many more iterations.
+  The twin labels can change between modes. The energy is the same.
+- **Iteration counts of the GEMS3K IPM solver** change on many systems when the input changes by a very small
+  amount. The result does not change.
+- **Trace phases.** The GEMS3K IPM solver can leave out a phase that is a little supersaturated. Optima finds
+  it.
+- **Large systems** can need tens of seconds for each point in the Optima modes.
+- **Trace elements below the species floors.** The floor amounts of the species of a trace element can add up
+  to more than the amount of the element. An Optima call can then stay BAD. The rescue cannot solve such a
+  call. Use AIA or HOP.
+- **Rescued calls cost more.** A call that the rescue saves (`pa_FailRescue`) can use several times the
+  iterations of a normal call. A call that no step can save uses the most iterations.
 
 ## Compatibility
 
-Project files from earlier versions load unchanged. The order of settings in the project files is the
-same, so files written by this version can be read by programs that use the same format.
+Project files from earlier versions load without change. The order of the settings in the project files is
+the same. Programs that use the same format can read the files that this version writes.
 
 ## Technical note: logging and tracing
 
-Nothing is traced by default. The only output is the normal log written through spdlog (messages and warnings
-on the screen, and the `ipmlog.txt` file for the GEMS3K IPM solver). Everything below is switched on by the
-user and costs nothing while it is off.
+By default, GEMS3K does not trace anything. The only output is the normal log through spdlog. This is the
+messages and warnings on the screen, and the `ipmlog.txt` file of the GEMS3K IPM solver. The user switches on
+all items below. They cost nothing while they are off.
 
-**Log level (spdlog).** The log is written by named loggers: `gems3k`, `ipm`, `tnode`, `kinmet`, `solmod`
-(and `chemicalfun`, `thermofun` when ThermoFun is used). Their level is set in the file `gems3k-config.json`, in
-the section `log`. Levels are `trace`, `debug`, `info` (default), `warning`, `error`, `critical` and `off`:
+**Log level (spdlog).** Named loggers write the log: `gems3k`, `ipm`, `tnode`, `kinmet` and `solmod`. When
+you use ThermoFun, the loggers `chemicalfun` and `thermofun` also write. Set the level in the file
+`gems3k-config.json`, in the section `log`. The levels are `trace`, `debug`, `info` (default), `warning`,
+`error`, `critical` and `off`:
 
 ```json
 {
@@ -385,36 +396,79 @@ the section `log`. Levels are `trace`, `debug`, `info` (default), `warning`, `er
 }
 ```
 
-**What to use.** The default is `info`, which is right for most uses: warnings and errors are shown, and the
-detailed messages stay off. You need no `gems3k-config.json` for this. Use `warning` when running many
-calculations in a loop (a sweep, or a coupled transport code), `debug` for one logger (usually `ipm`) when
-investigating a failed calculation, and `error` with `pa_PSM = 0` for very large batches.
+**Which level to use.** The default level `info` is correct for most uses. It shows warnings and errors. It
+does not show the detailed messages. You do not need a `gems3k-config.json` file for it.
+- Use `warning` when you run many calculations in a loop (a sweep, or a coupled transport code).
+- Use `debug` for one logger (usually `ipm`) to find the cause of a failed calculation.
+- Use `error` with `pa_PSM = 0` for very large batches.
 
-The file is optional: without it every logger runs at `info`. The repository contains one example,
-`tools-build/gems3k-config.json`, meant for development. It sets `gems3k` to `debug` and `thermofun` and
-`chemicalfun` to `trace`, and also writes a log file (`"file"` section with `path`, `size`, `count`), so do
+The file is optional. If it is not there, each logger runs at `info`. The repository has one example,
+`tools-build/gems3k-config.json`. It is for development. It sets `gems3k` to `debug`. It sets `thermofun` and
+`chemicalfun` to `trace`. It also writes a log file (section `"file"` with `path`, `size` and `count`). Do
 not copy it for normal use.
 
-`level` applies to all loggers, and `module_level` overrides it for one logger. `logs-directory` is where
-the log files go. The level can also be changed in code with `gems3k_update_log_level()`. The setting
-`pa_PSM` in the project file controls what the GEMS3K IPM solver writes to `ipmlog.txt` (0 = nothing,
-2 = also warnings, 3 = detailed trace, see [Settings](#settings)).
+`level` applies to all loggers. `module_level` replaces it for one logger. `logs-directory` is the folder for
+the log files. You can also change the level in code with `gems3k_update_log_level()`. The setting `pa_PSM`
+in the project file controls what the GEMS3K IPM solver writes to `ipmlog.txt` (0 = nothing, 2 = also
+warnings, 3 = detailed trace, see [Settings](#settings)).
 
-**Event trace (environment variable).** Set `GEMS3K_NATIVE_TRACE_FILE=<path>` before the program starts. The
-solver then appends a record for each call to that file: the settings in force, the bulk composition, the
-decisions the solver took, and the outcome (phases present with amounts, pH, pe, ionic strength). If the
-variable is not set, nothing is written. The file can be tens of megabytes on a long run, so write it to
-scratch space and delete it afterwards.
+**Event trace (environment variable).** Set `GEMS3K_NATIVE_TRACE_FILE=<path>` before the program starts.
+The solver then adds a record for each call to that file. The record has these items:
+- the settings that are in use
+- the bulk composition
+- the decisions of the solver
+- the outcome (phases that are present with amounts, pH, pe, ionic strength)
 
-**Further switches for investigating one problem.** Each is an environment variable that takes a file path,
-is read once, and writes only when set:
+If the variable is not set, the solver writes nothing. On a long run, the file can be tens of megabytes. Write
+it to scratch space. Delete it after use.
+
+**More switches to find the cause of one problem.** Each switch is an environment variable that has a file
+path. GEMS3K reads it one time. It writes only when you set the variable.
 
 | Variable | What it writes |
 |---|---|
-| `GEMS3K_IPM_PROBE` | Per-iteration progress of the GEMS3K IPM solver |
-| `GEMS3K_PHSTAB_PROBE` | Per-phase stability verdicts of the Optima path |
-| `GEMS3K_EARLYTREND_PROBE` | What the early stability check would see |
-| `GEMS3K_OPTIMA_TRACE_FILE` | Optima's own iteration table for the reduced problem |
+| `GEMS3K_IPM_PROBE` | The progress of the GEMS3K IPM solver at each iteration. |
+| `GEMS3K_PHSTAB_PROBE` | The stability result for each phase on the Optima path. |
+| `GEMS3K_EARLYTREND_PROBE` | What the early stability check would see. |
+| `GEMS3K_OPTIMA_TRACE_FILE` | The iteration table of Optima for the reduced problem. |
+| `GEMS3K_OPTIMA_STEPTRACE_FILE` | A debug record of each Optima step. |
+| `GEMS3K_TIMING_FILE` | The time of each call, divided by solver part. |
 
-A few more instruments (condition-number estimates, per-phase timing) exist only in a build made with
-`-DENABLE_BENCHMARK_DIAGNOSTICS=ON`; they add run time and are for benchmarking.
+A build with `-DENABLE_BENCHMARK_DIAGNOSTICS=ON` has a few more tools (condition-number estimates and timing
+for each phase). They add run time. They are for benchmarks.
+
+## Glossary
+
+These words have one meaning in this guide and in [Solver paths](SOLVER-PATH-GRAPH.md).
+
+| Word | Meaning |
+|---|---|
+| Activity coefficient | A number that corrects the amount of a species for non-ideal behaviour. |
+| Aqueous phase | The water solution. |
+| Bulk composition | The total amount of each element in the system. |
+| Cold start, from scratch | A start that does not use a previous result. |
+| Control condition, target | A pH or Eh that you ask for. The solver adds the acid, base or electron donor that it needs. |
+| Curvature | How fast the Gibbs energy changes its slope when an amount changes. The solver uses it to choose a step. |
+| Eh, pe, pH | Measures of the redox level and of the acidity of the aqueous phase. |
+| Element potential | The change of the Gibbs energy when you add one unit of an element. Also called the dual. |
+| Finish, finishing step | A final calculation on a fixed set of phases. It starts from the point where the solver stopped. |
+| Floor | The smallest amount that Optima gives to a species that is absent. |
+| Gibbs energy | The quantity that the solver makes as small as it can. |
+| Iteration | One step of a solver. |
+| Leveled solution | The result of a linear calculation where the mixed phases are at their best compositions. |
+| Line search | A method that tries shorter steps when a full step makes the result worse. |
+| Mass balance | The condition that the amount of each element in the result agrees with the bulk composition. |
+| Mixed phase | A phase with more than one species whose amounts change its properties. Examples are a solid solution and a melt. |
+| Miscibility gap | A range of composition where a mixed phase splits into two phases. |
+| Native | The GEMS3K IPM solver. |
+| Node | The object in GEMS3K that holds one system and its result. |
+| Rescue | The steps that GEMS3K tries when a call still fails after the retry ladder. |
+| Retry ladder | A fixed list of new tries that GEMS3K runs, in order, after a call fails. |
+| Solid solution | A solid phase whose end-members mix in any ratio. |
+| Sorption | The binding of species to a solid surface. |
+| Stall | A state where a solver runs but its error or energy does not improve. |
+| Status | The value that `GEM_run()` returns. It starts with OK, BAD or ERR. |
+| Tail stop | A stop of a solve whose energy does not change and whose error is only on trace amounts. |
+| Trace amount | A very small amount of a species or an element. |
+| Twin phases | Two phases that have the same end-members. |
+| Warm start | A start from the previous result in the node. |

@@ -153,7 +153,7 @@ static void memoize_objective_if_linesearch( Optima::Problem& problem, double fa
     };
 }
 
-// The debug-trace setting GEMS3K_OPTIMA_STEPTRACE_<name>, or its old name REAKTORO_TRACE_<name>; null when unset.
+// The debug-trace setting GEMS3K_OPTIMA_STEPTRACE_<name>, or its older name REAKTORO_TRACE_<name>; null when unset.
 static const char* optima_trace_env( const char* name )
 {
     if( const char* e = std::getenv( ( std::string( "GEMS3K_OPTIMA_STEPTRACE_" ) + name ).c_str() ) )
@@ -1311,7 +1311,7 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
             }
         }
         // a solution phase whose free end-members have all fallen to a trace and are still falling is vanishing: its members
-        // leave together (each alone would take a step of ~10% forever, the Hessian of a phase at 1e-9 being ~1/n)
+        // leave together (one at a time each would creep, because the phase curvature is large at a trace amount)
         for( long int k = 0; k < pm.FIs; k++ )
         {
             double tot = 0., totOld = 0.; long int cnt = 0;
@@ -3140,7 +3140,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 // water-activity convention
                 //     ln a_w = -(1 - x_w)/x_w = -(nSum - n_w)/n_w
                 //  => d ln a_w/d n_i = -1/n_w (i != w), (nSum-n_w)/n_w^2 (i = w).
-                // This is deliberately not d ln x_w/d n_i (that form measured clearly worse).
+                // This is deliberately not d ln x_w/d n_i (that form converges worse).
                 //
                 // Non-aqueous solution phases: pa_p->OptimaMoleFracHessian selects the form.
                 //   0 (default) - diag(1/X[j]) only.
@@ -4717,7 +4717,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
         // The phase-extinction tier, as a re-runnable unit: assembled below for AOP/SOP and
         // left empty for ROP. It must be callable a second time, by the early-probe safety
-        // net, on the full-budget re-solve's state - the net is the last rung, so without
+        // net, on the full-budget re-solve's state - the net is the last step, so without
         // this nothing would be left to rescue a re-solve that stalls the same way the
         // unarmed primary solve does.
         std::function<void(bool)> runExtinctionTier;
