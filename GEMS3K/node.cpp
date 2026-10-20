@@ -1063,12 +1063,12 @@ long int TNode::GEM_run_optima_cold_retry( long int requested )
 
 // Whether the amounts of a saved answer balance the bulk composition b (one value per IC of the DATABR) under the
 // per-element test of the solve itself (relative to DHBM, or also absolute with pa_DT); the charge row is left out.
-// True when not every species or element is in the DATABR, as the balance cannot be computed here.
+// False when not every species or element is in the DATABR: the balance cannot be computed, so the answer is not kept.
 bool TNode::NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b, double& worstRel ) const
 {
     worstRel = 0.;
     if( CSD->nDCb != CSD->nDC || CSD->nICb != CSD->nIC || (long int)b.size() < CSD->nICb )
-        return true;
+        return false;
     const double dtExp = fabs( (double)multi_ptr()->base_param()->DT );
     const double absCut = ( dtExp < 2. ) ? pmm->DHBM : pow( 10., -dtExp );
     bool ok = true;
