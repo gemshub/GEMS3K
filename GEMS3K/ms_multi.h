@@ -627,8 +627,8 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     long int OptimaFDPureSkip = 1;
     /// pa_OptimaFinishStall: the Newton finish gives up when, over this many steps, its largest reduced gradient has not
     /// halved, G has not fallen and its step size has stayed within 1 % (it then reports no convergence, as at its step
-    /// limit). 0 = off (default).
-    long int OptimaFinishStall = 0;
+    /// limit). 0 = off. Default 15.
+    long int OptimaFinishStall = 15;
     /// pa_OptimaTraceRespread: Optima solver: when the species floors of an element add up to more than its amount, its
     /// true amount is spread over its solution species from the converged potentials. 0 = off, 1 = on (default).
     long int OptimaTraceRespread = 1;
