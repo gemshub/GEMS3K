@@ -3,7 +3,7 @@
 This page shows what happens when you call `GEM_run()` in each calculation mode. It shows which solver runs
 first. It shows what the solver tries when a calculation fails. It shows when the solver stops.
 
-The [Glossary](SOLVER-OPTIONS-GUIDE.md#glossary) explains the special words. A drawn version of this page is in [SOLVER-PATH-GRAPH.html](SOLVER-PATH-GRAPH.html). To choose a mode and to
+The [Glossary](GLOSSARY.md) explains the special words. A drawn version of this page is in [SOLVER-PATH-GRAPH.html](SOLVER-PATH-GRAPH.html). To choose a mode and to
 see what each setting does, read the [options guide](SOLVER-OPTIONS-GUIDE.md). Settings for tests are in
 [Advanced settings](SOLVER-ADVANCED-SETTINGS.md).
 
@@ -44,7 +44,7 @@ In all modes, `GEM_run()` does these steps:
 2. It checks that the temperature and the pressure are in the range of the data tables.
 3. It loads the previous result in the warm modes (SIA and SOP).
 4. SHP uses the previous result for its GEMS3K IPM part if a usable result exists. If no usable result exists,
-   or if the warm attempt fails, SHP starts from scratch.
+   or if the warm attempt fails, SHP makes a cold start.
 5. All other modes prepare a new start.
 6. If kinetics is on, it does one kinetics time step.
 7. It holds back, for this call only, each species that is an exact copy of another species.
@@ -58,8 +58,8 @@ Then it runs the solver for the chosen mode.
 The GEMS3K IPM solver runs in AIA and SIA. It also runs as the first part of HOP and SHP.
 
 1. **First guess.**
-   - From scratch, a simple linear calculation finds a set of start amounts.
-   - From the previous result, the solver uses that result.
+   - In a cold start, a simple linear calculation finds a set of start amounts.
+   - In a warm start, the solver uses the previous result.
    - If the system has only pure phases, this step gives the final result.
    - If the system has no aqueous, gas or sorption phases, the solver starts from the leveled solution. This
      is the linear calculation with the mixed phases at their best compositions (`pa_IpmLevelStart`).
@@ -85,9 +85,9 @@ The GEMS3K IPM solver runs in AIA and SIA. It also runs as the first part of HOP
      Then Optima finishes the result from that point.
 
 **Restarts in the solver.**
-- If a warm start (SIA) fails in one of these steps, the solver starts again from scratch in the same call.
+- If a warm start (SIA) fails in one of these steps, the solver makes a new cold start in the same call.
   The status shows AIA.
-- If a start from scratch fails because the numbers grow without limit, the solver starts again one more
+- If a cold start fails because the numbers grow without limit, the solver starts again one more
   time. It uses a simpler phase check. Then it stops.
 
 ## Inside the Optima solver
@@ -104,7 +104,7 @@ The Optima solver runs in AOP and SOP. It also runs as the second part of HOP an
    - If it uses all its iterations but ends OK, GEMS3K keeps the result when no missing phase can form
      (`pa_OptimaFastAcceptCut`).
 2. **First guess.**
-   - From scratch: a linear calculation puts the mass in as few species as it can. If this leaves almost no
+   - Cold start: a linear calculation puts the mass in as few species as it can. If this leaves almost no
      water, or leaves a mixed phase empty, GEMS3K corrects the guess first. On a second try (see below), GEMS3K
      uses a better guess that also checks the mixed phases.
    - Leveled start (`pa_OptimaColdLevel`, `pa_OptimaLevelStart`, on by default). It is only for the quick try
@@ -115,8 +115,8 @@ The Optima solver runs in AOP and SOP. It also runs as the second part of HOP an
        point (`pa_OptimaLevelFinish`).
      - If the smaller problem (step 3) is not used, the start is the result of the linear calculation and its
        element potentials. Two copies of one solid solution start at different compositions.
-   - From the previous result: GEMS3K uses that result. If the node has never been solved, GEMS3K writes a
-     warning and starts from scratch.
+   - Warm start: GEMS3K uses the previous result. If the node has never been solved, GEMS3K writes a
+     warning and makes a cold start.
    - In HOP and SHP: the start is the result of the GEMS3K IPM solver.
 3. **Smaller problem first.** This step is for systems with 200 species or more, in AOP and SOP. The solver
    solves a smaller problem with only the species that are likely to matter. Then it adds each species that
@@ -131,7 +131,7 @@ The Optima solver runs in AOP and SOP. It also runs as the second part of HOP an
      If a solid does tend to form, the solve continues from the point where it stopped
      (`pa_OptimaTailDryOnly` = 2).
    - For a system with a multisite solid solution, the solver first looks for a phase that must disappear.
-     This look is short: 200 steps from scratch, 25 steps from the previous result.
+     This look is short: 200 steps in a cold start, 25 steps in a warm start.
 5. **Tries in the call.** These tries run in this order. They run only while the result is not good.
    1. Put the water back, if the result has almost no water.
    2. Put back a mixed phase that became empty.
@@ -184,10 +184,10 @@ Only the Optima modes can fix the pH or the Eh. See the options guide.
 
 ## The hybrid modes (HOP and SHP)
 
-1. The GEMS3K IPM solver runs. In HOP it starts from scratch. In SHP it starts from the previous result.
-   - If the node of SHP has never been solved, the solver starts from scratch and writes a warning.
+1. The GEMS3K IPM solver runs. In HOP it makes a cold start. In SHP it makes a warm start.
+   - If the node of SHP has never been solved, the solver makes a cold start and writes a warning.
    - If the solver stops because the energy does not improve (`pa_IpmNoProgress`), Optima starts from that
-     point. It first starts warm. If that fails, it starts from scratch.
+     point. It first starts warm. If that fails, it makes a cold start.
    - If the solver starts from the leveled solution and fails, GEMS3K solves it again from the usual start.
 2. GEMS3K saves the result of this part.
 3. Optima runs and starts from the saved result.
@@ -195,8 +195,8 @@ Only the Optima modes can fix the pH or the Eh. See the options guide.
    - Optima succeeds. You get the result of Optima.
    - Optima fails. GEMS3K puts back the saved GEMS3K IPM result. The status is BAD, for example
      `BAD_GEM_HOP`. For this reason, HOP is never worse than the GEMS3K IPM solver alone.
-   - The GEMS3K IPM solver failed in step 1. In SHP, the solver first runs again from scratch. If there is
-     still no result, Optima runs alone from scratch, as in AOP.
+   - The GEMS3K IPM solver failed in step 1. In SHP, the solver first runs again with a cold start. If there is
+     still no result, Optima runs alone with a cold start, as in AOP.
 
 The iteration count of a hybrid call is the sum of the two parts. `GEM_IterationsHOP()` gives the two parts
 separately.
@@ -211,8 +211,8 @@ existed before that step.
 |---|---|---|---|
 | 1 | AOP, SOP, HOP, SHP | Solves again with the anti-stall step of the line search switched off. | `pa_OptimaLineSearch` (1.5), `pa_OptimaLSStallEscape` (10) |
 | 2 | AIA only, after a failure with no result | Solves from up to 4 compositions that are changed by a very small amount. The first that works is the warm start for the exact composition. | `pa_ColdRetryNudges` (4) |
-| 3 | SOP, SHP | Solves again from scratch as AOP. If it succeeds, the status shows AOP. | `pa_OptimaColdRetry` (2) |
-| 4 | AOP, and step 3 | Solves from scratch one more time, from the better first guess. | `pa_OptimaCgSeed` (1e-6) |
+| 3 | SOP, SHP | Solves again with a cold start as AOP. If it succeeds, the status shows AOP. | `pa_OptimaColdRetry` (2) |
+| 4 | AOP, and step 3 | Makes one more cold start, from the better first guess. | `pa_OptimaCgSeed` (1e-6) |
 
 If `pa_OptimaColdRetry` = 2 (the default), a warm Optima call that goes badly stops early. It goes straight
 to step 3. This is usually less expensive than the end of the warm try.
@@ -243,7 +243,7 @@ settings.
   this usually means that Optima failed and you have the GEMS3K IPM result.
 - **ERR** (`ERR_GEM_...`): there is no result. All values that you read from the node are from before the call.
 - The status can name a different mode from the mode that you asked for.
-  - SIA changes to AIA after a restart from scratch.
+  - SIA changes to AIA after a new cold start.
   - SOP and SHP change to AOP after step 3 of the ladder.
 - After a rescue, `GEM_rescue_step()` is not 0. If the value is 6, the result is the best attempt and the
   status is BAD.
@@ -256,7 +256,7 @@ The full table is in the [options guide](SOLVER-OPTIONS-GUIDE.md#which-mode-to-u
 - **A checked result:** use HOP. It costs a little more than AIA and is never worse.
 - **Solid solutions, melts and phase diagrams:** use AOP or HOP.
 - **A series of small steps** (sweeps, titrations, transport): use AIA or AOP for the first point. Use SIA,
-  SOP or SHP for the next points. A start from the previous result costs much less.
+  SOP or SHP for the next points. A warm start costs much less.
 - **A series that crosses phase boundaries:** use SOP or SHP, not SIA. SIA can keep a phase after the phase
   is not stable.
 - **Very little water:** use AIA or HOP.

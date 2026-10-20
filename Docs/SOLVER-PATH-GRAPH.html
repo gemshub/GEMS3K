@@ -100,7 +100,7 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
   <p class="lede">This page shows, for each calculation mode, which solver runs first. It shows what the solver
   tries when a calculation fails and when it stops. The same content as plain text is in
   <a href="SOLVER-PATH-GRAPH.md">SOLVER-PATH-GRAPH.md</a>. To choose a mode and to see what each setting does, read
-  the <a href="SOLVER-OPTIONS-GUIDE.md">options guide</a>.</p>
+  the <a href="SOLVER-OPTIONS-GUIDE.md">options guide</a>. The <a href="GLOSSARY.md">glossary</a> explains the special words.</p>
 </header>
 
 <section>
@@ -137,10 +137,10 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
       <!-- AIA -->
       <rect x="40" y="40" width="140" height="44" rx="5" class="bk"/>
       <text x="110" y="60" class="mode" text-anchor="middle" style="fill:var(--native)">AIA · 1</text>
-      <text x="110" y="76" class="sub" text-anchor="middle">from scratch</text>
+      <text x="110" y="76" class="sub" text-anchor="middle">cold start</text>
       <rect x="230" y="40" width="200" height="44" rx="5" class="bn"/>
       <text x="330" y="60" class="lbl" text-anchor="middle">GEMS3K IPM</text>
-      <text x="330" y="76" class="sub" text-anchor="middle">from scratch</text>
+      <text x="330" y="76" class="sub" text-anchor="middle">cold start</text>
       <line x1="180" y1="62" x2="228" y2="62" class="ln" marker-end="url(#ar)"/>
       <rect x="710" y="40" width="180" height="44" rx="5" class="ba"/>
       <text x="800" y="58" class="lbl" text-anchor="middle">Change and try again</text>
@@ -156,17 +156,17 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
       <text x="330" y="140" class="sub" text-anchor="middle">from previous result</text>
       <line x1="180" y1="126" x2="228" y2="126" class="ln" marker-end="url(#ar)"/>
       <rect x="710" y="104" width="180" height="44" rx="5" class="ba"/>
-      <text x="800" y="122" class="lbl" text-anchor="middle">Start again from scratch</text>
+      <text x="800" y="122" class="lbl" text-anchor="middle">New cold start</text>
       <text x="800" y="138" class="sub" text-anchor="middle">same call, status AIA</text>
       <path d="M430,126 L708,126" class="lf" marker-end="url(#arf)"/>
 
       <!-- AOP -->
       <rect x="40" y="168" width="140" height="44" rx="5" class="bk"/>
       <text x="110" y="188" class="mode" text-anchor="middle" style="fill:var(--optima)">AOP · 10</text>
-      <text x="110" y="204" class="sub" text-anchor="middle">from scratch</text>
+      <text x="110" y="204" class="sub" text-anchor="middle">cold start</text>
       <rect x="230" y="168" width="200" height="44" rx="5" class="bo"/>
       <text x="330" y="188" class="lbl" text-anchor="middle">Optima</text>
-      <text x="330" y="204" class="sub" text-anchor="middle">from scratch</text>
+      <text x="330" y="204" class="sub" text-anchor="middle">cold start</text>
       <line x1="180" y1="190" x2="228" y2="190" class="ln" marker-end="url(#ar)"/>
       <rect x="710" y="168" width="180" height="44" rx="5" class="ba"/>
       <text x="800" y="186" class="lbl" text-anchor="middle">Try again, better guess</text>
@@ -192,7 +192,7 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
       <text x="110" y="332" class="sub" text-anchor="middle">hybrid</text>
       <rect x="230" y="296" width="200" height="44" rx="5" class="bn"/>
       <text x="330" y="316" class="lbl" text-anchor="middle">GEMS3K IPM</text>
-      <text x="330" y="332" class="sub" text-anchor="middle">from scratch</text>
+      <text x="330" y="332" class="sub" text-anchor="middle">cold start</text>
       <line x1="180" y1="318" x2="228" y2="318" class="ln" marker-end="url(#ar)"/>
       <rect x="480" y="296" width="200" height="44" rx="5" class="bo"/>
       <text x="580" y="316" class="lbl" text-anchor="middle">Optima</text>
@@ -230,7 +230,7 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
   <h2>What each call does first</h2>
   <ol class="steps">
     <li>It reads the temperature, the pressure and the bulk composition from the node. It checks that the temperature and the pressure are in the range of the data tables.</li>
-    <li>It loads the previous result in the warm modes (SIA and SOP). SHP uses the previous result for its GEMS3K IPM part if a usable result exists. If no usable result exists, or if the warm attempt fails, SHP starts from scratch. All other modes prepare a new start.</li>
+    <li>It loads the previous result in the warm modes (SIA and SOP). SHP uses the previous result for its GEMS3K IPM part if a usable result exists. If no usable result exists, or if the warm attempt fails, SHP makes a cold start. All other modes prepare a new start.</li>
     <li>If kinetics is on, it does one kinetics time step.</li>
     <li>It holds back, for this call only, each species that is an exact copy of another species.</li>
     <li>If <code>pa_DG</code> is more than 1e-5, it scales all amounts to a fixed total. At the end, it scales the amounts back.</li>
@@ -283,12 +283,12 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
       <line x1="250" y1="200" x2="212" y2="200" class="ln" marker-end="url(#ar2)"/>
       <!-- failure paths -->
       <path d="M560,100 C560,135 140,135 140,102" class="lf" marker-end="url(#arf)"/>
-      <text x="350" y="150" class="lkf" text-anchor="middle">warm start fails: start again from scratch (status AIA)</text>
+      <text x="350" y="150" class="lkf" text-anchor="middle">warm start fails: make a new cold start (status AIA)</text>
     </svg>
   </figure>
   <ol class="steps n">
-    <li><b>First guess.</b> From scratch, a simple linear calculation finds a set of start amounts. From the previous
-      result, the solver uses that result. If the system has only pure phases, this step gives the final result.
+    <li><b>First guess.</b> In a cold start, a simple linear calculation finds a set of start amounts. In a warm start,
+      the solver uses the previous result. If the system has only pure phases, this step gives the final result.
       If the system has no aqueous, gas or sorption phases, the solver starts from the leveled solution
       (<code>pa_IpmLevelStart</code>). If this call fails, GEMS3K solves it again from the usual start.</li>
     <li><b>Mass balance fix.</b> The solver changes the amounts until each element agrees with the bulk composition.</li>
@@ -306,7 +306,7 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
       The descent can stop at its iteration limit, or it can fail to solve its equations. Then Optima finishes the result
       from that point.</li>
   </ol>
-  <p>A start from scratch can fail because the numbers grow without limit. Then the solver starts again one more time.
+  <p>A cold start can fail because the numbers grow without limit. Then the solver starts again one more time.
   It uses a simpler phase check. Then it stops.</p>
 </section>
 
@@ -375,10 +375,10 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
           change anything. It stops early if its error does not improve after a jump in energy. Then the normal solve
           starts from the same inputs. If the quick try uses all its iterations but ends OK, GEMS3K keeps the result
           when no missing phase can form (<code>pa_OptimaFastAcceptCut</code>).</li>
-        <li>From scratch: a linear calculation puts the mass in as few species as it can. If this leaves almost no
+        <li>Cold start: a linear calculation puts the mass in as few species as it can. If this leaves almost no
           water, or leaves a mixed phase empty, GEMS3K corrects the guess first.</li>
-        <li>From the previous result: GEMS3K uses that result. If the node was never solved, GEMS3K writes a warning
-          and starts from scratch.</li>
+        <li>Warm start: GEMS3K uses the previous result. If the node was never solved, GEMS3K writes a warning
+          and makes a cold start.</li>
         <li>In HOP and SHP: the start is the result of the GEMS3K IPM solver.</li>
         <li>Leveled start (<code>pa_OptimaColdLevel</code>, <code>pa_OptimaLevelStart</code>, on). It is only for the quick
           try and the first full attempt. The guess also uses the mixed phases. If the system has only solids and other
@@ -400,7 +400,7 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
           that solid at zero. The solver then finishes. The hold stays only if no absent solid tends to form. If a solid
           does tend to form, the solve continues from the point where it stopped (<code>pa_OptimaTailDryOnly</code> = 2).</li>
         <li>For a system with a multisite solid solution, the solver first looks for a phase that must disappear. This look
-          is short: 200 steps from scratch, 25 steps from the previous result.</li>
+          is short: 200 steps in a cold start, 25 steps in a warm start.</li>
       </ul></li>
     <li><b>Tries in the call.</b> These tries run in this order. They run only while the result is not good: put the water
       back. Put back a mixed phase that became empty. Remove the vanishing phase of two identical mixed phases. Check each
@@ -439,17 +439,17 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
 <section>
   <h2><span class="tag t-h">Hybrid</span> HOP and SHP</h2>
   <ol class="steps h">
-    <li>The GEMS3K IPM solver runs. In HOP it starts from scratch. In SHP it starts from the previous result. If the node of
-      SHP was never solved, the solver starts from scratch and writes a warning. The solver can stop because the energy does
+    <li>The GEMS3K IPM solver runs. In HOP it makes a cold start. In SHP it makes a warm start. If the node of
+      SHP was never solved, the solver makes a cold start and writes a warning. The solver can stop because the energy does
       not improve (<code>pa_IpmNoProgress</code>). Then Optima starts from that point. It first starts warm. If that fails, it
-      starts from scratch. If the solver starts from the leveled solution and fails, GEMS3K solves it again from the usual start.</li>
+      makes a cold start. If the solver starts from the leveled solution and fails, GEMS3K solves it again from the usual start.</li>
     <li>GEMS3K saves the result of this part.</li>
     <li>Optima runs and starts from the saved result.</li>
     <li>If Optima succeeds, you get its result. If Optima fails, GEMS3K puts back the saved result and the status is BAD. For
       this reason, HOP is never worse than the GEMS3K IPM solver alone.</li>
   </ol>
-  <div class="note"><p>The GEMS3K IPM part can fail. Then SHP first runs it again from scratch. If there is still no result, Optima
-  runs alone from scratch, as in AOP. The iteration count is the sum of the two parts. <code>GEM_IterationsHOP()</code> gives the
+  <div class="note"><p>The GEMS3K IPM part can fail. Then SHP first runs it again with a cold start. If there is still no result, Optima
+  runs alone with a cold start, as in AOP. The iteration count is the sum of the two parts. <code>GEM_IterationsHOP()</code> gives the
   two parts separately.</p></div>
 </section>
 
@@ -469,10 +469,10 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
         works is the warm start for the exact composition.</td>
         <td><code>pa_ColdRetryNudges</code> (4)</td></tr>
       <tr><td>3</td><td><span class="tag t-o">SOP</span> <span class="tag t-h">SHP</span></td>
-        <td>Solves again from scratch as AOP. If it works, the status shows AOP.</td>
+        <td>Solves again with a cold start as AOP. If it works, the status shows AOP.</td>
         <td><code>pa_OptimaColdRetry</code> (2)</td></tr>
       <tr><td>4</td><td><span class="tag t-o">AOP</span>, and inside step 3</td>
-        <td>Solves from scratch one more time, from a better first guess that also uses the mixed phases.</td>
+        <td>Makes one more cold start, from a better first guess that also uses the mixed phases.</td>
         <td><code>pa_OptimaCgSeed</code> (1e-6)</td></tr>
     </tbody>
   </table>
@@ -515,7 +515,7 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
     </tbody>
   </table>
   </div>
-  <p>The status can name a different mode from the mode that you asked for. SIA changes to AIA after a restart from scratch. SOP and
+  <p>The status can name a different mode from the mode that you asked for. SIA changes to AIA after a new cold start. SOP and
   SHP change to AOP after step 3 of the ladder. After a rescue, <code>GEM_rescue_step()</code> is not 0. If the value is 6, the result
   is the best attempt and the status is BAD.</p>
 </section>

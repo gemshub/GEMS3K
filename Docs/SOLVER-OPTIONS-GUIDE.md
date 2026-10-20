@@ -4,7 +4,7 @@ This guide tells you what is new in this version. It tells you how to choose a s
 code. It tells you how to change a setting in the project file. It describes each setting and the known
 limits.
 
-Words with a special meaning are in the [Glossary](#glossary). To see what runs in each mode, in which order, and what GEMS3K tries when a calculation fails, read
+Words with a special meaning are in the [Glossary](GLOSSARY.md). To see what runs in each mode, in which order, and what GEMS3K tries when a calculation fails, read
 [Solver paths](SOLVER-PATH-GRAPH.md) ([drawn version](SOLVER-PATH-GRAPH.html)).
 
 ## The two solvers
@@ -46,7 +46,7 @@ are still the default.
 **Fewer failed calculations.** A calculation can fail to converge. Before GEMS3K reports a failure, it now
 tries again automatically. It uses one of these methods:
 - a start that is changed by a very small amount
-- a start from scratch instead of from the previous result
+- a cold start instead of a warm start
 - a finish on the phases that it already found
 
 **A rescue for failed calls.** A call can still fail. Then GEMS3K tries it again in steps (`pa_FailRescue`).
@@ -80,7 +80,7 @@ does not give a worse result than the GEMS3K IPM solver alone.
 ### Older programs that use the numbers 10 and 11
 
 In some older versions, status 10 meant "an external solver succeeded". Status 11 meant "it failed". In this
-version, 10 requests an Optima solve from scratch (AOP). Status 11 means that this solve succeeded.
+version, 10 requests an Optima cold start (AOP). Status 11 means that this solve succeeded.
 
 An old program can read 11 as a failure. That program then treats a success of Optima as an error. Use the
 named constants from `databr.h` (`NEED_GEM_AOP`, `OK_GEM_AOP` and so on). Do not use the raw numbers. Check
@@ -94,7 +94,7 @@ all old code that compares a status with 10 or 11.
 | Systems with many species (hundreds or more) | **AIA**, or **HOP** if you want a checked result | Optima alone is much slower on large systems. HOP gives the check of Optima. It costs a little more than the GEMS3K IPM solver. |
 | Strongly non-ideal systems: solid solutions, melts, miscibility gaps, phase diagrams | **AOP**, or **HOP** | Optima finds the correct set of stable phases more often when several mixing phases compete. |
 | The GEMS3K IPM solver fails, or warns that its result does not satisfy the mass balance | **AOP** or **HOP** | Optima solves most of these cases. |
-| Series of small changes: sweeps in temperature or composition, titrations, transport steps | **SOP** after a first point in AOP (or **SIA** after AIA) | A start from the previous result costs much less than a start from scratch. |
+| Series of small changes: sweeps in temperature or composition, titrations, transport steps | **SOP** after a first point in AOP (or **SIA** after AIA) | A warm start costs much less than a cold start. |
 | Series that cross phase boundaries | **AOP** or **SOP**. Do not use **SIA**. | SIA can keep the phases of the previous point after they are not stable. |
 | Systems with very little water (for example, nearly dry cement) | **AIA** or **HOP** | Optima can fail when the water is almost gone. The GEMS3K IPM solver handles these systems. |
 
@@ -211,7 +211,7 @@ if (status == OK_GEM_AOP)
   status. Do not trust the Eh in such a system.
 - A target can use all the water (for example, an extreme pH). GEMS3K then reports the result as not fully
   trustworthy (`BAD_GEM_...`).
-  - A failed SOP or SHP call is solved again from scratch. It can return `OK_GEM_AOP` (see
+  - A failed SOP or SHP call is solved again with a cold start. It can return `OK_GEM_AOP` (see
     `pa_OptimaColdRetry`).
   - A failed HOP call returns the GEMS3K IPM result without the target.
 - An `OK` status means that the solver met the target in its own model. An extreme target can still give a
@@ -258,7 +258,7 @@ These are the Optima settings that a user can change. Advanced settings has all 
 | `pa_OptimaTol` | 1e-8 | Sets how precisely Optima must converge. | Make it a little larger to get more speed and less accuracy on large systems. Make it smaller only if a result is not converged enough. | Any positive number. A smaller number is stricter. |
 | `pa_OptimaMaxSeconds` | 0 (off) | Sets a time limit in seconds for one calculation with its tries. The results then depend on the speed of the computer. | Long batch runs or transport runs. One stuck calculation must not stop the other calculations. | Any positive number of seconds. |
 | `pa_OptimaDimReduce` | 0 (automatic) | For large systems, the solver first solves with only the important species. Then it adds the other species. Automatic means that it is on from 200 species. | Switch it on for a slow system with fewer than 200 species. Switch it off if a large system gives a different result with it. | A positive number = on, with at most that number of passes. A negative number = off. |
-| `pa_OptimaColdRetry` | 2 (fail fast) | A calculation that starts from the previous result (SOP, SHP) can fail. Then the solver starts again from scratch. The value 2 stops the first attempt early. | Use 1 if the warm start usually succeeds but needs many iterations. Use 0 only for tests. | 0 = no new try. 1 = a new try only after the first attempt used its full budget. 2 = the first attempt stops early. |
+| `pa_OptimaColdRetry` | 2 (fail fast) | A warm-start calculation (SOP, SHP) can fail. Then the solver makes a new cold start. The value 2 stops the first attempt early. | Use 1 if the warm start usually succeeds but needs many iterations. Use 0 only for tests. | 0 = no new try. 1 = a new try only after the first attempt used its full budget. 2 = the first attempt stops early. |
 | `pa_OptimaAcceptRepair` | 0 (off) | Optima can accept a result that is almost converged. Then the solver first corrects a small error in the element totals. | Systems with very little water. Other cases where Optima ends near the result with element totals that are not exactly balanced. | 1 = on. |
 | `pa_OptimaZeroAbsent` | 2 | Sets how absent species are shown. They are shown as a very small amount. If necessary, the solver corrects the element totals. | Use 1 if absent phases must show exactly zero in the output. | 0 = very small amounts without a change. 1 = absent phases set to exactly zero. |
 | `pa_OptimaRedoxFree` | 1 (write to the log) | Checks before the calculation if the bulk fixes the redox level. This is the case if each element has one oxidation state and no spare oxidant or reductant exists. If the bulk does not fix the level, the solver writes this in the log. | Systems with no redox buffer. In these systems, the input does not fix Eh and the species that depend on it. | 0 = off. 2 = also aim the calculation at pe 4 when you give no pH target or Eh target. |
@@ -436,39 +436,3 @@ path. GEMS3K reads it one time. It writes only when you set the variable.
 
 A build with `-DENABLE_BENCHMARK_DIAGNOSTICS=ON` has a few more tools (condition-number estimates and timing
 for each phase). They add run time. They are for benchmarks.
-
-## Glossary
-
-These words have one meaning in this guide and in [Solver paths](SOLVER-PATH-GRAPH.md).
-
-| Word | Meaning |
-|---|---|
-| Activity coefficient | A number that corrects the amount of a species for non-ideal behaviour. |
-| Aqueous phase | The water solution. |
-| Bulk composition | The total amount of each element in the system. |
-| Cold start, from scratch | A start that does not use a previous result. |
-| Control condition, target | A pH or Eh that you ask for. The solver adds the acid, base or electron donor that it needs. |
-| Curvature | How fast the Gibbs energy changes its slope when an amount changes. The solver uses it to choose a step. |
-| Eh, pe, pH | Measures of the redox level and of the acidity of the aqueous phase. |
-| Element potential | The change of the Gibbs energy when you add one unit of an element. Also called the dual. |
-| Finish, finishing step | A final calculation on a fixed set of phases. It starts from the point where the solver stopped. |
-| Floor | The smallest amount that Optima gives to a species that is absent. |
-| Gibbs energy | The quantity that the solver makes as small as it can. |
-| Iteration | One step of a solver. |
-| Leveled solution | The result of a linear calculation where the mixed phases are at their best compositions. |
-| Line search | A method that tries shorter steps when a full step makes the result worse. |
-| Mass balance | The condition that the amount of each element in the result agrees with the bulk composition. |
-| Mixed phase | A phase with more than one species whose amounts change its properties. Examples are a solid solution and a melt. |
-| Miscibility gap | A range of composition where a mixed phase splits into two phases. |
-| Native | The GEMS3K IPM solver. |
-| Node | The object in GEMS3K that holds one system and its result. |
-| Rescue | The steps that GEMS3K tries when a call still fails after the retry ladder. |
-| Retry ladder | A fixed list of new tries that GEMS3K runs, in order, after a call fails. |
-| Solid solution | A solid phase whose end-members mix in any ratio. |
-| Sorption | The binding of species to a solid surface. |
-| Stall | A state where a solver runs but its error or energy does not improve. |
-| Status | The value that `GEM_run()` returns. It starts with OK, BAD or ERR. |
-| Tail stop | A stop of a solve whose energy does not change and whose error is only on trace amounts. |
-| Trace amount | A very small amount of a species or an element. |
-| Twin phases | Two phases that have the same end-members. |
-| Warm start | A start from the previous result in the node. |
