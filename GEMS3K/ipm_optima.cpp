@@ -3604,6 +3604,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             double fzErr = -1., fzF = 0.;
             // pa_OptimaTailStop: energy at the start of the current flat run, and its length.
             double tailRef = 0.; long int tailRun = 0; bool tailStop = false;
+            std::vector<long int> tailPhases;   // pa_OptimaTailDryOnly 2: the vanished phases that held the error
+            double tailErrPrev = -1., tailRatioMin = 1e300, tailRatioMax = 0.;   // step-to-step error ratio over the flat run
+            bool vanishedOff = false;   // the scoped tail stop has been used in this call (not cleared by reset())
             // pa_OptimaDryOut: the solve stopped because the water ran out, and where.
             bool dryOut = false; long int dryOutAt = 0; double dryOutW = 0.;
             long int wLO = -1;   // pa_OptimaDryOut: the water index, -1 = off (not cleared by reset())
@@ -3614,7 +3617,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 refErr  = refComp  = std::numeric_limits<double>::infinity();
                 run = 0; stalled = false; dryRun = 0; dryStop = false;
                 fzRun = 0; fzErr = -1.; fzF = 0.;
-                tailRef = 0.; tailRun = 0; tailStop = false;
+                tailRef = 0.; tailRun = 0; tailStop = false; tailPhases.clear(); tailErrPrev = -1.; tailRatioMin = 1e300; tailRatioMax = 0.;
                 dryOut = false; dryOutAt = 0; dryOutW = 0.;
             }
             bool overBudget() const {
@@ -3740,7 +3743,15 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const double kTailTol = pa_p->OptimaTol;   // pa_OptimaTailStop: the error that still counts
         // pa_OptimaTailStop / pa_OptimaTailStopWarm: flat steps needed (a warm call starts next to an answer)
         const long int kTailN = pm.pNP == 1 ? pa_p->OptimaTailStopWarm : pa_p->OptimaTailStop;
-        const bool kTailDryOnly = pa_p->OptimaTailDryOnly > 0;
+        // pa_OptimaTailDryOnly: 0 = every solve, 1 = only the dry solve, 2 = also a warm call whose left-over
+        // error sits only on members of nearly vanished non-aqueous solution phases
+        const long int kTailMode = pa_p->OptimaTailDryOnly;
+        const bool kTailWarm = pm.pNP != 0;
+        const double kVanished = 1e7 * pa_p->LogBarrierTau;   // the nearly-vanished amount of pa_OptimaFloorCurvature 3
+        std::vector<long int> solidPhaseOf( (size_t)L, -1 );
+        for( long int k = 0; k < pm.FIs; k++ )
+            if( pm.L1[k] > 1 && !( hasAq && pm.LO >= phStart[(size_t)k] && pm.LO < phStart[(size_t)k+1] ) )
+                for( long int j = phStart[(size_t)k]; j < phStart[(size_t)k+1]; j++ ) solidPhaseOf[(size_t)j] = k;
         if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. || earlyTrendN > 0
             || earlyCapN > 0 || g_optimaIterBudget >= 0 )
             options.convergence.check =
@@ -3748,7 +3759,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                  kEarlyTrendMinRate,
                  earlyTrend, earlyTrendArmed, earlyTrendProbeN, earlyTrendSeen,
                  earlyCapN, earlyCap, earlyCapArmed, earlyStopDwRel,
-                 aqPhaseIdxTrend, phDec, phMax, phLast, ffFrozenN, ffDivR, ffRisesN, ffCollapseR, frozenCutN, kTailTol, kTailN, kTailDryOnly]
+                 aqPhaseIdxTrend, phDec, phMax, phLast, ffFrozenN, ffDivR, ffRisesN, ffCollapseR, frozenCutN, kTailTol, kTailN, kTailMode, kTailWarm, kVanished, solidPhaseOf]
                 ( Optima::ConvergenceCheckArgs const& args ) -> bool
                 {
                     // pa_OptimaFastCollapse: the quick first try stops at once when its energy has grown to more
@@ -4013,14 +4024,25 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     // check decide.
                     {
                         const long int kTail = kTailN;
-                        // pa_OptimaTailDryOnly: the tail stop acts only after the water was taken out
+                        // pa_OptimaTailDryOnly: where the tail stop acts (see above)
+                        const bool vanishedOnly = kTailMode == 2 && !stallWatch->dryDone && !stallWatch->vanishedOff;
                         if( kTail > 0 && stallWatch->window > 0 && !g_optimaFixAccept
-                            && ( !kTailDryOnly || stallWatch->dryDone ) )
+                            && ( kTailMode == 0 || stallWatch->dryDone || ( vanishedOnly && kTailWarm ) ) )
                         {
                             const double fNow = args.F.result().f.f;
+                            const double eNow = args.E.errorx();
                             if( stallWatch->tailRun > 0 && std::fabs( fNow - stallWatch->tailRef ) <= 1e-12 * std::fabs( fNow ) )
+                            {
                                 stallWatch->tailRun++;
-                            else { stallWatch->tailRef = fNow; stallWatch->tailRun = 1; }
+                                if( stallWatch->tailErrPrev > 0. )
+                                {
+                                    const double q = eNow / stallWatch->tailErrPrev;
+                                    stallWatch->tailRatioMin = std::min( stallWatch->tailRatioMin, q );
+                                    stallWatch->tailRatioMax = std::max( stallWatch->tailRatioMax, q );
+                                }
+                            }
+                            else { stallWatch->tailRef = fNow; stallWatch->tailRun = 1; stallWatch->tailRatioMin = 1e300; stallWatch->tailRatioMax = 0.; }
+                            stallWatch->tailErrPrev = eNow;
                             if( stallWatch->tailRun >= kTail )
                             {
                                 const auto exv = args.E.ex();
@@ -4030,18 +4052,30 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                 for( long int j = 0; j < n; j++ ) xSum += std::max( (double)xv[j], 0. );
                                 const double tol = kTailTol;
                                 bool onlyTrace = true; long int nCarry = 0; double xCarryMax = 0.;
+                                std::vector<long int> carrierPhases;
                                 for( long int j = 0; j < n; j++ )
                                     if( std::fabs( (double)exv[j] ) > tol )
                                     {
                                         nCarry++; xCarryMax = std::max( xCarryMax, (double)xv[j] );
                                         if( xv[j] > 1e-9 * xSum ) { onlyTrace = false; break; }
+                                        if( vanishedOnly )
+                                        {
+                                            const long int kp = j < (long int)solidPhaseOf.size() ? solidPhaseOf[(size_t)j] : -1;
+                                            if( kp < 0 || !( (*phLast)[(size_t)kp] >= 0. && (*phLast)[(size_t)kp] < kVanished ) )
+                                            { onlyTrace = false; break; }
+                                            if( std::find( carrierPhases.begin(), carrierPhases.end(), kp ) == carrierPhases.end() )
+                                                carrierPhases.push_back( kp );
+                                        }
                                     }
                                 if( onlyTrace && nCarry > 0 )
                                 {
-                                    native_trace_decide( "tailstop it=%ld flat=%ld carriers=%ld xmax=%.3e xsum=%.3e err=%.3e",
+                                    char rr[96] = "";
+                                    if( vanishedOnly ) std::snprintf( rr, sizeof rr, " scope=vanished ratio=%.3f..%.3f", stallWatch->tailRatioMin, stallWatch->tailRatioMax );
+                                    native_trace_decide( "tailstop it=%ld flat=%ld carriers=%ld xmax=%.3e xsum=%.3e err=%.3e%s",
                                                          (long)args.result.iterations, stallWatch->tailRun, nCarry,
-                                                         xCarryMax, xSum, args.E.errorx() );
+                                                         xCarryMax, xSum, args.E.errorx(), rr );
                                     stallWatch->tailStop = true;
+                                    stallWatch->tailPhases = carrierPhases;
                                     stallWatch->stalled = true;
                                     return true;   // folded back to a failure below
                                 }
@@ -4432,6 +4466,96 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                at, result.succeeded ? 1 : 0 );
             dryJ0 = j0; dryJ1 = j1;
         }
+        // pa_OptimaTailDryOnly 2: a warm call stopped on the slow tail of nearly vanished solid solutions is solved on
+        // from the stop point with those phases held at the floor, up to three times (each round may find another such
+        // phase); the answer is then checked like any other. If a round fails, or a held phase wants to form, the call goes on from the first stop
+        // point with no phase held, as if there had been no stop. DECIDE tailpin.
+        if( stallWatch->tailStop && !result.succeeded && R == 0 && !stallWatch->tailPhases.empty() )
+        {
+            const Optima::State stopState = state;
+            std::vector<long int> pinned;
+            std::vector<double> pinLo, pinHi;
+            long int rounds = 0, nPh = 0;
+            bool pinOk = false;
+            std::string names;
+            while( stallWatch->tailStop && !result.succeeded && !stallWatch->tailPhases.empty() && rounds < 3 )
+            {
+                for( long int k : stallWatch->tailPhases )
+                {
+                    nPh++;
+                    names += ( names.empty() ? "" : "," ) + char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME );
+                    for( long int j = phStart[(size_t)k]; j < phStart[(size_t)k+1]; j++ )
+                        if( !extinctFixed[(size_t)j] && std::find( pinned.begin(), pinned.end(), j ) == pinned.end() )
+                        {
+                            pinned.push_back( j ); pinLo.push_back( problem.xlower[j] ); pinHi.push_back( problem.xupper[j] );
+                            problem.xlower[j] = dcFloor; problem.xupper[j] = dcFloor; state.x[j] = dcFloor;
+                        }
+                }
+                rounds++;
+                stallWatch->vanishedOff = rounds >= 3;
+                Optima::Solver solverPin;
+                solverPin.setOptions( options );
+                stallWatch->reset();
+                result = timed_solve( solverPin, problem, state );
+                applyStall( result );
+                optimaIterTotal += result.iterations;
+                pinOk = result.succeeded;
+            }
+            stallWatch->vanishedOff = true;
+            // A held phase stays held for the rest of the call only if, at the converged potentials, neither it nor any
+            // other absent solid mixture wants to form; otherwise the call goes on from the first stop point.
+            double pinTpd = 1e300;
+            if( pinOk )
+            {
+                for( long int j = 0; j < L; j++ ) { pm.Y[j] = state.x[j]; pm.X[j] = state.x[j]; }
+                for( long int i = 0; i < N; i++ ) pm.U[i] = -state.ye[i];
+                TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                CalculateActivityCoefficients( LINK_UX_MODE );
+                CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+                std::vector<long int> heldPh;
+                for( long int j : pinned )
+                {
+                    long int k = 0;
+                    while( k + 1 < (long int)phStart.size() && phStart[(size_t)k+1] <= j ) k++;
+                    if( std::find( heldPh.begin(), heldPh.end(), k ) == heldPh.end() ) heldPh.push_back( k );
+                }
+                // the full composition search: holding a phase for the rest of the call needs more than the local one
+                const bool strongWas = g_tpdStrongSearch;
+                g_tpdStrongSearch = true;
+                for( long int k : heldPh )
+                {
+                    std::vector<double> yb;
+                    pinTpd = std::min( pinTpd, NativeTpdPhase( k, phStart[(size_t)k], yb ) );
+                }
+                // a solid mixture that was already absent is checked too: the held solve never looked at it
+                for( long int k = 0; k < pm.FIs; k++ )
+                    if( phStart[(size_t)k] < L && solidPhaseOf[(size_t)phStart[(size_t)k]] == k && pm.XF[k] < kVanished
+                        && std::find( heldPh.begin(), heldPh.end(), k ) == heldPh.end() )
+                    {
+                        std::vector<double> yb;
+                        pinTpd = std::min( pinTpd, NativeTpdPhase( k, phStart[(size_t)k], yb ) );
+                    }
+                g_tpdStrongSearch = strongWas;
+            }
+            const bool keepHeld = pinOk && !( pinTpd < -std::max( pa_p->OptimaTpdAccept, 1e-6 ) );
+            if( !keepHeld )
+                for( size_t q = 0; q < pinned.size(); q++ ) { problem.xlower[pinned[q]] = pinLo[q]; problem.xupper[pinned[q]] = pinHi[q]; }
+            long int itBack = 0;
+            if( !keepHeld )
+            {   // a failed round, or a held phase that wants to form: a solve from the floor cannot grow it back, so go on
+                // from the first stop point
+                state = stopState;
+                Optima::Solver solverOn;
+                solverOn.setOptions( options );
+                stallWatch->reset();
+                result = timed_solve( solverOn, problem, state );
+                applyStall( result );
+                optimaIterTotal += result.iterations;
+                itBack = (long int)result.iterations;
+            }
+            native_trace_decide( "tailpin rounds=%ld phases=%ld species=%ld ok=%d held=%d tpd=%.3e back=%d it_back=%ld list=%s", rounds, nPh,
+                                 (long)pinned.size(), pinOk ? 1 : 0, keepHeld ? 1 : 0, pinTpd, keepHeld ? 0 : 1, itBack, names.c_str() );
+        }
         // pa_OptimaTailStop: take the stop point as it stands when no phase wants to form or go.
         // The finish is not run first: it can drop a genuine trace phase (a carrier of a trace element).
         if( stallWatch->tailStop && !result.succeeded && R == 0 )
@@ -4468,6 +4592,18 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     jb += n;
                 }
             }
+            // pa_OptimaTailDryOnly 2: the vanished phases that still held the error are searched too, whatever their
+            // members' amounts; one that wants to form makes the stop point no answer.
+            if( tWorst < 0 )
+                for( long int k : stallWatch->tailPhases )
+                {
+                    long int jb = 0;
+                    for( long int q = 0; q < k; q++ ) jb += pm.L1[q];
+                    std::vector<double> yb;
+                    const double tpd = NativeTpdPhase( k, jb, yb );
+                    tNtpd++;
+                    if( tpd < tTpd ) { tTpd = tpd; tTpdPh = k; }
+                }
             const bool tTpdOk = !( tTpd < -std::max( pa_p->OptimaTpdAccept, 1e-6 ) );
             native_trace_decide( "tailaccept stable=%d worst=%ld viol=%.3e absent=%d ntpd=%ld min_tpd=%.3e tpd_phase=%s",
                                  tWorst < 0 ? 1 : 0, tWorst, tViol, tAbsent ? 1 : 0, tNtpd, tTpd,
@@ -6220,9 +6356,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 }
                 // pa_OptimaAcceptRepair: when the test fails only on the per-IC mass balance,
                 // apply MassBalanceReproject() and re-test; restore if mb_rel stays > 1.
-                // A certified leveling start may also repair a rounding-size balance error.
+                // A certified leveling start may also repair a rounding-size balance error, and so may a tail
+                // stop or the solve after it, as an answer that converged would be.
                 const bool accRepair = pa_p->OptimaAcceptRepair > 0
-                    || g_lvlShortcut;
+                    || g_lvlShortcut || stallWatch->tailStop || stallWatch->vanishedOff;
                 if( ok && mbRelWorst > 1. && accRepair )
                 {
                     std::vector<double> Ysave( pm.Y, pm.Y + pm.L );

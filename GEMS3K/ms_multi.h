@@ -584,9 +584,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     long int OptimaTailStop = 100;
     /// pa_OptimaTailStopWarm: the same, on a warm call. 0 = off, default 10.
     long int OptimaTailStopWarm = 10;
-    /// pa_OptimaTailDryOnly: the tail stop acts only after pa_OptimaDryOut took the water phase out.
-    /// 0 = in every solve, 1 = only there (default).
-    long int OptimaTailDryOnly = 1;
+    /// pa_OptimaTailDryOnly: where the tail stop acts. 0 = in every solve, 1 = only after pa_OptimaDryOut took
+    /// the water phase out, 2 (default) = there, and in a warm call whose left-over error sits only on members of
+    /// nearly vanished solid solutions.
+    long int OptimaTailDryOnly = 2;
     /// pa_OptimaWaterKeep: 1 = a converged answer is kept when the retry with water put back fails;
     /// 2 = also, a dry answer that passed the tail-stop check is not retried with water (default); 0 = off.
     long int OptimaWaterKeep = 2;

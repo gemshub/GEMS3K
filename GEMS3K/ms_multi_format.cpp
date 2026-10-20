@@ -229,7 +229,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaDryOut", 0 , 0, 0, "# pa_OptimaDryOut: Optima solver: when the water runs out, take the water phase out and solve the solids alone; 0 = off, 1 = on { 0 }" },
     { "pa_OptimaTailStop", 0 , 0, 0, "# pa_OptimaTailStop: Optima solver: stop after this many steps with unchanged energy and only trace error left, then check the point; 0 = off { 100 }" },
     { "pa_OptimaTailStopWarm", 0 , 0, 0, "# pa_OptimaTailStopWarm: Optima solver: the same on a warm call; 0 = off { 10 }" },
-    { "pa_OptimaTailDryOnly", 0 , 0, 0, "# pa_OptimaTailDryOnly: Optima solver: the tail stop acts only after the water phase was taken out; 0 = always, 1 = only then { 1 }" },
+    { "pa_OptimaTailDryOnly", 0 , 0, 0, "# pa_OptimaTailDryOnly: Optima solver: where the tail stop acts; 0 = always, 1 = after the water phase was taken out, 2 = also in a warm call left with error only on vanished solid solutions { 2 }" },
     { "pa_OptimaWaterKeep", 0 , 0, 0, "# pa_OptimaWaterKeep: Optima solver: 1 = keep a converged answer when the water retry fails; 2 = also skip that retry after a checked dry answer; 0 = off { 2 }" },
     { "pa_OptimaSnapLeaving", 0 , 0, 0, "# pa_OptimaSnapLeaving: Optima solver, warm calls: put a species on its floor after it has limited the step this many times in a row on its way to zero; 0 = off { 2 }" },
     { "pa_OptimaPartialPivLU", 0 , 0, 0, "# pa_OptimaPartialPivLU: Optima solver: use the faster partial-pivot LU for a linear system of at least this size, falling back to full pivoting when an equation would be dropped; 0 = off { 100 }" },
