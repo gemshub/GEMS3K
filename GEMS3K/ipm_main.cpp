@@ -1099,9 +1099,13 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
         && ( smod == SM_IDEAL || smod == SM_BERMAN || smod == SM_CEF || smod == SM_MBW || smod == SM_REDKIS || smod == SM_MARGB
              || smod == SM_MARGT || smod == SM_GUGGENM || smod == SM_VANLAAR || smod == SM_REGULAR || smod == SM_NRTLLIQ
              || smod == SM_WILSLIQ );
+    // An ideal mixture has no activity terms, so a trial composition needs no model call at all.
+    const bool ideal = !alone && pm.sMod[k][SGM_MODE] == SM_IDEAL;
     auto evalY = [&]( const std::vector<double>& y, std::vector<double>& ynew ) -> double {
         restoreBase();
-        if( alone )
+        if( ideal )
+            for( long int a = 0; a < n; a++ ) pm.lnGam[p0+a] = 0.;
+        else if( alone )
         {
             double sy = 0.;
             for( long int a = 0; a < n; a++ ) sy += std::max( y[(size_t)a], 1e-300 );
