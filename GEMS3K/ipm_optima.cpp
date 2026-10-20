@@ -996,9 +996,9 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
     bool converged = false;
     const long int kMaxIt = 60, kMaxChanges = 6, kMaxSize = 900;
     std::string why = "maxit";
-    // pa_OptimaFinishStall: the lowest reduced gradient so far, and the step it was reached at.
+    // pa_OptimaFinishStall: the lowest reduced gradient so far, the step it was reached at, and G at that step.
     const long int kStall = base_param()->OptimaFinishStall;
-    double bestRed = 1e300; long int bestRedIt = 0, bestRedChanges = 0;
+    double bestRed = 1e300, stallG = 0., stepMin = 0., stepMax = 0.; long int bestRedIt = 0, bestRedChanges = 0, stallSkips = 0;
     for( ; it < kMaxIt; it++ )
     {
         std::vector<long int> fr;
@@ -1199,8 +1199,18 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
         if( kStall > 0 && !stationary )
         {
             if( changes != bestRedChanges ) { bestRed = 1e300; bestRedIt = it; bestRedChanges = changes; }
-            if( redMax < 0.5 * bestRed ) { bestRed = redMax; bestRedIt = it; }
-            else if( it - bestRedIt >= kStall ) { why = "stall"; break; }
+            if( redMax < 0.5 * bestRed ) { bestRed = redMax; bestRedIt = it; stallG = G; stepMin = stepMax = dMaxRel; }
+            else
+            {
+                stepMin = std::min( stepMin, dMaxRel ); stepMax = std::max( stepMax, dMaxRel );
+                if( it - bestRedIt >= kStall )
+                {
+                    // a finish whose G still falls, or whose step still changes, is slow, not dead: the window starts again
+                    if( G < stallG - 1e-12 * ( 1. + std::fabs( G ) ) || stepMax > 1.01 * stepMin )
+                    { bestRedIt = it; stallG = G; stepMin = stepMax = dMaxRel; stallSkips++; }
+                    else { why = "stall"; break; }
+                }
+            }
         }
         if( stationary )
         {
@@ -1398,8 +1408,9 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
             }
         }
     }
-    native_trace_decide( "finish ok=%d why=%s it=%ld changes=%ld entered=%ld left=%ld G0=%.12g G1=%.12g",
-                         converged ? 1 : 0, why.c_str(), (long)it, (long)changes, (long)entered, (long)left, G0, G );
+    native_trace_decide( "finish ok=%d why=%s it=%ld changes=%ld entered=%ld left=%ld G0=%.12g G1=%.12g%s",
+                         converged ? 1 : 0, why.c_str(), (long)it, (long)changes, (long)entered, (long)left, G0, G,
+                         stallSkips ? ( " stallskips=" + std::to_string( stallSkips ) ).c_str() : "" );
     if( !converged ) { restore(); return false; }
     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
     CalculateActivityCoefficients( LINK_UX_MODE );
