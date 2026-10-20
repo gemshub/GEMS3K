@@ -3257,8 +3257,15 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
             {
                 std::vector<double> nCg;
                 g_tpdStrongSearch = true;
-                const bool cgOk = ColumnGenerationSeed( nCg, 1e-6 ) && nCg.size() == (size_t)pm.L;
+                bool cgOk = ColumnGenerationSeed( nCg, 1e-6 ) && nCg.size() == (size_t)pm.L;
                 g_tpdStrongSearch = false;
+                // The leveled solution ignores species amount limits: a seed outside them is not used.
+                long int outside = 0;
+                if( cgOk && pm.DUL && pm.DLL )
+                    for( j = 0; j < pm.L; j++ )
+                        if( nCg[(size_t)j] > pm.DUL[j] * ( 1. + 1e-9 ) || nCg[(size_t)j] < pm.DLL[j] * ( 1. - 1e-9 ) )
+                            outside++;
+                if( outside > 0 ) cgOk = false;
                 long int inSoln = 0;
                 if( cgOk )
                 {
@@ -3268,7 +3275,7 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
                     lvlLeaveOut = ( pa_p->IpmLevelStart >= 2 && inSoln == 0 );
                     g_ipmLevelUsed = true;
                 }
-                native_trace_decide( "natlvl used=%d insoln=%ld leftout=%d", cgOk ? 1 : 0, inSoln, lvlLeaveOut ? 1 : 0 );
+                native_trace_decide( "natlvl used=%d insoln=%ld leftout=%d outside=%ld", cgOk ? 1 : 0, inSoln, lvlLeaveOut ? 1 : 0, outside );
                 ipm_logger->debug( "Native start from the leveled solution: used={} mixed-phase members={} left out={}",
                                    cgOk, inSoln, lvlLeaveOut );
             }

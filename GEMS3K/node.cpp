@@ -284,6 +284,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
                                            || s == BAD_GEM_HOP || s == BAD_GEM_SHP; };
 
     DATABR* D0 = snap();   // the call's inputs
+    const long int ITau0 = pmm->ITau, pKMM0 = pmm->pKMM;   // kinetic state before the first attempt
     long int st = GEM_run_capped( uPrimalSol );
     // a warm call may report its outcome under the cold code of its solver, so any bad or error code counts
     const bool isErr = st == ERR_GEM_AIA || st == ERR_GEM_SIA || st == ERR_GEM_AOP || st == ERR_GEM_SOP
@@ -336,6 +337,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         const long int ITau = pmm->ITau, pKMM = pmm->pKMM;
         const double kTau = pmm->kTau, kdT = pmm->kdT;
         if( kinetics && frozenBox ) CNode->dt = 0.;
+        if( kinetics && !frozenBox ) { pmm->ITau = ITau0; pmm->pKMM = pKMM0; }   // repeat this time step, not the next one
         CNode->NodeStatusCH = mode;
         CNode->IterDone = 0;   // a failed solve does not write it, so a loaded count is not counted again
         const long int s = GEM_run_capped( primal );

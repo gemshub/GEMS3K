@@ -116,7 +116,7 @@ if (node.GEM_init("Cu-dat.lst"))               // reads the project, including i
 // Choose the solver for this call: the mode is the value of NodeStatusCH.
 node.pCNode()->NodeStatusCH = NEED_GEM_AOP;    // Optima, cold start
 long status = node.GEM_run(false);
-if (status != OK_GEM_AOP)
+if (status != OK_GEM_AOP && status != OK_GEM_AIA)   // OK_GEM_AIA: a build without Optima runs AIA
     std::cerr << "not fully trustworthy, status " << status << "\n";
 std::cout << "pH " << node.Get_pH() << "  Eh " << node.Get_Eh() << "\n";
 
@@ -130,11 +130,13 @@ node.pCNode()->NodeStatusCH = NEED_GEM_SOP;
 status = node.GEM_run(false);
 ```
 
-Remember these two points:
+Remember these three points:
 - `GEM_run()` does nothing unless `NodeStatusCH` has a `NEED_GEM_...` value. Set the value just before each
   call.
 - You can use the same node for all modes. To compare two settings, make two nodes from two copies of the
   project. Use one `-ipm` file for each node.
+- In a build without Optima, the Optima modes run with the GEMS3K IPM solver. The status then has the AIA or SIA
+  code. A failed warm Optima call that GEMS3K solves again with a cold start returns the AOP code.
 
 A complete example is `tools/optima_test.cpp`.
 

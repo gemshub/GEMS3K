@@ -361,7 +361,9 @@ double TMultiBase::AbsentPhaseWorstDrive( long int& worstPhase )
     {
         const long int n = pm.L1[k];
         const char ph = pm.PHC[k];
-        const bool absent = pm.XF[k] <= 1e-9 * tot;
+        bool heldOut = pm.DUL != nullptr;   // every member held out by the input (upper limit 0): it cannot form
+        for( long int j = jb; j < jb + n && heldOut; j++ ) heldOut = pm.DUL[j] <= 0.;
+        const bool absent = pm.XF[k] <= 1e-9 * tot && !heldOut;
         if( absent && n == 1 )
         {
             double au = 0.;
