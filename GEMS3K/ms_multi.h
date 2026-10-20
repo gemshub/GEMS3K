@@ -1347,6 +1347,16 @@ public:
     /// declared outside the USE_OPTIMA_SOLVER block (closed and reopened here, which keeps
     /// the member's position in the class).
     std::vector<char> insBudgetTried;
+    // Control conditions (pH, Eh targets) exist only with Optima; without it the list stays empty.
+    /// Read-only access to the registered control conditions. After a
+    /// CalculateEquilibriumStateOptima() call each entry's titrantAmount, achievedValue and
+    /// targetMet hold that call's result.
+    const std::vector<EqControlCondition>& GetControlConditions() const
+    { return optima_control_conditions; }
+    /// Puts back control conditions saved with GetControlConditions(), results included (used when a
+    /// caller returns an earlier solve's answer).
+    void RestoreControlConditions( const std::vector<EqControlCondition>& saved )
+    { optima_control_conditions = saved; }
 #ifdef USE_OPTIMA_SOLVER
     // Equilibrium via the Optima interior-point solver, as an alternative to the IPM/MBR loop
     // (ipm_optima.cpp). Dispatched from TNode::GEM_run() for NEED_GEM_AOP/SOP: pm.pNP == 0 is a
@@ -1393,15 +1403,6 @@ public:
     /// Removes every registered control condition.
     void ClearControlConditions();
 
-    /// Read-only access to the registered control conditions. After a
-    /// CalculateEquilibriumStateOptima() call each entry's titrantAmount, achievedValue and
-    /// targetMet hold that call's result.
-    const std::vector<EqControlCondition>& GetControlConditions() const
-    { return optima_control_conditions; }
-    /// Puts back control conditions saved with GetControlConditions(), results included (used when a
-    /// caller returns an earlier solve's answer).
-    void RestoreControlConditions( const std::vector<EqControlCondition>& saved )
-    { optima_control_conditions = saved; }
 
     /// Worst-case (infinity-norm) mass-balance residual |A*Y - B| over pm.Y[]/pm.B[]. A
     /// diagnostic for callers and tests; the solver's own check is CheckMassBalanceResiduals().
@@ -1531,13 +1532,11 @@ public:
 
 protected:
 
-#ifdef USE_OPTIMA_SOLVER
     /// Control conditions registered via SetControlCondition_pH()/_Eh() (or appended
     /// directly as a custom EqControlCondition - see ipm_optima.h), active for the next
     /// CalculateEquilibriumStateOptima() call. Entries are fully resolved when added; the
     /// closed-form functions capture resolved indices by value and read G0[]/T at call time.
     std::vector<EqControlCondition> optima_control_conditions;
-#endif
 
     /// When true, SmoothingFactor() returns exactly 1.0 regardless of pm.FitVar[3]/[4],
     /// disabling the IPM-2 chemical-potential smoothing for one

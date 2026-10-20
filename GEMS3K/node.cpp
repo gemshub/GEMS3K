@@ -729,6 +729,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     double fastSec = 0.;
     bool fastFailed = false;
     const long int fastCap = multi_ptr()->base_param()->OptimaFastFirst;
+#ifdef USE_OPTIMA_SOLVER   // the quick try is an Optima solve
     if( requested == NEED_GEM_AOP && !kinetics && fastCap > 0 )
     {
         DATABR* fastBefore = new DATABR;
@@ -801,6 +802,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         CNode->NodeStatusCH = requested;
         clearipmLogError();
     }
+#endif
     // pa_OptimaLineSearch < 0: an Optima call that fails without the line search is re-run once
     // with it (g_optimaLineSearchRetry). The DATABR is snapshotted before the first attempt; a
     // retry that does not return OK hands the first failure back unchanged. DECIDE lsretry.
