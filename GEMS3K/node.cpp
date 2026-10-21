@@ -259,7 +259,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 // solver from the best point so far. Each passing answer comes from a solve at the exact composition with
 // the normal settings. With pa_FailRescue = 2, if none passes, the attempt that best balances the
 // composition (then lowest G) is returned as a bad result; if
-// none balances, the original failure is returned. A kinetic node is finished with this step's kinetic
+// none balances (or the DATABR lacks species or elements, so balance cannot be shown), the original failure is returned. A kinetic node is finished with this step's kinetic
 // limits held fixed, so the kinetics are not applied twice. pa_RescueBudget: after the call has used that many
 // iterations, steps 1 to 4 start no new attempt; an attempt that passed still gets its finish, and step 5, the
 // other solver, still runs once. DECIDE rescue, rescue-result, rescue-budget.
@@ -494,6 +494,9 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     // (5) the other solver, warm at the exact composition from the best balanced answer so far (or from the inputs).
     auto bestIndex = [&]() {
         long int best = -1;
+        // a DATABR without every species and element cannot show that an attempt balances, so none is offered
+        if( CSD->nDCb != CSD->nDC || CSD->nICb != CSD->nIC )
+            return best;
         for( size_t e = 0; e < pool.size(); e++ )
         {
             if( pool[e].rel > 1. || !pool[e].targetsMet ) continue;
