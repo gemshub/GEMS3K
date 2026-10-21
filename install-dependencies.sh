@@ -42,7 +42,7 @@ test -d /usr/local/include/spdlog || {
         # Building spdlog library
         mkdir -p ~/code && \
                 cd ~/code && \
-                git clone https://github.com/gabime/spdlog -b v1.11.0  && \
+                git clone https://github.com/gabime/spdlog  && \
                 cd spdlog/include && \
                 sudo cp -r spdlog /usr/local/include
 

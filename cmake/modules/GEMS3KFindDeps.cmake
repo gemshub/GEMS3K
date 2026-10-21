@@ -40,6 +40,28 @@ if(USE_THERMOFUN MATCHES ON)
     message(STATUS "Found ChemicalFun v${ChemicalFun_VERSION}")
   endif()
 
+# Find the autodiff library (header-only); fetch it if it is not installed (not needed with -DTFUN_USE_AUTODIFF=OFF)
+#if(NOT TFUN_USE_AUTODIFF)
+#    message(STATUS "Building without autodiff: the models use plain numbers, all derivatives are 0")
+#else()
+find_package(autodiff 1.1.1 CONFIG QUIET)
+if(autodiff_FOUND)
+    message(STATUS "Found autodiff: ${autodiff_DIR} (found version \"${autodiff_VERSION}\")")
+else()
+    message(STATUS "autodiff not found - fetching it from GitHub")
+    include(FetchContent)
+    set(AUTODIFF_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+    set(AUTODIFF_BUILD_PYTHON   OFF CACHE BOOL "" FORCE)
+    set(AUTODIFF_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(AUTODIFF_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(autodiff
+        GIT_REPOSITORY https://github.com/autodiff/autodiff.git
+        # v1.1.2 plus the commit that makes Eigen optional (ThermoFun does not need it)
+        GIT_TAG        b0a4feff5b2a61262e94305452ac53369fe35e75)
+    FetchContent_MakeAvailable(autodiff)
+endif()
+#endif() # TFUN_USE_AUTODIFF
+
   if(USE_SPDLOG_PRECOMPILED)
     if(NOT TARGET spdlog::spdlog)
        find_package(spdlog CONFIG REQUIRED)

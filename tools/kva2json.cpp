@@ -49,6 +49,7 @@
 #include <string>
 #include <iomanip>
 #include <memory>
+#include "spdlog/sinks/basic_file_sink.h"
 #include "GEMS3K/nodearray.h"
 #include "GEMS3K/jsonconfig.h"
 #include "GEMS3K/v_service.h"
@@ -135,12 +136,11 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
 
         TestModeGEMParam calc_param;  // use default data
         calc_param.useSIA = '-';
-        FILE* diffile = fopen( "tools-ICdif-log.dat", "w+" );
-        if( !diffile )
-            return 1;
+        std::shared_ptr<spdlog::logger> diff_log_file = spdlog::basic_logger_mt("ic_diff_log", "tools-ICdif-log.dat", true);
+        diff_log_file->set_pattern("%v");
 
         // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
-        if( !node_arr->CalcIPM_List( calc_param, 0, export_data.nIV-1, diffile ) )
+        if( !node_arr->CalcIPM_List( calc_param, 0, export_data.nIV-1, diff_log_file.get() ) )
         {
             std::cout << "error occured during inital calculation" << std::endl;
             return 1;
@@ -183,7 +183,7 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
                 // (5) Reading the next DBR file with different input composition or temperature
                 node_arr->GEMS3k_read_dbr( 0, dbr_file, input_data.files_mode() );
 
-                if( !node_arr->CalcIPM_One( calc_param, 0, diffile ) )
+                if( !node_arr->CalcIPM_One( calc_param, 0, diff_log_file.get() ) )
                 {
                     std::cout << "error occured during calculation: " << dbr_file <<  std::endl;
                     return 1;
@@ -202,7 +202,6 @@ feenableexcept (FE_DIVBYZERO|FE_OVERFLOW|FE_UNDERFLOW);
             }
         }
 
-        fclose (diffile);
         return 0;
     }
     catch(TError& err)
