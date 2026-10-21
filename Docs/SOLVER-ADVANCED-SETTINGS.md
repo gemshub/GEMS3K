@@ -70,7 +70,7 @@ The [Glossary](GLOSSARY.md) explains the special words.
 | `pa_IpmLevelStart` | 2 (on) | A cold-start calculation (AIA) on a system without aqueous, gas or sorption phases starts from the leveled solution. This is a linear calculation with the mixed phases at their best compositions. |
 | `pa_IpmQrSortPivot` | 100 (on) | A step with at least this number of active species uses a faster and more accurate method for its equations. |
 | `pa_RescueWalkSteps` | 8 | Sets the number of equal steps in the walk from the previous result to the new composition. |
-| `pa_RescueBudget` | 100000 (on) | The rescue (`pa_FailRescue`) starts no new step after the call has used this number of iterations. The count includes the first attempt and both solvers. The rescue then returns the best balanced attempt, as when no step succeeds. 0 = no limit. |
+| `pa_RescueBudget` | 100000 (on) | The rescue (`pa_FailRescue`) skips steps 1 to 4 after the call has used this number of iterations. The count includes the first attempt and both solvers. Step 5, the other solver, still runs one time. 0 = no limit. |
 | `pa_OptimaStallNetFactor` | 5 (on) | After a stall, Optima solves one more time with the stall check off. This last solve gets at most this number times the iterations of the solve that stalled, and at least 2000. 0 = the normal limit. |
 | `pa_NativeOptimaFinish` | 500 (on) | Needs a build with Optima. A solid can be left out or be in a trace amount and still tend to form. Then Optima finishes the result. The solver keeps the new result only if it is better. The calculation can stop at its iteration limit, or it can fail to solve its equations. Then Optima finishes it from the point where it stopped. |
 
