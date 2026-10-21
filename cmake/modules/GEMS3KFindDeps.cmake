@@ -21,7 +21,7 @@ endif()
 if(USE_OPTIMA_SOLVER)
   find_package(Optima REQUIRED)
 else()
-  find_package(Eigen3 REQUIRED NO_MODULE)
+  find_package(Eigen3 3.4 REQUIRED NO_MODULE)
 endif()
 message(STATUS "Found Eigen3 v${Eigen3_VERSION}")
 
