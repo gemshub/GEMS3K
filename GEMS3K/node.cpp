@@ -261,8 +261,8 @@ long int TNode::GEM_run( bool uPrimalSol )
 // composition (then lowest G) is returned as a bad result; if
 // none balances, the original failure is returned. A kinetic node is finished with this step's kinetic
 // limits held fixed, so the kinetics are not applied twice. pa_RescueBudget: after the call has used that many
-// iterations, steps 1 to 4 start no new solve; step 5, the other solver, still runs once. DECIDE rescue,
-// rescue-result, rescue-budget.
+// iterations, steps 1 to 4 start no new attempt; an attempt that passed still gets its finish, and step 5, the
+// other solver, still runs once. DECIDE rescue, rescue-result, rescue-budget.
 long int TNode::GEM_run_rescue( bool uPrimalSol )
 {
     rescueStep = 0;
@@ -363,7 +363,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
 
     native_trace_quiet( true );
     bool passed = false;
-    // pa_RescueBudget: true once the call has used its iterations; the remaining steps 1-4 are then skipped
+    // pa_RescueBudget: true once the call has used its iterations; no new attempt of steps 1-4 starts then
     bool budgetUsed = false;
     auto overBudget = [&]() {
         if( !budgetUsed && bp->RescueBudget > 0 && itTotal >= bp->RescueBudget )
@@ -483,6 +483,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         long int f = -1;
         if( isOk( s ) || isBad( s ) )
         {
+            addToPool( s, 4 );   // kept as a candidate in case its finish gives no result
             passed = finish( 4 );
             f = CNode->NodeStatusCH;
             if( passed ) rescueStep = 4;

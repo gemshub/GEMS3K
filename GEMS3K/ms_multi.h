@@ -512,8 +512,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     long int FailRescue = 2;
     /// pa_RescueWalkSteps: number of equal steps of the walk in pa_FailRescue; 0 = no walk. Default 8.
     long int RescueWalkSteps = 8;
-    /// pa_RescueBudget: after the whole call has used this many iterations of both solvers, pa_FailRescue skips its
-    /// remaining steps 1-4; step 5 (the other solver) still runs once. 0 = no limit. Default 100000.
+    /// pa_RescueBudget: after the whole call has used this many iterations of both solvers, pa_FailRescue starts no new
+    /// attempt of steps 1-4 (an attempt that passed still gets its finish); step 5 (the other solver) still runs once.
+    /// 0 = no limit. Default 100000.
     long int RescueBudget = 100000;
     /// pa_OptimaStallNetFactor: Optima's last re-solve after a stall gets at most this many times the iterations
     /// of the solve that stalled (at least 2000, at most the normal limit). 0 = the normal limit. Default 5.
