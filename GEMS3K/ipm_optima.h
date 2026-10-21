@@ -38,7 +38,7 @@
 #ifndef IPM_OPTIMA_H
 #define IPM_OPTIMA_H
 
-#ifdef USE_OPTIMA_SOLVER
+// Plain C++ only, so a build without Optima can hold an (always empty) list of control conditions.
 
 #include <functional>
 #include <string>
@@ -111,6 +111,5 @@ struct EqControlCondition
     bool targetMet = false;    ///< |achievedValue - target| <= tolerance, evaluated after the solve
 };
 
-#endif // USE_OPTIMA_SOLVER
 
 #endif // IPM_OPTIMA_H

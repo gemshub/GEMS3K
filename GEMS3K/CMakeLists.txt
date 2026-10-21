@@ -21,9 +21,7 @@ endif()
 # and ipm_optima.cpp). OFF by default; without it the native AIA/SIA paths are unchanged and the
 # Optima modes fall back to native. Requires Optima to be findable via CMAKE_PREFIX_PATH.
 option(USE_OPTIMA_SOLVER "Enable the Optima-based equilibrium solver (AOP/SOP modes, requires Optima to be installed)" OFF)
-if(USE_OPTIMA_SOLVER)
-    find_package(Optima REQUIRED)
-endif()
+# (Optima itself is found in cmake/modules/GEMS3KFindDeps.cmake, before Eigen.)
 
 # Benchmark/diagnostics-only instrumentation (condition-number estimation, per-phase timing).
 # It adds overhead to every linear solve, so it is OFF by default; gems-benchmark turns it ON.
@@ -37,6 +35,7 @@ if(BUILD_SHARED_LIBS)
 
    add_library(GEMS3K ${HEADER_FILES} ${SOURCE_FILES})
    add_library(GEMS3K::GEMS3K ALIAS GEMS3K)
+   target_include_directories(GEMS3K PRIVATE $<TARGET_PROPERTY:Eigen3::Eigen,INTERFACE_INCLUDE_DIRECTORIES>)
    if(USE_OPTIMA_SOLVER)
        target_compile_definitions(GEMS3K PUBLIC USE_OPTIMA_SOLVER)
        target_link_libraries(GEMS3K PUBLIC Optima::Optima)
@@ -74,6 +73,7 @@ endif()
 if(BUILD_STATIC_LIBS)
    add_library(GEMS3K-static STATIC ${HEADER_FILES} ${SOURCE_FILES})
     add_library(GEMS3K::GEMS3K-static ALIAS GEMS3K-static)
+    target_include_directories(GEMS3K-static PRIVATE $<TARGET_PROPERTY:Eigen3::Eigen,INTERFACE_INCLUDE_DIRECTORIES>)
    if(USE_OPTIMA_SOLVER)
        target_compile_definitions(GEMS3K-static PUBLIC USE_OPTIMA_SOLVER)
        target_link_libraries(GEMS3K-static PUBLIC Optima::Optima)

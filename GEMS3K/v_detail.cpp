@@ -15,18 +15,23 @@ static std::string logTitle( const std::string& title )
     return end == std::string::npos ? title : title.substr( 0, end + 1 );
 }
 
+// Above 0 while a caller catches the error and goes on (a quick try that is followed by the full solve):
+// the error is then logged at debug, not at error.
+thread_local int g_errorsHandledByCaller = 0;
+
 [[ noreturn ]] void Error (const std::string& title, const std::string& message)
 {
-    gems_logger->error("{}: {}", logTitle( title ), message);
+    if( g_errorsHandledByCaller > 0 )
+        gems_logger->debug("{}: {}", logTitle( title ), message);
+    else
+        gems_logger->error("{}: {}", logTitle( title ), message);
     throw TError(title, message);
 }
 
 void ErrorIf (bool error, const std::string& title, const std::string& message)
 {
-    if(error) {
-        gems_logger->error("{}: {}", logTitle( title ), message);
-        throw TError(title, message);
-    }
+    if(error)
+        Error( title, message );
 }
 
 template <> double InfMinus()

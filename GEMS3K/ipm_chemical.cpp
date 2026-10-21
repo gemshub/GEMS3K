@@ -580,7 +580,8 @@ case DC_SCM_SPECIES:
     {
         double SmoSensT = 1e-5;   // to be adjusted
         dF0 = F0 - Fold;
-        if( pm.X[j] > std::min( pm.lowPosNum, pm.DcMinM ) && fabs( dF0 ) >= SmoSensT )
+        // Optima switches smoothing off; skip the blend there, since Fold + (F0 - Fold) rounds F0 away when Fold is huge.
+        if( !optima_disable_smoothing && pm.X[j] > std::min( pm.lowPosNum, pm.DcMinM ) && fabs( dF0 ) >= SmoSensT )
        	    F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
     }
     return F0;

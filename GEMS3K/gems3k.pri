@@ -84,5 +84,6 @@
                       $$GEMS3K_CPP/datach_api.cpp \
                       $$GEMS3K_CPP/datach_formats.cpp \
                       $$GEMS3K_CPP/node_trace.cpp \
-                      $$GEMS3K_CPP/ipm_optima.cpp
+                      $$GEMS3K_CPP/ipm_optima.cpp \
+                      $$GEMS3K_CPP/ipm_level.cpp
 

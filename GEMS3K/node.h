@@ -490,6 +490,10 @@ public:
     ///                     true  (1)  -  use speciation provided in the DATABR memory structure (e.g. after reading the DBR file)
     ///  \return NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
     long int  GEM_run( bool uPrimalSol );   // calls GEM for a work node
+    /// Which pa_FailRescue step produced the last GEM_run() result: 0 = none (the call itself), 1 = warm from the
+    /// previous answer, 2 = a nudged composition, 3 = the walk, 4 = looser settings, 5 = the other solver,
+    /// 6 = the best attempt (returned as bad).
+    long int GEM_rescue_step() const { return rescueStep; }
 
     /// One trace element's verdict from GEM_trace_regimes().
     struct TraceRegime
@@ -1072,6 +1076,12 @@ public:
     double  Ph_Moles( const long int xBR ) const; // Added for consistency on Oct 1, 2020
     double  Ph_Mole( const long int xBR ) const; // obsolete, not recommended to use in new coupled codes
 
+    /// Tells whether a phase is really present: its amount is above relFloor times the total amount of all
+    /// phases. A phase left at the solver's tiny floor amount is reported as not present; amounts are not changed.
+    /// \param xBR is DBR phase index
+    /// \param relFloor is the share of the total amount below which a phase counts as absent (default 1e-9)
+    bool    Ph_Present( const long int xBR, const double relFloor = 1e-9 ) const;
+
     /// Retrieves the phase mass in kg.
     /// Works for multicomponent and for single-component phases.
     /// \param xph is DBR phase index
@@ -1399,13 +1409,22 @@ public:
     DATABR* databr_free(DATABR* data_BR_);
 
 protected:
+    long int rescueStep = 0;   // see GEM_rescue_step()
     /// One GEM_run() attempt, without the cold-call recovery (GEM_run() is this plus pa_ColdRetryNudges).
     long int GEM_run_single( bool uPrimalSol );
+    /// The layers of GEM_run(), outermost first; each calls the next.
+    void WarnIfSystemTooLarge();
+    long int GEM_run_rescue( bool uPrimalSol );     // pa_FailRescue
+    long int GEM_run_capped( bool uPrimalSol );     // pa_OptimaCallCap
+    long int GEM_run_dry_redo( bool uPrimalSol );   // pa_OptimaDryRetry
+    long int GEM_run_tries( bool uPrimalSol );      // pa_OptimaFastFirst, the solve and its retries
     /// pa_ColdRetryNudges' recovery of a failed NEED_GEM_AIA call; see BASE_PARAM::ColdRetryNudges.
     long int GEM_run_cold_retry( long int maxNudges );
+    /// Whether a saved answer's amounts balance the bulk b under the solve's own per-element test.
+    bool NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b, double& worstRel ) const;
     long int GEM_run_optima_cold_retry( long int requested );   // pa_OptimaColdRetry
     long int GEM_run_aop_cgseed( long int& itf, long int& itg, double& seconds );
-    long int GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* rung );   // cold AOP retry, with the column-generation seed as the second attempt
+    long int GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* step );   // cold AOP retry, with the column-generation seed as the second attempt
 
     void allocMemory();
     void freeMemory();
@@ -1461,6 +1480,8 @@ protected:
     /// Test to reload thermodynamic data from grid
     void CheckMtparam();
     virtual void init_into_gems3k();
+    /// Warns about single-species phases whose species is coded as a dissolved species.
+    void WarnSolidsCodedAqueous();
 
 public:
 

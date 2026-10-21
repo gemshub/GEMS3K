@@ -107,11 +107,14 @@ std::shared_ptr<spdlog::logger> TNode::ipmlog_file;   // logger name "ipmlog"
 | | `""` (empty) | No log file. |
 | `log_level` | 0 `trace` | Everything, including solver path decisions, for example `ITF=.. IT=..  ! PIA->AIA on E04IPM` in `ipmlog`. |
 | | 1 `debug` | Plus one line per equilibrium run, for example `GEMIPM TC=..`. |
-| | 2 `info` | Plus general progress messages. |
+| | 2 `info` | Plus one line for each choice of route the solver makes: retries, fallbacks, the quick first try, the dry-out steps. |
 | | 3 `warn` | Warnings only and above: failed or doubtful calculations (error code and text), and the warnings of the **Optima** solver (see below). xGEMS starts with this level (`update_loggers(false, "xGEMS.log", 3)` at import). |
 | | 4 `err` | Errors and above. Optima warnings are no longer logged. |
 | | 5 `critical` | Only critical errors. |
 | | 6 `off` | Nothing is logged. |
+
+Without a configuration file, or when its `log` section gives no `level`, the level is `warn`; a `log_level` above 6 also means `warn`.
+Start-up messages (configuration read, system loaded, thermodynamic data read) are at `debug`.
 
 A message is shown only if its level is at least `log_level`. Changing the level does not change where messages go, and the
 call replaces the sinks of all loggers, so call it once with all three values.

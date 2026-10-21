@@ -27,6 +27,7 @@
 //-------------------------------------------------------------------
 //
 
+#include "gems3k_timing.h"
 #include "ms_multi.h"
 #include "v_detail.h"
 #include "v_service.h"
@@ -289,6 +290,7 @@ TMultiBase::PhaseSpecificGamma( long int j, long int jb, long int je, long int k
 long int
 TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
 {
+    gems3k_timing::Scope timing( gems3k_timing::ActCoef );
     long int k, j, jb, je=0, jpb, jdb, ipb,  jpe=0, jde=0, ipe=0;
     //long int  jmb, jme=0, jsb, jse=0;
     //long int jphl=0, jlphc=0, jdqfc=0,  jrcpc=0;

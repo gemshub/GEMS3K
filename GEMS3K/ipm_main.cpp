@@ -29,7 +29,9 @@
 //-------------------------------------------------------------------
 //
 
+#include "gems3k_timing.h"
 #include <cstdlib>
+#include <Eigen/QR>
 #include <cstdarg>
 #include "ms_multi.h"
 #include "jama_lu.h"
@@ -90,6 +92,8 @@ FILE* ipm_probe_file()
 /// call (reset at its entry); only the first emits DECIDE "ipmkkt-fallback". thread_local
 /// because nodes may be solved concurrently on separate threads.
 static thread_local long int s_ipmKktFallbacks = 0;
+/// pa_IpmQrSortPivot: solves in the current InteriorPointsMethod() call; the first emits DECIDE "ipmqr-sortpivot".
+static thread_local long int s_ipmQrSortPivot = 0;
 
 void native_trace_decide( const char* fmt, ... )
 {
@@ -177,7 +181,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -207,7 +211,8 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaFastFirst, (long)pa->OptimaFloorCurvature, (long)pa->OptimaEmptySolvent, (long)pa->OptimaTpdVeto, (long)pa->OptimaEmptyPreSolveSkip, (long)pa->OptimaTwinReadmit, (long)pa->OptimaDryRetry, (long)pa->OptimaCallCap, (long)pa->OptimaCapNudges, (long)pa->OptimaFinishFirst, (long)pa->OptimaFastFrozen, pa->OptimaFastDiverge, (long)pa->OptimaRedoxFree, (long)pa->OptimaFastRises,
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
-             (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep );
+             (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot, (long)pa->OptimaLSWarmTrials,
+             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -1058,8 +1063,14 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
 // stable, and says whether it should form.
 // pa_OptimaLevelStart: set while the leveled start is certified; widens the composition search.
 thread_local bool g_tpdStrongSearch = false;
+// pa_IpmLevelStart: set when this call's native start came from the leveled solution; the second flag turns the start off for a retry.
+thread_local bool g_ipmLevelUsed = false;
+thread_local bool g_ipmNoProgArmed = false;   // pa_IpmNoProgress: set by the caller where the Optima finish follows
+thread_local bool g_ipmNoProgFired = false;   // pa_IpmNoProgress stopped the loop in this call
+thread_local bool g_ipmLevelOff = false;
 double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
 {
+    gems3k_timing::Scope timing( gems3k_timing::Tpd );
     const long int n = pm.L1[k], p1 = p0 + n, N = pm.N;
     ybest.assign( (size_t)n, 1.0 / std::max( 1L, n ) );
     if( n <= 1 || p1 > pm.L || !pm.X || !pm.U || !pm.A || !pm.lnGam )
@@ -1081,11 +1092,32 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
         c0[(size_t)(j-p0)] = au - ( pm.G0[j] + pm.fDQF[j] );
     }
     double tpdMin = 1e300;
-    auto evalY = [&]( const std::vector<double>& y, std::vector<double>& ynew ) {
+    // A solid or liquid mixture with a built-in model is evaluated alone: only its own model sees the trial composition.
+    const char phc = pm.PHC[k], smod = pm.sMod[k][SPHAS_TYP];
+    const bool alone = phSolMod && phSolMod[k] && pm.sMod[k][SGM_MODE] == SM_STNGAM
+        && ( phc == PH_LIQUID || phc == PH_SIMELT || phc == PH_SINCOND || phc == PH_SINDIS || phc == PH_HCARBL )
+        && ( smod == SM_IDEAL || smod == SM_BERMAN || smod == SM_CEF || smod == SM_MBW || smod == SM_REDKIS || smod == SM_MARGB
+             || smod == SM_MARGT || smod == SM_GUGGENM || smod == SM_VANLAAR || smod == SM_REGULAR || smod == SM_NRTLLIQ
+             || smod == SM_WILSLIQ );
+    // An ideal mixture has no activity terms, so a trial composition needs no model call at all.
+    const bool ideal = !alone && pm.sMod[k][SGM_MODE] == SM_IDEAL;
+    auto evalY = [&]( const std::vector<double>& y, std::vector<double>& ynew ) -> double {
         restoreBase();
-        for( long int j = p0; j < p1; j++ ) pm.X[j] = std::max( y[(size_t)(j-p0)], 1e-300 );
-        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-        CalculateActivityCoefficients( LINK_UX_MODE );
+        if( ideal )
+            for( long int a = 0; a < n; a++ ) pm.lnGam[p0+a] = 0.;
+        else if( alone )
+        {
+            double sy = 0.;
+            for( long int a = 0; a < n; a++ ) sy += std::max( y[(size_t)a], 1e-300 );
+            for( long int a = 0; a < n; a++ ) { pm.Wx[p0+a] = std::max( y[(size_t)a], 1e-300 ) / sy; pm.lnGam[p0+a] = 0.; }
+            SolModActCoeff( k, smod );
+        }
+        else
+        {
+            for( long int j = p0; j < p1; j++ ) pm.X[j] = std::max( y[(size_t)(j-p0)], 1e-300 );
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );
+        }
         double mx = -1e300;
         std::vector<double> lw( (size_t)n );
         for( long int a = 0; a < n; a++ ) { lw[(size_t)a] = c0[(size_t)a] - pm.lnGam[p0+a]; mx = std::max( mx, lw[(size_t)a] ); }
@@ -1097,6 +1129,7 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
         for( long int a = 0; a < n; a++ )
             if( y[(size_t)a] > 0. ) tpd += y[(size_t)a] * ( log( y[(size_t)a] ) - lw[(size_t)a] );
         if( tpd < tpdMin ) { tpdMin = tpd; ybest = y; }
+        return tpd;
     };
     try
     {
@@ -1145,15 +1178,79 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
                     starts.push_back( v );
                 }
         std::vector<double> tmp;
-        for( auto y : starts )
-            for( int it = 0; it < 300; it++ )
+        auto follow = [&]( std::vector<double> y, double tol, int maxit ) {
+            for( int it = 0; it < maxit; it++ )
             {
                 evalY( y, tmp );
                 double d = 0.;
                 for( long int a = 0; a < n; a++ ) d = std::max( d, fabs( tmp[(size_t)a] - y[(size_t)a] ) );
                 y = tmp;
-                if( d < 1e-11 ) break;
+                if( d < tol ) break;
             }
+        };
+        double xbGrid = -1., tbGrid = 1e300;   // best 1 % point of a two-member phase, from the screen
+        // pa_TpdStrongBasins: on the thorough search, try every start once and follow only the corner, ideal and
+        // uniform starts and the best few starts that lie apart from each other.
+        const long int basins = base_param()->TpdStrongBasins;
+        if( g_tpdStrongSearch && basins > 0 )
+        {
+            const size_t nBase = (size_t)n + 2;
+            std::vector<double> t0( starts.size() );
+            for( size_t q = 0; q < starts.size(); q++ )
+            {
+                t0[q] = evalY( starts[q], tmp );
+                if( n == 2 )
+                {
+                    const double g = starts[q][0] * 100., gr = std::round( g );
+                    if( gr >= 1. && gr <= 99. && fabs( g - gr ) < 1e-9 && t0[q] < tbGrid ) { tbGrid = t0[q]; xbGrid = gr / 100.; }
+                }
+            }
+            std::vector<size_t> ord;
+            for( size_t q = nBase; q < starts.size(); q++ ) ord.push_back( q );
+            std::sort( ord.begin(), ord.end(), [&t0]( size_t a, size_t b ) { return t0[a] < t0[b]; } );
+            std::vector<size_t> chosen;
+            for( size_t q : ord )
+            {
+                if( (long int)chosen.size() >= basins ) break;
+                bool near = false;
+                for( size_t c : chosen )
+                {
+                    double d = 0.;
+                    for( long int a = 0; a < n; a++ ) d = std::max( d, fabs( starts[q][(size_t)a] - starts[c][(size_t)a] ) );
+                    if( d < 0.15 ) { near = true; break; }
+                }
+                if( !near ) chosen.push_back( q );
+            }
+            // A two-member phase gets its interior from the scan below; the others follow the chosen starts.
+            for( size_t q = 0; q < nBase && q < starts.size(); q++ ) follow( starts[q], 1e-8, 60 );
+            if( n != 2 )
+                for( size_t q : chosen ) follow( starts[q], 1e-8, 60 );
+        }
+        else
+            for( const auto& y : starts )
+                follow( y, 1e-11, 300 );
+        if( n == 2 )
+        {
+            // A strongly non-ideal phase can have a narrow dip that lies between the starts and that the
+            // steps above do not reach: scan in 1 % steps, then narrow the best interval.
+            double xb = 0.5, tb = 1e300;
+            if( xbGrid > 0. ) { xb = xbGrid; tb = tbGrid; }   // the screen already tried the 1 % points
+            else
+            for( int g = 1; g < 100; g++ )
+            {
+                const double t = evalY( { g / 100., 1. - g / 100. }, tmp );
+                if( t < tb ) { tb = t; xb = g / 100.; }
+            }
+            double lo = std::max( xb - 0.01, 1e-9 ), hi = std::min( xb + 0.01, 1. - 1e-9 );
+            const double r = 0.5 * ( sqrt( 5. ) - 1. );
+            double x1 = hi - r * ( hi - lo ), x2 = lo + r * ( hi - lo );
+            double t1 = evalY( { x1, 1. - x1 }, tmp ), t2 = evalY( { x2, 1. - x2 }, tmp );
+            for( int it = 0; it < 30; it++ )
+            {
+                if( t1 < t2 ) { hi = x2; x2 = x1; t2 = t1; x1 = hi - r * ( hi - lo ); t1 = evalY( { x1, 1. - x1 }, tmp ); }
+                else          { lo = x1; x1 = x2; t1 = t2; x2 = lo + r * ( hi - lo ); t2 = evalY( { x2, 1. - x2 }, tmp ); }
+            }
+        }
     }
     catch( ... ) { tpdMin = 1e300; }
     try
@@ -2078,7 +2175,8 @@ void TMultiBase::EnergyDeterminacyCheck()
 }
 
 // A solid phase at a trace amount barely moves, because each step is scaled by the amount itself.
-// If it still tends to grow at the end, the answer may stop short of equilibrium: say so.
+// If it still tends to grow at the end, the answer may stop short of equilibrium: say so. A single solid
+// left out while it would form (stability index below the insertion threshold) is treated the same way.
 void TMultiBase::TraceGrowthCheck()
 {
     const long int N = pm.N, L = pm.L;
@@ -2095,13 +2193,15 @@ void TMultiBase::TraceGrowthCheck()
     {
         const char ph = pm.PHC[k];
         if( ph == PH_AQUEL || ph == PH_GASMIX || ph == PH_FLUID || ph == PH_PLASMA ) continue;
-        if( !( pm.XF[k] > pm.DSM ) || !( pm.XF[k] < traceAmount ) ) continue;
+        const bool absentSolid = pm.L1[k] == 1 && !( pm.XF[k] > pm.DSM ) && jb < L
+                                 && !( pm.DUL && pm.DUL[jb] <= 0. );   // not held out by the input
+        if( !absentSolid && ( !( pm.XF[k] > pm.DSM ) || !( pm.XF[k] < traceAmount ) ) ) continue;
         double pull = 0., gain = 0.;
         for( long int j = jb; j < jb + pm.L1[k] && j < L; j++ )
         {
-            if( !( pm.X[j] > 0. ) ) continue;
+            if( !absentSolid && !( pm.X[j] > 0. ) ) continue;
             if( pm.DUL && pm.DUL[j] < 1e6 && pm.X[j] >= pm.DUL[j] * ( 1. - 1e-9 ) ) continue;  // held at its upper limit
-            double s = pm.F[j];
+            double s = absentSolid ? pm.G0[j] + ( pm.fDQF ? pm.fDQF[j] : 0. ) : pm.F[j];
             for( long int i = 0; i < N; i++ ) s -= pm.U[i] * pm.A[i + j*N];
             if( !( -s > tol ) ) continue;         // the species tends to grow
             double room = 1e300;                  // most it could grow: limited by its scarcest element
@@ -2123,7 +2223,7 @@ void TMultiBase::TraceGrowthCheck()
     }
     if( nFound == 0 ) return;
     trace_growth_stuck = true;
-    trace_growth_note = fmt::format( "{} is present only in a trace amount but still tends to grow, so the result may stop short of "
+    trace_growth_note = fmt::format( "{} is absent or only in a trace amount but still tends to form, so the result may stop short of "
                        "equilibrium{}. Try HOP or AOP for this system.",
                        trace_safe_name( char_array_to_string( pm.SF[kWorst] + MAXSYMB, MAXPHNAME ) ),
                        nFound > 1 ? fmt::format( " ({} such phases: {})", nFound, listed ) : std::string() );
@@ -2552,6 +2652,10 @@ FORCED_AIA:
    }
 
 
+   // Before the mass-balance repair below: it moves pm.X but not pm.F or pm.U.
+   if( !pm.MK && !pm.PZ )
+       TraceGrowthCheck();
+
    // ---- Mass-balance check of the answer this call returns: warn only. Native's cold path
    // does not check the state it returns (a cold call's second MBR is exempt from the strict
    // guard), so the fact is reported instead of changing the verdict. Not NDEBUG-gated.
@@ -2591,7 +2695,6 @@ FORCED_AIA:
    {
        EnergyDeterminacyCheck();
        StrandedElementCheck();
-       TraceGrowthCheck();
    }
 
    if( pm.MK || pm.PZ ) // no good solution
@@ -3137,6 +3240,46 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 //        pm.PCI = 0.0;
      // Calling the simplex LP approximation here
         AutoInitialApproximation( );
+        // pa_IpmLevelStart: when every mixed phase can be checked for stability, start from the leveled
+        // solution (mixed phases at their best compositions) instead of the simplex vertex.
+        bool lvlLeaveOut = false;
+        if( pa_p->IpmLevelStart > 0 && !g_ipmLevelOff && !AllPhasesPure )
+        {
+            bool checkable = true;
+            for( k = 0; k < pm.FIs && checkable; k++ )
+            {
+                const char ph = pm.PHC[k];
+                if( pm.L1[k] > 1 && ( ph == PH_AQUEL || ph == PH_GASMIX || ph == PH_PLASMA || ph == PH_FLUID || ph == PH_SORPTION
+                                      || ph == PH_POLYEL || ph == PH_ADSORPT || ph == PH_IONEX ) )
+                    checkable = false;
+            }
+            if( checkable )
+            {
+                std::vector<double> nCg;
+                g_tpdStrongSearch = true;
+                bool cgOk = ColumnGenerationSeed( nCg, 1e-6 ) && nCg.size() == (size_t)pm.L;
+                g_tpdStrongSearch = false;
+                // The leveled solution ignores species amount limits: a seed outside them is not used.
+                long int outside = 0;
+                if( cgOk && pm.DUL && pm.DLL )
+                    for( j = 0; j < pm.L; j++ )
+                        if( nCg[(size_t)j] > pm.DUL[j] * ( 1. + 1e-9 ) || nCg[(size_t)j] < pm.DLL[j] * ( 1. - 1e-9 ) )
+                            outside++;
+                if( outside > 0 ) cgOk = false;
+                long int inSoln = 0;
+                if( cgOk )
+                {
+                    for( j = 0; j < pm.Ls; j++ ) if( nCg[(size_t)j] > 0. ) inSoln++;
+                    for( j = 0; j < pm.L; j++ ) pm.Y[j] = nCg[(size_t)j];
+                    // A leveled solution without mixed-phase members shows they cannot form; leave them out.
+                    lvlLeaveOut = ( pa_p->IpmLevelStart >= 2 && inSoln == 0 );
+                    g_ipmLevelUsed = true;
+                }
+                native_trace_decide( "natlvl used=%d insoln=%ld leftout=%d outside=%ld", cgOk ? 1 : 0, inSoln, lvlLeaveOut ? 1 : 0, outside );
+                ipm_logger->debug( "Native start from the leveled solution: used={} mixed-phase members={} left out={}",
+                                   cgOk, inSoln, lvlLeaveOut );
+            }
+        }
 // experimental 15.03.10 (probably correct)
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
         for( j=0; j< pm.L; j++ )
@@ -3175,7 +3318,7 @@ to_text_file( "MultiDumpLP.txt" );   // Debugging
         std::vector<double> yLpFill;
         if( FilloutBudgetValue() > 0. )
             yLpFill.assign( pm.Y, pm.Y + pm.L );
-        DC_RaiseZeroedOff( 0, pm.L );
+        DC_RaiseZeroedOff( lvlLeaveOut ? pm.Ls : 0, pm.L );
         // pa_FilloutBudget: the class constants can ask for more of an element than the system
         // holds. Applied after any fill-out, so it bounds whatever was written.
         ApplyFilloutBudget( yLpFill );
@@ -3605,7 +3748,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     long int N, IT1,J,Z,iRet,i,  nDivIC;
     double LM=0., LM1=1., FX1,    DivTol;
     // Noise-stall accept, pa_IpmStallWindow (see the field in ms_multi.h). All signals are
-    // required, and none references pa_DK; each alone was found unsafe.
+    // required, and none references pa_DK; each alone is unsafe.
     const long int kIpmStallMaxW = 200;
     const double kIpmStallFXTol   = 1.e-9;  // energy flat over the window
     const double kIpmStallCompTol = 1.e-6;  // sumX and maxX flat over the window
@@ -3614,12 +3757,14 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     const double kIpmStallIncLo   = 0.35;   // PCI increases on 35-65 % of steps,
     const double kIpmStallIncHi   = 0.65;   //   i.e. it is bouncing, not moving
     std::vector<double> stW_pci, stW_fx, stW_sum, stW_max;
+    std::vector<double> npBest;   // pa_IpmNoProgress: lowest energy so far, per iteration
     // One row of pm.X[] per iteration, held in a ring buffer.
     std::vector<double> stW_xf;
     long int stW_n = 0, stW_head = 0;
     const BASE_PARAM *pa_p = base_param();
     ipmKktRescues = 0;
     s_ipmKktFallbacks = 0;
+    s_ipmQrSortPivot = 0;
 
     status = 0;
     if( pm.FIs )
@@ -3834,6 +3979,22 @@ STEP_POINT( "IPM Iteration" );
                  && spreadOK( stW_max, kIpmStallCompTol )
                  && inc >= kIpmStallIncLo && inc <= kIpmStallIncHi )
                     goto CONVERGED;   // the criterion is noise; the state is not moving
+            }
+        }
+        // pa_IpmNoProgress: once the lowest energy has not improved over the window, stop as at the iteration limit;
+        // the caller then lets the Optima finish take over. Armed only where that finish follows.
+        if( g_ipmNoProgArmed && pa_p->IpmNoProgress > 0 )
+        {
+            const long int w = pa_p->IpmNoProgress;
+            if( IT1 == 0 ) npBest.clear();
+            npBest.push_back( npBest.empty() ? pm.FX : std::min( npBest.back(), pm.FX ) );
+            const long int n = (long int)npBest.size();
+            if( n > w && npBest[(size_t)( n - 1 )] >= npBest[(size_t)( n - 1 - w )] - 1e-10 * std::fabs( pm.FX ) )
+            {
+                g_ipmNoProgFired = true;
+                native_trace_decide( "ipmnoprog it=%ld window=%ld fx=%.12e", (long)IT1, (long)w, npBest.back() );
+                ipm_logger->info( "Native solver: no progress over {} iterations at iteration {}; handing over to the Optima finish", w, IT1 );
+                break;
             }
         }
         if( nCNud > 0L && (IT1 >= cnr-2 && IT1 >= 2 ) )  // finish here because u vector diverges at further IPM iterations
@@ -4051,7 +4212,7 @@ case DC_SCM_SPECIES:
 }
 
 /// The effective budget: GEMS3K_FILLOUT_BUDGET if set (negative = unset), else the field. The
-/// environment override is kept for the CTest case fillout.budget. Not cached, so it can be
+/// environment override is kept for a test case. Not cached, so it can be
 /// changed within one process. Read by both the call site (which must snapshot pm.Y before
 /// DC_RaiseZeroedOff()) and ApplyFilloutBudget(), so they agree.
 double TMultiBase::FilloutBudgetValue() const
@@ -4338,7 +4499,10 @@ long int TMultiBase::SolveIpmAugmented( long int N )
     const long int mode = base_param()->IpmAugmentedKKT;
     const double kRescueRel = 1e-12;
 
-    std::vector<long int> act;
+    // Working arrays reused between calls (one set per thread); this runs on every IPM iteration.
+    thread_local std::vector<long int> act;
+    thread_local std::vector<double> dreg, Q, b, Rd, v;
+    act.clear();
     for( long int jj = 0; jj < pm.L; jj++ )
         if( pm.Y[jj] > min( pm.lowPosNum, pm.DcMinM ) )
             act.push_back( jj );
@@ -4347,13 +4511,14 @@ long int TMultiBase::SolveIpmAugmented( long int N )
     // D is zero on every row some active species carries, and 1e-12 * max_i d_i on a row none
     // does (d_i = sum_j W_j a_ji^2, the normal matrix's own diagonal). A uniform D would move
     // the weak directions of u in this badly conditioned system.
-    std::vector<double> dreg( (size_t)N, 0. );
+    dreg.assign( (size_t)N, 0. );
     for( long int r = 0; r < La; r++ )
     {
         const long int j = act[(size_t)r];
+        const double* Aj = pm.A + j*Na;
         for( long int i = 0; i < N; i++ )
-        {   const double v = a(j,i);
-            dreg[(size_t)i] += pm.W[j] * v * v; }
+        {   const double aji = Aj[i];
+            dreg[(size_t)i] += pm.W[j] * aji * aji; }
     }
     double dmax = 0.;
     for( long int i = 0; i < N; i++ )
@@ -4415,22 +4580,100 @@ long int TMultiBase::SolveIpmAugmented( long int N )
     // mode 2: least squares  min |W^1/2 (A u - F)|^2 + u^T D u  by Householder QR of the
     // (La+N) x N stack [W^1/2 A_act ; D^1/2], right-hand side [W^1/2 F ; 0]. Column-major.
     const long int M = La + N;
-    std::vector<double> Q( (size_t)M * (size_t)N, 0. ), b( (size_t)M, 0. );
+
+    // pa_IpmQrSortPivot: on a large step, the same stack with its rows in decreasing order of size,
+    // factorised with column pivoting. Rows of very different size (W_j follows the species amounts)
+    // need both for the factorisation to be accurate on every row. Same rank test and fallback as below.
+    if( base_param()->IpmQrSortPivot > 0 && La >= base_param()->IpmQrSortPivot )
+    {
+        thread_local Eigen::MatrixXd S;
+        thread_local Eigen::VectorXd sb, su;
+        thread_local std::vector<double> rsize, rscale;
+        thread_local std::vector<long int> ord;
+        thread_local Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr;
+        rsize.resize( (size_t)M );
+        rscale.resize( (size_t)La );
+        for( long int r = 0; r < La; r++ )
+        {
+            const long int j = act[(size_t)r];
+            const double* Aj = pm.A + j*Na;
+            const double sw = sqrt( std::max( pm.W[j], 0. ) );
+            double amax = 0.;
+            for( long int c = 0; c < N; c++ )
+                amax = std::max( amax, fabs( sw * Aj[c] ) );
+            rscale[(size_t)r] = sw;
+            rsize[(size_t)r] = amax;
+        }
+        for( long int i = 0; i < N; i++ )
+            rsize[(size_t)(La + i)] = sqrt( dreg[(size_t)i] );
+        ord.resize( (size_t)M );
+        for( long int r = 0; r < M; r++ ) ord[(size_t)r] = r;
+        std::stable_sort( ord.begin(), ord.end(),
+                          [&]( long int x, long int y ) { return rsize[(size_t)x] > rsize[(size_t)y]; } );
+        S.resize( M, N );
+        sb.resize( M );
+        for( long int t = 0; t < M; t++ )
+        {
+            const long int r = ord[(size_t)t];
+            if( r < La )
+            {
+                const long int j = act[(size_t)r];
+                const double* Aj = pm.A + j*Na;
+                const double sw = rscale[(size_t)r];
+                for( long int c = 0; c < N; c++ )
+                    S(t, c) = sw * Aj[c];
+                sb[t] = sw * pm.F[j];
+            }
+            else
+            {
+                const long int i = r - La;
+                S.row(t).setZero();
+                S(t, i) = rsize[(size_t)r];
+                sb[t] = 0.;
+            }
+        }
+        qr.setThreshold( 1e-14 );
+        qr.compute( S );
+        if( s_ipmQrSortPivot++ == 0 )
+            native_trace_decide( "ipmqr-sortpivot La=%ld N=%ld itg=%ld", (long)La, (long)N, (long)pm.ITG );
+        if( qr.rank() < N )
+        {
+            ipm_logger->warn("SolveIpmAugmented (pa_IpmQrSortPivot): rank-deficient, rank {} of {}", (long)qr.rank(), N);
+            return 2;
+        }
+        su = qr.solve( sb );
+        for( long int i = 0; i < N; i++ )
+            pm.U[i] = su[i];
+        return 0;
+    }
+    // The top La rows of Q and b are overwritten in full below; only the bottom N rows need clearing.
+    Q.resize( (size_t)M * (size_t)N );
+    b.resize( (size_t)M );
+    Rd.resize( (size_t)N );
+    v.resize( (size_t)M );
+    double* const Qd = Q.data();
+    double* const bd = b.data();
+    double* const vd = v.data();
     for( long int r = 0; r < La; r++ )
     {
         const long int j = act[(size_t)r];
+        const double* Aj = pm.A + j*Na;
         const double sw = sqrt( std::max( pm.W[j], 0. ) );
         for( long int c = 0; c < N; c++ )
-            Q[(size_t)c * M + r] = sw * a(j,c);
-        b[(size_t)r] = sw * pm.F[j];
+            Qd[(size_t)c * M + r] = sw * Aj[c];
+        bd[r] = sw * pm.F[j];
     }
     for( long int i = 0; i < N; i++ )
-        Q[(size_t)i * M + La + i] = sqrt( dreg[(size_t)i] );
+    {
+        double* qi = Qd + (size_t)i * M + La;
+        std::fill( qi, qi + N, 0. );
+        qi[i] = sqrt( dreg[(size_t)i] );
+        bd[La + i] = 0.;
+    }
 
-    std::vector<double> Rd( (size_t)N, 0. ), v( (size_t)M, 0. );
     for( long int k = 0; k < N; k++ )
     {
-        double* qk = &Q[(size_t)k * M];
+        double* qk = Qd + (size_t)k * M;
         double nrm = 0.;
         for( long int r = k; r < M; r++ ) nrm += qk[r] * qk[r];
         nrm = sqrt( nrm );
@@ -4441,23 +4684,23 @@ long int TMultiBase::SolveIpmAugmented( long int N )
         }
         const double alpha = ( qk[k] > 0. ) ? -nrm : nrm;
         double vn2 = 0.;
-        for( long int r = k; r < M; r++ ) { v[(size_t)r] = qk[r]; }
-        v[(size_t)k] -= alpha;
-        for( long int r = k; r < M; r++ ) vn2 += v[(size_t)r] * v[(size_t)r];
+        for( long int r = k; r < M; r++ ) { vd[r] = qk[r]; }
+        vd[k] -= alpha;
+        for( long int r = k; r < M; r++ ) vn2 += vd[r] * vd[r];
         if( vn2 > 0. )
         {
             for( long int c = k; c < N; c++ )
             {
-                double* qc = &Q[(size_t)c * M];
+                double* qc = Qd + (size_t)c * M;
                 double s = 0.;
-                for( long int r = k; r < M; r++ ) s += v[(size_t)r] * qc[r];
+                for( long int r = k; r < M; r++ ) s += vd[r] * qc[r];
                 s *= 2. / vn2;
-                for( long int r = k; r < M; r++ ) qc[r] -= s * v[(size_t)r];
+                for( long int r = k; r < M; r++ ) qc[r] -= s * vd[r];
             }
             double s = 0.;
-            for( long int r = k; r < M; r++ ) s += v[(size_t)r] * b[(size_t)r];
+            for( long int r = k; r < M; r++ ) s += vd[r] * bd[r];
             s *= 2. / vn2;
-            for( long int r = k; r < M; r++ ) b[(size_t)r] -= s * v[(size_t)r];
+            for( long int r = k; r < M; r++ ) bd[r] -= s * vd[r];
         }
         Rd[(size_t)k] = qk[k];
     }
@@ -4473,7 +4716,7 @@ long int TMultiBase::SolveIpmAugmented( long int N )
     {
         double s = b[(size_t)k];
         for( long int c = k + 1; c < N; c++ )
-            s -= Q[(size_t)c * M + k] * pm.U[c];
+            s -= Qd[(size_t)c * M + k] * pm.U[c];
         pm.U[k] = s / Rd[(size_t)k];
     }
     return 0;

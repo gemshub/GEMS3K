@@ -37,6 +37,7 @@
 //-------------------------------------------------------------------
 //
 
+#include "gems3k_timing.h"
 #include <chrono>
 #include "ms_multi.h"
 
@@ -61,6 +62,15 @@
 
 // pa_OptimaCgSeed is a second attempt: the column-generation seed is used only while TNode
 // arms it for the retry of a cold AOP call that failed from the ordinary LP-feasibility seed.
+// Optima's solve(), timed when GEMS3K_TIMING_FILE is set.
+template<class S, class... A>
+static Optima::Result timed_solve( S& solver, A&&... args )
+{
+    gems3k_timing::Scope timing( gems3k_timing::OSolve );
+    return solver.solve( std::forward<A>( args )... );
+}
+
+extern thread_local bool g_ipmNoProgFired;   // pa_IpmNoProgress (ipm_main.cpp)
 extern thread_local bool g_optimaCgSeedArmed;   // defined in node.cpp (needed without USE_OPTIMA_SOLVER)
 extern thread_local bool g_optimaTargetWarned;  // defined in node.cpp
 extern thread_local long int g_optimaIterBudget;  // defined in node.cpp; -1 = no limit
@@ -73,16 +83,16 @@ extern thread_local bool g_optimaPreSolveEmpty;   // defined in node.cpp; set wh
 static thread_local bool g_ps0GaveUp = false;
 // pa_OptimaColdLevel: which leveled cold start this call used (0 = none).
 static thread_local int g_coldLvlUsed = 0;
-// pa_OptimaLevelStart: the column-generation LP's last round, and the certified start it gives.
-static thread_local bool g_cgConverged = false;
-static thread_local long int g_cgPseudo = 0;
-// Two used compositions of one phase lie far apart: the phase wants to split, which one copy cannot hold.
-static thread_local bool g_cgGap = false;
-static thread_local std::vector<double> g_cgDual;
+// pa_OptimaLevelStart: the column-generation LP's last round, and the certified start it gives (ipm_level.cpp).
+extern thread_local bool g_cgConverged;
+extern thread_local long int g_cgPseudo;
+extern thread_local bool g_cgGap;
+extern thread_local std::vector<double> g_cgDual;
 static thread_local bool g_lvlShortcut = false;
 // The leveled answer holds mixed phases: start from it, but solve it the ordinary way.
 static thread_local bool g_lvlCgStart = false;
 extern thread_local bool g_tpdStrongSearch;   // defined in ipm_main.cpp
+extern thread_local bool g_aqueousAbsent;     // defined in ipm_chemical2.cpp; set when the aqueous phase has no water
 extern thread_local long int g_lvlFullCalls;  // defined in node.cpp
 extern thread_local bool g_optimaFixAccept;       // defined in node.cpp
 // Set by the caller when PotentialSpaceFinish() starts from a call Optima reported OK. From
@@ -99,6 +109,7 @@ extern thread_local bool g_optimaLineSearchRetry;   // defined in node.cpp (need
 // Set by TNode::GEM_run() for the re-run of a failed Optima call with pa_OptimaLSStallEscape
 // switched off (DECIDE escretry).
 extern thread_local bool g_optimaLSEscapeOff;   // defined in node.cpp (needed without USE_OPTIMA_SOLVER)
+extern thread_local bool g_optimaEscRetryNext;   // defined in node.cpp
 // Objective memo for the line search. Optima's line-search trigger evaluates the objective at
 // the new point, and the solver then evaluates it again at the same point. GEMS3K's objective
 // is not a pure function: CalculateActivityCoefficients(LINK_UX_MODE) accumulates lnGmo and
@@ -142,15 +153,23 @@ static void memoize_objective_if_linesearch( Optima::Problem& problem, double fa
     };
 }
 
-// Debug trace, off unless the environment variable REAKTORO_TRACE_FILE is set. True when the Hessian
-// matrices are to be written for the current Optima iteration (REAKTORO_TRACE_HESSIAN=<iteration>,
-// REAKTORO_TRACE_HESSIAN_SOLVE=<solve>, default 1).
+// The debug-trace setting GEMS3K_OPTIMA_STEPTRACE_<name>, or its older name REAKTORO_TRACE_<name>; null when unset.
+static const char* optima_trace_env( const char* name )
+{
+    if( const char* e = std::getenv( ( std::string( "GEMS3K_OPTIMA_STEPTRACE_" ) + name ).c_str() ) )
+        return e;
+    return std::getenv( ( std::string( "REAKTORO_TRACE_" ) + name ).c_str() );
+}
+
+// Debug trace, off unless GEMS3K_OPTIMA_STEPTRACE_FILE is set. True when the Hessian matrices are to be
+// written for the current Optima iteration (GEMS3K_OPTIMA_STEPTRACE_HESSIAN=<iteration>,
+// GEMS3K_OPTIMA_STEPTRACE_HESSIAN_SOLVE=<solve>, default 1).
 static bool optima_trace_hessian_dump_now()
 {
-    static const long it = []{ const char* e = std::getenv("REAKTORO_TRACE_HESSIAN"); return e ? std::atol(e) : -1L; }();
-    static const long solve = []{ const char* e = std::getenv("REAKTORO_TRACE_HESSIAN_SOLVE"); return e ? std::atol(e) : 1L; }();
+    static const long it = []{ const char* e = optima_trace_env( "HESSIAN" ); return e ? std::atol(e) : -1L; }();
+    static const long solve = []{ const char* e = optima_trace_env( "HESSIAN_SOLVE" ); return e ? std::atol(e) : 1L; }();
     const auto& ts = Optima::trace::state();
-    static const int attempt = []{ const char* e = std::getenv("REAKTORO_TRACE_HESSIAN_ATTEMPT"); return e ? std::atoi(e) : 1; }();
+    static const int attempt = []{ const char* e = optima_trace_env( "HESSIAN_ATTEMPT" ); return e ? std::atoi(e) : 1; }();
     return Optima::trace::file() && it == ts.iter && solve == ts.solve && ts.attempt == attempt;
 }
 
@@ -159,13 +178,33 @@ template<class M>
 static void optima_trace_write_matrix( const char* tag, const M& m, long n )
 {
     const auto& ts = Optima::trace::state();
-    const std::string path = std::string( std::getenv("REAKTORO_TRACE_FILE") ) + ".hess." + std::to_string(ts.solve)
+    const std::string path = std::string( optima_trace_env( "FILE" ) ) + ".hess." + std::to_string(ts.solve)
                            + "." + std::to_string(ts.iter) + "." + tag + ".csv";
     std::ofstream f( path );
     f.precision( 17 );
     for( long r = 0; r < n; r++ )
         for( long c = 0; c < n; c++ )
             f << m(r,c) << ( c + 1 < n ? "," : "\n" );
+}
+
+// pa_OptimaPartialPivLU: the smallest linear system Optima factorises with partial pivoting (0 = never).
+static void apply_optima_lu( Optima::Options& o, long int minSize )
+{
+#ifdef OPTIMA_LU_PARTIAL_PIVOT   // needs an Optima build with this option
+    o.newtonstep.linearsolver.lu_partial_min_size = minSize > 0 ? minSize : 0;
+#else
+    (void)o; (void)minSize;
+#endif
+}
+
+// pa_OptimaSnapLeaving: how many limited steps in a row before a species heading to zero is put on its floor.
+static void apply_optima_snap( Optima::Options& o, long int snapAfter )
+{
+#ifdef OPTIMA_BACKTRACK_SNAP_LEAVING   // needs an Optima build with this option
+    o.backtracksearch.snap_leaving_after = snapAfter > 0 ? snapAfter : 0;
+#else
+    (void)o; (void)snapAfter;
+#endif
 }
 
 static void apply_optima_linesearch( Optima::Options& o, double factor, long int stallEscape = 0,
@@ -288,197 +327,13 @@ static double optima_default_box_moles( const MULTI& pm, double DG )
     return tot;
 }
 
-// Small self-contained two-phase primal simplex (dense tableau, Bland's rule for both
-// entering and leaving variables, the standard anti-cycling guarantee): solves
-// minimize sum_j c_j x_j  s.t.  A*x = b (A: nRows x nCols, via the `a` accessor), x >= 0.
-// Runs once per seed, not per iteration, so a dense O(rows*cols) tableau is adequate.
-// Returns false without modifying xOut when the system is infeasible or the iteration
-// cap/numerics fail (not distinguished; the caller falls back to a simpler seed), and true
-// with xOut sized nCols on success.
-// `cost` (optional, null = all ones) is the objective; `yOut` (optional) receives the optimal
-// dual of the equality rows, i.e. y with c_j - sum_i y_i a_ij >= 0 for every column. With
-// cost = pm.G0 that dual is a first-order estimate of pm.U[] (used by OptimaReducedPreSolve()).
+} // namespace
+
+// The two-phase simplex and the column-generation seed live in ipm_level.cpp (built without Optima too).
 bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
                              const std::function<double(long int,long int)>& a,
                              const double* b, std::vector<double>& xOut,
-                             const double* cost = nullptr, double* yOut = nullptr )
-{
-    if( nRows <= 0 || nCols <= 0 )
-        return false;
-    const double eps = 1e-9;
-    const long int nVar = nCols + nRows; // real (0..nCols) + artificial (nCols..nVar) columns
-    const long int nCon = nRows;
-    // Dense row-major tableau: T[i*(nVar+1)+j], i in [0,nCon), j in [0,nVar]
-    // (column nVar is the RHS).
-    std::vector<double> T( (size_t)nCon * (size_t)(nVar+1), 0. );
-    auto Tref = [&]( long int i, long int j ) -> double& { return T[ (size_t)i*(size_t)(nVar+1) + (size_t)j ]; };
-    std::vector<long int> basis( nCon );
-    std::vector<double> rowSgn( (size_t)nCon, 1. );   // per-row flip, to un-flip the dual
-
-    double bScale = 1.;
-    for( long int i = 0; i < nCon; i++ )
-        bScale = std::max( bScale, std::fabs(b[i]) );
-    const double feasTol = std::max( 1e-7, 1e-9 * bScale );
-
-    // Flip each row's sign so its RHS is non-negative (b_i==0 keeps sign
-    // +1, arbitrarily), then attach that row's own artificial column.
-    for( long int i = 0; i < nCon; i++ )
-    {
-        const double sgn = ( b[i] < 0. ) ? -1. : 1.;
-        rowSgn[(size_t)i] = sgn;
-        for( long int j = 0; j < nCols; j++ )
-            Tref(i,j) = sgn * a(i,j);
-        Tref(i, nCols + i) = 1.;
-        Tref(i, nVar) = sgn * b[i];
-        basis[i] = nCols + i;
-    }
-
-    // Phase-1 objective row (reduced costs c_j - z_j, minimizing sum of
-    // artificials): with every row's basic variable currently costing 1
-    // (its own artificial), canonical-form reduced cost for a real column
-    // j is -sum_i T[i][j]; every artificial column is already exactly
-    // canonical (reduced cost 0, left at its zero-initialized default -
-    // c_j=1 for artificial j, z_j=1*T[i][j]=1 in its own row, 0 elsewhere,
-    // so c_j-z_j=0 identically).
-    std::vector<double> row0( nVar + 1, 0. );
-    for( long int j = 0; j < nCols; j++ )
-    {
-        double s = 0.;
-        for( long int i = 0; i < nCon; i++ ) s += Tref(i,j);
-        row0[j] = -s;
-    }
-    {
-        double s = 0.;
-        for( long int i = 0; i < nCon; i++ ) s += Tref(i,nVar);
-        row0[nVar] = -s; // -(current phase-1 objective value)
-    }
-
-    auto pivot = [&]( long int prow, long int pcol )
-    {
-        const double piv = Tref(prow,pcol);
-        for( long int j = 0; j <= nVar; j++ )
-            Tref(prow,j) /= piv;
-        for( long int i = 0; i < nCon; i++ )
-        {
-            if( i == prow ) continue;
-            const double f = Tref(i,pcol);
-            if( f == 0. ) continue;
-            for( long int j = 0; j <= nVar; j++ )
-                Tref(i,j) -= f * Tref(prow,j);
-        }
-        const double f0 = row0[pcol];
-        if( f0 != 0. )
-            for( long int j = 0; j <= nVar; j++ )
-                row0[j] -= f0 * Tref(prow,j);
-        basis[prow] = pcol;
-    };
-
-    // limitCol: only columns [0,limitCol) may enter - phase 2 passes
-    // nCols to permanently exclude artificials from re-entering.
-    auto runSimplex = [&]( long int limitCol, long int maxIter, double entEps ) -> bool
-    {
-        for( long int iter = 0; iter < maxIter; iter++ )
-        {
-            long int q = -1;
-            for( long int j = 0; j < limitCol; j++ ) // Bland's rule: smallest negative-reduced-cost index
-                if( row0[j] < -entEps ) { q = j; break; }
-            if( q < 0 )
-                return true; // optimal for this phase
-            long int prow = -1; double bestRatio = 0.;
-            for( long int i = 0; i < nCon; i++ )
-            {
-                if( Tref(i,q) <= eps ) continue;
-                const double ratio = Tref(i,nVar) / Tref(i,q);
-                if( prow < 0 || ratio < bestRatio - 1e-12 ||
-                    ( std::fabs(ratio-bestRatio) <= 1e-12 && basis[i] < basis[prow] ) ) // Bland's tie-break
-                { prow = i; bestRatio = ratio; }
-            }
-            if( prow < 0 )
-                return false; // unbounded - cannot actually happen for a nonnegative-cost minimization
-                               // over x>=0 (bounded below by 0); treat as a numerical failure if hit
-            pivot( prow, q );
-        }
-        return false; // iteration cap hit
-    };
-
-    const long int maxIter = std::max( (long int)2000, 20*nVar );
-    if( !runSimplex( nVar, maxIter, eps ) )
-        return false;
-    if( -row0[nVar] > feasTol ) // phase-1 optimum not ~0: genuinely infeasible
-        return false;
-
-    // Drive out any artificial still basic at (necessarily zero) level,
-    // wherever a genuinely nonzero real-column pivot is available - a
-    // redundant/rank-deficient row is the only case where none exists,
-    // and is harmless to leave as-is (its value is 0 regardless).
-    for( long int i = 0; i < nCon; i++ )
-    {
-        if( basis[i] < nCols ) continue;
-        long int q = -1;
-        for( long int j = 0; j < nCols; j++ )
-            if( std::fabs(Tref(i,j)) > 1e-7 ) { q = j; break; }
-        if( q >= 0 )
-            pivot( i, q );
-    }
-
-    // Phase 2: minimize sum of REAL variables only; artificial columns
-    // permanently excluded from entering (limitCol=nCols below), so any
-    // still basic-at-zero from the step above just sit inert.
-    double cMax = 1.;
-    if( cost )
-        for( long int j = 0; j < nCols; j++ ) cMax = std::max( cMax, std::fabs( cost[j] ) );
-    std::fill( row0.begin(), row0.end(), 0. );
-    for( long int j = 0; j < nCols; j++ ) row0[j] = cost ? cost[j] : 1.;
-    for( long int i = 0; i < nCon; i++ )
-    {
-        if( basis[i] >= nCols ) continue; // degenerate artificial: cost 0, no canonicalization needed
-        const double cB = cost ? cost[ basis[i] ] : 1.;
-        if( cB == 0. ) continue;
-        for( long int j = 0; j <= nVar; j++ )
-            row0[j] -= cB * Tref(i,j);
-    }
-    if( !runSimplex( nCols, maxIter, eps * cMax ) )
-        return false;
-
-    xOut.assign( (size_t)nCols, 0. );
-    for( long int i = 0; i < nCon; i++ )
-        if( basis[i] < nCols )
-            xOut[ (size_t)basis[i] ] = std::max( 0., Tref(i,nVar) );
-
-    // Dual of the equality rows. Artificial column i is e_i in the FLIPPED
-    // system and costs 0, so its reduced cost is c-z = -y'_i; un-flip with the
-    // row's own sign. A row whose artificial is still basic (a redundant row)
-    // keeps reduced cost 0 and so gets y_i = 0, which is correct for it.
-    // The sign convention is then VERIFIED rather than assumed: the LP optimum
-    // must satisfy c_j - y.A_j >= 0 for every column, so if it does not, try the
-    // opposite sign, and if that fails too report failure rather than hand back
-    // a dual nothing downstream could trust.
-    if( yOut )
-    {
-        std::vector<double> y( (size_t)nCon );
-        for( long int i = 0; i < nCon; i++ )
-            y[(size_t)i] = -rowSgn[(size_t)i] * row0[nCols + i];
-        const double dualTol = 1e-6 * cMax;
-        bool ok = false;
-        for( int attempt = 0; attempt < 2 && !ok; attempt++ )
-        {
-            if( attempt == 1 )
-                for( long int i = 0; i < nCon; i++ ) y[(size_t)i] = -y[(size_t)i];
-            ok = true;
-            for( long int j = 0; j < nCols && ok; j++ )
-            {
-                double z = 0.;
-                for( long int i = 0; i < nCon; i++ ) z += y[(size_t)i] * a(i,j);
-                if( ( cost ? cost[j] : 1. ) - z < -dualTol ) ok = false;
-            }
-        }
-        if( !ok )
-            return false;
-        for( long int i = 0; i < nCon; i++ ) yOut[i] = y[(size_t)i];
-    }
-    return true;
-}
-} // namespace
+                             const double* cost = nullptr, double* yOut = nullptr );
 
 void TMultiBase::SetControlCondition_pH( double pH_target, double tolerance )
 {
@@ -1026,122 +881,6 @@ bool TMultiBase::DetectPhaseCollapseAndReseed( const double* x,
     return !reseedsOut.empty();
 }
 
-// pa_OptimaCgSeed (value = TPD tolerance in RT): a cold seed for Optima by column generation.
-// The species Gibbs LP (min sum_c cost_c n_c, A n = b, n >= 0; species columns priced at
-// G0 + fDQF) gives a vertex and its dual u; every non-ideal condensed solution phase is then
-// searched for its minimum tangent-plane distance against u (NativeTpdPhase()); each
-// composition y with TPD < -tol becomes a pseudo-compound column a_c = sum_j y_j A[:,j],
-// cost_c = TPD + a_c.u = sum_j y_j (G0_j + fDQF_j + ln y_j + lnGam_j(y)); the LP is re-solved
-// until no phase prices negative (at most 20 rounds). The species amounts returned are the
-// species columns plus each pseudo-compound's amount spread over its composition, so a solid
-// solution's mass is not put into a single end-member.
-// In plain words: a first guess that already considers mixed phases at sensible compositions.
-bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
-{
-    const long int N = pm.N, L = pm.L;
-    if( N <= 0 || L <= 0 || !pm.G0 || !pm.U || !pm.A || !pm.B )
-        return false;
-    struct Col { long int j; long int k; long int jb; std::vector<double> y; std::vector<double> a; double cost; };
-    std::vector<Col> cols;
-    for( long int j = 0; j < L; j++ )
-    {
-        Col c; c.j = j; c.k = -1; c.jb = j;
-        c.a.resize( (size_t)N );
-        for( long int i = 0; i < N; i++ ) c.a[(size_t)i] = pm.A[ i + j*N ];
-        c.cost = pm.G0[j] + ( pm.fDQF ? pm.fDQF[j] : 0. );
-        cols.push_back( c );
-    }
-    std::vector<double> Usave( pm.U, pm.U + N );
-    std::vector<double> x, y( (size_t)N, 0. ), cost;
-    int rounds = 0; long int added = 0, lastAdded = 0;
-    bool solved = false;
-    for( ; rounds < 20; rounds++ )
-    {
-        cost.resize( cols.size() );
-        for( size_t c = 0; c < cols.size(); c++ ) cost[c] = cols[c].cost;
-        auto aFn = [&cols]( long int i, long int c ) { return cols[(size_t)c].a[(size_t)i]; };
-        std::fill( y.begin(), y.end(), 0. );
-        if( !TwoPhaseSimplexMinSum( N, (long int)cols.size(), aFn, pm.B, x, cost.data(), y.data() ) )
-            break;
-        solved = true;
-        for( long int i = 0; i < N; i++ ) pm.U[i] = y[(size_t)i];
-        lastAdded = 0;
-        long int jb = 0;
-        for( long int k = 0; k < pm.FIs; k++ )
-        {
-            const long int n = pm.L1[k];
-            const char ph = pm.PHC[k];
-            if( n > 1 && ph != PH_AQUEL && ph != PH_GASMIX && ph != PH_PLASMA && ph != PH_FLUID && ph != PH_SORPTION
-                && ph != PH_POLYEL && ph != PH_ADSORPT && ph != PH_IONEX )
-            {
-                std::vector<double> yb;
-                const double tpd = NativeTpdPhase( k, jb, yb );
-                if( tpd < -tol && tpd > -1e299 )
-                {
-                    bool dup = false;
-                    for( const Col& c : cols )
-                        if( c.k == k )
-                        {
-                            double d = 0.;
-                            for( long int a = 0; a < n; a++ ) d = std::max( d, std::fabs( c.y[(size_t)a] - yb[(size_t)a] ) );
-                            if( d < 1e-4 ) { dup = true; break; }
-                        }
-                    if( !dup )
-                    {
-                        Col c; c.j = -1; c.k = k; c.jb = jb; c.y = yb; c.a.assign( (size_t)N, 0. );
-                        for( long int a = 0; a < n; a++ )
-                            for( long int i = 0; i < N; i++ ) c.a[(size_t)i] += yb[(size_t)a] * pm.A[ i + (jb+a)*N ];
-                        double au = 0.;
-                        for( long int i = 0; i < N; i++ ) au += c.a[(size_t)i] * y[(size_t)i];
-                        c.cost = tpd + au;
-                        cols.push_back( c );
-                        lastAdded++;
-                    }
-                }
-            }
-            jb += n;
-        }
-        added += lastAdded;
-        if( !lastAdded ) break;
-    }
-    for( long int i = 0; i < N; i++ ) pm.U[i] = Usave[(size_t)i];
-    if( !solved || x.size() != cols.size() )
-        return false;
-    nOut.assign( (size_t)L, 0. );
-    for( size_t c = 0; c < cols.size(); c++ )
-    {
-        if( x[c] <= 0. ) continue;
-        if( cols[c].k < 0 ) nOut[(size_t)cols[c].j] += x[c];
-        else for( size_t a = 0; a < cols[c].y.size(); a++ ) nOut[(size_t)(cols[c].jb + (long int)a)] += x[c] * cols[c].y[a];
-    }
-    double bScale = 1., maxResid = 0.;
-    for( long int i = 0; i < N; i++ ) bScale = std::max( bScale, std::fabs( pm.B[i] ) );
-    for( long int i = 0; i < N; i++ )
-    {
-        double sum = 0.;
-        for( long int j = 0; j < L; j++ ) sum += pm.A[ i + j*N ] * nOut[(size_t)j];
-        maxResid = std::max( maxResid, std::fabs( sum - pm.B[i] ) );
-    }
-    long int nPseudoUsed = 0;
-    for( size_t c = 0; c < cols.size(); c++ ) if( cols[c].k >= 0 && x[c] > 0. ) nPseudoUsed++;
-    g_cgGap = false;
-    for( size_t c = 0; c < cols.size() && !g_cgGap; c++ )
-        for( size_t d = c+1; d < cols.size() && cols[c].k >= 0 && x[c] > 0.; d++ )
-            if( cols[d].k == cols[c].k && x[d] > 0. )
-            {
-                double dy = 0.;
-                for( size_t a = 0; a < cols[c].y.size(); a++ ) dy = std::max( dy, std::fabs( cols[c].y[a] - cols[d].y[a] ) );
-                if( dy > 0.1 ) { g_cgGap = true; break; }
-            }
-    g_cgConverged = ( lastAdded == 0 );
-    g_cgPseudo = nPseudoUsed;
-    g_cgDual = y;
-    native_trace_decide( "cgseed rounds=%d columns_added=%ld pseudo_in_vertex=%ld mb_resid=%.3e tol=%.1e",
-                         rounds + 1, (long)added, (long)nPseudoUsed, maxResid, tol );
-    if( maxResid > std::max( 1e-6, 1e-8 * bScale ) )
-        return false;
-    return true;
-}
 
 // pa_OptimaFinish: with the phase set fixed the problem is smooth, and an exchange Optima can
 // cycle on (a pure compound against a solution end-member of the same composition, e.g.
@@ -1158,6 +897,7 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
 // In plain words: if Optima stops just short, finish the job with the phases it found.
 bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>& xlo, const std::vector<double>& xhi )
 {
+    gems3k_timing::Scope timing( gems3k_timing::Psf );
     const long int L = pm.L, N = pm.N;
     if( L <= 0 || N <= 0 || !pm.A || !pm.B || !pm.F || !pm.U )
         return false;
@@ -1256,6 +996,9 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
     bool converged = false;
     const long int kMaxIt = 60, kMaxChanges = 6, kMaxSize = 900;
     std::string why = "maxit";
+    // pa_OptimaFinishStall: the lowest reduced gradient so far, the step it was reached at, and G at that step.
+    const long int kStall = base_param()->OptimaFinishStall;
+    double bestRed = 1e300, stallG = 0., stepMin = 0., stepMax = 0.; long int bestRedIt = 0, bestRedChanges = 0, stallSkips = 0;
     for( ; it < kMaxIt; it++ )
     {
         std::vector<long int> fr;
@@ -1318,38 +1061,52 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
         double r1 = 0.; for( long int i = 0; i < N; i++ ) r1 += rex( r[(size_t)i], rFloor );
         bool solved = false;
         double dual = 1e-16;
-        auto solveDense = [&]( std::vector<double> K, std::vector<double> x ) -> bool
+        // LU of the KKT matrix with partial pivoting; one factorisation serves the solve and its refinement steps.
+        std::vector<double> KF;
+        std::vector<long int> piv;
+        auto factorDense = [&]( const std::vector<double>& K ) -> bool
         {
+            KF = K;
+            piv.assign( (size_t)M, 0 );
             for( long int c = 0; c < M; c++ )
             {
-                long int p = c; double pv = std::fabs( K[(size_t)c*(size_t)M + (size_t)c] );
+                long int p = c; double pv = std::fabs( KF[(size_t)c*(size_t)M + (size_t)c] );
                 for( long int q = c + 1; q < M; q++ )
                 {
-                    const double v = std::fabs( K[(size_t)q*(size_t)M + (size_t)c] );
+                    const double v = std::fabs( KF[(size_t)q*(size_t)M + (size_t)c] );
                     if( v > pv ) { pv = v; p = q; }
                 }
                 if( !( pv > 1e-300 ) ) return false;
+                piv[(size_t)c] = p;
                 if( p != c )
-                {
-                    for( long int q = 0; q < M; q++ ) std::swap( K[(size_t)c*(size_t)M + (size_t)q], K[(size_t)p*(size_t)M + (size_t)q] );
-                    std::swap( x[(size_t)c], x[(size_t)p] );
-                }
+                    for( long int q = 0; q < M; q++ ) std::swap( KF[(size_t)c*(size_t)M + (size_t)q], KF[(size_t)p*(size_t)M + (size_t)q] );
                 for( long int q = c + 1; q < M; q++ )
                 {
-                    const double f = K[(size_t)q*(size_t)M + (size_t)c] / K[(size_t)c*(size_t)M + (size_t)c];
+                    const double f = KF[(size_t)q*(size_t)M + (size_t)c] / KF[(size_t)c*(size_t)M + (size_t)c];
+                    KF[(size_t)q*(size_t)M + (size_t)c] = f;
                     if( f == 0. ) continue;
-                    for( long int t = c; t < M; t++ ) K[(size_t)q*(size_t)M + (size_t)t] -= f * K[(size_t)c*(size_t)M + (size_t)t];
-                    x[(size_t)q] -= f * x[(size_t)c];
+                    for( long int t = c + 1; t < M; t++ ) KF[(size_t)q*(size_t)M + (size_t)t] -= f * KF[(size_t)c*(size_t)M + (size_t)t];
                 }
             }
+            return true;
+        };
+        auto solveFactored = [&]( std::vector<double> x )
+        {
+            for( long int c = 0; c < M; c++ )
+                if( piv[(size_t)c] != c ) std::swap( x[(size_t)c], x[(size_t)piv[(size_t)c]] );
+            for( long int c = 0; c < M; c++ )
+                for( long int q = c + 1; q < M; q++ )
+                {
+                    const double f = KF[(size_t)q*(size_t)M + (size_t)c];
+                    if( f != 0. ) x[(size_t)q] -= f * x[(size_t)c];
+                }
             for( long int c = M - 1; c >= 0; c-- )
             {
                 double v = x[(size_t)c];
-                for( long int t = c + 1; t < M; t++ ) v -= K[(size_t)c*(size_t)M + (size_t)t] * x[(size_t)t];
-                x[(size_t)c] = v / K[(size_t)c*(size_t)M + (size_t)c];
+                for( long int t = c + 1; t < M; t++ ) v -= KF[(size_t)c*(size_t)M + (size_t)t] * x[(size_t)t];
+                x[(size_t)c] = v / KF[(size_t)c*(size_t)M + (size_t)c];
             }
             xsol = x;
-            return true;
         };
         const double mu0 = mu;
         bool ignoreFloorRows = false;
@@ -1382,14 +1139,15 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
                 rhs[(size_t)( nf + q )] = ( ignoreFloorRows && std::fabs( r[(size_t)i] ) <= rFloor ) ? 0. : -rho[(size_t)i] * r[(size_t)i];   // a row inside the floor is left alone: chasing it raises G for nothing
             }
             for( long int a = 0; a < nf; a++ ) rhs[(size_t)a] = -gt[(size_t)a];
-            if( !solveDense( K, rhs ) ) { dual = std::min( dual * 100., 1e-10 ); continue; }
+            if( !factorDense( K ) ) { dual = std::min( dual * 100., 1e-10 ); continue; }
+            solveFactored( rhs );
             std::vector<double> x = xsol;
             for( int ref = 0; ref < 2; ref++ )   // iterative refinement
             {
                 std::vector<double> res( rhs );
                 for( long int a = 0; a < M; a++ )
                     for( long int b = 0; b < M; b++ ) res[(size_t)a] -= K[(size_t)a*(size_t)M + (size_t)b] * x[(size_t)b];
-                if( !solveDense( K, res ) ) break;
+                solveFactored( res );
                 for( long int a = 0; a < M; a++ ) x[(size_t)a] += xsol[(size_t)a];
             }
             gDotDn = 0.; dMaxRel = 0.;
@@ -1436,7 +1194,25 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
             redMax = std::max( redMax, std::fabs( g ) );
         }
         const double rMax = massResid( n, r );
-        if( ( dMaxRel <= 1e-8 || std::fabs( gDotDn ) <= 1e-10 * ( 1. + std::fabs( G ) ) ) && redMax <= ( nullStep ? 1e-5 : 1e-7 ) && rMax <= rFloor )
+        const bool stationary = ( dMaxRel <= 1e-8 || std::fabs( gDotDn ) <= 1e-10 * ( 1. + std::fabs( G ) ) )
+                                && redMax <= ( nullStep ? 1e-5 : 1e-7 ) && rMax <= rFloor;
+        if( kStall > 0 && !stationary )
+        {
+            if( changes != bestRedChanges ) { bestRed = 1e300; bestRedIt = it; bestRedChanges = changes; }
+            if( redMax < 0.5 * bestRed ) { bestRed = redMax; bestRedIt = it; stallG = G; stepMin = stepMax = dMaxRel; }
+            else
+            {
+                stepMin = std::min( stepMin, dMaxRel ); stepMax = std::max( stepMax, dMaxRel );
+                if( it - bestRedIt >= kStall )
+                {
+                    // a finish whose G still falls, or whose step still changes, is slow, not dead: the window starts again
+                    if( G < stallG - 1e-12 * ( 1. + std::fabs( G ) ) || stepMax > 1.01 * stepMin )
+                    { bestRedIt = it; stallG = G; stepMin = stepMax = dMaxRel; stallSkips++; }
+                    else { why = "stall"; break; }
+                }
+            }
+        }
+        if( stationary )
         {
             // stationary on this set: does any species outside it want in?
             long int best = -1; double bestG = -1e-6;
@@ -1535,7 +1311,7 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
             }
         }
         // a solution phase whose free end-members have all fallen to a trace and are still falling is vanishing: its members
-        // leave together (each alone would take a step of ~10% forever, the Hessian of a phase at 1e-9 being ~1/n)
+        // leave together (one at a time each would creep, because the phase curvature is large at a trace amount)
         for( long int k = 0; k < pm.FIs; k++ )
         {
             double tot = 0., totOld = 0.; long int cnt = 0;
@@ -1632,8 +1408,9 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
             }
         }
     }
-    native_trace_decide( "finish ok=%d why=%s it=%ld changes=%ld entered=%ld left=%ld G0=%.12g G1=%.12g",
-                         converged ? 1 : 0, why.c_str(), (long)it, (long)changes, (long)entered, (long)left, G0, G );
+    native_trace_decide( "finish ok=%d why=%s it=%ld changes=%ld entered=%ld left=%ld G0=%.12g G1=%.12g%s",
+                         converged ? 1 : 0, why.c_str(), (long)it, (long)changes, (long)entered, (long)left, G0, G,
+                         stallSkips ? ( " stallskips=" + std::to_string( stallSkips ) ).c_str() : "" );
     if( !converged ) { restore(); return false; }
     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
     CalculateActivityCoefficients( LINK_UX_MODE );
@@ -1704,8 +1481,9 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
                                                    const char* exemptSpecies,
                                                    double& violOut, bool& wasAbsentOut,
                                                    std::vector<PhStabViolation>* rankedOut,
-                                                   PhStabCensus* censusOut )
+                                                   PhStabCensus* censusOut, const char* probeStage )
 {
+    gems3k_timing::Scope timing( gems3k_timing::Wpsv );
     const BASE_PARAM *pa_p = base_param();
     const long int L = pm.L;
     std::vector<PhStabViolation> ranked;
@@ -1837,11 +1615,13 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
             const char* fn = std::getenv( "GEMS3K_PHSTAB_PROBE" );
             return fn ? fopen( fn, "a" ) : nullptr; }();
         if( dbg )
+            // stage: which step asked; try: whether the quick first try of a cold call is running
             fprintf( dbg, "CENSUS phases=%ld exempt=%ld scanned=%ld clamped=%ld "
-                          "absent-but-stable=%ld present-but-unstable=%ld worst=%ld\n",
+                          "absent-but-stable=%ld present-but-unstable=%ld worst=%ld stage=%s try=%s\n",
                      (long)census.phases, (long)census.exempt, (long)census.scanned,
                      (long)census.clamped, (long)census.absentStable,
-                     (long)census.presentUnstable, (long)worstStabilityPhase );
+                     (long)census.presentUnstable, (long)worstStabilityPhase,
+                     probeStage ? probeStage : "check", g_optimaFixAccept ? "quick" : "full" );
     }
     if( rankedOut != nullptr ) rankedOut->swap( ranked );
     if( censusOut != nullptr ) *censusOut = census;
@@ -1878,6 +1658,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                                         long int passBudget,
                                         long int& iterationsOut, long int& activeOut )
 {
+    gems3k_timing::Scope timing( gems3k_timing::PreSolve );
     iterationsOut = 0;
     activeOut = 0;
     const long int N = pm.N;
@@ -1980,6 +1761,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     options.convergence.tolerance = pa_p->OptimaTol;
     apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
+    apply_optima_lu( options, pa_p->OptimaPartialPivLU );
 
         // ---- Stall / wall-clock guard for the pre-solve ----
         // A pass that has stopped improving is discarded early instead of running to its full
@@ -2134,6 +1916,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                       Optima::VectorView /*p*/, Optima::VectorView /*c*/,
                       Optima::ObjectiveOptions opts )
         {
+            gems3k_timing::Scope timingObj( gems3k_timing::Obj );
             for( long int j = 0; j < L; j++ )
                 pm.X[j] = act[(size_t)j] ? x[ jToNx[(size_t)j] ] : xlo[(size_t)j];
             TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
@@ -2435,7 +2218,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             trialOpts.maxiters = (unsigned)ps0Trial;
             solver.setOptions( trialOpts );
         }
-        Optima::Result result = solver.solve( problem, state );
+        Optima::Result result = timed_solve( solver, problem, state );
         if( ps0Trial > 0 && ps0Trial < passBudget )
         {
             const bool trialOk = result.succeeded && !preWatch->stalled && !preWatch->timedOut;
@@ -2463,7 +2246,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                 Optima::Solver solver2;
                 solver2.setOptions( options );
                 preWatch->reset();
-                result = solver2.solve( problem, state );
+                result = timed_solve( solver2, problem, state );
             }
             else
                 solver.setOptions( options );
@@ -2592,6 +2375,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
 double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long int& NumIterIPM, bool referenceMode,
                                                     bool runKinetics )
 {
+    gems3k_timing::Scope timing( gems3k_timing::OptimaCall );
     // Disable the IPM-2 chemical-potential smoothing for this call (see
     // optima_disable_smoothing). RAII, so the flag is restored on every exit.
     struct SmoothingGuard {
@@ -2608,6 +2392,23 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         TMultiBase* m;
         ~FloorRecordGuard() { m->PhaseHessianEnd(); }
     } floorRecordGuard{ this };
+
+#ifdef OPTIMA_LU_PARTIAL_PIVOT
+    // pa_OptimaPartialPivLU: how many linear solves of this call used partial pivoting, and how many of them fell back.
+    struct LuRecord {
+        long p0 = Optima::trace::state().lupartial, f0 = Optima::trace::state().lufallbacks;
+        ~LuRecord() { const long p = Optima::trace::state().lupartial - p0, f = Optima::trace::state().lufallbacks - f0;
+                      if( p > 0 ) native_trace_decide( "lupartial n=%ld fallback=%ld", p, f ); }
+    } luRecord;
+#endif
+
+#ifdef OPTIMA_BACKTRACK_SNAP_LEAVING
+    // pa_OptimaSnapLeaving: how many species this call put on their floor, for the trace.
+    struct SnapRecord {
+        long n0 = Optima::trace::state().snaps;
+        ~SnapRecord() { const long n = Optima::trace::state().snaps - n0; if( n > 0 ) native_trace_decide( "snapleaving n=%ld", n ); }
+    } snapRecord;
+#endif
 
     double ScFact = 1.;
     const BASE_PARAM* pa_p = base_param();
@@ -2708,10 +2509,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     // After rescaling, so pm.B, pm.DLL and dcFloor are in the same internal units.
     SubFloorElementCheck( dcFloor );
 
-    // Scale of the previous call, so a warm call can tell which species it left at the floor.
-    static thread_local double prevScFact = 0.;
-    const double prevScFactIn = prevScFact;
-    struct PrevScFactGuard { double& r; const double& v; ~PrevScFactGuard() { r = v; } } prevScFactGuard{ prevScFact, ScFact };
+    // Scale of this node's previous solve, so a warm call can tell which species it left at the floor.
+    const double prevScFactIn = prev_scfact;
+    struct PrevScFactGuard { double& r; const double& v; ~PrevScFactGuard() { r = v; } } prevScFactGuard{ prev_scfact, ScFact };
 
     // Trace bookkeeping: one traced solve per call; each Optima solve inside it is an attempt.
     static thread_local std::vector<double> traceXPrev;
@@ -3196,6 +2996,33 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
             native_trace_decide( "lvlpin species=%ld", nPin );
         }
+        // pa_OptimaLevelFinish: a leveled start with mixed phases is first finished by Newton on its own phases;
+        // Optima then starts from that point and its potentials. A finish that fails leaves the start as it was.
+        if( pa_p->OptimaLevelFinish > 0 && pm.pNP == 0 && g_lvlCgStart && g_cgDual.size() == (size_t)pm.N && R == 0 )
+        {
+            const std::vector<double> sx( pm.X, pm.X + pm.L ), sy( pm.Y, pm.Y + pm.L ), su( pm.U, pm.U + pm.N );
+            for( long int j = 0; j < pm.L; j++ ) pm.X[j] = std::max( pm.Y[j], problem.xlower[j] );
+            for( long int i = 0; i < pm.N; i++ ) pm.U[i] = g_cgDual[(size_t)i];
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );
+            std::vector<double> xlo( (size_t)pm.L ), xhi( (size_t)pm.L );
+            for( long int j = 0; j < pm.L; j++ ) { xlo[(size_t)j] = problem.xlower[j]; xhi[(size_t)j] = problem.xupper[j]; }
+            const bool ok = PotentialSpaceFinish( dcFloor, xlo, xhi );
+            if( ok )
+            {
+                for( long int j = 0; j < pm.L; j++ ) pm.Y[j] = pm.X[j];
+                for( long int i = 0; i < pm.N; i++ ) g_cgDual[(size_t)i] = pm.U[i];
+            }
+            else
+            {
+                for( long int j = 0; j < pm.L; j++ ) { pm.X[j] = sx[(size_t)j]; pm.Y[j] = sy[(size_t)j]; }
+                for( long int i = 0; i < pm.N; i++ ) pm.U[i] = su[(size_t)i];
+            }
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            CalculateActivityCoefficients( LINK_UX_MODE );
+            native_trace_decide( "lvlfinish ok=%d", ok ? 1 : 0 );
+            ipm_logger->debug( "Optima leveled start finished by Newton first: {}", ok ? "converged" : "did not converge" );
+        }
         // Titrant unknowns are free in sign, bounded only generously as a numerical safety net.
         const double titrantBound = std::max( optima_default_box_moles( pm, pa_p->DG ), 1.0 ) * 2.0;
         for( long int k = 0; k < R; k++ )
@@ -3262,12 +3089,18 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const long int kFDDelay = ( !referenceMode && pm.pNP == 0 && pa_p->OptimaFDHessianDelay > 0 )
                                   ? pa_p->OptimaFDHessianDelay : 0;
         const bool kMoleFracHessian = ( pa_p->OptimaMoleFracHessian != 0 );
+        // pa_OptimaFDPureSkip; not with electrostatic phases, which couple potentials across phases.
+        bool fdPureSkip = ( pa_p->OptimaFDPureSkip > 0 );
+        for( long int k = 0; k < pm.FI; k++ )
+            if( pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL ) fdPureSkip = false;
+        if( fdPureSkip ) native_trace_decide( "fdpureskip on=1" );
         const long int kFloorCurvature = pa_p->OptimaFloorCurvature;   // 0 off, 1 floor diagonal, 2 phase-sized step and full block, 3 = 1 + near-zero block
-        problem.f = [this, L, R, dcFloor, &fixedGrad, kLogBarrierTau, kPhaseHessianFloor, phTwin, kFDHessian, kMoleFracHessian, kFloorCurvature, fdSuppress, hasAq, phLast, phDec, phMax, nzSeen, phStart, twinCopies, traceLastF]
+        problem.f = [this, L, R, dcFloor, &fixedGrad, fdPureSkip, kLogBarrierTau, kPhaseHessianFloor, phTwin, kFDHessian, kMoleFracHessian, kFloorCurvature, fdSuppress, hasAq, phLast, phDec, phMax, nzSeen, phStart, twinCopies, traceLastF]
                     ( Optima::ObjectiveResultRef res, Optima::VectorView x,
                       Optima::VectorView /*p*/, Optima::VectorView /*c*/,
                       Optima::ObjectiveOptions opts )
         {
+            gems3k_timing::Scope timingObj( gems3k_timing::Obj );
             for( long int j = 0; j < L; j++ )
                 pm.X[j] = x[j];
             TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
@@ -3295,6 +3128,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             *traceLastF = fval;
             if( opts.eval.fxx )
             {
+                gems3k_timing::Scope timingFxx( gems3k_timing::ObjFxx );
                 res.fxx.setZero();
                 // Ideal-mixing curvature per multicomponent phase (j < pm.Ls). Single-species
                 // (pure) phases get no 1/X[j] term: their chemical potential does not depend on
@@ -3306,7 +3140,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 // water-activity convention
                 //     ln a_w = -(1 - x_w)/x_w = -(nSum - n_w)/n_w
                 //  => d ln a_w/d n_i = -1/n_w (i != w), (nSum-n_w)/n_w^2 (i = w).
-                // This is deliberately not d ln x_w/d n_i (that form measured clearly worse).
+                // This is deliberately not d ln x_w/d n_i (that form converges worse).
                 //
                 // Non-aqueous solution phases: pa_p->OptimaMoleFracHessian selects the form.
                 //   0 (default) - diag(1/X[j]) only.
@@ -3380,7 +3214,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                             (*nzSeen)[k] = 1;
                             native_trace_decide( "nearzeroblock phase=%s amount=%.3e peak=%.3e",
                                                  char_array_to_string( pm.SF[k], MAXPHNAME ).c_str(), Xf, (*phMax)[k] );
-                            ipm_logger->debug( "Optima: full mixing curvature for the nearly vanished phase {}",
+                            ipm_logger->info( "Optima: full mixing curvature for the nearly vanished phase {}",
                                                char_array_to_string( pm.SF[k], MAXPHNAME ) );
                         }
                         for( long int j = j0; j < j1; j++ )
@@ -3435,6 +3269,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         const long int i = (long int)opts.ibasicvars[bk];
                         if( i >= L ) continue; // a control-condition virtual slot, not a species
                         const double Xi = pm.X[i];
+                        gems3k_timing::Scope timingCol( i < pm.Ls ? gems3k_timing::FdMix : gems3k_timing::FdPure );
                         // pa_OptimaFloorCurvature 2: for a species of a solution phase the step is also at least
                         // 1e-7 of the phase amount, so the other potentials change well above round-off.
                         double hPhase = 0.;
@@ -3445,6 +3280,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                 if( i >= jj && i < jj + pm.L1[kk] ) { hPhase = pm.XF[kk] * 1e-7; break; }
                         }
                         const double h = std::max( { std::fabs(Xi) * 1e-7, dcFloor * 10., hPhase } );
+                        if( fdPureSkip && i >= pm.Ls )
+                        {   // a pure phase's amount changes no potential: its column is zero
+                            for( long int j = 0; j < L; j++ ) res.fxx(j,i) = 0.;
+                            if( kFloorCurvature == 2 )
+                            {
+                                const double Xb = std::max( Xi, dcFloor );
+                                res.fxx(i,i) += kLogBarrierTau / ( Xb * Xb );
+                            }
+                            continue;
+                        }
                         pm.X[i] = Xi + h;
                         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
                         CalculateActivityCoefficients( LINK_UX_MODE );
@@ -3478,6 +3323,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     if( regRatio > 0. )
                     {
                         long int p0 = 0;
+                        gems3k_timing::Scope timingBlock( gems3k_timing::FdBlock );
                         for( long int k = 0; k < pm.FIs; k++ )
                         {
                             const long int p1 = p0 + pm.L1[k];
@@ -3537,8 +3383,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
                     // Restore the base state: XF/XFA, activity coefficients and pm.F were left
                     // at the last perturbation's values.
-                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    {
+                        gems3k_timing::Scope timingRestore( gems3k_timing::ObjRestore );
+                        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                        CalculateActivityCoefficients( LINK_UX_MODE );
+                    }
                     for( long int j = 0; j < L; j++ )
                         pm.F[j] = Fbase[j];
 
@@ -3605,7 +3454,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                             for( long int j = 0; j < L; j++ ) pm.F[j] = Fbase[j];
                             optima_trace_write_matrix( "exact", [&]( long r, long c ) { return ex[(size_t)r*L+c]; }, L );
                             optima_trace_write_matrix( "ideal", [&]( long r, long c ) { return traceIdeal[(size_t)r*L+c]; }, L );
-                            std::ofstream f( std::string( std::getenv("REAKTORO_TRACE_FILE") ) + ".hess." + std::to_string(ts.solve)
+                            std::ofstream f( std::string( optima_trace_env( "FILE" ) ) + ".hess." + std::to_string(ts.solve)
                                              + "." + std::to_string(ts.iter) + ".state.csv" );
                             f.precision( 17 );
                             f << "index,name,n,basic\n";
@@ -3687,6 +3536,18 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             options.convergence.tolerance = pa_p->OptimaTol;
             apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
+            apply_optima_lu( options, pa_p->OptimaPartialPivLU );
+            // pa_OptimaLSWarmTrials: a warm call starts near the answer, where the full line search costs many
+            // evaluations per step for little gain; cap its trials there.
+            if( pm.pNP != 0 && pa_p->OptimaLSWarmTrials > 0 && options.linesearch.enabled )
+            {
+                options.linesearch.maxiterations = (unsigned)pa_p->OptimaLSWarmTrials;
+                native_trace_decide( "lswarmcap trials=%ld", (long)pa_p->OptimaLSWarmTrials );
+            }
+            // Plain warm calls only: on a cold start, or on a leg that starts from native's answer, a species
+            // far from its answer can limit the step many times on its way to a value that is not zero.
+            if( !referenceMode && pm.pNP != 0 && !optima_hop_leg )
+                apply_optima_snap( options, pa_p->OptimaSnapLeaving );
             // The quick first try of a cold call (pa_OptimaFastFirst): full step, each amount clipped to its bounds.
             // Not from a certified leveled start (pa_OptimaLevelStart): there the ordinary step only has to confirm it.
             if( g_optimaFixAccept && !g_lvlShortcut )
@@ -3743,17 +3604,21 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             double fzErr = -1., fzF = 0.;
             // pa_OptimaTailStop: energy at the start of the current flat run, and its length.
             double tailRef = 0.; long int tailRun = 0; bool tailStop = false;
+            std::vector<long int> tailPhases;   // pa_OptimaTailDryOnly 2: the vanished phases that held the error
+            double tailErrPrev = -1., tailRatioMin = 1e300, tailRatioMax = 0.;   // step-to-step error ratio over the flat run
+            bool vanishedOff = false;   // the scoped tail stop has been used in this call (not cleared by reset())
             // pa_OptimaDryOut: the solve stopped because the water ran out, and where.
             bool dryOut = false; long int dryOutAt = 0; double dryOutW = 0.;
             long int wLO = -1;   // pa_OptimaDryOut: the water index, -1 = off (not cleared by reset())
             bool dryDone = false;   // pa_OptimaDryOut: the water phase was taken out; do not look again
             bool wSeenWet = false;  // pa_OptimaDryOut: water was above the threshold at some step of this call
+            long int stallAt = 0;   // pa_OptimaStallNetFactor: iterations of the first solve that the watch stopped (not cleared by reset())
             void reset() {
                 bestErr = bestComp = std::numeric_limits<double>::infinity();
                 refErr  = refComp  = std::numeric_limits<double>::infinity();
                 run = 0; stalled = false; dryRun = 0; dryStop = false;
                 fzRun = 0; fzErr = -1.; fzF = 0.;
-                tailRef = 0.; tailRun = 0; tailStop = false;
+                tailRef = 0.; tailRun = 0; tailStop = false; tailPhases.clear(); tailErrPrev = -1.; tailRatioMin = 1e300; tailRatioMax = 0.;
                 dryOut = false; dryOutAt = 0; dryOutW = 0.;
             }
             bool overBudget() const {
@@ -3792,7 +3657,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             if( onlyAq.empty() ) { stallWatch->wLO = pm.LO; stallWatch->wSeenWet = dryWarmStart; }
             else native_trace_decide( "dryoff onlyaq=%s", onlyAq.c_str() );
             if( !onlyAq.empty() )
-                ipm_logger->debug( "Optima: water-only elements ({}), the dry-out is off (pa_OptimaDryOut)", onlyAq );
+                ipm_logger->info( "Optima: water-only elements ({}), the dry-out is off (pa_OptimaDryOut)", onlyAq );
         }
         stallWatch->reset();
         if( pa_p->OptimaDryRetry && !g_optimaDryOff && pm.LO >= 0 && pm.LO < pm.L && node1 != nullptr )
@@ -3879,7 +3744,15 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const double kTailTol = pa_p->OptimaTol;   // pa_OptimaTailStop: the error that still counts
         // pa_OptimaTailStop / pa_OptimaTailStopWarm: flat steps needed (a warm call starts next to an answer)
         const long int kTailN = pm.pNP == 1 ? pa_p->OptimaTailStopWarm : pa_p->OptimaTailStop;
-        const bool kTailDryOnly = pa_p->OptimaTailDryOnly > 0;
+        // pa_OptimaTailDryOnly: 0 = every solve, 1 = only the dry solve, 2 = also a warm call whose left-over
+        // error sits only on members of nearly vanished non-aqueous solution phases
+        const long int kTailMode = pa_p->OptimaTailDryOnly;
+        const bool kTailWarm = pm.pNP != 0;
+        const double kVanished = 1e7 * pa_p->LogBarrierTau;   // the nearly-vanished amount of pa_OptimaFloorCurvature 3
+        std::vector<long int> solidPhaseOf( (size_t)L, -1 );
+        for( long int k = 0; k < pm.FIs; k++ )
+            if( pm.L1[k] > 1 && !( hasAq && pm.LO >= phStart[(size_t)k] && pm.LO < phStart[(size_t)k+1] ) )
+                for( long int j = phStart[(size_t)k]; j < phStart[(size_t)k+1]; j++ ) solidPhaseOf[(size_t)j] = k;
         if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. || earlyTrendN > 0
             || earlyCapN > 0 || g_optimaIterBudget >= 0 )
             options.convergence.check =
@@ -3887,7 +3760,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                  kEarlyTrendMinRate,
                  earlyTrend, earlyTrendArmed, earlyTrendProbeN, earlyTrendSeen,
                  earlyCapN, earlyCap, earlyCapArmed, earlyStopDwRel,
-                 aqPhaseIdxTrend, phDec, phMax, phLast, ffFrozenN, ffDivR, ffRisesN, ffCollapseR, frozenCutN, kTailTol, kTailN, kTailDryOnly]
+                 aqPhaseIdxTrend, phDec, phMax, phLast, ffFrozenN, ffDivR, ffRisesN, ffCollapseR, frozenCutN, kTailTol, kTailN, kTailMode, kTailWarm, kVanished, solidPhaseOf]
                 ( Optima::ConvergenceCheckArgs const& args ) -> bool
                 {
                     // pa_OptimaFastCollapse: the quick first try stops at once when its energy has grown to more
@@ -3900,7 +3773,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         else if( cw.cf0 != 0. && std::fabs( fNow ) > ffCollapseR * std::fabs( cw.cf0 ) )
                         {
                             native_trace_decide( "fastcollapse step=%ld ratio=%.3e", cw.cstep, std::fabs( fNow / cw.cf0 ) );
-                            ipm_logger->debug( "Optima: the quick first try stopped at step {}: energy grew to {:.3g} times its start",
+                            ipm_logger->info( "Optima: the quick first try stopped at step {}: energy grew to {:.3g} times its start",
                                                cw.cstep, std::fabs( fNow / cw.cf0 ) );
                             cw.cstep++;
                             g_optimaIterBudget = 0; stallWatch->timedOut = true; return true;
@@ -3966,7 +3839,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         if( rs.rises >= ffRisesN )
                         {
                             native_trace_decide( "fastrises rises=%ld step=%ld", rs.rises, rs.riseSteps );
-                            ipm_logger->debug( "Optima: the quick first try stopped after its energy went up on {} steps (step {})",
+                            ipm_logger->info( "Optima: the quick first try stopped after its energy went up on {} steps (step {})",
                                                rs.rises, rs.riseSteps );
                             g_optimaIterBudget = 0; stallWatch->timedOut = true; return true;
                         }
@@ -4120,7 +3993,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         {
                             native_trace_decide( "frozencut steps=%ld it=%ld err=%.6e", stallWatch->fzRun,
                                                  (long)args.result.iterations, eNow );
-                            ipm_logger->debug( "Optima: solve stopped at step {}: energy and error unchanged for {} steps",
+                            ipm_logger->info( "Optima: solve stopped at step {}: energy and error unchanged for {} steps",
                                                (long)args.result.iterations, stallWatch->fzRun );
                             stallWatch->stalled = true;
                             return true;   // folded back to a failure below
@@ -4152,14 +4025,25 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     // check decide.
                     {
                         const long int kTail = kTailN;
-                        // pa_OptimaTailDryOnly: the tail stop acts only after the water was taken out
+                        // pa_OptimaTailDryOnly: where the tail stop acts (see above)
+                        const bool vanishedOnly = kTailMode == 2 && !stallWatch->dryDone && !stallWatch->vanishedOff;
                         if( kTail > 0 && stallWatch->window > 0 && !g_optimaFixAccept
-                            && ( !kTailDryOnly || stallWatch->dryDone ) )
+                            && ( kTailMode == 0 || stallWatch->dryDone || ( vanishedOnly && kTailWarm ) ) )
                         {
                             const double fNow = args.F.result().f.f;
+                            const double eNow = args.E.errorx();
                             if( stallWatch->tailRun > 0 && std::fabs( fNow - stallWatch->tailRef ) <= 1e-12 * std::fabs( fNow ) )
+                            {
                                 stallWatch->tailRun++;
-                            else { stallWatch->tailRef = fNow; stallWatch->tailRun = 1; }
+                                if( stallWatch->tailErrPrev > 0. )
+                                {
+                                    const double q = eNow / stallWatch->tailErrPrev;
+                                    stallWatch->tailRatioMin = std::min( stallWatch->tailRatioMin, q );
+                                    stallWatch->tailRatioMax = std::max( stallWatch->tailRatioMax, q );
+                                }
+                            }
+                            else { stallWatch->tailRef = fNow; stallWatch->tailRun = 1; stallWatch->tailRatioMin = 1e300; stallWatch->tailRatioMax = 0.; }
+                            stallWatch->tailErrPrev = eNow;
                             if( stallWatch->tailRun >= kTail )
                             {
                                 const auto exv = args.E.ex();
@@ -4169,18 +4053,30 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                 for( long int j = 0; j < n; j++ ) xSum += std::max( (double)xv[j], 0. );
                                 const double tol = kTailTol;
                                 bool onlyTrace = true; long int nCarry = 0; double xCarryMax = 0.;
+                                std::vector<long int> carrierPhases;
                                 for( long int j = 0; j < n; j++ )
                                     if( std::fabs( (double)exv[j] ) > tol )
                                     {
                                         nCarry++; xCarryMax = std::max( xCarryMax, (double)xv[j] );
                                         if( xv[j] > 1e-9 * xSum ) { onlyTrace = false; break; }
+                                        if( vanishedOnly )
+                                        {
+                                            const long int kp = j < (long int)solidPhaseOf.size() ? solidPhaseOf[(size_t)j] : -1;
+                                            if( kp < 0 || !( (*phLast)[(size_t)kp] >= 0. && (*phLast)[(size_t)kp] < kVanished ) )
+                                            { onlyTrace = false; break; }
+                                            if( std::find( carrierPhases.begin(), carrierPhases.end(), kp ) == carrierPhases.end() )
+                                                carrierPhases.push_back( kp );
+                                        }
                                     }
                                 if( onlyTrace && nCarry > 0 )
                                 {
-                                    native_trace_decide( "tailstop it=%ld flat=%ld carriers=%ld xmax=%.3e xsum=%.3e err=%.3e",
+                                    char rr[96] = "";
+                                    if( vanishedOnly ) std::snprintf( rr, sizeof rr, " scope=vanished ratio=%.3f..%.3f", stallWatch->tailRatioMin, stallWatch->tailRatioMax );
+                                    native_trace_decide( "tailstop it=%ld flat=%ld carriers=%ld xmax=%.3e xsum=%.3e err=%.3e%s",
                                                          (long)args.result.iterations, stallWatch->tailRun, nCarry,
-                                                         xCarryMax, xSum, args.E.errorx() );
+                                                         xCarryMax, xSum, args.E.errorx(), rr );
                                     stallWatch->tailStop = true;
+                                    stallWatch->tailPhases = carrierPhases;
                                     stallWatch->stalled = true;
                                     return true;   // folded back to a failure below
                                 }
@@ -4248,6 +4144,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                      stallWatch->timedOut ? "timeout" : "stall",
                                      (long)stallWatch->window, (long)stallWatch->run,
                                      (long)r.iterations, stallWatch->bestErr, stallWatch->bestComp );
+                if( stallWatch->stallAt == 0 && !stallWatch->timedOut )
+                    stallWatch->stallAt = (long int)r.iterations;
                 r.succeeded = false;
             }
         };
@@ -4258,7 +4156,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // nets). Saved before the first solve modifies `state`.
         const Optima::State initialState = state;
 
-        // Debug trace (REAKTORO_TRACE_FILE, off unless set): the per-solve setup records.
+        // Debug trace (GEMS3K_OPTIMA_STEPTRACE_FILE, off unless set): the per-solve setup records.
         long int traceFirstIt = 0, traceFupFirst = 0, traceFxFirst = 0;
         bool traceFirstOk = false;
         std::vector<double> traceX0;
@@ -4376,7 +4274,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // primary solve below as failed. The cheap attempt is itself a discarded probe.
             const bool trendWasArmed = *earlyTrendArmed;
             *earlyTrendArmed = false;
-            Optima::Result cheapResult = cheapSolver.solve( problem, cheapState );
+            Optima::Result cheapResult = timed_solve( cheapSolver, problem, cheapState );
             *earlyTrendArmed = trendWasArmed;
             *earlyTrend = false;
             *fdSuppress = false;
@@ -4422,7 +4320,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 PhStabCensus preCensus;
                 const long int preWorst = WorstPhaseStabilityViolation(
                             presenceThreshold, dcFloor, nullptr,
-                            preViol, preAbsent, &preRanked, &preCensus );
+                            preViol, preAbsent, &preRanked, &preCensus, "presolve" );
                 fprintf( preDbg,
                          "PRESOLVE pNP=%ld warm=%d capN=%ld trendN=%ld "
                          "worst=%ld viol=%.6e absent=%d "
@@ -4458,8 +4356,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         Optima::Sensitivity sensitivity( dims );
         // Arm the cap here and nowhere earlier: late arming scopes it to the first attempt.
         *earlyCapArmed = ( earlyCapN > 0 );
-        Optima::Result result = wantSens ? solver.solve( problem, state, sensitivity )
-                                         : solver.solve( problem, state );
+        Optima::Result result = wantSens ? timed_solve( solver, problem, state, sensitivity )
+                                         : timed_solve( solver, problem, state );
         // Returning true from convergence.check means "stop", and Optima reports that as
         // success, so an early stop is folded back to a failure here, before anything reads
         // result.succeeded.
@@ -4562,14 +4460,104 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             Optima::Solver solverDryOut;
             solverDryOut.setOptions( options );
             stallWatch->reset();
-            result = solverDryOut.solve( problem, state );
+            result = timed_solve( solverDryOut, problem, state );
             applyStall( result );
             optimaIterTotal += result.iterations;
             native_trace_decide( "dryout at=%ld water=%.3e fixed=%ld zz=%.3e ok=%d it=%ld", at, wAt, (long)( j1 - j0 ), zz,
                                  result.succeeded ? 1 : 0, (long)result.iterations );
-            ipm_logger->debug( "Optima: the water ran out at step {}; the solids were solved alone, ok={} (pa_OptimaDryOut)",
+            ipm_logger->info( "Optima: the water ran out at step {}; the solids were solved alone, ok={} (pa_OptimaDryOut)",
                                at, result.succeeded ? 1 : 0 );
             dryJ0 = j0; dryJ1 = j1;
+        }
+        // pa_OptimaTailDryOnly 2: a warm call stopped on the slow tail of nearly vanished solid solutions is solved on
+        // from the stop point with those phases held at the floor, up to three times (each round may find another such
+        // phase); the answer is then checked like any other. If a round fails, or a held phase wants to form, the call goes on from the first stop
+        // point with no phase held, as if there had been no stop. DECIDE tailpin.
+        if( stallWatch->tailStop && !result.succeeded && R == 0 && !stallWatch->tailPhases.empty() )
+        {
+            const Optima::State stopState = state;
+            std::vector<long int> pinned;
+            std::vector<double> pinLo, pinHi;
+            long int rounds = 0, nPh = 0;
+            bool pinOk = false;
+            std::string names;
+            while( stallWatch->tailStop && !result.succeeded && !stallWatch->tailPhases.empty() && rounds < 3 )
+            {
+                for( long int k : stallWatch->tailPhases )
+                {
+                    nPh++;
+                    names += ( names.empty() ? "" : "," ) + char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME );
+                    for( long int j = phStart[(size_t)k]; j < phStart[(size_t)k+1]; j++ )
+                        if( !extinctFixed[(size_t)j] && std::find( pinned.begin(), pinned.end(), j ) == pinned.end() )
+                        {
+                            pinned.push_back( j ); pinLo.push_back( problem.xlower[j] ); pinHi.push_back( problem.xupper[j] );
+                            problem.xlower[j] = dcFloor; problem.xupper[j] = dcFloor; state.x[j] = dcFloor;
+                        }
+                }
+                rounds++;
+                stallWatch->vanishedOff = rounds >= 3;
+                Optima::Solver solverPin;
+                solverPin.setOptions( options );
+                stallWatch->reset();
+                result = timed_solve( solverPin, problem, state );
+                applyStall( result );
+                optimaIterTotal += result.iterations;
+                pinOk = result.succeeded;
+            }
+            stallWatch->vanishedOff = true;
+            // A held phase stays held for the rest of the call only if, at the converged potentials, neither it nor any
+            // other absent solid mixture wants to form; otherwise the call goes on from the first stop point.
+            double pinTpd = 1e300;
+            if( pinOk )
+            {
+                for( long int j = 0; j < L; j++ ) { pm.Y[j] = state.x[j]; pm.X[j] = state.x[j]; }
+                for( long int i = 0; i < N; i++ ) pm.U[i] = -state.ye[i];
+                TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                CalculateActivityCoefficients( LINK_UX_MODE );
+                CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+                std::vector<long int> heldPh;
+                for( long int j : pinned )
+                {
+                    long int k = 0;
+                    while( k + 1 < (long int)phStart.size() && phStart[(size_t)k+1] <= j ) k++;
+                    if( std::find( heldPh.begin(), heldPh.end(), k ) == heldPh.end() ) heldPh.push_back( k );
+                }
+                // the full composition search: holding a phase for the rest of the call needs more than the local one
+                const bool strongWas = g_tpdStrongSearch;
+                g_tpdStrongSearch = true;
+                for( long int k : heldPh )
+                {
+                    std::vector<double> yb;
+                    pinTpd = std::min( pinTpd, NativeTpdPhase( k, phStart[(size_t)k], yb ) );
+                }
+                // a solid mixture that was already absent is checked too: the held solve never looked at it
+                for( long int k = 0; k < pm.FIs; k++ )
+                    if( phStart[(size_t)k] < L && solidPhaseOf[(size_t)phStart[(size_t)k]] == k && pm.XF[k] < kVanished
+                        && std::find( heldPh.begin(), heldPh.end(), k ) == heldPh.end() )
+                    {
+                        std::vector<double> yb;
+                        pinTpd = std::min( pinTpd, NativeTpdPhase( k, phStart[(size_t)k], yb ) );
+                    }
+                g_tpdStrongSearch = strongWas;
+            }
+            const bool keepHeld = pinOk && !( pinTpd < -std::max( pa_p->OptimaTpdAccept, 1e-6 ) );
+            if( !keepHeld )
+                for( size_t q = 0; q < pinned.size(); q++ ) { problem.xlower[pinned[q]] = pinLo[q]; problem.xupper[pinned[q]] = pinHi[q]; }
+            long int itBack = 0;
+            if( !keepHeld )
+            {   // a failed round, or a held phase that wants to form: a solve from the floor cannot grow it back, so go on
+                // from the first stop point
+                state = stopState;
+                Optima::Solver solverOn;
+                solverOn.setOptions( options );
+                stallWatch->reset();
+                result = timed_solve( solverOn, problem, state );
+                applyStall( result );
+                optimaIterTotal += result.iterations;
+                itBack = (long int)result.iterations;
+            }
+            native_trace_decide( "tailpin rounds=%ld phases=%ld species=%ld ok=%d held=%d tpd=%.3e back=%d it_back=%ld list=%s", rounds, nPh,
+                                 (long)pinned.size(), pinOk ? 1 : 0, keepHeld ? 1 : 0, pinTpd, keepHeld ? 0 : 1, itBack, names.c_str() );
         }
         // pa_OptimaTailStop: take the stop point as it stands when no phase wants to form or go.
         // The finish is not run first: it can drop a genuine trace phase (a carrier of a trace element).
@@ -4582,7 +4570,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             CalculateConcentrations( pm.X, pm.XF, pm.XFA );
             double tViol = 0.; bool tAbsent = false;
             const long int tWorst = WorstPhaseStabilityViolation( presenceThreshold, dcFloor,
-                        extinctFixed.empty() ? nullptr : extinctFixed.data(), tViol, tAbsent, nullptr );
+                        extinctFixed.empty() ? nullptr : extinctFixed.data(), tViol, tAbsent, nullptr, nullptr, "accept" );
             // Every absent mixed solid must also pass the composition search: a near-degenerate swap
             // (a solid solution replaced by a pure phase of almost the same energy) passes the check above.
             double tTpd = 1e300; long int tTpdPh = -1, tNtpd = 0;
@@ -4607,12 +4595,24 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     jb += n;
                 }
             }
+            // pa_OptimaTailDryOnly 2: the vanished phases that still held the error are searched too, whatever their
+            // members' amounts; one that wants to form makes the stop point no answer.
+            if( tWorst < 0 )
+                for( long int k : stallWatch->tailPhases )
+                {
+                    long int jb = 0;
+                    for( long int q = 0; q < k; q++ ) jb += pm.L1[q];
+                    std::vector<double> yb;
+                    const double tpd = NativeTpdPhase( k, jb, yb );
+                    tNtpd++;
+                    if( tpd < tTpd ) { tTpd = tpd; tTpdPh = k; }
+                }
             const bool tTpdOk = !( tTpd < -std::max( pa_p->OptimaTpdAccept, 1e-6 ) );
             native_trace_decide( "tailaccept stable=%d worst=%ld viol=%.3e absent=%d ntpd=%ld min_tpd=%.3e tpd_phase=%s",
                                  tWorst < 0 ? 1 : 0, tWorst, tViol, tAbsent ? 1 : 0, tNtpd, tTpd,
                                  tTpdPh >= 0 ? char_array_to_string( pm.SF[tTpdPh], MAXPHNAME ).c_str() : "-" );
             if( tWorst < 0 && tTpdOk ) { result.succeeded = true; tailAccepted = true; }
-            ipm_logger->debug( "Optima: stopped on a flat tail; the stop point was {} (pa_OptimaTailStop)",
+            ipm_logger->info( "Optima: stopped on a flat tail; the stop point was {} (pa_OptimaTailStop)",
                                tailAccepted ? "checked and taken as the answer" : "rejected by the stability check" );
         }
         // pa_OptimaDryOut: a dry solve that failed (the tail-stop check included) must not cost the
@@ -4629,11 +4629,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             Optima::Solver solverBack;
             solverBack.setOptions( options );
             stallWatch->reset();
-            result = solverBack.solve( problem, state );
+            result = timed_solve( solverBack, problem, state );
             applyStall( result );
             optimaIterTotal += result.iterations;
             native_trace_decide( "dryback ok=%d it=%ld", result.succeeded ? 1 : 0, (long)result.iterations );
-            ipm_logger->debug( "Optima: the dry solve failed; solved again with the water back, ok={} (pa_OptimaDryOut)",
+            ipm_logger->info( "Optima: the dry solve failed; solved again with the water back, ok={} (pa_OptimaDryOut)",
                                result.succeeded ? 1 : 0 );
         }
         // pa_OptimaDryOut: after a dry solve, check the dry answer against a solve that keeps the water.
@@ -4654,7 +4654,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             for( long int j = j0; j < j1; j++ ) exempt[(size_t)j] = 0;
             double dViol = 0.; bool dAbsent = false;
             std::vector<PhStabViolation> dRanked;
-            WorstPhaseStabilityViolation( presenceThreshold, dcFloor, exempt.data(), dViol, dAbsent, &dRanked );
+            WorstPhaseStabilityViolation( presenceThreshold, dcFloor, exempt.data(), dViol, dAbsent, &dRanked, nullptr, "dryout" );
             double aqViol = 0.; bool aqPhaseWants = false;
             for( const auto& v : dRanked )
                 if( v.k == kAq && v.wasAbsent && !v.clamped ) { aqPhaseWants = true; aqViol = v.viol; }
@@ -4695,7 +4695,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverWet;
                 solverWet.setOptions( options );
                 stallWatch->reset();
-                result = solverWet.solve( problem, state );
+                result = timed_solve( solverWet, problem, state );
                 applyStall( result );
                 optimaIterTotal += result.iterations;
                 tailAccepted = false;
@@ -4703,7 +4703,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 const bool wetWins = result.succeeded && gWet < gDry - 1e-9 * ( 1. + std::fabs( gDry ) );
                 native_trace_decide( "drywet ok=%d it=%ld g_dry=%.12g g_wet=%.12g chosen=%s", result.succeeded ? 1 : 0,
                                      (long)result.iterations, gDry, result.succeeded ? gWet : 0., wetWins ? "wet" : "dry" );
-                ipm_logger->debug( "Optima: dry answer compared with a solve keeping the water: the {} answer is kept (pa_OptimaDryOut)",
+                ipm_logger->info( "Optima: dry answer compared with a solve keeping the water: the {} answer is kept (pa_OptimaDryOut)",
                                    wetWins ? "wet" : "dry" );
                 if( !wetWins )
                 {
@@ -4720,7 +4720,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
         // The phase-extinction tier, as a re-runnable unit: assembled below for AOP/SOP and
         // left empty for ROP. It must be callable a second time, by the early-probe safety
-        // net, on the full-budget re-solve's state - the net is the last rung, so without
+        // net, on the full-budget re-solve's state - the net is the last step, so without
         // this nothing would be left to rescue a re-solve that stalls the same way the
         // unarmed primary solve does.
         std::function<void(bool)> runExtinctionTier;
@@ -4742,7 +4742,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 solverToggle.setOptions( toggled );
                 state = initialState;
                 stallWatch->reset();
-                result = solverToggle.solve( problem, state );
+                result = timed_solve( solverToggle, problem, state );
                 applyStall( result );
                 optimaIterTotal += result.iterations;
             };
@@ -4797,7 +4797,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         Optima::Solver solverWater;
                         solverWater.setOptions( options );
                         stallWatch->reset();
-                        Optima::Result waterResult = solverWater.solve( problem, waterState );
+                        Optima::Result waterResult = timed_solve( solverWater, problem, waterState );
                         applyStall( waterResult );
                         optimaIterTotal += waterResult.iterations;
                         state = waterState;
@@ -4839,7 +4839,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverPhase; // fresh instance - see the note above tryToggleRetry's own solver
                 solverPhase.setOptions( options );
                 stallWatch->reset();
-                Optima::Result retryResult = solverPhase.solve( problem, retryState );
+                Optima::Result retryResult = timed_solve( solverPhase, problem, retryState );
                 applyStall( retryResult );
                 optimaIterTotal += retryResult.iterations;
                 state = retryState;
@@ -4879,7 +4879,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverWater; // fresh instance - see the note above tryToggleRetry's own solver
                 solverWater.setOptions( options );
                 stallWatch->reset();
-                Optima::Result retryResult = solverWater.solve( problem, retryState );
+                Optima::Result retryResult = timed_solve( solverWater, problem, retryState );
                 applyStall( retryResult );
                 optimaIterTotal += retryResult.iterations;
                 // pa_OptimaWaterKeep: a converged answer is kept when the water retry fails;
@@ -4887,7 +4887,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 if( pa_p->OptimaWaterKeep > 0 && result.succeeded && !retryResult.succeeded )
                 {
                     native_trace_decide( "waterkeep water=%.3e retry_it=%ld", state.x[pm.LO], (long)retryResult.iterations );
-                    ipm_logger->debug( "Optima: the retry with water put back failed; the converged answer is kept (pa_OptimaWaterKeep)" );
+                    ipm_logger->info( "Optima: the retry with water put back failed; the converged answer is kept (pa_OptimaWaterKeep)" );
                 }
                 else
                 {
@@ -4921,7 +4921,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverPhase; // fresh instance - see the note above tryToggleRetry's own solver
                 solverPhase.setOptions( options );
                 stallWatch->reset();
-                Optima::Result retryResult = solverPhase.solve( problem, retryState );
+                Optima::Result retryResult = timed_solve( solverPhase, problem, retryState );
                 applyStall( retryResult );
                 optimaIterTotal += retryResult.iterations;
                 state = retryState;
@@ -4961,7 +4961,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     Optima::Solver solverDry;   // fresh instance, as for the retries above
                     solverDry.setOptions( options );
                     stallWatch->reset();
-                    Optima::Result dryResult = solverDry.solve( problem, retryState );
+                    Optima::Result dryResult = timed_solve( solverDry, problem, retryState );
                     applyStall( dryResult );
                     optimaIterTotal += dryResult.iterations;
                     native_trace_decide( "dryretry water=%.6g cap=%.6g drystop=%d seedwater=%.6g ok=%d it=%ld",
@@ -5110,7 +5110,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         stallWatch->timedOut = false;
                         native_trace_decide( "extallow budget=%ld", g_optimaIterBudget );
                     }
-                    Optima::Result retryResult = solverExt.solve( problem, retryState );
+                    Optima::Result retryResult = timed_solve( solverExt, problem, retryState );
                     applyStall( retryResult );
                     optimaIterTotal += retryResult.iterations;
                     state = retryState;
@@ -5158,7 +5158,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     WorstPhaseStabilityViolation(
                                 presenceThreshold, dcFloor,
                                 extinctFixed.empty() ? nullptr : extinctFixed.data(),
-                                psViol, psAbsent, &psRanked, &psCensus );
+                                psViol, psAbsent, &psRanked, &psCensus, "phasesel" );
                     if( psRanked.empty() )
                         break;                       // assemblage is self-consistent
 
@@ -5283,7 +5283,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     solverPS.setOptions( options );
                     stallWatch->reset();
                     Optima::State psState = state;
-                    Optima::Result psResult = solverPS.solve( problem, psState );
+                    Optima::Result psResult = timed_solve( solverPS, problem, psState );
                     applyStall( psResult );
                     optimaIterTotal += psResult.iterations;
                     state = psState;
@@ -5348,7 +5348,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverTR;
                 solverTR.setOptions( options );
                 stallWatch->reset();
-                Optima::Result trResult = solverTR.solve( problem, trial );
+                Optima::Result trResult = timed_solve( solverTR, problem, trial );
                 applyStall( trResult );
                 optimaIterTotal += trResult.iterations;
                 native_trace_decide( "twinreadmit solved=%d it=%ld", trResult.succeeded ? 1 : 0, (long)trResult.iterations );
@@ -5426,7 +5426,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 CalculateActivityCoefficients( LINK_UX_MODE );
                 CalculateConcentrations( pm.X, pm.XF, pm.XFA );
                 ffWorst = WorstPhaseStabilityViolation( presenceThreshold, dcFloor,
-                            extinctFixed.empty() ? nullptr : extinctFixed.data(), ffViol, ffAbsent, nullptr );
+                            extinctFixed.empty() ? nullptr : extinctFixed.data(), ffViol, ffAbsent, nullptr, nullptr, "finishfirst" );
             }
             native_trace_decide( "finishfirst ok=%d stable=%d worst=%ld viol=%.3e absent=%d",
                                  ok ? 1 : 0, ffWorst < 0 ? 1 : 0, ffWorst, ffViol, ffAbsent ? 1 : 0 );
@@ -5453,20 +5453,30 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         const bool skipFullBudgetResolves = warmFailFast && pm.pNP == 1;
         if( skipFullBudgetResolves && !result.succeeded )
             native_trace_decide( "warmfailfast stalled=%d", stallWatch->stalled ? 1 : 0 );
-        if( !skipFullBudgetResolves && !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
+        // When the call will be re-run with the stall escape off (escretry), that attempt carries the net instead.
+        const bool netLeftToRetry = g_optimaEscRetryNext && !g_optimaLSEscapeOff;
+        if( netLeftToRetry && !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
+            native_trace_decide( "stallnet skipped=escretry" );
+        if( !skipFullBudgetResolves && !netLeftToRetry && !result.succeeded && stallWatch->stalled && stallWatch->window > 0 )
         {
-            ipm_logger->warn( "Optima: all retries failed after a stall. Solving once more with the "
+            ipm_logger->info( "Optima: all retries failed after a stall. Solving once more with the "
                                "stall guard off (pa_OptimaStallWindow, in the project's -ipm file)." );
             const long int savedWindow = stallWatch->window;
             stallWatch->window = 0;      // the check lambda reads this on every call
             stallWatch->reset();
             unpinForNet();               // the PROBLEM too, not only the state - see above
             Optima::Solver solverNS;     // fresh instance, per the retry-ordering note above
-            solverNS.setOptions( options );
+            // pa_OptimaStallNetFactor: the net gets a multiple of the iterations after which the first solve stalled
+            Optima::Options netOptions = options;
+            if( pa_p->OptimaStallNetFactor > 0 && stallWatch->stallAt > 0 )
+                netOptions.maxiters = (unsigned)std::min( (long int)options.maxiters,
+                                          std::max( 2000L, pa_p->OptimaStallNetFactor * stallWatch->stallAt ) );
+            solverNS.setOptions( netOptions );
             Optima::State  nsState  = initialState;
-            Optima::Result nsResult = solverNS.solve( problem, nsState );
+            Optima::Result nsResult = timed_solve( solverNS, problem, nsState );
             optimaIterTotal += nsResult.iterations;
-            native_trace_decide( "stallnet outcome=%s it=%ld", nsResult.succeeded ? "converged" : "failed", (long int)nsResult.iterations );
+            native_trace_decide( "stallnet outcome=%s it=%ld cap=%ld stallat=%ld", nsResult.succeeded ? "converged" : "failed",
+                                 (long int)nsResult.iterations, (long int)netOptions.maxiters, stallWatch->stallAt );
             stallWatch->window = savedWindow;
             if( !nsResult.succeeded )
                 repinAfterNet();         // the net did not win - leave the boxes as they were
@@ -5506,7 +5516,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 epStartDx = std::max( epStartDx, std::fabs( epState.x[j] - initialState.x[j] ) );
             native_trace_decide( "netresume from=%s probeat=%ld dx=%.6e",
                                  epResumed ? "probe" : "initial", earlyProbeIters, epStartDx );
-            Optima::Result epResult = solverEP.solve( problem, epState );
+            Optima::Result epResult = timed_solve( solverEP, problem, epState );
             optimaIterTotal += epResult.iterations;
             const bool epStalled = ( stallWatch->stalled || stallWatch->timedOut );
             if( epStalled ) epResult.succeeded = false;
@@ -5527,7 +5537,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 solverFB.setOptions( options );
                 stallWatch->reset();
                 Optima::State  fbState  = initialState;
-                Optima::Result fbResult = solverFB.solve( problem, fbState );
+                Optima::Result fbResult = timed_solve( solverFB, problem, fbState );
                 optimaIterTotal += fbResult.iterations;
                 const bool fbStalled = ( stallWatch->stalled || stallWatch->timedOut );
                 if( fbStalled ) fbResult.succeeded = false;
@@ -5591,7 +5601,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 Optima::Solver solverFB;
                 solverFB.setOptions( options );
                 Optima::State  fbState  = initialState;
-                Optima::Result fbResult = solverFB.solve( problem, fbState );
+                Optima::Result fbResult = timed_solve( solverFB, problem, fbState );
                 optimaIterTotal += fbResult.iterations;
                 const bool fbStalled = ( stallWatch->stalled || stallWatch->timedOut );
                 if( fbStalled ) fbResult.succeeded = false;
@@ -5639,6 +5649,72 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // Optima's multipliers ye have the opposite sign convention from U[].
         for( long int i = 0; i < N; i++ )
             pm.U[i] = -state.ye[i];
+        // pa_OptimaTraceRespread: an element all of whose species sit at their floors, and whose floors add up to more than
+        // its amount, gets its true amount spread over its solution species, x_j * exp(-s_j + a_ij * d), s_j the reduced gradient, d set so it balances.
+        if( pa_p->OptimaTraceRespread > 0 && result.succeeded )
+        {
+            bool changed = false, potentials = false;
+            for( long int i = 0; i < N - pm.E; i++ )
+            {
+                if( !( pm.B[i] > 0. ) ) continue;
+                double tot = 0., fixedPart = 0.;
+                bool present = false;   // a species of this element above its floor fixes its potential: leave it alone
+                std::vector<long int> fl;
+                for( long int j = 0; j < L; j++ )
+                {
+                    const double a = pm.A[ i + j*N ];
+                    if( !( a > 0. ) ) continue;
+                    tot += a * pm.X[j];
+                    if( pm.X[j] <= problem.xlower[j] * 10. && pm.DLL[j] <= 0. ) fl.push_back( j );
+                    else { fixedPart += a * pm.X[j]; present = true; }
+                }
+                if( present ) continue;
+                for( long int k = 0; k < R; k++ ) { const double t = problem.Aex( i, L+k ) * state.x[L+k]; tot += t; fixedPart += t; }
+                if( !( tot - pm.B[i] > 1e-6 * pm.B[i] ) || fl.empty() ) continue;   // the balance holds
+                const double target = pm.B[i] - fixedPart;
+                if( !( target > 0. ) ) continue;
+                if( !potentials )   // only when some element needs it
+                {
+                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
+                    potentials = true;
+                }
+                std::vector<double> lnx0( fl.size() ), aa( fl.size() );
+                std::vector<char> sol( fl.size() );
+                for( size_t q = 0; q < fl.size(); q++ )
+                {
+                    const long int j = fl[q];
+                    double mu = 0.;
+                    for( long int k = 0; k < N; k++ ) mu += pm.A[ k + j*N ] * pm.U[k];
+                    sol[q] = j < pm.Ls;
+                    lnx0[q] = std::log( pm.X[j] ) - ( pm.F[j] - mu );
+                    aa[q] = pm.A[ i + j*N ];
+                }
+                auto mass = [&]( double d ) {
+                    double m = 0.;
+                    for( size_t q = 0; q < fl.size(); q++ )
+                        if( sol[q] ) m += aa[q] * std::exp( std::min( lnx0[q] + aa[q] * d, 700. ) );
+                    return m; };
+                double lo = -2000., hi = 2000.;
+                if( !( mass( lo ) < target && mass( hi ) > target ) ) continue;
+                for( int it = 0; it < 200; it++ ) { const double mid = 0.5 * ( lo + hi ); ( mass( mid ) < target ? lo : hi ) = mid; }
+                const double d = 0.5 * ( lo + hi );
+                for( size_t q = 0; q < fl.size(); q++ )
+                {
+                    const long int j = fl[q];
+                    pm.X[j] = sol[q] ? std::exp( lnx0[q] + aa[q] * d ) : 0.;
+                    state.x[j] = pm.X[j];
+                }
+                pm.U[i] += d;
+                state.ye[i] = -pm.U[i];
+                changed = true;
+                native_trace_decide( "tracerespread ic=%ld species=%ld delta=%.6g before=%.3e target=%.3e", (long)i,
+                                     (long)fl.size(), d, tot - fixedPart, target );
+            }
+            if( changed )
+                for( long int j = 0; j < L; j++ ) pm.Y[j] = pm.X[j];
+        }
 
         // pa_OptimaFinish: Newton finish on the fixed phase set from Optima's last point; the
         // checks below judge its result like Optima's own.
@@ -5708,13 +5784,18 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         long int worstKKTSpecies = -1;
         std::vector<double> gradSaved( (size_t)L, 0. );   // for pa_OptimaZeroAbsent below
         const double kktTol = std::max( pa_p->GAS, 1e-300 );
+        long int nBarrierPassed = 0;   // species the barrier term alone would have failed
         for( long int j = 0; j < L; j++ )
         {
             // The gradient Optima minimised includes, for pure-phase species, the
             // log-barrier term -tau/X[j]; stationarity is checked for that objective.
             double gradJ = pm.F[j];
-            if( j >= pm.Ls )
-                gradJ -= kLogBarrierTau / std::max( pm.X[j], dcFloor );
+            // A pure-phase species whose barrier term exceeds the tolerance is held there by the barrier:
+            // it is judged as sitting on its floor, on its gradient without that term (a tie then passes).
+            const double barrier = ( j >= pm.Ls ) ? kLogBarrierTau / std::max( pm.X[j], dcFloor ) : 0.;
+            const bool barrierHeld = barrier > kktTol;
+            if( !barrierHeld )
+                gradJ -= barrier;
             for( long int i = 0; i < N; i++ )
                 gradJ -= pm.U[i] * pm.A[ i + j*N ];
             gradSaved[(size_t)j] = gradJ;
@@ -5723,6 +5804,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // constraint: its multiplier is unrestricted in sign, so no one-sided test applies.
             if( problem.xupper[j] <= problem.xlower[j] + std::max( dcFloor, problem.xlower[j]*1e-6 ) )
                 resid = 0.;                        // fixed (degenerate box): no sign test applies
+            else if( barrierHeld )
+            {
+                resid = std::max( -gradJ, 0. );   // held at its floor by the barrier: gradJ should be >= 0
+                if( resid <= kktTol && std::max( barrier - gradJ, 0. ) > kktTol ) nBarrierPassed++;
+            }
             else if( pm.X[j] <= problem.xlower[j] + std::max( dcFloor, problem.xlower[j]*1e-6 ) )
                 resid = std::max( -gradJ, 0. );   // at lower bound: gradJ should be >= 0
             else if( pm.X[j] >= problem.xupper[j] * ( 1. - 1e-6 ) )
@@ -5735,6 +5821,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 worstKKTSpecies = j;
             }
         }
+        if( nBarrierPassed > 0 )
+            native_trace_decide( "kktbarrier passed=%ld tau=%.1e tol=%.1e", (long)nBarrierPassed, kLogBarrierTau, kktTol );
         // pa_OptimaTailStop: after a tail-stop answer, a species holding under 1e-9 of the total amount is not
         // held to the stationarity test, as the stop itself did not; recorded with the largest skipped residual.
         if( tailAccepted && maxKKTResidual > kktTol )
@@ -5898,7 +5986,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         long int worstStabilityPhase = WorstPhaseStabilityViolation(
                     presenceThreshold, dcFloor,
                     extinctFixed.empty() ? nullptr : extinctFixed.data(),
-                    worstStabilityViol, worstStabilityWasAbsent, &stabRanked );
+                    worstStabilityViol, worstStabilityWasAbsent, &stabRanked, nullptr, "final" );
         bool stabilityOk = ( worstStabilityPhase < 0 );
 
         // Commit each active condition's titrant into pm.B[], so that the mass-balance check
@@ -6277,9 +6365,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 }
                 // pa_OptimaAcceptRepair: when the test fails only on the per-IC mass balance,
                 // apply MassBalanceReproject() and re-test; restore if mb_rel stays > 1.
-                // A certified leveling start may also repair a rounding-size balance error.
+                // A certified leveling start may also repair a rounding-size balance error, and so may a tail
+                // stop or the solve after it, as an answer that converged would be.
                 const bool accRepair = pa_p->OptimaAcceptRepair > 0
-                    || g_lvlShortcut;
+                    || g_lvlShortcut || stallWatch->tailStop || stallWatch->vanishedOff;
                 if( ok && mbRelWorst > 1. && accRepair )
                 {
                     std::vector<double> Ysave( pm.Y, pm.Y + pm.L );
@@ -6335,6 +6424,21 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
         }
 
+        // An answer whose water phase is reported must look like water: a pH far off the water scale or an
+        // absurd ionic strength means the solve stopped on a wrong state, so it is not accepted. Not checked
+        // when a pH or Eh target is set: the target sets the state then.
+        if( result.succeeded && R == 0 && pm.LO >= 0 && HasAqueousPhase() )
+        {
+            CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+            const bool insane = !g_aqueousAbsent && ( pm.pH < -2. || pm.pH > 16. || pm.IC > 100. );
+            if( insane )
+            {
+                result.succeeded = false;
+                native_trace_decide( "aqsanity pH=%.3f IS=%.3e", pm.pH, pm.IC );
+                ipm_logger->info( "Optima: the answer was refused: its water phase has pH {:.2f} and ionic strength {:.3g}",
+                                  pm.pH, pm.IC );
+            }
+        }
         if( !result.succeeded && pa_p->DW )
         {
             // pa_DW gates the same decision for native's "MBR iterations exceeded" case.
@@ -6434,6 +6538,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
 {
     long int fiaN = 0, ipmN = 0;
     bool nativeOk = true;
+    bool noProgWarm = false;   // pa_IpmNoProgress stopped the native leg: Optima starts warm from its last state
     double calcTime = 0.;
     std::vector<double> Ysave, Usave;
     double FXsave = kTotalGibbsEnergyUnset;   // native's total G, external units (restored below)
@@ -6472,12 +6577,18 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
     }
     catch( TError& werr )
     {
+        if( g_ipmNoProgFired && werr.title.rfind( "E06IPM", 0 ) == 0 )
+        {
+            noProgWarm = true;
+            nativeOk = false;
+            ipm_logger->info( "HOP: native leg stopped without progress; the Optima leg starts from its last state" );
+        }
         // Cold fallback for the warm native leg: native SIA can refuse a state its own
         // cold path returned. Retry the leg cold, so SHP degrades to HOP at the cost of
         // one wasted attempt.
-        if( wantWarmNative )
+        else if( wantWarmNative )
         {
-            ipm_logger->warn( "HOP: warm native leg failed ({}: {}); retrying it cold", werr.title, werr.mess );
+            ipm_logger->info( "HOP: warm native leg failed ({}: {}); retrying it cold", werr.title, werr.mess );
             wantWarmNative = false;
             fiaN = ipmN = 0;
             try
@@ -6491,7 +6602,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             catch( TError& nerr2 )
             {
                 nativeOk = false;
-                ipm_logger->warn( "HOP: native leg failed cold too ({}: {}); solving cold with Optima",
+                ipm_logger->info( "HOP: native leg failed cold too ({}: {}); solving cold with Optima",
                                    nerr2.title, nerr2.mess );
                 fiaN = ipmN = 0;
                 calcTime = 0.;
@@ -6502,7 +6613,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             // No assemblage to hand over: degrade to a plain cold Optima solve (an AOP
             // result under a HOP status) and say so.
             nativeOk = false;
-            ipm_logger->warn( "HOP: native leg failed ({}: {}); solving cold with Optima", werr.title, werr.mess );
+            ipm_logger->info( "HOP: native leg failed ({}: {}); solving cold with Optima", werr.title, werr.mess );
             fiaN = ipmN = 0;
             calcTime = 0.;
         }
@@ -6553,7 +6664,30 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
         }
     } legRecorder{ this, warmNative, nativeOk, fiaN, ipmN, fiaO, ipmO, calcTime, timeNativeLeg };
 
-    if( !nativeOk )
+    if( noProgWarm )
+    {
+        // Warm from the stopped native state, as the native rescue does; cold if that fails.
+        bool ok = false;
+        try
+        {
+            pm.pNP = 1;
+            optima_hop_leg = true;
+            calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false, /* runKinetics */ false );
+            optima_hop_leg = false;
+            ok = !( pm.MK || pm.PZ );
+        }
+        catch( TError& ) { optima_hop_leg = false; }
+        native_trace_decide( "ipmnoprog-hop warm=%d", ok ? 1 : 0 );
+        if( !ok )
+        {
+            long int fiaC = 0, ipmC = 0;
+            pm.pNP = 0;
+            try { calcTime += CalculateEquilibriumStateOptima( fiaC, ipmC, false, false ); }
+            catch( TError& ) { fiaO += fiaC; ipmO += ipmC; NumIterFIA = fiaN + fiaO; NumIterIPM = ipmN + ipmO; throw; }
+            fiaO += fiaC; ipmO += ipmC;
+        }
+    }
+    else if( !nativeOk )
     {
         // No native answer to fall back to: a failure propagates as a plain cold AOP
         // call's would.
@@ -6676,6 +6810,45 @@ double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIP
                          accept ? 1 : 0, accept ? "-" : why.c_str(), Gnat, Gopt, (long)fiaO, (long)ipmO, (long)cap );
     NumIterFIA += fiaO; NumIterIPM += ipmO;
     return dt;
+}
+
+// Native stopped at its iteration limit, or (broken) its linear system broke down. Optima solves from native's
+// last state, then once from scratch; a clean answer is kept, otherwise the caller reports native's failure.
+bool TMultiBase::NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM, double& seconds, bool broken )
+{
+    const long int cap = base_param()->NativeOptimaFinish;
+    if( cap <= 0 || !optima_control_conditions.empty() )
+        return false;
+    const long int savedPNP = pm.pNP;
+    long int fiaO = 0, ipmO = 0;
+    bool ok = false;
+    int attempt = 0;
+    for( ; attempt < 2 && !ok; attempt++ )
+    {
+        struct Budget {   // each attempt's iteration cap; always lifted again, also on a throw
+            explicit Budget( long int n ) { g_optimaIterBudget = n; }
+            ~Budget() { g_optimaIterBudget = -1; }
+        } budget( cap );
+        long int fia = 0, ipm = 0;
+        pm.pNP = ( attempt == 0 ) ? 1 : 0;
+        try
+        {
+            optima_hop_leg = ( attempt == 0 );
+            seconds += CalculateEquilibriumStateOptima( fia, ipm, false, /* runKinetics */ false );
+            ok = !( pm.MK || pm.PZ );
+        }
+        catch( TError& ) {}
+        optima_hop_leg = false;
+        fiaO += fia; ipmO += ipm;
+    }
+    pm.pNP = savedPNP;
+    native_trace_decide( "nativerescue ok=%d why=%s attempts=%d fiao=%ld ipmo=%ld cap=%ld", ok ? 1 : 0,
+                         broken ? "E07" : "E06", attempt, (long)fiaO, (long)ipmO, (long)cap );
+    ipm_logger->info( "Native solver {}; Optima {} the answer",
+                      broken ? "could not solve its linear system" : "stopped at its iteration limit",
+                      ok ? ( attempt == 1 ? "finished" : "found" ) : "did not find" );
+    NumIterFIA += fiaO; NumIterIPM += ipmO;
+    return ok;
 }
 
 #endif // USE_OPTIMA_SOLVER

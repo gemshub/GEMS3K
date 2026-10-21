@@ -170,7 +170,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 
         // Creating and initializing the TActivity class instance for this TNode instance
         init_into_gems3k();
-        node_logger->info("Initialization of system {}", char_array_to_string(pmm->stkey,EQ_RKLEN));
+        node_logger->debug("Initialization of system {}", char_array_to_string(pmm->stkey,EQ_RKLEN));
         return 0;
     }
     catch(TError& err)
@@ -201,6 +201,29 @@ void TNode::init_into_gems3k()
     //InitReadActivities( mult_in.c_str(),CSD ); // from DCH file in future?
     multi_ptr()->InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
     this->InitCopyActivities( CSD, pmm, CNode );
+    WarnSolidsCodedAqueous();
+}
+
+// A single-species phase outside the aqueous phase whose species is coded as a dissolved species gets the
+// energy terms of a solute, which gives wrong answers: warn once per such phase when the system is loaded.
+void TNode::WarnSolidsCodedAqueous()
+{
+    if( !pmm || !pmm->DCC || !pmm->PHC || !pmm->L1 )
+        return;
+    for( long int k = 0, j = 0; k < pmm->FI; j += pmm->L1[k], k++ )
+    {
+        if( pmm->L1[k] != 1 || pmm->PHC[k] == PH_AQUEL || j >= pmm->L )
+            continue;
+        const char c = pmm->DCC[j];
+        if( c != DC_AQ_SPECIES && c != DC_AQ_PROTON && c != DC_AQ_ELECTRON && c != DC_AQ_SURCOMP
+            && c != DC_AQ_SOLVENT && c != DC_AQ_SOLVCOM )
+            continue;
+        auto trim = []( std::string s ) { s.erase( s.find_last_not_of( ' ' ) + 1 ); return s; };
+        node_logger->warn( "Phase {} has one species, {}, coded '{}' as a dissolved species, so its energy is taken as "
+                           "that of a solute and the results will be wrong. Try: code it 'O' (single-component phase).",
+                           trim( char_array_to_string( pmm->SF[k] + MAXSYMB, MAXPHNAME ) ),
+                           trim( char_array_to_string( pmm->SM[j], MAXDCNAME ) ), c );
+    }
 }
 
 //  Parameters:
@@ -270,7 +293,7 @@ long int  TNode::GEM_init( std::string dch_json, std::string ipm_json,
 
         // Creating and initializing the TActivity class instance for this TNode instance
         init_into_gems3k();
-        node_logger->info("Initialization of system {}", char_array_to_string(pmm->stkey,EQ_RKLEN));
+        node_logger->debug("Initialization of system {}", char_array_to_string(pmm->stkey,EQ_RKLEN));
 
         return 0;
     }
@@ -579,8 +602,8 @@ bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
 
 #ifndef NO_THERMOFUN
     thermo_engine.reset(new ThermoFun::ThermoEngine(thermo_file_or_string));
-    node_logger->info("ThermoEngine substances: {}", thermo_engine->database().numberOfSubstances());
-    node_logger->info("Read ThermoEngine: {}", thermo_file_or_string);
+    node_logger->debug("ThermoEngine substances: {}", thermo_engine->database().numberOfSubstances());
+    node_logger->debug("Read ThermoEngine: {}", thermo_file_or_string);
     return true;
 #else
     node_logger->warn("Try read ThermoEngine not in USE_THERMOFUN mode {}", thermo_file_or_string);
@@ -640,7 +663,7 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         if( CSD->ccPH[0] == PH_AQUEL )
         {
             std::string h2o_key = dCH->DCNL[pmm->LO];
-            node_logger->info("water-solvent: {}", h2o_key);
+            node_logger->debug("water-solvent: {}", h2o_key);
             auto water_props = thermo_engine->propertiesSolvent(funT, funP, h2o_key);
             auto water_electro = thermo_engine->electroPropertiesSolvent(funT, funP, h2o_key);
 
