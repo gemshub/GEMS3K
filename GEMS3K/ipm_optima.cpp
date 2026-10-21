@@ -3612,6 +3612,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             long int wLO = -1;   // pa_OptimaDryOut: the water index, -1 = off (not cleared by reset())
             bool dryDone = false;   // pa_OptimaDryOut: the water phase was taken out; do not look again
             bool wSeenWet = false;  // pa_OptimaDryOut: water was above the threshold at some step of this call
+            long int stallAt = 0;   // pa_OptimaStallNetFactor: iterations of the first solve that the watch stopped (not cleared by reset())
             void reset() {
                 bestErr = bestComp = std::numeric_limits<double>::infinity();
                 refErr  = refComp  = std::numeric_limits<double>::infinity();
@@ -4143,6 +4144,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                      stallWatch->timedOut ? "timeout" : "stall",
                                      (long)stallWatch->window, (long)stallWatch->run,
                                      (long)r.iterations, stallWatch->bestErr, stallWatch->bestComp );
+                if( stallWatch->stallAt == 0 && !stallWatch->timedOut )
+                    stallWatch->stallAt = (long int)r.iterations;
                 r.succeeded = false;
             }
         };
@@ -5463,11 +5466,17 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             stallWatch->reset();
             unpinForNet();               // the PROBLEM too, not only the state - see above
             Optima::Solver solverNS;     // fresh instance, per the retry-ordering note above
-            solverNS.setOptions( options );
+            // pa_OptimaStallNetFactor: the net gets a multiple of the iterations after which the first solve stalled
+            Optima::Options netOptions = options;
+            if( pa_p->OptimaStallNetFactor > 0 && stallWatch->stallAt > 0 )
+                netOptions.maxiters = (unsigned)std::min( (long int)options.maxiters,
+                                          std::max( 2000L, pa_p->OptimaStallNetFactor * stallWatch->stallAt ) );
+            solverNS.setOptions( netOptions );
             Optima::State  nsState  = initialState;
             Optima::Result nsResult = timed_solve( solverNS, problem, nsState );
             optimaIterTotal += nsResult.iterations;
-            native_trace_decide( "stallnet outcome=%s it=%ld", nsResult.succeeded ? "converged" : "failed", (long int)nsResult.iterations );
+            native_trace_decide( "stallnet outcome=%s it=%ld cap=%ld stallat=%ld", nsResult.succeeded ? "converged" : "failed",
+                                 (long int)nsResult.iterations, (long int)netOptions.maxiters, stallWatch->stallAt );
             stallWatch->window = savedWindow;
             if( !nsResult.succeeded )
                 repinAfterNet();         // the net did not win - leave the boxes as they were

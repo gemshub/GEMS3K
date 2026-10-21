@@ -260,7 +260,9 @@ long int TNode::GEM_run( bool uPrimalSol )
 // the normal settings. With pa_FailRescue = 2, if none passes, the attempt that best balances the
 // composition (then lowest G) is returned as a bad result; if
 // none balances, the original failure is returned. A kinetic node is finished with this step's kinetic
-// limits held fixed, so the kinetics are not applied twice. DECIDE rescue, rescue-result.
+// limits held fixed, so the kinetics are not applied twice. pa_RescueBudget: after the call has used that many
+// iterations, steps 1 to 4 start no new solve; step 5, the other solver, still runs once. DECIDE rescue,
+// rescue-result, rescue-budget.
 long int TNode::GEM_run_rescue( bool uPrimalSol )
 {
     rescueStep = 0;
@@ -361,12 +363,21 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
 
     native_trace_quiet( true );
     bool passed = false;
+    // pa_RescueBudget: true once the call has used its iterations; the remaining steps 1-4 are then skipped
+    bool budgetUsed = false;
+    auto overBudget = [&]() {
+        if( !budgetUsed && bp->RescueBudget > 0 && itTotal >= bp->RescueBudget )
+        {
+            budgetUsed = true;
+            native_trace_decide( "rescue-budget it=%ld budget=%ld attempts=%ld", itTotal, bp->RescueBudget, nAttempts );
+        }
+        return budgetUsed; };
 
     // (1) a cold call with a previous answer in its inputs is solved warm from it, as a transport code would
     double xPrev = 0.;
     for( long int jj = 0; jj < CSD->nDCb; jj++ ) xPrev += D0->xDC[jj];
     const bool coldReq = requested == NEED_GEM_AIA || requested == NEED_GEM_AOP || requested == NEED_GEM_HOP;
-    if( coldReq && xPrev > 0. )
+    if( coldReq && xPrev > 0. && !overBudget() )
     {
         databr_copy( D0 );
         const long int s = run( warmMode, true, false );
@@ -376,7 +387,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     }
 
     // (2) nudged compositions, as pa_ColdRetryNudges: bIC[i] x (1 + s_i k 1e-15), k = +1, -1, +2, -2, ...
-    for( long int n = 0; n < bp->ColdRetryNudges && !passed; n++ )
+    for( long int n = 0; n < bp->ColdRetryNudges && !passed && !overBudget(); n++ )
     {
         const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
         databr_copy( D0 );
@@ -397,7 +408,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     // (3) walk from the bulk the previous answer balances to the new one, in equal warm steps; a failed step
     // is halved, at most three times. A kinetic node walks inside the kinetic limits of the first attempt
     // that produced them, and skips the walk if none did.
-    if( !passed && bp->RescueWalkSteps > 0 && CSD->nDCb == CSD->nDC && CSD->nICb == CSD->nIC )
+    if( !passed && !overBudget() && bp->RescueWalkSteps > 0 && CSD->nDCb == CSD->nDC && CSD->nICb == CSD->nIC )
     {
         std::vector<double> bPrev( (size_t)nIC, 0. );
         double xSum = 0.;
@@ -418,7 +429,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             { DATABR* live = CNode; CNode = good; databr_copy( live ); CNode = live; }
             double tGood = 0., h = 1. / (double)bp->RescueWalkSteps;
             long int halvings = 0, steps = 0, s = -1;
-            while( tGood < 1. )
+            while( tGood < 1. && !overBudget() )
             {
                 const double t = std::min( 1., tGood + h );
                 databr_copy( good );
@@ -459,7 +470,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         native_trace_decide( "rescue skip=4,5 reason=kinetic-no-result attempts=%ld", nAttempts );
 
     // (4) one solve with looser settings, then the finish with the normal ones.
-    if( !passed && !noResultKinetic )
+    if( !passed && !noResultKinetic && !overBudget() )
     {
         databr_copy( D0 );
         const BASE_PARAM saved = *bp;
@@ -496,6 +507,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         if( warmMode == NEED_GEM_SIA ) others.push_back( NEED_GEM_SOP );
         else if( warmMode == NEED_GEM_SOP ) { if( !controlled ) others.push_back( NEED_GEM_SIA ); }
         else { if( !controlled ) others.push_back( NEED_GEM_SIA ); others.push_back( NEED_GEM_SOP ); }
+        // step 5 runs even when the budget is used: it is one solve per solver, and often the one that passes
         for( long int code : others )
         {
             if( passed ) break;
@@ -550,10 +562,12 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             result = st;
         }
     }
-    native_trace_decide( "rescue-result requested=%ld first=%ld step=%ld status=%ld attempts=%ld pool=%ld it=%ld",
-                         requested, st, rescueStep, result, nAttempts, (long)pool.size(), itTotal );
+    native_trace_decide( "rescue-result requested=%ld first=%ld step=%ld status=%ld attempts=%ld pool=%ld it=%ld budget=%d",
+                         requested, st, rescueStep, result, nAttempts, (long)pool.size(), itTotal, budgetUsed ? 1 : 0 );
     node_logger->info( "GEM_run(): mode {} failed ({}) - rescue: {}", requested, st,
                        passed ? "recovered" : ( rescueStep == 6 ? "best attempt returned" : "still failed" ) );
+    if( budgetUsed && !passed )
+        node_logger->info( "GEM_run(): the rescue stopped at its iteration limit (pa_RescueBudget = {})", bp->RescueBudget );
     for( auto& e : pool ) databr_free( e.d );
     databr_free( failed );
     databr_free( D0 );

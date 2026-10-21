@@ -28,7 +28,7 @@ AIA and SIA). Its settings are the `pa_...` entries in the `-ipm` file of the pr
 
 The settings of Optima are also `pa_...` entries in the `-ipm` file. Their names start with `pa_Optima`. See
 [user settings](#optima-solver--user-settings). Settings for tests are in
-[Advanced settings](SOLVER-ADVANCED-SETTINGS.md).
+[Advanced settings](SOLVER-ADVANCED-SETTINGS.md). Suggested settings for common cases are in [Advanced usage](SOLVER-ADVANCED-USAGE.md).
 
 The Optima library has more options. You cannot set them in the GEMS3K project files. GEMS3K chooses them.
 The options guide of the Optima library describes them (`docs/OPTIONS-GUIDE.md` in its repository).
@@ -250,6 +250,9 @@ In a text file (`…-ipm.dat`), add the setting after the `<END_DIM>` line. For 
 Put each setting in the file one time only. If a name is in the file two times, GEMS3K uses the later value.
 GEMS3K does not read a setting that is before `<END_DIM>` in a text file.
 
+
+**Suggested settings for common cases** (transport, grids, dry systems and others): see [Advanced usage](SOLVER-ADVANCED-USAGE.md#suggested-settings-for-common-cases).
+
 ### Optima solver — user settings
 
 These are the Optima settings that a user can change. Advanced settings has all other Optima settings
@@ -258,7 +261,7 @@ These are the Optima settings that a user can change. Advanced settings has all 
 | Setting | Default | What it does | When it can help | Other values |
 |---|---|---|---|---|
 | `pa_OptimaTol` | 1e-8 | Sets how precisely Optima must converge. | Make it a little larger to get more speed and less accuracy on large systems. Make it smaller only if a result is not converged enough. | Any positive number. A smaller number is stricter. |
-| `pa_OptimaMaxSeconds` | 0 (off) | Sets a time limit in seconds for one calculation with its tries. The results then depend on the speed of the computer. | Long batch runs or transport runs. One stuck calculation must not stop the other calculations. | Any positive number of seconds. |
+| `pa_OptimaMaxSeconds` | 0 (off) | Sets a time limit in seconds for one Optima solve with its tries. Each rescue step starts the limit again. The results then depend on the speed of the computer. | Long batch runs or transport runs. One stuck calculation must not stop the other calculations. | Any positive number of seconds. |
 | `pa_OptimaDimReduce` | 0 (automatic) | For large systems, the solver first solves with only the important species. Then it adds the other species. Automatic means that it is on from 200 species. | Switch it on for a slow system with fewer than 200 species. Switch it off if a large system gives a different result with it. | A positive number = on, with at most that number of passes. A negative number = off. |
 | `pa_OptimaColdRetry` | 2 (fail fast) | A warm-start calculation (SOP, SHP) can fail. Then the solver makes a new cold start. The value 2 stops the first attempt early. | Use 1 if the warm start usually succeeds but needs many iterations. Use 0 only for tests. | 0 = no new try. 1 = a new try only after the first attempt used its full budget. 2 = the first attempt stops early. |
 | `pa_OptimaAcceptRepair` | 0 (off) | Optima can accept a result that is almost converged. Then the solver first corrects a small error in the element totals. | Systems with very little water. Other cases where Optima ends near the result with element totals that are not exactly balanced. | 1 = on. |
@@ -335,7 +338,7 @@ hand, the project is not correct. To change them, export the project again from 
 
 | Setting | Default | What it does | When it can help | Other values |
 |---|---|---|---|---|
-| `pa_FailRescue` | 2 (on) | A call can end with an error or a BAD result. Then GEMS3K tries it again in steps. The steps are: a warm restart from the previous result, compositions that are changed by a very small amount, a walk from the previous result, looser settings, and the other solver. GEMS3K finishes each successful step at the exact composition with the normal settings. With the value 2, you get the best attempt that keeps the element totals if no step succeeds. Its status is BAD. If there is a pH target or an Eh target, GEMS3K keeps only an attempt that meets the target. | Keep the value 2. This is important for transport codes, which need a result for each node. It costs more iterations only on calls that fail. | 0 = off. 1 = steps 1 to 5 only. |
+| `pa_FailRescue` | 2 (on) | A call can end with an error or a BAD result. Then GEMS3K tries it again in steps. The steps are: a warm restart from the previous result, compositions that are changed by a very small amount, a walk from the previous result, looser settings, and the other solver. GEMS3K finishes each successful step at the exact composition with the normal settings. With the value 2, you get the best attempt that keeps the element totals if no step succeeds. Its status is BAD. If there is a pH target or an Eh target, GEMS3K keeps only an attempt that meets the target. | Keep the value 2. This is important for transport codes, which need a result for each node. It costs more iterations only on calls that fail. A call that no step can save stops after 100000 iterations (`pa_RescueBudget`, in [Advanced settings](SOLVER-ADVANCED-SETTINGS.md)). | 0 = off. 1 = steps 1 to 5 only. |
 
 ## Known limits
 
@@ -370,7 +373,8 @@ hand, the project is not correct. To change them, export the project again from 
   to more than the amount of the element. An Optima call can then stay BAD. The rescue cannot solve such a
   call. Use AIA or HOP.
 - **Rescued calls cost more.** A call that the rescue saves (`pa_FailRescue`) can use several times the
-  iterations of a normal call. A call that no step can save uses the most iterations.
+  iterations of a normal call. A call that no step can save uses the most iterations. `pa_RescueBudget` limits
+  this number. `pa_OptimaMaxSeconds` does not limit it, because the time limit starts again for each try.
 
 ## Compatibility
 

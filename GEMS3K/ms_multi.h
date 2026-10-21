@@ -512,6 +512,12 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     long int FailRescue = 2;
     /// pa_RescueWalkSteps: number of equal steps of the walk in pa_FailRescue; 0 = no walk. Default 8.
     long int RescueWalkSteps = 8;
+    /// pa_RescueBudget: after the whole call has used this many iterations of both solvers, pa_FailRescue skips its
+    /// remaining steps 1-4; step 5 (the other solver) still runs once. 0 = no limit. Default 100000.
+    long int RescueBudget = 100000;
+    /// pa_OptimaStallNetFactor: Optima's last re-solve after a stall gets at most this many times the iterations
+    /// of the solve that stalled (at least 2000, at most the normal limit). 0 = the normal limit. Default 5.
+    long int OptimaStallNetFactor = 5;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2001,7 +2007,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor
 
 } MULTI_DYNAMIC_FIELDS;
 

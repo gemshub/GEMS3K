@@ -6,7 +6,7 @@ Just extended with an alternative Activity C++ API as the basis for a new Python
 Main version use [ThermoFun](https://bitbucket.org/gems4/thermofun/src/master/) - a code for calculating the standard state thermodynamic properties of substances and reactions at a given temperature and pressure. 
 
 
-**Choosing a solver and its settings:** see [Docs/SOLVER-OPTIONS-GUIDE.md](Docs/SOLVER-OPTIONS-GUIDE.md) — the two solvers (GEMS3K IPM and Optima), the six calculation modes, every `pa_` setting, and the known limitations.
+**Choosing a solver and its settings:** see [Docs/SOLVER-OPTIONS-GUIDE.md](Docs/SOLVER-OPTIONS-GUIDE.md) — the two solvers (GEMS3K IPM and Optima), the six calculation modes, every `pa_` setting, and the known limitations. Suggested settings for batch runs, transport and grids: [Docs/SOLVER-ADVANCED-USAGE.md](Docs/SOLVER-ADVANCED-USAGE.md).
 
 **What each mode does, step by step:** see [Docs/SOLVER-PATH-GRAPH.md](Docs/SOLVER-PATH-GRAPH.md) ([drawn version](Docs/SOLVER-PATH-GRAPH.html)). It shows the order of the solver steps, the retries and the rescue.
 
