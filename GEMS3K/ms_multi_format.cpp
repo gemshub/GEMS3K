@@ -185,7 +185,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaDimReduce", 0 , 0, 0, "# pa_OptimaDimReduce: Optima solver: species-level dimension reduction; >0 = max passes, 0 = auto (on from 200 species), <0 = off { 0 }" },
     { "pa_OptimaDimReduceTol", 0 , 0, 0, "# pa_OptimaDimReduceTol: Optima solver: initial species set of the dimension reduction; >0 = RT threshold, <0 = -m (m x N cheapest species) { 10 }" },
     { "pa_MbPivotSplit", 0 , 0, 0, "# pa_MbPivotSplit: reserved, no effect { 0 }" },
-    { "pa_OptimaZeroAbsent", 0 , 0, 0, "# pa_OptimaZeroAbsent: Optima solver: absent species in the answer; 0 = floor amounts, 1 = zero absent phases and rebalance, 2 = floor amounts and repair a failing mass balance { 2 }" },
+    { "pa_OptimaZeroAbsent", 0 , 0, 0, "# pa_OptimaZeroAbsent: Optima solver: absent species in the answer; 0 = floor amounts, 1 = zero absent phases and rebalance, 2 = floor amounts and repair a failing mass balance, 3 = as 2, then absent phases set to 0 as in the GEMS3K IPM solver { 3 }" },
     { "pa_OptimaReadmitSeed", 0 , 0, 0, "# pa_OptimaReadmitSeed: reserved, no effect { 0 }" },
     { "pa_IpmStallWindow", 0 , 0, 0, "# pa_IpmStallWindow: IPM: accept convergence when energy and composition have stopped changing over this many iterations; 0 = off { 30 }" },
     { "pa_MbReproject", 0 , 0, 0, "# pa_MbReproject: Native solver: repair an unsatisfied mass balance of the answer by projection; 0 = off, 1 = on { 1 }" },

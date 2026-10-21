@@ -1578,6 +1578,10 @@ void TNode::packDataBr()
             CNode->aPH[ii] = pmm->Aalp[ CSD->xph[ii] ]*kg_to_g;
         CNode->omPH[ii] = pmm->Falp[ CSD->xph[ii] ];
     }
+    floorParkedAmount.assign( (size_t)CSD->nPHb, -1. );
+    for( ii=0; ii<CSD->nPHb; ii++ )
+        if( multi_ptr() && multi_ptr()->PhaseFloorParked( CSD->xph[ii] ) )
+            floorParkedAmount[(size_t)ii] = CNode->xPH[ii];
     for( ii=0; ii<CSD->nPSb; ii++ )
     {   CNode->vPS[ii] = pmm->FVOL[ CSD->xph[ii] ]/m3_to_cm3;
         CNode->mPS[ii] = pmm->FWGT[ CSD->xph[ii] ]/kg_to_g;

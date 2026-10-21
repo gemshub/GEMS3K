@@ -155,8 +155,8 @@ The Optima solver runs in AOP and SOP. It also runs as the second part of HOP an
 8. **Accept by direct check.** Optima can fail its own stopping test. If the mass balance holds, and a direct
    test shows that no missing phase must form, GEMS3K accepts the result (`pa_OptimaTpdAccept`, on by default).
 9. **Touch-up.** An accepted result can have a small error in the element totals. The solver tries a small
-   repair. It keeps the repair only if the repair helps (`pa_OptimaZeroAbsent` = 2, the default). With the
-   value 1, the species of absent phases are set to exactly zero.
+   repair. It keeps the repair only if the repair helps. Then it sets absent phases to 0, by the same rule as
+   the GEMS3K IPM solver (`pa_OptimaZeroAbsent` = 3, the default).
 
 **Cap on one call.** The cap is for AOP and SOP (`pa_OptimaCallCap`, off by default). The whole call, with all
 its tries, can use only a set number of iterations.

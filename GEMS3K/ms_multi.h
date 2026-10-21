@@ -229,12 +229,15 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     ///   0  at the floor amount.
     ///   1  absent phases are set to exactly 0 and the element totals are rebalanced; the zeroing
     ///      is undone if the rebalance fails.
-    ///   2  (default) floor amounts, plus a repair that projects the answer back onto the mass
+    ///   2  floor amounts, plus a repair that projects the answer back onto the mass
     ///      balance if it fails the per-element test; the repair is dropped if it does not help.
+    ///   3  (default) the repair of 2, then absent phases are set to exactly 0, as the GEMS3K IPM solver
+    ///      reports them, and the element totals are rebalanced. A phase that carries an element
+    ///      whose balance cannot be kept stays at its floor amount.
     /// Any other non-zero value behaves as 1.
     /// In plain words: decides whether absent species are shown as exactly zero or as a tiny
     /// amount, and fixes the element totals if needed.
-    long int OptimaZeroAbsent = 2;
+    long int OptimaZeroAbsent = 3;
 
     /// pa_OptimaReadmitSeed: reserved, no effect. Kept so that the field order of BASE_PARAM
     /// (used by positional project-file serialisation) does not change.
@@ -1806,6 +1809,16 @@ protected:
     /// cleared at the start of each native solve.
     bool trace_growth_stuck = false;
     std::string trace_growth_note;
+    /// One entry per phase: 1 when the last accepted Optima answer left the whole phase at the
+    /// solver's lower bound and the phase is not supersaturated, so it is absent. Cleared at the
+    /// start of each native and Optima solve.
+    std::vector<char> phase_floor_parked;
+    /// Per species: the floor amount pa_OptimaZeroAbsent = 3 replaced by 0 in the last Optima answer, else 0.
+    /// The next warm start of the GEMS3K IPM solver gets these amounts back as its starting point, so the
+    /// reported zeros do not change how that solver starts. Taken over by warm_floor_seed at the start of
+    /// each native solve.
+    std::vector<double> zeroed_floor_amount;
+    std::vector<double> warm_floor_seed;
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
     void AutoInitialApproximation( );
 
@@ -1888,6 +1901,9 @@ public:
     /// In plain words: a trace element the user did not ask about, whose exact balance is
     /// not checked strictly.
     bool ICIsDefaultSeed( long int i ) const;
+    /// True when the last Optima answer marked phase k (MULTI index) as absent at its lower bound.
+    bool PhaseFloorParked( long int k ) const
+    { return k >= 0 && (size_t)k < phase_floor_parked.size() && phase_floor_parked[(size_t)k]; }
     /// Warns, on the Optima path, when an ordinary IC's bulk amount is smaller than the least
     /// its carrier species can hold at the lower bound,
     ///   need_i = sum_j a(i,j) * max(DLL_j, floor)   over species with a(i,j) > 0,

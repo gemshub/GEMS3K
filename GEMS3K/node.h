@@ -124,6 +124,10 @@ protected:
     NumIterFIA,   ///< \protected Total Number of performed FIA entry iterations
     NumIterIPM;   ///< \protected Total Number of performed IPM main iterations
 
+    /// Per DBR phase: the amount the last packDataBr() wrote for a phase the Optima solver
+    /// marked as absent at its floor, or -1. Read by Ph_Present().
+    std::vector<double> floorParkedAmount;
+
     TMultiBase* multi_ptr() const
     {
         return multi_base;
@@ -1076,11 +1080,13 @@ public:
     double  Ph_Moles( const long int xBR ) const; // Added for consistency on Oct 1, 2020
     double  Ph_Mole( const long int xBR ) const; // obsolete, not recommended to use in new coupled codes
 
-    /// Tells whether a phase is really present: its amount is above relFloor times the total amount of all
-    /// phases. A phase left at the solver's tiny floor amount is reported as not present; amounts are not changed.
+    /// Tells whether a phase is present: its amount is above 0 and the solver did not mark it as absent.
+    /// The Optima solver marks a phase it left at its tiny floor amount by the same rule the GEMS3K IPM
+    /// solver uses to set a phase to 0. Amounts are not changed.
     /// \param xBR is DBR phase index
-    /// \param relFloor is the share of the total amount below which a phase counts as absent (default 1e-9)
-    bool    Ph_Present( const long int xBR, const double relFloor = 1e-9 ) const;
+    /// \param relFloor if above 0, a phase below relFloor times the total amount of all phases also counts
+    ///        as absent (default 0, off). This test can also hide real trace phases.
+    bool    Ph_Present( const long int xBR, const double relFloor = 0. ) const;
 
     /// Retrieves the phase mass in kg.
     /// Works for multicomponent and for single-component phases.

@@ -20,7 +20,6 @@ for one project or one run. They do not change the defaults.
 | No redox couple in the system | `pa_OptimaRedoxFree = 2`, or give an Eh target. | The bulk composition does not fix the Eh. The setting aims at pe 4. |
 | Solid solutions with end-members that are almost the same | `pa_DK = 1e-7` | Gives a clearly more accurate composition with the GEMS3K IPM solver. |
 | Sorption models | `pa_DGC = 0.001` | Damps the non-ideal corrections between iterations. |
-| Absent phases must show exactly zero | `pa_OptimaZeroAbsent = 1` | Optima keeps an absent species at a very small floor amount by default. |
 | Large systems (hundreds of species) | AIA, or HOP for a checked result. With Optima: `pa_OptimaTol` a little larger. | Optima alone is much slower on large systems. |
 | Trace elements | A stricter `pa_DHB`. Give each element more than the floor amounts of its species need (see [Known limits](SOLVER-OPTIONS-GUIDE.md#known-limits)). | Keeps the mass balance of small amounts exact. |
 | Find the cause of a failed calculation | `pa_PSM = 2` or `3` | Writes warnings or a detailed trace to `ipmlog.txt`. |

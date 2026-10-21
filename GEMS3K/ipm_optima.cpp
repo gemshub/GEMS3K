@@ -2376,6 +2376,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                                     bool runKinetics )
 {
     gems3k_timing::Scope timing( gems3k_timing::OptimaCall );
+    phase_floor_parked.clear();   // set again below only for an accepted answer
+    zeroed_floor_amount.clear();
     // Disable the IPM-2 chemical-potential smoothing for this call (see
     // optima_disable_smoothing). RAII, so the flag is restored on every exit.
     struct SmoothingGuard {
@@ -6104,11 +6106,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // ---- pa_OptimaZeroAbsent: absent species in the answer (see BASE_PARAM::OptimaZeroAbsent).
         // Runs after every trustworthiness check and only on a clean verdict, so it never
         // turns an accepted answer into a rejected one.
-        if( pa_p->OptimaZeroAbsent == 2 && result.succeeded && allTargetsMet
+        if( ( pa_p->OptimaZeroAbsent == 2 || pa_p->OptimaZeroAbsent == 3 ) && result.succeeded && allTargetsMet
             && massBalanceBadIC < 0 && kktOk && stabilityOk )
         {
-            // Value 2: keep the amounts Optima returned, repair only a failing balance. Same
-            // acceptance gate as the zeroing below.
+            // Value 2 (and the first part of 3): keep the amounts Optima returned, repair only a
+            // failing balance. Same acceptance gate as the zeroing below.
             const long int Zc = N - pm.E;
             // worst relative residual over the ordinary ICs (the CERT record's mb_rel), worst absolute
             // residual over the charge row(s), and the charge rows' tolerance DHBM x total charge carried
@@ -6439,6 +6441,150 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                   pm.pH, pm.IC );
             }
         }
+        // Absent phases of an accepted answer (phase_floor_parked), and pa_OptimaZeroAbsent = 3.
+        phase_floor_parked.assign( (size_t)pm.FI, 0 );
+        if( result.succeeded && allTargetsMet && massBalanceBadIC < 0 && kktOk && stabilityOk )
+        {
+            // The GEMS3K IPM solver's phase-selection rules (PhaseSelectionSpeciationCleanup), with
+            // the stability index logSI = pm.Falp[k] from StabilityIndexes() on the converged answer.
+            // A phase whose species all sit on the numerical floor is Optima's form of a zero phase:
+            // it stays zero unless logSI >= pa_DF, where it would be inserted. A species with an upper
+            // limit of 0 (DUL = 0) is zero in the IPM solver, so its floor amount also counts as zero.
+            // A phase under any other kinetic limit is not touched. A phase above the floor with
+            // logSI <= -pa_DFM is removed by the IPM solver; here only if the log barrier alone holds
+            // it above the floor, because no solve follows. Larger ones are only counted.
+            long int nParked = 0, nUnstableOffFloor = 0, nSupersatFloor = 0;
+            for( long int k = 0, j0 = 0; k < pm.FI && j0 < L; j0 += pm.L1[k], k++ )
+            {
+                const long int j1 = std::min( j0 + pm.L1[k], L );
+                if( j1 <= j0 )
+                    continue;
+                bool onFloor = true, nearFloor = true, kinConstr = false, allHeldAtZero = true;
+                for( long int j = j0; j < j1; j++ )
+                {
+                    const bool heldAtZero = ( pm.DUL[j] <= 0. && pm.DLL[j] <= 0. );
+                    if( !heldAtZero ) allHeldAtZero = false;
+                    if( !heldAtZero && ( pm.DUL[j] < 1e6 || pm.DLL[j] > 0. ) ) { kinConstr = true; break; }
+                    const double lo = problem.xlower[j];
+                    const bool atLo = !( lo > dcFloor * ( 1. + 1e-9 ) ) && pm.Y[j] <= lo + std::max( dcFloor, lo * 1e-6 );
+                    // a pure-phase species held just above the floor by the log barrier (as judged in the
+                    // stationarity check above)
+                    const bool barrierHeld = ( j >= pm.Ls ) && !( lo > dcFloor * ( 1. + 1e-9 ) )
+                        && pa_p->LogBarrierTau / std::max( pm.Y[j], dcFloor ) > kktTol;
+                    if( !atLo ) onFloor = false;
+                    if( !atLo && !barrierHeld ) nearFloor = false;
+                }
+                if( kinConstr ) continue;
+                if( onFloor )
+                {   // a zero phase: stays zero unless it would be inserted
+                    if( allHeldAtZero || pm.Falp[k] < pa_p->DF ) { phase_floor_parked[(size_t)k] = 1; nParked++; }
+                    else nSupersatFloor++;
+                }
+                else if( pm.Falp[k] <= -pa_p->DFM )
+                {   // a present phase the IPM solver would remove; done here only for barrier-held amounts
+                    if( nearFloor ) { phase_floor_parked[(size_t)k] = 1; nParked++; }
+                    else nUnstableOffFloor++;
+                }
+            }
+            if( pa_p->OptimaZeroAbsent == 3 && nParked > 0 )
+            {
+                // Set the absent phases to exactly 0, as the GEMS3K IPM solver reports them, and
+                // rebalance. If an element still fails its balance, the absent phases that carry
+                // it keep their floor amounts and the rest is tried again.
+                const long int Zc = N - pm.E;
+                std::vector<double> Ysave( pm.Y, pm.Y + L );
+                auto residuals = [&]( std::vector<double>& c, std::vector<double>& tol )
+                {
+                    for( long int i = 0; i < N; i++ )
+                    {
+                        double ci = pm.B[i], scale = 0.;
+                        for( long int jj = 0; jj < L; jj++ )
+                        {
+                            ci -= pm.A[ i + jj*N ] * pm.Y[jj];
+                            scale += std::fabs( pm.A[ i + jj*N ] ) * pm.Y[jj];
+                        }
+                        c[(size_t)i] = ci;
+                        tol[(size_t)i] = ( i < Zc ) ? pm.B[i] * pm.DHBM : scale * pm.DHBM;
+                    }
+                };
+                std::vector<double> cBefore( (size_t)N ), tolBefore( (size_t)N ), cAfter( (size_t)N ), tolAfter( (size_t)N );
+                residuals( cBefore, tolBefore );
+                // An element is broken when its residual grew past the residual before and past frac x
+                // its tolerance. The rebalance starts at 0.1, the share of the tolerance the GEMS3K IPM
+                // solver allows a removed phase to use (CutoffDistortionMBR).
+                auto brokenIC = [&]( double frac ) -> long int
+                {
+                    residuals( cAfter, tolAfter );
+                    for( long int i = 0; i < N; i++ )
+                        if( std::fabs( cAfter[(size_t)i] ) >
+                            std::max( std::fabs( cBefore[(size_t)i] ), frac * tolBefore[(size_t)i] )
+                            && !ICIsDefaultSeed( i ) )
+                            return i;
+                    return -1;
+                };
+                std::vector<char> zeroIt( phase_floor_parked );
+                long int nZeroPh = 0, nZeroDC = 0, nKeptPh = 0, rounds = 0;
+                int rebalanced = 0, ok = 0;
+                for( ; rounds < 16; rounds++ )
+                {
+                    for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];
+                    nZeroPh = 0; nZeroDC = 0;
+                    for( long int k = 0, j0 = 0; k < pm.FI && j0 < L; j0 += pm.L1[k], k++ )
+                    {
+                        if( !zeroIt[(size_t)k] ) continue;
+                        const long int j1 = std::min( j0 + pm.L1[k], L );
+                        for( long int j = j0; j < j1; j++ )
+                            if( pm.Y[j] != 0. ) { pm.Y[j] = 0.; nZeroDC++; }
+                        nZeroPh++;
+                    }
+                    if( nZeroPh == 0 ) break;
+                    rebalanced = 0;
+                    long int bad = brokenIC( 0.1 );
+                    if( bad >= 0 )
+                    {
+                        rebalanced = MassBalanceReproject( pm.Y ) ? 1 : 0;
+                        bad = brokenIC( 1. );
+                    }
+                    if( bad < 0 ) { ok = 1; break; }
+                    // keep at the floor every zeroed phase that carries the failing element
+                    long int nKeep = 0;
+                    for( long int k = 0, j0 = 0; k < pm.FI && j0 < L; j0 += pm.L1[k], k++ )
+                    {
+                        if( !zeroIt[(size_t)k] ) continue;
+                        const long int j1 = std::min( j0 + pm.L1[k], L );
+                        for( long int j = j0; j < j1; j++ )
+                            if( pm.A[ bad + j*N ] != 0. ) { zeroIt[(size_t)k] = 0; nKeep++; break; }
+                    }
+                    nKeptPh += nKeep;
+                    if( nKeep == 0 ) break;   // no absent phase carries it: zeroing is not the cause
+                }
+                // The same per-IC test as the accepted state must still pass.
+                if( ok && CheckMassBalanceResiduals( pm.Y ) >= 0 )
+                    ok = 0;
+                if( !ok )
+                    for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];
+                else
+                {
+                    zeroed_floor_amount.assign( (size_t)L, 0. );
+                    for( long int j = 0; j < L; j++ )
+                        if( pm.Y[j] == 0. && Ysave[(size_t)j] > 0. ) zeroed_floor_amount[(size_t)j] = Ysave[(size_t)j];
+                }
+                for( long int j = 0; j < L; j++ ) pm.X[j] = pm.Y[j];
+                TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+                TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                CalculateActivityCoefficients( LINK_UX_MODE );
+                CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+                CheckMassBalanceResiduals( pm.Y );   // pm.C[] describes the returned state
+                native_trace_decide( "zeroabsent3 parked=%ld zeroed=%ld species=%ld keptfloor=%ld unstable_offfloor=%ld "
+                                     "supersat_floor=%ld rounds=%ld rebalanced=%d reverted=%d",
+                                     nParked, ok ? nZeroPh : 0L, ok ? nZeroDC : 0L, ok ? nKeptPh : nParked,
+                                     nUnstableOffFloor, nSupersatFloor, rounds, rebalanced, ok ? 0 : 1 );
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: pa_OptimaZeroAbsent=3 - {} of {} absent "
+                                   "phases set to 0{}", ok ? nZeroPh : 0L, nParked,
+                                   ok ? "" : " (reverted: the element balance would break)" );
+            }
+        }
+
         if( !result.succeeded && pa_p->DW )
         {
             // pa_DW gates the same decision for native's "MBR iterations exceeded" case.

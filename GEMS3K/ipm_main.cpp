@@ -3341,6 +3341,16 @@ to_text_file( "MultiDumpAA.txt" );   // Debugging
     }
     else  // Taking previous GEMIPM result as an initial approximation
     {
+        // a species the previous Optima answer reported as 0 (pa_OptimaZeroAbsent = 3) starts from the
+        // floor amount it had, as it would without the zeroing
+        if( warm_floor_seed.size() == (size_t)pm.L )
+        {
+            long int nSeed = 0;
+            for( j = 0; j < pm.L; j++ )
+                if( pm.Y[j] == 0. && warm_floor_seed[(size_t)j] > 0. ) { pm.Y[j] = warm_floor_seed[(size_t)j]; nSeed++; }
+            if( nSeed ) native_trace_decide( "warmfloorseed species=%ld", nSeed );
+        }
+        warm_floor_seed.clear();
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
         for( j=0; j< pm.L; j++ )
             pm.X[j] = pm.Y[j];
