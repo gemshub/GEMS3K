@@ -1,3 +1,4 @@
+#include <cctype>
 #include <istream>
 #include <regex>
 #include <cstring>
@@ -49,6 +50,53 @@ void replaceall( std::string& str, const std::string& old_part, const std::strin
         posb = pos + new_part.length();
         pos = str.find( old_part, posb );
     }
+}
+
+void replace_json_inf_nan(std::string& str, const std::string& inf_text, const std::string& nan_text)
+{
+    auto word = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '.'; };
+    std::string res;
+    res.reserve(str.size());
+    bool in_string = false;
+    for( size_t ii = 0; ii < str.size(); ii++ )
+    {
+        const char c = str[ii];
+        if( in_string )
+        {
+            res += c;
+            if( c == '\\' && ii + 1 < str.size() )
+                res += str[++ii];          // an escaped character, also an escaped quote
+            else if( c == '"' )
+                in_string = false;
+            continue;
+        }
+        if( c == '"' )
+        {
+            in_string = true;
+            res += c;
+            continue;
+        }
+        const bool start = ii == 0 || !word( str[ii-1] );
+        const char* tok = nullptr;
+        if( start && str.compare( ii, 3, "inf" ) == 0 ) tok = "inf";
+        else if( start && str.compare( ii, 3, "nan" ) == 0 ) tok = "nan";
+        if( tok && ( ii + 3 >= str.size() || !word( str[ii+3] ) ) )
+        {
+            const bool minus = !res.empty() && res.back() == '-';
+            if( tok[0] == 'i' )
+            {
+                if( minus )
+                    res.pop_back();       // -inf is written as a negative number text
+                res += minus ? "-" + ( inf_text[0] == '-' ? inf_text.substr(1) : inf_text ) : inf_text;
+            }
+            else
+                res += nan_text;
+            ii += 2;
+            continue;
+        }
+        res += c;
+    }
+    str = res;
 }
 
 void replaceall(std::string& str, char ch1, char ch2)

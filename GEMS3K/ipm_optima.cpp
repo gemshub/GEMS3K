@@ -786,6 +786,19 @@ void TMultiBase::WarnCollapsedTwins()
     }
 }
 
+/// Index of the element (IC) with this name in pm.SB, or -1. Works without a node (the GEMSGUI solver has none).
+static long int ic_index_by_name( const MULTI& pm, const char* name )
+{
+    for( long int i = 0; i < pm.N; i++ )
+    {
+        std::string s = char_array_to_string( pm.SB[i], MAXICNAME );
+        strip( s );
+        if( s == name )
+            return i;
+    }
+    return -1;
+}
+
 bool TMultiBase::DetectSolventCollapseAndReseed( const double* x, double upperBound, double& waterSeedOut )
 {
     if( !HasAqueousPhase() || pm.LO < 0 || pm.LO >= pm.L )
@@ -808,8 +821,8 @@ bool TMultiBase::DetectSolventCollapseAndReseed( const double* x, double upperBo
                 native_trace_decide( "emptysolvent water=%.6g solutes=%.6g", x[pm.LO], otherTotal );
             // Reseed value: bounded by the most water the system's total H and O could form.
             double waterSeed = otherTotal;
-            const long int xH = ( node1 != nullptr ) ? node1->IC_name_to_xCH( "H" ) : -1;
-            const long int xO = ( node1 != nullptr ) ? node1->IC_name_to_xCH( "O" ) : -1;
+            const long int xH = ic_index_by_name( pm, "H" );
+            const long int xO = ic_index_by_name( pm, "O" );
             if( xH >= 0 && xO >= 0 )
             {
                 const double bulkEstimate = std::min( pm.B[xH] / 2.0, pm.B[xO] );
@@ -3744,10 +3757,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 ipm_logger->info( "Optima: water-only elements ({}), the dry-out is off (pa_OptimaDryOut)", onlyAq );
         }
         stallWatch->reset();
-        if( pa_p->OptimaDryRetry && !g_optimaDryOff && pm.LO >= 0 && pm.LO < pm.L && node1 != nullptr )
+        if( pa_p->OptimaDryRetry && !g_optimaDryOff && pm.LO >= 0 && pm.LO < pm.L )
         {
-            const long int xHd = node1->IC_name_to_xCH( "H" );
-            const long int xOd = node1->IC_name_to_xCH( "O" );
+            const long int xHd = ic_index_by_name( pm, "H" );
+            const long int xOd = ic_index_by_name( pm, "O" );
             if( xHd >= 0 && xOd >= 0 )
             {
                 stallWatch->dryLO = pm.LO;
@@ -4866,8 +4879,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         for( long int j = j0; j < j1; j++ )
                             if( j != pm.LO ) otherTotal += state.x[j];
                         double waterSeed = otherTotal;
-                        const long int xH = ( node1 != nullptr ) ? node1->IC_name_to_xCH( "H" ) : -1;
-                        const long int xO = ( node1 != nullptr ) ? node1->IC_name_to_xCH( "O" ) : -1;
+                        const long int xH = ic_index_by_name( pm, "H" );
+                        const long int xO = ic_index_by_name( pm, "O" );
                         if( xH >= 0 && xO >= 0 )
                         {
                             const double bulkEstimate = std::min( pm.B[xH] / 2.0, pm.B[xO] );
@@ -5015,10 +5028,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // pa_OptimaDryRetry: a failed solve that left almost no liquid water, while the bulk
             // could form much more, is solved once more from the water-first start; kept only if
             // it converges.
-            if( pa_p->OptimaDryRetry && !g_optimaDryOff && !result.succeeded && pm.LO >= 0 && pm.LO < L && node1 != nullptr )
+            if( pa_p->OptimaDryRetry && !g_optimaDryOff && !result.succeeded && pm.LO >= 0 && pm.LO < L )
             {
-                const long int xH = node1->IC_name_to_xCH( "H" );
-                const long int xO = node1->IC_name_to_xCH( "O" );
+                const long int xH = ic_index_by_name( pm, "H" );
+                const long int xO = ic_index_by_name( pm, "O" );
                 const double wCap = ( xH >= 0 && xO >= 0 ) ? std::min( pm.B[xH] / 2., pm.B[xO] ) : 0.;
                 const double xw = state.x[pm.LO];
                 std::vector<double> seed;

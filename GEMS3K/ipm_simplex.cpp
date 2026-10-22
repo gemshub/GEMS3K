@@ -506,7 +506,7 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA1, A, Q, &ITER);
 /// Main call to GEM IPM calculation of equilibrium state in MULTI
 /// (with internal re-scaling of the system).
 //
-double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM )
+double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM, bool runKinetics )
 {
   gems3k_timing::Scope timing( gems3k_timing::Native );
   double ScFact=1.;
@@ -532,7 +532,8 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
 
   // One kinetics/metastability time step (RunKineticsStep(), ipm_chemical4.cpp), shared with
   // the Optima entry point.
-  RunKineticsStep();
+  if( runKinetics )
+      RunKineticsStep();
 
     if( base_param()->DG > 1e-5 )
     {

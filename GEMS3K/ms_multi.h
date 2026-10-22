@@ -1347,7 +1347,10 @@ public:
     /// (ipm_level.cpp). worstPhase is the phase, -1 if none.
     double AbsentPhaseWorstDrive( long int& worstPhase );
 
-    double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
+    /// \param runKinetics run the kinetics step (RunKineticsStep()); false for a second solve of the same time step,
+    ///        whose kinetic limits are already set
+    double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM,
+                                      bool runKinetics = true );
     void InitalizeGEM_IPM_Data();
     virtual void DC_LoadThermodynamicData( TNode* aNa = nullptr );
 

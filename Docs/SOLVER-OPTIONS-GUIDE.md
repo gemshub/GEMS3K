@@ -230,8 +230,10 @@ in the Optima modes, as if you called `Set_pH_target()` or `Set_Eh_target()` wit
 
 - A DBR file without these fields has no target. Files from older versions read as before.
 - An older GEMS3K version reads a file with these fields and does not use the targets.
-- If the next DBR of the node has no target, GEMS3K removes the target that the earlier DBR set. A target
-  that you set with `Set_pH_target()` stays.
+- If the next DBR of the node has no target, GEMS3K removes the target that the earlier DBR set.
+- A DBR target replaces a target that you set with `Set_pH_target()` or `Set_Eh_target()`. Your target
+  comes back when the DBR target is removed.
+- A target value that is not a finite number is not used. GEMS3K writes a warning to the log.
 - `Clear_ControlConditions()` also removes the targets of the DBR.
 - AIA and SIA do not use the targets. GEMS3K writes one warning to the log.
 - A binary DBR file does not keep the targets.
