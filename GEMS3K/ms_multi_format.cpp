@@ -249,6 +249,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_RescueWalkSteps", 0 , 0, 0, "# pa_RescueWalkSteps: number of steps of the walk from the previous answer in pa_FailRescue; 0 = no walk { 8 }" },
     { "pa_RescueBudget", 0 , 0, 0, "# pa_RescueBudget: after the call has used this many iterations, pa_FailRescue skips steps 1-4 (the other solver still runs); 0 = no limit { 100000 }" },
     { "pa_OptimaStallNetFactor", 0 , 0, 0, "# pa_OptimaStallNetFactor: Optima solver: the last re-solve after a stall gets at most this many times the iterations of the stalled solve (at least 2000); 0 = the normal limit { 5 }" },
+    { "pa_IpmTwinSplit", 0 , 0, 0, "# pa_IpmTwinSplit: IPM solver: after a warm call, two copies of a solid solution at one composition are checked for a split; if one is found (lower by more than this, RT per mole), the call is solved again cold; 0 = off { 1e-6 }" },
 };
 
 
@@ -267,7 +268,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 162, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 163, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -600,6 +601,8 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_RescueBudget, pa_p->RescueBudget, _comment, false  );
     if( pa_p->OptimaStallNetFactor != pa_p_.OptimaStallNetFactor )
         prar.writeField(f_pa_OptimaStallNetFactor, pa_p->OptimaStallNetFactor, _comment, false  );
+    if( pa_p->IpmTwinSplit != pa_p_.IpmTwinSplit )
+        prar.writeField(f_pa_IpmTwinSplit, pa_p->IpmTwinSplit, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -1005,7 +1008,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 162, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 163, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1586,6 +1589,8 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_RescueBudget: rddar.readArray("pa_RescueBudget" , &pa_p->RescueBudget, 1);
             break;
         case f_pa_OptimaStallNetFactor: rddar.readArray("pa_OptimaStallNetFactor" , &pa_p->OptimaStallNetFactor, 1);
+            break;
+        case f_pa_IpmTwinSplit: rddar.readArray("pa_IpmTwinSplit" , &pa_p->IpmTwinSplit, 1);
             break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;

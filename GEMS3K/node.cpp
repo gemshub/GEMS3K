@@ -214,6 +214,27 @@ thread_local long int g_optimaCapAllowance = 0;   // extra iterations for the re
 thread_local bool g_optimaDryRedoCall = false;   // inside the dry-retry redo (pa_OptimaDryRetry)
 thread_local bool g_optimaDryFailed = false;     // the dry stop fired and the water-first retry failed
 thread_local bool g_optimaDryOff = false;        // the dry stop and its retry are off for this call
+bool TNode::SyncMultiWithDataBr()
+{
+    bool same = true;
+    for( long int i = 0; i < CSD->nDCb && same; i++ )
+        same = ( CNode->xDC[i] == pmm->X[ CSD->xdc[i] ] );
+    if( same )
+        return false;
+    unpackDataBr( true );
+    for( long int i = 0; i < CSD->nICb; i++ )
+        pmm->U[ CSD->xic[i] ] = CNode->uIC[i];
+    multi_ptr()->RefreshFromAmounts();
+    return true;
+}
+
+void TMultiBase::BeginCalculation()
+{
+    g_optimaTargetWarned = false;
+    g_optimaPreSolveEmpty = false;
+    g_lvlFullCalls = 0;
+}
+
 // Warn once when the system holds more than 1e6 mol of elements, more than the solvers are tested for.
 void TNode::WarnIfSystemTooLarge()
 {
@@ -739,9 +760,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
 {
     const long int requested = CNode->NodeStatusCH;
     const bool kinetics = CNode->dt > 0.;
-    g_optimaTargetWarned = false;
-    g_optimaPreSolveEmpty = false;
-    g_lvlFullCalls = 0;
+    TMultiBase::BeginCalculation();
     // pa_OptimaFastFirst > 0: a cold Optima call first tries a quick solve - the full step clipped to the
     // bounds, plain settings and a small iteration cap. Anything but OK sends the call back to its inputs
     // for the normal solve, and both tries' iterations are counted. DECIDE fastfirst.

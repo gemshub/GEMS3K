@@ -379,7 +379,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// iterations allowed. 0 = off, default 500.
     long int NativeOptimaFinish = 500;
     /// pa_OptimaCollapseCheck: when checking an Optima answer, judge a phase that has vanished by its pure
-    /// species, so a phase that should come back is not taken as correctly absent. 0 = off, 1 = on (default).
+    /// species, so a phase that should come back is not taken as correctly absent. A pure phase below the
+    /// presence limit is judged by its potential when present, and a water phase that has vanished is
+    /// judged as absent. 0 = off, 1 = on (default).
     long int OptimaCollapseCheck = 1;
     /// pa_OptimaFastFirst: a cold Optima call (AOP) first tries a quick solve that takes the full step and
     /// clips each amount to its bounds; if that does not end OK, the normal solve runs from the same inputs.
@@ -522,6 +524,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_OptimaStallNetFactor: Optima's last re-solve after a stall gets at most this many times the iterations
     /// of the solve that stalled (at least 2000, at most the normal limit). 0 = the normal limit. Default 5.
     long int OptimaStallNetFactor = 5;
+    /// pa_IpmTwinSplit: after a warm GEMS3K IPM call, two copies of one solid solution with the same composition
+    /// are checked for a split: if a composition of that phase lies lower than the current answer by more than this
+    /// value (RT per mole), the call is solved again from a cold start. 0 = off. Default 1e-6.
+    double IpmTwinSplit = 1e-6;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -1447,6 +1453,11 @@ public:
     void PhaseHessianEnd();
     /// Warns about copies of a solid solution that ended with the same composition (final answer only).
     void WarnCollapsedTwins();
+    /// pa_IpmTwinSplit: true when a warm GEMS3K IPM answer has two present copies of one solid solution at
+    /// one composition (within 1e-3 in each mole fraction) and the tangent-plane search finds a composition of
+    /// that phase lower than the answer by more than pa_IpmTwinSplit (RT per mole). Then the copies should
+    /// split, and the warm answer is a saddle. Read-only.
+    bool WarmTwinSplitCheck();
     std::vector<char> phfTwin;
     std::vector<long int> phfFired;
 
@@ -1901,6 +1912,13 @@ public:
     /// In plain words: a trace element the user did not ask about, whose exact balance is
     /// not checked strictly.
     bool ICIsDefaultSeed( long int i ) const;
+    /// Resets what the solver keeps for one calculation (retry counters, one-time warnings).
+    /// TNode::GEM_run() calls it. A caller that runs CalculateEquilibriumState...() directly, as
+    /// GEMSGUI does, calls it once before each calculation, or later calls run as retries.
+    static void BeginCalculation();
+    /// Rebuilds what follows from the amounts pm.Y: pm.X, the phase totals, activities, concentrations and pm.FX.
+    /// Used when an answer is put back into MULTI from a node (TNode::SyncMultiWithDataBr()).
+    void RefreshFromAmounts();
     /// True when the last Optima answer marked phase k (MULTI index) as absent at its lower bound.
     bool PhaseFloorParked( long int k ) const
     { return k >= 0 && (size_t)k < phase_floor_parked.size() && phase_floor_parked[(size_t)k]; }
@@ -2024,7 +2042,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit
 
 } MULTI_DYNAMIC_FIELDS;
 

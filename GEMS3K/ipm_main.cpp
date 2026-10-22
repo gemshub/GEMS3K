@@ -181,7 +181,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld pa_IpmTwinSplit=%g\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -212,7 +212,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
              (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot, (long)pa->OptimaLSWarmTrials,
-             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor );
+             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor, pa->IpmTwinSplit );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -1068,6 +1068,80 @@ thread_local bool g_ipmLevelUsed = false;
 thread_local bool g_ipmNoProgArmed = false;   // pa_IpmNoProgress: set by the caller where the Optima finish follows
 thread_local bool g_ipmNoProgFired = false;   // pa_IpmNoProgress stopped the loop in this call
 thread_local bool g_ipmLevelOff = false;
+void TMultiBase::RefreshFromAmounts()
+{
+    for( long int j = 0; j < pm.L; j++ ) pm.X[j] = pm.Y[j];
+    TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    CalculateActivityCoefficients( LINK_UX_MODE );
+    CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+    // TotalGibbsEnergy() writes pm.X/XF/XFA, so they are kept by copy
+    std::vector<double> Xs( pm.X, pm.X + pm.L ), XFs( pm.XF, pm.XF + pm.FI ), XFAs( pm.XFA, pm.XFA + pm.FIs );
+    pm.FX = TotalGibbsEnergy();
+    std::copy( Xs.begin(), Xs.end(), pm.X );
+    std::copy( XFs.begin(), XFs.end(), pm.XF );
+    std::copy( XFAs.begin(), XFAs.end(), pm.XFA );
+}
+
+bool TMultiBase::WarmTwinSplitCheck()
+{
+    const double tol = base_param()->IpmTwinSplit;
+    if( !( tol > 0. ) || !pm.X || pm.FIs < 2 )
+        return false;
+    const std::vector<char> twin = PhaseHessianTwins();
+    if( twin.size() != (size_t)pm.FIs )
+        return false;
+    const long int N = pm.N;
+    std::vector<long int> start( (size_t)pm.FIs + 1, 0 );
+    for( long int k = 0; k < pm.FIs; k++ ) start[(size_t)k+1] = start[(size_t)k] + pm.L1[k];
+    double sysTot = 0.;
+    for( long int j = 0; j < pm.L; j++ ) sysTot += std::max( pm.X[j], 0. );
+    const double presentMin = 1e-9 * sysTot;   // as WarnCollapsedTwins()
+    auto sameColumn = [&]( long int i, long int j ) {
+        for( long int r = 0; r < N; r++ )
+            if( pm.A[ r + i*N ] != pm.A[ r + j*N ] ) return false;
+        return true;
+    };
+    for( long int a = 0; a < pm.FIs; a++ )
+        for( long int b = a+1; b < pm.FIs; b++ )
+        {
+            if( !twin[(size_t)a] || !twin[(size_t)b] || pm.L1[a] != pm.L1[b] || pm.L1[a] < 2 || start[(size_t)b+1] > pm.L )
+                continue;
+            double ta = 0., tb = 0.;
+            for( long int j = start[(size_t)a]; j < start[(size_t)a+1]; j++ ) ta += std::max( pm.X[j], 0. );
+            for( long int j = start[(size_t)b]; j < start[(size_t)b+1]; j++ ) tb += std::max( pm.X[j], 0. );
+            if( !( ta > presentMin && tb > presentMin ) )
+                continue;
+            // the same end-members, in any order, and the same composition within 1e-3
+            double dmax = 0.;
+            bool matched = true;
+            for( long int i = start[(size_t)a]; i < start[(size_t)a+1] && matched; i++ )
+            {
+                long int jm = -1;
+                for( long int j = start[(size_t)b]; j < start[(size_t)b+1]; j++ )
+                    if( sameColumn( i, j ) ) { jm = j; break; }
+                if( jm < 0 ) { matched = false; break; }
+                dmax = std::max( dmax, std::fabs( std::max( pm.X[i], 0. ) / ta - std::max( pm.X[jm], 0. ) / tb ) );
+            }
+            if( !matched || dmax > 1e-3 )
+                continue;
+            std::vector<double> ybest;
+            const double tpd = NativeTpdPhase( a, start[(size_t)a], ybest );
+            const bool split = tpd < -tol;
+            native_trace_decide( "twinsplit pair=%s|%s dfrac=%.3e tpd=%.3e tol=%.1e cold=%d",
+                                 char_array_to_string( pm.SF[a] + MAXSYMB, MAXPHNAME ).c_str(),
+                                 char_array_to_string( pm.SF[b] + MAXSYMB, MAXPHNAME ).c_str(), dmax, tpd, tol, split ? 1 : 0 );
+            if( split )
+            {
+                ipm_logger->info( "Warm start: two copies of {} kept one composition where they should split "
+                                  "(by {:.3g} RT per mole); solving again from a cold start",
+                                  char_array_to_string( pm.SF[a] + MAXSYMB, MAXPHNAME ), -tpd );
+                return true;
+            }
+        }
+    return false;
+}
+
 double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
 {
     gems3k_timing::Scope timing( gems3k_timing::Tpd );
@@ -2610,6 +2684,11 @@ FORCED_AIA:
        GasParcP();  // do we really need it?
    }
    pm.IT = pm.ITG;
+
+   // pa_IpmTwinSplit: two copies of a solid solution left at one composition where they should split
+   // (a warm start keeps them equal): solve again from a cold start
+   if( pm.MK != 2 && pm.pNP && IAstatus == false && WarmTwinSplitCheck() )
+       pm.MK = 2;
 
    // testing results
    if( pm.MK == 2 )

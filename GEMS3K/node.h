@@ -498,6 +498,10 @@ public:
     /// previous answer, 2 = a nudged composition, 3 = the walk, 4 = looser settings, 5 = the other solver,
     /// 6 = the best attempt (returned as bad).
     long int GEM_rescue_step() const { return rescueStep; }
+    /// Puts the answer of the last GEM_run() into MULTI when MULTI holds another state (a retry step can
+    /// return an earlier attempt, kept only in DATABR). For callers that read MULTI, such as GEMSGUI.
+    /// \return true if MULTI was changed.
+    bool SyncMultiWithDataBr();
 
     /// One trace element's verdict from GEM_trace_regimes().
     struct TraceRegime

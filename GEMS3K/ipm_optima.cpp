@@ -1571,7 +1571,16 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
             if( nMax <= 0. ) continue;      // trap (b): genuine zero ceiling -> absent
             if( pm.Y[j] >= kRelPresenceEps * nMax ) { anySignificant = true; break; }
         }
-        const bool present = anyOffFloor && ( pm.YF[k] >= presenceThreshold ) && anySignificant;
+        // A water phase that has vanished (its water at or below XwMinM, as in PrimalChemicalPotentials() and the collapse
+        // check, and its total below 1e-9 of all phases) counts as absent, so a water phase that should come back is judged by
+        // its stability index (pa_OptimaCollapseCheck). A dried-out brine that keeps its solutes is not affected.
+        double allPhases = 0.;
+        for( long int kk = 0; kk < pm.FI; kk++ ) allPhases += std::max( pm.YF[kk], 0. );
+        const bool aqDry = pa_p->OptimaCollapseCheck && pm.PHC[k] == PH_AQUEL && pm.LO >= 0 && pm.Y[pm.LO] <= pm.XwMinM
+                           && pm.YF[k] <= 1e-9 * allPhases;
+        const bool present = anyOffFloor && ( pm.YF[k] >= presenceThreshold ) && anySignificant && !aqDry;
+        if( aqDry && logSI > pa_p->DF && anyOffFloor && pm.YF[k] >= presenceThreshold && anySignificant )
+            native_trace_decide( "aqdryabsent water=%.3e logSI=%.3f stage=%s", pm.Y[pm.LO], logSI, probeStage ? probeStage : "check" );
         // GEMS3K_PHSTAB_PROBE=<path>: one line per phase per evaluation - amount, stability
         // index, the three presence clauses and the verdict. Zero cost when unset.
         {
@@ -2527,6 +2536,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
     try
     {
+        // The GUI loads the mixing model parameters here when they are not loaded yet, as GEM_IPM_Init()
+        // does for the native path. Standalone GEMS3K reads them from the input files, and the call does nothing.
+        {
+            bool multiComponent = false;
+            for( long int k = 0; k < pm.FI; k++ )
+                if( pm.L1[k] > 1 )
+                    multiComponent = true;
+            if( pm.FIs && multiComponent )
+                GEM_IPM_Init_gui1();
+        }
         // Allocates/parametrises each multicomponent phase's TSolMod at the current T,P (the
         // native path does this in GEM_IPM_Init()).
         CalculateActivityCoefficients( LINK_TP_MODE );
@@ -5763,9 +5782,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
         // A phase below its minimum amount gets no chemical potentials above (they stay 0), so it would
         // always look correctly absent. Judge it by its pure species instead (aqueous phase: the water).
+        // A single-species phase below that amount gets the potential it has when present (pm.G).
         if( pa_p->OptimaCollapseCheck )
         {
-            long int jc = 0, nset = 0;
+            long int jc = 0, nset = 0, nsingle = 0;
             for( long int k = 0; k < pm.FI; k++ )
             {
                 const long int jn = jc + pm.L1[k];
@@ -5778,9 +5798,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         pm.F[j] = pm.G0[j] + ( pm.fDQF ? pm.fDQF[j] : 0. );
                         nset++;
                     }
+                // the same skip as in PrimalChemicalPotentials()
+                const bool singleSkipped = pm.L1[k] == 1 && ( pm.XF[k] < pm.PhMinM || pm.XF[k] <= pm.DSM );
+                if( singleSkipped && pm.DCCW[jc] == DC_SINGLE )
+                {
+                    pm.F[jc] = pm.G[jc];
+                    nsingle++;
+                }
                 jc = jn;
             }
-            if( nset ) native_trace_decide( "collapsecheck species=%ld", nset );
+            if( nset || nsingle ) native_trace_decide( "collapsecheck species=%ld single=%ld", nset, nsingle );
         }
         double maxKKTResidual = 0.;
         long int worstKKTSpecies = -1;
