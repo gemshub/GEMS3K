@@ -53,6 +53,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstdio>
+#include <cstring>
 #include <cstdlib>
 #include <functional>
 #include <limits>
@@ -595,6 +596,91 @@ std::vector<char> TMultiBase::PhaseHessianTwins() const
             if( rows[(size_t)a].size() > 1 && rows[(size_t)a] == rows[(size_t)b] )
                 twin[(size_t)a] = twin[(size_t)b] = 1;
     return twin;
+}
+
+/// pa_OptimaTwinLabel: for two present copies of one solid solution that are the same in every input (end-members
+/// in the same order, standard energies, bounds, model code and parameters), puts each composition into the copy
+/// whose major end-members (class M) it holds most of. Only amounts move, so G does not change.
+long int TMultiBase::OptimaTwinLabel()
+{
+    if( base_param()->OptimaTwinLabel <= 0 || pm.FIs < 2 || !pm.X || !pm.Y || !pm.DCC )
+        return 0;
+    const std::vector<char> twin = PhaseHessianTwins();
+    if( twin.size() != (size_t)pm.FIs )
+        return 0;
+    const long int N = pm.N, FIs = pm.FIs;
+    // first species and first index of each phase's parameter blocks, as CalculateActivityCoefficients() counts them
+    std::vector<long int> st( (size_t)FIs + 1, 0 ), ip( (size_t)FIs, 0 ), jp( (size_t)FIs, 0 ), jd( (size_t)FIs, 0 );
+    long int ipe = 0, jpe = 0, jde = 0;
+    for( long int k = 0; k < FIs; k++ )
+    {
+        st[(size_t)k+1] = st[(size_t)k] + pm.L1[k];
+        ip[(size_t)k] = ipe; jp[(size_t)k] = jpe; jd[(size_t)k] = jde;
+        if( pm.L1[k] == 1 && !( pm.PHC[k] == PH_GASMIX || pm.PHC[k] == PH_PLASMA || pm.PHC[k] == PH_FLUID ) )
+            continue;
+        ipe += pm.LsMod[k*3]*pm.LsMod[k*3+1];
+        jpe += pm.LsMod[k*3]*pm.LsMod[k*3+2];
+        jde += pm.LsMdc[k*3]*pm.L1[k];
+    }
+    auto isMajor = [&]( long int j ) { return pm.DCC[j] == DC_SOL_MAJOR || pm.DCC[j] == DC_SOL_MAJDEP; };
+    auto same = []( double x, double y ) { return std::fabs( x - y ) <= 1e-12 * ( 1. + std::fabs( x ) ); };
+    long int nSwap = 0;
+    std::vector<char> used( (size_t)FIs, 0 );
+    for( long int a = 0; a < FIs; a++ )
+        for( long int b = a+1; b < FIs; b++ )
+        {
+            const long int n = pm.L1[a];
+            if( !twin[(size_t)a] || !twin[(size_t)b] || used[(size_t)a] || used[(size_t)b] || n != pm.L1[b] || n < 2
+                || st[(size_t)b+1] > pm.L || pm.PHC[a] != pm.PHC[b] )
+                continue;
+            const long int ja = st[(size_t)a], jb = st[(size_t)b];
+            bool ok = std::memcmp( pm.sMod[a], pm.sMod[b], sizeof( pm.sMod[a] ) ) == 0;
+            for( int q = 0; q < 3 && ok; q++ )
+                ok = pm.LsMod[a*3+q] == pm.LsMod[b*3+q] && pm.LsMdc[a*3+q] == pm.LsMdc[b*3+q];
+            for( long int i = 0; i < n && ok; i++ )
+            {
+                for( long int r = 0; r < N && ok; r++ ) ok = pm.A[ r + (ja+i)*N ] == pm.A[ r + (jb+i)*N ];
+                ok = ok && same( pm.G0[ja+i], pm.G0[jb+i] ) && same( pm.DUL[ja+i], pm.DUL[jb+i] ) && same( pm.DLL[ja+i], pm.DLL[jb+i] );
+            }
+            const long int nIP = pm.LsMod[a*3]*pm.LsMod[a*3+1], nPM = pm.LsMod[a*3]*pm.LsMod[a*3+2], nDM = pm.LsMdc[a*3]*n;
+            for( long int q = 0; q < nIP && ok; q++ ) ok = pm.IPx[ip[(size_t)a]+q] == pm.IPx[ip[(size_t)b]+q];
+            for( long int q = 0; q < nPM && ok; q++ ) ok = same( pm.PMc[jp[(size_t)a]+q], pm.PMc[jp[(size_t)b]+q] );
+            for( long int q = 0; q < nDM && ok; q++ ) ok = same( pm.DMc[jd[(size_t)a]+q], pm.DMc[jd[(size_t)b]+q] );
+            if( !ok )
+                continue;
+            double ta = 0., tb = 0.;
+            for( long int i = 0; i < n; i++ ) { ta += std::max( pm.X[ja+i], 0. ); tb += std::max( pm.X[jb+i], 0. ); }
+            const double presentMin = std::max( pm.DSM, 1e-20 );
+            if( !( ta > presentMin && tb > presentMin ) )
+                continue;
+            used[(size_t)a] = used[(size_t)b] = 1;
+            // share of each copy's major end-members, kept as is and swapped
+            double keep = 0., swap = 0.;
+            for( long int i = 0; i < n; i++ )
+            {
+                const double xa = std::max( pm.X[ja+i], 0. ) / ta, xb = std::max( pm.X[jb+i], 0. ) / tb;
+                if( isMajor( ja+i ) ) { keep += xa; swap += xb; }
+                if( isMajor( jb+i ) ) { keep += xb; swap += xa; }
+            }
+            const bool doSwap = swap > keep + 1e-9;
+            native_trace_decide( "twinlabel a=%ld b=%ld keep=%.6g swap=%.6g swapped=%d", (long)a, (long)b, keep, swap, doSwap ? 1 : 0 );
+            if( !doSwap )
+                continue;
+            for( long int i = 0; i < n; i++ )
+            {
+                const long int j1 = ja+i, j2 = jb+i;
+                for( double* v : { pm.X, pm.Y, pm.XY, pm.lnGam, pm.lnGmo, pm.Gamma, pm.Wx, pm.F, pm.Fx, pm.F0, pm.Y_la, pm.Y_w } )
+                    if( v ) std::swap( v[j1], v[j2] );
+            }
+            for( double* v : { pm.XF, pm.YF, pm.XFA, pm.YFA, pm.XFs, pm.Falps, pm.Falp, pm.FVOL, pm.FWGT } )
+                if( v ) std::swap( v[a], v[b] );
+            nSwap++;
+            ipm_logger->debug( "Optima: two copies of one solid solution swapped their amounts to match their major end-members ({} and {})",
+                               char_array_to_string( pm.SF[a]+MAXSYMB, MAXPHNAME ), char_array_to_string( pm.SF[b]+MAXSYMB, MAXPHNAME ) );
+        }
+    if( nSwap > 0 )
+        RefreshFromAmounts();
+    return nSwap;
 }
 
 /// Starts the per-run record of the curvature floor: which phases are twins, none fired yet.
@@ -6677,6 +6763,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
     if( pa_p->DG > 1e-5 )
         RescaleSystemFromInternal( ScFact );
+
+    // pa_OptimaTwinLabel: name the copies of one solid solution by their major end-members
+    OptimaTwinLabel();
 
     // Store the total Gibbs energy in pm.FX, which packDataBr() publishes as DATABR.Gs.
     // Done after RescaleSystemFromInternal() (which divides pm.FX by ScFact) and after every

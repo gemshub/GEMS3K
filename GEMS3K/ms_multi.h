@@ -528,6 +528,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// are checked for a split: if a composition of that phase lies lower than the current answer by more than this
     /// value (RT per mole), the call is solved again from a cold start. 0 = off. Default 1e-6.
     double IpmTwinSplit = 1e-6;
+    /// pa_OptimaTwinLabel: after an Optima solve, two present copies of one solid solution (same end-members,
+    /// standard energies and model parameters) swap their amounts when the other copy's major end-members (class M)
+    /// fit the composition better. G does not change. 0 = off, 1 = on (default).
+    long int OptimaTwinLabel = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -1458,6 +1462,9 @@ public:
     /// that phase lower than the answer by more than pa_IpmTwinSplit (RT per mole). Then the copies should
     /// split, and the warm answer is a saddle. Read-only.
     bool WarmTwinSplitCheck();
+    /// pa_OptimaTwinLabel: swaps the amounts of two present, identical copies of one solid solution when the
+    /// other copy's major end-members (class M) fit the composition better. G does not change. Returns the swaps.
+    long int OptimaTwinLabel();
     std::vector<char> phfTwin;
     std::vector<long int> phfFired;
 
@@ -2042,7 +2049,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel
 
 } MULTI_DYNAMIC_FIELDS;
 
