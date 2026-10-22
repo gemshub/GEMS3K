@@ -124,6 +124,10 @@ typedef struct  /// DATABR - template node data bridge structure
     *amru, ///< Upper AMRs on amounts of multi-component phases (mol) [nPSb]                         +      +      -     -
     *amrl, ///< Lower AMRs on amounts of multi-component phases (mol) [nPSb]                         +      +      -     -
   *omPH; ///< stability (saturation) indices of phases in log10 scale, can change in GEM [nPHb]     (+)    (+)     +     +
+
+   double
+    pHtarget,  ///< pH the calculation must reach, Optima modes only; DOUBLE_EMPTY when not set (optional input)
+    Ehtarget;  ///< Eh (V) the calculation must reach, Optima modes only; DOUBLE_EMPTY when not set (optional input)
 }
 DATABR;
 
@@ -248,7 +252,9 @@ f_dll, f_dul, f_aPH, f_xPH, f_vPS,
 f_mPS, f_bPS, f_xPA, f_bSP,
 f_amru, f_amrl,       f_omph,
 // only for VTK format output
-f_mPH, f_vPH, f_m_t, f_con, f_mju, f_lga
+f_mPH, f_vPH, f_m_t, f_con, f_mju, f_lga,
+// optional GEM input, after the VTK fields so that their indices do not change
+f_pHtarget, f_Ehtarget
 
 } DATABR_FIELDS;
 

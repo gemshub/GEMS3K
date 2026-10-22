@@ -1083,6 +1083,35 @@ void TMultiBase::RefreshFromAmounts()
     std::copy( XFAs.begin(), XFAs.end(), pm.XFA );
 }
 
+/// Flags each phase that has a twin: another phase with the same end-members (same count and
+/// same stoichiometry rows). Only such phases can show a miscibility gap; they are listed in the
+/// trace and warned about if the floor never changed them.
+std::vector<char> TMultiBase::PhaseHessianTwins() const
+{
+    std::vector<char> twin( (size_t)pm.FIs, 0 );
+    const long int N = pm.N;
+    std::vector<std::vector<std::vector<double>>> rows( (size_t)pm.FIs );
+    long int p0 = 0;
+    for( long int k = 0; k < pm.FIs; k++ )
+    {
+        const long int p1 = p0 + pm.L1[k];
+        if( pm.PHC[k] != PH_AQUEL )
+            for( long int j = p0; j < p1 && p1 <= pm.L; j++ )
+            {
+                std::vector<double> r( (size_t)N );
+                for( long int i = 0; i < N; i++ ) r[(size_t)i] = pm.A[ i + j*N ];
+                rows[(size_t)k].push_back( std::move(r) );
+            }
+        std::sort( rows[(size_t)k].begin(), rows[(size_t)k].end() );
+        p0 = p1;
+    }
+    for( long int a = 0; a < pm.FIs; a++ )
+        for( long int b = a+1; b < pm.FIs; b++ )
+            if( rows[(size_t)a].size() > 1 && rows[(size_t)a] == rows[(size_t)b] )
+                twin[(size_t)a] = twin[(size_t)b] = 1;
+    return twin;
+}
+
 bool TMultiBase::WarmTwinSplitCheck()
 {
     const double tol = base_param()->IpmTwinSplit;

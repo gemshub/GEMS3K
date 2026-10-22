@@ -569,35 +569,6 @@ TMultiBase::RedoxFreeCheck TMultiBase::CheckRedoxFree() const
     return r;
 }
 
-/// Flags each phase that has a twin: another phase with the same end-members (same count and
-/// same stoichiometry rows). Only such phases can show a miscibility gap; they are listed in the
-/// trace and warned about if the floor never changed them.
-std::vector<char> TMultiBase::PhaseHessianTwins() const
-{
-    std::vector<char> twin( (size_t)pm.FIs, 0 );
-    const long int N = pm.N;
-    std::vector<std::vector<std::vector<double>>> rows( (size_t)pm.FIs );
-    long int p0 = 0;
-    for( long int k = 0; k < pm.FIs; k++ )
-    {
-        const long int p1 = p0 + pm.L1[k];
-        if( pm.PHC[k] != PH_AQUEL )
-            for( long int j = p0; j < p1 && p1 <= pm.L; j++ )
-            {
-                std::vector<double> r( (size_t)N );
-                for( long int i = 0; i < N; i++ ) r[(size_t)i] = pm.A[ i + j*N ];
-                rows[(size_t)k].push_back( std::move(r) );
-            }
-        std::sort( rows[(size_t)k].begin(), rows[(size_t)k].end() );
-        p0 = p1;
-    }
-    for( long int a = 0; a < pm.FIs; a++ )
-        for( long int b = a+1; b < pm.FIs; b++ )
-            if( rows[(size_t)a].size() > 1 && rows[(size_t)a] == rows[(size_t)b] )
-                twin[(size_t)a] = twin[(size_t)b] = 1;
-    return twin;
-}
-
 /// pa_OptimaTwinLabel: for two present copies of one solid solution that are the same in every input (end-members
 /// in the same order, standard energies, bounds, model code and parameters), puts each composition into the copy
 /// whose major end-members (class M) it holds most of. Only amounts move, so G does not change.
@@ -624,6 +595,10 @@ long int TMultiBase::OptimaTwinLabel()
     }
     auto isMajor = [&]( long int j ) { return pm.DCC[j] == DC_SOL_MAJOR || pm.DCC[j] == DC_SOL_MAJDEP; };
     auto same = []( double x, double y ) { return std::fabs( x - y ) <= 1e-12 * ( 1. + std::fabs( x ) ); };
+    // present: above 1e-9 of the system total, as in WarmTwinSplitCheck() and WarnCollapsedTwins()
+    double sysTot = 0.;
+    for( long int j = 0; j < pm.L; j++ ) sysTot += std::max( pm.X[j], 0. );
+    const double presentMin = 1e-9 * sysTot;
     long int nSwap = 0;
     std::vector<char> used( (size_t)FIs, 0 );
     for( long int a = 0; a < FIs; a++ )
@@ -648,9 +623,11 @@ long int TMultiBase::OptimaTwinLabel()
             for( long int q = 0; q < nDM && ok; q++ ) ok = same( pm.DMc[jd[(size_t)a]+q], pm.DMc[jd[(size_t)b]+q] );
             if( !ok )
                 continue;
+            // a copy parked at its floor is absent; its amounts must not move into the present copy
+            if( PhaseFloorParked( a ) || PhaseFloorParked( b ) )
+                continue;
             double ta = 0., tb = 0.;
             for( long int i = 0; i < n; i++ ) { ta += std::max( pm.X[ja+i], 0. ); tb += std::max( pm.X[jb+i], 0. ); }
-            const double presentMin = std::max( pm.DSM, 1e-20 );
             if( !( ta > presentMin && tb > presentMin ) )
                 continue;
             used[(size_t)a] = used[(size_t)b] = 1;

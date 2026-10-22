@@ -265,6 +265,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 {
     WarnIfSystemTooLarge();
     const long int requested = CNode->NodeStatusCH;
+    ApplyDbrTargets( requested );
     long int st;
     {
         gems3k_timing::Scope t( gems3k_timing::Call );
@@ -272,6 +273,48 @@ long int TNode::GEM_run( bool uPrimalSol )
     }
     gems3k_timing::flush( requested, st, CNode->IterDone );
     return st;
+}
+
+void TNode::ApplyDbrTargets( long int mode )
+{
+    const bool pH = !IsDoubleEmpty( CNode->pHtarget ), Eh = !IsDoubleEmpty( CNode->Ehtarget );
+#ifdef USE_OPTIMA_SOLVER
+    TMultiBase* m = multi_ptr();
+    // remove the targets that an earlier DBR set and this one does not have
+    if( ( dbrTarget_pH && !pH ) || ( dbrTarget_Eh && !Eh ) )
+    {
+        std::vector<EqControlCondition> keep;
+        for( const auto& c : m->GetControlConditions() )
+            if( !( ( c.name == "pH" && dbrTarget_pH && !pH ) || ( c.name == "Eh" && dbrTarget_Eh && !Eh ) ) )
+                keep.push_back( c );
+        m->RestoreControlConditions( keep );
+    }
+    dbrTarget_pH = pH;
+    dbrTarget_Eh = Eh;
+    if( pH || Eh )
+    {
+        // the target setters find the H, charge and H+ indices through the node
+        TNode* const node0 = m->node1;
+        m->node1 = this;
+        try {
+            if( pH ) m->SetControlCondition_pH( CNode->pHtarget );
+            if( Eh ) m->SetControlCondition_Eh( CNode->Ehtarget );
+        }
+        catch( ... ) { m->node1 = node0; throw; }
+        m->node1 = node0;
+    }
+#endif
+#ifdef USE_OPTIMA_SOLVER
+    const bool used = mode == NEED_GEM_AOP || mode == NEED_GEM_SOP || mode == NEED_GEM_HOP || mode == NEED_GEM_SHP;
+#else
+    const bool used = false;   // without Optima no mode uses targets
+    (void)mode;
+#endif
+    if( ( pH || Eh ) && !dbrTargetWarned && !used )
+    {
+        node_logger->warn( "The DBR has a pH or Eh target; only the Optima modes (AOP, SOP, HOP, SHP) use it" );
+        dbrTargetWarned = true;
+    }
 }
 
 // pa_FailRescue: a call that ends with an error or a bad result is tried again in steps, stopping at the

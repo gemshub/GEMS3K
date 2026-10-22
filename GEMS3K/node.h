@@ -267,9 +267,14 @@ public:
     /// Set_pH_target().
     void Set_Eh_target( double Eh_target, double tolerance = -1. )
     { multi_ptr()->SetControlCondition_Eh( Eh_target, tolerance ); }
-    /// Removes every registered control condition.
+    /// Removes every registered control condition, and the pH and Eh targets of the DBR.
     void Clear_ControlConditions()
-    { multi_ptr()->ClearControlConditions(); }
+    {
+        multi_ptr()->ClearControlConditions();
+        CNode->pHtarget = DOUBLE_EMPTY;
+        CNode->Ehtarget = DOUBLE_EMPTY;
+        dbrTarget_pH = dbrTarget_Eh = false;
+    }
     /// Titrant amount solved for the given condition ("pH"/"Eh") in the last Optima-mode GEM_run()
     /// call, or 0 if that condition was not active. Real moles; the input bulk composition
     /// gained -stoich*xi (pH: -xi mol H+; Eh: xi mol of electrons removed), and the returned
@@ -1420,6 +1425,11 @@ public:
 
 protected:
     long int rescueStep = 0;   // see GEM_rescue_step()
+    /// Registers the pH and Eh targets of the DBR (pHtarget, Ehtarget) for the next solve. A target that an
+    /// earlier DBR of this node set and this DBR does not have is removed; targets set with Set_pH_target()
+    /// or Set_Eh_target() are kept. The GEMS3K IPM modes do not use targets (one warning per node).
+    void ApplyDbrTargets( long int mode );
+    bool dbrTarget_pH = false, dbrTarget_Eh = false, dbrTargetWarned = false;
     /// One GEM_run() attempt, without the cold-call recovery (GEM_run() is this plus pa_ColdRetryNudges).
     long int GEM_run_single( bool uPrimalSol );
     /// The layers of GEM_run(), outermost first; each calls the next.

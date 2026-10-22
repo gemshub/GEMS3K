@@ -1332,6 +1332,13 @@ public:
     double CertStabTPD( long int& worstPhase, long int& nScanned, long int& nDisagree );
     /// Prototype: composition search for one absent non-ideal phase; see ipm_main.cpp.
     double NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest );
+    /// Per phase: 1 if another phase has the same end-members (a miscibility gap needs two copies).
+    std::vector<char> PhaseHessianTwins() const;
+    /// pa_IpmTwinSplit: true when a warm GEMS3K IPM answer has two present copies of one solid solution at
+    /// one composition (within 1e-3 in each mole fraction) and the tangent-plane search finds a composition of
+    /// that phase lower than the answer by more than pa_IpmTwinSplit (RT per mole). Then the copies should
+    /// split, and the warm answer is a saddle. Read-only.
+    bool WarmTwinSplitCheck();
     /// The leveled solution: species Gibbs LP plus mixed phases at their best compositions,
     /// priced by a tangent-plane search (ipm_level.cpp). Used by the native start and by Optima.
     bool ColumnGenerationSeed( std::vector<double>& nOut, double tol );
@@ -1450,18 +1457,11 @@ public:
     /// Checks whether nothing in the bulk fixes the redox level (pa_OptimaRedoxFree).
     RedoxFreeCheck CheckRedoxFree() const;
 
-    /// Per phase: 1 if another phase has the same end-members (a miscibility gap needs two copies).
-    std::vector<char> PhaseHessianTwins() const;
     /// Per-run record of the curvature floor (twin flags, times it fired); see ipm_optima.cpp.
     void PhaseHessianBegin();
     void PhaseHessianEnd();
     /// Warns about copies of a solid solution that ended with the same composition (final answer only).
     void WarnCollapsedTwins();
-    /// pa_IpmTwinSplit: true when a warm GEMS3K IPM answer has two present copies of one solid solution at
-    /// one composition (within 1e-3 in each mole fraction) and the tangent-plane search finds a composition of
-    /// that phase lower than the answer by more than pa_IpmTwinSplit (RT per mole). Then the copies should
-    /// split, and the warm answer is a saddle. Read-only.
-    bool WarmTwinSplitCheck();
     /// pa_OptimaTwinLabel: swaps the amounts of two present, identical copies of one solid solution when the
     /// other copy's major end-members (class M) fit the composition better. G does not change. Returns the swaps.
     long int OptimaTwinLabel();

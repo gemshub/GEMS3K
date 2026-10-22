@@ -222,6 +222,27 @@ if (status == OK_GEM_AOP)
   result that has no physical meaning (for example, a pH far outside 0 to 14). Judge the target. Do not
   only look at the status.
 
+### Targets in the DBR file
+
+A DBR file can also give the targets, in the optional fields `pHtarget` and `Ehtarget` (Eh in volts).
+GEMSGUI writes them when the system recipe has a target. GEMS3K reads them with the DBR and uses them
+in the Optima modes, as if you called `Set_pH_target()` or `Set_Eh_target()` with the default tolerance.
+
+- A DBR file without these fields has no target. Files from older versions read as before.
+- An older GEMS3K version reads a file with these fields and does not use the targets.
+- If the next DBR of the node has no target, GEMS3K removes the target that the earlier DBR set. A target
+  that you set with `Set_pH_target()` stays.
+- `Clear_ControlConditions()` also removes the targets of the DBR.
+- AIA and SIA do not use the targets. GEMS3K writes one warning to the log.
+- A binary DBR file does not keep the targets.
+
+```cpp
+node.pCNode()->pHtarget = 11.;                 // the same as the field "pHtarget" in the file
+node.pCNode()->NodeStatusCH = NEED_GEM_AOP;
+node.GEM_run(false);
+node.GEM_write_dbr("out-dbr.json", GEMS3KGenerator::f_json, true, false);   // the file keeps the target
+```
+
 ## Settings
 
 GEMS3K reads the settings from the `pa_...` entries in the `-ipm` file of the project. A setting that is not
