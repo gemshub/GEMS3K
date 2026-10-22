@@ -26,6 +26,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include <cmath>
 #include "gems3k_timing.h"
 #include "node.h"
 #include "datach_api.h"
@@ -219,6 +220,8 @@ bool TNode::SyncMultiWithDataBr()
     bool same = true;
     for( long int i = 0; i < CSD->nDCb && same; i++ )
         same = ( CNode->xDC[i] == pmm->X[ CSD->xdc[i] ] );
+    for( long int i = 0; i < CSD->nICb && same; i++ )
+        same = ( CNode->uIC[i] == pmm->U[ CSD->xic[i] ] );
     if( same )
         return false;
     unpackDataBr( true );
@@ -277,18 +280,54 @@ long int TNode::GEM_run( bool uPrimalSol )
 
 void TNode::ApplyDbrTargets( long int mode )
 {
-    const bool pH = !IsDoubleEmpty( CNode->pHtarget ), Eh = !IsDoubleEmpty( CNode->Ehtarget );
+    auto given = []( double v, const char* name ) {
+        if( IsDoubleEmpty( v ) ) return false;
+        if( !std::isfinite( v ) )
+        {
+            node_logger->warn( "The DBR {} target is not a finite number; it is not used", name );
+            return false;
+        }
+        return true; };
+    const bool pHgiven = given( CNode->pHtarget, "pH" ), Ehgiven = given( CNode->Ehtarget, "Eh" );
+#ifdef USE_OPTIMA_SOLVER
+    const bool used = mode == NEED_GEM_AOP || mode == NEED_GEM_SOP || mode == NEED_GEM_HOP || mode == NEED_GEM_SHP;
+#else
+    const bool used = false;   // without Optima no mode uses targets
+    (void)mode;
+#endif
+    if( ( pHgiven || Ehgiven ) && !used && !dbrTargetWarned )
+    {
+        node_logger->warn( "The DBR has a pH or Eh target; only the Optima modes (AOP, SOP, HOP, SHP) use it" );
+        dbrTargetWarned = true;
+    }
+    // a target is registered only for a mode that uses it, so the other modes run as without a target
+    const bool pH = used && pHgiven, Eh = used && Ehgiven;
 #ifdef USE_OPTIMA_SOLVER
     TMultiBase* m = multi_ptr();
-    // remove the targets that an earlier DBR set and this one does not have
-    if( ( dbrTarget_pH && !pH ) || ( dbrTarget_Eh && !Eh ) )
-    {
+    // a DBR target that this call does not use is removed; the target of the same name that the program
+    // set (Set_pH_target(), Set_Eh_target()) and the DBR target replaced comes back
+    auto expire = [m]( const char* name, bool was, bool now, std::vector<EqControlCondition>& saved ) {
+        if( !was || now )
+            return;
         std::vector<EqControlCondition> keep;
         for( const auto& c : m->GetControlConditions() )
-            if( !( ( c.name == "pH" && dbrTarget_pH && !pH ) || ( c.name == "Eh" && dbrTarget_Eh && !Eh ) ) )
-                keep.push_back( c );
+            if( c.name != name ) keep.push_back( c );
+        for( const auto& c : saved ) keep.push_back( c );
+        saved.clear();
         m->RestoreControlConditions( keep );
-    }
+    };
+    expire( "pH", dbrTarget_pH, pH, apiTarget_pH );
+    expire( "Eh", dbrTarget_Eh, Eh, apiTarget_Eh );
+    // keep the program's target of the same name before a DBR target replaces it
+    auto keepApi = [m]( const char* name, bool was, bool now, std::vector<EqControlCondition>& saved ) {
+        if( was || !now )
+            return;
+        saved.clear();
+        for( const auto& c : m->GetControlConditions() )
+            if( c.name == name ) saved.push_back( c );
+    };
+    keepApi( "pH", dbrTarget_pH, pH, apiTarget_pH );
+    keepApi( "Eh", dbrTarget_Eh, Eh, apiTarget_Eh );
     dbrTarget_pH = pH;
     dbrTarget_Eh = Eh;
     if( pH || Eh )
@@ -304,17 +343,6 @@ void TNode::ApplyDbrTargets( long int mode )
         m->node1 = node0;
     }
 #endif
-#ifdef USE_OPTIMA_SOLVER
-    const bool used = mode == NEED_GEM_AOP || mode == NEED_GEM_SOP || mode == NEED_GEM_HOP || mode == NEED_GEM_SHP;
-#else
-    const bool used = false;   // without Optima no mode uses targets
-    (void)mode;
-#endif
-    if( ( pH || Eh ) && !dbrTargetWarned && !used )
-    {
-        node_logger->warn( "The DBR has a pH or Eh target; only the Optima modes (AOP, SOP, HOP, SHP) use it" );
-        dbrTargetWarned = true;
-    }
 }
 
 // pa_FailRescue: a call that ends with an error or a bad result is tried again in steps, stopping at the

@@ -261,12 +261,20 @@ public:
     /// default) derives the tolerance from pa_p->GAS.
     /// In plain words: asks the Optima solver to reach a given pH.
     void Set_pH_target( double pH_target, double tolerance = -1. )
-    { multi_ptr()->SetControlCondition_pH( pH_target, tolerance ); }
+    {
+        multi_ptr()->SetControlCondition_pH( pH_target, tolerance );
+        if( dbrTarget_pH )   // a DBR target is active: this one comes back when the DBR target goes
+            keepApiTarget( "pH", apiTarget_pH );
+    }
     /// Registers (or replaces) an Eh (V) equilibrium control condition.
     /// `tolerance < 0` (the default) derives it from pa_p->GAS, same as
     /// Set_pH_target().
     void Set_Eh_target( double Eh_target, double tolerance = -1. )
-    { multi_ptr()->SetControlCondition_Eh( Eh_target, tolerance ); }
+    {
+        multi_ptr()->SetControlCondition_Eh( Eh_target, tolerance );
+        if( dbrTarget_Eh )
+            keepApiTarget( "Eh", apiTarget_Eh );
+    }
     /// Removes every registered control condition, and the pH and Eh targets of the DBR.
     void Clear_ControlConditions()
     {
@@ -274,6 +282,15 @@ public:
         CNode->pHtarget = DOUBLE_EMPTY;
         CNode->Ehtarget = DOUBLE_EMPTY;
         dbrTarget_pH = dbrTarget_Eh = false;
+        apiTarget_pH.clear();
+        apiTarget_Eh.clear();
+    }
+    /// Copies the registered condition of this name into `saved`
+    void keepApiTarget( const char* name, std::vector<EqControlCondition>& saved )
+    {
+        saved.clear();
+        for( const auto& c : multi_ptr()->GetControlConditions() )
+            if( c.name == name ) saved.push_back( c );
     }
     /// Titrant amount solved for the given condition ("pH"/"Eh") in the last Optima-mode GEM_run()
     /// call, or 0 if that condition was not active. Real moles; the input bulk composition
@@ -1430,6 +1447,8 @@ protected:
     /// or Set_Eh_target() are kept. The GEMS3K IPM modes do not use targets (one warning per node).
     void ApplyDbrTargets( long int mode );
     bool dbrTarget_pH = false, dbrTarget_Eh = false, dbrTargetWarned = false;
+    /// The program's pH and Eh conditions that a DBR target replaced; they come back when the DBR target goes
+    std::vector<EqControlCondition> apiTarget_pH, apiTarget_Eh;
     /// One GEM_run() attempt, without the cold-call recovery (GEM_run() is this plus pa_ColdRetryNudges).
     long int GEM_run_single( bool uPrimalSol );
     /// The layers of GEM_run(), outermost first; each calls the next.

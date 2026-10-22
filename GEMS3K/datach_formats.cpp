@@ -975,6 +975,8 @@ void databr_from_file(const DATACH* CSD, DATABR* CNode, GemDataStream& ff)
 {
     databr_free_internal(CNode);
     databr_realloc(CSD, CNode);
+    CNode->pHtarget = DOUBLE_EMPTY;   // a binary DBR has no targets
+    CNode->Ehtarget = DOUBLE_EMPTY;
 
     // const data
     ff.readArray( &CNode->NodeHandle, 6 );
