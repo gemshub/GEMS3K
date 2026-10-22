@@ -6693,6 +6693,17 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         for( long int k = 0; k < pm.FIs; k++ )  pm.XFA[k] = XFAsave[(size_t)k];
     }
 
+    // Count the present phases as the GEMS3K IPM solver does; GEMSGUI sizes its saved record by this count
+    pm.FI1 = 0;
+    pm.FI1s = 0;
+    for( long int k = 0; k < pm.FI; k++ )
+        if( pm.YF[k] >= std::min( pm.PhMinM, 1e-22 ) )
+        {
+            pm.FI1++;
+            if( k < pm.FIs )
+                pm.FI1s++;
+        }
+
     NumIterFIA = pm.ITF;
     NumIterIPM = pm.ITG;
     pm.t_end = clock();
