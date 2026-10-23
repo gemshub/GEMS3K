@@ -416,8 +416,8 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
     <li><b>Accept by direct check.</b> Optima can fail its own stopping test. If the mass balance holds, and a direct test
       shows that no missing phase must form, GEMS3K accepts the result (<code>pa_OptimaTpdAccept</code>, on).</li>
     <li><b>Touch-up.</b> An accepted result can have a small error in the element totals. The solver tries a small repair. It
-      keeps the repair only if the repair helps (<code>pa_OptimaZeroAbsent</code> = 2). With the value 1, the species of absent
-      phases are set to exactly zero.</li>
+      keeps the repair only if the repair helps. Then it sets absent phases to 0, by the same rule as the GEMS3K IPM solver
+      (<code>pa_OptimaZeroAbsent</code> = 3).</li>
   </ol>
   <div class="note"><p><b>Cap on one call</b> (AOP and SOP, <code>pa_OptimaCallCap</code>, off by default). The whole call, with
   all its tries, can use only a set number of iterations. If a call fails and the cap is used up, GEMS3K repeats the call with

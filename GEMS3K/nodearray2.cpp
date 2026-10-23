@@ -109,6 +109,8 @@ void TNodeArray::CopyWorkNodeFromArray( TNode* wrkNode, long int ii, long int nN
     else  wrkNode->pCNode()->aPH = nullptr;
     copyValues( wrkNode->pCNode()->xPH, arr_BR[ii]->xPH, wrkNode->pCSD()->nPHb );
     copyValues( wrkNode->pCNode()->omPH, arr_BR[ii]->omPH, wrkNode->pCSD()->nPHb );
+    wrkNode->pCNode()->pHtarget = arr_BR[ii]->pHtarget;
+    wrkNode->pCNode()->Ehtarget = arr_BR[ii]->Ehtarget;
     copyValues( wrkNode->pCNode()->vPS, arr_BR[ii]->vPS, wrkNode->pCSD()->nPSb );
     copyValues( wrkNode->pCNode()->mPS, arr_BR[ii]->mPS, wrkNode->pCSD()->nPSb );
 
@@ -185,6 +187,8 @@ void TNodeArray::MoveWorkNodeToArray( TNode* wrkNode, long int ii, long int nNod
     else  arr_BR[ii]->aPH = nullptr;
     copyValues( arr_BR[ii]->xPH, wrkNode->pCNode()->xPH, wrkNode->pCSD()->nPHb );
     copyValues( arr_BR[ii]->omPH, wrkNode->pCNode()->omPH, wrkNode->pCSD()->nPHb );
+    arr_BR[ii]->pHtarget = wrkNode->pCNode()->pHtarget;
+    arr_BR[ii]->Ehtarget = wrkNode->pCNode()->Ehtarget;
     copyValues( arr_BR[ii]->vPS, wrkNode->pCNode()->vPS, wrkNode->pCSD()->nPSb );
     copyValues( arr_BR[ii]->mPS, wrkNode->pCNode()->mPS, wrkNode->pCSD()->nPSb );
 

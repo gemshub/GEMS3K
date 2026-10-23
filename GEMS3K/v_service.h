@@ -35,6 +35,9 @@ void strip(std::string& str);
 void replace(std::string& str, const char* old_part, const char* new_part);
 void replaceall(std::string& str, const std::string& old_part, const std::string& new_part);
 void replaceall(std::string& str, char ch1, char ch2);
+/// Replaces the bare JSON tokens inf and nan (also after a minus sign) by number text.
+/// Text inside strings and parts of longer words are not changed.
+void replace_json_inf_nan(std::string& str, const std::string& inf_text, const std::string& nan_text);
 std::vector<std::string> split(const std::string& str, const std::string& delimiters);
 
 //// Extract the string value from data.

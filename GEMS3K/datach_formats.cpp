@@ -51,7 +51,7 @@ namespace  dbr_dch_api {
 // the text of the comment for this data object, optionally written into the
 // text-format output DBR or DCH file.
 //
-std::vector<io_formats::outField> DataBR_fields =  {  // [f_lga+1/*60*/]
+std::vector<io_formats::outField> DataBR_fields =  {  // [f_Ehtarget+1]
   { "NodeHandle",  0, 0, 1, "# NodeHandle: Node identification handle"},
   { "NodeTypeHY",  0, 0, 1, "# NodeTypeHY:  Node type code (hydraulic), not used on TNode level; see typedef NODETYPE" },
   { "NodeTypeMT",  0, 0, 1, "# NodeTypeMT:  Node type (mass transport), not used on TNode level; see typedef NODETYPE" },
@@ -118,7 +118,10 @@ std::vector<io_formats::outField> DataBR_fields =  {  // [f_lga+1/*60*/]
     { "m_t",  0, 0, nICbi, "# m_t: Total dissolved molality of independent components, m [nICb]" },
     { "con",  0, 0, nDCbi, "# con: DC concentrations in phases (molal, mole fraction) [nDCb]" },
     { "mju",  0, 0, nDCbi, "# mju: DC chemical potentials in equilibrium, J/mol [nDCb]" },
-    { "lga",  0, 0, nDCbi, "# lga: DC activities in equilibrium, in log10 scale [nDCb]" }
+    { "lga",  0, 0, nDCbi, "# lga: DC activities in equilibrium, in log10 scale [nDCb]" },
+// optional GEM input (after the VTK fields, so that their indices do not change)
+  { "pHtarget",  0, 0, 1, "\n# pHtarget: pH the calculation must reach; only the Optima modes use it (optional GEM input)" },
+  { "Ehtarget",  0, 0, 1, "# Ehtarget: Eh (V) the calculation must reach; only the Optima modes use it (optional GEM input)" }
 };
 
 std::vector<io_formats::outField> DataCH_static_fields =  {  // [14]
@@ -180,7 +183,7 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
     bool _comment = with_comments;
 
     out_format.put_head( GEMS3KGenerator::gen_dbr_name(out_format.set_name(), 0, CNode->NodeHandle), "dbr");
-    io_formats::TPrintArrays<TIO>  prar( f_omph+1/*55*/, DataBR_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( f_Ehtarget+1/*63*/, DataBR_fields, out_format );
 
     if( _comment )
     {
@@ -290,6 +293,10 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
     prar.writeArray(  f_amru,  CNode->amru, CSD->nPSb, -1L,_comment, brief_mode );
     prar.writeArray(  f_amrl,  CNode->amrl, CSD->nPSb, -1L,_comment, brief_mode );
     prar.writeArray(  f_omph,  CNode->omPH, CSD->nPHb, -1L,_comment, brief_mode );
+    if( !IsDoubleEmpty( CNode->pHtarget ) )
+        prar.writeField(f_pHtarget, CNode->pHtarget, _comment, false );
+    if( !IsDoubleEmpty( CNode->Ehtarget ) )
+        prar.writeField(f_Ehtarget, CNode->Ehtarget, _comment, false );
 
     if(!brief_mode || prar.getAlws( f_bPS ))
     {
@@ -317,7 +324,7 @@ void databr_from_text_file(const DATACH* CSD, DATABR* CNode, TIO& in_format )
     // mem_set( &CNode->Tm, 0, 19*sizeof(double));
     databr_reset(CNode, 0);
 
-    io_formats::TReadArrays<TIO>  rdar(f_omph+1/*55*/, DataBR_fields, in_format);
+    io_formats::TReadArrays<TIO>  rdar(f_Ehtarget+1/*63*/, DataBR_fields, in_format);
 
     long int nfild = rdar.findNext();
     while( nfild >=0 )
@@ -470,6 +477,10 @@ void databr_from_text_file(const DATACH* CSD, DATABR* CNode, TIO& in_format )
         case f_amrl: rdar.readArray( "amrl",  CNode->amrl, CSD->nPSb );
             break;
         case f_omph: rdar.readArray( "omPH",  CNode->omPH, CSD->nPHb );
+            break;
+        case f_pHtarget: rdar.readArray( "pHtarget",  &CNode->pHtarget, 1);
+            break;
+        case f_Ehtarget: rdar.readArray( "Ehtarget",  &CNode->Ehtarget, 1);
             break;
         }
         nfild = rdar.findNext();
@@ -964,6 +975,8 @@ void databr_from_file(const DATACH* CSD, DATABR* CNode, GemDataStream& ff)
 {
     databr_free_internal(CNode);
     databr_realloc(CSD, CNode);
+    CNode->pHtarget = DOUBLE_EMPTY;   // a binary DBR has no targets
+    CNode->Ehtarget = DOUBLE_EMPTY;
 
     // const data
     ff.readArray( &CNode->NodeHandle, 6 );

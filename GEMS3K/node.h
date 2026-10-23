@@ -124,6 +124,10 @@ protected:
     NumIterFIA,   ///< \protected Total Number of performed FIA entry iterations
     NumIterIPM;   ///< \protected Total Number of performed IPM main iterations
 
+    /// Per DBR phase: the amount the last packDataBr() wrote for a phase the Optima solver
+    /// marked as absent at its floor, or -1. Read by Ph_Present().
+    std::vector<double> floorParkedAmount;
+
     TMultiBase* multi_ptr() const
     {
         return multi_base;
@@ -257,15 +261,37 @@ public:
     /// default) derives the tolerance from pa_p->GAS.
     /// In plain words: asks the Optima solver to reach a given pH.
     void Set_pH_target( double pH_target, double tolerance = -1. )
-    { multi_ptr()->SetControlCondition_pH( pH_target, tolerance ); }
+    {
+        multi_ptr()->SetControlCondition_pH( pH_target, tolerance );
+        if( dbrTarget_pH )   // a DBR target is active: this one comes back when the DBR target goes
+            keepApiTarget( "pH", apiTarget_pH );
+    }
     /// Registers (or replaces) an Eh (V) equilibrium control condition.
     /// `tolerance < 0` (the default) derives it from pa_p->GAS, same as
     /// Set_pH_target().
     void Set_Eh_target( double Eh_target, double tolerance = -1. )
-    { multi_ptr()->SetControlCondition_Eh( Eh_target, tolerance ); }
-    /// Removes every registered control condition.
+    {
+        multi_ptr()->SetControlCondition_Eh( Eh_target, tolerance );
+        if( dbrTarget_Eh )
+            keepApiTarget( "Eh", apiTarget_Eh );
+    }
+    /// Removes every registered control condition, and the pH and Eh targets of the DBR.
     void Clear_ControlConditions()
-    { multi_ptr()->ClearControlConditions(); }
+    {
+        multi_ptr()->ClearControlConditions();
+        CNode->pHtarget = DOUBLE_EMPTY;
+        CNode->Ehtarget = DOUBLE_EMPTY;
+        dbrTarget_pH = dbrTarget_Eh = false;
+        apiTarget_pH.clear();
+        apiTarget_Eh.clear();
+    }
+    /// Copies the registered condition of this name into `saved`
+    void keepApiTarget( const char* name, std::vector<EqControlCondition>& saved )
+    {
+        saved.clear();
+        for( const auto& c : multi_ptr()->GetControlConditions() )
+            if( c.name == name ) saved.push_back( c );
+    }
     /// Titrant amount solved for the given condition ("pH"/"Eh") in the last Optima-mode GEM_run()
     /// call, or 0 if that condition was not active. Real moles; the input bulk composition
     /// gained -stoich*xi (pH: -xi mol H+; Eh: xi mol of electrons removed), and the returned
@@ -494,6 +520,10 @@ public:
     /// previous answer, 2 = a nudged composition, 3 = the walk, 4 = looser settings, 5 = the other solver,
     /// 6 = the best attempt (returned as bad).
     long int GEM_rescue_step() const { return rescueStep; }
+    /// Puts the answer of the last GEM_run() into MULTI when MULTI holds another state (a retry step can
+    /// return an earlier attempt, kept only in DATABR). For callers that read MULTI, such as GEMSGUI.
+    /// \return true if MULTI was changed.
+    bool SyncMultiWithDataBr();
 
     /// One trace element's verdict from GEM_trace_regimes().
     struct TraceRegime
@@ -1076,11 +1106,13 @@ public:
     double  Ph_Moles( const long int xBR ) const; // Added for consistency on Oct 1, 2020
     double  Ph_Mole( const long int xBR ) const; // obsolete, not recommended to use in new coupled codes
 
-    /// Tells whether a phase is really present: its amount is above relFloor times the total amount of all
-    /// phases. A phase left at the solver's tiny floor amount is reported as not present; amounts are not changed.
+    /// Tells whether a phase is present: its amount is above 0 and the solver did not mark it as absent.
+    /// The Optima solver marks a phase it left at its tiny floor amount by the same rule the GEMS3K IPM
+    /// solver uses to set a phase to 0. Amounts are not changed.
     /// \param xBR is DBR phase index
-    /// \param relFloor is the share of the total amount below which a phase counts as absent (default 1e-9)
-    bool    Ph_Present( const long int xBR, const double relFloor = 1e-9 ) const;
+    /// \param relFloor if above 0, a phase below relFloor times the total amount of all phases also counts
+    ///        as absent (default 0, off). This test can also hide real trace phases.
+    bool    Ph_Present( const long int xBR, const double relFloor = 0. ) const;
 
     /// Retrieves the phase mass in kg.
     /// Works for multicomponent and for single-component phases.
@@ -1410,6 +1442,21 @@ public:
 
 protected:
     long int rescueStep = 0;   // see GEM_rescue_step()
+    /// Registers the pH and Eh targets of the DBR (pHtarget, Ehtarget) for the next solve. A target that an
+    /// earlier DBR of this node set and this DBR does not have is removed; targets set with Set_pH_target()
+    /// or Set_Eh_target() are kept. The GEMS3K IPM modes do not use targets (one warning per node).
+    void ApplyDbrTargets( long int mode );
+    bool dbrTarget_pH = false, dbrTarget_Eh = false, dbrTargetWarned = false;
+    /// True for the modes that apply the pH and Eh targets (AOP, SOP, HOP, SHP, built with Optima)
+    static bool modeUsesTargets( long int mode );
+    /// A target solve writes the titrated bulk composition into bIC. titrEntered_ is the composition the caller
+    /// entered, titrSolved_ the one the solve wrote back. A later call in a mode that does not apply targets puts
+    /// the entered composition back, unless the caller has changed bIC since.
+    std::vector<double> titrEntered_, titrSolved_;
+    void restoreEnteredComposition( long int mode );
+    void rememberTitration( long int mode, const std::vector<double>& before );
+    /// The program's pH and Eh conditions that a DBR target replaced; they come back when the DBR target goes
+    std::vector<EqControlCondition> apiTarget_pH, apiTarget_Eh;
     /// One GEM_run() attempt, without the cold-call recovery (GEM_run() is this plus pa_ColdRetryNudges).
     long int GEM_run_single( bool uPrimalSol );
     /// The layers of GEM_run(), outermost first; each calls the next.

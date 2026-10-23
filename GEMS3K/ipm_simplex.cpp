@@ -506,13 +506,16 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA1, A, Q, &ITER);
 /// Main call to GEM IPM calculation of equilibrium state in MULTI
 /// (with internal re-scaling of the system).
 //
-double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM )
+double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM, bool runKinetics )
 {
   gems3k_timing::Scope timing( gems3k_timing::Native );
   double ScFact=1.;
 
   InitalizeGEM_IPM_Data();
   trace_growth_stuck = false;
+  phase_floor_parked.clear();
+  warm_floor_seed.swap( zeroed_floor_amount );   // read by the warm start in GEM_IPM_InitialApproximation()
+  zeroed_floor_amount.clear();
 
     // Redundant species are held at zero for this call only (ExcludeRedundantDCs, ipm_main.cpp);
     // the guard restores their metastability settings on every exit, exceptions included.
@@ -529,7 +532,8 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
 
   // One kinetics/metastability time step (RunKineticsStep(), ipm_chemical4.cpp), shared with
   // the Optima entry point.
-  RunKineticsStep();
+  if( runKinetics )
+      RunKineticsStep();
 
     if( base_param()->DG > 1e-5 )
     {
@@ -537,6 +541,31 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
         ScaleSystemToInternal( ScFact );
     }
     prev_scfact = ScFact;   // read by a warm Optima call on this node
+    for( double& seed : warm_floor_seed )   // mol to the internal units of this solve
+        seed *= ScFact;
+    {   // did the bulk, T, P or a zero upper limit change since the previous solve (read by the warm zero check)
+        warmInputChanged_ = prevBulkMol_.size() != (size_t)pm.N || prevDulPositive_.size() != (size_t)pm.L
+                            || pm.TCc != prevTC_ || pm.Pc != prevP_;
+        prevTC_ = pm.TCc;
+        prevP_ = pm.Pc;
+        prevBulkMol_.resize( (size_t)pm.N );
+        for( long int i = 0; i < pm.N; i++ )
+        {
+            const double b = pm.B[i] / ScFact;
+            if( std::fabs( b - prevBulkMol_[(size_t)i] ) > 1e-12 * std::max( std::fabs( b ), 1e-300 ) )
+                warmInputChanged_ = true;
+            prevBulkMol_[(size_t)i] = b;
+        }
+        // a species whose upper limit goes from 0 to positive can be at 0 from the previous solve
+        prevDulPositive_.resize( (size_t)pm.L, 0 );
+        for( long int j = 0; j < pm.L; j++ )
+        {
+            const char pos = pm.DUL[j] > 0. ? 1 : 0;
+            if( pos && !prevDulPositive_[(size_t)j] )
+                warmInputChanged_ = true;
+            prevDulPositive_[(size_t)j] = pos;
+        }
+    }
 
 try{
        switch( pm.tMin )

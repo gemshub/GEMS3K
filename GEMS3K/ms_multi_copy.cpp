@@ -565,7 +565,10 @@ void TMultiBase::multi_realloc( char PAalp, char PSigm )
     else
     {
         pm.BF = 0;
-        pm.BFC = 0;
+        // the element totals of the solid phases are used also when no solution phase exists
+        pm.BFC = new double[pm.N];
+        for( ii=0; ii<pm.N; ii++ )
+            pm.BFC[ii] = 0.0;
         pm.XFA = 0;
         pm.YFA = 0;
         pm.PUL = 0;

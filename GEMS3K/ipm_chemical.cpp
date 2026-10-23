@@ -351,7 +351,8 @@ void TMultiBase::Set_DC_limits( bool InitState )
                 if( XU > 1e6 ) XU = 1e6;
                 if( XL < 0.0 ) XL = 0.0;
                 if( XL > 1e6 ) XL = 1e6;
-                if( XU > XFU )
+                // only a phase with one species must have its species limits inside the phase limits
+                if( je - jb == 1 && XU > XFU )
                 {
      //               JJ = j;
     //                KK = k;
@@ -360,7 +361,7 @@ void TMultiBase::Set_DC_limits( bool InitState )
                     Error( "E11IPM: Set_DC_limits(): ",tbuf );
     //                XU = XFU; // - pm.lowPosNum;
                 }
-                if( XL < XFL )
+                if( je - jb == 1 && XL < XFL )
                 {
     //                JJ = j;
     //                KK = k;

@@ -229,12 +229,16 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     ///   0  at the floor amount.
     ///   1  absent phases are set to exactly 0 and the element totals are rebalanced; the zeroing
     ///      is undone if the rebalance fails.
-    ///   2  (default) floor amounts, plus a repair that projects the answer back onto the mass
+    ///   2  floor amounts, plus a repair that projects the answer back onto the mass
     ///      balance if it fails the per-element test; the repair is dropped if it does not help.
+    ///   3  (default) the repair of 2, then absent phases are set to exactly 0, as the GEMS3K IPM solver
+    ///      reports them, and the element totals are rebalanced. A phase that carries an element
+    ///      whose balance cannot be kept stays at its floor amount. A trace species of a present
+    ///      solution phase that sits on its floor gets the amount the converged potentials give it.
     /// Any other non-zero value behaves as 1.
     /// In plain words: decides whether absent species are shown as exactly zero or as a tiny
     /// amount, and fixes the element totals if needed.
-    long int OptimaZeroAbsent = 2;
+    long int OptimaZeroAbsent = 3;
 
     /// pa_OptimaReadmitSeed: reserved, no effect. Kept so that the field order of BASE_PARAM
     /// (used by positional project-file serialisation) does not change.
@@ -376,7 +380,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// iterations allowed. 0 = off, default 500.
     long int NativeOptimaFinish = 500;
     /// pa_OptimaCollapseCheck: when checking an Optima answer, judge a phase that has vanished by its pure
-    /// species, so a phase that should come back is not taken as correctly absent. 0 = off, 1 = on (default).
+    /// species, so a phase that should come back is not taken as correctly absent. A pure phase below the
+    /// presence limit is judged by its potential when present, and a water phase that has vanished is
+    /// judged as absent. 0 = off, 1 = on (default).
     long int OptimaCollapseCheck = 1;
     /// pa_OptimaFastFirst: a cold Optima call (AOP) first tries a quick solve that takes the full step and
     /// clips each amount to its bounds; if that does not end OK, the normal solve runs from the same inputs.
@@ -519,6 +525,14 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// pa_OptimaStallNetFactor: Optima's last re-solve after a stall gets at most this many times the iterations
     /// of the solve that stalled (at least 2000, at most the normal limit). 0 = the normal limit. Default 5.
     long int OptimaStallNetFactor = 5;
+    /// pa_IpmTwinSplit: after a warm GEMS3K IPM call, two copies of one solid solution with the same composition
+    /// are checked for a split: if a composition of that phase lies lower than the current answer by more than this
+    /// value (RT per mole), the call is solved again from a cold start. 0 = off. Default 1e-6.
+    double IpmTwinSplit = 1e-6;
+    /// pa_OptimaTwinLabel: after an Optima solve, two present copies of one solid solution (same end-members,
+    /// standard energies and model parameters) swap their amounts when the other copy's major end-members (class M)
+    /// fit the composition better. G does not change. 0 = off, 1 = on (default).
+    long int OptimaTwinLabel = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -1134,6 +1148,15 @@ class TMultiBase
     std::vector<double> DLL_preScale_, DLL_postScale_;
     std::vector<double> PUL_preScale_, PUL_postScale_;
 
+    /// Species list of the last zero-width kinetic box warning; the same list again is logged at debug level
+    std::string kinDegenWarned_;
+    /// Input of the previous GEMS3K IPM solve: bulk composition (mol), T, P and which species have a positive
+    /// upper limit. warmInputChanged_ is true if this solve has another input (read by the warm zero check).
+    std::vector<double> prevBulkMol_;
+    double prevTC_ = 0., prevP_ = 0.;
+    std::vector<char> prevDulPositive_;
+    bool warmInputChanged_ = true;
+
     friend class TNode;
 protected:
     /// Default logger for ipm chemical
@@ -1319,6 +1342,13 @@ public:
     double CertStabTPD( long int& worstPhase, long int& nScanned, long int& nDisagree );
     /// Prototype: composition search for one absent non-ideal phase; see ipm_main.cpp.
     double NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest );
+    /// Per phase: 1 if another phase has the same end-members (a miscibility gap needs two copies).
+    std::vector<char> PhaseHessianTwins() const;
+    /// pa_IpmTwinSplit: true when a warm GEMS3K IPM answer has two present copies of one solid solution at
+    /// one composition (within 1e-3 in each mole fraction) and the tangent-plane search finds a composition of
+    /// that phase lower than the answer by more than pa_IpmTwinSplit (RT per mole). Then the copies should
+    /// split, and the warm answer is a saddle. Read-only.
+    bool WarmTwinSplitCheck();
     /// The leveled solution: species Gibbs LP plus mixed phases at their best compositions,
     /// priced by a tangent-plane search (ipm_level.cpp). Used by the native start and by Optima.
     bool ColumnGenerationSeed( std::vector<double>& nOut, double tol );
@@ -1327,7 +1357,10 @@ public:
     /// (ipm_level.cpp). worstPhase is the phase, -1 if none.
     double AbsentPhaseWorstDrive( long int& worstPhase );
 
-    double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
+    /// \param runKinetics run the kinetics step (RunKineticsStep()); false for a second solve of the same time step,
+    ///        whose kinetic limits are already set
+    double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM,
+                                      bool runKinetics = true );
     void InitalizeGEM_IPM_Data();
     virtual void DC_LoadThermodynamicData( TNode* aNa = nullptr );
 
@@ -1437,13 +1470,14 @@ public:
     /// Checks whether nothing in the bulk fixes the redox level (pa_OptimaRedoxFree).
     RedoxFreeCheck CheckRedoxFree() const;
 
-    /// Per phase: 1 if another phase has the same end-members (a miscibility gap needs two copies).
-    std::vector<char> PhaseHessianTwins() const;
     /// Per-run record of the curvature floor (twin flags, times it fired); see ipm_optima.cpp.
     void PhaseHessianBegin();
     void PhaseHessianEnd();
     /// Warns about copies of a solid solution that ended with the same composition (final answer only).
     void WarnCollapsedTwins();
+    /// pa_OptimaTwinLabel: swaps the amounts of two present, identical copies of one solid solution when the
+    /// other copy's major end-members (class M) fit the composition better. G does not change. Returns the swaps.
+    long int OptimaTwinLabel();
     std::vector<char> phfTwin;
     std::vector<long int> phfFired;
 
@@ -1806,6 +1840,16 @@ protected:
     /// cleared at the start of each native solve.
     bool trace_growth_stuck = false;
     std::string trace_growth_note;
+    /// One entry per phase: 1 when the last accepted Optima answer left the whole phase at the
+    /// solver's lower bound and the phase is not supersaturated, so it is absent. Cleared at the
+    /// start of each native and Optima solve.
+    std::vector<char> phase_floor_parked;
+    /// Per species: the floor amount (mol) pa_OptimaZeroAbsent = 3 replaced by 0 in the last Optima answer, else 0.
+    /// The next warm start of the GEMS3K IPM solver gets these amounts back as its starting point, so the
+    /// reported zeros do not change how that solver starts. Taken over by warm_floor_seed at the start of
+    /// each native solve.
+    std::vector<double> zeroed_floor_amount;
+    std::vector<double> warm_floor_seed;
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
     void AutoInitialApproximation( );
 
@@ -1888,6 +1932,16 @@ public:
     /// In plain words: a trace element the user did not ask about, whose exact balance is
     /// not checked strictly.
     bool ICIsDefaultSeed( long int i ) const;
+    /// Resets what the solver keeps for one calculation (retry counters, one-time warnings).
+    /// TNode::GEM_run() calls it. A caller that runs CalculateEquilibriumState...() directly, as
+    /// GEMSGUI does, calls it once before each calculation, or later calls run as retries.
+    static void BeginCalculation();
+    /// Rebuilds what follows from the amounts pm.Y: pm.X, the phase totals, activities, concentrations and pm.FX.
+    /// Used when an answer is put back into MULTI from a node (TNode::SyncMultiWithDataBr()).
+    void RefreshFromAmounts();
+    /// True when the last Optima answer marked phase k (MULTI index) as absent at its lower bound.
+    bool PhaseFloorParked( long int k ) const
+    { return k >= 0 && (size_t)k < phase_floor_parked.size() && phase_floor_parked[(size_t)k]; }
     /// Warns, on the Optima path, when an ordinary IC's bulk amount is smaller than the least
     /// its carrier species can hold at the lower bound,
     ///   need_i = sum_j a(i,j) * max(DLL_j, floor)   over species with a(i,j) > 0,
@@ -2008,7 +2062,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel
 
 } MULTI_DYNAMIC_FIELDS;
 

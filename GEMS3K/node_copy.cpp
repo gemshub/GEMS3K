@@ -543,6 +543,8 @@ void TNode::databr_copy( DATABR* otherCNode )
     copyValues( CNode->amru, otherCNode->amru, CSD->nPSb );
     copyValues( CNode->amrl, otherCNode->amrl, CSD->nPSb );
     copyValues( CNode->omPH, otherCNode->omPH, CSD->nPHb );
+    CNode->pHtarget = otherCNode->pHtarget;
+    CNode->Ehtarget = otherCNode->Ehtarget;
 }
 
 

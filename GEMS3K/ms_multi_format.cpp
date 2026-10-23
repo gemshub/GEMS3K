@@ -185,7 +185,7 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaDimReduce", 0 , 0, 0, "# pa_OptimaDimReduce: Optima solver: species-level dimension reduction; >0 = max passes, 0 = auto (on from 200 species), <0 = off { 0 }" },
     { "pa_OptimaDimReduceTol", 0 , 0, 0, "# pa_OptimaDimReduceTol: Optima solver: initial species set of the dimension reduction; >0 = RT threshold, <0 = -m (m x N cheapest species) { 10 }" },
     { "pa_MbPivotSplit", 0 , 0, 0, "# pa_MbPivotSplit: reserved, no effect { 0 }" },
-    { "pa_OptimaZeroAbsent", 0 , 0, 0, "# pa_OptimaZeroAbsent: Optima solver: absent species in the answer; 0 = floor amounts, 1 = zero absent phases and rebalance, 2 = floor amounts and repair a failing mass balance { 2 }" },
+    { "pa_OptimaZeroAbsent", 0 , 0, 0, "# pa_OptimaZeroAbsent: Optima solver: absent species in the answer; 0 = floor amounts, 1 = zero absent phases and rebalance, 2 = floor amounts and repair a failing mass balance, 3 = as 2, then absent phases set to 0 as in the GEMS3K IPM solver { 3 }" },
     { "pa_OptimaReadmitSeed", 0 , 0, 0, "# pa_OptimaReadmitSeed: reserved, no effect { 0 }" },
     { "pa_IpmStallWindow", 0 , 0, 0, "# pa_IpmStallWindow: IPM: accept convergence when energy and composition have stopped changing over this many iterations; 0 = off { 30 }" },
     { "pa_MbReproject", 0 , 0, 0, "# pa_MbReproject: Native solver: repair an unsatisfied mass balance of the answer by projection; 0 = off, 1 = on { 1 }" },
@@ -249,6 +249,8 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_RescueWalkSteps", 0 , 0, 0, "# pa_RescueWalkSteps: number of steps of the walk from the previous answer in pa_FailRescue; 0 = no walk { 8 }" },
     { "pa_RescueBudget", 0 , 0, 0, "# pa_RescueBudget: after the call has used this many iterations, pa_FailRescue skips steps 1-4 (the other solver still runs); 0 = no limit { 100000 }" },
     { "pa_OptimaStallNetFactor", 0 , 0, 0, "# pa_OptimaStallNetFactor: Optima solver: the last re-solve after a stall gets at most this many times the iterations of the stalled solve (at least 2000); 0 = the normal limit { 5 }" },
+    { "pa_IpmTwinSplit", 0 , 0, 0, "# pa_IpmTwinSplit: IPM solver: after a warm call, two copies of a solid solution at one composition are checked for a split; if one is found (lower by more than this, RT per mole), the call is solved again cold; 0 = off { 1e-6 }" },
+    { "pa_OptimaTwinLabel", 0 , 0, 0, "# pa_OptimaTwinLabel: Optima: two present copies of one solid solution swap their amounts when the other copy's major end-members fit better; G does not change; 0 = off, 1 = on { 1 }" },
 };
 
 
@@ -267,7 +269,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 162, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 164, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -600,6 +602,10 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_RescueBudget, pa_p->RescueBudget, _comment, false  );
     if( pa_p->OptimaStallNetFactor != pa_p_.OptimaStallNetFactor )
         prar.writeField(f_pa_OptimaStallNetFactor, pa_p->OptimaStallNetFactor, _comment, false  );
+    if( pa_p->IpmTwinSplit != pa_p_.IpmTwinSplit )
+        prar.writeField(f_pa_IpmTwinSplit, pa_p->IpmTwinSplit, _comment, false  );
+    if( pa_p->OptimaTwinLabel != pa_p_.OptimaTwinLabel )
+        prar.writeField(f_pa_OptimaTwinLabel, pa_p->OptimaTwinLabel, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -1005,7 +1011,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 162, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 164, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1586,6 +1592,10 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_RescueBudget: rddar.readArray("pa_RescueBudget" , &pa_p->RescueBudget, 1);
             break;
         case f_pa_OptimaStallNetFactor: rddar.readArray("pa_OptimaStallNetFactor" , &pa_p->OptimaStallNetFactor, 1);
+            break;
+        case f_pa_IpmTwinSplit: rddar.readArray("pa_IpmTwinSplit" , &pa_p->IpmTwinSplit, 1);
+            break;
+        case f_pa_OptimaTwinLabel: rddar.readArray("pa_OptimaTwinLabel" , &pa_p->OptimaTwinLabel, 1);
             break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;

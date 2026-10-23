@@ -181,7 +181,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld pa_IpmTwinSplit=%g pa_OptimaTwinLabel=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -212,7 +212,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
              (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot, (long)pa->OptimaLSWarmTrials,
-             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor );
+             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor, pa->IpmTwinSplit, (long)pa->OptimaTwinLabel );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -1068,6 +1068,109 @@ thread_local bool g_ipmLevelUsed = false;
 thread_local bool g_ipmNoProgArmed = false;   // pa_IpmNoProgress: set by the caller where the Optima finish follows
 thread_local bool g_ipmNoProgFired = false;   // pa_IpmNoProgress stopped the loop in this call
 thread_local bool g_ipmLevelOff = false;
+void TMultiBase::RefreshFromAmounts()
+{
+    for( long int j = 0; j < pm.L; j++ ) pm.X[j] = pm.Y[j];
+    TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    CalculateActivityCoefficients( LINK_UX_MODE );
+    CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+    // TotalGibbsEnergy() writes pm.X/XF/XFA, so they are kept by copy
+    std::vector<double> Xs( pm.X, pm.X + pm.L ), XFs( pm.XF, pm.XF + pm.FI ), XFAs( pm.XFA, pm.XFA + pm.FIs );
+    pm.FX = TotalGibbsEnergy();
+    std::copy( Xs.begin(), Xs.end(), pm.X );
+    std::copy( XFs.begin(), XFs.end(), pm.XF );
+    std::copy( XFAs.begin(), XFAs.end(), pm.XFA );
+}
+
+/// Flags each phase that has a twin: another phase with the same end-members (same count and
+/// same stoichiometry rows). Only such phases can show a miscibility gap; they are listed in the
+/// trace and warned about if the floor never changed them.
+std::vector<char> TMultiBase::PhaseHessianTwins() const
+{
+    std::vector<char> twin( (size_t)pm.FIs, 0 );
+    const long int N = pm.N;
+    std::vector<std::vector<std::vector<double>>> rows( (size_t)pm.FIs );
+    long int p0 = 0;
+    for( long int k = 0; k < pm.FIs; k++ )
+    {
+        const long int p1 = p0 + pm.L1[k];
+        if( pm.PHC[k] != PH_AQUEL )
+            for( long int j = p0; j < p1 && p1 <= pm.L; j++ )
+            {
+                std::vector<double> r( (size_t)N );
+                for( long int i = 0; i < N; i++ ) r[(size_t)i] = pm.A[ i + j*N ];
+                rows[(size_t)k].push_back( std::move(r) );
+            }
+        std::sort( rows[(size_t)k].begin(), rows[(size_t)k].end() );
+        p0 = p1;
+    }
+    for( long int a = 0; a < pm.FIs; a++ )
+        for( long int b = a+1; b < pm.FIs; b++ )
+            if( rows[(size_t)a].size() > 1 && rows[(size_t)a] == rows[(size_t)b] )
+                twin[(size_t)a] = twin[(size_t)b] = 1;
+    return twin;
+}
+
+bool TMultiBase::WarmTwinSplitCheck()
+{
+    const double tol = base_param()->IpmTwinSplit;
+    if( !( tol > 0. ) || !pm.X || pm.FIs < 2 )
+        return false;
+    const std::vector<char> twin = PhaseHessianTwins();
+    if( twin.size() != (size_t)pm.FIs )
+        return false;
+    const long int N = pm.N;
+    std::vector<long int> start( (size_t)pm.FIs + 1, 0 );
+    for( long int k = 0; k < pm.FIs; k++ ) start[(size_t)k+1] = start[(size_t)k] + pm.L1[k];
+    double sysTot = 0.;
+    for( long int j = 0; j < pm.L; j++ ) sysTot += std::max( pm.X[j], 0. );
+    const double presentMin = 1e-9 * sysTot;   // as WarnCollapsedTwins()
+    auto sameColumn = [&]( long int i, long int j ) {
+        for( long int r = 0; r < N; r++ )
+            if( pm.A[ r + i*N ] != pm.A[ r + j*N ] ) return false;
+        return true;
+    };
+    for( long int a = 0; a < pm.FIs; a++ )
+        for( long int b = a+1; b < pm.FIs; b++ )
+        {
+            if( !twin[(size_t)a] || !twin[(size_t)b] || pm.L1[a] != pm.L1[b] || pm.L1[a] < 2 || start[(size_t)b+1] > pm.L )
+                continue;
+            double ta = 0., tb = 0.;
+            for( long int j = start[(size_t)a]; j < start[(size_t)a+1]; j++ ) ta += std::max( pm.X[j], 0. );
+            for( long int j = start[(size_t)b]; j < start[(size_t)b+1]; j++ ) tb += std::max( pm.X[j], 0. );
+            if( !( ta > presentMin && tb > presentMin ) )
+                continue;
+            // the same end-members, in any order, and the same composition within 1e-3
+            double dmax = 0.;
+            bool matched = true;
+            for( long int i = start[(size_t)a]; i < start[(size_t)a+1] && matched; i++ )
+            {
+                long int jm = -1;
+                for( long int j = start[(size_t)b]; j < start[(size_t)b+1]; j++ )
+                    if( sameColumn( i, j ) ) { jm = j; break; }
+                if( jm < 0 ) { matched = false; break; }
+                dmax = std::max( dmax, std::fabs( std::max( pm.X[i], 0. ) / ta - std::max( pm.X[jm], 0. ) / tb ) );
+            }
+            if( !matched || dmax > 1e-3 )
+                continue;
+            std::vector<double> ybest;
+            const double tpd = NativeTpdPhase( a, start[(size_t)a], ybest );
+            const bool split = tpd < -tol;
+            native_trace_decide( "twinsplit pair=%s|%s dfrac=%.3e tpd=%.3e tol=%.1e cold=%d",
+                                 char_array_to_string( pm.SF[a] + MAXSYMB, MAXPHNAME ).c_str(),
+                                 char_array_to_string( pm.SF[b] + MAXSYMB, MAXPHNAME ).c_str(), dmax, tpd, tol, split ? 1 : 0 );
+            if( split )
+            {
+                ipm_logger->info( "Warm start: two copies of {} kept one composition where they should split "
+                                  "(by {:.3g} RT per mole); solving again from a cold start",
+                                  char_array_to_string( pm.SF[a] + MAXSYMB, MAXPHNAME ), -tpd );
+                return true;
+            }
+        }
+    return false;
+}
+
 double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
 {
     gems3k_timing::Scope timing( gems3k_timing::Tpd );
@@ -2591,11 +2694,48 @@ FORCED_AIA:
    if( FILE* ntf = native_trace_file() )
    {
        long int nz = 0;
+       std::string zeroNames;   // the first species that start at 0, with an upper limit above 0
        for( long int j = 0; j < pm.L; j++ )
-           if( pm.Y[j] == 0. ) nz++;
-       fprintf( ntf, "INIT  pNP=%ld IAstatus=%d zeroDC=%ld of %ld\n",
-                (long)pm.pNP, (int)IAstatus, (long)nz, (long)pm.L );
+           if( pm.Y[j] == 0. )
+           {
+               nz++;
+               if( pm.DUL[j] > 0. && std::count( zeroNames.begin(), zeroNames.end(), ',' ) < 8 )
+               {
+                   if( !zeroNames.empty() ) zeroNames += ',';
+                   std::string nm = char_array_to_string( pm.SM[j], MAXDCNAME );
+                   nm.erase( nm.find_last_not_of( ' ' ) + 1 );
+                   zeroNames += nm;
+               }
+           }
+       fprintf( ntf, "INIT  pNP=%ld IAstatus=%d zeroDC=%ld of %ld names=%s\n",
+                (long)pm.pNP, (int)IAstatus, (long)nz, (long)pm.L, zeroNames.empty() ? "-" : zeroNames.c_str() );
        fflush( ntf );
+   }
+   // A warm start that has an element of the bulk but no species above 0 to carry it cannot reach a
+   // solution (a species at exactly 0 cannot grow), so the call starts cold
+   if( pm.pNP && IAstatus == false )
+   {
+       long int iMiss = -1;
+       for( long int i = 0; i < pm.N && iMiss < 0; i++ )
+       {
+           if( !( pm.B[i] > 0. ) || ( pm.ICC && ( pm.ICC[i] == IC_CHARGE || pm.ICC[i] == IC_VOLUME ) ) )
+               continue;
+           bool carried = false;
+           for( long int j = 0; j < pm.L && !carried; j++ )
+               carried = pm.A[ i + j*pm.N ] > 0. && pm.Y[j] > 0.;
+           if( !carried )
+               iMiss = i;
+       }
+       if( iMiss >= 0 )
+       {
+           const std::string ic = char_array_to_string( pm.SB[iMiss], MAXICNAME );
+           native_trace_decide( "warmnocarrier ic=%s b=%.6e", ic.c_str(), pm.B[iMiss] );
+           ipm_logger->debug( "Warm start: no species carries {} (b = {:g}); the call starts cold", ic, pm.B[iMiss] );
+           pm.pNP = 0;
+           pm.MK = 0;
+           Reset_uDD( 0L, uDDtrace );
+           goto FORCED_AIA;
+       }
    }
    if( IAstatus == false )
    {
@@ -2611,6 +2751,57 @@ FORCED_AIA:
    }
    pm.IT = pm.ITG;
 
+   // A species at exactly 0 in a present solution phase cannot grow in a warm solve. If the converged
+   // potentials give it an amount that holds more than 1e-6 of an element's bulk, the zero is wrong and
+   // the call starts cold. With the same input as the previous solve, a cold start gives the same answer,
+   // so the check runs only after the bulk, T, P or a zero upper limit changed.
+   if( pm.MK != 2 && pm.pNP && IAstatus == false && pm.FIs > 0 && warmInputChanged_ )
+   {
+       const double t = 1e-20;   // test amount for the potential of a zero species
+       std::vector<double> Yt( pm.Y, pm.Y + pm.L ), Ft( (size_t)pm.L, 0. ), YFt( (size_t)pm.FI, 0. ), YFAt( (size_t)pm.FIs, 0. );
+       std::vector<long int> zj;
+       for( long int k = 0, jb = 0; k < pm.FIs; jb += pm.L1[k], k++ )
+       {
+           if( pm.L1[k] < 2 || !( pm.YF[k] > pm.DSM ) )
+               continue;
+           for( long int j = jb; j < jb + pm.L1[k]; j++ )
+               if( pm.Y[j] == 0. && pm.DUL[j] > 0. && pm.DLL[j] <= 0. )
+               { Yt[(size_t)j] = t; zj.push_back( j ); }
+       }
+       if( !zj.empty() )
+       {
+           TotalPhasesAmounts( Yt.data(), YFt.data(), YFAt.data() );
+           PrimalChemicalPotentials( Ft.data(), Yt.data(), YFt.data(), YFAt.data() );
+           long int jBad = -1;
+           double worst = 0.;
+           for( long int j : zj )
+           {
+               double mu = 0.;
+               for( long int i = 0; i < pm.N; i++ ) mu += pm.A[ i + j*pm.N ] * pm.U[i];
+               const double lnN = std::log( t ) + std::min( mu - Ft[(size_t)j], 700. );
+               for( long int i = 0; i < pm.N; i++ )
+               {
+                   const double a = pm.A[ i + j*pm.N ];
+                   if( !( a > 0. ) || !( pm.B[i] > 0. ) || ( pm.ICC && ( pm.ICC[i] == IC_CHARGE || pm.ICC[i] == IC_VOLUME ) ) )
+                       continue;
+                   const double share = a * std::exp( lnN ) / pm.B[i];
+                   if( share > worst ) { worst = share; jBad = j; }
+               }
+           }
+           if( worst > 1e-6 )
+           {
+               std::string nm = char_array_to_string( pm.SM[jBad], MAXDCNAME );
+               nm.erase( nm.find_last_not_of( ' ' ) + 1 );
+               native_trace_decide( "warmzero species=%s share=%.3e zeros=%ld", nm.c_str(), worst, (long)zj.size() );
+               ipm_logger->debug( "Warm start: {} stayed at 0 but should hold {:.3g} of an element; the call starts cold", nm, worst );
+               pm.MK = 2;
+           }
+       }
+   }
+   // pa_IpmTwinSplit: two copies of a solid solution left at one composition where they should split
+   // (a warm start keeps them equal): solve again from a cold start
+   if( pm.MK != 2 && pm.pNP && IAstatus == false && WarmTwinSplitCheck() )
+       pm.MK = 2;
    // testing results
    if( pm.MK == 2 )
    {	if( pm.pNP )
@@ -3341,6 +3532,18 @@ to_text_file( "MultiDumpAA.txt" );   // Debugging
     }
     else  // Taking previous GEMIPM result as an initial approximation
     {
+        // a species the previous Optima answer reported as 0 (pa_OptimaZeroAbsent = 3) starts from the
+        // floor amount it had, as it would without the zeroing
+        if( warm_floor_seed.size() == (size_t)pm.L )
+        {
+            long int nSeed = 0;
+            double seedSum = 0.;
+            for( j = 0; j < pm.L; j++ )
+                if( pm.Y[j] == 0. && warm_floor_seed[(size_t)j] > 0. )
+                { pm.Y[j] = warm_floor_seed[(size_t)j]; seedSum += pm.Y[j]; nSeed++; }
+            if( nSeed ) native_trace_decide( "warmfloorseed species=%ld mol=%.9e", nSeed, seedSum / ( prev_scfact > 0. ? prev_scfact : 1. ) );
+        }
+        warm_floor_seed.clear();
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
         for( j=0; j< pm.L; j++ )
             pm.X[j] = pm.Y[j];

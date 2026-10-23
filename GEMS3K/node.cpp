@@ -26,6 +26,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include <algorithm>
+#include <cmath>
 #include "gems3k_timing.h"
 #include "node.h"
 #include "datach_api.h"
@@ -97,6 +99,15 @@ TNode::TNode( const TNode& otherNode )
     databr_copy( otherNode.CNode );
 
     multi_ptr()->copyMULTI( *otherNode.multi_base );
+    // the targets go with the copy: the registered conditions and which of them came from the DBR
+#ifdef USE_OPTIMA_SOLVER
+    multi_ptr()->RestoreControlConditions( otherNode.multi_base->GetControlConditions() );
+#endif
+    dbrTarget_pH = otherNode.dbrTarget_pH;
+    dbrTarget_Eh = otherNode.dbrTarget_Eh;
+    dbrTargetWarned = otherNode.dbrTargetWarned;
+    apiTarget_pH = otherNode.apiTarget_pH;
+    apiTarget_Eh = otherNode.apiTarget_Eh;
 
     // copy intervals for minimizatiom
     pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
@@ -214,6 +225,29 @@ thread_local long int g_optimaCapAllowance = 0;   // extra iterations for the re
 thread_local bool g_optimaDryRedoCall = false;   // inside the dry-retry redo (pa_OptimaDryRetry)
 thread_local bool g_optimaDryFailed = false;     // the dry stop fired and the water-first retry failed
 thread_local bool g_optimaDryOff = false;        // the dry stop and its retry are off for this call
+bool TNode::SyncMultiWithDataBr()
+{
+    bool same = true;
+    for( long int i = 0; i < CSD->nDCb && same; i++ )
+        same = ( CNode->xDC[i] == pmm->X[ CSD->xdc[i] ] );
+    for( long int i = 0; i < CSD->nICb && same; i++ )
+        same = ( CNode->uIC[i] == pmm->U[ CSD->xic[i] ] );
+    if( same )
+        return false;
+    unpackDataBr( true );
+    for( long int i = 0; i < CSD->nICb; i++ )
+        pmm->U[ CSD->xic[i] ] = CNode->uIC[i];
+    multi_ptr()->RefreshFromAmounts();
+    return true;
+}
+
+void TMultiBase::BeginCalculation()
+{
+    g_optimaTargetWarned = false;
+    g_optimaPreSolveEmpty = false;
+    g_lvlFullCalls = 0;
+}
+
 // Warn once when the system holds more than 1e6 mol of elements, more than the solvers are tested for.
 void TNode::WarnIfSystemTooLarge()
 {
@@ -244,13 +278,137 @@ long int TNode::GEM_run( bool uPrimalSol )
 {
     WarnIfSystemTooLarge();
     const long int requested = CNode->NodeStatusCH;
+    ApplyDbrTargets( requested );
+    restoreEnteredComposition( requested );
+    const std::vector<double> bBefore( CNode->bIC, CNode->bIC + CSD->nICb );
     long int st;
     {
         gems3k_timing::Scope t( gems3k_timing::Call );
         st = GEM_run_rescue( uPrimalSol );
     }
+    rememberTitration( requested, bBefore );
     gems3k_timing::flush( requested, st, CNode->IterDone );
     return st;
+}
+
+bool TNode::modeUsesTargets( long int mode )
+{
+#ifdef USE_OPTIMA_SOLVER
+    return mode == NEED_GEM_AOP || mode == NEED_GEM_SOP || mode == NEED_GEM_HOP || mode == NEED_GEM_SHP;
+#else
+    (void)mode;
+    return false;
+#endif
+}
+
+void TNode::restoreEnteredComposition( long int mode )
+{
+    if( titrSolved_.empty() )
+        return;
+    const size_t n = titrSolved_.size();
+    bool untouched = n == (size_t)CSD->nICb;
+    for( size_t i = 0; i < n && untouched; i++ )
+        untouched = CNode->bIC[i] == titrSolved_[i];
+    if( !untouched )
+    {   // the caller set a new composition: nothing to put back
+        titrEntered_.clear();
+        titrSolved_.clear();
+        return;
+    }
+#ifdef USE_OPTIMA_SOLVER
+    if( modeUsesTargets( mode ) && !multi_ptr()->GetControlConditions().empty() )
+        return;   // the target is applied again from this composition
+#endif
+    for( size_t i = 0; i < n; i++ )
+        CNode->bIC[i] = titrEntered_[i];
+    native_trace_decide( "titration-restore mode=%ld", mode );
+    node_logger->info( "The last solve used a pH or Eh target and changed the bulk composition; mode {} does not use "
+                       "a target, so the composition that was entered is solved", mode );
+    titrEntered_.clear();
+    titrSolved_.clear();
+}
+
+void TNode::rememberTitration( long int mode, const std::vector<double>& before )
+{
+#ifdef USE_OPTIMA_SOLVER
+    if( !modeUsesTargets( mode ) || multi_ptr()->GetControlConditions().empty() )
+        return;
+    const size_t n = before.size();
+    // a call that starts from the composition an earlier target solve wrote keeps that solve's entered composition
+    const bool continuing = titrSolved_.size() == n && std::equal( before.begin(), before.end(), titrSolved_.begin() );
+    if( !continuing )
+        titrEntered_ = before;
+    titrSolved_.assign( CNode->bIC, CNode->bIC + n );
+#else
+    (void)mode; (void)before;
+#endif
+}
+
+void TNode::ApplyDbrTargets( long int mode )
+{
+    auto given = []( double v, const char* name ) {
+        if( IsDoubleEmpty( v ) ) return false;
+        if( !std::isfinite( v ) )
+        {
+            node_logger->warn( "The DBR {} target is not a finite number; it is not used", name );
+            return false;
+        }
+        return true; };
+    const bool pHgiven = given( CNode->pHtarget, "pH" ), Ehgiven = given( CNode->Ehtarget, "Eh" );
+#ifdef USE_OPTIMA_SOLVER
+    const bool used = mode == NEED_GEM_AOP || mode == NEED_GEM_SOP || mode == NEED_GEM_HOP || mode == NEED_GEM_SHP;
+#else
+    const bool used = false;   // without Optima no mode uses targets
+    (void)mode;
+#endif
+    if( ( pHgiven || Ehgiven ) && !used && !dbrTargetWarned )
+    {
+        node_logger->warn( "The DBR has a pH or Eh target; only the Optima modes (AOP, SOP, HOP, SHP) use it" );
+        dbrTargetWarned = true;
+    }
+    // a target is registered only for a mode that uses it, so the other modes run as without a target
+    const bool pH = used && pHgiven, Eh = used && Ehgiven;
+#ifdef USE_OPTIMA_SOLVER
+    TMultiBase* m = multi_ptr();
+    // a DBR target that this call does not use is removed; the target of the same name that the program
+    // set (Set_pH_target(), Set_Eh_target()) and the DBR target replaced comes back
+    auto expire = [m]( const char* name, bool was, bool now, std::vector<EqControlCondition>& saved ) {
+        if( !was || now )
+            return;
+        std::vector<EqControlCondition> keep;
+        for( const auto& c : m->GetControlConditions() )
+            if( c.name != name ) keep.push_back( c );
+        for( const auto& c : saved ) keep.push_back( c );
+        saved.clear();
+        m->RestoreControlConditions( keep );
+    };
+    expire( "pH", dbrTarget_pH, pH, apiTarget_pH );
+    expire( "Eh", dbrTarget_Eh, Eh, apiTarget_Eh );
+    // keep the program's target of the same name before a DBR target replaces it
+    auto keepApi = [m]( const char* name, bool was, bool now, std::vector<EqControlCondition>& saved ) {
+        if( was || !now )
+            return;
+        saved.clear();
+        for( const auto& c : m->GetControlConditions() )
+            if( c.name == name ) saved.push_back( c );
+    };
+    keepApi( "pH", dbrTarget_pH, pH, apiTarget_pH );
+    keepApi( "Eh", dbrTarget_Eh, Eh, apiTarget_Eh );
+    dbrTarget_pH = pH;
+    dbrTarget_Eh = Eh;
+    if( pH || Eh )
+    {
+        // the target setters find the H, charge and H+ indices through the node
+        TNode* const node0 = m->node1;
+        m->node1 = this;
+        try {
+            if( pH ) m->SetControlCondition_pH( CNode->pHtarget );
+            if( Eh ) m->SetControlCondition_Eh( CNode->Ehtarget );
+        }
+        catch( ... ) { m->node1 = node0; throw; }
+        m->node1 = node0;
+    }
+#endif
 }
 
 // pa_FailRescue: a call that ends with an error or a bad result is tried again in steps, stopping at the
@@ -739,9 +897,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
 {
     const long int requested = CNode->NodeStatusCH;
     const bool kinetics = CNode->dt > 0.;
-    g_optimaTargetWarned = false;
-    g_optimaPreSolveEmpty = false;
-    g_lvlFullCalls = 0;
+    TMultiBase::BeginCalculation();
     // pa_OptimaFastFirst > 0: a cold Optima call first tries a quick solve - the full step clipped to the
     // bounds, plain settings and a small iteration cap. Anything but OK sends the call back to its inputs
     // for the normal solve, and both tries' iterations are counted. DECIDE fastfirst.
@@ -1405,7 +1561,11 @@ long int TNode::GEM_run_single( bool uPrimalSol )
             // internal multi error
             ipmlog_error = pmm->errorCode+ std::string(": ") +  pmm->errorBuf;
             // A thrown error was already logged by Error(); this status path throws nothing.
-            node_logger->error( "{}", ipmlog_error );
+            // A failed quick try is followed by the full solve, so it is logged at debug, as in Error().
+            if( g_errorsHandledByCaller > 0 )
+                node_logger->debug( "{}", ipmlog_error );
+            else
+                node_logger->error( "{}", ipmlog_error );
         }
         else
         {
@@ -1578,6 +1738,10 @@ void TNode::packDataBr()
             CNode->aPH[ii] = pmm->Aalp[ CSD->xph[ii] ]*kg_to_g;
         CNode->omPH[ii] = pmm->Falp[ CSD->xph[ii] ];
     }
+    floorParkedAmount.assign( (size_t)CSD->nPHb, -1. );
+    for( ii=0; ii<CSD->nPHb; ii++ )
+        if( multi_ptr() && multi_ptr()->PhaseFloorParked( CSD->xph[ii] ) )
+            floorParkedAmount[(size_t)ii] = CNode->xPH[ii];
     for( ii=0; ii<CSD->nPSb; ii++ )
     {   CNode->vPS[ii] = pmm->FVOL[ CSD->xph[ii] ]/m3_to_cm3;
         CNode->mPS[ii] = pmm->FWGT[ CSD->xph[ii] ]/kg_to_g;

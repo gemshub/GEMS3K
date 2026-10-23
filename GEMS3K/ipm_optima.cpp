@@ -53,6 +53,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstdio>
+#include <cstring>
 #include <cstdlib>
 #include <functional>
 #include <limits>
@@ -568,33 +569,95 @@ TMultiBase::RedoxFreeCheck TMultiBase::CheckRedoxFree() const
     return r;
 }
 
-/// Flags each phase that has a twin: another phase with the same end-members (same count and
-/// same stoichiometry rows). Only such phases can show a miscibility gap; they are listed in the
-/// trace and warned about if the floor never changed them.
-std::vector<char> TMultiBase::PhaseHessianTwins() const
+/// pa_OptimaTwinLabel: for two present copies of one solid solution that are the same in every input (end-members
+/// in the same order, standard energies, bounds, model code and parameters), puts each composition into the copy
+/// whose major end-members (class M) it holds most of. Only amounts move, so G does not change.
+long int TMultiBase::OptimaTwinLabel()
 {
-    std::vector<char> twin( (size_t)pm.FIs, 0 );
-    const long int N = pm.N;
-    std::vector<std::vector<std::vector<double>>> rows( (size_t)pm.FIs );
-    long int p0 = 0;
-    for( long int k = 0; k < pm.FIs; k++ )
+    if( base_param()->OptimaTwinLabel <= 0 || pm.FIs < 2 || !pm.X || !pm.Y || !pm.DCC )
+        return 0;
+    const std::vector<char> twin = PhaseHessianTwins();
+    if( twin.size() != (size_t)pm.FIs )
+        return 0;
+    const long int N = pm.N, FIs = pm.FIs;
+    // first species and first index of each phase's parameter blocks, as CalculateActivityCoefficients() counts them
+    std::vector<long int> st( (size_t)FIs + 1, 0 ), ip( (size_t)FIs, 0 ), jp( (size_t)FIs, 0 ), jd( (size_t)FIs, 0 );
+    long int ipe = 0, jpe = 0, jde = 0;
+    for( long int k = 0; k < FIs; k++ )
     {
-        const long int p1 = p0 + pm.L1[k];
-        if( pm.PHC[k] != PH_AQUEL )
-            for( long int j = p0; j < p1 && p1 <= pm.L; j++ )
-            {
-                std::vector<double> r( (size_t)N );
-                for( long int i = 0; i < N; i++ ) r[(size_t)i] = pm.A[ i + j*N ];
-                rows[(size_t)k].push_back( std::move(r) );
-            }
-        std::sort( rows[(size_t)k].begin(), rows[(size_t)k].end() );
-        p0 = p1;
+        st[(size_t)k+1] = st[(size_t)k] + pm.L1[k];
+        ip[(size_t)k] = ipe; jp[(size_t)k] = jpe; jd[(size_t)k] = jde;
+        if( pm.L1[k] == 1 && !( pm.PHC[k] == PH_GASMIX || pm.PHC[k] == PH_PLASMA || pm.PHC[k] == PH_FLUID ) )
+            continue;
+        ipe += pm.LsMod[k*3]*pm.LsMod[k*3+1];
+        jpe += pm.LsMod[k*3]*pm.LsMod[k*3+2];
+        jde += pm.LsMdc[k*3]*pm.L1[k];
     }
-    for( long int a = 0; a < pm.FIs; a++ )
-        for( long int b = a+1; b < pm.FIs; b++ )
-            if( rows[(size_t)a].size() > 1 && rows[(size_t)a] == rows[(size_t)b] )
-                twin[(size_t)a] = twin[(size_t)b] = 1;
-    return twin;
+    auto isMajor = [&]( long int j ) { return pm.DCC[j] == DC_SOL_MAJOR || pm.DCC[j] == DC_SOL_MAJDEP; };
+    auto same = []( double x, double y ) { return std::fabs( x - y ) <= 1e-12 * ( 1. + std::fabs( x ) ); };
+    // present: above 1e-9 of the system total, as in WarmTwinSplitCheck() and WarnCollapsedTwins()
+    double sysTot = 0.;
+    for( long int j = 0; j < pm.L; j++ ) sysTot += std::max( pm.X[j], 0. );
+    const double presentMin = 1e-9 * sysTot;
+    long int nSwap = 0;
+    std::vector<char> used( (size_t)FIs, 0 );
+    for( long int a = 0; a < FIs; a++ )
+        for( long int b = a+1; b < FIs; b++ )
+        {
+            const long int n = pm.L1[a];
+            if( !twin[(size_t)a] || !twin[(size_t)b] || used[(size_t)a] || used[(size_t)b] || n != pm.L1[b] || n < 2
+                || st[(size_t)b+1] > pm.L || pm.PHC[a] != pm.PHC[b] )
+                continue;
+            const long int ja = st[(size_t)a], jb = st[(size_t)b];
+            bool ok = std::memcmp( pm.sMod[a], pm.sMod[b], sizeof( pm.sMod[a] ) ) == 0;
+            for( int q = 0; q < 3 && ok; q++ )
+                ok = pm.LsMod[a*3+q] == pm.LsMod[b*3+q] && pm.LsMdc[a*3+q] == pm.LsMdc[b*3+q];
+            for( long int i = 0; i < n && ok; i++ )
+            {
+                for( long int r = 0; r < N && ok; r++ ) ok = pm.A[ r + (ja+i)*N ] == pm.A[ r + (jb+i)*N ];
+                ok = ok && same( pm.G0[ja+i], pm.G0[jb+i] ) && same( pm.DUL[ja+i], pm.DUL[jb+i] ) && same( pm.DLL[ja+i], pm.DLL[jb+i] );
+            }
+            const long int nIP = pm.LsMod[a*3]*pm.LsMod[a*3+1], nPM = pm.LsMod[a*3]*pm.LsMod[a*3+2], nDM = pm.LsMdc[a*3]*n;
+            for( long int q = 0; q < nIP && ok; q++ ) ok = pm.IPx[ip[(size_t)a]+q] == pm.IPx[ip[(size_t)b]+q];
+            for( long int q = 0; q < nPM && ok; q++ ) ok = same( pm.PMc[jp[(size_t)a]+q], pm.PMc[jp[(size_t)b]+q] );
+            for( long int q = 0; q < nDM && ok; q++ ) ok = same( pm.DMc[jd[(size_t)a]+q], pm.DMc[jd[(size_t)b]+q] );
+            if( !ok )
+                continue;
+            // a copy parked at its floor is absent; its amounts must not move into the present copy
+            if( PhaseFloorParked( a ) || PhaseFloorParked( b ) )
+                continue;
+            double ta = 0., tb = 0.;
+            for( long int i = 0; i < n; i++ ) { ta += std::max( pm.X[ja+i], 0. ); tb += std::max( pm.X[jb+i], 0. ); }
+            if( !( ta > presentMin && tb > presentMin ) )
+                continue;
+            used[(size_t)a] = used[(size_t)b] = 1;
+            // share of each copy's major end-members, kept as is and swapped
+            double keep = 0., swap = 0.;
+            for( long int i = 0; i < n; i++ )
+            {
+                const double xa = std::max( pm.X[ja+i], 0. ) / ta, xb = std::max( pm.X[jb+i], 0. ) / tb;
+                if( isMajor( ja+i ) ) { keep += xa; swap += xb; }
+                if( isMajor( jb+i ) ) { keep += xb; swap += xa; }
+            }
+            const bool doSwap = swap > keep + 1e-9;
+            native_trace_decide( "twinlabel a=%ld b=%ld keep=%.6g swap=%.6g swapped=%d", (long)a, (long)b, keep, swap, doSwap ? 1 : 0 );
+            if( !doSwap )
+                continue;
+            for( long int i = 0; i < n; i++ )
+            {
+                const long int j1 = ja+i, j2 = jb+i;
+                for( double* v : { pm.X, pm.Y, pm.XY, pm.lnGam, pm.lnGmo, pm.Gamma, pm.Wx, pm.F, pm.Fx, pm.F0, pm.Y_la, pm.Y_w } )
+                    if( v ) std::swap( v[j1], v[j2] );
+            }
+            for( double* v : { pm.XF, pm.YF, pm.XFA, pm.YFA, pm.XFs, pm.Falps, pm.Falp, pm.FVOL, pm.FWGT } )
+                if( v ) std::swap( v[a], v[b] );
+            nSwap++;
+            ipm_logger->debug( "Optima: two copies of one solid solution swapped their amounts to match their major end-members ({} and {})",
+                               char_array_to_string( pm.SF[a]+MAXSYMB, MAXPHNAME ), char_array_to_string( pm.SF[b]+MAXSYMB, MAXPHNAME ) );
+        }
+    if( nSwap > 0 )
+        RefreshFromAmounts();
+    return nSwap;
 }
 
 /// Starts the per-run record of the curvature floor: which phases are twins, none fired yet.
@@ -723,6 +786,19 @@ void TMultiBase::WarnCollapsedTwins()
     }
 }
 
+/// Index of the element (IC) with this name in pm.SB, or -1. Works without a node (the GEMSGUI solver has none).
+static long int ic_index_by_name( const MULTI& pm, const char* name )
+{
+    for( long int i = 0; i < pm.N; i++ )
+    {
+        std::string s = char_array_to_string( pm.SB[i], MAXICNAME );
+        strip( s );
+        if( s == name )
+            return i;
+    }
+    return -1;
+}
+
 bool TMultiBase::DetectSolventCollapseAndReseed( const double* x, double upperBound, double& waterSeedOut )
 {
     if( !HasAqueousPhase() || pm.LO < 0 || pm.LO >= pm.L )
@@ -745,8 +821,8 @@ bool TMultiBase::DetectSolventCollapseAndReseed( const double* x, double upperBo
                 native_trace_decide( "emptysolvent water=%.6g solutes=%.6g", x[pm.LO], otherTotal );
             // Reseed value: bounded by the most water the system's total H and O could form.
             double waterSeed = otherTotal;
-            const long int xH = ( node1 != nullptr ) ? node1->IC_name_to_xCH( "H" ) : -1;
-            const long int xO = ( node1 != nullptr ) ? node1->IC_name_to_xCH( "O" ) : -1;
+            const long int xH = ic_index_by_name( pm, "H" );
+            const long int xO = ic_index_by_name( pm, "O" );
             if( xH >= 0 && xO >= 0 )
             {
                 const double bulkEstimate = std::min( pm.B[xH] / 2.0, pm.B[xO] );
@@ -1571,7 +1647,16 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
             if( nMax <= 0. ) continue;      // trap (b): genuine zero ceiling -> absent
             if( pm.Y[j] >= kRelPresenceEps * nMax ) { anySignificant = true; break; }
         }
-        const bool present = anyOffFloor && ( pm.YF[k] >= presenceThreshold ) && anySignificant;
+        // A water phase that has vanished (its water at or below XwMinM, as in PrimalChemicalPotentials() and the collapse
+        // check, and its total below 1e-9 of all phases) counts as absent, so a water phase that should come back is judged by
+        // its stability index (pa_OptimaCollapseCheck). A dried-out brine that keeps its solutes is not affected.
+        double allPhases = 0.;
+        for( long int kk = 0; kk < pm.FI; kk++ ) allPhases += std::max( pm.YF[kk], 0. );
+        const bool aqDry = pa_p->OptimaCollapseCheck && pm.PHC[k] == PH_AQUEL && pm.LO >= 0 && pm.Y[pm.LO] <= pm.XwMinM
+                           && pm.YF[k] <= 1e-9 * allPhases;
+        const bool present = anyOffFloor && ( pm.YF[k] >= presenceThreshold ) && anySignificant && !aqDry;
+        if( aqDry && logSI > pa_p->DF && anyOffFloor && pm.YF[k] >= presenceThreshold && anySignificant )
+            native_trace_decide( "aqdryabsent water=%.3e logSI=%.3f stage=%s", pm.Y[pm.LO], logSI, probeStage ? probeStage : "check" );
         // GEMS3K_PHSTAB_PROBE=<path>: one line per phase per evaluation - amount, stability
         // index, the three presence clauses and the verdict. Zero cost when unset.
         {
@@ -2376,6 +2461,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                                     bool runKinetics )
 {
     gems3k_timing::Scope timing( gems3k_timing::OptimaCall );
+    phase_floor_parked.clear();   // set again below only for an accepted answer
+    zeroed_floor_amount.clear();
     // Disable the IPM-2 chemical-potential smoothing for this call (see
     // optima_disable_smoothing). RAII, so the flag is restored on every exit.
     struct SmoothingGuard {
@@ -2525,6 +2612,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
     try
     {
+        // The GUI loads the mixing model parameters here when they are not loaded yet, as GEM_IPM_Init()
+        // does for the native path. Standalone GEMS3K reads them from the input files, and the call does nothing.
+        {
+            bool multiComponent = false;
+            for( long int k = 0; k < pm.FI; k++ )
+                if( pm.L1[k] > 1 )
+                    multiComponent = true;
+            if( pm.FIs && multiComponent )
+                GEM_IPM_Init_gui1();
+        }
         // Allocates/parametrises each multicomponent phase's TSolMod at the current T,P (the
         // native path does this in GEM_IPM_Init()).
         CalculateActivityCoefficients( LINK_TP_MODE );
@@ -3660,10 +3757,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 ipm_logger->info( "Optima: water-only elements ({}), the dry-out is off (pa_OptimaDryOut)", onlyAq );
         }
         stallWatch->reset();
-        if( pa_p->OptimaDryRetry && !g_optimaDryOff && pm.LO >= 0 && pm.LO < pm.L && node1 != nullptr )
+        if( pa_p->OptimaDryRetry && !g_optimaDryOff && pm.LO >= 0 && pm.LO < pm.L )
         {
-            const long int xHd = node1->IC_name_to_xCH( "H" );
-            const long int xOd = node1->IC_name_to_xCH( "O" );
+            const long int xHd = ic_index_by_name( pm, "H" );
+            const long int xOd = ic_index_by_name( pm, "O" );
             if( xHd >= 0 && xOd >= 0 )
             {
                 stallWatch->dryLO = pm.LO;
@@ -4782,8 +4879,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         for( long int j = j0; j < j1; j++ )
                             if( j != pm.LO ) otherTotal += state.x[j];
                         double waterSeed = otherTotal;
-                        const long int xH = ( node1 != nullptr ) ? node1->IC_name_to_xCH( "H" ) : -1;
-                        const long int xO = ( node1 != nullptr ) ? node1->IC_name_to_xCH( "O" ) : -1;
+                        const long int xH = ic_index_by_name( pm, "H" );
+                        const long int xO = ic_index_by_name( pm, "O" );
                         if( xH >= 0 && xO >= 0 )
                         {
                             const double bulkEstimate = std::min( pm.B[xH] / 2.0, pm.B[xO] );
@@ -4931,10 +5028,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // pa_OptimaDryRetry: a failed solve that left almost no liquid water, while the bulk
             // could form much more, is solved once more from the water-first start; kept only if
             // it converges.
-            if( pa_p->OptimaDryRetry && !g_optimaDryOff && !result.succeeded && pm.LO >= 0 && pm.LO < L && node1 != nullptr )
+            if( pa_p->OptimaDryRetry && !g_optimaDryOff && !result.succeeded && pm.LO >= 0 && pm.LO < L )
             {
-                const long int xH = node1->IC_name_to_xCH( "H" );
-                const long int xO = node1->IC_name_to_xCH( "O" );
+                const long int xH = ic_index_by_name( pm, "H" );
+                const long int xO = ic_index_by_name( pm, "O" );
                 const double wCap = ( xH >= 0 && xO >= 0 ) ? std::min( pm.B[xH] / 2., pm.B[xO] ) : 0.;
                 const double xw = state.x[pm.LO];
                 std::vector<double> seed;
@@ -5761,9 +5858,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         PrimalChemicalPotentials( pm.F, pm.X, pm.XF, pm.XFA );
         // A phase below its minimum amount gets no chemical potentials above (they stay 0), so it would
         // always look correctly absent. Judge it by its pure species instead (aqueous phase: the water).
+        // A single-species phase below that amount gets the potential it has when present (pm.G).
         if( pa_p->OptimaCollapseCheck )
         {
-            long int jc = 0, nset = 0;
+            long int jc = 0, nset = 0, nsingle = 0;
             for( long int k = 0; k < pm.FI; k++ )
             {
                 const long int jn = jc + pm.L1[k];
@@ -5776,9 +5874,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         pm.F[j] = pm.G0[j] + ( pm.fDQF ? pm.fDQF[j] : 0. );
                         nset++;
                     }
+                // the same skip as in PrimalChemicalPotentials()
+                const bool singleSkipped = pm.L1[k] == 1 && ( pm.XF[k] < pm.PhMinM || pm.XF[k] <= pm.DSM );
+                if( singleSkipped && pm.DCCW[jc] == DC_SINGLE )
+                {
+                    pm.F[jc] = pm.G[jc];
+                    nsingle++;
+                }
                 jc = jn;
             }
-            if( nset ) native_trace_decide( "collapsecheck species=%ld", nset );
+            if( nset || nsingle ) native_trace_decide( "collapsecheck species=%ld single=%ld", nset, nsingle );
         }
         double maxKKTResidual = 0.;
         long int worstKKTSpecies = -1;
@@ -6104,11 +6209,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // ---- pa_OptimaZeroAbsent: absent species in the answer (see BASE_PARAM::OptimaZeroAbsent).
         // Runs after every trustworthiness check and only on a clean verdict, so it never
         // turns an accepted answer into a rejected one.
-        if( pa_p->OptimaZeroAbsent == 2 && result.succeeded && allTargetsMet
+        if( ( pa_p->OptimaZeroAbsent == 2 || pa_p->OptimaZeroAbsent == 3 ) && result.succeeded && allTargetsMet
             && massBalanceBadIC < 0 && kktOk && stabilityOk )
         {
-            // Value 2: keep the amounts Optima returned, repair only a failing balance. Same
-            // acceptance gate as the zeroing below.
+            // Value 2 (and the first part of 3): keep the amounts Optima returned, repair only a
+            // failing balance. Same acceptance gate as the zeroing below.
             const long int Zc = N - pm.E;
             // worst relative residual over the ordinary ICs (the CERT record's mb_rel), worst absolute
             // residual over the charge row(s), and the charge rows' tolerance DHBM x total charge carried
@@ -6439,6 +6544,220 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                   pm.pH, pm.IC );
             }
         }
+        // Absent phases of an accepted answer (phase_floor_parked), and pa_OptimaZeroAbsent = 3.
+        phase_floor_parked.assign( (size_t)pm.FI, 0 );
+        if( result.succeeded && allTargetsMet && massBalanceBadIC < 0 && kktOk && stabilityOk )
+        {
+            // The GEMS3K IPM solver's phase-selection rules (PhaseSelectionSpeciationCleanup), with
+            // the stability index logSI = pm.Falp[k] from StabilityIndexes() on the converged answer.
+            // A phase whose species all sit on the numerical floor is Optima's form of a zero phase:
+            // it stays zero unless logSI >= pa_DF, where it would be inserted. A species with an upper
+            // limit of 0 (DUL = 0) is zero in the IPM solver, so its floor amount also counts as zero.
+            // A phase under any other kinetic limit is not touched. A phase above the floor with
+            // logSI <= -pa_DFM is removed by the IPM solver; here only if the log barrier alone holds
+            // it above the floor, because no solve follows. Larger ones are only counted.
+            long int nParked = 0, nUnstableOffFloor = 0, nSupersatFloor = 0;
+            for( long int k = 0, j0 = 0; k < pm.FI && j0 < L; j0 += pm.L1[k], k++ )
+            {
+                const long int j1 = std::min( j0 + pm.L1[k], L );
+                if( j1 <= j0 )
+                    continue;
+                bool onFloor = true, nearFloor = true, kinConstr = false, allHeldAtZero = true;
+                for( long int j = j0; j < j1; j++ )
+                {
+                    const bool heldAtZero = ( pm.DUL[j] <= 0. && pm.DLL[j] <= 0. );
+                    if( !heldAtZero ) allHeldAtZero = false;
+                    if( !heldAtZero && ( pm.DUL[j] < 1e6 || pm.DLL[j] > 0. ) ) { kinConstr = true; break; }
+                    const double lo = problem.xlower[j];
+                    const bool atLo = !( lo > dcFloor * ( 1. + 1e-9 ) ) && pm.Y[j] <= lo + std::max( dcFloor, lo * 1e-6 );
+                    // a pure-phase species held just above the floor by the log barrier (as judged in the
+                    // stationarity check above)
+                    const bool barrierHeld = ( j >= pm.Ls ) && !( lo > dcFloor * ( 1. + 1e-9 ) )
+                        && pa_p->LogBarrierTau / std::max( pm.Y[j], dcFloor ) > kktTol;
+                    if( !atLo ) onFloor = false;
+                    if( !atLo && !barrierHeld ) nearFloor = false;
+                }
+                if( kinConstr ) continue;
+                if( onFloor )
+                {   // a zero phase: stays zero unless it would be inserted
+                    if( allHeldAtZero || pm.Falp[k] < pa_p->DF ) { phase_floor_parked[(size_t)k] = 1; nParked++; }
+                    else nSupersatFloor++;
+                }
+                else if( pm.Falp[k] <= -pa_p->DFM )
+                {   // a present phase the IPM solver would remove; done here only for barrier-held amounts
+                    if( nearFloor ) { phase_floor_parked[(size_t)k] = 1; nParked++; }
+                    else nUnstableOffFloor++;
+                }
+            }
+            if( pa_p->OptimaZeroAbsent == 3 && nParked > 0 )
+            {
+                // Set the absent phases to exactly 0, as the GEMS3K IPM solver reports them, and
+                // rebalance. If an element still fails its balance, the absent phases that carry
+                // it keep their floor amounts and the rest is tried again.
+                const long int Zc = N - pm.E;
+                std::vector<double> Ysave( pm.Y, pm.Y + L );
+                auto residuals = [&]( std::vector<double>& c, std::vector<double>& tol )
+                {
+                    for( long int i = 0; i < N; i++ )
+                    {
+                        double ci = pm.B[i], scale = 0.;
+                        for( long int jj = 0; jj < L; jj++ )
+                        {
+                            ci -= pm.A[ i + jj*N ] * pm.Y[jj];
+                            scale += std::fabs( pm.A[ i + jj*N ] ) * pm.Y[jj];
+                        }
+                        c[(size_t)i] = ci;
+                        tol[(size_t)i] = ( i < Zc ) ? pm.B[i] * pm.DHBM : scale * pm.DHBM;
+                    }
+                };
+                std::vector<double> cBefore( (size_t)N ), tolBefore( (size_t)N ), cAfter( (size_t)N ), tolAfter( (size_t)N );
+                residuals( cBefore, tolBefore );
+                // An element is broken when its residual grew past the residual before and past frac x
+                // its tolerance. The rebalance starts at 0.1, the share of the tolerance the GEMS3K IPM
+                // solver allows a removed phase to use (CutoffDistortionMBR).
+                auto brokenIC = [&]( double frac ) -> long int
+                {
+                    residuals( cAfter, tolAfter );
+                    for( long int i = 0; i < N; i++ )
+                        if( std::fabs( cAfter[(size_t)i] ) >
+                            std::max( std::fabs( cBefore[(size_t)i] ), frac * tolBefore[(size_t)i] )
+                            && !ICIsDefaultSeed( i ) )
+                            return i;
+                    return -1;
+                };
+                std::vector<char> zeroIt( phase_floor_parked );
+                long int nZeroPh = 0, nZeroDC = 0, nKeptPh = 0, rounds = 0;
+                int rebalanced = 0, ok = 0;
+                for( ; rounds < 16; rounds++ )
+                {
+                    for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];
+                    nZeroPh = 0; nZeroDC = 0;
+                    for( long int k = 0, j0 = 0; k < pm.FI && j0 < L; j0 += pm.L1[k], k++ )
+                    {
+                        if( !zeroIt[(size_t)k] ) continue;
+                        const long int j1 = std::min( j0 + pm.L1[k], L );
+                        for( long int j = j0; j < j1; j++ )
+                            if( pm.Y[j] != 0. ) { pm.Y[j] = 0.; nZeroDC++; }
+                        nZeroPh++;
+                    }
+                    if( nZeroPh == 0 ) break;
+                    rebalanced = 0;
+                    long int bad = brokenIC( 0.1 );
+                    if( bad >= 0 )
+                    {
+                        rebalanced = MassBalanceReproject( pm.Y ) ? 1 : 0;
+                        bad = brokenIC( 1. );
+                    }
+                    if( bad < 0 ) { ok = 1; break; }
+                    // keep at the floor every zeroed phase that carries the failing element
+                    long int nKeep = 0;
+                    for( long int k = 0, j0 = 0; k < pm.FI && j0 < L; j0 += pm.L1[k], k++ )
+                    {
+                        if( !zeroIt[(size_t)k] ) continue;
+                        const long int j1 = std::min( j0 + pm.L1[k], L );
+                        for( long int j = j0; j < j1; j++ )
+                            if( pm.A[ bad + j*N ] != 0. ) { zeroIt[(size_t)k] = 0; nKeep++; break; }
+                    }
+                    nKeptPh += nKeep;
+                    if( nKeep == 0 ) break;   // no absent phase carries it: zeroing is not the cause
+                }
+                // The same per-IC test as the accepted state must still pass.
+                if( ok && CheckMassBalanceResiduals( pm.Y ) >= 0 )
+                    ok = 0;
+                if( !ok )
+                    for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];
+                else
+                {
+                    // kept in mol: the next native solve can run at another scale
+                    zeroed_floor_amount.assign( (size_t)L, 0. );
+                    for( long int j = 0; j < L; j++ )
+                        if( pm.Y[j] == 0. && Ysave[(size_t)j] > 0. ) zeroed_floor_amount[(size_t)j] = Ysave[(size_t)j] / ScFact;
+                    double floorMol = 0.;
+                    for( double v : zeroed_floor_amount ) floorMol += v;
+                    native_trace_decide( "zeroabsent3seed mol=%.9e scfact=%.9g", floorMol, ScFact );
+                }
+                for( long int j = 0; j < L; j++ ) pm.X[j] = pm.Y[j];
+                TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+                TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                CalculateActivityCoefficients( LINK_UX_MODE );
+                CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+                CheckMassBalanceResiduals( pm.Y );   // pm.C[] describes the returned state
+                native_trace_decide( "zeroabsent3 parked=%ld zeroed=%ld species=%ld keptfloor=%ld unstable_offfloor=%ld "
+                                     "supersat_floor=%ld rounds=%ld rebalanced=%d reverted=%d",
+                                     nParked, ok ? nZeroPh : 0L, ok ? nZeroDC : 0L, ok ? nKeptPh : nParked,
+                                     nUnstableOffFloor, nSupersatFloor, rounds, rebalanced, ok ? 0 : 1 );
+                ipm_logger->debug( "CalculateEquilibriumStateOptima: pa_OptimaZeroAbsent=3 - {} of {} absent "
+                                   "phases set to 0{}", ok ? nZeroPh : 0L, nParked,
+                                   ok ? "" : " (reverted: the element balance would break)" );
+            }
+            if( pa_p->OptimaZeroAbsent == 3 )
+            {
+                // A trace species of a present solution phase that sits on its floor and would go lower
+                // (reduced gradient s > 0) gets the amount the converged potentials give it, floor * exp(-s),
+                // at least pa_DcMin. The element totals are then rebalanced.
+                std::vector<double> Ysave( pm.Y, pm.Y + L );
+                long int nLow = 0;
+                double moved = 0.;
+                for( long int k = 0, j0 = 0; k < pm.FIs && j0 < L; j0 += pm.L1[k], k++ )
+                {
+                    if( pm.L1[k] < 2 || phase_floor_parked[(size_t)k] )
+                        continue;
+                    for( long int j = j0; j < std::min( j0 + pm.L1[k], L ); j++ )
+                    {
+                        if( pm.DUL[j] < 1e6 || pm.DLL[j] > 0. )
+                            continue;   // a kinetic limit
+                        const double lo = problem.xlower[j], g = gradSaved[(size_t)j];
+                        const bool atLo = !( lo > dcFloor * ( 1. + 1e-9 ) ) && pm.Y[j] <= lo + std::max( dcFloor, lo * 1e-6 );
+                        if( !atLo || !( g > kktTol ) || !( pm.Y[j] > 0. ) )
+                            continue;
+                        // not 0: a later warm GEMS3K IPM start cannot grow a species from 0
+                        const double y = std::max( pm.Y[j] * std::exp( -std::min( g, 700. ) ), pm.DcMinM );
+                        moved += pm.Y[j] - y;
+                        pm.Y[j] = y;
+                        nLow++;
+                    }
+                }
+                if( nLow > 0 )
+                {
+                    const long int Ne = N - pm.E;
+                    auto resid = [&]( long int i ) { double c = pm.B[i]; for( long int jj = 0; jj < L; jj++ ) c -= pm.A[ i + jj*N ] * pm.Y[jj]; return c; };
+                    std::vector<double> c0( (size_t)Ne );
+                    for( long int i = 0; i < Ne; i++ )
+                    {
+                        double c = pm.B[i];
+                        for( long int jj = 0; jj < L; jj++ ) c -= pm.A[ i + jj*N ] * Ysave[(size_t)jj];
+                        c0[(size_t)i] = c;
+                    }
+                    auto broken = [&]() {
+                        for( long int i = 0; i < Ne; i++ )
+                            if( std::fabs( resid( i ) ) > std::max( std::fabs( c0[(size_t)i] ), 0.1 * pm.B[i] * pm.DHBM ) && !ICIsDefaultSeed( i ) )
+                                return true;
+                        return false;
+                    };
+                    int rebalanced = 0, reverted = 0;
+                    if( broken() )
+                    {
+                        rebalanced = MassBalanceReproject( pm.Y ) ? 1 : 0;
+                        if( broken() || CheckMassBalanceResiduals( pm.Y ) >= 0 )
+                        {
+                            for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];
+                            reverted = 1;
+                        }
+                    }
+                    for( long int j = 0; j < L; j++ ) pm.X[j] = pm.Y[j];
+                    TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+                    CheckMassBalanceResiduals( pm.Y );   // pm.C[] describes the returned state
+                    native_trace_decide( "floorspecies species=%ld mol=%.6e rebalanced=%d reverted=%d", nLow, moved / ScFact,
+                                         rebalanced, reverted );
+                    ipm_logger->debug( "CalculateEquilibriumStateOptima: {} trace species of present phases moved below their "
+                                       "floor{}", reverted ? 0L : nLow, reverted ? " (reverted: the element balance would break)" : "" );
+                }
+            }
+        }
+
         if( !result.succeeded && pa_p->DW )
         {
             // pa_DW gates the same decision for native's "MBR iterations exceeded" case.
@@ -6505,6 +6824,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     if( pa_p->DG > 1e-5 )
         RescaleSystemFromInternal( ScFact );
 
+    // pa_OptimaTwinLabel: name the copies of one solid solution by their major end-members
+    OptimaTwinLabel();
+
     // Store the total Gibbs energy in pm.FX, which packDataBr() publishes as DATABR.Gs.
     // Done after RescaleSystemFromInternal() (which divides pm.FX by ScFact) and after every
     // post-solve step has committed its amounts. TotalGibbsEnergy() is what
@@ -6519,6 +6841,17 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         for( long int k = 0; k < pm.FI; k++ )   pm.XF[k]  = XFsave[(size_t)k];
         for( long int k = 0; k < pm.FIs; k++ )  pm.XFA[k] = XFAsave[(size_t)k];
     }
+
+    // Count the present phases as the GEMS3K IPM solver does; GEMSGUI sizes its saved record by this count
+    pm.FI1 = 0;
+    pm.FI1s = 0;
+    for( long int k = 0; k < pm.FI; k++ )
+        if( pm.YF[k] >= std::min( pm.PhMinM, 1e-22 ) )
+        {
+            pm.FI1++;
+            if( k < pm.FIs )
+                pm.FI1s++;
+        }
 
     NumIterFIA = pm.ITF;
     NumIterIPM = pm.ITG;

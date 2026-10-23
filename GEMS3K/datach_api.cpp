@@ -26,6 +26,7 @@
 
 #include <sstream>
 #include "datach_api.h"
+#include "v_detail.h"
 #include "gems3k_impex.h"
 #include "gdatastream.h"
 #include "io_keyvalue.h"
@@ -718,6 +719,8 @@ void databr_free_internal(DATABR *CNode_)
 // set default values(zeros) for DATABR structure
 void databr_reset(DATABR *CnNde1, long int level)
 {
+    CnNde1->pHtarget = DOUBLE_EMPTY;   // no pH or Eh target
+    CnNde1->Ehtarget = DOUBLE_EMPTY;
     //  FMT variables (units or dimensionsless) - to be used for storing them
     //  at the nodearray level = 0.; normally not used in the single-node FMT-GEM coupling
     CnNde1->Tm = 0.;

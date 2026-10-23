@@ -162,17 +162,20 @@ if (node.GEM_rescue_step() == 6)
 
 ### Which phases are present
 
-The Optima solver never sets an amount to exactly zero. A phase that does not form stays at a very small floor
-amount. The floor is about the size of `pa_DHB` for each species (for example, 1e-13 mol). The GEMS3K IPM
-solver removes such phases. For this reason, one result can show more phases with an amount above zero in an
-Optima mode than in a GEMS3K IPM mode.
+Both solvers use the same rule to decide that a phase is 0 mol. The rule comes from the phase selection of the
+GEMS3K IPM solver. An absent phase stays at 0 mol unless it is supersaturated. A present phase is removed when it
+is clearly undersaturated.
 
-- **Old rule, `pa_DS`.** A phase is present when its amount is more than `pa_DS` (default 1e-20 mol). The
-  GEMS3K IPM solver uses this rule to remove phases. Graphical front ends use it to show the phases that are
-  present. The value is much lower than the floor of Optima. With Optima, each floor phase passes this rule.
-- **New rule, `Ph_Present(k)`.** A phase is present when it holds more than 1e-9 of the total amount of all
-  phases. A second argument changes this share. The amounts do not change. With this rule, the Optima modes
-  and the GEMS3K IPM modes show the same phases.
+The Optima solver cannot reach exactly 0 mol. A phase that does not form stays at a very small floor amount. With
+`pa_OptimaZeroAbsent = 3` (the default), Optima sets such a phase to 0 mol after the calculation. If 0 mol would
+break the balance of an element, the phase keeps its floor amount.
+A trace species of a present solution phase does not stay on its floor. It gets the amount that the result gives it.
+
+- **`pa_DS`.** A phase with more than `pa_DS` (default 1e-20 mol) counts as present in the output. Graphical front
+  ends use this rule.
+- **`Ph_Present(k)`.** A phase is present when its amount is above 0 and the solver did not mark it as absent.
+  It also hides a floor amount that Optima kept for the element balance. It does not use a limit in mol, so it
+  keeps real trace phases. A second argument adds a share test. This test can also hide real trace phases.
 
 ```cpp
 for (long k = 0; k < node.pCSD()->nPHb; k++)
@@ -220,6 +223,29 @@ if (status == OK_GEM_AOP)
   result that has no physical meaning (for example, a pH far outside 0 to 14). Judge the target. Do not
   only look at the status.
 
+### Targets in the DBR file
+
+A DBR file can also give the targets, in the optional fields `pHtarget` and `Ehtarget` (Eh in volts).
+GEMSGUI writes them when the system recipe has a target. GEMS3K reads them with the DBR and uses them
+in the Optima modes, as if you called `Set_pH_target()` or `Set_Eh_target()` with the default tolerance.
+
+- A DBR file without these fields has no target. Files from older versions read as before.
+- An older GEMS3K version reads a file with these fields and does not use the targets.
+- If the next DBR of the node has no target, GEMS3K removes the target that the earlier DBR set.
+- A DBR target replaces a target that you set with `Set_pH_target()` or `Set_Eh_target()`. Your target
+  comes back when the DBR target is removed.
+- A target value that is not a finite number is not used. GEMS3K writes a warning to the log.
+- `Clear_ControlConditions()` also removes the targets of the DBR.
+- AIA and SIA do not use the targets. GEMS3K writes one warning to the log.
+- A binary DBR file does not keep the targets.
+
+```cpp
+node.pCNode()->pHtarget = 11.;                 // the same as the field "pHtarget" in the file
+node.pCNode()->NodeStatusCH = NEED_GEM_AOP;
+node.GEM_run(false);
+node.GEM_write_dbr("out-dbr.json", GEMS3KGenerator::f_json, true, false);   // the file keeps the target
+```
+
 ## Settings
 
 GEMS3K reads the settings from the `pa_...` entries in the `-ipm` file of the project. A setting that is not
@@ -265,7 +291,7 @@ These are the Optima settings that a user can change. Advanced settings has all 
 | `pa_OptimaDimReduce` | 0 (automatic) | For large systems, the solver first solves with only the important species. Then it adds the other species. Automatic means that it is on from 200 species. | Switch it on for a slow system with fewer than 200 species. Switch it off if a large system gives a different result with it. | A positive number = on, with at most that number of passes. A negative number = off. |
 | `pa_OptimaColdRetry` | 2 (fail fast) | A warm-start calculation (SOP, SHP) can fail. Then the solver makes a new cold start. The value 2 stops the first attempt early. | Use 1 if the warm start usually succeeds but needs many iterations. Use 0 only for tests. | 0 = no new try. 1 = a new try only after the first attempt used its full budget. 2 = the first attempt stops early. |
 | `pa_OptimaAcceptRepair` | 0 (off) | Optima can accept a result that is almost converged. Then the solver first corrects a small error in the element totals. | Systems with very little water. Other cases where Optima ends near the result with element totals that are not exactly balanced. | 1 = on. |
-| `pa_OptimaZeroAbsent` | 2 | Sets how absent species are shown. They are shown as a very small amount. If necessary, the solver corrects the element totals. | Use 1 if absent phases must show exactly zero in the output. | 0 = very small amounts without a change. 1 = absent phases set to exactly zero. |
+| `pa_OptimaZeroAbsent` | 3 | Sets how absent phases are shown. With 3, Optima uses the same rule as the GEMS3K IPM solver and shows an absent phase as 0. If 0 would break the balance of an element, the phase keeps a very small amount. A trace species of a present phase gets its real amount. | Keep the default. | 0 = very small amounts without a change. 1 = absent phases set to 0 by an older rule. 2 = very small amounts, element totals corrected. |
 | `pa_OptimaRedoxFree` | 1 (write to the log) | Checks before the calculation if the bulk fixes the redox level. This is the case if each element has one oxidation state and no spare oxidant or reductant exists. If the bulk does not fix the level, the solver writes this in the log. | Systems with no redox buffer. In these systems, the input does not fix Eh and the species that depend on it. | 0 = off. 2 = also aim the calculation at pe 4 when you give no pH target or Eh target. |
 | `pa_OptimaCallCap` | 0 (no cap) | Sets the largest number of iterations for one calculation (AOP, SOP). After that number, the solver repeats the calculation with amounts that are changed by a very small amount. | Batch runs where a calculation sometimes runs for a very long time. | -1 = chosen from the size of the system. A positive number = that number of iterations. |
 | `pa_OptimaDryOut` | 0 (off) | The water can run out during a calculation. Then the solver takes the water phase out and solves the solids alone. It compares this result with a solve that keeps the water. It keeps the result with the lower energy. If the dry solve fails, the calculation continues with the water back. The solver does not use this if an element can only be in the water. It needs `pa_OptimaStallWindow` to be on. | Use 1 for systems where the water is used up by design, for example cement hydration with little water. It is off by default. If the water only becomes low during a calculation, the dry result can be wrong. | 0 = off. 1 = on. |
@@ -291,7 +317,7 @@ These settings were in earlier versions. They have the same meaning. Most projec
 | `pa_DGC` | 0 | A second damping setting. It works together with the setting above. | Use 0.001 for systems with sorption. | From −1 to 1. |
 | `pa_PRD` | −5 | A final clean-up. It removes very small amounts of species that stay at the end of the calculation. The value −5 means that it cleans up amounts below 1e-5. | Make it more negative if real trace amounts are removed. Use 0 to see the raw result. | 0 = off. −6 or less = clean up only smaller amounts. |
 | `pa_GAS` | 0.001 | Sets how strict the final clean-up is. A larger value keeps more trace amounts in the result. | Systems with very little water (0.002 together with `pa_OptimaAcceptRepair`). Cases where trace phases are important. | Any small positive number. |
-| `pa_DS` | 1e-20 | Sets the smallest amount of a phase, in moles, that is still shown as present (the old rule, see [Which phases are present](#which-phases-are-present)). | Make it larger to hide trace phases that have no meaning. With Optima, use `Ph_Present()`. | Any small positive amount. |
+| `pa_DS` | 1e-20 | Sets the smallest amount of a phase, in moles, that is still shown as present (see [Which phases are present](#which-phases-are-present)). | Make it larger to hide trace phases that have no meaning. | Any small positive amount. |
 | `pa_XwMin` | 1e-13 | The amount of water can become less than this value (moles). Then the solver removes the aqueous solution from the result. | Drying systems or almost dry systems. Use it to control when the aqueous solution goes away. | Any small positive amount. |
 | `pa_ScMin` | 1e-13 | The amount of a solid with a sorption surface can become less than this value (moles). Then the solver removes the sorption phase. | Sorption systems where the sorbent almost fully dissolves. | Any small positive amount. |
 | `pa_PhMin` | 1e-20 | A solution phase other than the aqueous phase can become less than this amount (moles). Then the solver removes it with all its species. | Systems with many solid solutions or melts in trace amounts. | Any small positive amount. |
