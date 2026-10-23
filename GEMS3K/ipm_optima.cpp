@@ -6690,6 +6690,72 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                    "phases set to 0{}", ok ? nZeroPh : 0L, nParked,
                                    ok ? "" : " (reverted: the element balance would break)" );
             }
+            if( pa_p->OptimaZeroAbsent == 3 )
+            {
+                // A trace species of a present solution phase that sits on its floor and would go lower
+                // (reduced gradient s > 0) gets the amount the converged potentials give it, floor * exp(-s),
+                // at least pa_DcMin. The element totals are then rebalanced.
+                std::vector<double> Ysave( pm.Y, pm.Y + L );
+                long int nLow = 0;
+                double moved = 0.;
+                for( long int k = 0, j0 = 0; k < pm.FIs && j0 < L; j0 += pm.L1[k], k++ )
+                {
+                    if( pm.L1[k] < 2 || phase_floor_parked[(size_t)k] )
+                        continue;
+                    for( long int j = j0; j < std::min( j0 + pm.L1[k], L ); j++ )
+                    {
+                        if( pm.DUL[j] < 1e6 || pm.DLL[j] > 0. )
+                            continue;   // a kinetic limit
+                        const double lo = problem.xlower[j], g = gradSaved[(size_t)j];
+                        const bool atLo = !( lo > dcFloor * ( 1. + 1e-9 ) ) && pm.Y[j] <= lo + std::max( dcFloor, lo * 1e-6 );
+                        if( !atLo || !( g > kktTol ) || !( pm.Y[j] > 0. ) )
+                            continue;
+                        // not 0: a later warm GEMS3K IPM start cannot grow a species from 0
+                        const double y = std::max( pm.Y[j] * std::exp( -std::min( g, 700. ) ), pm.DcMinM );
+                        moved += pm.Y[j] - y;
+                        pm.Y[j] = y;
+                        nLow++;
+                    }
+                }
+                if( nLow > 0 )
+                {
+                    const long int Ne = N - pm.E;
+                    auto resid = [&]( long int i ) { double c = pm.B[i]; for( long int jj = 0; jj < L; jj++ ) c -= pm.A[ i + jj*N ] * pm.Y[jj]; return c; };
+                    std::vector<double> c0( (size_t)Ne );
+                    for( long int i = 0; i < Ne; i++ )
+                    {
+                        double c = pm.B[i];
+                        for( long int jj = 0; jj < L; jj++ ) c -= pm.A[ i + jj*N ] * Ysave[(size_t)jj];
+                        c0[(size_t)i] = c;
+                    }
+                    auto broken = [&]() {
+                        for( long int i = 0; i < Ne; i++ )
+                            if( std::fabs( resid( i ) ) > std::max( std::fabs( c0[(size_t)i] ), 0.1 * pm.B[i] * pm.DHBM ) && !ICIsDefaultSeed( i ) )
+                                return true;
+                        return false;
+                    };
+                    int rebalanced = 0, reverted = 0;
+                    if( broken() )
+                    {
+                        rebalanced = MassBalanceReproject( pm.Y ) ? 1 : 0;
+                        if( broken() || CheckMassBalanceResiduals( pm.Y ) >= 0 )
+                        {
+                            for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];
+                            reverted = 1;
+                        }
+                    }
+                    for( long int j = 0; j < L; j++ ) pm.X[j] = pm.Y[j];
+                    TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+                    CheckMassBalanceResiduals( pm.Y );   // pm.C[] describes the returned state
+                    native_trace_decide( "floorspecies species=%ld mol=%.6e rebalanced=%d reverted=%d", nLow, moved / ScFact,
+                                         rebalanced, reverted );
+                    ipm_logger->debug( "CalculateEquilibriumStateOptima: {} trace species of present phases moved below their "
+                                       "floor{}", reverted ? 0L : nLow, reverted ? " (reverted: the element balance would break)" : "" );
+                }
+            }
         }
 
         if( !result.succeeded && pa_p->DW )

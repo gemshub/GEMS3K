@@ -543,6 +543,17 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
     prev_scfact = ScFact;   // read by a warm Optima call on this node
     for( double& seed : warm_floor_seed )   // mol to the internal units of this solve
         seed *= ScFact;
+    {   // did the bulk change since the previous solve (read by the warm zero check)
+        bulkChanged_ = prevBulkMol_.size() != (size_t)pm.N;
+        prevBulkMol_.resize( (size_t)pm.N );
+        for( long int i = 0; i < pm.N; i++ )
+        {
+            const double b = pm.B[i] / ScFact;
+            if( std::fabs( b - prevBulkMol_[(size_t)i] ) > 1e-12 * std::max( std::fabs( b ), 1e-300 ) )
+                bulkChanged_ = true;
+            prevBulkMol_[(size_t)i] = b;
+        }
+    }
 
 try{
        switch( pm.tMin )

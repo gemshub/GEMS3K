@@ -1447,6 +1447,14 @@ protected:
     /// or Set_Eh_target() are kept. The GEMS3K IPM modes do not use targets (one warning per node).
     void ApplyDbrTargets( long int mode );
     bool dbrTarget_pH = false, dbrTarget_Eh = false, dbrTargetWarned = false;
+    /// True for the modes that apply the pH and Eh targets (AOP, SOP, HOP, SHP, built with Optima)
+    static bool modeUsesTargets( long int mode );
+    /// A target solve writes the titrated bulk composition into bIC. titrEntered_ is the composition the caller
+    /// entered, titrSolved_ the one the solve wrote back. A later call in a mode that does not apply targets puts
+    /// the entered composition back, unless the caller has changed bIC since.
+    std::vector<double> titrEntered_, titrSolved_;
+    void restoreEnteredComposition( long int mode );
+    void rememberTitration( long int mode, const std::vector<double>& before );
     /// The program's pH and Eh conditions that a DBR target replaced; they come back when the DBR target goes
     std::vector<EqControlCondition> apiTarget_pH, apiTarget_Eh;
     /// One GEM_run() attempt, without the cold-call recovery (GEM_run() is this plus pa_ColdRetryNudges).

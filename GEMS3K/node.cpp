@@ -26,6 +26,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include <algorithm>
 #include <cmath>
 #include "gems3k_timing.h"
 #include "node.h"
@@ -98,6 +99,15 @@ TNode::TNode( const TNode& otherNode )
     databr_copy( otherNode.CNode );
 
     multi_ptr()->copyMULTI( *otherNode.multi_base );
+    // the targets go with the copy: the registered conditions and which of them came from the DBR
+#ifdef USE_OPTIMA_SOLVER
+    multi_ptr()->RestoreControlConditions( otherNode.multi_base->GetControlConditions() );
+#endif
+    dbrTarget_pH = otherNode.dbrTarget_pH;
+    dbrTarget_Eh = otherNode.dbrTarget_Eh;
+    dbrTargetWarned = otherNode.dbrTargetWarned;
+    apiTarget_pH = otherNode.apiTarget_pH;
+    apiTarget_Eh = otherNode.apiTarget_Eh;
 
     // copy intervals for minimizatiom
     pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
@@ -269,13 +279,69 @@ long int TNode::GEM_run( bool uPrimalSol )
     WarnIfSystemTooLarge();
     const long int requested = CNode->NodeStatusCH;
     ApplyDbrTargets( requested );
+    restoreEnteredComposition( requested );
+    const std::vector<double> bBefore( CNode->bIC, CNode->bIC + CSD->nICb );
     long int st;
     {
         gems3k_timing::Scope t( gems3k_timing::Call );
         st = GEM_run_rescue( uPrimalSol );
     }
+    rememberTitration( requested, bBefore );
     gems3k_timing::flush( requested, st, CNode->IterDone );
     return st;
+}
+
+bool TNode::modeUsesTargets( long int mode )
+{
+#ifdef USE_OPTIMA_SOLVER
+    return mode == NEED_GEM_AOP || mode == NEED_GEM_SOP || mode == NEED_GEM_HOP || mode == NEED_GEM_SHP;
+#else
+    (void)mode;
+    return false;
+#endif
+}
+
+void TNode::restoreEnteredComposition( long int mode )
+{
+    if( titrSolved_.empty() )
+        return;
+    const size_t n = titrSolved_.size();
+    bool untouched = n == (size_t)CSD->nICb;
+    for( size_t i = 0; i < n && untouched; i++ )
+        untouched = CNode->bIC[i] == titrSolved_[i];
+    if( !untouched )
+    {   // the caller set a new composition: nothing to put back
+        titrEntered_.clear();
+        titrSolved_.clear();
+        return;
+    }
+#ifdef USE_OPTIMA_SOLVER
+    if( modeUsesTargets( mode ) && !multi_ptr()->GetControlConditions().empty() )
+        return;   // the target is applied again from this composition
+#endif
+    for( size_t i = 0; i < n; i++ )
+        CNode->bIC[i] = titrEntered_[i];
+    native_trace_decide( "titration-restore mode=%ld", mode );
+    node_logger->info( "The last solve used a pH or Eh target and changed the bulk composition; mode {} does not use "
+                       "a target, so the composition that was entered is solved", mode );
+    titrEntered_.clear();
+    titrSolved_.clear();
+}
+
+void TNode::rememberTitration( long int mode, const std::vector<double>& before )
+{
+#ifdef USE_OPTIMA_SOLVER
+    if( !modeUsesTargets( mode ) || multi_ptr()->GetControlConditions().empty() )
+        return;
+    const size_t n = before.size();
+    // a call that starts from the composition an earlier target solve wrote keeps that solve's entered composition
+    const bool continuing = titrSolved_.size() == n && std::equal( before.begin(), before.end(), titrSolved_.begin() );
+    if( !continuing )
+        titrEntered_ = before;
+    titrSolved_.assign( CNode->bIC, CNode->bIC + n );
+#else
+    (void)mode; (void)before;
+#endif
 }
 
 void TNode::ApplyDbrTargets( long int mode )

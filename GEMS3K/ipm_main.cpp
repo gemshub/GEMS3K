@@ -2694,11 +2694,48 @@ FORCED_AIA:
    if( FILE* ntf = native_trace_file() )
    {
        long int nz = 0;
+       std::string zeroNames;   // the first species that start at 0, with an upper limit above 0
        for( long int j = 0; j < pm.L; j++ )
-           if( pm.Y[j] == 0. ) nz++;
-       fprintf( ntf, "INIT  pNP=%ld IAstatus=%d zeroDC=%ld of %ld\n",
-                (long)pm.pNP, (int)IAstatus, (long)nz, (long)pm.L );
+           if( pm.Y[j] == 0. )
+           {
+               nz++;
+               if( pm.DUL[j] > 0. && std::count( zeroNames.begin(), zeroNames.end(), ',' ) < 8 )
+               {
+                   if( !zeroNames.empty() ) zeroNames += ',';
+                   std::string nm = char_array_to_string( pm.SM[j], MAXDCNAME );
+                   nm.erase( nm.find_last_not_of( ' ' ) + 1 );
+                   zeroNames += nm;
+               }
+           }
+       fprintf( ntf, "INIT  pNP=%ld IAstatus=%d zeroDC=%ld of %ld names=%s\n",
+                (long)pm.pNP, (int)IAstatus, (long)nz, (long)pm.L, zeroNames.empty() ? "-" : zeroNames.c_str() );
        fflush( ntf );
+   }
+   // A warm start that has an element of the bulk but no species above 0 to carry it cannot reach a
+   // solution (a species at exactly 0 cannot grow), so the call starts cold
+   if( pm.pNP && IAstatus == false )
+   {
+       long int iMiss = -1;
+       for( long int i = 0; i < pm.N && iMiss < 0; i++ )
+       {
+           if( !( pm.B[i] > 0. ) || ( pm.ICC && ( pm.ICC[i] == IC_CHARGE || pm.ICC[i] == IC_VOLUME ) ) )
+               continue;
+           bool carried = false;
+           for( long int j = 0; j < pm.L && !carried; j++ )
+               carried = pm.A[ i + j*pm.N ] > 0. && pm.Y[j] > 0.;
+           if( !carried )
+               iMiss = i;
+       }
+       if( iMiss >= 0 )
+       {
+           const std::string ic = char_array_to_string( pm.SB[iMiss], MAXICNAME );
+           native_trace_decide( "warmnocarrier ic=%s b=%.6e", ic.c_str(), pm.B[iMiss] );
+           ipm_logger->debug( "Warm start: no species carries {} (b = {:g}); the call starts cold", ic, pm.B[iMiss] );
+           pm.pNP = 0;
+           pm.MK = 0;
+           Reset_uDD( 0L, uDDtrace );
+           goto FORCED_AIA;
+       }
    }
    if( IAstatus == false )
    {
@@ -2714,11 +2751,57 @@ FORCED_AIA:
    }
    pm.IT = pm.ITG;
 
+   // A species at exactly 0 in a present solution phase cannot grow in a warm solve. If the converged
+   // potentials give it an amount that holds more than 1e-6 of an element's bulk, the zero is wrong and
+   // the call starts cold. With the same bulk as the previous solve, a cold start gives the same answer,
+   // so the check runs only after the bulk changed.
+   if( pm.MK != 2 && pm.pNP && IAstatus == false && pm.FIs > 0 && bulkChanged_ )
+   {
+       const double t = 1e-20;   // test amount for the potential of a zero species
+       std::vector<double> Yt( pm.Y, pm.Y + pm.L ), Ft( (size_t)pm.L, 0. ), YFt( (size_t)pm.FI, 0. ), YFAt( (size_t)pm.FIs, 0. );
+       std::vector<long int> zj;
+       for( long int k = 0, jb = 0; k < pm.FIs; jb += pm.L1[k], k++ )
+       {
+           if( pm.L1[k] < 2 || !( pm.YF[k] > pm.DSM ) )
+               continue;
+           for( long int j = jb; j < jb + pm.L1[k]; j++ )
+               if( pm.Y[j] == 0. && pm.DUL[j] > 0. && pm.DLL[j] <= 0. )
+               { Yt[(size_t)j] = t; zj.push_back( j ); }
+       }
+       if( !zj.empty() )
+       {
+           TotalPhasesAmounts( Yt.data(), YFt.data(), YFAt.data() );
+           PrimalChemicalPotentials( Ft.data(), Yt.data(), YFt.data(), YFAt.data() );
+           long int jBad = -1;
+           double worst = 0.;
+           for( long int j : zj )
+           {
+               double mu = 0.;
+               for( long int i = 0; i < pm.N; i++ ) mu += pm.A[ i + j*pm.N ] * pm.U[i];
+               const double lnN = std::log( t ) + std::min( mu - Ft[(size_t)j], 700. );
+               for( long int i = 0; i < pm.N; i++ )
+               {
+                   const double a = pm.A[ i + j*pm.N ];
+                   if( !( a > 0. ) || !( pm.B[i] > 0. ) || ( pm.ICC && ( pm.ICC[i] == IC_CHARGE || pm.ICC[i] == IC_VOLUME ) ) )
+                       continue;
+                   const double share = a * std::exp( lnN ) / pm.B[i];
+                   if( share > worst ) { worst = share; jBad = j; }
+               }
+           }
+           if( worst > 1e-6 )
+           {
+               std::string nm = char_array_to_string( pm.SM[jBad], MAXDCNAME );
+               nm.erase( nm.find_last_not_of( ' ' ) + 1 );
+               native_trace_decide( "warmzero species=%s share=%.3e zeros=%ld", nm.c_str(), worst, (long)zj.size() );
+               ipm_logger->debug( "Warm start: {} stayed at 0 but should hold {:.3g} of an element; the call starts cold", nm, worst );
+               pm.MK = 2;
+           }
+       }
+   }
    // pa_IpmTwinSplit: two copies of a solid solution left at one composition where they should split
    // (a warm start keeps them equal): solve again from a cold start
    if( pm.MK != 2 && pm.pNP && IAstatus == false && WarmTwinSplitCheck() )
        pm.MK = 2;
-
    // testing results
    if( pm.MK == 2 )
    {	if( pm.pNP )

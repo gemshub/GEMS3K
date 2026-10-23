@@ -233,7 +233,8 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     ///      balance if it fails the per-element test; the repair is dropped if it does not help.
     ///   3  (default) the repair of 2, then absent phases are set to exactly 0, as the GEMS3K IPM solver
     ///      reports them, and the element totals are rebalanced. A phase that carries an element
-    ///      whose balance cannot be kept stays at its floor amount.
+    ///      whose balance cannot be kept stays at its floor amount. A trace species of a present
+    ///      solution phase that sits on its floor gets the amount the converged potentials give it.
     /// Any other non-zero value behaves as 1.
     /// In plain words: decides whether absent species are shown as exactly zero or as a tiny
     /// amount, and fixes the element totals if needed.
@@ -1149,6 +1150,9 @@ class TMultiBase
 
     /// Species list of the last zero-width kinetic box warning; the same list again is logged at debug level
     std::string kinDegenWarned_;
+    /// Bulk composition (mol) of the previous GEMS3K IPM solve, and whether this solve has another one
+    std::vector<double> prevBulkMol_;
+    bool bulkChanged_ = true;
 
     friend class TNode;
 protected:
