@@ -1495,7 +1495,11 @@ long int TNode::GEM_run_single( bool uPrimalSol )
             // internal multi error
             ipmlog_error = pmm->errorCode+ std::string(": ") +  pmm->errorBuf;
             // A thrown error was already logged by Error(); this status path throws nothing.
-            node_logger->error( "{}", ipmlog_error );
+            // A failed quick try is followed by the full solve, so it is logged at debug, as in Error().
+            if( g_errorsHandledByCaller > 0 )
+                node_logger->debug( "{}", ipmlog_error );
+            else
+                node_logger->error( "{}", ipmlog_error );
         }
         else
         {

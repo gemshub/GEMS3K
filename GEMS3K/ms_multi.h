@@ -1147,6 +1147,9 @@ class TMultiBase
     std::vector<double> DLL_preScale_, DLL_postScale_;
     std::vector<double> PUL_preScale_, PUL_postScale_;
 
+    /// Species list of the last zero-width kinetic box warning; the same list again is logged at debug level
+    std::string kinDegenWarned_;
+
     friend class TNode;
 protected:
     /// Default logger for ipm chemical
@@ -1834,7 +1837,7 @@ protected:
     /// solver's lower bound and the phase is not supersaturated, so it is absent. Cleared at the
     /// start of each native and Optima solve.
     std::vector<char> phase_floor_parked;
-    /// Per species: the floor amount pa_OptimaZeroAbsent = 3 replaced by 0 in the last Optima answer, else 0.
+    /// Per species: the floor amount (mol) pa_OptimaZeroAbsent = 3 replaced by 0 in the last Optima answer, else 0.
     /// The next warm start of the GEMS3K IPM solver gets these amounts back as its starting point, so the
     /// reported zeros do not change how that solver starts. Taken over by warm_floor_seed at the start of
     /// each native solve.

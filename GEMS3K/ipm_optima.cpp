@@ -6668,9 +6668,13 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     for( long int j = 0; j < L; j++ ) pm.Y[j] = Ysave[(size_t)j];
                 else
                 {
+                    // kept in mol: the next native solve can run at another scale
                     zeroed_floor_amount.assign( (size_t)L, 0. );
                     for( long int j = 0; j < L; j++ )
-                        if( pm.Y[j] == 0. && Ysave[(size_t)j] > 0. ) zeroed_floor_amount[(size_t)j] = Ysave[(size_t)j];
+                        if( pm.Y[j] == 0. && Ysave[(size_t)j] > 0. ) zeroed_floor_amount[(size_t)j] = Ysave[(size_t)j] / ScFact;
+                    double floorMol = 0.;
+                    for( double v : zeroed_floor_amount ) floorMol += v;
+                    native_trace_decide( "zeroabsent3seed mol=%.9e scfact=%.9g", floorMol, ScFact );
                 }
                 for( long int j = 0; j < L; j++ ) pm.X[j] = pm.Y[j];
                 TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );

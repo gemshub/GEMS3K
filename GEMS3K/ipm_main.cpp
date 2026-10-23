@@ -3454,9 +3454,11 @@ to_text_file( "MultiDumpAA.txt" );   // Debugging
         if( warm_floor_seed.size() == (size_t)pm.L )
         {
             long int nSeed = 0;
+            double seedSum = 0.;
             for( j = 0; j < pm.L; j++ )
-                if( pm.Y[j] == 0. && warm_floor_seed[(size_t)j] > 0. ) { pm.Y[j] = warm_floor_seed[(size_t)j]; nSeed++; }
-            if( nSeed ) native_trace_decide( "warmfloorseed species=%ld", nSeed );
+                if( pm.Y[j] == 0. && warm_floor_seed[(size_t)j] > 0. )
+                { pm.Y[j] = warm_floor_seed[(size_t)j]; seedSum += pm.Y[j]; nSeed++; }
+            if( nSeed ) native_trace_decide( "warmfloorseed species=%ld mol=%.9e", nSeed, seedSum / ( prev_scfact > 0. ? prev_scfact : 1. ) );
         }
         warm_floor_seed.clear();
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );

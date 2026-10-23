@@ -541,6 +541,8 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
         ScaleSystemToInternal( ScFact );
     }
     prev_scfact = ScFact;   // read by a warm Optima call on this node
+    for( double& seed : warm_floor_seed )   // mol to the internal units of this solve
+        seed *= ScFact;
 
 try{
        switch( pm.tMin )
