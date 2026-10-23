@@ -87,6 +87,8 @@ The GEMS3K IPM solver runs in AIA and SIA. It also runs as the first part of HOP
 **Restarts in the solver.**
 - If a warm start (SIA) fails in one of these steps, the solver makes a new cold start in the same call.
   The status shows AIA.
+- A warm start (SIA) also makes a new cold start in two more cases. An element has no species with an amount above 0.
+  Or the result keeps a species of a present solution at 0 mol, but the species must form.
 - If a cold start fails because the numbers grow without limit, the solver starts again one more
   time. It uses a simpler phase check. Then it stops.
 
