@@ -1150,9 +1150,12 @@ class TMultiBase
 
     /// Species list of the last zero-width kinetic box warning; the same list again is logged at debug level
     std::string kinDegenWarned_;
-    /// Bulk composition (mol) of the previous GEMS3K IPM solve, and whether this solve has another one
+    /// Input of the previous GEMS3K IPM solve: bulk composition (mol), T, P and which species have a positive
+    /// upper limit. warmInputChanged_ is true if this solve has another input (read by the warm zero check).
     std::vector<double> prevBulkMol_;
-    bool bulkChanged_ = true;
+    double prevTC_ = 0., prevP_ = 0.;
+    std::vector<char> prevDulPositive_;
+    bool warmInputChanged_ = true;
 
     friend class TNode;
 protected:

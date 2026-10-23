@@ -2753,9 +2753,9 @@ FORCED_AIA:
 
    // A species at exactly 0 in a present solution phase cannot grow in a warm solve. If the converged
    // potentials give it an amount that holds more than 1e-6 of an element's bulk, the zero is wrong and
-   // the call starts cold. With the same bulk as the previous solve, a cold start gives the same answer,
-   // so the check runs only after the bulk changed.
-   if( pm.MK != 2 && pm.pNP && IAstatus == false && pm.FIs > 0 && bulkChanged_ )
+   // the call starts cold. With the same input as the previous solve, a cold start gives the same answer,
+   // so the check runs only after the bulk, T, P or a zero upper limit changed.
+   if( pm.MK != 2 && pm.pNP && IAstatus == false && pm.FIs > 0 && warmInputChanged_ )
    {
        const double t = 1e-20;   // test amount for the potential of a zero species
        std::vector<double> Yt( pm.Y, pm.Y + pm.L ), Ft( (size_t)pm.L, 0. ), YFt( (size_t)pm.FI, 0. ), YFAt( (size_t)pm.FIs, 0. );
