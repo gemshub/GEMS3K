@@ -73,12 +73,13 @@ void TSIT::alloc_internal()
 
     for (long int j=0; j<NComp; j++)
     {
-        E0[j] = new double [NComp];
-        E1[j] = new double [NComp];
-        dE0[j] = new double [NComp];
-        dE1[j] = new double [NComp];
-        d2E0[j] = new double [NComp];
-        d2E1[j] = new double [NComp];
+        // zeroed once here; PTparam() sets only the listed pairs, the same ones on every call
+        E0[j] = new double [NComp]();
+        E1[j] = new double [NComp]();
+        dE0[j] = new double [NComp]();
+        dE1[j] = new double [NComp]();
+        d2E0[j] = new double [NComp]();
+        d2E1[j] = new double [NComp]();
     }
 }
 
@@ -109,24 +110,10 @@ void TSIT::free_internal()
 
 long int TSIT::PTparam()
 {
-    long int j, i, ip, i1, i2;
+    long int ip, i1, i2;
     double p0, p1, alp, bet, dal, rho, eps, dedt, d2edt2, dedp;
 
-    // fill internal arrays of interaction parameters with standard value
-    for (j=0; j<NComp; j++)
-    {
-        for (i=0; i<NComp; i++)
-        {
-            E0[j][i] = 0.0;
-            E1[j][i] = 0.0;
-            dE0[j][i] = 0.0;
-            dE1[j][i] = 0.0;
-            d2E0[j][i] = 0.0;
-            d2E1[j][i] = 0.0;
-        }
-    }
-
-    // read and convert interaction parameters that have non-standard value
+    // read and convert interaction parameters that have non-standard value (all other entries stay 0 from alloc_internal)
     for (ip=0; ip<NPar; ip++)
     {
         i1 = aIPx[MaxOrd*ip];
@@ -180,37 +167,29 @@ long int TSIT::MixMod()
     sqI = sqrt(I);
     lgI = log10(I);
 
+    // SIT sums of all species in one pass over the parameters, added in the same order as per species
+    // Corrected to 2-coeff SIT parameter and extended to neutral species by DK on 13.05.2009
+    std::vector<double> sumSIT( NComp, 0. );
+    for( ip=0; ip<NPar; ip++ )
+    {
+        i1 = aIPx[ip*MaxOrd];  // order of indexes for binary parameters plays no role
+        i2 = aIPx[ip*MaxOrd+1];
+
+        if( i1 == i2 )
+            continue;
+
+        sumSIT[i1] += ( E0[i1][i2] + E1[i1][i2]*lgI ) * m[i2];  // epsilon
+        sumSIT[i2] += ( E0[i1][i2] + E1[i1][i2]*lgI ) * m[i1];  // epsilon
+    }
+
     // loop over species
     for( j=0; j<NComp; j++ )
     {
         lgGam = 0.;
 
-        // Calculation of the SIT sum (new variant)
-        // Corrected to 2-coeff SIT parameter and extended to neutral species by DK on 13.05.2009
         SumSIT = 0.;
         if( j != NComp-1 )  // not for water solvent
-        {
-            for( ip=0; ip<NPar; ip++ )
-            {
-                i1 = aIPx[ip*MaxOrd];  // order of indexes for binary parameters plays no role
-                i2 = aIPx[ip*MaxOrd+1];
-
-                if( i1 == i2 )
-                    continue;
-
-                if( i1 == j )
-                {
-                    // SumSIT += ( aIPc[ip*NPcoef] + aIPc[ip*NPcoef+1]*lgI ) * m[i2]; // epsilon
-                    SumSIT += ( E0[i1][i2] + E1[i1][i2]*lgI ) * m[i2];  // epsilon
-                }
-
-                else if( i2 == j )
-                {
-                    // SumSIT += ( aIPc[ip*NPcoef] + aIPc[ip*NPcoef+1]*lgI ) * m[i1]; // epsilon
-                    SumSIT += ( E0[i1][i2] + E1[i1][i2]*lgI ) * m[i1];  // epsilon
-                }
-            }
-        }
+            SumSIT = sumSIT[j];
 
         // Charged species
         if( noZero(z[j]) )
@@ -1471,6 +1450,31 @@ void TPitzer::calcSizes()
 void TPitzer::Ecalc( double z, double z1, double I1, double DH_term,
         double& Etheta, double& Ethetap)
 {
+    // The result depends only on the four inputs, and a call repeats the same few charge pairs many times:
+    // keep the results for the current ionic strength and Debye-Hueckel term.
+    struct EcalcMemo { double z, z1, Et, Etp; };
+    thread_local std::vector<EcalcMemo> memo;
+    thread_local double memoI = -1., memoDH = 0.;
+    if( I1 != memoI || DH_term != memoDH )
+    {
+        memo.clear();
+        memoI = I1;
+        memoDH = DH_term;
+    }
+    for( const auto& e : memo )
+        if( e.z == z && e.z1 == z1 )
+        {
+            Etheta = e.Et;
+            Ethetap = e.Etp;
+            return;
+        }
+    EcalcRaw( z, z1, I1, DH_term, Etheta, Ethetap );
+    memo.push_back( { z, z1, Etheta, Ethetap } );
+}
+
+void TPitzer::EcalcRaw( double z, double z1, double I1, double DH_term,
+        double& Etheta, double& Ethetap)
+{
     long int k, m;
     double xMN, xMM, xNN,  x1;
     double zet=0., dzdx=0.;
@@ -1950,6 +1954,11 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
 
     GM6 = 2*GM6a + GM6c;
 
+    // Neutral-cation-anion term (zeta), as in the neutral and water terms
+    for( n=0; n<Nn; n++)
+        for( a=0; a<Na; a++)
+            GM6 += pmn[n]*pma[a]*Zeta[n][M][a];
+
     // Term GM
     GM = GM1+GM2+GM3+GM4+GM5+GM6;
 
@@ -2057,6 +2066,11 @@ double TPitzer::lnGammaX( long int X, double DH_term )
     }
 
     GX6 = 2.*GX6a + GX6b;
+
+    // Neutral-cation-anion term (zeta), as in the neutral and water terms
+    for( n=0; n<Nn; n++)
+        for( c=0; c<Nc; c++)
+            GX6 += pmn[n]*pmc[c]*Zeta[n][c][X];
 
     // Term GX
     GX = GX1+GX2+GX3+GX4+GX5+GX6;

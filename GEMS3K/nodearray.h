@@ -111,6 +111,7 @@ protected:
 
     char* tcNode;      ///< Node type codes (see databr.h), size anNodes
     bool* iaNode;      ///< GEM IA status for all nodes (true: NEED_GEM_AIA, false: NEED_GEM_SIA)
+    bool warnedOutside = false;  ///< true after the first outside-domain particle warning of this run
     
     void allocMemory();
     void freeMemory();
@@ -517,6 +518,13 @@ public:
 
     /// Get full mass particle type in the node ndx
     double GetNodeMass( long int ndx, char type, char tcode, unsigned char ips );
+
+    /// Warn once per run that a particle left the domain
+    void warnParticleOutsideOnce();
+
+    /// Allow the outside-domain warning to be shown again (new run on a reused array)
+    void resetOutsideWarning()
+    { warnedOutside = false; }
 
     /// Move a mass m_v from node ndx_from to node ind_to, for particle type
     void MoveParticleMass( long int ndx_from, long int ind_to, char type, char ComponentMode,

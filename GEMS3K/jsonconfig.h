@@ -232,7 +232,7 @@ private:
     // logger internal data --------------------------------
     std::optional<TJsonConfig> log_section;
     std::set<std::string> gems3k_loggers = default_gems3k_loggers;
-    std::string gems3k_logger_level = "info";
+    std::string gems3k_logger_level = "warn";
 
     /// Get the output level for module logger.
     /// @param module_name Name of the logger.

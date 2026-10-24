@@ -73,6 +73,8 @@ struct TFatalError:
 
 [[ noreturn ]]  void Error ( const std::string& title, const std::string& message );
 void ErrorIf ( bool error, const std::string& title, const std::string& message );
+/// Above 0 while the caller handles the error itself: Error() then logs at debug instead of error.
+extern thread_local int g_errorsHandledByCaller;
 
 
 #endif  // VERROR_H
