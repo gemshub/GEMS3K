@@ -1052,6 +1052,17 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
     return worst;
 }
 
+// A solid or liquid mixture with a built-in model can be evaluated alone: only its own model sees the trial composition.
+bool TMultiBase::PhaseModelAlone( long int k ) const
+{
+    const char phc = pm.PHC[k], smod = pm.sMod[k][SPHAS_TYP];
+    return phSolMod && phSolMod[k] && pm.sMod[k][SGM_MODE] == SM_STNGAM
+        && ( phc == PH_LIQUID || phc == PH_SIMELT || phc == PH_SINCOND || phc == PH_SINDIS || phc == PH_HCARBL )
+        && ( smod == SM_IDEAL || smod == SM_BERMAN || smod == SM_CEF || smod == SM_MBW || smod == SM_REDKIS || smod == SM_MARGB
+             || smod == SM_MARGT || smod == SM_GUGGENM || smod == SM_VANLAAR || smod == SM_REGULAR || smod == SM_NRTLLIQ
+             || smod == SM_WILSLIQ );
+}
+
 // An absent mixed phase has no composition of its own, so StabilityIndexes() cannot know its
 // activity coefficients: on a cold start it writes -1, and on a warm start it may use 1 for every
 // coefficient. Here the composition and the coefficients are repeated until they agree, and the
@@ -1096,10 +1107,16 @@ long int TMultiBase::ReportAbsentPhaseIndexes()
     keep( pm.Wx, pm.L );     keep( pm.FitVar, 5 );
     auto restoreBase = [&saved]() { for( const Save& c : saved ) std::copy( c.v.begin(), c.v.end(), c.p ); };
 
+    // At most this many activity-coefficient evaluations per call, shared evenly by the phases still to do;
+    // the best value found is kept.
+    const long int kEvalBudget = 600;
+    long int evals = 0, nLeft = 0;
+    for( char f : need ) nLeft += f;
     long int nDone = 0;
     for( long int k = 0, p0 = 0; k < pm.FIs; p0 += pm.L1[k], k++ )
     {
         if( !need[(size_t)k] ) continue;
+        const long int phaseEnd = evals + std::max( 1L, ( kEvalBudget - evals ) / nLeft-- );
         const long int n = pm.L1[k], p1 = p0 + n;
         const double was = pm.Falp[k];
         std::vector<double> c0( (size_t)n );
@@ -1129,13 +1146,23 @@ long int TMultiBase::ReportAbsentPhaseIndexes()
                 starts.push_back( v );
             }
             std::vector<double> lw( (size_t)n );
+            const bool alone = PhaseModelAlone( k );
+            const char smod = pm.sMod[k][SPHAS_TYP];
             for( std::vector<double> y : starts )
-                for( int it = 0; it < 100; it++ )
+                for( int it = 0; it < 100 && evals < phaseEnd; it++, evals++ )
                 {
                     restoreBase();
-                    for( long int j = p0; j < p1; j++ ) pm.X[j] = std::max( y[(size_t)(j-p0)], 1e-300 );
-                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    if( alone )
+                    {
+                        for( long int a = 0; a < n; a++ ) { pm.Wx[p0+a] = std::max( y[(size_t)a], 1e-300 ); pm.lnGam[p0+a] = 0.; }
+                        SolModActCoeff( k, smod );
+                    }
+                    else
+                    {
+                        for( long int j = p0; j < p1; j++ ) pm.X[j] = std::max( y[(size_t)(j-p0)], 1e-300 );
+                        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                        CalculateActivityCoefficients( LINK_UX_MODE );
+                    }
                     double mx = -1e300;
                     for( long int a = 0; a < n; a++ ) { lw[(size_t)a] = c0[(size_t)a] - pm.lnGam[p0+a]; mx = std::max( mx, lw[(size_t)a] ); }
                     double s = 0., tpd = 0.;
@@ -1317,13 +1344,8 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
         c0[(size_t)(j-p0)] = au - ( pm.G0[j] + pm.fDQF[j] );
     }
     double tpdMin = 1e300;
-    // A solid or liquid mixture with a built-in model is evaluated alone: only its own model sees the trial composition.
-    const char phc = pm.PHC[k], smod = pm.sMod[k][SPHAS_TYP];
-    const bool alone = phSolMod && phSolMod[k] && pm.sMod[k][SGM_MODE] == SM_STNGAM
-        && ( phc == PH_LIQUID || phc == PH_SIMELT || phc == PH_SINCOND || phc == PH_SINDIS || phc == PH_HCARBL )
-        && ( smod == SM_IDEAL || smod == SM_BERMAN || smod == SM_CEF || smod == SM_MBW || smod == SM_REDKIS || smod == SM_MARGB
-             || smod == SM_MARGT || smod == SM_GUGGENM || smod == SM_VANLAAR || smod == SM_REGULAR || smod == SM_NRTLLIQ
-             || smod == SM_WILSLIQ );
+    const char smod = pm.sMod[k][SPHAS_TYP];
+    const bool alone = PhaseModelAlone( k );
     // An ideal mixture has no activity terms, so a trial composition needs no model call at all.
     const bool ideal = !alone && pm.sMod[k][SGM_MODE] == SM_IDEAL;
     auto evalY = [&]( const std::vector<double>& y, std::vector<double>& ynew ) -> double {

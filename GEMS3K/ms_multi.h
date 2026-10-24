@@ -1347,6 +1347,8 @@ public:
     /// \return number of phases whose index was replaced.
     /// In plain words: gives a missing mixed phase a real saturation index, not a placeholder.
     long int ReportAbsentPhaseIndexes();
+    /// True if phase k has a built-in model that can be evaluated alone at a trial composition.
+    bool PhaseModelAlone( long int k ) const;
     /// Prototype: composition search for one absent non-ideal phase; see ipm_main.cpp.
     double NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest );
     /// Per phase: 1 if another phase has the same end-members (a miscibility gap needs two copies).
