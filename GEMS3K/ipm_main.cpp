@@ -1052,6 +1052,128 @@ double TMultiBase::CertStabTPD( long int& worstPhase, long int& nScanned, long i
     return worst;
 }
 
+// An absent mixed phase has no composition of its own, so StabilityIndexes() cannot know its
+// activity coefficients: on a cold start it writes -1, and on a warm start it may use 1 for every
+// coefficient. Here the composition and the coefficients are repeated until they agree, and the
+// index is log10 of the sum of a_j / gamma_j there. Every composition tried gives a valid lower
+// bound, so the best one seen is kept if the repeat does not settle.
+// In plain words: gives a missing mixed phase a real saturation index, not a placeholder.
+long int TMultiBase::ReportAbsentPhaseIndexes()
+{
+    if( !pm.X || !pm.XF || !pm.XFA || !pm.L1 || !pm.U || !pm.A || !pm.lnGam || !pm.Falp
+        || !pm.G0 || !pm.fDQF || pm.FIs <= 0 )
+        return 0;
+    const long int N = pm.N;
+    // Which phases need it
+    std::vector<char> need( (size_t)pm.FIs, 0 );
+    bool any = false;
+    for( long int k = 0, p0 = 0; k < pm.FIs; p0 += pm.L1[k], k++ )
+    {
+        const long int n = pm.L1[k], p1 = p0 + n;
+        const char ph = pm.PHC[k];
+        if( n <= 1 || p1 > pm.L || ph == PH_AQUEL || ph == PH_SORPTION || ph == PH_POLYEL
+            || ph == PH_ADSORPT || ph == PH_IONEX )
+            continue;
+        if( pm.sMod[k][SGM_MODE] == SM_IDEAL || pm.sMod[k][SPHAS_TYP] == SM_IDEAL )
+            continue;
+        if( !( pm.XF[k] <= pm.DSM ) )
+            continue;
+        bool allOne = true;
+        for( long int j = p0; j < p1; j++ )
+            if( std::fabs( pm.Gamma[j] - 1. ) > 1e-12 ) { allOne = false; break; }
+        if( std::fabs( pm.Falp[k] + 1. ) < 1e-12 || allOne )
+        { need[(size_t)k] = 1; any = true; }
+    }
+    if( !any )
+        return 0;
+
+    struct Save { double* p; std::vector<double> v; };
+    std::vector<Save> saved;
+    auto keep = [&saved]( double* p, long int m ) { if( p && m > 0 ) saved.push_back( { p, std::vector<double>( p, p + m ) } ); };
+    keep( pm.X, pm.L );      keep( pm.XF, pm.FI );     keep( pm.XFA, pm.FIs );
+    keep( pm.G, pm.L );      keep( pm.lnGam, pm.L );   keep( pm.lnGmo, pm.L );
+    keep( pm.Gamma, pm.L );  keep( pm.F0, pm.L );      keep( pm.fDQF, pm.L );
+    keep( pm.Wx, pm.L );     keep( pm.FitVar, 5 );
+    auto restoreBase = [&saved]() { for( const Save& c : saved ) std::copy( c.v.begin(), c.v.end(), c.p ); };
+
+    long int nDone = 0;
+    for( long int k = 0, p0 = 0; k < pm.FIs; p0 += pm.L1[k], k++ )
+    {
+        if( !need[(size_t)k] ) continue;
+        const long int n = pm.L1[k], p1 = p0 + n;
+        const double was = pm.Falp[k];
+        std::vector<double> c0( (size_t)n );
+        for( long int j = p0; j < p1; j++ )
+        {
+            double au = 0.;
+            for( long int i = 0; i < N; i++ ) au += pm.A[ i + j*N ] * pm.U[i];
+            c0[(size_t)(j-p0)] = au - ( pm.G0[j] + pm.fDQF[j] );
+        }
+        double best = -1e300;
+        try
+        {
+            // Starts: the ideal-activity guess, the centroid and each corner. Half steps, so a two-cycle settles.
+            const double mx0 = *std::max_element( c0.begin(), c0.end() );
+            std::vector<std::vector<double>> starts;
+            {
+                std::vector<double> v( (size_t)n ); double s0 = 0.;
+                for( long int a = 0; a < n; a++ ) { v[(size_t)a] = exp( c0[(size_t)a] - mx0 ); s0 += v[(size_t)a]; }
+                for( double& x : v ) x /= s0;
+                starts.push_back( v );
+            }
+            starts.push_back( std::vector<double>( (size_t)n, 1.0 / n ) );
+            for( long int a = 0; a < n && n <= 12; a++ )
+            {
+                std::vector<double> v( (size_t)n, 1e-6 / ( n - 1 ) );
+                v[(size_t)a] = 1. - 1e-6;
+                starts.push_back( v );
+            }
+            std::vector<double> lw( (size_t)n );
+            for( std::vector<double> y : starts )
+                for( int it = 0; it < 100; it++ )
+                {
+                    restoreBase();
+                    for( long int j = p0; j < p1; j++ ) pm.X[j] = std::max( y[(size_t)(j-p0)], 1e-300 );
+                    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+                    CalculateActivityCoefficients( LINK_UX_MODE );
+                    double mx = -1e300;
+                    for( long int a = 0; a < n; a++ ) { lw[(size_t)a] = c0[(size_t)a] - pm.lnGam[p0+a]; mx = std::max( mx, lw[(size_t)a] ); }
+                    double s = 0., tpd = 0.;
+                    for( double v : lw ) s += exp( v - mx );
+                    for( long int a = 0; a < n; a++ )
+                        if( y[(size_t)a] > 0. ) tpd += y[(size_t)a] * ( log( y[(size_t)a] ) - lw[(size_t)a] );
+                    best = std::max( best, -tpd );
+                    double d = 0.;
+                    for( long int a = 0; a < n; a++ )
+                    {
+                        const double yn = exp( lw[(size_t)a] - mx ) / s;
+                        d = std::max( d, std::fabs( yn - y[(size_t)a] ) );
+                        y[(size_t)a] = 0.5 * ( y[(size_t)a] + yn );
+                    }
+                    if( d < 1e-9 ) break;
+                }
+        }
+        catch( ... ) { best = -1e300; }   // a model that throws at a trial composition keeps the old index
+        restoreBase();
+        if( best > -1e299 )
+        {
+            pm.Falp[k] = best / lg_to_ln;
+            nDone++;
+            native_trace_decide( "phindex-ownx phase=%ld was=%.6g now=%.8g", (long)k, was, pm.Falp[k] );
+            ipm_logger->debug( "Stability index of absent phase {} from its own composition: {:.6g} (was {:.6g})",
+                               char_array_to_string( pm.SF[k] + MAXSYMB, MAXPHNAME ), pm.Falp[k], was );
+        }
+    }
+    try
+    {   // re-seed the TSolMod objects, as CertStabTPD() does
+        TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+        CalculateActivityCoefficients( LINK_UX_MODE );
+    }
+    catch( ... ) {}
+    restoreBase();
+    return nDone;
+}
+
 // The composition search of CertStabTPD() for one absent non-ideal phase k (species p0 ..
 // p0+L1[k]-1): returns min TPD (RT per mole of phase; < 0: the phase lowers G against the
 // current dual pm.U) and the composition where it was found. Used by the TPD acceptance of the

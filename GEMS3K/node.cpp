@@ -1732,6 +1732,12 @@ void TNode::packDataBr()
     CNode->Ms = pmm->MBX;
 
     // arrays
+    // An absent mixed phase gets a real saturation index in place of the cold-start placeholder.
+    if( multi_ptr() )
+    {
+        try { multi_ptr()->ReportAbsentPhaseIndexes(); }
+        catch( ... ) {}
+    }
     for( ii=0; ii<CSD->nPHb; ii++ )
     {  CNode->xPH[ii] = pmm->XF[ CSD->xph[ii] ];
         if( CSD->nAalp >0 )

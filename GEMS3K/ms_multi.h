@@ -1340,6 +1340,13 @@ public:
     /// \return min over scanned phases of the smallest TPD(y) in RT (< 0: unstable), +1e300 if none.
     /// In plain words: checks whether a mixed phase left out of the answer should in fact form.
     double CertStabTPD( long int& worstPhase, long int& nScanned, long int& nDisagree );
+    /// Report-only: an absent non-ideal mixed phase whose index is the cold-start placeholder (-1)
+    /// or was made with every activity coefficient equal to 1 gets the index at its own
+    /// composition, found by repeating composition and activity coefficients until they agree.
+    /// Changes pm.Falp only; no solver decision reads it afterwards.
+    /// \return number of phases whose index was replaced.
+    /// In plain words: gives a missing mixed phase a real saturation index, not a placeholder.
+    long int ReportAbsentPhaseIndexes();
     /// Prototype: composition search for one absent non-ideal phase; see ipm_main.cpp.
     double NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest );
     /// Per phase: 1 if another phase has the same end-members (a miscibility gap needs two copies).
