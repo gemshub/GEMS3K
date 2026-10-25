@@ -693,7 +693,9 @@ void TMultiBase::PhaseHessianEnd()
                 std::string shown;
                 for( size_t i = 0; i < list.size(); i++ )
                     shown += ( i ? ( i+1 == list.size() ? " and " : ", " ) : "" ) + list[i];
-                ipm_logger->warn( "Solid solutions {} are copies and did not split. "
+                // once per system: a process repeats the same note at every step
+                ipm_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "twins-nosplit|" + shown ) ? spdlog::level::warn : spdlog::level::debug,
+                                  "Solid solutions {} are copies and did not split. "
                                   "Try: if no miscibility gap is expected, remove one copy to speed up the calculation.",
                                   shown );
             }
@@ -778,7 +780,8 @@ void TMultiBase::WarnCollapsedTwins()
                                 nPairs++;
                             }
                         }
-                ipm_logger->warn( "Solid solutions {} and {} are copies and ended with the same composition, so the split "
+                ipm_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "twins-same|" + na + "|" + nb ) ? spdlog::level::warn : spdlog::level::debug,
+                                  "Solid solutions {} and {} are copies and ended with the same composition, so the split "
                                   "between them is arbitrary; this can make the calculation slow or unstable. "
                                   "Try: if no miscibility gap is expected here, remove one copy of each copied pair "
                                   "({} in this system: {}).", na, nb, nPairs, allPairs );
@@ -2644,7 +2647,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 if( pm.U[i] != 0. ) warmStateUsable = true;
             }
             if( !warmStateUsable )
-                ipm_logger->warn( "Warm start (SOP) requested, but this node has no earlier solution "
+                ipm_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "warm-SOP" ) ? spdlog::level::warn : spdlog::level::debug,
+                                  "Warm start (SOP) requested, but this node has no earlier solution "
                                   "(the speciation stored in the .dbr file is not one). Solving cold. "
                                   "Try: use AOP for a first solve, and SOP only after a solve." );
         }
@@ -6892,7 +6896,8 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
         if( !usable )
         {
             wantWarmNative = false;
-            ipm_logger->warn( "Warm start (SHP) requested, but this node has no earlier solution. "
+            ipm_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "warm-SHP" ) ? spdlog::level::warn : spdlog::level::debug,
+                              "Warm start (SHP) requested, but this node has no earlier solution. "
                               "Native leg runs cold. Try: use HOP for a first solve, and SHP only "
                               "after a solve." );
         }
@@ -7133,7 +7138,7 @@ double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIP
         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
         CalculateConcentrations( pm.X, pm.XF, pm.XFA );   // activity coefficients were put back above
         pm.MK = savedMK; pm.PZ = savedPZ;
-        ipm_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "tracegrowth|" + trace_growth_note )
+        ipm_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "tracegrowth" )
                              ? spdlog::level::warn : spdlog::level::debug, "{}", trace_growth_note );
     }
     else

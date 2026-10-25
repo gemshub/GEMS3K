@@ -73,10 +73,11 @@ TNode::TNode()
         spdlog::register_logger(ipmlog_file);
     }
 #ifdef USE_OPTIMA_SOLVER
-    // Optima prints its warnings to std::cout unless told otherwise: send them to the "tnode" logger, so that
+    // Optima prints its warnings to std::cout unless told otherwise: send them to the "tnode" logger (debug level), so that
     // update_loggers(use_stdout, logfile, level) decides whether they reach the console, the log file, or nowhere
     Optima::setWarningHandler([](const std::string& message) {
-        if(node_logger) node_logger->warn("Optima: {}", message);
+        // The solver goes on after each of these notes; a failed solve reports its own error
+        if(node_logger) node_logger->debug("Optima: {}", message);
     });
 #endif
     });
@@ -272,6 +273,25 @@ void TNode::WarnIfSystemTooLarge()
     }
 }
 
+// A retry that recovered the answer is a detail (debug level); one that did not stays at the info level
+static spdlog::level::level_enum retryLevel( bool recovered )
+{
+    return recovered ? spdlog::level::debug : spdlog::level::info;
+}
+
+// True if the status of a call is a failure (an error or a bad result) in any mode
+static bool callFailed( long int st )
+{
+    if( st == ERR_GEM_AIA || st == ERR_GEM_SIA || st == BAD_GEM_AIA || st == BAD_GEM_SIA || st == T_ERROR_GEM )
+        return true;
+#ifdef USE_OPTIMA_SOLVER
+    return st == ERR_GEM_AOP || st == ERR_GEM_SOP || st == ERR_GEM_HOP || st == ERR_GEM_SHP || st == ERR_GEM_ROP
+        || st == BAD_GEM_AOP || st == BAD_GEM_SOP || st == BAD_GEM_HOP || st == BAD_GEM_SHP || st == BAD_GEM_ROP;
+#else
+    return false;
+#endif
+}
+
 // The layers of one call, outermost first: the call cap, the dry redo, then the quick first try and the
 // solve with its retries. Each layer calls the next one.
 long int TNode::GEM_run( bool uPrimalSol )
@@ -284,8 +304,28 @@ long int TNode::GEM_run( bool uPrimalSol )
     long int st;
     {
         gems3k_timing::Scope t( gems3k_timing::Call );
-        st = GEM_run_rescue( uPrimalSol );
+        // A failed attempt is followed by retries: its error goes to the debug level here, and the
+        // last error is printed below only if the call ends in failure.
+        g_errorsHandledByCaller++;
+        try
+        {
+            st = GEM_run_rescue( uPrimalSol );
+        }
+        catch( TError& e )
+        {
+            g_errorsHandledByCaller--;
+            LogError( e.title, e.mess );
+            throw;
+        }
+        catch( ... )
+        {
+            g_errorsHandledByCaller--;
+            throw;
+        }
+        g_errorsHandledByCaller--;
     }
+    if( !ipmlog_error.empty() && callFailed( st ) )
+        node_logger->error( "{}", ipmlog_error );
     rememberTitration( requested, bBefore );
     gems3k_timing::flush( requested, st, CNode->IterDone );
     return st;
@@ -1043,7 +1083,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
             itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
             native_trace_decide( "%s requested=%ld first=%ld second=%ld", lsRetryArmed ? "lsretry" : "escretry",
                                  (long)requested, (long)status, (long)second );
-            node_logger->info( "GEM_run(): mode {} failed ({}) - re-solved once from the same inputs with {}: {}",
+            node_logger->log( retryLevel( isOkStatus( second ) ), "GEM_run(): mode {} failed ({}) - re-solved once from the same inputs with {}: {}",
                                (long)requested, (long)status,
                                lsRetryArmed ? "the line-search retry" : "the stall escape off",
                                isOkStatus( second ) ? "recovered" : "still failed" );
@@ -1077,7 +1117,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
             g_ipmLevelOff = false;
             itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
             native_trace_decide( "natlvlretry requested=%ld first=%ld second=%ld", (long)requested, (long)status, (long)second );
-            node_logger->info( "GEM_run(): mode {} failed ({}) after the leveled start - solved again from the ordinary start: {}",
+            node_logger->log( retryLevel( isOkStatus( second ) ), "GEM_run(): mode {} failed ({}) after the leveled start - solved again from the ordinary start: {}",
                                (long)requested, (long)status, isOkStatus( second ) ? "recovered" : "still failed" );
             if( !isOkStatus( second ) ) { databr_copy( failed ); ipmlog_error = failedError; }
             databr_free( failed );
@@ -1177,7 +1217,7 @@ long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, lon
         g_optimaLSEscapeOff = false;
         itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
         native_trace_decide( "escretry step=%s requested=%ld first=%ld second=%ld", step, (long)requested, (long)st, (long)second );
-        node_logger->info( "GEM_run(): {} attempt failed ({}) - re-solved with the stall escape off: {}",
+        node_logger->log( retryLevel( isOk( second ) ), "GEM_run(): {} attempt failed ({}) - re-solved with the stall escape off: {}",
                            step, (long)st, isOk( second ) ? "recovered" : "still failed" );
         if( !isOk( second ) ) { databr_copy( failed ); ipmlog_error = failedError; }
         databr_free( failed );
@@ -1195,7 +1235,7 @@ long int TNode::GEM_run_aop_cgseed( long int& itf, long int& itg, double& second
     const long int st = GEM_run_single_legacy_retry( false, itf, itg, seconds, "cgseed" );
     g_optimaCgSeedArmed = false;
     native_trace_decide( "cgseedretry aop=%ld", (long)st );
-    node_logger->info( "GEM_run(): cold AOP failed - retried from the column-generation seed: {}",
+    node_logger->log( retryLevel( st == OK_GEM_AOP ), "GEM_run(): cold AOP failed - retried from the column-generation seed: {}",
                        st == OK_GEM_AOP ? "recovered" : "still failed" );
     return st;
 }
@@ -1221,7 +1261,7 @@ long int TNode::GEM_run_optima_cold_retry( long int requested )
         cold = GEM_run_aop_cgseed( itf, itg, seconds );
     native_trace_decide( "optimacoldretry requested=%ld failed=%ld aop=%ld", (long)requested,
                          (long)failedStatus, (long)cold );
-    node_logger->info( "GEM_run(): warm Optima call (mode {}) failed ({}) - re-solved cold as AOP: {}",
+    node_logger->log( retryLevel( cold == OK_GEM_AOP ), "GEM_run(): warm Optima call (mode {}) failed ({}) - re-solved cold as AOP: {}",
                        (long)requested, (long)failedStatus, cold == OK_GEM_AOP ? "recovered" : "still failed" );
     if( cold != OK_GEM_AOP )
     {
@@ -1342,7 +1382,7 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
     native_trace_quiet( false );
     if( nudgedOk )
         databr_free( nudgedOk );
-    node_logger->info( "GEM_run(): cold native call failed - retried from nudged compositions (up to {}): {}",
+    node_logger->log( retryLevel( result != ERR_GEM_AIA ), "GEM_run(): cold native call failed - retried from nudged compositions (up to {}): {}",
                        (long)maxNudges, result == ERR_GEM_AIA ? "still failed" : "recovered" );
 
     if( result == ERR_GEM_AIA )

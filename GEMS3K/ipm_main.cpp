@@ -42,7 +42,6 @@
 #include <chrono>
 #include <mutex>
 #include <set>
-#include <regex>
 #include <map>
 #include <string>
 
@@ -2419,7 +2418,7 @@ void TMultiBase::EnergyDeterminacyCheck()
             : fmt::format( "fixed only to +-{:.2g} %", 100. * worstRel );
         if( nDegenerate > 0 ) kWorst = -1;
         // once per system: a process repeats the same note at every step
-        const bool firstTime = first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "undetermined|" + std::regex_replace( listed, std::regex( "\\([^)]*\\)" ), "" ) );   // names only, not the percentages
+        const bool firstTime = first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "undetermined" );
         auto notFixedLog = [&]( spdlog::level::level_enum lvl ) {
             gems_logger->log( lvl,
             "Some phase amounts are not fixed by the energy: {} phase(s) are determined only to worse than "
@@ -2490,7 +2489,7 @@ void TMultiBase::TraceGrowthCheck()
 #ifdef USE_OPTIMA_SOLVER
     if( base_param()->NativeOptimaFinish > 0 ) return;   // the Optima finish reports instead
 #endif
-    gems_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "tracegrowth|" + trace_growth_note )
+    gems_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "tracegrowth" )
                           ? spdlog::level::warn : spdlog::level::debug, "{}", trace_growth_note );
 }
 
