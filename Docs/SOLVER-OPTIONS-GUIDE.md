@@ -306,7 +306,7 @@ These settings were in earlier versions. They have the same meaning. Most projec
 | `pa_DHB` | 1e-13 | Sets how closely the amount of each element in the result must agree with the input amount. The value is a fraction of that amount. | Make it a little looser if a calculation fails only because of this check. Make it stricter for systems with trace elements. | Usually from 1e-9 (looser) to 1e-15 (stricter). |
 | `pa_DT` | 0 | Sets how the check above is used. The value 0 uses it in the same way for each element. | Systems with major elements and trace elements. The relative check can be too strict for the major elements. | A value of −6 or less = for major elements, use a fixed amount instead of a fraction. |
 | `pa_IIM` | 7000 | Sets the largest number of iterations of the main calculation. After that number, the calculation stops. | Make it larger for large or difficult systems that use all their iterations. | Up to 32767. A larger value becomes 32767, with a warning. |
-| `pa_DP` | 130 | Sets the largest number of iterations of the step that makes the element totals agree. | Make it larger if that step uses all its iterations on a difficult system. | Any positive number. |
+| `pa_DP` | 130 | Sets the largest number of iterations of the step that makes the element totals agree. | Make it larger if that step uses all its iterations on a difficult system. | Up to 32767. A larger value becomes 32767, with a warning. |
 | `pa_DW` | 1 (on) | Treats the use of all the iterations above as an error. | Switch it off only to look at a result that GEMS3K would reject. | 0 = not an error. |
 | `pa_PE` | 1 (on) | Requires that the result has no electric charge. | Keep it on for each system with ions. Switch it off only for systems with no charged species. | 0 = off. |
 | `pa_PC` | 2 | Sets how the solver decides which phases are present. The value 2 is the current method. It also adds phases that the solver wrongly left out. | Keep the value 2. The old method is only for the comparison with old results. | 1 = the old method. |
@@ -415,26 +415,27 @@ all items below. They cost nothing while they are off.
 
 **Log level (spdlog).** Named loggers write the log: `gems3k`, `ipm`, `tnode`, `kinmet` and `solmod`. When
 you use ThermoFun, the loggers `chemicalfun` and `thermofun` also write. Set the level in the file
-`gems3k-config.json`, in the section `log`. The levels are `trace`, `debug`, `info` (default), `warning`,
+`gems3k-config.json`, in the section `log`. The levels are `trace`, `debug`, `info`, `warning` (default),
 `error`, `critical` and `off`:
 
 ```json
 {
   "log": {
-    "level": "info",
+    "level": "warning",
     "logs-directory": "logs",
     "module_level": { "ipm": "debug", "tnode": "warning" }
   }
 }
 ```
 
-**Which level to use.** The default level `info` is correct for most uses. It shows warnings and errors. It
+**Which level to use.** The default level `warning` is correct for most uses. It shows warnings and errors. It
 does not show the detailed messages. You do not need a `gems3k-config.json` file for it.
-- Use `warning` when you run many calculations in a loop (a sweep, or a coupled transport code).
+- Keep `warning` when you run many calculations in a loop (a sweep, or a coupled transport code).
+- Use `info` to see each choice of route that the solver makes.
 - Use `debug` for one logger (usually `ipm`) to find the cause of a failed calculation.
 - Use `error` with `pa_PSM = 0` for very large batches.
 
-The file is optional. If it is not there, each logger runs at `info`. The repository has one example,
+The file is optional. If it is not there, each logger runs at `warning`. The repository has one example,
 `tools-build/gems3k-config.json`. It is for development. It sets `gems3k` to `debug`. It sets `thermofun` and
 `chemicalfun` to `trace`. It also writes a log file (section `"file"` with `path`, `size` and `count`). Do
 not copy it for normal use.

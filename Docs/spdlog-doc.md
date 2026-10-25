@@ -122,8 +122,7 @@ call replaces the sinks of all loggers, so call it once with all three values.
 **Optima warnings.** In builds with the Optima solver, warnings printed by Optima (for example *"Proceeding with linear-search
 algorithm even though current Newton step is not a descent direction"*) are sent to the `tnode` logger at level `warn`, so
 they follow `update_loggers`: on the console only if `use_stdout` is true and `log_level <= 3`, in the log file if a file is
-given, nowhere if `log_level >= 4`. (Optima itself prints to `std::cout` when it is used without GEMS3K; see
-`optima/.claude/docs/GEMS3K-MODIFICATIONS.md`, section 8.)
+given, nowhere if `log_level >= 4`. (Optima itself prints to `std::cout` when it is used without GEMS3K.)
 
 **`ipmlog.txt` and `pa_PSM`.** The IPM solver writes its own diagnostics to `ipmlog.txt` (logger `ipmlog`). How much it writes
 is set by the project setting `pa_PSM` (0 = nothing, 2 = also warnings, 3 = detailed trace) *and* by the logger level above; the
