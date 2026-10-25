@@ -28,6 +28,11 @@ thread_local int g_errorsHandledByCaller = 0;
     throw TError(title, message);
 }
 
+void LogError (const std::string& title, const std::string& message)
+{
+    gems_logger->error("{}: {}", logTitle( title ), message);
+}
+
 void ErrorIf (bool error, const std::string& title, const std::string& message)
 {
     if(error)

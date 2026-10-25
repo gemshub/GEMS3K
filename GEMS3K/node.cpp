@@ -726,7 +726,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     }
     native_trace_decide( "rescue-result requested=%ld first=%ld step=%ld status=%ld attempts=%ld pool=%ld it=%ld budget=%d",
                          requested, st, rescueStep, result, nAttempts, (long)pool.size(), itTotal, budgetUsed ? 1 : 0 );
-    node_logger->info( "GEM_run(): mode {} failed ({}) - rescue: {}", requested, st,
+    node_logger->log( passed ? spdlog::level::debug : spdlog::level::info, "GEM_run(): mode {} failed ({}) - rescue: {}", requested, st,
                        passed ? "recovered" : ( rescueStep == 6 ? "best attempt returned" : "still failed" ) );
     if( budgetUsed && !passed )
         node_logger->info( "GEM_run(): the rescue stopped at its iteration limit (pa_RescueBudget = {})", bp->RescueBudget );
@@ -1485,6 +1485,8 @@ long int TNode::GEM_run_single( bool uPrimalSol )
                            && multi_ptr()->base_param()->NativeOptimaFinish > 0 );
             try
             {
+                // an error here may be recovered below: it is logged there only if it is not
+                struct HandledErrors { HandledErrors() { g_errorsHandledByCaller++; } ~HandledErrors() { g_errorsHandledByCaller--; } } handled;
                 CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
             }
             catch( TError& nerr )
@@ -1500,7 +1502,10 @@ long int TNode::GEM_run_single( bool uPrimalSol )
                 {
                     // pa_IpmNoProgress stopped native and the finish failed: solve again cold without the stop.
                     if( !( limit && g_ipmNoProgFired ) )
+                    {
+                        LogError( nerr.title, nerr.mess );
                         throw;
+                    }
                     g_ipmNoProgArmed = false;
                     pmm->pNP = 0;
                     const long int fia0 = NumIterFIA, ipm0 = NumIterIPM;
@@ -1513,6 +1518,7 @@ long int TNode::GEM_run_single( bool uPrimalSol )
                     catch( TError& )
                     {
                         native_trace_decide( "ipmnoprog-retry ok=0" );
+                        LogError( nerr.title, nerr.mess );
                         throw nerr;
                     }
                 }
