@@ -106,10 +106,10 @@ std::shared_ptr<spdlog::logger> TNode::ipmlog_file;   // logger name "ipmlog"
 | `logfile_name` | a name, e.g. `"xGEMS.log"` | Messages are also written to this rotating file (default size 1 MiB, 1 file), in `GemsSettings::data_logger_directory` (the working directory by default). The file is created when the **first message** is written, so no empty file is left when nothing is logged. |
 | | `""` (empty) | No log file. |
 | `log_level` | 0 `trace` | Everything, including solver path decisions, for example `ITF=.. IT=..  ! PIA->AIA on E04IPM` in `ipmlog`. |
-| | 1 `debug` | Plus one line per equilibrium run, for example `GEMIPM TC=..`. |
+| | 1 `debug` | Plus one line per equilibrium run, for example `GEMIPM TC=..`. Also the details of attempts that a retry recovered, and the notes of the **Optima** solver (see below). |
 | | 2 `info` | Plus one line for each choice of route the solver makes: retries, fallbacks, the quick first try, the dry-out steps. |
-| | 3 `warn` | Warnings only and above: failed or doubtful calculations (error code and text), and the warnings of the **Optima** solver (see below). xGEMS starts with this level (`update_loggers(false, "xGEMS.log", 3)` at import). |
-| | 4 `err` | Errors and above. Optima warnings are no longer logged. |
+| | 3 `warn` | Warnings only and above: failed or doubtful calculations (error code and text). A failed attempt that a retry recovered prints nothing at this level. xGEMS starts with this level (`update_loggers(false, "xGEMS.log", 3)` at import). |
+| | 4 `err` | Errors and above. |
 | | 5 `critical` | Only critical errors. |
 | | 6 `off` | Nothing is logged. |
 
@@ -119,10 +119,10 @@ Start-up messages (configuration read, system loaded, thermodynamic data read) a
 A message is shown only if its level is at least `log_level`. Changing the level does not change where messages go, and the
 call replaces the sinks of all loggers, so call it once with all three values.
 
-**Optima warnings.** In builds with the Optima solver, warnings printed by Optima (for example *"Proceeding with linear-search
-algorithm even though current Newton step is not a descent direction"*) are sent to the `tnode` logger at level `warn`, so
-they follow `update_loggers`: on the console only if `use_stdout` is true and `log_level <= 3`, in the log file if a file is
-given, nowhere if `log_level >= 4`. (Optima itself prints to `std::cout` when it is used without GEMS3K.)
+**Optima notes.** In builds with the Optima solver, the notes printed by Optima (for example *"Proceeding with linear-search
+algorithm even though current Newton step is not a descent direction"*) are sent to the `tnode` logger at level `debug`. The
+solver goes on after each note, so they are details. They follow `update_loggers`: on the console only if `use_stdout` is
+true and `log_level <= 1`, in the log file if a file is given and `log_level <= 1`, nowhere if `log_level >= 2`. (Optima itself prints to `std::cout` when it is used without GEMS3K.)
 
 **`ipmlog.txt` and `pa_PSM`.** The IPM solver writes its own diagnostics to `ipmlog.txt` (logger `ipmlog`). How much it writes
 is set by the project setting `pa_PSM` (0 = nothing, 2 = also warnings, 3 = detailed trace) *and* by the logger level above; the
