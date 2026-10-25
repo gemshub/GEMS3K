@@ -16,12 +16,28 @@ if(BUILD_SOLMOD_PYTHON)
     endif()
 endif()
 
+# Eigen (header-only) is needed by the native solver's linear algebra.
+# With Optima, Optima is found first and brings the Eigen it was built with.
+if(USE_OPTIMA_SOLVER)
+  find_package(Optima REQUIRED)
+endif()
+find_package(Eigen3 REQUIRED NO_MODULE)
+if(Eigen3_VERSION VERSION_LESS 3.4)
+  message(FATAL_ERROR "Eigen 3.4 or newer is required (found ${Eigen3_VERSION})")
+endif()
+message(STATUS "Found Eigen3 v${Eigen3_VERSION}")
+
 if(USE_THERMOFUN MATCHES ON)
   find_package(ThermoFun REQUIRED)
   if(NOT ThermoFun_FOUND)
     message(FATAL_ERROR "ThermoFun library not found")
   else()
     message(STATUS "Found ThermoFun v${ThermoFun_VERSION}")
+    # ThermoFun before 0.7.0 keeps a reference to the pressure in the key of its property cache, so a later
+    # pressure changes the old keys. A ThermoFun before 0.7.0 cannot switch that cache off after it is made.
+    if(ThermoFun_VERSION VERSION_LESS 0.7.0)
+      message(WARNING "ThermoFun ${ThermoFun_VERSION} has a property cache that can return values of an earlier pressure. Use ThermoFun 0.7.0 or newer (see environment.yml).")
+    endif()
   endif()
 
   find_package(ChemicalFun REQUIRED)

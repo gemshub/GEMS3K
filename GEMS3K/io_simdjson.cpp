@@ -50,9 +50,7 @@ public:
             auto input_string = json_string;
             trim(input_string);
             trim(input_string, "[]");
-            replaceall( input_string, "-inf", DOUBLE_INFMINUS_STR);
-            replaceall( input_string, "inf", DOUBLE_INFPLUS_STR);
-            replaceall( input_string, "nan", DOUBLE_NAN_STR);
+            replace_json_inf_nan( input_string, DOUBLE_INFPLUS_STR, DOUBLE_NAN_STR );   // not inside strings
             json_data = parser.parse( input_string );
 
             if( !test_set_name.empty() )
