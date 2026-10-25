@@ -25,8 +25,8 @@ public:
 protected:
     void sink_it_(const spdlog::details::log_msg& msg) override
     {
-        open_();
-        inner_->log(msg);
+        if( open_() )
+            inner_->log(msg);
     }
 
     void flush_() override
@@ -42,16 +42,25 @@ protected:
     }
 
 private:
-    void open_()
+    // A failed open is reported once, through spdlog's error handler; later messages are dropped
+    bool open_()
     {
-        if(inner_) return;
-        inner_ = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(path_, max_size_, max_files_);
-        inner_->set_formatter(this->formatter_->clone());
+        if(inner_) return true;
+        if(failed_) return false;
+        try {
+            inner_ = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(path_, max_size_, max_files_);
+            inner_->set_formatter(this->formatter_->clone());
+        } catch(const spdlog::spdlog_ex&) {
+            failed_ = true;
+            throw;
+        }
+        return true;
     }
 
     std::string path_;
     std::size_t max_size_;
     std::size_t max_files_;
+    bool failed_ = false;
     std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> inner_;
 };
 

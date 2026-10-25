@@ -4,6 +4,10 @@ cmake_minimum_required(VERSION 3.16..4.2)
 # Set the name of the project
 project(GEMS3K VERSION 5.2.0 LANGUAGES CXX C)
 
+# The tests are built only with -DBUILD_TESTING=ON; ctest then finds them
+set(BUILD_TESTING OFF CACHE BOOL "Build the GEMS3K tests")
+include(CTest)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

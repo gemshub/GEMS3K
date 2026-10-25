@@ -1182,6 +1182,24 @@ public:
        return pa_standalone.get();
     }
 
+    /// While it lives, this node works with its own copy of the settings: a retry can change them
+    /// without changing the settings of the other nodes that share them. Take base_param() after
+    /// making it.
+    /// In plain words: lets one node try other settings without touching the other nodes.
+    struct LocalSettings
+    {
+        explicit LocalSettings( TMultiBase& multi ): m( multi ), kept( multi.pa_standalone )
+        {
+            if( kept ) m.pa_standalone = std::make_shared<BASE_PARAM>( *kept );
+        }
+        ~LocalSettings() { m.pa_standalone = kept; }
+        LocalSettings( const LocalSettings& ) = delete;
+        LocalSettings& operator=( const LocalSettings& ) = delete;
+    private:
+        TMultiBase& m;
+        std::shared_ptr<BASE_PARAM> kept;
+    };
+
     MULTI* GetPM()
     { return &pm; }
 

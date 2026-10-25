@@ -631,13 +631,15 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     if( !passed && !noResultKinetic && !overBudget() )
     {
         databr_copy( D0 );
-        const BASE_PARAM saved = *bp;
-        bp->DK *= 10.;
-        bp->OptimaTol = 1e-6;
-        bp->OptimaDcFloor = 1e-12;
-        bp->LogBarrierTau = 1e-12;
+        TMultiBase::LocalSettings ownSettings( *multi_ptr() );   // the other nodes keep their settings
+        BASE_PARAM* bp4 = multi_ptr()->base_param();
+        const BASE_PARAM saved = *bp4;
+        bp4->DK *= 10.;
+        bp4->OptimaTol = 1e-6;
+        bp4->OptimaDcFloor = 1e-12;
+        bp4->LogBarrierTau = 1e-12;
         const long int s = run( requested, uPrimalSol, false );
-        *bp = saved;
+        *bp4 = saved;
         long int f = -1;
         if( isOk( s ) || isBad( s ) )
         {
@@ -912,6 +914,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         dbr_dch_api::databr_reset( fastBefore, 1 );
         dbr_dch_api::databr_realloc( CSD, fastBefore );
         { DATABR* live = CNode; CNode = fastBefore; databr_copy( live ); CNode = live; }
+        TMultiBase::LocalSettings ownSettings( *multi_ptr() );   // the other nodes keep their settings
         BASE_PARAM* bp = multi_ptr()->base_param();
         const BASE_PARAM saved = *bp;
         bp->DG = 1e-5;                  // no rescaling
