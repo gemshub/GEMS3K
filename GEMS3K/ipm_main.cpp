@@ -42,6 +42,7 @@
 #include <chrono>
 #include <mutex>
 #include <set>
+#include <regex>
 #include <map>
 #include <string>
 
@@ -94,6 +95,13 @@ FILE* ipm_probe_file()
 static thread_local long int s_ipmKktFallbacks = 0;
 /// pa_IpmQrSortPivot: solves in the current InteriorPointsMethod() call; the first emits DECIDE "ipmqr-sortpivot".
 static thread_local long int s_ipmQrSortPivot = 0;
+
+bool first_note_for_system( const char* systemKey, const std::string& noteKey )
+{
+    thread_local std::set<std::string> seen;
+    if( seen.size() > 256 ) seen.clear();
+    return seen.insert( std::string( systemKey ? systemKey : "", 0, 20 ) + "|" + noteKey ).second;
+}
 
 void native_trace_decide( const char* fmt, ... )
 {
@@ -2410,12 +2418,16 @@ void TMultiBase::EnergyDeterminacyCheck()
             ? std::string( "whose amount lies inside its own energy resolution, so even its PRESENCE is undetermined" )
             : fmt::format( "fixed only to +-{:.2g} %", 100. * worstRel );
         if( nDegenerate > 0 ) kWorst = -1;
-        gems_logger->warn(
+        // once per system: a process repeats the same note at every step
+        const bool firstTime = first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "undetermined|" + std::regex_replace( listed, std::regex( "\\([^)]*\\)" ), "" ) );   // names only, not the percentages
+        auto notFixedLog = [&]( spdlog::level::level_enum lvl ) {
+            gems_logger->log( lvl,
             "Some phase amounts are not fixed by the energy: {} phase(s) are determined only to worse than "
             "{:.0f} % (worst: {}, {}). Other values are equally valid, so treat these amounts as "
             "approximate. Phases: {}",
             nWarn, 100. * warnRel,
-            kWorst >= 0 ? trimmedPhaseName( kWorst ) : std::string( "an interchangeable phase" ), worstTxt, listed );
+            kWorst >= 0 ? trimmedPhaseName( kWorst ) : std::string( "an interchangeable phase" ), worstTxt, listed ); };
+        notFixedLog( firstTime ? spdlog::level::warn : spdlog::level::debug );
         native_trace_decide( "undetermined phases=%ld threshold=%.0e worst=%.2e list=%s",
                              (long)nWarn, warnRel, worstRel, listed.c_str() );
     }
@@ -2478,7 +2490,8 @@ void TMultiBase::TraceGrowthCheck()
 #ifdef USE_OPTIMA_SOLVER
     if( base_param()->NativeOptimaFinish > 0 ) return;   // the Optima finish reports instead
 #endif
-    gems_logger->warn( "{}", trace_growth_note );
+    gems_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "tracegrowth|" + trace_growth_note )
+                          ? spdlog::level::warn : spdlog::level::debug, "{}", trace_growth_note );
 }
 
 // ExcludeRedundantDCs: a species entered twice is removed from the solve.
@@ -3914,7 +3927,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
            buf += "Degeneration in R matrix (fault in SLE solver).\n"
                   "Mass balance cannot be improved, not possible to proceed.";
            setErrorMessage( 5, "E05IPM: Mass Balance Refinement: " , buf.c_str() );
-           gems_logger->warn(buf);
+           gems_logger->debug(buf);   // the solve goes on; a failed solve reports the error itself
        }
        else
            iRet = 0;  // reset: matrix was singular in a previous iteration but recovered —
@@ -4340,7 +4353,7 @@ STEP_POINT( "IPM Iteration" );
             {
                 g_ipmNoProgFired = true;
                 native_trace_decide( "ipmnoprog it=%ld window=%ld fx=%.12e", (long)IT1, (long)w, npBest.back() );
-                ipm_logger->info( "Native solver: no progress over {} iterations at iteration {}; handing over to the Optima finish", w, IT1 );
+                ipm_logger->debug( "Native solver: no progress over {} iterations at iteration {}; handing over to the Optima finish", w, IT1 );
                 break;
             }
         }
@@ -5243,8 +5256,8 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
         if( !lu.isNonsingular() )
         {
             // Singular matrix — log diagnostics to identify the cause
-            ipm_logger->warn("MakeAndSolveSystemOfLinearEquations FAILED:");
-            ipm_logger->warn("LU Decomposition\n{}", lu.to_string());
+            ipm_logger->debug("MakeAndSolveSystemOfLinearEquations FAILED:");
+            ipm_logger->debug("LU Decomposition\n{}", lu.to_string());
 #ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
             pm.CondNum = std::numeric_limits<double>::infinity();
 #endif

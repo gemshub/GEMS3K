@@ -7133,10 +7133,11 @@ double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIP
         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
         CalculateConcentrations( pm.X, pm.XF, pm.XFA );   // activity coefficients were put back above
         pm.MK = savedMK; pm.PZ = savedPZ;
-        ipm_logger->warn( "{}", trace_growth_note );
+        ipm_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "tracegrowth|" + trace_growth_note )
+                             ? spdlog::level::warn : spdlog::level::debug, "{}", trace_growth_note );
     }
     else
-        ipm_logger->info( "Native solver left a trace phase that still tends to grow; finished with Optima, "
+        ipm_logger->debug( "Native solver left a trace phase that still tends to grow; finished with Optima, "
                           "which lowered the energy by {:.3g} RT", Gnat - Gopt );
     pm.pNP = savedPNP;
     native_trace_decide( "nativefinish ok=%d why=%s gnat=%.10f gopt=%.10f fiao=%ld ipmo=%ld cap=%ld",
@@ -7177,7 +7178,8 @@ bool TMultiBase::NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM,
     pm.pNP = savedPNP;
     native_trace_decide( "nativerescue ok=%d why=%s attempts=%d fiao=%ld ipmo=%ld cap=%ld", ok ? 1 : 0,
                          broken ? "E07" : "E06", attempt, (long)fiaO, (long)ipmO, (long)cap );
-    ipm_logger->info( "Native solver {}; Optima {} the answer",
+    // a recovered answer is a detail; only a failed rescue is shown at the normal level
+    ipm_logger->log( ok ? spdlog::level::debug : spdlog::level::info, "Native solver {}; Optima {} the answer",
                       broken ? "could not solve its linear system" : "stopped at its iteration limit",
                       ok ? ( attempt == 1 ? "finished" : "found" ) : "did not find" );
     NumIterFIA += fiaO; NumIterIPM += ipmO;

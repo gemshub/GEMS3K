@@ -1990,6 +1990,10 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
 /// identical. Zero cost when GEMS3K_NATIVE_TRACE_FILE is unset.
 /// In plain words: notes in the trace which optional mechanisms actually fired.
 void native_trace_decide( const char* fmt, ... );
+/// True the first time a note is asked for in this thread for this system (first 20 characters of
+/// the system key) and this key; later calls give false, so the caller logs it at debug level.
+/// In plain words: lets a note about a system appear once, not at every step of a process.
+bool first_note_for_system( const char* systemKey, const std::string& noteKey );
 
 /// Writes the outcome of a completed solve into the trace file: the present phase
 /// assemblage (names, amounts, molar volumes and an order-independent hash of the name
