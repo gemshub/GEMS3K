@@ -33,6 +33,11 @@ if(USE_THERMOFUN MATCHES ON)
     message(FATAL_ERROR "ThermoFun library not found")
   else()
     message(STATUS "Found ThermoFun v${ThermoFun_VERSION}")
+    # ThermoFun before 0.7.0 keeps a reference to the pressure in the key of its property cache, so a later
+    # pressure changes the old keys. A ThermoFun before 0.7.0 cannot switch that cache off after it is made.
+    if(ThermoFun_VERSION VERSION_LESS 0.7.0)
+      message(WARNING "ThermoFun ${ThermoFun_VERSION} has a property cache that can return values of an earlier pressure. Use ThermoFun 0.7.0 or newer (see environment.yml).")
+    endif()
   endif()
 
   find_package(ChemicalFun REQUIRED)
