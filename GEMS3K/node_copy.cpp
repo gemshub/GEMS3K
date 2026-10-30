@@ -633,8 +633,10 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
         // keys dangling once this function returns, and a later lookup could return another
         // substance's properties. Static storage keeps the referent alive at one address; P is
         // also passed by value, so the ordering stays correct.
-        static thread_local double funP;
+        static thread_local double funP, funPg, funPge;
         funP = P*bar_to_Pa;   // T in K, P in Pa
+        // the steam calls get the input P (0 = saturation): the liquid calls write Psat into funP
+        funPg = funPge = funP;
 
         DATACH  *dCH = pCSD();
 
@@ -669,15 +671,9 @@ bool TNode::load_all_thermodynamic_from_thermo( double TK, double PPa )
             auto water_props = thermo_engine->propertiesSolvent(funT, funP, h2o_key);
             auto water_electro = thermo_engine->electroPropertiesSolvent(funT, funP, h2o_key);
 
-            auto water_vapor = thermo_engine->database().getSubstance(h2o_key);
-            water_vapor.setMethod_P( ThermoFun::MethodCorrP_Thrift::type::CPM_GAS);
-
-            ThermoFun::Database db2;
-            db2.addSubstance(water_vapor);
-
-            ThermoFun::ThermoEngine te2(db2);
-            auto water_gas_props = te2.propertiesSolvent(funT, funP, h2o_key);
-            auto water_gas_electro = te2.electroPropertiesSolvent(funT, funP, h2o_key);
+            // Steam: the water record in the vapour state
+            auto water_gas_props = thermo_engine->propertiesSolvent(funT, funPg, h2o_key, 1);
+            auto water_gas_electro = thermo_engine->electroPropertiesSolvent(funT, funPge, h2o_key, 1);
             pmm->denW[0] = water_props.density.val/1e3;
             pmm->epsW[0] = water_electro.epsilon.val;
             pmm->denW[1] = water_props.densityT.val/1e3;
