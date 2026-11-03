@@ -1889,6 +1889,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
             [preWatch]( Optima::ConvergenceCheckArgs const& args ) -> bool
             {
                 if( g_optimaIterBudget > 0 ) --g_optimaIterBudget;
+                if( CalculationCancelled() ) { preWatch->timedOut = true; return true; }
                 if( preWatch->overBudget() ) { preWatch->timedOut = true; return true; }
                 if( preWatch->window <= 0 ) return false;
                 const double e = args.E.errorx();
@@ -4057,7 +4058,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     // stagnate: each alone can stagnate on a run that does converge. The
                     // wall-clock guard comes first, since it must fire even while the iterate
                     // is still improving.
-                    if( stallWatch->overBudget() )
+                    if( CalculationCancelled() || stallWatch->overBudget() )
                     {
                         stallWatch->timedOut = true;
                         return true;   // stop now; folded back to a failure below

@@ -564,6 +564,8 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     // pa_RescueBudget: true once the call has used its iterations; no new attempt of steps 1-4 starts then
     bool budgetUsed = false;
     auto overBudget = [&]() {
+        if( CalculationCancelled() )
+            return true;
         if( !budgetUsed && bp->RescueBudget > 0 && itTotal >= bp->RescueBudget )
         {
             budgetUsed = true;

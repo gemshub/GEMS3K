@@ -1,4 +1,5 @@
 #include <set>
+#include <atomic>
 #include "v_detail.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
@@ -18,6 +19,10 @@ static std::string logTitle( const std::string& title )
 // Above 0 while a caller catches the error and goes on (a quick try that is followed by the full solve):
 // the error is then logged at debug, not at error.
 thread_local int g_errorsHandledByCaller = 0;
+
+static std::atomic<bool> g_calculationCancel{ false };
+void SetCalculationCancel( bool on ) { g_calculationCancel.store( on ); }
+bool CalculationCancelled() { return g_calculationCancel.load(); }
 
 [[ noreturn ]] void Error (const std::string& title, const std::string& message)
 {
