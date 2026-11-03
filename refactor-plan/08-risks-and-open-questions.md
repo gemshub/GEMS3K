@@ -2,13 +2,14 @@ GEMS3K commit: 54b5f819ba83589daa9cd9aa0a9ff699adb28b1d (branch develop_optima, 
 
 # 08 — Risks and open questions
 
-## 1. Blocker found in this session
+## 1. Blocker found in this session (updated after access was granted)
 
-**gems-benchmark was not accessible.** `add_repo gemshub/gems-benchmark` answered "no access"; an anonymous clone
-asked for credentials. Consequences: no freeze tools (`freeze.sh`, `freeze_diff.py`, `recheck.py`), no corpus, no
-CTest (44 tests), no TEST-CATALOGUE, no reproduction of the committed freeze. The profile (03) uses a substitute
-corpus of 21 public projects. Every Stage A step depends on the freeze (05 §0), so **A0 must run on the owner's
-machine first**.
+**gems-benchmark is now accessible, but the freeze still cannot run outside the owner's machine.** `freeze.sh`
+calls `mode_compare` from the owner's local `GEMS3K/debug-optima-vs-reaktoro/` (in no repository), and
+`freeze.sh`, `build-gems3k.sh` and `recheck.py` hard-code `/home/dmiron/...` paths; the recorded standard freeze is
+in the git-ignored `.claude/docs/freeze/`. What ran here (03 §7): trace self-check OK, CTest 92/96, `ci.sh` 114 of
+132 rows exact (18 rows differ for environment reasons). Every Stage A step depends on the freeze (05 §0), so
+**A0 must run on the owner's machine first, or `mode_compare` must be published (Q21)**.
 
 ## 2. Risks
 
@@ -19,7 +20,7 @@ machine first**.
 | R3 | A thread-local flag is read on a path outside the call chain (A6) | medium / high | per-flag read/write list in each PR; debug mirror asserts for one release; DECIDE golden test |
 | R4 | GEMSGUI breaks: it subclasses TMultiBase, reads MULTI, defines `BASE_PARAM::read/write`, binds fields by pointer | medium / high | 02 §2.4–§2.5 kept; `static_assert` on the 38-member prefix; GEMSGUI build in GEMS3K CI (owner, Q13) |
 | R5 | Stage A tempts "small fixes" that change answers (FitVar copy, OK test, nDC loop, model caches) | high / medium | all are listed as B1/B2 with owner decisions; Stage A copies today's behaviour exactly |
-| R6 | Freezes taken on different machines differ (glibc picks `__ieee754_log_fma` by CPU; aarch64/Apple clang contract FMA by default) | medium / high | one machine class for all Stage A freezes; B10/B12 make it explicit |
+| R6 | Freezes taken on different machines differ (glibc picks `__ieee754_log_fma` by CPU; aarch64/Apple clang contract FMA by default) | medium / high | one machine class for all Stage A freezes; B10/B12 make it explicit. **Measured (03 §7):** disabling glibc's FMA/AVX dispatch removes all 5 CI findings of `f_GEOTHERM` (incl. ITG 687 → 688); gcc 14.3 vs 16.2 changes nothing |
 | R7 | The activity call is not idempotent (lnGmo, F0 smoothing via FitVar[3]); any change of call count changes results | certain / high | Stage A never changes the number or order of activity calls; B4 verifies bit-identity on the Optima path first |
 | R8 | The Optima fork's feature macros (`OPTIMA_LU_PARTIAL_PIVOT`, `…SNAP_LEAVING`, `…STALL_ESCAPE`, `…REJECT_WORSE`) silently do nothing against upstream Optima | medium / medium | print the macros in EFF (A13); `gems3k_build_features()` (A1) |
 | R9 | `NativeOptimaFinish/Rescue` reset the iteration budget to −1 instead of restoring it; nesting a cap around them would lose the outer budget | low today / medium after refactor | A6b keeps the behaviour and adds a test; B1 restores the previous value |
@@ -32,7 +33,7 @@ machine first**.
 
 | # | Question | Assumed default |
 |---|---|---|
-| Q1 | Can the planning/implementation sessions get read access to gems-benchmark (freeze tools, corpus, CTest)? | No access now; the owner runs A0 and every freeze; plan files describe the expected commands. |
+| Q1 | Can the planning/implementation sessions get read access to gems-benchmark (freeze tools, corpus, CTest)? | Granted during this session (03 §7). The freeze still needs Q21. |
 | Q2 | May the plan files be pushed to a branch `refactor-plan` in GEMS3K? | Not pushed. They are in the untracked folder `refactor-plan/` and in the zip. |
 | Q3 | Single declaration of `BASE_PARAM`: X-macro (`.def` file) or a generator script (Python → header)? | X-macro (no build-time tool; works with qmake and MSVC). |
 | Q4 | Keep the qmake files (`gems3k.pri`, `node-gem.pro`, `gemcalc.pro`) and the MinGW Makefiles? | Keep in Stage A, generated from the CMake lists by a script; drop in 5.0 if nobody uses them. |
@@ -52,3 +53,6 @@ machine first**.
 | Q18 | Is the dn/db feature (`optima_want_sensitivity`) used by any consumer today? | Not found in xgems or GEMSGUI; treat as internal until a getter is published (07 §3). |
 | Q19 | Two environment variables change results (`GEMS3K_OPTIMA_NET_RESUME`, `GEMS3K_FILLOUT_BUDGET`). Move them into `BASE_PARAM`? | Keep the env names; read once into RunConfig and print in EFF (A8); adding `pa_` fields is a later owner decision (BASE_PARAM contract). |
 | Q20 | Established terms: the plan keeps "GEMS3K IPM solver", "warm start", "cold start". New terms introduced: RunContext, WarmState, PhaseModel, DiagnosticsSink, SolverWorkspace. OK? | Yes; no established term was changed. |
+| Q21 | Publish `mode_compare` (the freeze driver, now only in the owner's local `GEMS3K/debug-optima-vs-reaktoro/`) and the standard freeze, and make the gems-benchmark tool paths configurable? | Yes, as a gems-benchmark PR before A1; until then every freeze runs on the owner's machine. |
+| Q22 | Which CTest failures are known? Brief: "44 tests, 4 known failures (2026-10-17)". Here: 96 tests, failing `optima_regression.aop.restart`, `proposed.aop`, `dimreduce.gate` (+ `ci.baseline`, invalid with Optima). | Assume these three are the known Optima-side failures; the owner confirms on the A0 machine. |
+| Q23 | Freeze environment: which CPU, glibc, ThermoFun and compiler recorded the CI baseline and the standard freeze? 18 of 132 CI rows differ here for environment reasons. | Record them in every freeze header from A0 on; one environment for all Stage A freezes. |

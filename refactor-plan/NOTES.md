@@ -1325,3 +1325,17 @@ CASHNK1_HOP 135.5M: models 26.7, log 15.2, GX+TPA 10.7, conc+gamma 10.1, ipmQR 7
   with gcc 14.3 (conda-forge 14.3.0) on the same head started (build-ci-gcc14).
 - Each configure of GEMS3K rewrote the tracked GEMS3K/gems3k_version.h (restored with git checkout every time;
   the stop hook flagged it as an uncommitted change) -> confirms A1 item.
+- Discriminating runs of tools/ci.sh (stock GEMS3K, no Optima, -DBUILD_SOLMOD_PYTHON=OFF):
+  * head 54b5f81, gcc 16.2: 28 findings (26 ANSWER, 2 COST) on 9 projects: f_CASHNK, f_GEOTHERM, f_Kaolinite pHtitr,
+    f_Solvus series1, f_Solvus Test1, f_TestSUP98, o_Solvus series2, T12 (+ both modes).
+  * head, gcc 14.3 (conda-forge 14.3.0, build-ci-gcc14): the SAME 28 findings, identical to the last digit.
+  * GEMS3K 56368bf (last commit before the record time 14:24:17Z): does NOT build without Optima (node.cpp l.306
+    EqControlCondition / GetControlConditions only under USE_OPTIMA_SOLVER).
+  * GEMS3K cc60bb7 (14:26:03Z, "Build without Optima again" = the tree the baseline was recorded from): the SAME
+    28 findings -> the 26 GEMS3K commits since did not change any of the 132 CI rows on this machine.
+  * head, gcc 16.2, GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX2,-FMA,-AVX512F,-AVX512VL,-AVX512BW,-AVX512DQ: 23 findings;
+    all 5 of f_GEOTHERM (Vs, Barite x2 modes, ITG 687->688) disappear -> libm CPU dispatch moves answers/iterations.
+  * Machine: Intel Xeon @ 2.80 GHz (fma, avx2, avx512f), Ubuntu glibc 2.39, conda thermofun 0.7.3 (CMake reports
+    v0.7.2), chemicalfun 0.1.13, eigen 3.4.0. Owner's environment for the baseline unknown (08 Q23).
+- recheck.py: hard-coded G=/home/dmiron/git/hub/GEMS3K, B=/home/dmiron/git/hub/gems-benchmark, STD freeze in
+  .claude/docs/freeze/2026-10-22-STANDARD-0238683.txt (git-ignored) -> fast tier 2/51 here = missing data.

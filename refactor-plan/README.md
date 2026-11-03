@@ -63,8 +63,9 @@ file. Activity models move behind a `PhaseModel` interface. The diagnostics stay
 
 ## Five biggest risks (08)
 
-1. **No access to gems-benchmark.** Freezes, corpus and CTest were not available here. The owner must run the
-   baseline (A0) before Stage A starts.
+1. **The freeze runs only on the owner's machine.** gems-benchmark became accessible: CTest passes 92 of 96, and
+   the CI check reproduces 114 of 132 recorded rows (the rest differ because of the machine, not the code). But
+   the freeze driver is in no repository, so the owner must run the baseline (A0) or publish the driver.
 2. **Moving hot code can change the floating-point results** through inlining. Each step checks the freeze and
    the instruction counts.
 3. **A hidden flag may be read on an unexpected path** while the thread-locals are replaced. This is handled by
@@ -74,4 +75,4 @@ file. Activity models move behind a `PhaseModel` interface. The diagnostics stay
 5. **The activity call is not repeatable** (it keeps a history), and freezes differ between CPU types. So Stage A
    never changes the number of calls, and all freezes use one machine class.
 
-Open questions with assumed defaults: 08 §3 (20 items).
+Open questions with assumed defaults: 08 §3 (23 items).

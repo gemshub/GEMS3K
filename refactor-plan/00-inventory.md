@@ -14,7 +14,7 @@ GEMS3K commit: 54b5f819ba83589daa9cd9aa0a9ff699adb28b1d (branch develop_optima, 
 | orchestra_cpp | main / f88bb1b | design study (07) | read |
 | reaktoro | main | design study | layout + activity model API read |
 | solvers/{cea, MAGEMin, phreeqc3, thermochimica, Equilipy, qpax} | default | design study | layout read |
-| **gemshub/gems-benchmark** | — | freeze tools, corpus, CTest, recheck.py | **NOT ACCESSIBLE** (private; `add_repo` refused, anonymous clone asks for credentials). See 08 Q1. |
+| gemshub/gems-benchmark | develop / dc220de (main 5651c52 has no freeze tools) | freeze tools, corpus, CTest, recheck.py | not accessible during the planning; granted later in the session. CTest and the CI check ran (03 §7); the freeze cannot run here (08 §1, Q21) |
 
 ## 2. GEMS3K library sources (`GEMS3K/GEMS3K/`, 77 files, 74 035 lines)
 

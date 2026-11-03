@@ -52,7 +52,15 @@ Expected length: 25–35 pull requests. Steps A6a–e, A10a–d and A12 are the 
 - **Risk:** a non-reproducible baseline (machine class, CPU FMA dispatch of libm, 03 §4). Mitigation: one machine
   class for all Stage A freezes.
 - **Verification:** freeze matches the record row for row; if not, stop and find why before A1.
-- **Size:** none. **Depends on:** —. **Other repos:** gems-benchmark (run only).
+- **Status from this session (2026-11-03, 03 §7):** trace self-check OK; CTest 92/96; `ci.sh` reproduces 114
+  of 132 recorded native rows exactly, and the other 18 rows differ for environment reasons (same result with
+  gcc 14.3 and 16.2, at the baseline's code and at head; glibc FMA dispatch alone moves one project). The freeze
+  could not run (driver `mode_compare` not published). **Before A1:** publish `mode_compare` (and the recorded
+  standard freeze) in gems-benchmark, make `freeze.sh`, `build-gems3k.sh` and `recheck.py` take their paths from
+  the environment instead of `/home/dmiron/...`, and record in each freeze header the CPU flags, glibc,
+  compiler and conda package versions (08 Q21).
+- **Size:** none in GEMS3K (S in gems-benchmark). **Depends on:** —. **Other repos:** gems-benchmark (tool
+  paths, `mode_compare`, the `<unistd.h>` include of `include/difftest/optima_regression.h`).
 
 ### A1 — Build system: explicit targets, no hidden paths
 - **Moves:** `GEMS3K/CMakeLists.txt` from `file(GLOB)` to explicit lists grouped by the future modules (04 §2),
@@ -61,7 +69,8 @@ Expected length: 25–35 pull requests. Steps A6a–e, A10a–d and A12 are the 
   `include_directories("/usr/local/include/eigen3")` (root l.101–102, l.167) in favour of `find_package` targets;
   write `gems3k_version.h` into the build tree (stop rewriting the tracked file, root l.149–151); add
   `gems3k_build_features()` (01/02 §1: USE_OPTIMA_SOLVER, NO_NODEARRAYLEVEL) checked by `GEM_init`; drop the
-  dangling `BUILD_GEM2MT` subdirectory; add `tools/check_flags.py` (A-rule 2); add `.gitattributes` that pins
+  dangling `BUILD_GEM2MT` subdirectory; make `BUILD_SOLMOD_PYTHON` follow `BUILD_SOLMOD` (today a default
+  configure fails without pybind11 even with `BUILD_SOLMOD=OFF`, 03 §7); add `tools/check_flags.py` (A-rule 2); add `.gitattributes` that pins
   `ipm_chemical.cpp` and `s_kinmet.cpp` to CRLF and the rest to LF (trap 9; no content change).
 - **Why:** reproducible builds, module boundaries visible, tracked file no longer dirty after configure; the
   hard-coded paths broke the tsolmod4rkt build in this session.

@@ -4,13 +4,13 @@ GEMS3K commit: 54b5f819ba83589daa9cd9aa0a9ff699adb28b1d (branch develop_optima, 
 
 ## 0. Limits of this profile (read first)
 
-- **Not the owner's corpus.** gems-benchmark is private and was not accessible (00 §1, 08 Q1), so the freeze
-  corpus, `freeze.sh`, CTest and `recheck.py` were not available. The profile uses a substitute corpus of
+- **Not the owner's corpus.** gems-benchmark was not accessible when this profile was made (it was granted later
+  in the session; the checks then run are in §7). The freeze itself still cannot run here (§7). The profile uses a substitute corpus of
   **21 projects** found in the public repositories (GEMS3K `node-gem-build`, `tools-build`, `tools`,
   `tsolmod4rkt-build`; xgems `demos/resources`, `tests/gems3k`). Larger systems from the owner's corpus may move
   the balance.
-- **The committed freeze was not reproduced** (no freeze tools, no recorded freeze). Every number below is a
-  measurement of this build on this machine, not a comparison with the owner's records.
+- **The committed freeze was not reproduced** (the freeze driver and the recorded freezes are on the owner's
+  machine only, §7). Every number in §1–§3 is a measurement of this build on this machine.
 - Machine: 4 cores, 15 GB, Linux 6.18 container. No `perf`. Deterministic instruction counts from
   `valgrind --tool=callgrind`; wall time from `std::chrono::steady_clock` and from the existing
   `GEMS3K_TIMING_FILE` per-part timer (`gems3k_timing.h`).
@@ -172,3 +172,28 @@ Commands: `GEMS3K_TIMING_FILE=<out>.timing prof_driver <lst> <MODE> 5` per proje
 `valgrind --tool=callgrind --toggle-collect='TNode::GEM_run(bool)' prof_driver <lst> <MODE> 5`;
 `callgrind_annotate --auto=no --threshold=100 <file>`. Note: `Get_GibbsEnergy()` mutates X/XF/XFA (09); the
 driver calls it after the timed region only.
+
+## 7. gems-benchmark checks (run after access was granted, 2026-11-03)
+
+gems-benchmark `develop` dc220de (the default branch `main` 5651c52 has no freeze tools). Built against the same
+GEMS3K install as §0 (Optima on, ThermoFun on). Results:
+
+| Check | Result here | Notes |
+|---|---|---|
+| `tools/trace_selfcheck.sh` | **OK** — RUN, BULK, SET, EFF, KEY, DECIDE all emitted | the install writes every record the freeze reads |
+| CTest, 96 registered tests (GUIDE says 42; feature-watch cases added) | **92 pass, 4 fail** in 91 s | `optima_regression.aop.restart` (1 check: `earlynet_f_CalcDolo`, armed = unarmed = 18 it), `proposed.aop` (ratchets `hoknob_T2b` penalty 1.0× < 20×, `crossing_T11`), `dimreduce.gate` (AUTO on the wrong side of the gate for T8_aq101/T8_aq201), `ci.baseline` (not valid with an Optima build) — 08 Q22 |
+| `tools/ci.sh` (stock GEMS3K without Optima, 132 recorded native rows) at head 54b5f81 | **28 findings** (26 answer, 2 cost) on 9 projects; 114 rows reproduce exactly | baseline recorded 2026-10-20 with gcc 14.3 |
+| same, built with gcc 14.3 instead of 16.2 | **the same 28 findings, identical to the last digit** | the compiler version does not move answers here |
+| same, at GEMS3K cc60bb7 (the code the baseline was recorded from, 2 min later) | **the same 28 findings** | the 26 commits since did not change any CI row here |
+| same, with glibc's FMA/AVX dispatch disabled (`GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX2,-FMA,…`) | **23 findings**: all 5 of `f_GEOTHERM` (incl. ITG 687 → 688) disappear | libm CPU dispatch alone changes answers and iteration counts (R6) |
+| `tools/freeze.sh` | **cannot run here** | needs `mode_compare` from the owner's local `GEMS3K/debug-optima-vs-reaktoro/` (in no repository); hard-coded `/home/dmiron/...` paths (freeze.sh l.59–62, build-gems3k.sh, recheck.py l.22–28) |
+| `tools/recheck.py --tier fast` | 2 of 51 claims hold — **not meaningful here** | reads the standard freeze from `.claude/docs/freeze/` (git-ignored, owner's machine only) |
+
+Build problems found on the way (A1 and a gems-benchmark fix): a default GEMS3K configure needs pybind11 even with
+`BUILD_SOLMOD=OFF` (`BUILD_SOLMOD_PYTHON` defaults ON); every configure rewrites the tracked `gems3k_version.h`;
+gems-benchmark `include/difftest/optima_regression.h` l.608/l.643 call `::getpid()` without `<unistd.h>` (fails with
+gcc 16.2; worked around here with `-include unistd.h`, no source change).
+
+Consequence for the plan: the remaining 23 findings are environment-dependent (most likely the ThermoFun or glibc
+version; 6 of the 9 projects are ThermoFun `f_` projects). Freeze pairs for Stage A must come from **one fixed
+environment** (machine class, glibc, conda package versions), recorded in the freeze header (05 A0, 08 R6).

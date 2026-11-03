@@ -12,7 +12,7 @@ A change needs a migration (§6) with a compatibility layer and a removal date.
 |---|---|---|---|---|
 | xgems | develop_optima / c1ea07f | C++20 + pybind11; CI ubuntu, windows, macos | installed GEMS3K, `#include <GEMS3K/node.h>` | TNode API, DATACH/DATABR fields, status codes, `gems3k_update_loggers` |
 | GEMSGUI | develop_gems3kv5 / 1fa83316 | C++20, Qt6; CI linux, macos (2), windows | `GEMS3K::GEMS3K(-static)` | subclasses `TMultiBase`, `TNode`, `TNodeArray`; defines `BASE_PARAM::read/write`; binds BASE_PARAM fields by pointer |
-| gems-benchmark (private, not read) | — | — | — | per brief: freeze tools read the `RUN/SET/EFF/KEY/CERT/DECIDE` trace and `# dec` lines; CTest 44 tests |
+| gems-benchmark | develop / dc220de | C++/CMake + bash/Python tools | installed GEMS3K (`-I<prefix>/include`) | freeze tools read the `RUN/BULK/SET/EFF/KEY/CERT/DECIDE` trace (`tools/trace_selfcheck.sh` checks them) and `# dec` lines; CTest 96 tests registered; `ci_baseline` (132 native rows) |
 | node-gem, gemcalc, tools (in repo) | — | C++ (qmake and CMake) | source tree | TNode API |
 | tsolmod4rkt (in repo) + Python module | — | C++ | source tree | `TSolMod`, `SolutionData`, `datach_api`, `io_*`, `jsonconfig`, `num_methods`, `v_service`, `verror` |
 
