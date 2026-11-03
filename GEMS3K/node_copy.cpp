@@ -27,6 +27,7 @@
 
 #include  <sstream>
 #include "node.h"
+#include "thermofun_settings.h"
 #include "num_methods.h"
 #include "gdatastream.h"
 //#include "io_keyvalue.h"
@@ -604,6 +605,7 @@ bool TNode::load_ThermoEngine(const std::string &thermo_file_or_string)
 
 #ifndef NO_THERMOFUN
     thermo_engine.reset(new ThermoFun::ThermoEngine(thermo_file_or_string));
+    thermofun_settings::useStandardStateOfGases(*thermo_engine);
     node_logger->debug("ThermoEngine substances: {}", thermo_engine->database().numberOfSubstances());
     node_logger->debug("Read ThermoEngine: {}", thermo_file_or_string);
     return true;

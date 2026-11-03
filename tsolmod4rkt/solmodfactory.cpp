@@ -25,6 +25,7 @@
 
 #include <fstream>
 #include "solmodfactory.h"
+#include "thermofun_settings.h"
 #include "jsonconfig.h"
 #include "datach_api.h"
 #include "num_methods.h"
@@ -505,6 +506,7 @@ bool SolModFactory::load_ThermoEngine(const std::string &thermo_file_or_string)
 
 #ifndef NO_THERMOFUN
     thermo_engine.reset(new ThermoFun::ThermoEngine(thermo_file_or_string));
+    thermofun_settings::useStandardStateOfGases(*thermo_engine);
     TSolMod::solmod_logger->trace("Read ThermoEngine: {}", thermo_file_or_string);
     return true;
 #else
