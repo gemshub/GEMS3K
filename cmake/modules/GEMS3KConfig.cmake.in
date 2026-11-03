@@ -9,5 +9,12 @@ if(NOT TARGET GEMS3K::GEMS3K)
     include("@PACKAGE_GEMS3K_INSTALL_CONFIGDIR@/GEMS3KTargets.cmake")
 endif()
 
+# Optima::Optima is a public dependency of the exported targets when built with it.
+# After the include above: Optima's own dependencies reset PACKAGE_PREFIX_DIR.
+if(@USE_OPTIMA_SOLVER@)
+    include(CMakeFindDependencyMacro)
+    find_dependency(Optima)
+endif()
+
 # Recommended check at the end of a cmake config file.
 check_required_components(GEMS3K)

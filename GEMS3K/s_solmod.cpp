@@ -78,6 +78,7 @@ TSolMod::TSolMod( SolutionData *sd ):
     DC_Codes = sd->DC_Codes;
     x = sd->arWx;
     phVOL = sd->aphVOL;
+    phXF = sd->aphXF;
     aVol = sd->arVol;
     lnGamma = sd->arlnGam;
     lnGamConf = sd->arlnCnft;  // new double[NComp];
@@ -124,6 +125,7 @@ TSolMod::TSolMod( long int NSpecies, char Mod_Code,  double T_k, double P_bar ):
     DC_Codes = 0;
     x = 0;
     phVOL = 0;
+    phXF = 0;
     aVol = 0;
     lnGamma = 0;
     lnGamConf = 0;
@@ -238,7 +240,7 @@ long int TSolMod::init_multisite()
             else {  // comparing with mns for previous end member
                 if( fabs( mns[s] - mnsj ) > 1e-6 )  // bugfix 06.06.2011 DK
                 { // error - inconsistent multiplicity number in different end members
-                    solmod_logger->warn("{} error - inconsistent multiplicity number in different end members: j = {} s= {}  mns[s]= {} mnsj={}",
+                    solmod_logger->warn("Phase {}: end member {} has a different site multiplicity for sublattice {} ({} vs {}). Try: check the end-member site-fraction definitions of this phase.",
                                         PhaseName, j, s, mns[s], mnsj);
                     //return j; // returns the end member index
                 }

@@ -10,6 +10,7 @@
 #include "v_service.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
+#include "lazy_file_sink.h"
 
 // Get home directory in Linux, C++
 std::string  home_dir()
@@ -17,7 +18,7 @@ std::string  home_dir()
 #ifdef _WIN32
     char homedir[1000];
     snprintf(homedir, 1000, "%s%s", getenv("HOMEDRIVE"), getenv("HOMEPATH"));
-    gems_logger->info("HOMEDRIVE: {}", homedir);
+    gems_logger->debug("HOMEDRIVE: {}", homedir);
     return  std::string(homedir);
 #else
     const char *homeDir;
@@ -28,7 +29,7 @@ std::string  home_dir()
             homeDir = pwd->pw_dir;
     }
     ErrorIf( !homeDir, "filesystem", "HOME environment variable not set.");
-    gems_logger->info("Home directory is {}", homeDir);
+    gems_logger->debug("Home directory is {}", homeDir);
     return std::string(homeDir);
 #endif
 }
@@ -62,7 +63,7 @@ JsonConfigSection::JsonConfigSection(const std::string &filename)
     std::stringstream buffer;
     buffer << f_json.rdbuf();
     input_str = buffer.str();
-    gems_logger->info( "The configuration file {} has been read.", filename);
+    gems_logger->debug( "The configuration file {} has been read.", filename);
     }
     else {
        input_str = "{}";
@@ -156,7 +157,7 @@ JsonConfigSection::JsonConfigSection(const std::string &filename)
     std::stringstream buffer;
     buffer << f_json.rdbuf();
     input_str = buffer.str();
-    gems_logger->info( "The configuration file {} has been read.", filename);
+    gems_logger->debug( "The configuration file {} has been read.", filename);
     }
     else {
        input_str = "{}";
@@ -319,7 +320,7 @@ GemsSettings::~GemsSettings()
 spdlog::level::level_enum GemsSettings::get_level(const std::string &module_name)
 {
     if (!log_section) {
-        return spdlog::level::info;
+        return spdlog::level::warn;
     }
     auto level_name = log_section->value_or_default<std::string>("module_level."+module_name, gems3k_logger_level);
     return spdlog::level::from_str(level_name);
@@ -339,7 +340,7 @@ bool GemsSettings::update_logger()
     }
     gems3k_loggers = log_section->value_or_default<std::set<std::string>>("modules", {});
     gems3k_loggers.insert(default_gems3k_loggers.begin(), default_gems3k_loggers.end());
-    gems3k_logger_level = log_section->value_or_default<std::string>("level", "info");
+    gems3k_logger_level = log_section->value_or_default<std::string>("level", "warn");
 
     std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> stdout_sink;
     std::set<std::string> stdout_module_names;
@@ -357,7 +358,7 @@ bool GemsSettings::update_logger()
         stdout_sink->set_pattern(gems3k_logger_pattern);
     }
 
-    std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
+    std::shared_ptr<spdlog::sinks::sink> file_sink;
     std::set<std::string> file_module_names;
     auto file_section = log_section->section("file");
     if(file_section)
@@ -366,7 +367,7 @@ bool GemsSettings::update_logger()
         auto logfile_path = file_section->value_or_default<std::string>("path", "gems_log.txt");
         auto logfile_size =file_section->value_or_default<size_t>("size", GemsSettings::log_file_size);
         auto logfile_count = file_section->value_or_default<size_t>("count", GemsSettings::log_file_count);
-        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+        file_sink = gems3k_detail::make_lazy_file_sink(
                     with_directory(logfile_path), logfile_size, logfile_count);
         auto logfile_pattern = file_section->value_or_default<std::string>("pattern", gems3k_logger_pattern);
         file_sink->set_pattern(logfile_pattern);
@@ -391,18 +392,18 @@ bool GemsSettings::update_logger()
 
 void GemsSettings::gems3k_update_loggers(bool use_stdout, const std::string& logfile_name, size_t log_level)
 {
-    spdlog::level::level_enum log_lev = spdlog::level::info;
+    spdlog::level::level_enum log_lev = spdlog::level::warn;
     if( log_level<7 ) {
         log_lev = static_cast<spdlog::level::level_enum>(log_level);
     }
 
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     stdout_sink->set_pattern(gems3k_logger_pattern);
-    std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
+    std::shared_ptr<spdlog::sinks::sink> file_sink;
     if(!logfile_name.empty()) {
-        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(with_directory(logfile_name),
-                                                                           GemsSettings::log_file_size,
-                                                                           GemsSettings::log_file_count);
+        file_sink = gems3k_detail::make_lazy_file_sink(with_directory(logfile_name),
+                                                       GemsSettings::log_file_size,
+                                                       GemsSettings::log_file_count);
         file_sink->set_pattern(gems3k_logger_pattern);
     }
 
@@ -429,7 +430,7 @@ void GemsSettings::gems3k_update_loggers(bool use_stdout, const std::string& log
 
 void GemsSettings::gems3k_update_log_level(size_t log_level)
 {
-    spdlog::level::level_enum log_lev = spdlog::level::info;
+    spdlog::level::level_enum log_lev = spdlog::level::warn;
     if( log_level<7 ) {
         log_lev = static_cast<spdlog::level::level_enum>(log_level);
     }
@@ -451,11 +452,11 @@ void GemsSettings::gems3k_update_log_level(size_t log_level)
 
 void GemsSettings::gems3k_clear_loggers(const std::string& logfile_name)
 {
-    std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
+    std::shared_ptr<spdlog::sinks::sink> file_sink;
     if(!logfile_name.empty()) {
-        file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(with_directory(logfile_name),
-                                                                           GemsSettings::log_file_size,
-                                                                           GemsSettings::log_file_count);
+        file_sink = gems3k_detail::make_lazy_file_sink(with_directory(logfile_name),
+                                                       GemsSettings::log_file_size,
+                                                       GemsSettings::log_file_count);
     }
     for(const auto& lname: gems3k_loggers) {
         auto logger = spdlog::get(lname);

@@ -10,6 +10,10 @@ set(Tools
        thread_test
        thermofun_test)
 
+if(USE_OPTIMA_SOLVER)
+    list(APPEND Tools optima_test)
+endif()
+
 foreach (toolName ${Tools})
 
     add_executable(${toolName} ${toolName}.cpp)

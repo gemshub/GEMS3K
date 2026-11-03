@@ -72,7 +72,16 @@ struct TFatalError:
 
 
 [[ noreturn ]]  void Error ( const std::string& title, const std::string& message );
+/// Writes an error text to the log at error level, as Error() does, without throwing.
+void LogError ( const std::string& title, const std::string& message );
 void ErrorIf ( bool error, const std::string& title, const std::string& message );
+/// Above 0 while the caller handles the error itself: Error() then logs at debug instead of error.
+extern thread_local int g_errorsHandledByCaller;
+/// Set from another thread (a GUI Cancel button) to stop a running calculation at its next check.
+/// The retry loop starts no new attempt and the Optima solver ends its run; the call then ends as a failure.
+/// The caller sets it back to false before the next calculation.
+void SetCalculationCancel( bool on );
+bool CalculationCancelled();
 
 
 #endif  // VERROR_H

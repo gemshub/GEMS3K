@@ -35,6 +35,9 @@ void strip(std::string& str);
 void replace(std::string& str, const char* old_part, const char* new_part);
 void replaceall(std::string& str, const std::string& old_part, const std::string& new_part);
 void replaceall(std::string& str, char ch1, char ch2);
+/// Replaces the bare JSON tokens inf and nan (also after a minus sign) by number text.
+/// Text inside strings and parts of longer words are not changed.
+void replace_json_inf_nan(std::string& str, const std::string& inf_text, const std::string& nan_text);
 std::vector<std::string> split(const std::string& str, const std::string& delimiters);
 
 //// Extract the string value from data.
@@ -150,6 +153,19 @@ inline void trim(std::string &s )
 {
     ltrim(s);
     rtrim(s);
+}
+
+/// Fixed-width record name (space padded, e.g. "a   aq") as readable text for messages:
+/// trailing padding removed and runs of spaces collapsed to one.
+inline std::string name_for_message(const char* data_ptr, size_t max_size)
+{
+    std::string in = char_array_to_string(data_ptr, max_size), out;
+    for( char c: in )
+        if( c != ' ' || (!out.empty() && out.back() != ' ') )
+            out += c;
+    while( !out.empty() && out.back() == ' ' )
+        out.pop_back();
+    return out;
 }
 
 /// Trim characters from start (in place).

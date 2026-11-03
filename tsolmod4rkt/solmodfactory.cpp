@@ -527,6 +527,8 @@ bool SolModFactory::load_all_thermodynamic_from_thermo(double TK, double PPa)
         pmp->TC = pmp->TCc = TK-C_to_K;
         // new API
         double funT = TK, funP=P*bar_to_Pa;   // T in K, P in Pa
+        // the steam calls get the input P (0 = saturation): the liquid calls write Psat into funP
+        double funPg = funP, funPge = funP;
 
         DATACH  *dCH = CSD;
 
@@ -554,15 +556,9 @@ bool SolModFactory::load_all_thermodynamic_from_thermo(double TK, double PPa)
             auto water_props = thermo_engine->propertiesSolvent(funT, funP, h2o_key);
             auto water_electro = thermo_engine->electroPropertiesSolvent(funT, funP, h2o_key);
 
-            auto water_vapor = thermo_engine->database().getSubstance(h2o_key);
-            water_vapor.setMethod_P( ThermoFun::MethodCorrP_Thrift::type::CPM_GAS);
-
-            ThermoFun::Database db2;
-            db2.addSubstance(water_vapor);
-
-            ThermoFun::ThermoEngine te2(db2);
-            auto water_gas_props = te2.propertiesSolvent(funT, funP, h2o_key);
-            auto water_gas_electro = te2.electroPropertiesSolvent(funT, funP, h2o_key);
+            // Steam: the water record in the vapour state
+            auto water_gas_props = thermo_engine->propertiesSolvent(funT, funPg, h2o_key, 1);
+            auto water_gas_electro = thermo_engine->electroPropertiesSolvent(funT, funPge, h2o_key, 1);
             pmp->denW[0] = water_props.density.val/1e3;
             pmp->epsW[0] = water_electro.epsilon.val;
             pmp->denW[1] = water_props.densityT.val/1e3;

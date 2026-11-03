@@ -124,6 +124,10 @@ protected:
     NumIterFIA,   ///< \protected Total Number of performed FIA entry iterations
     NumIterIPM;   ///< \protected Total Number of performed IPM main iterations
 
+    /// Per DBR phase: the amount the last packDataBr() wrote for a phase the Optima solver
+    /// marked as absent at its floor, or -1. Read by Ph_Present().
+    std::vector<double> floorParkedAmount;
+
     TMultiBase* multi_ptr() const
     {
         return multi_base;
@@ -250,6 +254,55 @@ public:
     {
         return char_array_to_string(pmm->errorBuf, 1024);
     }
+
+#ifdef USE_OPTIMA_SOLVER
+    /// Registers (or replaces) a pH control condition for the next GEM_run() call in
+    /// NEED_GEM_AOP/SOP/HOP/SHP mode. Persists until Clear_ControlConditions(). `tolerance < 0` (the
+    /// default) derives the tolerance from pa_p->GAS.
+    /// In plain words: asks the Optima solver to reach a given pH.
+    void Set_pH_target( double pH_target, double tolerance = -1. )
+    {
+        multi_ptr()->SetControlCondition_pH( pH_target, tolerance );
+        if( dbrTarget_pH )   // a DBR target is active: this one comes back when the DBR target goes
+            keepApiTarget( "pH", apiTarget_pH );
+    }
+    /// Registers (or replaces) an Eh (V) equilibrium control condition.
+    /// `tolerance < 0` (the default) derives it from pa_p->GAS, same as
+    /// Set_pH_target().
+    void Set_Eh_target( double Eh_target, double tolerance = -1. )
+    {
+        multi_ptr()->SetControlCondition_Eh( Eh_target, tolerance );
+        if( dbrTarget_Eh )
+            keepApiTarget( "Eh", apiTarget_Eh );
+    }
+    /// Removes every registered control condition, and the pH and Eh targets of the DBR.
+    void Clear_ControlConditions()
+    {
+        multi_ptr()->ClearControlConditions();
+        CNode->pHtarget = DOUBLE_EMPTY;
+        CNode->Ehtarget = DOUBLE_EMPTY;
+        dbrTarget_pH = dbrTarget_Eh = false;
+        apiTarget_pH.clear();
+        apiTarget_Eh.clear();
+    }
+    /// Copies the registered condition of this name into `saved`
+    void keepApiTarget( const char* name, std::vector<EqControlCondition>& saved )
+    {
+        saved.clear();
+        for( const auto& c : multi_ptr()->GetControlConditions() )
+            if( c.name == name ) saved.push_back( c );
+    }
+    /// Titrant amount solved for the given condition ("pH"/"Eh") in the last Optima-mode GEM_run()
+    /// call, or 0 if that condition was not active. Real moles; the input bulk composition
+    /// gained -stoich*xi (pH: -xi mol H+; Eh: xi mol of electrons removed), and the returned
+    /// bIC already includes it. See EqControlCondition (ipm_optima.h) for the full result.
+    double Get_ControlCondition_titrant( const std::string& name ) const
+    {
+        for( const auto& c : multi_ptr()->GetControlConditions() )
+            if( c.name == name ) return c.titrantAmount;
+        return 0.;
+    }
+#endif
 
     //  Calls for direct coupling of a FMT code with GEMS3K
 
@@ -463,6 +516,77 @@ public:
     ///                     true  (1)  -  use speciation provided in the DATABR memory structure (e.g. after reading the DBR file)
     ///  \return NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
     long int  GEM_run( bool uPrimalSol );   // calls GEM for a work node
+    /// Which pa_FailRescue step produced the last GEM_run() result: 0 = none (the call itself), 1 = warm from the
+    /// previous answer, 2 = a nudged composition, 3 = the walk, 4 = looser settings, 5 = the other solver,
+    /// 6 = the best attempt (returned as bad).
+    long int GEM_rescue_step() const { return rescueStep; }
+    /// Puts the answer of the last GEM_run() into MULTI when MULTI holds another state (a retry step can
+    /// return an earlier attempt, kept only in DATABR). For callers that read MULTI, such as GEMSGUI.
+    /// \return true if MULTI was changed.
+    bool SyncMultiWithDataBr();
+
+    /// One trace element's verdict from GEM_trace_regimes().
+    struct TraceRegime
+    {
+        long int xIC = -1;           ///< DBR index of the independent component
+        std::string name;            ///< IC name
+        double amount = 0.;          ///< bulk amount as given, mol
+        /// LINEAR    - phase fractions unchanged (within tol) at every factor: the result is valid at the given amount
+        /// SATURATED - a single-species phase carrying it is present and its dissolved amount (in multi-species
+        ///             phases) stays within 1.5x over >= 10x of total: solubility-controlled
+        /// BOUNDARY  - a single-species phase carrying it appears or disappears across the factors: the given
+        ///             amount sits at a solubility limit
+        /// NONLINEAR - anything else (site saturation, ionic-strength feedback, or a numerical floor)
+        /// STRANDED  - every carrier is in ONE multi-species phase that is <= 1e-6 of the system at the given
+        ///             amount: the element holds that phase open (may be combined, e.g. "STRANDED+NONLINEAR")
+        /// FAILED    - a re-solve did not return OK or BAD
+        std::string verdict;
+        double maxFractionChange = 0.; ///< largest |fraction in a phase - given-amount fraction| over the factors
+        std::vector<std::pair<std::string,double>> phases;  ///< partitioning at the given amount (fraction > 1e-4)
+        std::vector<std::string> boundaryPhases;            ///< phases that appear/disappear (BOUNDARY)
+    };
+    /// Dilute-regime check for trace elements. Re-solves this node (cold, NodeStatusCH = mode)
+    /// with every trace IC's bulk amount scaled by each factor (all together - they share the
+    /// solutions' activity models) and classifies each trace IC (TraceRegime::verdict). A trace
+    /// IC has bIC <= traceRel x the total non-charge bulk; ofInterest (IC names), when given,
+    /// restricts the check to those elements. The node is restored exactly afterwards (DATABR
+    /// inputs and results, and MULTI). Costs 1 + factors.size() solves.
+    /// In plain words: checks whether the result for a trace element would scale simply if its
+    /// amount were changed.
+    std::vector<TraceRegime> GEM_trace_regimes( const std::vector<double>& factors = { 0.1, 10. },
+                                               double traceRel = 1e-6, double tol = 1e-3,
+                                               long int mode = NEED_GEM_AIA,
+                                               const std::vector<std::string>& ofInterest = {} );
+
+    /// Marks the independent components whose amounts the caller needs (e.g. radionuclides at
+    /// 1e-9 mol). Once any are marked, every other trace IC is a default seed - a placeholder
+    /// amount that only keeps the element defined. Nothing in the solve reads it; it is the
+    /// default ofInterest of GEM_trace_regimes(), and the stranded-element warning tags each
+    /// element it names [of interest] or [default seed]. Names are matched after trimming;
+    /// unknown names are skipped with a warning. Returns the number matched; an empty list
+    /// clears the marking.
+    /// In plain words: tell the program which trace elements you actually care about.
+    long int GEM_set_elements_of_interest( const std::vector<std::string>& names );
+    /// The IC names currently marked of interest (see GEM_set_elements_of_interest()).
+    const std::vector<std::string>& GEM_elements_of_interest() const;
+
+#ifdef USE_OPTIMA_SOLVER
+    /// Tries NEED_GEM_ROP first and falls back to a plain NEED_GEM_AIA solve on anything but a
+    /// clean OK_GEM_ROP. A caller-side retry over two existing paths; systems ROP does not
+    /// handle pay its wasted attempt on top.
+    /// In plain words: try the quick reference Optima run, and use the original solver if it fails.
+    long int GEM_run_ROP_or_AIA( bool uPrimalSol )
+    {
+        CNode->NodeStatusCH = NEED_GEM_ROP;
+        long int status = GEM_run( uPrimalSol );
+        if( status != OK_GEM_ROP )
+        {
+            CNode->NodeStatusCH = NEED_GEM_AIA;
+            status = GEM_run( uPrimalSol );
+        }
+        return status;
+    }
+#endif
 
     /// Returns GEMIPM2 calculation time in seconds elapsed during the last call of GEM_run() - can be used for monitoring
     ///                      the performance of calculations.
@@ -477,6 +601,22 @@ public:
     /// \param NumIterFIA  Total number of performed MBR() iterations to obtain a feasible initial approximation for the IPM algorithm.
     /// \param NumIterIPM  Total number of performed IPM main descent algorithm iterations.
     long int GEM_Iterations( long int& PrecLoops, long int& NumIterFIA, long int& NumIterIPM );
+
+    /// The last GEM_run() call's cost split between its native and its Optima leg, for the
+    /// two-leg modes (NEED_GEM_HOP, NEED_GEM_SHP) only. GEM_Iterations() and GEM_CalcTime()
+    /// report the total. The Optima leg's iterations include a failed, discarded attempt.
+    /// \return false - and every output left untouched - when the last GEM_run() was not a
+    ///         two-leg mode.
+    /// \param NumIterFIANative,NumIterIPMNative  iterations in the native leg
+    /// \param NumIterFIAOptima,NumIterIPMOptima  iterations in the Optima leg
+    /// \param TimeNative,TimeOptima              seconds in each leg, same resolution as GEM_CalcTime()
+    /// \param Failed  optional: true when that call left by exception; its iteration counts are
+    ///        real, but TimeOptima is then 0 and not a measurement.
+    /// In plain words: how the work of a HOP/SHP call was split between the two solvers.
+    bool GEM_IterationsHOP( long int& NumIterFIANative, long int& NumIterIPMNative,
+                            long int& NumIterFIAOptima, long int& NumIterIPMOptima,
+                            double& TimeNative, double& TimeOptima,
+                            bool* Failed = nullptr ) const;
 
     /// (3) Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
     ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
@@ -749,6 +889,13 @@ public:
         return dbr_dch_api::check_grid_P(CSD, P);
     }
 
+    /// Maps a node pressure onto the DATACH pressure-axis coordinate: 0 on a saturated-vapour-
+    /// pressure grid, otherwise P unchanged. Apply to any P interpolated against Pval[].
+    double grid_P( double P ) const
+    {
+        return dbr_dch_api::grid_P(CSD, P);
+    }
+
     /// Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using DATACH
     /// lookup arrays. \return -1L if interpolation is needed, or 1D index of the lookup array element
     /// if TK and P fit within the respective tolerances.
@@ -796,6 +943,37 @@ public:
     /// \param norm defines in wnich units the value is returned: false - in J/mol; true (default) - in mol/mol
     /// \return G0(P,TK) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
     double DC_G0(const long int xCH, const double P, const double TK,  bool norm=true) const;
+
+    /// The standard molar Gibbs energies the solver actually minimised - pm.G0[], indexed over
+    /// the MULTI species list - or nullptr before any run. Not the same as DC_G0(), which reads
+    /// the exported DATACH grid (CSD->G0[]); on a ThermoFun project
+    /// load_all_thermodynamic_from_thermo() writes pm.G0[] directly and the two can differ.
+    /// Units: the internal uniform standard state (see ConvertGj_toUniformStandardState), not
+    /// J/mol; compare only with another run of the same project.
+    /// In plain words: the energies the solver really used, which may differ from the file.
+    const double* Get_solver_G0() const
+    { return multi_ptr()->GetPM()->G0; }
+
+    /// Species count of the array Get_solver_G0() returns (pm.L).
+    long int Get_solver_L() const
+    { return multi_ptr()->GetPM()->L; }
+
+    /// Geometry and conditioning of the present-species stoichiometry at the returned answer -
+    /// the TMultiBase::CertRank() report of the trace's RANK line, for callers that do not use
+    /// the trace. Report-only (writes nothing; nothing in the solver calls it). Costs
+    /// O(pres * N^2), small against a solve but not zero.
+    /// \return false when there is no state to report (no pm.X/pm.A, or pm.N <= 0); `r` is then
+    /// left at its defaults - sentinels, never zeros.
+    /// In plain words: tells how well-posed the final equations of the last solve were.
+    bool Get_CertRank( TMultiBase::CertRankReport& r ) const
+    {
+        r = TMultiBase::CertRankReport();
+        const MULTI* mp = multi_ptr() ? multi_ptr()->GetPM() : nullptr;
+        if( !mp || !mp->X || !mp->A || mp->N <= 0 )
+            return false;
+        multi_ptr()->CertRank( r );
+        return true;
+    }
 
     /// Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa)
     /// from the DATACH structure.
@@ -928,6 +1106,14 @@ public:
     double  Ph_Moles( const long int xBR ) const; // Added for consistency on Oct 1, 2020
     double  Ph_Mole( const long int xBR ) const; // obsolete, not recommended to use in new coupled codes
 
+    /// Tells whether a phase is present: its amount is above 0 and the solver did not mark it as absent.
+    /// The Optima solver marks a phase it left at its tiny floor amount by the same rule the GEMS3K IPM
+    /// solver uses to set a phase to 0. Amounts are not changed.
+    /// \param xBR is DBR phase index
+    /// \param relFloor if above 0, a phase below relFloor times the total amount of all phases also counts
+    ///        as absent (default 0, off). This test can also hide real trace phases.
+    bool    Ph_Present( const long int xBR, const double relFloor = 0. ) const;
+
     /// Retrieves the phase mass in kg.
     /// Works for multicomponent and for single-component phases.
     /// \param xph is DBR phase index
@@ -957,6 +1143,12 @@ public:
 
     /// Retrieves pH of the aqueous solution
     double Get_pH( );
+
+    /// Total Gibbs energy G(X) of the last converged state, in RT units.
+    /// The correctness criterion for comparing solver paths - see
+    /// TMultiBase::TotalGibbsEnergy() (ms_multi.h) for why the OK/FAIL status
+    /// and pm.FX are both unsuitable. Call only after a completed GEM_run().
+    double Get_GibbsEnergy() { return multi_ptr()->TotalGibbsEnergy(); }
 
     /// Retrieves pe of the aqueous solution
     double Get_pe( );
@@ -1249,6 +1441,37 @@ public:
     DATABR* databr_free(DATABR* data_BR_);
 
 protected:
+    long int rescueStep = 0;   // see GEM_rescue_step()
+    /// Registers the pH and Eh targets of the DBR (pHtarget, Ehtarget) for the next solve. A target that an
+    /// earlier DBR of this node set and this DBR does not have is removed; targets set with Set_pH_target()
+    /// or Set_Eh_target() are kept. The GEMS3K IPM modes do not use targets (one warning per node).
+    void ApplyDbrTargets( long int mode );
+    bool dbrTarget_pH = false, dbrTarget_Eh = false, dbrTargetWarned = false;
+    /// True for the modes that apply the pH and Eh targets (AOP, SOP, HOP, SHP, built with Optima)
+    static bool modeUsesTargets( long int mode );
+    /// A target solve writes the titrated bulk composition into bIC. titrEntered_ is the composition the caller
+    /// entered, titrSolved_ the one the solve wrote back. A later call in a mode that does not apply targets puts
+    /// the entered composition back, unless the caller has changed bIC since.
+    std::vector<double> titrEntered_, titrSolved_;
+    void restoreEnteredComposition( long int mode );
+    void rememberTitration( long int mode, const std::vector<double>& before );
+    /// The program's pH and Eh conditions that a DBR target replaced; they come back when the DBR target goes
+    std::vector<EqControlCondition> apiTarget_pH, apiTarget_Eh;
+    /// One GEM_run() attempt, without the cold-call recovery (GEM_run() is this plus pa_ColdRetryNudges).
+    long int GEM_run_single( bool uPrimalSol );
+    /// The layers of GEM_run(), outermost first; each calls the next.
+    void WarnIfSystemTooLarge();
+    long int GEM_run_rescue( bool uPrimalSol );     // pa_FailRescue
+    long int GEM_run_capped( bool uPrimalSol );     // pa_OptimaCallCap
+    long int GEM_run_dry_redo( bool uPrimalSol );   // pa_OptimaDryRetry
+    long int GEM_run_tries( bool uPrimalSol );      // pa_OptimaFastFirst, the solve and its retries
+    /// pa_ColdRetryNudges' recovery of a failed NEED_GEM_AIA call; see BASE_PARAM::ColdRetryNudges.
+    long int GEM_run_cold_retry( long int maxNudges );
+    /// Whether a saved answer's amounts balance the bulk b under the solve's own per-element test.
+    bool NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b, double& worstRel ) const;
+    long int GEM_run_optima_cold_retry( long int requested );   // pa_OptimaColdRetry
+    long int GEM_run_aop_cgseed( long int& itf, long int& itg, double& seconds );
+    long int GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, long int& itg, double& seconds, const char* step );   // cold AOP retry, with the column-generation seed as the second attempt
 
     void allocMemory();
     void freeMemory();
@@ -1304,6 +1527,8 @@ protected:
     /// Test to reload thermodynamic data from grid
     void CheckMtparam();
     virtual void init_into_gems3k();
+    /// Warns about single-species phases whose species is coded as a dissolved species.
+    void WarnSolidsCodedAqueous();
 
 public:
 

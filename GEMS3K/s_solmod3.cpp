@@ -2154,22 +2154,26 @@ double TBerman::dGref_dysigma( const long int j, const long int s, const long in
     long int l, m, nmem;
     double krond=0., ys, dst, dsum=0.;
     bool kron;
+    // the moieties of end member j on site s that are not in all end members (independent of l)
+    std::vector<long int> mj;
+    for( m=0; m < NMoi; m++ ) // Looking through moieties
+    {
+       nmem = em_howmany( s, m );
+       if( nmem == NComp )
+           continue;  // ignoring the moiety which is present in all end members
+       krond = KronDelta( j, s, m );
+       if( noZero( krond ) )
+           mj.push_back( m );
+    }
     for( l=0; l<NComp; l++ )
     {
        if( l == ex_j )   // this end member is marked to be skipped
            continue;
        ys = 0.; kron = false;
-       for( m=0; m < NMoi; m++ ) // Looking through moieties
+       for( long int m2 : mj )
        {
-          nmem = em_howmany( s, m );
-          if( nmem == NComp )
-              continue;  // ignoring the moiety which is present in all end members
-          krond = KronDelta( j, s, m );
-          if( noZero( krond ) )
-          {
-              ys += mn[l][s][m] * y[s][m];
-              kron = true;
-          }
+           ys += mn[l][s][m2] * y[s][m2];
+           kron = true;
        } // m
        if( kron == false )
            continue;  // no moieties belonging to l-th end member that are also
@@ -2242,22 +2246,25 @@ long int TBerman::em_which(const long int s, const long int m, const long int jb
 //
 long int TBerman::em_howmany( long int s, long int m )
 {
-    long int l, jc=0;
-    for( l=0; l<NComp; l++ )
+    // the site table does not change, so the counts are taken once
+    if( emCount.empty() )
     {
-       // if( mn[l][s][m] != 0 )
-       if( fabs(mn[l][s][m]) > 1e-14 )
-           jc++;
+        emCount.assign( (size_t)NSub * (size_t)NMoi, 0 );
+        for( long int s1=0; s1<NSub; s1++ )
+            for( long int m1=0; m1<NMoi; m1++ )
+                for( long int l=0; l<NComp; l++ )
+                    if( fabs(mn[l][s1][m1]) > 1e-14 )
+                        emCount[(size_t)(s1*NMoi+m1)]++;
     }
-    return jc;
+    return emCount[(size_t)(s*NMoi+m)];
 }
 
 // calculates ref.frame term (modified CEF, see eq 43)
 //
 double TBerman::RefFrameTerm( const long int j, const double G_ref )
 {
-    long int m, s, nmem;
-    double reftj, sum_s, sum_m, ys, ydp, dgr_dys;
+    long int s;
+    double reftj, sum_s, sum_m, dgr_dys;
 
     sum_s = 0.;
     for( s = 0; s < NSub; s++ )  // sublattices
@@ -2266,23 +2273,7 @@ double TBerman::RefFrameTerm( const long int j, const double G_ref )
             continue; // no reciprocal contribution from sublattices with one moiety
         dgr_dys = dGref_dysigma( j, s, -1L );
         sum_s += dgr_dys;
-        sum_m = 0.;
-        for( m=0; m < NMoi; m++ ) // Looking through moieties
-        {
-            nmem = em_howmany( s, m );
-            if( nmem == NComp )
-                continue;  // ignoring the moiety which is present in all end members
-//           l = which_em( s, m );
-//           if( l < 0 )  // moiety m does not exist on site s
-//               continue;
-//           if( l == j )    // not sure
-//               continue;
-//           ys = ysigma( l, s );
-           ys = y[s][m];
-           dgr_dys = dGref_dysm( s, m, -1L );
-           ydp = ys * dgr_dys;
-           sum_m += ydp;
-        } // m
+        sum_m = refSumM[(size_t)s];   // does not depend on j: computed once per call in ReciprocalPart()
         sum_s -= sum_m;
     } // s
     reftj = G_ref + sum_s;
@@ -2348,6 +2339,24 @@ long int TBerman::ReciprocalPart()
         G_ref += pyp[j] * oGf[j];
     }
     solmod_logger->trace("G_ref= {}", G_ref);
+    // Per-site moiety sums of RefFrameTerm(), the same for every end member
+    refSumM.assign( (size_t)NSub, 0. );
+    for( s = 0; s < NSub; s++ )  // sublattices
+    {
+        if( NmoS[s] < 2L )
+            continue; // no reciprocal contribution from sublattices with one moiety
+        double sum_m = 0.;
+        for( long int m=0; m < NMoi; m++ ) // Looking through moieties
+        {
+            if( em_howmany( s, m ) == NComp )
+                continue;  // ignoring the moiety which is present in all end members
+            const double ys = y[s][m];
+            const double dgr_dys = dGref_dysm( s, m, -1L );
+            const double ydp = ys * dgr_dys;
+            sum_m += ydp;
+        } // m
+        refSumM[(size_t)s] = sum_m;
+    }
     // Calculation of reciprocal activity terms (modified from CEF, Sundman & Agren, 1981)
     for( j=0; j<NComp; j++)
     {

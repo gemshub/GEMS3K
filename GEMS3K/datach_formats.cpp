@@ -51,7 +51,7 @@ namespace  dbr_dch_api {
 // the text of the comment for this data object, optionally written into the
 // text-format output DBR or DCH file.
 //
-std::vector<io_formats::outField> DataBR_fields =  {  // [f_lga+1/*60*/]
+std::vector<io_formats::outField> DataBR_fields =  {  // [f_Ehtarget+1]
   { "NodeHandle",  0, 0, 1, "# NodeHandle: Node identification handle"},
   { "NodeTypeHY",  0, 0, 1, "# NodeTypeHY:  Node type code (hydraulic), not used on TNode level; see typedef NODETYPE" },
   { "NodeTypeMT",  0, 0, 1, "# NodeTypeMT:  Node type (mass transport), not used on TNode level; see typedef NODETYPE" },
@@ -118,7 +118,10 @@ std::vector<io_formats::outField> DataBR_fields =  {  // [f_lga+1/*60*/]
     { "m_t",  0, 0, nICbi, "# m_t: Total dissolved molality of independent components, m [nICb]" },
     { "con",  0, 0, nDCbi, "# con: DC concentrations in phases (molal, mole fraction) [nDCb]" },
     { "mju",  0, 0, nDCbi, "# mju: DC chemical potentials in equilibrium, J/mol [nDCb]" },
-    { "lga",  0, 0, nDCbi, "# lga: DC activities in equilibrium, in log10 scale [nDCb]" }
+    { "lga",  0, 0, nDCbi, "# lga: DC activities in equilibrium, in log10 scale [nDCb]" },
+// optional GEM input (after the VTK fields, so that their indices do not change)
+  { "pHtarget",  0, 0, 1, "\n# pHtarget: pH the calculation must reach; only the Optima modes use it (optional GEM input)" },
+  { "Ehtarget",  0, 0, 1, "# Ehtarget: Eh (V) the calculation must reach; only the Optima modes use it (optional GEM input)" }
 };
 
 std::vector<io_formats::outField> DataCH_static_fields =  {  // [14]
@@ -180,7 +183,7 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
     bool _comment = with_comments;
 
     out_format.put_head( GEMS3KGenerator::gen_dbr_name(out_format.set_name(), 0, CNode->NodeHandle), "dbr");
-    io_formats::TPrintArrays<TIO>  prar( f_omph+1/*55*/, DataBR_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( f_Ehtarget+1/*63*/, DataBR_fields, out_format );
 
     if( _comment )
     {
@@ -290,6 +293,10 @@ void databr_to_text_file(const DATACH* CSD, const DATABR* CNode, TIO& out_format
     prar.writeArray(  f_amru,  CNode->amru, CSD->nPSb, -1L,_comment, brief_mode );
     prar.writeArray(  f_amrl,  CNode->amrl, CSD->nPSb, -1L,_comment, brief_mode );
     prar.writeArray(  f_omph,  CNode->omPH, CSD->nPHb, -1L,_comment, brief_mode );
+    if( !IsDoubleEmpty( CNode->pHtarget ) )
+        prar.writeField(f_pHtarget, CNode->pHtarget, _comment, false );
+    if( !IsDoubleEmpty( CNode->Ehtarget ) )
+        prar.writeField(f_Ehtarget, CNode->Ehtarget, _comment, false );
 
     if(!brief_mode || prar.getAlws( f_bPS ))
     {
@@ -317,7 +324,7 @@ void databr_from_text_file(const DATACH* CSD, DATABR* CNode, TIO& in_format )
     // mem_set( &CNode->Tm, 0, 19*sizeof(double));
     databr_reset(CNode, 0);
 
-    io_formats::TReadArrays<TIO>  rdar(f_omph+1/*55*/, DataBR_fields, in_format);
+    io_formats::TReadArrays<TIO>  rdar(f_Ehtarget+1/*63*/, DataBR_fields, in_format);
 
     long int nfild = rdar.findNext();
     while( nfild >=0 )
@@ -471,6 +478,10 @@ void databr_from_text_file(const DATACH* CSD, DATABR* CNode, TIO& in_format )
             break;
         case f_omph: rdar.readArray( "omPH",  CNode->omPH, CSD->nPHb );
             break;
+        case f_pHtarget: rdar.readArray( "pHtarget",  &CNode->pHtarget, 1);
+            break;
+        case f_Ehtarget: rdar.readArray( "Ehtarget",  &CNode->Ehtarget, 1);
+            break;
         }
         nfild = rdar.findNext();
     }
@@ -479,7 +490,7 @@ void databr_from_text_file(const DATACH* CSD, DATABR* CNode, TIO& in_format )
     std::string ret = rdar.testRead();
     if( !ret.empty() )
     { ret += " - fields must be read from DataBR structure";
-        Error( "Error", ret);
+        Error( "Reading project file", ret );
     }
 }
 
@@ -664,7 +675,7 @@ void datach_from_text_file(DATACH* CSD, TIO& in_format, bool use_thermofun)
     std::string ret = rdar.testRead();
     if( !ret.empty() )
     { ret += " - fields must be read from DataCH structure";
-        Error( "Error", ret);
+        Error( "Reading project file", ret );
     }
 
     datach_realloc(CSD);
@@ -752,19 +763,19 @@ void datach_from_text_file(DATACH* CSD, TIO& in_format, bool use_thermofun)
         case f_Pval: rddar.readArray( "Pval", CSD->Pval, CSD->nPp );
             break;
         case f_denW: if( !CSD->denW )
-                Error( "Error", "Array denW is not allocated in DCH!");
+                Error( "Reading DCH file", "Array denW is in the file but was not allocated: the dimension header and the field list disagree. Try: re-export the project from GEMS.");
             rddar.readArray( "denW", CSD->denW, 5*gridTP(CSD) );
             break;
         case f_denWg: if( !CSD->denWg )
-                Error( "Error", "Array denWg is not allocated in DCH!");
+                Error( "Reading DCH file", "Array denWg is in the file but was not allocated: the dimension header and the field list disagree. Try: re-export the project from GEMS.");
             rddar.readArray( "denWg", CSD->denWg, 5*gridTP(CSD) );
             break;
         case f_epsW: if( !CSD->epsW )
-                Error( "Error", "Array epsW is not allocated in DCH!");
+                Error( "Reading DCH file", "Array epsW is in the file but was not allocated: the dimension header and the field list disagree. Try: re-export the project from GEMS.");
             rddar.readArray( "epsW", CSD->epsW,  5*gridTP(CSD) );
             break;
         case f_epsWg: if( !CSD->epsWg )
-                Error( "Error", "Array epsWg is not allocated in DCH!");
+                Error( "Reading DCH file", "Array epsWg is in the file but was not allocated: the dimension header and the field list disagree. Try: re-export the project from GEMS.");
             rddar.readArray( "epsWg", CSD->epsWg,  5*gridTP(CSD) );
             break;
         case f_V0: rddar.readArray( "V0", CSD->V0,  CSD->nDC*gridTP(CSD) );
@@ -772,27 +783,27 @@ void datach_from_text_file(DATACH* CSD, TIO& in_format, bool use_thermofun)
         case f_G0: rddar.readArray( "G0", CSD->G0, CSD->nDC*gridTP(CSD) );
             break;
         case f_H0: if( !CSD->H0 )
-                Error( "Error", "Array HO is not allocated in DCH!");
+                Error( "Reading DCH file", "Array HO is in the file but was not allocated: the dimension header and the field list disagree. Try: re-export the project from GEMS.");
             rddar.readArray( "H0", CSD->H0,  CSD->nDC*gridTP(CSD));
             break;
         case f_S0: if( !CSD->S0 )
-                Error( "Error", "Array S0 is not allocated in DCH!");
+                Error( "Reading DCH file", "Array S0 is in the file but was not allocated: the dimension header and the field list disagree. Try: re-export the project from GEMS.");
             rddar.readArray( "S0", CSD->S0,CSD->nDC*gridTP(CSD));
             break;
         case f_Cp0: if( !CSD->Cp0 )
-                Error( "Error", "Array CpO is not allocated in DCH!");
+                Error( "Reading DCH file", "Array CpO is in the file but was not allocated: the dimension header and the field list disagree. Try: re-export the project from GEMS.");
             rddar.readArray( "Cp0", CSD->Cp0,CSD->nDC*gridTP(CSD) );
             break;
         case f_A0: if( !CSD->A0 )
-                Error( "Error", "Array AO is not allocated in DCH!");
+                Error( "Reading DCH file", "Array AO is in the file but was not allocated: the dimension header and the field list disagree. Try: re-export the project from GEMS.");
             rddar.readArray( "A0", CSD->A0, CSD->nDC*gridTP(CSD) );
             break;
         case f_U0: if( !CSD->U0 )
-                Error( "Error", "Array UO is not allocated in DCH!");
+                Error( "Reading DCH file", "Array UO is in the file but was not allocated: the dimension header and the field list disagree. Try: re-export the project from GEMS.");
             rddar.readArray( "U0", CSD->U0, CSD->nDC*gridTP(CSD) );
             break;
         case f_DD: if( !CSD->DD )
-                Error( "Error", "Array DD is not allocated in DCH!");
+                Error( "Reading DCH file", "Array DD is in the file but was not allocated: the dimension header and the field list disagree. Try: re-export the project from GEMS.");
             rddar.readArray( "DD", CSD->DD, CSD->nDCs*gridTP(CSD));
             break;
         case f_Psat: rddar.readArray( "Psat", CSD->Psat, CSD->nTp );
@@ -814,7 +825,7 @@ void datach_from_text_file(DATACH* CSD, TIO& in_format, bool use_thermofun)
     ret = rddar.testRead();
     if( !ret.empty() )
     { ret += " - fields must be read from DataCH structure";
-        Error( "Error", ret);
+        Error( "Reading project file", ret );
     }
 }
 
@@ -964,6 +975,8 @@ void databr_from_file(const DATACH* CSD, DATABR* CNode, GemDataStream& ff)
 {
     databr_free_internal(CNode);
     databr_realloc(CSD, CNode);
+    CNode->pHtarget = DOUBLE_EMPTY;   // a binary DBR has no targets
+    CNode->Ehtarget = DOUBLE_EMPTY;
 
     // const data
     ff.readArray( &CNode->NodeHandle, 6 );
