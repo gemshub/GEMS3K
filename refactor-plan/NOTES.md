@@ -1293,3 +1293,35 @@ CASHNK1_HOP 135.5M: models 26.7, log 15.2, GX+TPA 10.7, conc+gamma 10.1, ipmQR 7
 => glibc dispatches __ieee754_log_fma (FMA variant chosen at run time by CPU features): libm results can differ
    between CPUs with and without FMA -> freeze comparisons across machines need the same CPU class (08).
 => printf/strtod inside GEM_run: 0 %. Allocation: 0.8-5.8 % self.
+
+## gems-benchmark (access granted after the first hand-over; develop dc220de, main 5651c52)
+- Clone /home/user/gems-benchmark (shallow), develop checked out DETACHED (no local branch). Default branch `main`
+  lacks the freeze tools; `develop` has GUIDE.md, tools/ (freeze.sh, freeze_diff.py, recheck.py, ci.sh, ...),
+  tests/ (96 CTest tests registered here; GUIDE says 42), regression/, Resources/ (259 .lst; corpora gems3k 40,
+  gems3k-fail 15, gems3k-native-fail 5, gems3k-psina 28, gems3k-proposed T1-T12, gems4r-corium, solvus, under_review).
+- FREEZE NOT RUNNABLE HERE: freeze.sh l.59-62 hard-codes BM=/home/dmiron/git/hub/gems-benchmark and
+  CMP=${FREEZE_CMP:-/home/dmiron/git/hub/GEMS3K/debug-optima-vs-reaktoro/mode_compare}; `mode_compare` is not in
+  GEMS3K (code search: 0 hits) nor in gems-benchmark. GUIDE "Known limits": the freeze cannot run in CI.
+  build-gems3k.sh also hard-codes SRC/CONDA paths of the owner's machine. No recorded freeze file in the repo.
+- Built tools+tests (build-solvus/, ignored by .gitignore) against hub-install/gems3k (Optima ON, ThermoFun ON,
+  BUILD_SOLMOD OFF, conda gcc 16.2, Eigen 3.4.0). FOUND: include/difftest/optima_regression.h l.608, l.643 use
+  ::getpid() without <unistd.h> -> compile error with gcc 16.2 / this libstdc++; worked around with
+  CMAKE_CXX_FLAGS=-include unistd.h (no source change).
+- trace_selfcheck.sh: OK (RUN 3, BULK 3, SET 3, EFF 3, KEY 3, DECIDE 21 records).
+- CTest (Optima build, -j3, 91 s): 92/96 pass. FAIL: optima_regression.aop.restart (1 check:
+  earlynet_f_CalcDolo "cost is the unarmed solve plus the wasted probe" armed=18 unarmed=18 set=-4),
+  proposed.aop (hoknob_T2b degeneracy penalty ratio 1.0x, ratchet >= 20; crossing_T11 "aop is penalised
+  approaching the boundary"), dimreduce.gate (T8_aq101 AUTO -> OFF below the gate; T8_aq201 AUTO -> ON above the
+  gate; wrong-side cost 1.0x), ci.baseline (invalid here: baseline is for a no-Optima library; 34 findings).
+  Brief: "44 tests, 4 known failures (2026-10-17)" - which 4 not stated; owner to confirm.
+- tools/ci.sh (stock GEMS3K, no Optima, built from /home/user/GEMS3K head): first configure FAILED - GEMS3K's
+  default BUILD_SOLMOD_PYTHON=ON needs pybind11 even with BUILD_SOLMOD=OFF (cmake/modules/GEMS3KFindDeps.cmake l.10)
+  -> plan A1 item. With --gems3k-cmake -DBUILD_SOLMOD_PYTHON=OFF: 132 rows, 28 findings (26 ANSWER: Vs rel
+  5e-8..9e-5 on 9 projects; phase amounts e.g. CSHK 4.15e-6 -> 5.07e-6 mol (18 %), Gibbsite 1.08e-4 rel,
+  feldspars ~1e-4 rel; 2 COST: f_GEOTHERM ITG 687 -> 688, o_Solvus series2 ITG 372 -> 398). No fixture
+  mismatch (input files identical, FNV hashes in "# fix" lines).
+- Baseline header: recorded 2026-10-20T14:24:17Z, gems3k 5.2.0, "built by gcc 14.3 ... floating-point answers
+  depend on this - the record is not portable across toolchains". This session: gcc 16.2 -> discriminating run
+  with gcc 14.3 (conda-forge 14.3.0) on the same head started (build-ci-gcc14).
+- Each configure of GEMS3K rewrote the tracked GEMS3K/gems3k_version.h (restored with git checkout every time;
+  the stop hook flagged it as an uncommitted change) -> confirms A1 item.
