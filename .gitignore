@@ -81,3 +81,5 @@ environment.yml
 .claude
 tmp/
 GEMS3K.code-workspace
+CHECK-LATER.md
+xGEMS.log
