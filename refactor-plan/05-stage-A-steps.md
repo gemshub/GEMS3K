@@ -38,9 +38,10 @@ A0 baseline ─▶ A1 build ─▶ A2 contract tests ─┬─▶ A3 BASE_PARAM 
                                                └─▶ A6 RunContext (a–e) ─▶ A7 workspace ─▶ A8 process statics, env
 A9 model statics (after A2) ; A10 file moves and splits (after A6, A7, A13) ; A11 warm state (after A6)
 A12 de-duplication (after A10) ; A13 diagnostics component (after A2) ; A14 tests and docs (continuous)
+A15 ThermoSource (after A10) ; A16 one phase-property implementation (after A9, A10) ; A17 model registry (after A16)
 ```
 
-Expected length: 25–35 pull requests. Steps A6a–e, A10a–d and A12 are the long ones.
+Expected length: 28–40 pull requests. Steps A6a–e, A10a–d and A12 are the long ones.
 
 ## 2. Steps
 
@@ -240,7 +241,8 @@ Expected length: 25–35 pull requests. Steps A6a–e, A10a–d and A12 are the 
   `GEM_from_MT` variants (node.cpp) and the duplicate `GEM_from_MT_time`/`GEM_set_MT`; one table per character code
   only where tables are identical; dense kernels only where bit-identical (compare `SymEigFloorInPlace` with
   `CertSymEigMin`, the two dense LU/MGS copies; merge identical ones, keep the others with a cross-reference).
-  `TActivity`/`TKinetics` duplicates of TMultiBase code: mark `[[deprecated]]` (02 §6), no merge in A.
+  `TActivity`/`TKinetics` duplicate TMultiBase code: they are **not** deprecated (owner: they are the seeds of
+  ThermoSol/ThermoKin, 11); the duplication is removed in A16 in their favour.
 - **Why:** goal 3.
 - **Risk:** two "identical" kernels that differ in one loop order (FP). Rule: merge only after a token diff shows
   identity.
@@ -268,6 +270,37 @@ Expected length: 25–35 pull requests. Steps A6a–e, A10a–d and A12 are the 
 - **Risk:** none for results.
 - **Verification:** CTest green; freeze.
 - **Size:** M (continuous). **Depends on:** each step adds its tests. **Other repos:** none.
+
+### A15 — `ThermoSource`: one interface for standard-state properties
+- **Moves:** `load_all_thermodynamic_from_grid` and `load_all_thermodynamic_from_thermo` behind `ThermoSource`
+  (`GridSource`, `ThermoFunSource`), plus `CompareSource` (writes differences, returns the grid values);
+  `DC_LoadThermodynamicData`, `TNode::DC_G0 … DC_U0`, `Get_Psat`, `TActivity::updateStandard*` call the source; the
+  choice stays as today (ThermoFun when `thermo_engine` is set). Details: 10 §2.
+- **Why:** owner: ThermoFun instead of GEMS3K's own T-P path; makes the grid path switchable for the comparison
+  campaign (10 §3, B13).
+- **Risk:** low (same functions, moved). Trap 4 (`DC_G0` returns the grid) kept exactly.
+- **Verification:** freeze row for row; `CompareSource` on the corpus writes the property differences (input for
+  B13, no result change).
+- **Size:** M. **Depends on:** A10. **Other repos:** none.
+
+### A16 — One phase-property implementation (`TActivity`)
+- **Moves:** TMultiBase's phase-property code (ipm_chemical*.cpp: concentrations, primal potentials, SolModCreate…
+  DarkenProp) and `TActivity`'s copy (s_activity*.cpp) become one implementation, owned by `TActivity`, which
+  TMultiBase calls. Only where the two bodies are token-identical; where they differ, keep both with a
+  cross-reference and a test (A12 rule). Same for `TKinetics` and the KM_* copy in ipm_chemical4.cpp.
+- **Why:** 11 §2: `TActivity` is where the models are linked; it becomes the ThermoSol boundary inside GEMS3K.
+- **Risk:** medium — the two copies may differ in a loop order (FP). Token diff first.
+- **Verification:** freeze row for row; instruction counts (A-rule 3: hot code, 03 §3).
+- **Size:** L. **Depends on:** A9, A10, A2. **Other repos:** GEMSGUI (subclass hooks unchanged; check
+  `calculateActivityCoefficients_scripts`).
+
+### A17 — Model registry
+- **Moves:** the `SolModCreate` and `KM_Create` switches on character codes become registration tables (code,
+  constructor, name); the dispatch order and the constructor arguments stay the same.
+- **Why:** ≥ 8 edit sites per new model become one (09); ThermoFun v2 `MethodRegistry` pattern (11 §1).
+- **Risk:** low. ELVIS (commented out in `SolModCreate`, still in the dispatch) keeps today's behaviour.
+- **Verification:** freeze; one unit test per registered code.
+- **Size:** M. **Depends on:** A16. **Other repos:** tsolmod4rkt (same factory).
 
 ## 3. Hidden-state removal map (00 §4 → steps)
 

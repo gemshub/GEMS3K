@@ -29,10 +29,13 @@ GEMS3K/                         (repository root: unchanged top level)
    │                                settings resolvers (optima_dimreduce_passes …), status codes, status mapping
    ├─ io/          gems3k_io        io_template/keyvalue/simdjson/nlohmann policies, DCH/DBR/IPM formats,
    │                                GemDataStream, .lst generator (gems3k_impex), GemsSettings (jsonconfig)
-   ├─ thermo/      gems3k_thermo    standard-state loading: grid interpolation, ThermoFun adapter
+   ├─ thermo/      gems3k_thermo    ThermoSource interface: ThermoFunSource (target), GridSource (legacy until
+   │                                B14), CompareSource (10 §2)
    ├─ models/      gems3k_models    TSolMod base + factory; fluid/ (CG, CORK, PR78, PRSV, SRK, STP), solution/
    │                                (Ideal, Margules, …, Berman, CEF, MBW), aqueous/ (DH, Davies, Helgeson, Karpov,
    │                                Shvarov, ELVIS, Pitzer, SIT, EUNIQUAC), other/; kinetics/ (TKinMet); sorption/
+   │                                → becomes the ThermoSol library (phase models, from TActivity) and the
+   │                                ThermoKin library (kinetics, from TKinetics): thermosol/, thermokin/ (11)
    ├─ numerics/    gems3k_numerics  dense kernels used by the solver: Householder QR (IPM), dense LU with
    │                                refinement, Jacobi symmetric eigen floor, two-phase LP simplex, Karpov simplex,
    │                                interpolation; vendored tnt/jama (internal)
@@ -42,7 +45,7 @@ GEMS3K/                         (repository root: unchanged top level)
    ├─ optima/      gems3k_optima    (USE_OPTIMA_SOLVER) problem build, objective/Hessian, pre-solve, seeds,
    │                                retry/repair tiers as named functions, HOP, native finish/rescue, targets
    ├─ run/         (in gems3k_node) GEM_run layer pipeline: rescue, cap, dry redo, tries, single; RunContext
-   ├─ node/        gems3k_node      TNode public API, pack/unpack, name maps, TActivity/TKinetics (deprecated)
+   ├─ node/        gems3k_node      TNode public API, pack/unpack, name maps, TActivity/TKinetics front ends (11)
    ├─ nodearray/   gems3k_nodearray TNodeArray
    └─ diag/        gems3k_diag      trace writers (RUN/SET/EFF/KEY/CERT/DECIDE), probes, gems3k_timing
 ```
@@ -149,14 +152,18 @@ first 38 members stay hand-written (GEMSGUI binary layout) with `static_assert(o
 pointers: inputs x, T, P, parameters; outputs lnγ (and optional dlnγ/dn). In Stage A it is a thin wrapper that still
 writes through today's aliases (no FP change). The factory `SolModCreate` becomes a registration table
 (one entry per model: code, constructor, name), so adding a model touches one file (today ≥ 8 sites).
+The full design — ThermoSol and ThermoKin as libraries built on ThermoFun v2 principles, with `TActivity` and
+`TKinetics` as the starting point — is in `11-thermosol-thermokin.md`; standard states from ThermoFun only in
+`10-thermofun-tp.md`; the performance techniques behind 06 in `12-performance-techniques.md`.
 
 ## 4. Dependency rules (checked by CMake target links)
 
 ```
 core ← data ← io
 core ← numerics
-data, numerics ← models ← thermo
-data, numerics, models, thermo ← kernel
+ThermoFun ← thermo (ThermoSource)
+ThermoFun, numerics ← ThermoSol (phase models), ThermoKin (kinetics)     no GEMS3K headers inside them
+data, numerics, thermo, ThermoSol, ThermoKin ← kernel
 kernel ← optima          (optional; Optima::Optima)
 kernel, optima, diag ← node(run) ← nodearray
 core ← diag ← (kernel, optima, node)     diag only writes; it never changes results

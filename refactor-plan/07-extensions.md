@@ -77,6 +77,10 @@ transport (Newton on the transport–chemistry system) and for smart prediction 
 **Verification.** Finite-difference check on the corpus: perturb each b_i by ±1e-7 relative, solve warm, compare
 with dn/db·Δb on rows with an unchanged phase set; report the relative error per project (expected < 1e-5).
 
+See also: `10-thermofun-tp.md` (standard states from ThermoFun only), `11-thermosol-thermokin.md` (phase-model
+and kinetics libraries; the batched `Engine::evaluateBatch` is the first GPU candidate) and
+`12-performance-techniques.md` (techniques catalogue, on-demand learning §6).
+
 ## 4. Order (after Stage B core steps)
 
 1. dn/db at the accepted point for the Optima leg (B1) → public getter (small).

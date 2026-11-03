@@ -1339,3 +1339,39 @@ CASHNK1_HOP 135.5M: models 26.7, log 15.2, GX+TPA 10.7, conc+gamma 10.1, ipmQR 7
     v0.7.2), chemicalfun 0.1.13, eigen 3.4.0. Owner's environment for the baseline unknown (08 Q23).
 - recheck.py: hard-coded G=/home/dmiron/git/hub/GEMS3K, B=/home/dmiron/git/hub/gems-benchmark, STD freeze in
   .claude/docs/freeze/2026-10-22-STANDARD-0238683.txt (git-ignored) -> fast tier 2/51 here = missing data.
+
+## Owner request 2 (ThermoFun T-P, ThermoSol, ThermoKin, performance techniques) — facts used for files 10-12
+- Owner: "new gems should work with thermofun instead of its own T-P methods (at least refactored such that its
+  models can be switched off and removed after the full comparison that thermofun reproduces)"; "activity models
+  decoupled ... a new library ... thermosol similar to thermofun v2, but for phase models"; "thermofun can be a
+  guideline, activity is where these models are linked in gems now"; "TKinetics --> ThermoKin"; plus a section on
+  C++ optimisation, vectorisation, GPU, reduced systems, compute only what changes, memoisation, on-demand learning.
+- The three layout questions (GEMSGUI in scope; where ThermoSol lives; new files vs fold-in) were not answered;
+  defaults used and listed as 08 Q24/Q25 (+ new files 10-12).
+- GEMS3K T-P: datach.h l.50-108 grid fields; LagranInterp calls: ms_multi_diff.cpp 12, node2.cpp 22, node_copy 1,
+  num_methods 12; CheckMtparam node_copy.cpp l.563; DC_LoadThermodynamicData ms_multi_diff.cpp l.293;
+  load_all_thermodynamic_from_thermo node_copy.cpp l.617; thermo_engine 9 uses in node_copy.cpp.
+- GEMSGUI T-P producers: Modules/s_supcrt.cpp 1473 + s_supcrt2.cpp 1484, s_tpwork.cpp 89, m_dcomp.cpp 1581,
+  m_dcomp2.cpp 965, m_reacdc.cpp 1947, m_reac2.cpp 1749, Submods/ms_mtparm.cpp 1056; ThermoFun export
+  v_thermofun.cpp 963.
+- gems-benchmark tools/compare/thermofun-gems: analyse.py, check_one.sh, compare.py, export_one.sh, groups.py,
+  make_reference_reaktoro.py, show.py, summary.py, tfcheck.cpp, tfprops.cpp ("tfprops <db.json> <symbol>: reads
+  T_K P_bar lines, prints G H S Cp V from ThermoFun"). Corpus gems3k: 11 f_, 17 j_, 2 o_, 2 t_ prefixes.
+- ThermoFun v2: data-model.md principles (records first, SI inside, missing is not zero, immutable records +
+  recompute only dependents, method belongs to record, water passes properties on, constants are data);
+  Methods/{MethodRegistry, Symbolic/SymbolicExpression, Solutes (ADgems, Anderson91, HKFgems, HKFreaktoro,
+  HollandPowell98), Water (HGK-JNgems, HGKreaktoro, JN91reaktoro, BradleyPitzer79, Fernandez1997,
+  HelgesonKirkham74, Sverjensky2014, IdealGasWolley), Fluids, Minerals, Reactions, ParameterSets}; Compat/;
+  ThermoEngineSensitivities.cpp; ThermoEngine still `double& P` (l.148-182).
+- TActivity (activities.h; s_activity.cpp: setTemperature..updateChemicalData, primal potentials, GX,
+  StabilityIndexes; s_activity2.cpp: phase_bcs/bfc, concentrations; s_activity3.cpp: SolModCreate, SolModParPT,
+  SolModActCoeff, SolModExcessProp, SolModIdealProp, SolModDarkenProp, SolModStandProp, Alloc/Free TSolMod,
+  TSorpMod, TKinMet, SetSmoothingFactor); node_activities.cpp TNode front end incl. getIntegralPhaseProperties.
+- Aqueous models get water data as raw pointers: ipm_chemical3.cpp l.740-761 `new TPitzer(&sd, aM, aZ, pm.denW,
+  pm.epsW)` (also TSIT, TEUNIQUAC, TELVIS); THelgeson same signature (s_solmod.h l.1911).
+- TKinMet: s_kinmet.h l.226 base, TMWReaKin l.457, TUptakeKin l.491, TIonExKin l.536, TAdsorpKin l.564, TNucleKin
+  l.592; KinMetData l.97; methods PTparam, RateMod, RateInit, SplitMod, SplitInit, SetMetCon, UpdateFSA, GetModFSA,
+  UpdatePT, UpdateTime, PRrateCon, CorrSpecSurfArea, uptake tables.
+- Existing optimisation material: Optima EchelonizerExtended::updateWithPriorityWeights/updateOrdering,
+  LinearSolverNullspace/Rangespace, StablePartition; Reaktoro Equilibrium/SmartEquilibriumSolver,
+  EquilibriumPredictor, EquilibriumSensitivity, Kinetics/SmartKineticsSolver.

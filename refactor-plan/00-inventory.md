@@ -29,8 +29,8 @@ Windows line endings (trap 9). Hidden state is listed in §4.
 | node.cpp | 2477 | GEM_run layer stack (l.297–1663), 25 thread-locals (l.203–228), packDataBr/unpackDataBr (l.1730–1950), GEM_from_MT ×6, GEM_to_MT, CalcTime |
 | node2.cpp | 1353 | name lookup, index maps, DC_G0…DC_U0 grid accessors, Set_DC_G0, Get_Psat |
 | node_copy.cpp | 762 | GEM_init (file and string forms), read/write DBR, datach/databr copy, ThermoFun engine load, `load_all_thermodynamic_from_thermo` |
-| node_activities.cpp | 488 | TNode-side activity API (TActivity copy of MULTI fields) |
-| node_kinetics.cpp | 893 | TKinetics (duplicate of TMultiBase kinetics in ipm_chemical4.cpp) |
+| node_activities.cpp | 488 | TNode front end of `TActivity` (setTemperature, setSpeciation, updateActivityCoefficients, getIntegralPhaseProperties, …) — **seed of ThermoSol** (11) |
+| node_kinetics.cpp | 893 | `TKinetics` (KM_* functions; the TMultiBase copy is in ipm_chemical4.cpp) — **seed of ThermoKin** (11) |
 | node_format.cpp | 293 | VTK output of DATABR |
 | node_trace.cpp | 208 | GEM_trace_regimes (snapshot + restore of MULTI and DATABR) |
 | nodearray.h / .cpp / nodearray2.cpp | 794 / 810 / 849 | TNodeArray: OpenMP node loop, work-node copy in/out, transport helpers, logs, VTK; `static TNodeArray* na` |
@@ -85,7 +85,7 @@ Windows line endings (trap 9). Hidden state is listed in §4.
 | s_solmod4.cpp | 4811 | aqueous: Limiting law, Debye–Hückel, Davies, Helgeson, Karpov, Shvarov, ELVIS |
 | s_solmod5.cpp | 2835 | EUNIQUAC, Pitzer, SIT |
 | s_solmod6.cpp | 187 | TModOther |
-| s_activity.cpp / 2 / 3 | 1003 / 486 / 1142 | TActivity: activity API on TNode (duplicates TMultiBase code) |
+| s_activity.cpp / 2 / 3 | 1003 / 486 / 1142 | `TActivity`: where GEMS links the phase models (SolModCreate…DarkenProp, concentrations, primal potentials); same code as in TMultiBase — **seed of ThermoSol** (11 §2) |
 | s_kinmet.h / s_kinmet.cpp (CRLF) | 623 / 1460 | TKinMet kinetic rate models |
 | s_sorpmod.h / .cpp | 416 / 142 | TSorpMod — unfinished stub (sorption lives in TMultiBase, ipm_chemical2.cpp) |
 
@@ -129,11 +129,19 @@ Windows line endings (trap 9). Hidden state is listed in §4.
 | H4 | process-wide mutable statics | ipm_main `native_cert_dualfree_resolved` l.316 (data race), `warned` sets with mutex l.2672/2775; v_detail `g_calculationCancel`; nodearray `TNodeArray::na`; jsonconfig `GemsSettings data`; Optima `trace::state()` | cross-thread state | A8 |
 | H5 | function-local memo statics in activity models | s_solmod2.cpp l.1422/1483/1525/1578/1758 (TCGFcalc), s_solmod4.cpp l.4678 (TELVIS::trapzd) | wrong-instance cache, data race | A9 (move into the instance) |
 | H6 | environment variables read inside the solver | `GEMS3K_OPTIMA_NET_RESUME` (ms_multi.h l.634, changes results), `GEMS3K_FILLOUT_BUDGET` (ipm_main l.4579, changes results, read per call), probes (§3 of 09) | hidden inputs | A8 (results: into BASE_PARAM or an explicit `DiagnosticsConfig`; probes kept) |
-| H7 | TSolMod objects alias MULTI arrays | s_solmod.cpp ctor; node_trace.cpp restores MULTI by value copy because the models point into it | ownership through raw pointers | B-prep/A10 (explicit `PhaseModelView`) |
-| H8 | non-idempotent activity call | `CalculateActivityCoefficients(LINK_UX_MODE)`: lnGmo accumulation and F0 smoothing via `FitVar[3]` (ipm_chemical l.417, ipm_chemical3 SmoothingFactor) | call history changes results | documented in A; changed only in B (it is FP order) |
+| H7 | TSolMod objects alias MULTI arrays | s_solmod.cpp ctor; node_trace.cpp restores MULTI by value copy because the models point into it | ownership through raw pointers | A10, then ThermoSol `PhaseState`/`PhaseProps` (11 §4, B15) |
+| H8 | non-idempotent activity call | `CalculateActivityCoefficients(LINK_UX_MODE)`: lnGmo accumulation and F0 smoothing via `FitVar[3]` (ipm_chemical l.417, ipm_chemical3 SmoothingFactor) | call history changes results | documented in A; the smoothing stays a GEMS3K solver feature outside ThermoSol (11 §2); changed only in B |
 | H9 | MULTI shared across nodes of a TNodeArray worker | nodearray.cpp l.142–170; ipm_chemical4 l.80–82 comment | previous node's answer seeds the next | A11 (make the seeding explicit and test it) |
 | H10 | getters that mutate | `TotalGibbsEnergy()` (X/XF/XFA), `Get_GibbsEnergy()`, `Get_PMc`, `packDataBr()` → `ReportAbsentPhaseIndexes()` | state changes on read | A5 |
 | H11 | member flags used as hidden parameters | `optima_disable_smoothing`, `optima_hop_leg`, `optima_want_sensitivity`, `hop_split`, `trace_growth_stuck`, `prev_scfact`, `phase_floor_parked`, `zeroed_floor_amount`, `warm_floor_seed`, `prevBulkMol_`, `warmInputChanged_` | per-call parameters stored on the object | A6 (call parameters), A11 (warm-start state object) |
 | H12 | memory-layout copies by count | ms_multi_copy.cpp `copyValues(&pm.N, …, 39)`, `(&pm.TC, …, 53)`; GEMSGUI `readArray(&PC,10)`, `(&DG,28)` | struct layout as contract | A2 (static_assert), A3 (named copy) |
 | H13 | shared settings object | `pa_standalone` shared_ptr copied between nodes; `base_param()` returns non-const | silent settings sharing | A4 (const view + explicit LocalSettings) |
 | H14 | stale-on-failure outputs | GEM_run_single catch without packDataBr; TNodeArray copies back | old values look new | A5 (documented, flagged) — behaviour kept in A |
+
+## 5. Libraries around GEMS3K (target, see 10 and 11)
+
+| Library | Role | Source today | Plan |
+|---|---|---|---|
+| ThermoFun (thermohub/thermofun, v2) | standard-state properties at T, P; water properties | GEMS3K grid interpolation (DATACH arrays + `LagranInterp`) or ThermoFun; GEMSGUI computes the grids (`s_supcrt*`, `m_dcomp*`, `m_reac*`, `ms_mtparm`) | the only source after the comparison campaign (10) |
+| ThermoSol (new) | phase properties: activity and mixing models, excess properties, concentrations | `TActivity` + TSolMod family + TSorpMod + tsolmod4rkt | 11 §2 |
+| ThermoKin (new) | kinetics: rate laws, metastability bounds, surface areas | `TKinetics` + TKinMet | 11 §3 |

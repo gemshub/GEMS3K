@@ -153,3 +153,14 @@ headers stay installed with a `#pragma message` deprecation note (opt-out macro 
 | A5 pure getters | yes (old names forward) | optional switch to the pure names | optional | — |
 | A10 file moves | yes | include paths unchanged (installed headers keep names) | unchanged | tools that grep source paths, if any |
 | B1 TNodeArray OK test | yes | — | review `TNodeArrayGUI` (overrides) | new freeze rows for node arrays |
+
+## 8. Contract items added by 10 and 11
+
+| Item | Today | Migration |
+|---|---|---|
+| DATACH grid fields (`TKval`, `Pval`, `Psat`, `G0`…`U0`, `denW`, `epsW`, `denWg`, `epsWg`, `nTp`, `nPp`, `Ttol`, `Ptol`, `mLook`) and the DCH file format | read and written; GEMSGUI writes them | kept in the struct until 5.0; writers stop after B14; readers accept them ≥ 12 months with an `info` line naming the converter (10 §4) |
+| `TNode::DC_G0 … DC_U0`, `Get_Psat` | interpolate the grid (trap 4) | same signatures; values from `ThermoSource` (ThermoFun after B13); documented change of meaning in the release notes |
+| ThermoFun JSON per project | optional (`f_thermofun` mode) | required after B14 |
+| `TActivity` / `TKinetics` and the TNode activity API (node_activities.cpp) | public but undocumented | **kept** as the ThermoSol/ThermoKin front end; documented; not deprecated (reverses Q14 of the first version) |
+| `TSolMod(SolutionData*)`, `SolutionData`, TSolMod virtuals (tsolmod4rkt) | public | kept until ThermoSol's `PhaseModel` API is released (B17); then `[[deprecated]]` forwarders for one release cycle (§6) |
+| Legacy phase arrays in the IPM file (`sMod`, `LsMod`, `PMc`, `DMc`, `IPx`, `MoiSN`, …) and kinetics arrays | the only format | ThermoSol/ThermoKin `Compat` reads and writes them byte for byte; v2 records (named, with units) added beside them |

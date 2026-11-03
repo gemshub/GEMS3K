@@ -28,6 +28,10 @@ in the git-ignored `.claude/docs/freeze/`. What ran here (03 §7): trace self-ch
 | R11 | Plan scale: 25–35 Stage A PRs, each with two freeze pairs (~hours each) | certain / schedule | batch small S steps; freeze jobs in parallel (`FREEZE_JOBS`); no build during freezes |
 | R12 | The substitute corpus under-represents the owner's large systems; B priorities may shift | medium / medium | B0 and each B step re-measure on the owner's corpus before merging |
 | R13 | dn/db users (if any) get values from the primary Optima attempt, not the accepted answer | unknown / medium | B1; document now (A14) |
+| R14 | ThermoFun does not cover every T-P method used in the GEMS databases (known: `f_PitzerTHE` water data) | medium / high (blocks B14) | coverage part of the campaign (10 §3 c); grid kept until the list is empty |
+| R15 | ThermoFun direct calculation is slower than grid interpolation for transport with many temperatures | medium / medium | measure (10 §3 d); exact (T, P) memo or on-demand table (12 §5) |
+| R16 | Moving the models into ThermoSol/ThermoKin targets changes inlining and so FP results | medium / medium | A-rule 3 checks; B15 scored even when identity is expected |
+| R17 | Two copies of the phase-property code (TMultiBase vs TActivity) differ in a detail; merging changes results | medium / high | A16 merges only token-identical code |
 
 ## 3. Open questions (each with the default this plan assumes)
 
@@ -46,7 +50,7 @@ in the git-ignored `.claude/docs/freeze/`. What ran here (03 §7): trace self-ch
 | Q11 | FP contract for releases: pin `-ffp-contract=off` on all platforms? | Yes, but only in Stage B (B10), scored; Stage A changes no flags. |
 | Q12 | GPU work: start only after a CPU batch experiment shows ≥ 70 % of node-iterations on the common path? | Yes. |
 | Q13 | Add GEMSGUI and xgems builds to GEMS3K CI (as consumers)? | Yes for xgems (public); GEMSGUI if CI time allows. |
-| Q14 | Keep `TActivity`/`TKinetics` (duplicates of TMultiBase code, allocated in every TNode)? | Deprecate in A12/A14, remove in 5.0 unless a consumer uses them (none found in xgems; GEMSGUI not checked for them). |
+| Q14 | Keep `TActivity`/`TKinetics`? | **Answered by the owner: yes** — they are the seeds of ThermoSol and ThermoKin (11); not deprecated; the TMultiBase copies go (A16). |
 | Q15 | Is the stale-DATABR-on-ERR behaviour (trap 6) relied on by anyone, or may B change it to "NaN-fill on ERR"? | Keep (contract); a B change only with consumer agreement. |
 | Q16 | Line endings: pin per file with `.gitattributes` (keep CRLF for `ipm_chemical.cpp`, `s_kinmet.cpp`) or convert both to LF? | Pin as they are (no content change in Stage A); convert in a separate whitespace-only PR later if the owner wants. |
 | Q17 | Application class for quality management (de-RSE/GI guideline) | Highest class (library used by other groups and tools). |
@@ -56,3 +60,9 @@ in the git-ignored `.claude/docs/freeze/`. What ran here (03 §7): trace self-ch
 | Q21 | Publish `mode_compare` (the freeze driver, now only in the owner's local `GEMS3K/debug-optima-vs-reaktoro/`) and the standard freeze, and make the gems-benchmark tool paths configurable? | Yes, as a gems-benchmark PR before A1; until then every freeze runs on the owner's machine. |
 | Q22 | Which CTest failures are known? Brief: "44 tests, 4 known failures (2026-10-17)". Here: 96 tests, failing `optima_regression.aop.restart`, `proposed.aop`, `dimreduce.gate` (+ `ci.baseline`, invalid with Optima). | Assume these three are the known Optima-side failures; the owner confirms on the A0 machine. |
 | Q23 | Freeze environment: which CPU, glibc, ThermoFun and compiler recorded the CI baseline and the standard freeze? 18 of 132 CI rows differ here for environment reasons. | Record them in every freeze header from A0 on; one environment for all Stage A freezes. |
+| Q24 | GEMSGUI's own T-P methods (`s_supcrt*`, `m_dcomp*`, `m_reac*`, `ms_mtparm`, ~9 000 lines): replace with ThermoFun too? | Yes, in a separate GEMSGUI track behind the same comparison (10 §6). (Asked; no answer yet.) |
+| Q25 | Where do ThermoSol and ThermoKin live while they are made? | Inside GEMS3K first (`thermosol/`, `thermokin/` targets and namespaces), own repositories (thermohub) when the API and the v2 record format are stable (B17). (Asked; no answer yet.) |
+| Q26 | Tolerances of the ThermoFun comparison (10 §3) | \|ΔG0\| ≤ 1 J/mol; relative 1e-6 for V0, S0, Cp0, H0 and water properties; freeze tolerances for equilibria. |
+| Q27 | Names | ThermoSol and ThermoKin, as given by the owner. |
+| Q28 | Sorption models (TSorpMod stub + sorption code in TMultiBase): in ThermoSol, or a library of their own? | In ThermoSol (they are phase models). |
+| Q29 | Does ThermoSol own the concentration-scale conversions (molality, mole fraction, surface density), or does GEMS3K pass concentrations? | ThermoSol owns them (per-phase evaluation, 12 §4). |

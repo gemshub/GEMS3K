@@ -154,6 +154,40 @@ B10 compile/FP policy (owner decision) ; B11 node batches (after B2) ; B12 libm 
 - **Basis:** 03 §4 (`__ieee754_log_fma` chosen at run time). **Gain:** freezes comparable across machines.
   **Cost:** some speed (measure). **Size:** S. **Depends on:** B0.
 
+### B13 — Comparison campaign, then ThermoFun as the default source (10 §3–§4)
+- **Change:** run the four-part comparison (property level with `tools/compare/thermofun-gems`, equilibrium level
+  with `f_`/`j_` twins and new ThermoFun twins, method coverage, cost); when it passes, ThermoFun is the default
+  `ThermoSource` for every project with ThermoFun data.
+- **Basis:** owner goal; known gap `f_PitzerTHE`. **Gain:** one T-P source; no interpolation error.
+- **Risk:** answers move (data change); never mixed with a solver change in one freeze pair. **Scoring:** 10 §3.
+- **Size:** M (mostly gems-benchmark runs). **Depends on:** A15, B0.
+
+### B14 — Grid removal schedule (10 §4)
+- **Change:** writers stop writing T-P grids; readers accept them for ≥ 12 months with an `info` line and a
+  converter; then remove `GridSource` and the T-P `LagranInterp` use (not before 5.0). GEMSGUI track in parallel
+  (10 §6).
+- **Size:** M. **Depends on:** B13. **Other repos:** GEMSGUI, xgems (DC_* meaning), node-gem/GEMS4R users.
+
+### B15 — ThermoSol and ThermoKin targets inside GEMS3K (11 §4–§5)
+- **Change:** `thermosol/` and `thermokin/` folders, CMake targets and namespaces; `PhaseModel`/`RateModel`
+  interfaces; `Compat` for the legacy arrays (byte-identical round trip); v2 records (named, with units);
+  `TActivity`/`TKinetics` become the adapters.
+- **Basis:** 03 §3 (work around the models 25–27 % in Optima runs: per-phase evaluation makes 12 §4 natural).
+- **Risk:** inlining across library borders (A-rule 3) → scored even if bit-identity is expected.
+- **Size:** L. **Depends on:** A16, A17, B13 (water properties from one source).
+
+### B16 — Derivative blocks in ThermoSol (= B5)
+- **Change:** analytic or AD `d lnγ/dn`, d/dT, d/dP per model family; the Optima objective and
+  PotentialSpaceFinish use them instead of FD columns. **Depends on:** B15. Scored as B5.
+
+### B17 — Own repositories (11 §5)
+- **Change:** move ThermoSol and ThermoKin to their own repositories (proposed thermohub/thermosol,
+  thermohub/thermokin), merge tsolmod4rkt, Python modules, Reaktoro adapter; GEMS3K links them.
+- **Depends on:** B15 used on the whole corpus for one release. **Other repos:** all consumers (02 §8).
+
+Techniques behind B3–B17 (vectorisation, reduced systems, computing only what changes, memoisation, on-demand
+learning, GPU): `12-performance-techniques.md`.
+
 ## 3. Measured basis summary
 
 | Step | Measured share it attacks (03) | Where measured |

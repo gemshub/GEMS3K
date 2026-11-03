@@ -27,7 +27,17 @@ code was changed, committed or pushed. The detail is in files 00–09; `NOTES.md
 Eleven modules in folders and CMake targets: core, data, io, thermo, models, numerics, kernel (GEMS3K IPM solver),
 optima (adapter), run (retry layers), node, nodearray, plus diag (traces). The installed library and headers
 keep their names. A `RunContext` object replaces the thread-local flags. `BASE_PARAM` gets one declaration
-file. Activity models move behind a `PhaseModel` interface. The diagnostics stay byte for byte.
+file. The diagnostics stay byte for byte. Three libraries sit around the solver:
+- **ThermoFun** gives all standard-state T-P properties. GEMS3K's own grid interpolation is first made
+  switchable, then removed after a full comparison shows that ThermoFun reproduces it (10). GEMSGUI's own T-P
+  methods follow in their own track.
+- **ThermoSol** (new) holds the phase models: activity, mixing and excess properties. It starts from `TActivity`,
+  where GEMS links the models today, and follows the ThermoFun v2 principles: named records with units, a model
+  registry, and recomputing only what changed (11).
+- **ThermoKin** (new) holds the kinetics, starting from `TKinetics` (11).
+
+`12-performance-techniques.md` lists the speed techniques: vectorisation, GPU batches, reduced systems,
+computing only what changes, memoisation and on-demand learning.
 
 ## Order of work
 
@@ -43,7 +53,8 @@ file. Activity models move behind a `PhaseModel` interface. The diagnostics stay
   - A11 warm-start state;
   - A12 de-duplication;
   - A13 diagnostics component;
-  - A14 tests and docs.
+  - A14 tests and docs;
+  - A15 one source for T-P data (`ThermoSource`), A16 one phase-property code (`TActivity`), A17 model registry.
 
   Every step must reproduce the STD and RAW freezes row for row, including `# dec`.
 - **Stage B (06, scored like a solver change).** Steps in order:
@@ -57,7 +68,8 @@ file. Activity models move behind a `PhaseModel` interface. The diagnostics stay
   - B7 linear algebra;
   - B8 line search;
   - B9 allocations;
-  - B10–B12 floating-point policy, parallel node batches and libm.
+  - B10–B12 floating-point policy, parallel node batches and libm;
+  - B13 ThermoFun comparison and switch, B14 grid removal, B15–B17 ThermoSol and ThermoKin as libraries.
 - **Extensions (07).** dn/db at the accepted answer comes first. No GPU work starts until a CPU batch test shows
   that most nodes stay on the common path.
 
@@ -75,4 +87,4 @@ file. Activity models move behind a `PhaseModel` interface. The diagnostics stay
 5. **The activity call is not repeatable** (it keeps a history), and freezes differ between CPU types. So Stage A
    never changes the number of calls, and all freezes use one machine class.
 
-Open questions with assumed defaults: 08 §3 (23 items).
+Open questions with assumed defaults: 08 §3 (29 items).
