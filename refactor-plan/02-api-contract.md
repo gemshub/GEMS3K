@@ -171,4 +171,6 @@ headers stay installed with a `#pragma message` deprecation note (opt-out macro 
 |---|---|---|
 | `gems3k::SystemDefinition` (value object), `gems3k::SystemBuilder` | new C++ API, additive | documented in `Docs/`; versioned with the library |
 | `TNode::GEM_init(const SystemDefinition&)`, xgems `ChemicalEngine(definition)` | new overloads beside the file and JSON-string forms | the old forms stay (no deprecation) |
-| `system.yaml` schema (`gems3k: <version>` key at the top) | new file format | readers accept older schema versions; a change of meaning needs a new major version (ThermoFun v2 pattern) |
+| `system.yaml` schema (`gems3k: <version>` key at the top) | new file format; **GEMSGUI's export from S8 on** | readers accept older schema versions; a change of meaning needs a new major version (ThermoFun v2 pattern) |
+| DCH/IPM/DBR files | today the export format | become the internal legacy format: always readable until at least 5.0, written only on request (`--legacy`) (13 §7.2) |
+| `results.yaml` / `results.json` (`gems3k-results: <version>`) | new | named results with units, `stale` flag on ERR rows (13 §7.3) |

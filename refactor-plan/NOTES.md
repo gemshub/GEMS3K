@@ -1395,3 +1395,9 @@ CASHNK1_HOP 135.5M: models 26.7, log 15.2, GX+TPA 10.7, conc+gamma 10.1, ipmQR 7
   l.1351, SURFACE_MASTER_SPECIES l.1434, RATES l.1616); Equilipy read_dat (read_dat.py l.42), equilib_single
   (l.146), equilib_batch (l.136); CEA samples/example1.inp (problem / reactants / only datasets); MAGEMin
   src/*_database; ThermoFun v2 examples/v2/minimal.yaml (thermohub: 2.0.0-draft.1, thermodataset, substances).
+- Owner request 3b: "now the GUI writes the gems3k files but their format is far from user friendly". Answers:
+  system.yaml (+ ThermoFun v2 dataset of the used species) becomes GEMSGUI's export, DCH/IPM/DBR internal legacy;
+  add a named results file. Evidence: Resources/gems3k/j_10TH_G_seawater_1_0_1_25_0: 6 files 3 861 386 bytes
+  (-fun.json 2 949 507, -dch.json 865 942, -ipm.json 36 977, -dbr-0-0000.json 8 784, two .lst); nIC 12, nDC 122,
+  nPH 87, nTp 81, nPp 1; ipm.json "sMod": ["ZNNSNNNN","INNINNNN","GNNSNNNN"], "LsMod": [242,4,6,0,0,0,1,0,3],
+  "IPxPH": [2,8,-1,-10,...]; dbr has bIC, xDC, xPH, gam by index.

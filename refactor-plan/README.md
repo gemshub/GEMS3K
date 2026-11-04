@@ -41,7 +41,8 @@ computing only what changes, memoisation and on-demand learning.
 
 `13-headless-system-definition.md` plans **systems without GEMSGUI**: a C++ builder (like Reaktoro) that picks
 elements, species, phases and phase models from ThermoFun v2 and ThermoSol records, a `system.yaml` file that is
-the same object saved, and Python through xgems.
+the same object saved, and Python through xgems. `system.yaml` plus a ThermoFun v2 dataset becomes **GEMSGUI's
+export**; DCH/IPM/DBR become an internal legacy format; results get a **named results file** with units.
 
 ## Order of work
 
@@ -75,7 +76,7 @@ the same object saved, and Python through xgems.
   - B10–B12 floating-point policy, parallel node batches and libm;
   - B13 ThermoFun comparison and switch, B14 grid removal, B15–B17 ThermoSol and ThermoKin as libraries.
 - **Track S (13), beside Stage A:** S1 definition object and YAML, S2 builder, S3 converter from GEMSGUI projects
-  and corpus comparison, S4 Python, S5 direct initialisation, S6 ThermoSol records.
+  and corpus comparison, S4 Python, S5 direct initialisation, S6 ThermoSol records, S7 results file, S8 GEMSGUI export switch.
 - **Extensions (07).** dn/db at the accepted answer comes first. No GPU work starts until a CPU batch test shows
   that most nodes stay on the common path.
 
@@ -93,4 +94,4 @@ the same object saved, and Python through xgems.
 5. **The activity call is not repeatable** (it keeps a history), and freezes differ between CPU types. So Stage A
    never changes the number of calls, and all freezes use one machine class.
 
-Open questions with assumed defaults: 08 §3 (33 items).
+Open questions with assumed defaults: 08 §3 (34 items).

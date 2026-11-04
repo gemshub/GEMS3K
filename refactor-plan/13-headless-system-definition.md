@@ -161,8 +161,8 @@ engine = xgems.ChemicalEngine(b.definition())
 
 ## 4. Validation
 
-1. **Every corpus project again, without GEMSGUI.** A converter writes `system.yaml` from a GEMSGUI project (its
-   ThermoFun export plus its phase definitions). The builder then makes DCH/IPM/DBR, which are compared with
+1. **Every corpus project again, without GEMSGUI.** A converter (S3) reads the legacy export of a project
+   (DCH, IPM, DBR, ThermoFun JSON) and writes `system.yaml`; no GEMSGUI is needed for this. The builder then makes DCH/IPM/DBR, which are compared with
    GEMSGUI's export field by field: names, A, codes, model arrays, bulk, bounds, settings. Every difference is either
    fixed or recorded with its reason.
 2. **Freeze both** (GEMSGUI export and headless definition) in all six modes; score them as 10 §3 b. The
@@ -177,19 +177,93 @@ engine = xgems.ChemicalEngine(b.definition())
 |---|---|---|---|
 | S1 | `SystemDefinition` value object + YAML load/save (round trip) + schema document | A3 (settings by name) | round-trip tests |
 | S2 | `SystemBuilder` with the checks and the derivations of §3.3; output path 1 (JSON documents → `GEM_init`) | S1, A15 (ThermoSource) | examples of §4.3 solve; documents compared with GEMSGUI exports for the same systems |
-| S3 | GEMSGUI project → `system.yaml` converter; whole-corpus comparison (§4.1–§4.2) | S2 | field comparison report; freezes |
+| S3 | converter legacy export (DCH/IPM/DBR + ThermoFun JSON) → `system.yaml` (tool `gems3k-convert`); whole-corpus round trip legacy → YAML → builder → legacy (§4.1–§4.2) | S2 | field comparison report; freezes |
 | S4 | Python binding in xgems; `ChemicalEngine(definition)` | S2 | xgems tests, CI on Linux, Windows and macOS |
 | S5 | output path 2: direct `GEM_init(const SystemDefinition&)` | S3 | the same freezes as S3, row for row |
 | S6 | ThermoSol and ThermoKin records instead of the legacy model and kinetics arrays | B15 (11) | S3 comparison again |
+| S7 | named results file (`results.yaml` / `.json`, §7.3) written by `TNode`, xgems and the tools | S1 | schema tests; values equal to the DBR values of the same run |
+| S8 | GEMSGUI exports `system.yaml` + a ThermoFun v2 dataset of only the species used (§7.2); legacy export kept as an option for one release cycle | S3, GEMSGUI PR | S3 round trip on GEMSGUI's own test projects |
 
 New module: `system/` (CMake target `gems3k_system`): builder, YAML reader and writer, derivations. It depends on
 `data`, `io`, `thermo`, ThermoSol/ThermoKin and ChemicalFun (04 §2, §4).
 
-## 6. Open questions (08 Q30–Q33)
+## 6. Open questions (08 Q30–Q34)
 
 - Q30: sorption and surface complexation (sites, densities, electrostatic models) in S2, or later? Default: in S2,
   with GEMSGUI's arrays.
 - Q31: should `system.yaml` also hold processes and sweeps (titrations, T series)? Default: no; a separate
   `run.yaml` later.
 - Q32: where is the schema documented? Default: `Docs/system-yaml.md` plus a JSON Schema file used by the reader.
-- Q33: should GEMSGUI write `system.yaml` too? Default: yes, through the S3 converter first, then directly.
+- Q33: should GEMSGUI write `system.yaml` too? **Answered by the owner: yes** — it becomes GEMSGUI's export (§7).
+- Q34: results file format — YAML or JSON, one file per node or one per run? Default: JSON for programs and YAML
+  for people from the same writer; one file per run with one entry per node and step.
+
+## 7. User-friendly files (owner decision)
+
+### 7.1 What is wrong with the export today
+
+GEMSGUI writes the solver's internal memory, not a user format. Example from the corpus,
+`Resources/gems3k/j_10TH_G_seawater_1_0_1_25_0` (12 elements, 122 species, 87 phases):
+
+| Problem | Evidence |
+|---|---|
+| six files for one system | `-dat.lst`, `-dbr.lst`, `-dch.json`, `-ipm.json`, `-dbr-0-0000.json`, `-fun.json`: 3.9 MB in total |
+| phase models as character codes and positional counts | `"sMod": ["ZNNSNNNN", "INNINNNN", "GNNSNNNN"]`, `"LsMod": [242, 4, 6, 0, 0, 0, 1, 0, 3]` |
+| interaction parameters keyed by index lists | `"IPxPH": [2, 8, -1, -10, 2, 8, -1, -11, …]` |
+| the stoichiometry and the index maps as flat number arrays | `"A"`, `"xic"`, `"xdc"`, `"xph"`, `"ccIC"`, `"ccDC"`, `"ccPH"`, `"nDCinPH"` |
+| the system file is mostly a T-P table | `-dch.json` 866 KB: `nTp` = 81 temperatures × 122 species × 7 properties (removed by 10) |
+| the ThermoFun file holds the whole dataset | `-fun.json` 2.9 MB for 122 species used |
+| settings mixed with allocation flags | `pa_*` values next to `PV`, `PSOL`, `PAalp`, `PSigm`, `Lads`, `FIa`, `FIat` |
+| results by index | DBR `bIC`, `xDC`, `xPH`, `gam` are arrays in DATACH/DATABR index order; the names are in another file |
+| a setting placed in the wrong block is ignored without a message | trap 2 (`<END_DIM>`) |
+
+### 7.2 The new export
+
+- **GEMSGUI exports `system.yaml`** (§3.5) **plus a ThermoFun v2 dataset that holds only the species the system
+  uses** (with their methods and sources). These two files are what users read, edit, share and keep in version
+  control.
+- **DCH/IPM/DBR become the internal legacy format.** The builder makes them in memory (path 1, then path 2).
+  GEMS3K still reads them (all existing projects and corpora keep working), and can write them on request
+  (`--legacy`) for old tools and for debugging. Users do not edit them any more.
+- **Migration** (ThermoFun `legacy-and-v2.md` pattern):
+  - release N: GEMSGUI writes both forms, `system.yaml` first; the converter `gems3k-convert` (S3) turns existing
+    exports into `system.yaml`;
+  - release N + 1: GEMSGUI writes only `system.yaml` by default; reading legacy files logs one `info` line that
+    names the converter;
+  - legacy reading stays at least until 5.0 (02 §8).
+- **Node arrays** (TNodeArray, transport): `system.yaml` defines the chemistry once; the node states are a list of
+  bulk compositions and conditions (`nodes.yaml` or a table), not one DBR file per node.
+
+### 7.3 The results file
+
+`results.yaml` (people) and `results.json` (programs) come from one writer. Everything is named and has units:
+
+```yaml
+gems3k-results: 1.0.0-draft.1
+system: calcite-nacl              # the system.yaml it belongs to
+run:
+  - node: 0
+    status: {code: OK_GEM_AIA, mode: AIA, iterations: 27, stale: false}   # stale = true on ERR rows (trap 6)
+    conditions: {T: {value: 298.15, unit: K}, P: {value: 1.0e5, unit: Pa}}
+    system_properties: {G: {value: -1.234e6, unit: J}, V: {value: 1.0e-3, unit: m3}, mass: {value: 1.01, unit: kg}}
+    aqueous: {pH: 8.27, pe: 3.1, Eh: {value: 0.18, unit: V}, ionic_strength: {value: 0.105, unit: molal}}
+    phases:
+      - name: aq_gen
+        amount: {value: 55.6, unit: mol}
+        mass: {value: 1.006, unit: kg}
+        saturation_index: 0.0
+        species:
+          - {name: Ca+2, amount: {value: 1.2e-4, unit: mol}, molality: 1.2e-4, activity_coefficient: 0.38, log10_activity: -4.34}
+      - name: Calcite
+        amount: {value: 9.88e-3, unit: mol}
+        saturation_index: 0.0
+    elements:
+      - {name: Ca, total: {value: 0.01, unit: mol}, dual_potential: {value: -1.0e5, unit: J/mol}}
+```
+
+Rules:
+- one entry per node and step;
+- phases that are absent are listed with amount 0 and their saturation index, so a user sees why;
+- ERR rows say `stale: true` instead of silently repeating old values (trap 6, 02 §3);
+- the writer reads the same getters as xgems (02 §2.1), so the file and the API agree;
+- precision is configurable; the default writes 17 significant digits in JSON, 6 in YAML.

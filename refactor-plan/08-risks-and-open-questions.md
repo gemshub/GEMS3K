@@ -69,4 +69,5 @@ in the git-ignored `.claude/docs/freeze/`. What ran here (03 §7): trace self-ch
 | Q30 | Sorption and surface complexation (sites, densities, electrostatic models) in the first headless builder (13 S2), or later? | In S2, with GEMSGUI's arrays. |
 | Q31 | Should `system.yaml` also hold processes and sweeps (titrations, T series)? | No; a separate `run.yaml` later. |
 | Q32 | Where is the `system.yaml` schema documented? | `Docs/system-yaml.md` plus a JSON Schema file that the reader uses. |
-| Q33 | Should GEMSGUI write `system.yaml` too? | Yes: first through the S3 converter, then directly. |
+| Q33 | Should GEMSGUI write `system.yaml` too? | **Answered by the owner: yes** — `system.yaml` + a ThermoFun v2 dataset become GEMSGUI's export; DCH/IPM/DBR become the internal legacy format (13 §7). A named results file is added (13 §7.3). |
+| Q34 | Results file: YAML or JSON; one file per node or per run? | JSON for programs and YAML for people from one writer; one file per run with an entry per node and step. |
