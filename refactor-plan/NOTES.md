@@ -1401,3 +1401,10 @@ CASHNK1_HOP 135.5M: models 26.7, log 15.2, GX+TPA 10.7, conc+gamma 10.1, ipmQR 7
   (-fun.json 2 949 507, -dch.json 865 942, -ipm.json 36 977, -dbr-0-0000.json 8 784, two .lst); nIC 12, nDC 122,
   nPH 87, nTp 81, nPp 1; ipm.json "sMod": ["ZNNSNNNN","INNINNNN","GNNSNNNN"], "LsMod": [242,4,6,0,0,0,1,0,3],
   "IPxPH": [2,8,-1,-10,...]; dbr has bIC, xDC, xPH, gam by index.
+- Owner request 3c: "the system definition should be as easy and automatic as possible but also flexible to set all
+  options; all this work on the system definition should be a separate part from reformatting but should be had in
+  mind when reformatting". Implemented as: 13 = Part II (separate track S, S0-S8), levels 0-3 with profiles and a
+  resolved definition; 04 §9 eight design rules; 05 A-rule 6. Reusable checks: CheckRedoxFree ipm_optima.cpp
+  l.451, SubFloorElementCheck ipm_main.cpp l.2077, EnergyDeterminacyCheck l.2164, ExcludeRedundantDCs l.2515,
+  StrandedElementCheck l.2715, WarnSolidsCodedAqueous node_copy.cpp l.209. Reader-side derivations to separate:
+  ms_multi_format.cpp l.888-890 (LO, PG), l.989 (DCmm from A), l.1011 (ConvertDCC).

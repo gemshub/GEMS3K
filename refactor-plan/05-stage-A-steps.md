@@ -27,6 +27,10 @@ a freeze runs (brief §5); check `ldd <tool> | grep -i -E 'gems3k|optima'` befor
 `CMAKE_HOME_DIRECTORY` of a reused build folder; no commit or push without the owner's request; no
 `Co-Authored-By: Claude` trailer (owner rule).
 
+**A-rule 6 — Keep the Part II seams.** A step must not break the design rules of 04 §9 (settings by name,
+read separate from derive, in-memory start, names first-class, models by name, `ThermoSource`, no hidden state,
+results by name). The review of A3, A10, A12, A15 and A17 checks them explicitly.
+
 **Step card format** (PSIP style): *Moves* · *Why* · *Risk* · *Verification* · *Size* (S < 200 changed lines,
 M 200–1 000, L > 1 000 mostly moves) · *Depends on* · *Other repos*.
 
@@ -43,8 +47,9 @@ A15 ThermoSource (after A10) ; A16 one phase-property implementation (after A9, 
 
 Expected length: 28–40 pull requests. Steps A6a–e, A10a–d and A12 are the long ones.
 
-Track S (systems without GEMSGUI, 13 §5) runs beside Stage A: it adds code and changes no existing path. S1
-needs A3 (settings by name), S2 needs A15 (`ThermoSource`).
+Part II (systems without GEMSGUI, 13) is **not** part of Stage A: it is separate work with its own track S. It adds
+code and changes no existing path. S1 needs A3 (settings by name), S2 needs A15 (`ThermoSource`). Stage A keeps it
+in mind through A-rule 6.
 
 ## 2. Steps
 

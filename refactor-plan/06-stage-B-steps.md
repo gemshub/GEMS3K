@@ -185,7 +185,8 @@ B10 compile/FP policy (owner decision) ; B11 node batches (after B2) ; B12 libm 
   thermohub/thermokin), merge tsolmod4rkt, Python modules, Reaktoro adapter; GEMS3K links them.
 - **Depends on:** B15 used on the whole corpus for one release. **Other repos:** all consumers (02 §8).
 
-Track S6 (ThermoSol/ThermoKin records in headless system definitions, 13 §5) follows B15.
+Part II (13) is separate work; its step S6 (ThermoSol/ThermoKin records in system definitions) follows B15. Stage B
+steps keep the design rules of 04 §9.
 
 Techniques behind B3–B17 (vectorisation, reduced systems, computing only what changes, memoisation, on-demand
 learning, GPU): `12-performance-techniques.md`.

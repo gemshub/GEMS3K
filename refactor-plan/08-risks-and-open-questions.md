@@ -32,6 +32,8 @@ in the git-ignored `.claude/docs/freeze/`. What ran here (03 §7): trace self-ch
 | R15 | ThermoFun direct calculation is slower than grid interpolation for transport with many temperatures | medium / medium | measure (10 §3 d); exact (T, P) memo or on-demand table (12 §5) |
 | R16 | Moving the models into ThermoSol/ThermoKin targets changes inlining and so FP results | medium / medium | A-rule 3 checks; B15 scored even when identity is expected |
 | R17 | Two copies of the phase-property code (TMultiBase vs TActivity) differ in a detail; merging changes results | medium / high | A16 merges only token-identical code |
+| R18 | Part II work leaks into Stage A steps (scope mixing) or Stage A makes Part II harder | medium / medium | Part II is a separate track (13); A-rule 6 and the rules of 04 §9 are checked in reviews |
+| R19 | Automatic choices (level 0, profiles) change silently when a database or profile changes | medium / medium | the resolved definition is saved with every run (13 §3.0) |
 
 ## 3. Open questions (each with the default this plan assumes)
 
@@ -71,3 +73,4 @@ in the git-ignored `.claude/docs/freeze/`. What ran here (03 §7): trace self-ch
 | Q32 | Where is the `system.yaml` schema documented? | `Docs/system-yaml.md` plus a JSON Schema file that the reader uses. |
 | Q33 | Should GEMSGUI write `system.yaml` too? | **Answered by the owner: yes** — `system.yaml` + a ThermoFun v2 dataset become GEMSGUI's export; DCH/IPM/DBR become the internal legacy format (13 §7). A named results file is added (13 §7.3). |
 | Q34 | Results file: YAML or JSON; one file per node or per run? | JSON for programs and YAML for people from one writer; one file per run with an entry per node and step. |
+| Q35 | Which system-definition profiles ship first (13 §3.0), and where are they kept? | `aqueous`, `cement`, `hydrothermal`, `igneous`, `gas`, `alloy`, as YAML files in the GEMS3K repository. |

@@ -1,6 +1,11 @@
 GEMS3K commit: 54b5f819ba83589daa9cd9aa0a9ff699adb28b1d (branch develop_optima, 2026-11-03)
 
-# 13 — GEMS3K without the GUI: define a chemical system by code or in YAML
+# 13 — Part II: GEMS3K without the GUI — define a chemical system by code or in YAML
+
+**This is a separate part of the plan (owner).** The restructuring (Part I: files 00–12, Stages A and B) does not
+contain these steps and never waits for them. Part I keeps Part II in mind through the design rules in 04 §9 and
+A-rule 6 (05 §0), so that nothing it builds has to be undone for Part II. Part II has its own milestones (track S,
+§5) and can start when the Part I steps it needs exist (A3, A15; B15 for S6).
 
 **Goal (owner):** a user can make a chemical system without GEMSGUI — through a code API, as in Reaktoro (which has
 no GUI), or in a YAML file — and choose the elements, species, phases and phase models there.
@@ -50,6 +55,30 @@ No code builds DATACH, MULTI and DATABR from a list of species. GEMSGUI does tha
 - From ThermoFun v2: SI inside, units on read, named records, version key at the top.
 
 ## 3. Design
+
+### 3.0 Easy by default, every option settable (owner)
+
+The definition is **as easy and as automatic as possible, but every option can be set**. Four levels use the same
+object; a higher level only adds detail:
+
+| Level | The user gives | The builder decides | Example |
+|---|---|---|---|
+| 0 — automatic | a database, a bulk composition (formulas and amounts), T and P | the elements (from the bulk formulas); all species of these elements in the database; the phases by rules (aqueous phase if water is in the bulk, gas phase if the database has gases of these elements, each pure solid as its own phase, mixed solid phases only where the database has a phase record — never invented); the default model of each phase kind from the profile; default settings (`pa_p_`) | `System::fromBulk(db, {{"H2O",1,"kg"},{"CaCO3",0.01,"mol"},{"NaCl",0.1,"mol"}}, 298.15, 1e5)` — or a YAML file of five lines |
+| 1 — profile | level 0 + a **profile** name | rules and default models of that field of work | `profile: cement` |
+| 2 — selections | level 1 + include/exclude species or phases by name, tag or class; models per phase; bulk recipe with units; lists of T, P and of node compositions | the rest | `exclude: [tag: organic]`, `phases: {aq_gen: {model: Pitzer}}` |
+| 3 — full control | anything: species classes and bounds (DUL/DLL), every model parameter, sorption sites, kinetics records, every `pa_` setting by name | nothing | the complete `system.yaml` of §3.5 |
+
+- **Profiles are data, not code**: a profile is a YAML file with phase rules, default models, filters and setting
+  defaults (proposed set: `aqueous` (default), `cement`, `hydrothermal`, `igneous`, `gas`, `alloy`/CALPHAD; 08 Q35).
+  Users can write their own.
+- **Automatic is never hidden.** The builder writes the **resolved definition** — every automatic choice made
+  explicit (`system.resolved.yaml`) — and a short report of which rule chose what (like the SET/EFF records of the
+  solver). A saved resolved file gives the same system later, even when a database or a profile default changes.
+- **Automatic checks with a suggestion**, reusing the checks GEMS3K already has: `CheckRedoxFree`
+  (ipm_optima.cpp l.451: nothing fixes the redox state), `SubFloorElementCheck` (ipm_main.cpp l.2077),
+  `StrandedElementCheck` (l.2715: an element with no carrier), `ExcludeRedundantDCs` (l.2515: duplicate species),
+  `EnergyDeterminacyCheck` (l.2164), `WarnSolidsCodedAqueous` (node_copy.cpp l.209). In the builder they run before
+  the first solve and say what to add or remove.
 
 ### 3.1 The definition object
 
@@ -175,6 +204,7 @@ engine = xgems.ChemicalEngine(b.definition())
 
 | Step | What | Depends on | Check |
 |---|---|---|---|
+| S0 | profiles and rules of §3.0 as data; resolved-definition writer and report | S1 | a level-0 YAML of five lines solves CalciteIC and a cement example; the resolved file reproduces them |
 | S1 | `SystemDefinition` value object + YAML load/save (round trip) + schema document | A3 (settings by name) | round-trip tests |
 | S2 | `SystemBuilder` with the checks and the derivations of §3.3; output path 1 (JSON documents → `GEM_init`) | S1, A15 (ThermoSource) | examples of §4.3 solve; documents compared with GEMSGUI exports for the same systems |
 | S3 | converter legacy export (DCH/IPM/DBR + ThermoFun JSON) → `system.yaml` (tool `gems3k-convert`); whole-corpus round trip legacy → YAML → builder → legacy (§4.1–§4.2) | S2 | field comparison report; freezes |
@@ -187,7 +217,7 @@ engine = xgems.ChemicalEngine(b.definition())
 New module: `system/` (CMake target `gems3k_system`): builder, YAML reader and writer, derivations. It depends on
 `data`, `io`, `thermo`, ThermoSol/ThermoKin and ChemicalFun (04 §2, §4).
 
-## 6. Open questions (08 Q30–Q34)
+## 6. Open questions (08 Q30–Q35)
 
 - Q30: sorption and surface complexation (sites, densities, electrostatic models) in S2, or later? Default: in S2,
   with GEMSGUI's arrays.
@@ -195,6 +225,8 @@ New module: `system/` (CMake target `gems3k_system`): builder, YAML reader and w
   `run.yaml` later.
 - Q32: where is the schema documented? Default: `Docs/system-yaml.md` plus a JSON Schema file used by the reader.
 - Q33: should GEMSGUI write `system.yaml` too? **Answered by the owner: yes** — it becomes GEMSGUI's export (§7).
+- Q35: which profiles ship first, and who keeps their default models? Default: `aqueous`, `cement`, `hydrothermal`,
+  `igneous`, `gas`, `alloy`; the owner keeps them in the GEMS3K repository as YAML files.
 - Q34: results file format — YAML or JSON, one file per node or one per run? Default: JSON for programs and YAML
   for people from the same writer; one file per run with one entry per node and step.
 

@@ -39,10 +39,17 @@ file. The diagnostics stay byte for byte. Three libraries sit around the solver:
 `12-performance-techniques.md` lists the speed techniques: vectorisation, GPU batches, reduced systems,
 computing only what changes, memoisation and on-demand learning.
 
-`13-headless-system-definition.md` plans **systems without GEMSGUI**: a C++ builder (like Reaktoro) that picks
-elements, species, phases and phase models from ThermoFun v2 and ThermoSol records, a `system.yaml` file that is
-the same object saved, and Python through xgems. `system.yaml` plus a ThermoFun v2 dataset becomes **GEMSGUI's
-export**; DCH/IPM/DBR become an internal legacy format; results get a **named results file** with units.
+## Part II — systems without GEMSGUI (13, separate work)
+
+- **Separate from the restructuring.** Part I (Stages A and B) never waits for it; it keeps Part II in mind through
+  eight design rules (04 §9, A-rule 6).
+- **A C++ builder** (like Reaktoro) picks elements, species, phases and phase models from ThermoFun v2 and ThermoSol
+  records. `system.yaml` is the same object saved, and Python gets it through xgems.
+- **Easy by default, every option settable:** a database, a bulk composition, T and P are enough. Profiles add the
+  defaults of a field (cement, hydrothermal, …), and anything can be set by hand. Every automatic choice is saved in
+  a resolved file.
+- **User-friendly files:** `system.yaml` plus a ThermoFun v2 dataset becomes GEMSGUI's export; DCH/IPM/DBR become an
+  internal legacy format; results get a named results file with units.
 
 ## Order of work
 
@@ -75,8 +82,9 @@ export**; DCH/IPM/DBR become an internal legacy format; results get a **named re
   - B9 allocations;
   - B10–B12 floating-point policy, parallel node batches and libm;
   - B13 ThermoFun comparison and switch, B14 grid removal, B15–B17 ThermoSol and ThermoKin as libraries.
-- **Track S (13), beside Stage A:** S1 definition object and YAML, S2 builder, S3 converter from GEMSGUI projects
-  and corpus comparison, S4 Python, S5 direct initialisation, S6 ThermoSol records, S7 results file, S8 GEMSGUI export switch.
+- **Part II, track S (13), separate from Stages A and B:** S0 profiles and automatic rules, S1 definition object and
+  YAML, S2 builder, S3 converter from legacy exports and corpus round trip, S4 Python, S5 direct start, S6 ThermoSol
+  records, S7 results file, S8 GEMSGUI export switch.
 - **Extensions (07).** dn/db at the accepted answer comes first. No GPU work starts until a CPU batch test shows
   that most nodes stay on the common path.
 
@@ -94,4 +102,4 @@ export**; DCH/IPM/DBR become an internal legacy format; results get a **named re
 5. **The activity call is not repeatable** (it keeps a history), and freezes differ between CPU types. So Stage A
    never changes the number of calls, and all freezes use one machine class.
 
-Open questions with assumed defaults: 08 §3 (34 items).
+Open questions with assumed defaults: 08 §3 (35 items).

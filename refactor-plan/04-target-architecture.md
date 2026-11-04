@@ -240,3 +240,22 @@ network policy).
 - The char-coded enums in files and in `MULTI` (file format); typed enums only at new interfaces.
 - The Optima fork and its feature macros (owner's decision space; 08 Q8).
 - JAMA/TNT (used on cold paths; replacing them changes FP order → Stage B with scoring).
+
+## 9. Design rules from Part II (system definition, 13) that the restructuring keeps in mind
+
+Part II is separate work (owner), but the restructuring must not make it harder. Each rule names the Part I steps
+where reviewers check it (A-rule 6, 05 §0):
+
+1. **Settings by name.** Every `pa_` field is reachable by its name (A3); no new setting is positional only.
+2. **Read and derive are separate.** Today `from_text_file_gemipm` mixes reading with derivations (`pm.LO`, `pm.PG`
+   ms_multi_format.cpp l.888–890, `ConvertDCC()` l.1011, restoring `DCmm` from A l.989, writing into DATACH while
+   reading MULTI). A10 and A12 move each derivation into a named function that a builder can call without a file.
+3. **An in-memory start exists and stays.** `GEM_init(dch_json, ipm_json, dbr_json, thermo)` keeps working through
+   every move (A10); allocation (`datach_realloc`, `databr_realloc`, `multi_realloc`) stays callable without a reader.
+4. **Names are first-class.** Name → index maps are built once per system (not linear searches per call, trap 8);
+   new interfaces take names or typed ids, not raw indexes.
+5. **Models are chosen by name or record**, never by a character code in new code (A17 registry, B15 ThermoSol records).
+6. **Standard states come through `ThermoSource`** (A15); nothing new reads the T-P grid.
+7. **Definitions are values; state is not hidden.** No new global, static or thread-local state (A6–A9); a system
+   definition can be copied and compared.
+8. **Results can be read by name** (02 §2.1 getters), so the results file of 13 §7.3 needs no new solver code.
