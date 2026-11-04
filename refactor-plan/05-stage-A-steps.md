@@ -43,6 +43,9 @@ A15 ThermoSource (after A10) ; A16 one phase-property implementation (after A9, 
 
 Expected length: 28–40 pull requests. Steps A6a–e, A10a–d and A12 are the long ones.
 
+Track S (systems without GEMSGUI, 13 §5) runs beside Stage A: it adds code and changes no existing path. S1
+needs A3 (settings by name), S2 needs A15 (`ThermoSource`).
+
 ## 2. Steps
 
 ### A0 — Baseline and harness (owner's machine)

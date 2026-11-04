@@ -1375,3 +1375,23 @@ CASHNK1_HOP 135.5M: models 26.7, log 15.2, GX+TPA 10.7, conc+gamma 10.1, ipmQR 7
 - Existing optimisation material: Optima EchelonizerExtended::updateWithPriorityWeights/updateOrdering,
   LinearSolverNullspace/Rangespace, StablePartition; Reaktoro Equilibrium/SmartEquilibriumSolver,
   EquilibriumPredictor, EquilibriumSensitivity, Kinetics/SmartKineticsSolver.
+
+## Owner request 3 (GEMS3K without the GUI; system by code API or YAML) — facts used for file 13
+- Owner answers: C++ builder API is the core (YAML = its serialised form, Python via xgems); species and standard
+  states from ThermoFun v2 databases.
+- Headless entries today: GEM_init(lst) node_copy.cpp l.107; GEM_init(dch_json, ipm_json, dbr_json, thermo) l.234;
+  xgems ChemicalEngine::initializeFromJsonStrings (ChemicalEngine.hpp l.242). No builder exists.
+- Reusable: dbr_dch_api::datach_realloc/databr_realloc/datach_reset; DCH/IPM/DBR JSON writers/readers; ChemicalFun
+  FormulaParser (ChemicalFormulaParser.h, ChemicalData.h: FormulaToken, DBElements, ElementKey,
+  formulasProperties; MoietyParser.h); tsolmod4rkt SolModFactory.
+- GEMSGUI system-definition modules: m_icomp.cpp 240, m_dcomp.cpp 1581, m_dcomp2.cpp 965, m_reacdc.cpp 1947,
+  m_reac2.cpp 1749, m_phase.cpp 1864, m_phase2.cpp 1833, m_compos.cpp 1344, Submods/ms_rmults.cpp 1110,
+  ms_system.cpp 1712, ms_sysbc.cpp 1008, ms_mtparm.cpp 1056, m_param.cpp.
+- Other codes: Reaktoro Core/Phases.hpp (speciate l.45, exclude l.58, Phases l.281, AqueousPhase l.344,
+  GaseousPhase l.374, LiquidPhase l.404, SolidPhase l.434, MineralPhase l.458, MineralPhases l.480),
+  examples/python/ex-class-phases.py, YAML databases embedded/databases/reaktoro/*.yaml (Species: Name, Formula,
+  Elements "3:Fe 2:Al", AggregateState, StandardThermoModel: {HollandPowell: {...}}); PHREEQC database keywords
+  (phreeqc.dat: SOLUTION_MASTER_SPECIES l.5, SOLUTION_SPECIES l.62, PHASES l.968, EXCHANGE_MASTER_SPECIES
+  l.1351, SURFACE_MASTER_SPECIES l.1434, RATES l.1616); Equilipy read_dat (read_dat.py l.42), equilib_single
+  (l.146), equilib_batch (l.136); CEA samples/example1.inp (problem / reactants / only datasets); MAGEMin
+  src/*_database; ThermoFun v2 examples/v2/minimal.yaml (thermohub: 2.0.0-draft.1, thermodataset, substances).

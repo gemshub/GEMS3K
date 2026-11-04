@@ -164,3 +164,11 @@ headers stay installed with a `#pragma message` deprecation note (opt-out macro 
 | `TActivity` / `TKinetics` and the TNode activity API (node_activities.cpp) | public but undocumented | **kept** as the ThermoSol/ThermoKin front end; documented; not deprecated (reverses Q14 of the first version) |
 | `TSolMod(SolutionData*)`, `SolutionData`, TSolMod virtuals (tsolmod4rkt) | public | kept until ThermoSol's `PhaseModel` API is released (B17); then `[[deprecated]]` forwarders for one release cycle (§6) |
 | Legacy phase arrays in the IPM file (`sMod`, `LsMod`, `PMc`, `DMc`, `IPx`, `MoiSN`, …) and kinetics arrays | the only format | ThermoSol/ThermoKin `Compat` reads and writes them byte for byte; v2 records (named, with units) added beside them |
+
+## 9. New public API for systems made without GEMSGUI (13)
+
+| Item | Form | Rules |
+|---|---|---|
+| `gems3k::SystemDefinition` (value object), `gems3k::SystemBuilder` | new C++ API, additive | documented in `Docs/`; versioned with the library |
+| `TNode::GEM_init(const SystemDefinition&)`, xgems `ChemicalEngine(definition)` | new overloads beside the file and JSON-string forms | the old forms stay (no deprecation) |
+| `system.yaml` schema (`gems3k: <version>` key at the top) | new file format | readers accept older schema versions; a change of meaning needs a new major version (ThermoFun v2 pattern) |

@@ -47,6 +47,8 @@ GEMS3K/                         (repository root: unchanged top level)
    ├─ run/         (in gems3k_node) GEM_run layer pipeline: rescue, cap, dry redo, tries, single; RunContext
    ├─ node/        gems3k_node      TNode public API, pack/unpack, name maps, TActivity/TKinetics front ends (11)
    ├─ nodearray/   gems3k_nodearray TNodeArray
+   ├─ system/      gems3k_system    SystemDefinition, SystemBuilder, system.yaml reader/writer, derivations
+   │                                (stoichiometry, codes, model layout, bulk) — systems without GEMSGUI (13)
    └─ diag/        gems3k_diag      trace writers (RUN/SET/EFF/KEY/CERT/DECIDE), probes, gems3k_timing
 ```
 
@@ -166,6 +168,7 @@ ThermoFun, numerics ← ThermoSol (phase models), ThermoKin (kinetics)     no GE
 data, numerics, thermo, ThermoSol, ThermoKin ← kernel
 kernel ← optima          (optional; Optima::Optima)
 kernel, optima, diag ← node(run) ← nodearray
+data, io, thermo, ThermoSol, ThermoKin, ChemicalFun ← system ← node (GEM_init(const SystemDefinition&))
 core ← diag ← (kernel, optima, node)     diag only writes; it never changes results
 ```
 

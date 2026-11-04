@@ -79,7 +79,8 @@ with dn/db·Δb on rows with an unchanged phase set; report the relative error p
 
 See also: `10-thermofun-tp.md` (standard states from ThermoFun only), `11-thermosol-thermokin.md` (phase-model
 and kinetics libraries; the batched `Engine::evaluateBatch` is the first GPU candidate) and
-`12-performance-techniques.md` (techniques catalogue, on-demand learning §6).
+`12-performance-techniques.md` (techniques catalogue, on-demand learning §6). Systems made in code or YAML without
+GEMSGUI (`13-headless-system-definition.md`) make batch, GPU and on-demand-learning tests easy to set up.
 
 ## 4. Order (after Stage B core steps)
 
