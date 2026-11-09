@@ -394,6 +394,14 @@ hand, the project is not correct. To change them, export the project again from 
   amount. The result does not change.
 - **Trace phases.** The GEMS3K IPM solver can leave out a phase that is a little supersaturated. Optima finds
   it.
+- **Small reacting part in a large inert part.** An example is 1e-10 mol of reacting elements in 1e-4 mol of an
+  inert gas. With the default `pa_DK`, AIA and SIA give the same energy and the same phases. But the trace
+  amounts can be different by about 0.1 %, and a phase that is about to disappear by a few %. Each mode stops
+  at a different point near the same result. The result does not depend on the start point.
+  - To make the modes agree, set `pa_DK = 1e-8` and `pa_DHB = 1e-17`.
+  - Scaling all amounts by the same factor does not help, because the solver scales the system itself.
+  - Compare amounts only between runs in the same mode. A warm start (SIA) also depends on the solution it
+    starts from.
 - **Large systems** can need tens of seconds for each point in the Optima modes.
 - **Trace elements below the species floors.** The floor amounts of the species of a trace element can add up
   to more than the amount of the element. An Optima call can then stay BAD. The rescue cannot solve such a
