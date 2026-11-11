@@ -46,7 +46,7 @@
 #include <string>
 
 // Thread-safe logger to stdout with colors
-std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = spdlog::stdout_color_mt("ipm");
+std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = gems3k_logger("ipm");
 
 #define uDDtrace false
 

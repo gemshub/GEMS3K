@@ -33,7 +33,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 // Thread-safe logger to stdout with colors
-std::shared_ptr<spdlog::logger> TSolMod::solmod_logger = spdlog::stdout_color_mt("solmod");
+std::shared_ptr<spdlog::logger> TSolMod::solmod_logger = gems3k_logger("solmod");
 
 //=============================================================================================
 // TSolMod base class for multicomponent solid, liquid, fluid and aqueous mixtures

@@ -29,6 +29,11 @@
 #include <spdlog/spdlog.h>
 
 /// Default logger for gems3k library
+/// The logger with this name: the one already registered, or a new one that writes to stdout in color.
+/// Two copies of GEMS3K in one process (for example a static copy in one Python module and the shared
+/// library in another) share the spdlog registry; creating a logger name twice would throw.
+std::shared_ptr<spdlog::logger> gems3k_logger(const std::string& name);
+
 extern std::shared_ptr<spdlog::logger> gems_logger;
 
 extern const std::string _GEMIPM_version_stamp;

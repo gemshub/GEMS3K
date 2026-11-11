@@ -44,7 +44,7 @@
 
 
 // Thread-safe logger to stdout with colors
-std::shared_ptr<spdlog::logger> TNode::node_logger = spdlog::stdout_color_mt("tnode");
+std::shared_ptr<spdlog::logger> TNode::node_logger = gems3k_logger("tnode");
 // Thread-safe logger to file !!!!  to do change
 std::shared_ptr<spdlog::logger> TNode::ipmlog_file;// = spdlog::stdout_color_mt("ipmlog");
 
@@ -64,6 +64,10 @@ TNode::TNode()
 {
     std::call_once(once_flag, [](){
         // Thread-safe one-time operation
+    if(!ipmlog_file) {
+        // Another copy of GEMS3K in this process may have registered it already (see gems3k_logger)
+        ipmlog_file = spdlog::get("ipmlog");
+    }
     if(!ipmlog_file) {
         // ipmlog.txt is created when the first message is written, not here
         ipmlog_file = std::make_shared<spdlog::logger>("ipmlog",

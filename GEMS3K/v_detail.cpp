@@ -3,8 +3,14 @@
 #include "v_detail.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+std::shared_ptr<spdlog::logger> gems3k_logger(const std::string& name)
+{
+    auto logger = spdlog::get(name);
+    return logger ? logger : spdlog::stdout_color_mt(name);
+}
+
 // Thread-safe logger to stdout with colors
-std::shared_ptr<spdlog::logger> gems_logger = spdlog::stdout_color_mt("gems3k");
+std::shared_ptr<spdlog::logger> gems_logger = gems3k_logger("gems3k");
 
 TError::~TError()
 {}
