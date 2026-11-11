@@ -27,6 +27,7 @@
 //-------------------------------------------------------------------
 //
 
+#include "gems3k_timing.h"
 #include "ms_multi.h"
 #include "v_detail.h"
 #include "v_service.h"
@@ -35,6 +36,11 @@
 // added 18.06.2008 DK
 double TMultiBase::SmoothingFactor( )
 {
+   // Optima path only (AOP/SOP/ROP): return exactly 1.0, which makes the IPM-2 smoothing blend
+   // in DC_PrimalChemicalPotentialUpdate() a no-op, so the objective Optima minimises depends on
+   // x alone (see optima_disable_smoothing). Native AIA/SIA never sets this flag.
+   if( optima_disable_smoothing )
+      return 1.0;
    if( pm.FitVar[4] < 0 )
    {  // To start SIA mode (smart initial approximation)
       return 1.0;
@@ -284,6 +290,7 @@ TMultiBase::PhaseSpecificGamma( long int j, long int jb, long int je, long int k
 long int
 TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
 {
+    gems3k_timing::Scope timing( gems3k_timing::ActCoef );
     long int k, j, jb, je=0, jpb, jdb, ipb,  jpe=0, jde=0, ipe=0;
     //long int  jmb, jme=0, jsb, jse=0;
     //long int jphl=0, jlphc=0, jdqfc=0,  jrcpc=0;
@@ -370,6 +377,8 @@ TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
             jb = je;
             je += pm.L1[k];
             sMod = pm.sMod[k];
+            if( !phSolMod[k] )  // no solution model object (one-species phase, skipped in LINK_TP_MODE)
+                continue;
             switch( pm.PHC[k] )
             {
             case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
@@ -633,6 +642,7 @@ void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int
     sd.arCTermt = pm.CTerms+jb; // End member coulombic terms
 
     sd.aphVOL = pm.FVOL+k;
+    sd.aphXF = pm.XF+k;   // lets an EoS model turn its molar volume into the total aphVOL expects
     sd.DC_Codes = pm.DCC+jb;  // pointer to Dcomp class codes (added 02.05.2010 TW)
     sd.arMoiSN = pm.MoiSN+jmb;  // Pointer to sublattice-moiety multiplicity array
     sd.arSitFr = pm.SitFr+jsb;  // Pointer to sublattice-moiety multiplicity array
@@ -1111,7 +1121,7 @@ void TMultiBase::SolModStandProp ( /*long int jb,*/ long int k, char ModCode )
         // fluid (gas) models
         case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
         case SM_STFLUID:
-        {    ErrorIf( !phSolMod[k], "SolModIdealProp: ","Invalid index of phase");
+        {    ErrorIf( !phSolMod[k], "SolModStandProp: ","Invalid index of phase");
              TSolMod* mySM = phSolMod[k];
              mySM->StandardProp( zst );
              break;

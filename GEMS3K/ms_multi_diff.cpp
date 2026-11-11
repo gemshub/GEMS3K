@@ -305,6 +305,9 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
     double Go, Gg=0., Ge=0., Vv, h0=0., S0 = 0., Cp0= 0., a0 = 0., u0 = 0.;
     double P = PPa/bar_to_Pa;
     DATACH  *dCH = aNa->pCSD();
+    // Pressure coordinate for the lookup grid: 0 on a saturated-vapour-pressure grid, where the
+    // node carries the resolved Psat(T) and the axis carries the 0 marker (see grid_P()).
+    const double Pg = aNa->grid_P( PPa );
 
     //    ipm_logger->info("Calc Lookup T: {}  P: {}", TK, PPa);                 Temporarily disabled 23.Jan.2022
     if( dCH->nTp <1 || dCH->nPp <1 || aNa->check_TP( TK, PPa ) == false )
@@ -346,13 +349,13 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
         else
         {
             pm.denW[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->denW+jj,
-                                       PPa, TK, dCH->nTp, dCH->nPp,6 )/1e3;// from test denW enough
+                                       Pg, TK, dCH->nTp, dCH->nPp,6 )/1e3;// from test denW enough
             pm.epsW[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->epsW+jj,
-                                       PPa, TK, dCH->nTp, dCH->nPp,5 );// from test epsW enough
+                                       Pg, TK, dCH->nTp, dCH->nPp,5 );// from test epsW enough
             pm.denWg[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->denWg+jj,
-                                        PPa, TK, dCH->nTp, dCH->nPp,5 )/1e3;
+                                        Pg, TK, dCH->nTp, dCH->nPp,5 )/1e3;
             pm.epsWg[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->epsWg+jj,
-                                        PPa, TK, dCH->nTp, dCH->nPp,5 );
+                                        Pg, TK, dCH->nTp, dCH->nPp,5 );
         }
     }
 
@@ -409,19 +412,19 @@ void TMultiBase::load_all_thermodynamic_from_grid(TNode* aNa, double TK, double 
             else
             {
                 Go = LagranInterp( dCH->Pval, dCH->TKval, dCH->G0+jj,
-                                   PPa, TK, dCH->nTp, dCH->nPp, 6 ); // from test G0[Ca+2] enough
+                                   Pg, TK, dCH->nTp, dCH->nPp, 6 ); // from test G0[Ca+2] enough
                 Vv = LagranInterp( dCH->Pval, dCH->TKval, dCH->V0+jj,
-                                   PPa, TK, dCH->nTp, dCH->nPp, 5 )*1e5;
+                                   Pg, TK, dCH->nTp, dCH->nPp, 5 )*1e5;
                 if( dCH->S0 ) S0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->S0+jj,
-                                                  PPa, TK, dCH->nTp, dCH->nPp, 4 ); // from test S0[Ca+2] enough
+                                                  Pg, TK, dCH->nTp, dCH->nPp, 4 ); // from test S0[Ca+2] enough
                 if( dCH->H0 ) h0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->H0+jj,
-                                                  PPa, TK, dCH->nTp, dCH->nPp,5 );
+                                                  Pg, TK, dCH->nTp, dCH->nPp,5 );
                 if( dCH->Cp0 ) Cp0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->Cp0+jj,
-                                                    PPa, TK, dCH->nTp, dCH->nPp, 3 ); // from test Cp0[Ca+2] not more
+                                                    Pg, TK, dCH->nTp, dCH->nPp, 3 ); // from test Cp0[Ca+2] not more
                 if( dCH->A0 ) a0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->A0+jj,
-                                                  PPa, TK, dCH->nTp, dCH->nPp,5 );
+                                                  Pg, TK, dCH->nTp, dCH->nPp,5 );
                 if( dCH->U0 ) u0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->U0+jj,
-                                                  PPa, TK, dCH->nTp, dCH->nPp,5 );
+                                                  Pg, TK, dCH->nTp, dCH->nPp,5 );
             }
             if( pm.tpp_G )
                 pm.tpp_G[j] = Go;

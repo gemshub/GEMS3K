@@ -562,7 +562,7 @@ void TActivity::PrimalChemicalPotentials( double F[], double Y[], double YF[], d
         {                 // error - will result in zerodivide!
            Error( "E13IPM: PrimalChemicalPotentials():",
                   std::string("Broken phase amount from primal approximation: Phase "+
-                  char_array_to_string(act.SF[k],20)+"  Yf= "+std::to_string(Yf)));
+                  name_for_message(act.SF[k],20)+" Yf= "+std::to_string(Yf)));
 //           Yf = act.YFk;
         }
         if( ( act.PHC[k] == PH_AQUEL && YFk >= act.XwMinM )

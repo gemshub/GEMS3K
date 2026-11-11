@@ -29,7 +29,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 // Thread-safe logger to stdout with colors
-std::shared_ptr<spdlog::logger> TKinMet::kinmet_logger = spdlog::stdout_color_mt("kinmet");
+std::shared_ptr<spdlog::logger> TKinMet::kinmet_logger = gems3k_logger("kinmet");
 
 
 //=============================================================================================

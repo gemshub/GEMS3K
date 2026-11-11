@@ -65,9 +65,7 @@ NlohmannJsonRead::NlohmannJsonRead(std::ostream &ff, const std::string &test_set
     std::stringstream buffer;
     buffer << ff.rdbuf();
     auto input_string = buffer.str();
-    replaceall( input_string, "-inf", DOUBLE_INFMINUS_STR);
-    replaceall( input_string, "inf", DOUBLE_INFPLUS_STR);
-    replaceall( input_string, "nan", DOUBLE_NAN_STR);
+    replace_json_inf_nan( input_string, DOUBLE_INFPLUS_STR, DOUBLE_NAN_STR );   // not inside strings
     nlohmann::json json_arr = nlohmann::json::parse(input_string);
 
     json_data = json_arr[0];

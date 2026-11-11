@@ -6,6 +6,10 @@ Just extended with an alternative Activity C++ API as the basis for a new Python
 Main version use [ThermoFun](https://bitbucket.org/gems4/thermofun/src/master/) - a code for calculating the standard state thermodynamic properties of substances and reactions at a given temperature and pressure. 
 
 
+**Choosing a solver and its settings:** see [Docs/SOLVER-OPTIONS-GUIDE.md](Docs/SOLVER-OPTIONS-GUIDE.md) — the two solvers (GEMS3K IPM and Optima), the six calculation modes, every `pa_` setting, and the known limitations. Suggested settings for batch runs, transport and grids: [Docs/SOLVER-ADVANCED-USAGE.md](Docs/SOLVER-ADVANCED-USAGE.md).
+
+**What each mode does, step by step:** see [Docs/SOLVER-PATH-GRAPH.md](Docs/SOLVER-PATH-GRAPH.md) ([drawn version](Docs/SOLVER-PATH-GRAPH.html)). It shows the order of the solver steps, the retries and the rescue.
+
 ## Briefly about GEMS3K
 
 The code Implements the improved GEM IPM-3 algorithm with excellent mass balance precision and fast convergence to Gibbs energy minimum even in very complex non-ideal chemical systems with two-sided metastability constraints (learn more on GEMS3K web page).
@@ -120,6 +124,8 @@ sudo ./install_no_thermofun.sh
 * BUILD_GEM2MT  (default ON) - Enable building the standalone math-transport library.
 
 * BUILD_TOOLS   (default ON) - Enable building the [kva2json utility](tools/README.md) to convert GEMS3K files formats. 
+
+* USE_OPTIMA_SOLVER (default OFF) - Enable the Optima solver (modes AOP, SOP, HOP, SHP). Install Optima first; CMake finds it through CMAKE_PREFIX_PATH. GEMS3K then uses the Eigen version of the Optima build. GEMS3K supports Eigen 3.4 and Eigen 5. Without this option, the Optima modes run with the GEMS3K IPM solver, with a warning.
 
 * BUILD_NLOHMANNJSON (default OFF) - Enable using the [nlohmann JSON](https://github.com/nlohmann/json) to serialize/deserialize input files, otherwise, the simdjson library is used.
 
