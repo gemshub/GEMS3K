@@ -258,6 +258,8 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
             jb = je;
             je += act.L1[k];
             sMod = act.sMod[k];
+            if( !phSolMod[k] )  // no solution model object (one-species phase, skipped in LINK_TP_MODE)
+                continue;
                 switch( act.PHC[k] )
             {
               case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:

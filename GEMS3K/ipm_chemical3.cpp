@@ -377,6 +377,8 @@ TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
             jb = je;
             je += pm.L1[k];
             sMod = pm.sMod[k];
+            if( !phSolMod[k] )  // no solution model object (one-species phase, skipped in LINK_TP_MODE)
+                continue;
             switch( pm.PHC[k] )
             {
             case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
@@ -1119,7 +1121,7 @@ void TMultiBase::SolModStandProp ( /*long int jb,*/ long int k, char ModCode )
         // fluid (gas) models
         case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
         case SM_STFLUID:
-        {    ErrorIf( !phSolMod[k], "SolModIdealProp: ","Invalid index of phase");
+        {    ErrorIf( !phSolMod[k], "SolModStandProp: ","Invalid index of phase");
              TSolMod* mySM = phSolMod[k];
              mySM->StandardProp( zst );
              break;
