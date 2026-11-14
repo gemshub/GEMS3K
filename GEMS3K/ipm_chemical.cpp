@@ -582,8 +582,24 @@ case DC_SCM_SPECIES:
         double SmoSensT = 1e-5;   // to be adjusted
         dF0 = F0 - Fold;
         // Optima switches smoothing off; skip the blend there, since Fold + (F0 - Fold) rounds F0 away when Fold is huge.
+        // pa_PhaseSmoothing = 1: the damping factor is set by the phase's own non-ideality,
+        // 1/(1 + sum of x|ln gamma|); the aqueous phase is not damped. 0: the pa_AG/pa_DGC rule.
+        double sf = SmoothingFactor();
+        if( base_param()->PhaseSmoothing == 1 && !optima_disable_smoothing )
+        {
+            sf = 1.;
+            if( pm.PHC[k] != PH_AQUEL && pm.XF[k] > 0. )
+            {
+                long int jb = 0;
+                for( long int q = 0; q < k; q++ ) jb += pm.L1[q];
+                double c8 = 1.;
+                for( long int i = jb; i < jb + pm.L1[k]; i++ )
+                    c8 += pm.X[i] / pm.XF[k] * fabs( pm.lnGam[i] );
+                sf = 1. / c8;
+            }
+        }
         if( !optima_disable_smoothing && pm.X[j] > std::min( pm.lowPosNum, pm.DcMinM ) && fabs( dF0 ) >= SmoSensT )
-       	    F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
+       	    F0 = Fold + dF0 * sf;    // Changed 18.06.2008 DK
     }
     return F0;
 }

@@ -533,6 +533,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// standard energies and model parameters) swap their amounts when the other copy's major end-members (class M)
     /// fit the composition better. G does not change. 0 = off, 1 = on (default).
     long int OptimaTwinLabel = 1;
+    /// pa_PhaseSmoothing: native IPM solver: how the activity terms of a non-ideal phase are damped between
+    /// iterations. 1 = by the phase's own non-ideality, factor 1/(1 + sum of x|ln gamma|); the aqueous phase is
+    /// not damped (default). 0 = the pa_AG / pa_DGC rule.
+    long int PhaseSmoothing = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2093,7 +2097,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing
 
 } MULTI_DYNAMIC_FIELDS;
 
