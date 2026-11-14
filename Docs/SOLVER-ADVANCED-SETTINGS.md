@@ -74,6 +74,7 @@ The [Glossary](GLOSSARY.md) explains the special words.
 | `pa_RescueBudget` | 100000 (on) | The rescue (`pa_FailRescue`) skips steps 1 to 4 after the call has used this number of iterations. The count includes the first attempt and both solvers. Step 5, the other solver, still runs one time. 0 = no limit. |
 | `pa_OptimaStallNetFactor` | 5 (on) | After a stall, Optima solves one more time with the stall check off. This last solve gets at most this number times the iterations of the solve that stalled, and at least 2000. 0 = the normal limit. |
 | `pa_IpmTwinSplit` | 1e-6 (on) | After a warm GEMS3K IPM calculation, two copies of one solid solution can keep one composition where they should split into two phases. The solver then tests that composition. If a split is lower by more than this value (RT per mole), the calculation is solved again from a cold start. 0 = off. |
+| `pa_PhaseSmoothing` | 1 (on) | The GEMS3K IPM solver damps the change of the non-ideal corrections of a phase between iterations by 1/(1 + Σ x·|ln γ|) of that phase. The aqueous phase is not damped. 0 = use `pa_AG` and `pa_DGC`. |
 | `pa_NativeOptimaFinish` | 500 (on) | Needs a build with Optima. A solid can be left out or be in a trace amount and still tend to form. Then Optima finishes the result. The solver keeps the new result only if it is better. The calculation can stop at its iteration limit, or it can fail to solve its equations. Then Optima finishes it from the point where it stopped. |
 
 ## Removed settings
