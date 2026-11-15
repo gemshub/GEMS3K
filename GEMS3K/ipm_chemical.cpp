@@ -582,13 +582,21 @@ case DC_SCM_SPECIES:
         double SmoSensT = 1e-5;   // to be adjusted
         dF0 = F0 - Fold;
         // Optima switches smoothing off; skip the blend there, since Fold + (F0 - Fold) rounds F0 away when Fold is huge.
-        // pa_PhaseSmoothing = 1: the damping factor is set by the phase's own non-ideality,
-        // 1/(1 + sum of x|ln gamma|); the aqueous phase is not damped. 0: the pa_AG/pa_DGC rule.
+        // pa_PhaseSmoothing = 1: in a mixed phase other than the aqueous, sorption and polyelectrolyte phases, the
+        // update of a species is damped by the phase's own non-ideality, 1/(1 + sum of x|ln gamma|), unless it kept its
+        // sign since the last step (a steady drift, not damped). The aqueous, sorption and
+        // polyelectrolyte phases keep the pa_AG/pa_DGC rule. 0: the pa_AG/pa_DGC rule for every phase.
         double sf = SmoothingFactor();
-        if( base_param()->PhaseSmoothing == 1 && !optima_disable_smoothing )
+        if( base_param()->PhaseSmoothing == 1 && !optima_disable_smoothing
+            && pm.PHC[k] != PH_AQUEL && pm.PHC[k] != PH_SORPTION && pm.PHC[k] != PH_POLYEL )
         {
+            static thread_local std::vector<double> prevD;
+            static thread_local long int prevIT = -1;
+            if( (long int)prevD.size() != pm.L || pm.IT < prevIT )
+                prevD.assign( (size_t)pm.L, 0. );
+            prevIT = pm.IT;
             sf = 1.;
-            if( pm.PHC[k] != PH_AQUEL && pm.XF[k] > 0. )
+            if( !( dF0 * prevD[(size_t)j] > 0. ) && pm.XF[k] > 0. )
             {
                 long int jb = 0;
                 for( long int q = 0; q < k; q++ ) jb += pm.L1[q];
@@ -597,6 +605,7 @@ case DC_SCM_SPECIES:
                     c8 += pm.X[i] / pm.XF[k] * fabs( pm.lnGam[i] );
                 sf = 1. / c8;
             }
+            prevD[(size_t)j] = dF0;
         }
         if( !optima_disable_smoothing && pm.X[j] > std::min( pm.lowPosNum, pm.DcMinM ) && fabs( dF0 ) >= SmoSensT )
        	    F0 = Fold + dF0 * sf;    // Changed 18.06.2008 DK
@@ -1423,6 +1432,8 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
         AmThExp = 4.;
     }
     AmountThreshold = pow(10.,-AmThExp);
+    // pa_PsscCleanupBudget = 2: what the raises of this pass have taken from each IC so far.
+    std::vector<double> clnUsed( (size_t)pm.N, 0. );
 
     kfr = -1; kur = -1;
     if( !pm.K2 )
@@ -1736,12 +1747,32 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                   else  // possibly lost DC in a solution phase (only estimated mole fraction available)
                      YjCleaned = pm.EMU[j]*pm.YF[k]; // does not work for adsorption yet
                   // pa_PsscCleanupBudget: a zeroed species is raised to at most what the bulk can supply.
-                  if( pa_p->PsscCleanupBudget > 0 && L1k > 1 )
+                  if( pa_p->PsscCleanupBudget == 1 && L1k > 1 )
                   {   const double cap = PhaseInsertionCeiling( j );
                       if( cap >= 0. && YjCleaned > cap )
                       {   native_trace_decide( "cleanupraise capped species=%s raise=%.6e cap=%.6e",
                                                char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), YjCleaned, cap );
                           YjCleaned = cap; } }
+                  // Mode 2: no raise when the estimated mole fraction is above 1 (then it is not a mole fraction),
+                  // and the raises of one pass share the amount of each IC instead of each taking all of it.
+                  if( pa_p->PsscCleanupBudget >= 2 && L1k > 1 )
+                  {   if( !( pm.EMU[j] <= 1. ) )
+                      {   native_trace_decide( "cleanupraise skipped species=%s emu=%.6e",
+                                               char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), pm.EMU[j] );
+                          YjCleaned = 0.; }
+                      else
+                      {   double cap = -1.;
+                          for( long int i = 0; i < pm.N - pm.E; i++ )
+                          {   const double a = pm.A[ i + j*pm.N ];
+                              if( a > 0. ) { const double c = std::max( 0., pm.B[i] - clnUsed[(size_t)i] ) / a;
+                                             if( cap < 0. || c < cap ) cap = c; } }
+                          if( cap >= 0. && YjCleaned > cap )
+                          {   native_trace_decide( "cleanupraise capped species=%s raise=%.6e cap=%.6e shared=1",
+                                                   char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), YjCleaned, cap );
+                              YjCleaned = cap; }
+                          for( long int i = 0; i < pm.N - pm.E; i++ )
+                          {   const double a = pm.A[ i + j*pm.N ];
+                              if( a > 0. ) clnUsed[(size_t)i] += a * YjCleaned; } } }
              }
              YjDiff = YjCleaned - Yj;
              if( fabs( YjDiff ) > CutoffDistortionMBR )

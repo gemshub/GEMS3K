@@ -534,15 +534,20 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// fit the composition better. G does not change. 0 = off, 1 = on (default).
     long int OptimaTwinLabel = 1;
     /// pa_PhaseSmoothing: native IPM solver: how the activity terms of a non-ideal phase are damped between
-    /// iterations. 1 = by the phase's own non-ideality, factor 1/(1 + sum of x|ln gamma|); the aqueous phase is
-    /// not damped (default). 0 = the pa_AG / pa_DGC rule.
+    /// iterations. 1 = in a solid or melt solution, by the phase's own non-ideality, factor 1/(1 + sum of x|ln gamma|),
+    /// only when a species' correction changes direction; the aqueous, sorption and polyelectrolyte phases keep the
+    /// pa_AG / pa_DGC rule (default). 0 = the pa_AG / pa_DGC rule for every phase.
     long int PhaseSmoothing = 1;
-    /// pa_IpmBalanceStep: IPM solver: after each step, add the step part that restores the mass balance. The part
-    /// uses the factor of the step's own linear system. 1 = on (default), 0 = off.
-    long int IpmBalanceStep = 1;
+    /// pa_IpmBalanceStep: IPM solver: after each step, add the step part that restores the mass balance.
+    /// 2 = the part has its own factor with scaled columns and leaves trace species out (default); 3 = as 2, but only
+    /// after a step that leaves the balance outside its tolerance; 1 = the part uses the factor of the step's own
+    /// linear system; 0 = off.
+    long int IpmBalanceStep = 2;
     /// pa_PsscCleanupBudget: phase selection: a species of a present solution phase that was set to zero is raised
-    /// again by at most the amount the bulk composition can supply. 1 = on (default), 0 = off (fixed raise).
-    long int PsscCleanupBudget = 1;
+    /// again by at most the amount the bulk composition can supply. 2 = the raises of one pass share that amount, and a
+    /// species whose estimated mole fraction is above 1 is not raised (default); 1 = each raise has the full amount;
+    /// 0 = off (fixed raise).
+    long int PsscCleanupBudget = 2;
     /// pa_DcMinMolecule: IPM solver, cold calls: a species is cut to zero only below one molecule in real moles,
     /// instead of below pa_DcMin. Use it together with pa_IpmBalanceStep. 1 = on, 0 = off (default).
     long int DcMinMolecule = 0;
@@ -550,6 +555,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// try the step times 1/(1 - r) and keep it only if the energy falls and the mass balance does not get worse.
     /// 1 = on, 0 = off (default).
     long int IpmJumpAhead = 0;
+    /// pa_OptimaJumpAhead: Optima solver: when two successive steps point the same way and shrink at a steady ratio,
+    /// try a longer step. The step is not tried if it would cross a bound, and it is kept only if the error falls.
+    /// 1 = on (default), 0 = off.
+    long int OptimaJumpAhead = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -1513,6 +1522,9 @@ public:
     };
     /// Checks whether nothing in the bulk fixes the redox level (pa_OptimaRedoxFree).
     RedoxFreeCheck CheckRedoxFree() const;
+    /// pa_IpmBalanceStep = 2: the H balance row when the bulk is redox-free with no spare electrons above 10 * DHBM,
+    /// else -1. Then the H balance depends on the O and charge balances, and the mass-balance steps leave it out.
+    long int RedoxFreeDropRow() const;
 
     /// Per-run record of the curvature floor (twin flags, times it fired); see ipm_optima.cpp.
     void PhaseHessianBegin();
@@ -2110,7 +2122,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing, f_pa_IpmBalanceStep, f_pa_PsscCleanupBudget, f_pa_DcMinMolecule, f_pa_IpmJumpAhead
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing, f_pa_IpmBalanceStep, f_pa_PsscCleanupBudget, f_pa_DcMinMolecule, f_pa_IpmJumpAhead, f_pa_OptimaJumpAhead
 
 } MULTI_DYNAMIC_FIELDS;
 

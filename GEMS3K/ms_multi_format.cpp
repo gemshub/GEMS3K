@@ -251,11 +251,12 @@ std::vector<io_formats::outField> MULTI_dynamic_fields =  { //80
     { "pa_OptimaStallNetFactor", 0 , 0, 0, "# pa_OptimaStallNetFactor: Optima solver: the last re-solve after a stall gets at most this many times the iterations of the stalled solve (at least 2000); 0 = the normal limit { 5 }" },
     { "pa_IpmTwinSplit", 0 , 0, 0, "# pa_IpmTwinSplit: IPM solver: after a warm call, two copies of a solid solution at one composition are checked for a split; if one is found (lower by more than this, RT per mole), the call is solved again cold; 0 = off { 1e-6 }" },
     { "pa_OptimaTwinLabel", 0 , 0, 0, "# pa_OptimaTwinLabel: Optima: two present copies of one solid solution swap their amounts when the other copy's major end-members fit better; G does not change; 0 = off, 1 = on { 1 }" },
-    { "pa_PhaseSmoothing", 0 , 0, 0, "# pa_PhaseSmoothing: IPM solver: damping of the activity terms of a non-ideal phase between iterations; 1 = by the phase's own non-ideality (the aqueous phase is not damped), 0 = the pa_AG/pa_DGC rule { 1 }" },
-    { "pa_IpmBalanceStep", 0 , 0, 0, "# pa_IpmBalanceStep: IPM solver: after each step, add the step part that restores the mass balance; 1 = on, 0 = off { 1 }" },
-    { "pa_PsscCleanupBudget", 0 , 0, 0, "# pa_PsscCleanupBudget: phase selection: a zeroed species of a present solution phase is raised by at most what the bulk can supply; 1 = on, 0 = off { 1 }" },
+    { "pa_PhaseSmoothing", 0 , 0, 0, "# pa_PhaseSmoothing: IPM solver: damping of the activity terms of a non-ideal phase between iterations; 1 = by the phase's own non-ideality in solid and melt solutions, only when a correction changes direction (aqueous, sorption and polyelectrolyte phases keep pa_AG/pa_DGC), 0 = the pa_AG/pa_DGC rule { 1 }" },
+    { "pa_IpmBalanceStep", 0 , 0, 0, "# pa_IpmBalanceStep: IPM solver: after each step, add the step part that restores the mass balance; 2 = own scaled factor, trace species left out, 3 = as 2 only when outside tolerance, 1 = factor of the step, 0 = off { 2 }" },
+    { "pa_PsscCleanupBudget", 0 , 0, 0, "# pa_PsscCleanupBudget: phase selection: a zeroed species of a present solution phase is raised by at most what the bulk can supply; 2 = shared budget, no raise from a mole fraction above 1; 1 = budget per raise; 0 = off { 2 }" },
     { "pa_DcMinMolecule", 0 , 0, 0, "# pa_DcMinMolecule: IPM solver, cold calls: a species is cut to zero only below one molecule in real moles, not below pa_DcMin; 1 = on, 0 = off { 0 }" },
     { "pa_IpmJumpAhead", 0 , 0, 0, "# pa_IpmJumpAhead: IPM solver: after two steps in one direction that shrink at a steady ratio, try a longer step and keep it only if the energy falls; 1 = on, 0 = off { 0 }" },
+    { "pa_OptimaJumpAhead", 0 , 0, 0, "# pa_OptimaJumpAhead: Optima solver: after two steps in one direction that shrink at a steady ratio, try a longer step that crosses no bound and keep it only if the error falls; 1 = on, 0 = off { 1 }" },
 };
 
 
@@ -274,7 +275,7 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 
     out_format.put_head( GEMS3KGenerator::gen_ipm_name( out_format.set_name() ), "ipm");
     io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays<TIO>  prar( 169, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 170, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -621,6 +622,8 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
         prar.writeField(f_pa_DcMinMolecule, pa_p->DcMinMolecule, _comment, false  );
     if( pa_p->IpmJumpAhead != pa_p_.IpmJumpAhead )
         prar.writeField(f_pa_IpmJumpAhead, pa_p->IpmJumpAhead, _comment, false  );
+    if( pa_p->OptimaJumpAhead != pa_p_.OptimaJumpAhead )
+        prar.writeField(f_pa_OptimaJumpAhead, pa_p->OptimaJumpAhead, _comment, false  );
     if(!brief_mode || pm.tMin != G_TP_ )
         prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -1026,7 +1029,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays<TIO>   rddar( 169, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 170, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 
@@ -1621,6 +1624,8 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
         case f_pa_DcMinMolecule: rddar.readArray("pa_DcMinMolecule" , &pa_p->DcMinMolecule, 1);
             break;
         case f_pa_IpmJumpAhead: rddar.readArray("pa_IpmJumpAhead" , &pa_p->IpmJumpAhead, 1);
+                break;
+        case f_pa_OptimaJumpAhead: rddar.readArray("pa_OptimaJumpAhead" , &pa_p->OptimaJumpAhead, 1);
             break;
         case f_pa_MbPivotSplit: rddar.readArray("pa_MbPivotSplit" , &pa_p->MbPivotSplit, 1);
                 break;

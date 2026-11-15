@@ -1847,6 +1847,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     // max(2000, pa_IIM), or less on the first attempt (pa_OptimaPreSolveFirstIters).
     options.maxiters = (unsigned)passBudget;
     options.convergence.tolerance = pa_p->OptimaTol;
+    options.jumpahead = pa_p->OptimaJumpAhead > 0;   // pa_OptimaJumpAhead
     apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
     apply_optima_lu( options, pa_p->OptimaPartialPivLU );
@@ -3636,6 +3637,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // pa_OptimaEarlyStabilityAt's cap is enforced in the convergence hook, not as a
             // maxiters clamp, so maxiters keeps the full budget.
             options.convergence.tolerance = pa_p->OptimaTol;
+            // pa_OptimaJumpAhead: a longer step when steps shrink at a steady ratio; never across a bound.
+            options.jumpahead = pa_p->OptimaJumpAhead > 0;
+            native_trace_decide( "optimajumpahead on=%d", options.jumpahead ? 1 : 0 );
             apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
             apply_optima_lu( options, pa_p->OptimaPartialPivLU );
