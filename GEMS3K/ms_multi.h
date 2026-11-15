@@ -537,6 +537,19 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// iterations. 1 = by the phase's own non-ideality, factor 1/(1 + sum of x|ln gamma|); the aqueous phase is
     /// not damped (default). 0 = the pa_AG / pa_DGC rule.
     long int PhaseSmoothing = 1;
+    /// pa_IpmBalanceStep: IPM solver: after each step, add the step part that restores the mass balance. The part
+    /// uses the factor of the step's own linear system. 1 = on (default), 0 = off.
+    long int IpmBalanceStep = 1;
+    /// pa_PsscCleanupBudget: phase selection: a species of a present solution phase that was set to zero is raised
+    /// again by at most the amount the bulk composition can supply. 1 = on (default), 0 = off (fixed raise).
+    long int PsscCleanupBudget = 1;
+    /// pa_DcMinMolecule: IPM solver, cold calls: a species is cut to zero only below one molecule in real moles,
+    /// instead of below pa_DcMin. Use it together with pa_IpmBalanceStep. 1 = on, 0 = off (default).
+    long int DcMinMolecule = 0;
+    /// pa_IpmJumpAhead: IPM solver: when two successive steps point the same way and shrink at a steady ratio r,
+    /// try the step times 1/(1 - r) and keep it only if the energy falls and the mass balance does not get worse.
+    /// 1 = on, 0 = off (default).
+    long int IpmJumpAhead = 0;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -2097,7 +2110,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing, f_pa_IpmBalanceStep, f_pa_PsscCleanupBudget, f_pa_DcMinMolecule, f_pa_IpmJumpAhead
 
 } MULTI_DYNAMIC_FIELDS;
 

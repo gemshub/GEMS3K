@@ -94,6 +94,13 @@ FILE* ipm_probe_file()
 static thread_local long int s_ipmKktFallbacks = 0;
 /// pa_IpmQrSortPivot: solves in the current InteriorPointsMethod() call; the first emits DECIDE "ipmqr-sortpivot".
 static thread_local long int s_ipmQrSortPivot = 0;
+/// pa_IpmBalanceStep: the R factor of the QR that gives pm.U, kept by SolveIpmAugmented() for the
+/// mass-balance part of the step (two triangular solves, no new factorisation).
+static thread_local std::vector<double> s_feasR;      // N x N upper factor, row-major: R(i,c) = s_feasR[i*N + c]
+static thread_local std::vector<long int> s_feasPerm; // column permutation (S P = Q R); identity when not pivoted
+static thread_local long int s_feasN = 0;
+static thread_local bool s_feasOk = false;
+static thread_local bool s_feasKeep = false;          // pa_IpmBalanceStep of the current IPM call
 
 bool first_note_for_system( const char* systemKey, const std::string& noteKey )
 {
@@ -188,7 +195,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld pa_IpmTwinSplit=%g pa_OptimaTwinLabel=%ld pa_PhaseSmoothing=%ld\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld pa_IpmTwinSplit=%g pa_OptimaTwinLabel=%ld pa_PhaseSmoothing=%ld pa_IpmBalanceStep=%ld pa_PsscCleanupBudget=%ld pa_DcMinMolecule=%ld pa_IpmJumpAhead=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -219,7 +226,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
              (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot, (long)pa->OptimaLSWarmTrials,
-             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor, pa->IpmTwinSplit, (long)pa->OptimaTwinLabel, (long)pa->PhaseSmoothing );
+             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor, pa->IpmTwinSplit, (long)pa->OptimaTwinLabel, (long)pa->PhaseSmoothing, (long)pa->IpmBalanceStep, (long)pa->PsscCleanupBudget, (long)pa->DcMinMolecule, (long)pa->IpmJumpAhead );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -4124,6 +4131,9 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     ipmKktRescues = 0;
     s_ipmKktFallbacks = 0;
     s_ipmQrSortPivot = 0;
+    // pa_IpmBalanceStep and pa_IpmJumpAhead for this call.
+    s_feasKeep = pa_p->IpmBalanceStep > 0;
+    native_trace_decide( "balancestep mode=%ld jumpahead=%ld", (long)pa_p->IpmBalanceStep, (long)pa_p->IpmJumpAhead );
     // pa_PhaseSmoothing: say once per call which damping rule the non-ideal phases get.
     if( pm.FIs > 0 && pm.sMod )
     {
@@ -4232,6 +4242,87 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
        LM1 = OptimizeStepSize( LM ); // Finding an optimal value of the descent step size
        FX1 = GX( LM1 ); // Calculation of the total Gibbs energy of the system G(X)
                           // and copying of Y, YF vectors into X,XF, respectively.
+       // pa_IpmJumpAhead: when two successive steps point the same way and shrink at a steady ratio r,
+       // try the step times 1/(1-r) and keep it only if G falls.
+       {
+           static thread_local std::vector<double> exD0;
+           static thread_local double exR0 = -1., exC0 = 0.;
+           if( pa_p->IpmJumpAhead > 0 )
+           {
+               const size_t Ls = (size_t)pm.L;
+               if( IT1 == 0 ) { exD0.assign( Ls, 0. ); exR0 = -1.; exC0 = 0.; }
+               std::vector<double> d( Ls );
+               double dd = 0., d0d0 = 0., dd0 = 0.;
+               for( size_t j = 0; j < Ls; j++ )
+               {   d[j] = LM1 * pm.MU[j]; dd += d[j]*d[j];
+                   if( exD0.size() == Ls ) { d0d0 += exD0[j]*exD0[j]; dd0 += d[j]*exD0[j]; } }
+               const double cs = ( dd > 0. && d0d0 > 0. ) ? dd0 / sqrt( dd * d0d0 ) : 0.;
+               const double r = d0d0 > 0. ? dd0 / d0d0 : -1.;
+               bool fired = false;
+               if( cs > 0.99 && exC0 > 0.99 && r > 0. && exR0 > 0.
+                   && std::max( r, exR0 ) < 1.0001 && std::min( r, exR0 ) >= 0.5 )
+               {
+                   const double g = 1. / ( 1. - std::min( std::min( r, exR0 ), 0.9999 ) );
+                   if( g <= 1000. )
+                   {
+                       const double LMx = std::min( g * LM1, 0.95 * LM );
+                       if( LMx > LM1 * 1.01 )
+                       {
+                           // A lower G can also come from a step that loses mass, so the jump must not
+                           // leave the mass balance worse than its tolerance or than before.
+                           long int ji1, ji2; double jr1, ja1; native_trace_mb_of( pm, pm.X, ji1, jr1, ji2, ja1 );
+                           const double FXx = GX( LMx );
+                           long int ji3, ji4; double jr2, ja2; native_trace_mb_of( pm, pm.X, ji3, jr2, ji4, ja2 );
+                           if( FXx < FX1 && jr2 <= std::max( jr1, 1. ) ) { FX1 = FXx; LM1 = LMx; fired = true; }
+                           else FX1 = GX( LM1 );
+                       }
+                   }
+               }
+               // After a jump the history restarts.
+               if( fired ) { exD0.assign( Ls, 0. ); exR0 = -1.; exC0 = 0.; }
+               else { exD0 = d; exR0 = r; exC0 = cs; }
+           }
+       }
+       // pa_IpmBalanceStep: add the step part that restores the mass balance, scaled on its own:
+       // factor 1, or less so that no amount turns negative.
+       // Up to three passes with the same factor (iterative refinement); a pass that does not shrink the
+       // worst residual relative to b is undone and ends the loop.
+       for( int feasPass = 0; feasPass < 3 && s_feasKeep && s_feasOk && s_feasN == N; feasPass++ )
+       {
+           long int fi1, fi2; double frBefore, fa1; native_trace_mb_of( pm, pm.X, fi1, frBefore, fi2, fa1 );
+           std::vector<double> xKeep( pm.X, pm.X + pm.L );
+           // r = b - A x after the step; S P = Q R gives A W A^T = P R^T R P^T, so v = P R^-1 R^-T P^T r.
+           std::vector<double> r( (size_t)N ), w( (size_t)N ), y( (size_t)N ), z( (size_t)N ), v( (size_t)N ), d( (size_t)pm.L, 0. );
+           for( long int i = 0; i < N; i++ ) r[(size_t)i] = pm.B[i];
+           for( long int j = 0; j < pm.L; j++ )
+               if( pm.X[j] != 0. ) for( long int i = 0; i < N; i++ ) r[(size_t)i] -= pm.A[i + j*pm.N] * pm.X[j];
+           for( long int c = 0; c < N; c++ ) w[(size_t)c] = r[(size_t)s_feasPerm[(size_t)c]];
+           const double* R = s_feasR.data();
+           bool ok = true;
+           for( long int k = 0; k < N && ok; k++ )
+           {   double t = w[(size_t)k];
+               for( long int i = 0; i < k; i++ ) t -= R[i*N + k] * y[(size_t)i];
+               if( !( fabs( R[k*N + k] ) > 0. ) ) ok = false; else y[(size_t)k] = t / R[k*N + k]; }
+           for( long int k = N - 1; k >= 0 && ok; k-- )
+           {   double t = y[(size_t)k];
+               for( long int c = k + 1; c < N; c++ ) t -= R[k*N + c] * z[(size_t)c];
+               z[(size_t)k] = t / R[k*N + k]; }
+           for( long int c = 0; c < N && ok; c++ ) v[(size_t)s_feasPerm[(size_t)c]] = z[(size_t)c];
+           for( long int c = 0; c < N && ok; c++ ) ok = std::isfinite( v[(size_t)c] );
+           if( !ok ) break;
+           double sf = 1.;
+           for( long int j = 0; j < pm.L; j++ )
+           {   if( !( pm.X[j] > min( pm.lowPosNum, pm.DcMinM ) ) || pm.W[j] <= 0. ) continue;
+               double c = 0.;
+               for( long int i = 0; i < N; i++ ) c += pm.A[i + j*pm.N] * v[(size_t)i];
+               d[(size_t)j] = pm.W[j] * c;
+               if( d[(size_t)j] < 0. ) sf = std::min( sf, 0.99 * pm.X[j] / -d[(size_t)j] ); }
+           for( long int j = 0; j < pm.L; j++ ) pm.X[j] += sf * d[(size_t)j];
+           long int fi3, fi4; double frAfter, fa2; native_trace_mb_of( pm, pm.X, fi3, frAfter, fi4, fa2 );
+           if( !( frAfter < frBefore ) )
+           {   std::copy( xKeep.begin(), xKeep.end(), pm.X ); TotalPhasesAmounts( pm.X, pm.XF, pm.XFA ); break; }
+           TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+       }
        pm.FX=FX1;
        // temporary
        for(i=4; i>0; i-- )
@@ -4864,6 +4955,7 @@ static double InverseIterationMinEig( Decomp& decomp, long int N, int iters )
 ///         normal equations would have gone on.
 long int TMultiBase::SolveIpmAugmented( long int N )
 {
+    s_feasOk = false;
     const long int Na = pm.N;   // stride of the a(j,i) macro
     const long int mode = base_param()->IpmAugmentedKKT;
     const double kRescueRel = 1e-12;
@@ -5013,6 +5105,14 @@ long int TMultiBase::SolveIpmAugmented( long int N )
         su = qr.solve( sb );
         for( long int i = 0; i < N; i++ )
             pm.U[i] = su[i];
+        if( s_feasKeep )   // pa_IpmBalanceStep: keep R and the column permutation
+        {
+            const Eigen::MatrixXd Rm = qr.matrixR().topLeftCorner( N, N ).template triangularView<Eigen::Upper>();
+            s_feasR.assign( (size_t)(N*N), 0. ); s_feasPerm.resize( (size_t)N ); s_feasN = N;
+            for( long int i = 0; i < N; i++ ) for( long int c = i; c < N; c++ ) s_feasR[(size_t)(i*N + c)] = Rm( i, c );
+            for( long int c = 0; c < N; c++ ) s_feasPerm[(size_t)c] = qr.colsPermutation().indices()[c];
+            s_feasOk = true;
+        }
         return 0;
     }
     // The top La rows of Q and b are overwritten in full below; only the bottom N rows need clearing.
@@ -5087,6 +5187,15 @@ long int TMultiBase::SolveIpmAugmented( long int N )
         for( long int c = k + 1; c < N; c++ )
             s -= Qd[(size_t)c * M + k] * pm.U[c];
         pm.U[k] = s / Rd[(size_t)k];
+    }
+    if( s_feasKeep )   // pa_IpmBalanceStep: keep R (unpivoted)
+    {
+        s_feasR.assign( (size_t)(N*N), 0. ); s_feasPerm.resize( (size_t)N ); s_feasN = N;
+        for( long int k = 0; k < N; k++ )
+        {   s_feasR[(size_t)(k*N + k)] = Rd[(size_t)k];
+            for( long int c = k + 1; c < N; c++ ) s_feasR[(size_t)(k*N + c)] = Qd[(size_t)c * M + k]; }
+        for( long int c = 0; c < N; c++ ) s_feasPerm[(size_t)c] = c;
+        s_feasOk = true;
     }
     return 0;
 }
@@ -5496,6 +5605,10 @@ double TMultiBase::RescaleToSize( bool /*standard_size*/ )
     pm.XwMinM = SizeFactor * pa_p->XwMin;  // cutoff for the amount of water-solvent
     pm.ScMinM = SizeFactor * pa_p->ScMin;  // cutoff for amount of the sorbent
     pm.DcMinM = SizeFactor * pa_p->DcMin;  // cutoff for Ls set (amount of solution phase component)
+    // pa_DcMinMolecule: on a cold call the cutoff is one molecule in real moles, in internal units.
+    if( pa_p->DcMinMolecule > 0 && !pm.pNP )
+    {   pm.DcMinM = 1.66e-24 * ( ( pa_p->DG > 1e-5 && pm.TMols > 0. ) ? pm.SMols / pm.TMols : 1. );
+        native_trace_decide( "dcminmolecule DcMinM=%.4e", pm.DcMinM ); }
     pm.PhMinM = SizeFactor * pa_p->PhMin;  // cutoff for single-comp.phase amount and its DC
   // insertion values before SolveSimplex() (re-scaled to system size)
     pm.DFYwM = SizeFactor * pa_p->DFYw;

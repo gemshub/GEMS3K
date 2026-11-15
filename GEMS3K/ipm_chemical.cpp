@@ -1735,6 +1735,13 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                      continue; // L1kZeroDCs++; No way to improve for pure substance
                   else  // possibly lost DC in a solution phase (only estimated mole fraction available)
                      YjCleaned = pm.EMU[j]*pm.YF[k]; // does not work for adsorption yet
+                  // pa_PsscCleanupBudget: a zeroed species is raised to at most what the bulk can supply.
+                  if( pa_p->PsscCleanupBudget > 0 && L1k > 1 )
+                  {   const double cap = PhaseInsertionCeiling( j );
+                      if( cap >= 0. && YjCleaned > cap )
+                      {   native_trace_decide( "cleanupraise capped species=%s raise=%.6e cap=%.6e",
+                                               char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), YjCleaned, cap );
+                          YjCleaned = cap; } }
              }
              YjDiff = YjCleaned - Yj;
              if( fabs( YjDiff ) > CutoffDistortionMBR )

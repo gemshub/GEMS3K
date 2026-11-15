@@ -301,6 +301,21 @@ static bool callFailed( long int st )
 long int TNode::GEM_run( bool uPrimalSol )
 {
     WarnIfSystemTooLarge();
+    // A time step without any kinetic phase has no effect: the call runs as with dt = 0, and the caller's dt is
+    // given back on every exit. (A transport code can export equilibrium nodes with its time step.)
+    struct NoKineticsTimeStep {
+        DATABR* c; double dt = 0.; bool on = false;
+        NoKineticsTimeStep( DATABR* cn, const MULTI* p ) : c( cn )
+        {
+            if( c->dt <= 0. || !p ) return;
+            if( p->LsKin )
+                for( long int k = 0; k < p->FI; k++ )
+                    if( p->LsKin[k*6] > 0 ) return;
+            dt = c->dt; on = true; c->dt = 0.;
+            native_trace_decide( "dtnokinetics dt=%g", dt );
+        }
+        ~NoKineticsTimeStep() { if( on ) c->dt = dt; }
+    } noKineticsTimeStep( CNode, pmm );
     const long int requested = CNode->NodeStatusCH;
     ApplyDbrTargets( requested );
     restoreEnteredComposition( requested );
