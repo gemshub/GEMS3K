@@ -1450,6 +1450,10 @@ public:
     /// caller returns an earlier solve's answer).
     void RestoreControlConditions( const std::vector<EqControlCondition>& saved )
     { optima_control_conditions = saved; }
+    /// pa_IpmBalanceStep = 2: the H balance row when the bulk is redox-free with no spare electrons above 10 * DHBM,
+    /// else -1. Then the H balance depends on the O and charge balances, and the mass-balance steps leave it out.
+    /// Always -1 in a build without Optima.
+    long int RedoxFreeDropRow() const;
 #ifdef USE_OPTIMA_SOLVER
     // Equilibrium via the Optima interior-point solver, as an alternative to the IPM/MBR loop
     // (ipm_optima.cpp). Dispatched from TNode::GEM_run() for NEED_GEM_AOP/SOP: pm.pNP == 0 is a
@@ -1522,9 +1526,6 @@ public:
     };
     /// Checks whether nothing in the bulk fixes the redox level (pa_OptimaRedoxFree).
     RedoxFreeCheck CheckRedoxFree() const;
-    /// pa_IpmBalanceStep = 2: the H balance row when the bulk is redox-free with no spare electrons above 10 * DHBM,
-    /// else -1. Then the H balance depends on the O and charge balances, and the mass-balance steps leave it out.
-    long int RedoxFreeDropRow() const;
 
     /// Per-run record of the curvature floor (twin flags, times it fired); see ipm_optima.cpp.
     void PhaseHessianBegin();
