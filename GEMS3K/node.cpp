@@ -308,9 +308,12 @@ long int TNode::GEM_run( bool uPrimalSol )
         NoKineticsTimeStep( DATABR* cn, const MULTI* p ) : c( cn )
         {
             if( c->dt <= 0. || !p ) return;
-            if( p->LsKin )
-                for( long int k = 0; k < p->FI; k++ )
-                    if( p->LsKin[k*6] > 0 ) return;
+            // A phase has kinetics if it has parallel reactions or a kinetic model (a model can have no reactions).
+            for( long int k = 0; k < p->FI; k++ )
+            {
+                if( p->LsKin && p->LsKin[k*6] > 0 ) return;
+                if( p->kMod && p->kMod[k][0] != KM_UNDEF ) return;
+            }
             dt = c->dt; on = true; c->dt = 0.;
             native_trace_decide( "dtnokinetics dt=%g", dt );
         }

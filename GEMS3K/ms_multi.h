@@ -1176,6 +1176,9 @@ class TMultiBase
 
     /// Species list of the last zero-width kinetic box warning; the same list again is logged at debug level
     std::string kinDegenWarned_;
+    /// pa_PhaseSmoothing = 1: the last update of each species and the iteration it was made in (cleared per solve)
+    std::vector<double> smoothPrevD_;
+    long int smoothPrevIT_ = -1;
     /// Input of the previous GEMS3K IPM solve: bulk composition (mol), T, P and which species have a positive
     /// upper limit. warmInputChanged_ is true if this solve has another input (read by the warm zero check).
     std::vector<double> prevBulkMol_;
@@ -1791,6 +1794,7 @@ protected:
     double DC_GibbsEnergyContribution(   double G,  double x,  double logXF,
                                          double logXw,  char DCCW );
     double GX( double LM  );
+    double GXofX();
     void ConvertDCC();
     long int  getXvolume();
 

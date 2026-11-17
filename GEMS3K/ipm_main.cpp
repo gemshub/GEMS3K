@@ -106,6 +106,31 @@ static thread_local long int s_balTried = 0, s_balKept = 0, s_balShort = 0;
 /// pa_IpmBalanceStep = 2: refinement steps taken with the balance correction, in the current IPM call.
 static thread_local long int s_mbrQrSteps = 0;
 
+/// The largest part (at most 1) of the balance correction d that keeps every amount inside its limits.
+/// It stops 1 % short of a limit, and returns 0 if d moves an amount already on a kinetic limit further out.
+static double balance_correction_step( const MULTI& pm, const double* amt, const std::vector<double>& d )
+{
+    double sf = 1.;
+    for( long int j = 0; j < pm.L; j++ )
+    {
+        const double dj = d[(size_t)j];
+        const char rl = pm.RLC ? pm.RLC[j] : NO_LIM;
+        if( dj < 0. )
+        {
+            const bool hasLo = pm.DLL && ( rl == NO_LIM || rl == LOWER_LIM || rl == BOTH_LIM );
+            const double lo = hasLo ? std::max( pm.DLL[j], 0. ) : 0.;
+            if( amt[j] > lo ) sf = std::min( sf, 0.99 * ( amt[j] - lo ) / -dj );
+            else if( lo > 0. ) sf = 0.;
+        }
+        else if( dj > 0. && pm.DUL && ( rl == UPPER_LIM || rl == BOTH_LIM ) )
+        {
+            if( amt[j] < pm.DUL[j] ) sf = std::min( sf, 0.99 * ( pm.DUL[j] - amt[j] ) / dj );
+            else sf = 0.;
+        }
+    }
+    return sf;
+}
+
 /// pa_IpmBalanceStep = 2: the mass-balance correction d with A d = r and the smallest weighted size (weights pm.W),
 /// for the amounts amt (pm.X in the IPM step, pm.Y in the mass-balance refinement). The IC dropRow (if >= 0) is left
 /// out: on a redox-free system the H balance depends on the O and charge balances (Shvarov 1987).
@@ -2897,7 +2922,9 @@ void TMultiBase::GibbsEnergyMinimization()
 {
   bool IAstatus;
   Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
-  pm.CondNum = 0.;      // reset condition-number diagnostics for this GEM call;
+  smoothPrevD_.clear();      // pa_PhaseSmoothing: each solve starts without a previous step
+  smoothPrevIT_ = -1;
+  pm.CondNum = 0.;     // reset condition-number diagnostics for this GEM call;
   pm.CondNumDiag = 0.;  // updated to the worst case seen across internal linear solves below
   pm.SolveTimeMs = 0.;      // per-phase timing: reset, accumulated across internal linear
   pm.CondNumTimeMs = 0.;    // solves below (SolveTimeMs) and its diagnostics-only subset
@@ -3837,6 +3864,21 @@ STEP_POINT("Before FIA");
     return false;
 }
 
+long int TMultiBase::RedoxFreeDropRow() const
+{
+#ifdef USE_OPTIMA_SOLVER
+    if( base_param()->IpmBalanceStep < 2 )
+        return -1;
+    const RedoxFreeCheck rf = CheckRedoxFree();
+    if( !rf.free || !( fabs( rf.excess ) <= 10. * pm.DHBM ) )
+        return -1;
+    for( long int i = 0; i < pm.N - pm.E; i++ )
+        if( pm.ICC[i] == IC_HYDROGEN )
+            return i;
+#endif
+    return -1;
+}
+
 // ------------------- ------------------ ----------------
 /// Calculation of a feasible IPM approximation, refinement of the mass balance.
 //
@@ -3858,21 +3900,6 @@ STEP_POINT("Before FIA");
 ///          4  - error in Initial mass balance residuals (debugging)
 ///          5  - error in MetastabilityLagrangeMultiplier() (debugging)
 //
-long int TMultiBase::RedoxFreeDropRow() const
-{
-#ifdef USE_OPTIMA_SOLVER
-    if( base_param()->IpmBalanceStep < 2 )
-        return -1;
-    const RedoxFreeCheck rf = CheckRedoxFree();
-    if( !rf.free || !( fabs( rf.excess ) <= 10. * pm.DHBM ) )
-        return -1;
-    for( long int i = 0; i < pm.N - pm.E; i++ )
-        if( pm.ICC[i] == IC_HYDROGEN )
-            return i;
-#endif
-    return -1;
-}
-
 long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
 {
     long int IT1;
@@ -4197,6 +4224,7 @@ STEP_POINT("FIA Iteration");
     {
         MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
         double res = ResidualMetric();
+        int kept = 0;
         for( int pass = 0; pass < 5 && res > 1.; pass++ )
         {
             WeightMultipliers( true );
@@ -4204,9 +4232,8 @@ STEP_POINT("FIA Iteration");
             std::vector<double> rr( (size_t)Nr ), dd( (size_t)pm.L, 0. ), yKeep( pm.Y, pm.Y + pm.L );
             for( long int ii = 0; ii < Nr; ii++ ) rr[(size_t)ii] = pm.C[ii];
             if( !balance_correction_qr( pm, pm.Y, Nr, rr, dd, hDrop ) ) break;
-            double sf = 1.;
-            for( J = 0; J < pm.L; J++ )
-                if( dd[(size_t)J] < 0. && pm.Y[J] > 0. ) sf = std::min( sf, 0.99 * pm.Y[J] / -dd[(size_t)J] );
+            const double sf = balance_correction_step( pm, pm.Y, dd );
+            if( !( sf > 0. ) ) break;
             for( J = 0; J < pm.L; J++ ) pm.Y[J] += sf * dd[(size_t)J];
             MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
             const double resNew = ResidualMetric();
@@ -4214,6 +4241,21 @@ STEP_POINT("FIA Iteration");
             {   std::copy( yKeep.begin(), yKeep.end(), pm.Y ); MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C ); break; }
             res = resNew;
             s_mbrQrSteps++;
+            kept++;
+        }
+        // The repair met the balance test: finish as a converged refinement.
+        if( kept > 0 && res <= 1. )
+        {
+            for( j=0; j< pm.L; j++ )
+                pm.X[j] = pm.Y[j];
+            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+            if( pm.PD == 2 )
+                CalculateActivityCoefficients( LINK_UX_MODE);
+            if( iRet == 1 )
+                iRet = 0;
+            native_trace_decide( "mbr-qr-finish-ok from=%ld", (long)WhereCalledFrom );
+            native_trace_mbr_exit( pm, pa_p, "converged_repair", WhereCalledFrom, pa_p->DP, iRet, trRestored );
+            return iRet;
         }
     }
    if( pa_p->DW && ( WhereCalledFrom == 0L || pm.pNP ) )  // Now controlled by DW flag
@@ -4431,11 +4473,12 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
            }
        }
        // pa_IpmBalanceStep: add the step part that restores the mass balance, scaled on its own:
-       // factor 1, or less so that no amount turns negative.
+       // factor 1, or less so that no amount leaves its limits.
        // Up to three passes with the same factor (iterative refinement); a pass that does not shrink the
        // worst residual relative to b is undone and ends the loop.
        // Mode 1 uses the factor kept from the step's own linear system; mode 2 makes its own factor.
        const bool balOwnQr = pa_p->IpmBalanceStep >= 2;
+       int balKeptNow = 0;
        for( int feasPass = 0; feasPass < 3 && s_feasKeep && ( balOwnQr || ( s_feasOk && s_feasN == N ) ); feasPass++ )
        {
            long int fi1, fi2; double frBefore, fa1; native_trace_mb_of( pm, pm.X, fi1, frBefore, fi2, fa1 );
@@ -4474,19 +4517,20 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
                    for( long int i = 0; i < N; i++ ) c += pm.A[i + j*pm.N] * v[(size_t)i];
                    d[(size_t)j] = pm.W[j] * c; }
            }
-           double sf = 1.;
-           for( long int j = 0; j < pm.L; j++ )
-               if( d[(size_t)j] < 0. && pm.X[j] > 0. ) sf = std::min( sf, 0.99 * pm.X[j] / -d[(size_t)j] );
+           const double sf = balance_correction_step( pm, pm.X, d );
            s_balTried++;
            if( sf < 1. ) s_balShort++;
+           if( !( sf > 0. ) ) break;
            for( long int j = 0; j < pm.L; j++ ) pm.X[j] += sf * d[(size_t)j];
            long int fi3, fi4; double frAfter, fa2; native_trace_mb_of( pm, pm.X, fi3, frAfter, fi4, fa2 );
            if( !( frAfter < frBefore ) )
            {   std::copy( xKeep.begin(), xKeep.end(), pm.X ); TotalPhasesAmounts( pm.X, pm.XF, pm.XFA ); break; }
            s_balKept++;
+           balKeptNow++;
            TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
        }
-       pm.FX=FX1;
+       // A kept correction changed the amounts, so the energy is that of the corrected amounts.
+       pm.FX = balKeptNow > 0 ? GXofX() : FX1;
        // temporary
        for(i=4; i>0; i-- )
             pm.logCDvalues[i] = pm.logCDvalues[i-1];

@@ -590,11 +590,10 @@ case DC_SCM_SPECIES:
         if( base_param()->PhaseSmoothing == 1 && !optima_disable_smoothing
             && pm.PHC[k] != PH_AQUEL && pm.PHC[k] != PH_SORPTION && pm.PHC[k] != PH_POLYEL )
         {
-            static thread_local std::vector<double> prevD;
-            static thread_local long int prevIT = -1;
-            if( (long int)prevD.size() != pm.L || pm.IT < prevIT )
+            std::vector<double>& prevD = smoothPrevD_;
+            if( (long int)prevD.size() != pm.L || pm.IT < smoothPrevIT_ )
                 prevD.assign( (size_t)pm.L, 0. );
-            prevIT = pm.IT;
+            smoothPrevIT_ = pm.IT;
             sf = 1.;
             if( !( dF0 * prevD[(size_t)j] > 0. ) && pm.XF[k] > 0. )
             {
@@ -771,8 +770,7 @@ double TMultiBase::DC_GibbsEnergyContribution(
 //
 double TMultiBase::GX( double LM  )
 {
-    long int i, j, k;
-    double x, XF, XFw, FX, Gi; // debug variable
+    long int i;
 //    double const1= pm.lowPosNum*10.,
 //           const2 = pm.lowPosNum*1000.;
 
@@ -792,6 +790,14 @@ double TMultiBase::GX( double LM  )
         }
     // calculate new total quantities of phases
     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    return GXofX();
+}
+
+/// G(X) of the current amounts pm.X, with the phase totals pm.XF and pm.XFA already up to date.
+double TMultiBase::GXofX()
+{
+    long int i, j, k;
+    double x, XF, XFw, FX, Gi;
 
     // calculating G(X)
     FX=0.;
