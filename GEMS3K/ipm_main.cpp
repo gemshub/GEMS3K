@@ -3870,7 +3870,7 @@ long int TMultiBase::RedoxFreeDropRow() const
     if( base_param()->IpmBalanceStep < 2 )
         return -1;
     const RedoxFreeCheck rf = CheckRedoxFree();
-    if( !rf.free || !( fabs( rf.excess ) <= 10. * pm.DHBM ) )
+    if( !rf.exact || !( fabs( rf.excess ) <= 10. * pm.DHBM ) )
         return -1;
     for( long int i = 0; i < pm.N - pm.E; i++ )
         if( pm.ICC[i] == IC_HYDROGEN )
@@ -3939,6 +3939,12 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     const long int hDrop = RedoxFreeDropRow();
     if( hDrop >= 0 )
         native_trace_decide( "mbr-hdrop from=%ld", (long)WhereCalledFrom );
+    else if( base_param()->IpmBalanceStep >= 2 && native_trace_file() )
+    {
+        const RedoxFreeCheck rf = CheckRedoxFree();
+        if( rf.free && !rf.exact )   // H2, O2 or a second valence: the H balance stays tested
+            native_trace_decide( "mbr-hdrop-inexact from=%ld", (long)WhereCalledFrom );
+    }
     // Track previous max residual to detect oscillation
     double prev_maxResidual = std::numeric_limits<double>::max();
     long int stalledIter = 0;

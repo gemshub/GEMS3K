@@ -566,6 +566,25 @@ TMultiBase::RedoxFreeCheck TMultiBase::CheckRedoxFree() const
     if( visits > kMaxVisits ) r.determined = false;
     r.excess = best < 1e300 ? bestE : 0.;
     r.rel = std::fabs( r.excess ) / std::max( scale, 1e-300 );
+    // The H balance is a copy of the others only when every species keeps each element at its one valence.
+    // H2, O2 or an element with two valences breaks this.
+    if( r.free && r.consistent && r.determined )
+    {
+        r.exact = true;
+        for( long int j = 0; j < L && r.exact; j++ )
+        {
+            if( pm.DUL[j] <= 0. ) continue;
+            double e = rest( j );
+            bool absent = false;
+            for( long int i = 0; i < N; i++ )
+            {
+                if( !isOther( i ) || a( j, i ) == 0. ) continue;
+                if( pm.B[i] == 0. || val[(size_t)i].size() != 1 ) { absent = true; break; }
+                e -= val[(size_t)i][0] * a( j, i );
+            }
+            if( !absent && std::fabs( e ) > 1e-6 ) r.exact = false;
+        }
+    }
     return r;
 }
 

@@ -1524,6 +1524,7 @@ public:
         bool consistent = false;  ///< every element in the bulk has only one valence
         bool determined = false;  ///< every element's valences are known and the search finished
         bool free = false;
+        bool exact = false;       ///< free, and every species keeps each element at that one valence
         double excess = 0.;       ///< electron excess of the bulk for the closest choice, mol
         double rel = 0.;          ///< excess over the bulk's total valence amount
     };
