@@ -205,11 +205,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
 
     /// pa_OptimaDimReduce: before the full Optima solve, solve a reduced problem with only the
     /// species likely to be present, add back any that want to form, then use the result as the
-    /// start of the full solve. > 0 = limit on add-back passes; 0 = AUTO, on for large systems
-    /// (optima_dimreduce_passes()); < 0 = off. Not used with control conditions or in ROP; on the
-    /// HOP leg only for an explicit positive value.
-    /// In plain words: makes large systems much faster by first solving with only the
-    /// species that are likely to be present.
+    /// start of the full solve. Experimental. > 0 = on, with this limit on add-back passes;
+    /// 0 (default) or < 0 = off. Not used with control conditions or in ROP.
+    /// In plain words: first solves with only the species that are likely to be present.
     long int OptimaDimReduce = 0;
 
     /// pa_OptimaDimReduceTol: which species the reduced problem of pa_OptimaDimReduce starts with.
@@ -598,16 +596,8 @@ extern thread_local OptimaQuickTryWatch g_optimaQuickTry;   // defined in node.c
 /// packDataBr() checks for it, so an answer that was never priced is reported.
 constexpr double kTotalGibbsEnergyUnset = 7777777.;
 
-/// Species-count gate at or above which pa_OptimaDimReduce = 0 (AUTO) turns the
-/// dimension-reduction pre-solve on.
-constexpr long int kOptimaDimReduceAutoMinDC  = 200;
-/// Pass count AUTO selects when the gate opens.
-constexpr long int kOptimaDimReduceAutoPasses = 8;
-
-/// Resolves pa_OptimaDimReduce's three-valued setting to the pass count the solver
-/// attempts: > 0 explicit count, < 0 off, 0 AUTO. `nDC` is the species count (pm.L).
-/// Whether the pre-solve is reached also depends on the call: it runs on a cold Optima
-/// leg (pm.pNP == 0), and on a HOP leg only under an explicit positive setting.
+/// Resolves pa_OptimaDimReduce to the pass count the solver attempts: > 0 that count,
+/// otherwise off. The pre-solve runs on a cold Optima leg (pm.pNP == 0) and on a HOP leg.
 /// Iteration cap of one Optima call (pa_OptimaCallCap): -1 = max(1000, 20 per species), 0 = none.
 /// Used by both the solver and the EFF trace line.
 inline long int optima_call_cap( long int configured, long int nDC )
@@ -617,11 +607,9 @@ inline long int optima_call_cap( long int configured, long int nDC )
     return configured;
 }
 
-inline long int optima_dimreduce_passes( long int configured, long int nDC )
+inline long int optima_dimreduce_passes( long int configured, long int /*nDC*/ )
 {
-    if( configured == 0 && nDC >= kOptimaDimReduceAutoMinDC )
-        return kOptimaDimReduceAutoPasses;
-    return configured;
+    return configured > 0 ? configured : 0;
 }
 
 /// Per-pass Optima iteration budget of OptimaReducedPreSolve(): max(2000, pa_IIM),

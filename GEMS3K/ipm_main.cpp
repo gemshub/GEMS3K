@@ -167,11 +167,11 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
         const long int Nc = (long int)ics.size();
         if( La < Nc )
             return attempt > 0;
-        // The factor depends only on the species set, their weights and the matrix A. The passes of one IPM step
+        // The factor depends only on the species set, their weights, the balance rows used and the matrix A. The passes of one IPM step
         // share the weights, so a factor made for the same set and weights is used again.
-        static thread_local struct { const double* A = nullptr; long int N = -1, drop = -2; std::vector<long int> js;
+        static thread_local struct { const double* A = nullptr; long int N = -1, rows = -1, drop = -2; std::vector<long int> js;
                                      std::vector<double> w; Eigen::VectorXd c; Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr; } fc;
-        bool same = fc.A == pm.A && fc.N == pm.N && fc.drop == dropRow && fc.js == js;
+        bool same = fc.A == pm.A && fc.N == pm.N && fc.rows == N && fc.drop == dropRow && fc.js == js;
         for( long int q = 0; same && q < La; q++ ) same = fc.w[(size_t)q] == pm.W[js[(size_t)q]];
         if( !same )
         {
@@ -185,7 +185,7 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
                 if( !( fc.c( i ) > 0. ) ) fc.c( i ) = 1.;
                 S.col( i ) /= fc.c( i ); }
             fc.qr.compute( S );
-            fc.A = pm.A; fc.N = pm.N; fc.drop = dropRow; fc.js = js;
+            fc.A = pm.A; fc.N = pm.N; fc.rows = N; fc.drop = dropRow; fc.js = js;
             fc.w.resize( (size_t)La );
             for( long int q = 0; q < La; q++ ) fc.w[(size_t)q] = pm.W[js[(size_t)q]];
         }
@@ -351,13 +351,11 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
     {
         const long int drCfg = (long)pa->OptimaDimReduce;
         const long int drEff = optima_dimreduce_passes( drCfg, (long)pm.L );
-        const char* drGate = ( drCfg > 0 ) ? "EXPLICIT"
-                           : ( drCfg < 0 ) ? "OFF" : "AUTO";
+        const char* drGate = ( drCfg > 0 ) ? "EXPLICIT" : "OFF";
         // A warm leg never takes the cold-start path, and ROP (referenceMode) skips the
         // pre-solve entirely.
         const char* drReached = ( drEff <= 0 )      ? "no(off)"
                               : ( mode == 18 )      ? "no(ROP)"
-                              : ( pm.pNP != 0 && drCfg <= 0 ) ? "no(warm,AUTO)"
                               : "maybe";
         // pa_OptimaEarlyStabilityAt, AUTO-gated on the presence of a multisite solid-solution
         // model (optima_earlystability_at()); the multisite phase count is printed as the gate input.
@@ -388,7 +386,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
                  " presolve_firstbudget_eff=%ld presolve_passbudget_full=%ld"
                  " pa_OptimaCallCap_cfg=%ld pa_OptimaCallCap_eff=%ld callcap_L=%ld\n",
                  drCfg, drEff, drGate, (long)pm.L,
-                 (long)kOptimaDimReduceAutoMinDC, drReached,
+                 -1L, drReached,
                  esCfg, esEff, esGate, esMulti,
                  (long)kOptimaEarlyStabilityAutoCap,
                  (long)kOptimaEarlyStabilityAutoWarmCap, (int)esWarm, esReached,
@@ -3968,11 +3966,17 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     auto ResidualMetric = [&]() -> double
     {
         double worst = 0.;
+        // With pa_MbClassRule, a trace IC keeps its relative tolerance, as in the convergence test below.
+        double traceB = 0.;
+        if( pa_p->MbClassRule > 0. )
+        {   for( long int ii=0; ii<pm.N-pm.E; ii++ ) traceB = std::max( traceB, pm.B[ii] );
+            traceB *= pa_p->MbClassRule; }
         for( long int ii=0; ii<pm.N; ii++ )
         {
             if( ii == hDrop ) continue;
             double denom = pm.B[ii] * pm.DHBM;
-            if( pa_p->DT )
+            const bool isTrace = ( ii < pm.N - pm.E && pm.B[ii] < traceB );
+            if( pa_p->DT && !isTrace )
                 denom = std::max( denom, AbsMbCutoff_stall );
             if( denom <= 0. )
                 denom = ( pm.DHBM > 0. ? pm.DHBM : 1e-16 );
