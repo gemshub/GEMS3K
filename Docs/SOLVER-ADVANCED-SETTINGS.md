@@ -18,7 +18,6 @@ The [Glossary](GLOSSARY.md) explains the special words.
 | `pa_OptimaLSStallEscape` | 10 (on) | Shorter steps can fail this number of times in a row. Then the solver takes one full step to get out. |
 | `pa_OptimaLSRejectWorse` | 0 (off) | If a shorter step does not help, the solver uses the full step. |
 | `pa_OptimaCgSeed` | 1e-6 (on) | A better start for a new try with a cold start. It uses the phases that are likely to be stable. |
-| `pa_OptimaDimReduceTol` | 10 | Sets how many species the first guess of "species that matter" includes. A larger value includes more species. |
 | `pa_OptimaPreSolveFirstIters` | 6000 | Sets the iteration limit for each pass of the reduced first solve. The solver stops a pass that does not progress. |
 | `pa_OptimaEarlyStabilityAt` | 0 (automatic) | Lets Optima find early that a phase must disappear. Without it, the phase becomes smaller slowly. |
 | `pa_OptimaDcFloor` | 0 (automatic) | Sets the smallest amount that Optima can represent for an absent species. |
