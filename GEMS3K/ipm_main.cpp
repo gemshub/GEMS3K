@@ -103,6 +103,8 @@ static thread_local bool s_feasOk = false;
 static thread_local bool s_feasKeep = false;          // pa_IpmBalanceStep of the current IPM call
 /// pa_IpmBalanceStep: passes tried, passes kept and passes shortened to keep amounts positive, in the current IPM call.
 static thread_local long int s_balTried = 0, s_balKept = 0, s_balShort = 0;
+/// pa_IpmBalanceStep = 2: corrections in which an IC held only by trace species got those species back.
+static thread_local long int s_balTraceIC = 0;
 /// pa_IpmBalanceStep = 2: refinement steps taken with the balance correction, in the current IPM call.
 static thread_local long int s_mbrQrSteps = 0;
 
@@ -157,10 +159,29 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
                 for( long int q = jb; q < jb + pm.L1[k]; q++ ) phTot[(size_t)q] = t;
                 jb += pm.L1[k]; } }
         std::vector<long int> js;
+        std::vector<char> inJs( (size_t)pm.L, 0 );
+        bool traceIC = false;
+        auto usable = [&]( long int j ) {
+            return amt[j] > std::min( pm.lowPosNum, pm.DcMinM ) && pm.W[j] > 0. && !blocked[(size_t)j]; };
         for( long int j = 0; j < pm.L; j++ )
-            if( amt[j] > std::min( pm.lowPosNum, pm.DcMinM ) && pm.W[j] > 0. && !blocked[(size_t)j]
-                && !( balTrace > 0. && amt[j] < balTrace * phTot[(size_t)j] ) )
-                js.push_back( j );
+            if( usable( j ) && !( balTrace > 0. && amt[j] < balTrace * phTot[(size_t)j] ) )
+            {   js.push_back( j ); inJs[(size_t)j] = 1; }
+        // An IC that is held only by trace species (for example Na at 1e-9 mol) gets those species back.
+        // Without them, the balance of that IC cannot be corrected and the IPM loop does not stop.
+        for( long int i = 0; i < N; i++ )
+        {
+            if( i == dropRow || !( pm.B[i] > 0. ) ) continue;
+            bool held = false;
+            for( long int j = 0; j < pm.L && !held; j++ ) held = inJs[(size_t)j] && pm.A[i + j*pm.N] != 0.;
+            if( held ) continue;
+            bool added = false;
+            for( long int j = 0; j < pm.L; j++ )
+                if( !inJs[(size_t)j] && pm.A[i + j*pm.N] != 0. && usable( j ) ) { inJs[(size_t)j] = 1; added = true; }
+            if( added ) traceIC = true;
+        }
+        if( traceIC ) s_balTraceIC++;
+        js.clear();
+        for( long int j = 0; j < pm.L; j++ ) if( inJs[(size_t)j] ) js.push_back( j );
         const long int La = (long int)js.size();
         std::vector<long int> ics;
         for( long int i = 0; i < N; i++ ) if( i != dropRow ) ics.push_back( i );
@@ -3248,8 +3269,8 @@ STEP_POINT("After FIA");
    native_trace_stage( pm, pa_p, "IPM", "exit", eRet, true );
    if( pa_p->IpmBalanceStep > 0 )
    {
-       native_trace_decide( "balancestep-sum mode=%ld tried=%ld kept=%ld short=%ld mbrqr=%ld", (long)pa_p->IpmBalanceStep,
-                            (long)s_balTried, (long)s_balKept, (long)s_balShort, (long)s_mbrQrSteps );
+       native_trace_decide( "balancestep-sum mode=%ld tried=%ld kept=%ld short=%ld mbrqr=%ld traceic=%ld", (long)pa_p->IpmBalanceStep,
+                            (long)s_balTried, (long)s_balKept, (long)s_balShort, (long)s_mbrQrSteps, (long)s_balTraceIC );
        ipm_logger->debug( "Mass-balance step part (mode {}): {} passes, {} kept, {} shortened",
                           (long)pa_p->IpmBalanceStep, s_balTried, s_balKept, s_balShort );
    }
@@ -4333,6 +4354,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     // pa_IpmBalanceStep and pa_IpmJumpAhead for this call.
     s_feasKeep = pa_p->IpmBalanceStep > 0;
     s_balTried = s_balKept = s_balShort = 0;
+    s_balTraceIC = 0;
     s_mbrQrSteps = 0;
     native_trace_decide( "balancestep mode=%ld jumpahead=%ld", (long)pa_p->IpmBalanceStep, (long)pa_p->IpmJumpAhead );
     // pa_PhaseSmoothing: say once per call which damping rule the non-ideal phases get.
