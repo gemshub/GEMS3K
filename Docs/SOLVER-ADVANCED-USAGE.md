@@ -19,7 +19,7 @@ for one project or one run. They do not change the defaults.
 | Water used up by design (for example cement hydration with little water) | `pa_OptimaDryOut = 1`. If AOP or SOP still fails: `pa_OptimaAcceptRepair = 1` and `pa_GAS = 0.002`, or use AIA or HOP. | Optima solves the solids without the water phase when the water runs out. |
 | No redox couple in the system | `pa_OptimaRedoxFree = 2`, or give an Eh target. | The bulk composition does not fix the Eh. The setting aims at pe 4. |
 | Solid solutions with end-members that are almost the same | `pa_DK = 1e-7` | Gives a clearly more accurate composition with the GEMS3K IPM solver. |
-| Sorption models | `pa_DGC = 0.001` | Damps the non-ideal corrections between iterations. |
+| Sorption models | `pa_DGC = 0.001`. The sorption phase always uses `pa_DGC`. Keep `pa_PhaseSmoothing = 1` for the other phases. | Damps the non-ideal corrections between iterations. |
 | Large systems (hundreds of species) | AIA, or HOP for a checked result. With Optima: `pa_OptimaTol` a little larger. | Optima alone is much slower on large systems. |
 | Trace elements | A stricter `pa_DHB`. Give each element more than the floor amounts of its species need (see [Known limits](SOLVER-OPTIONS-GUIDE.md#known-limits)). | Keeps the mass balance of small amounts exact. |
 | Find the cause of a failed calculation | `pa_PSM = 2` or `3` | Writes warnings or a detailed trace to `ipmlog.txt`. |
