@@ -1849,6 +1849,8 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     // pa_PsscCleanupBudget = 3: a present pure phase that stays oversaturated, limited by a trace IC that is dilute in every
     // solution phase, is brought to saturation. The dissolved species of that IC are scaled down as if only the potential
     // of that IC changed, and the freed amount goes into the phase. The balance repair after this step fixes the other ICs.
+    // The potentials before the fill are kept, so that a rejected pass can restore them with the amounts.
+    std::vector<double> fillU, fillFalp;
     if( CleanupStatus && pa_p->PRD && pa_p->PsscCleanupBudget >= 3 )
     {
         const long int Zlim = pm.N - pm.E;
@@ -1895,6 +1897,9 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                 pm.Y[j] = y; }
             const double before = pm.Y[jf], dlg = pm.Falp[kf] / aS;
             pm.Y[jf] = std::min( pm.Y[jf] + freed / aS, cap );
+            if( fillU.empty() )
+            {   fillU.assign( pm.U, pm.U + pm.N );
+                fillFalp.assign( pm.Falp, pm.Falp + pm.FI ); }
             // The potential of the IC moves by the same step, and so does the saturation index of each pure phase with it.
             pm.U[il] -= lg_to_ln * dlg;
             {   long int j0 = 0;
@@ -1948,6 +1953,9 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     {  // changes in Y vector are not accepted - restore (too many IPM loops)
        for(j=0;j<pm.L;j++)
           pm.Y[j]=pm.XY[j];
+       if( !fillU.empty() )
+       {   std::copy( fillU.begin(), fillU.end(), pm.U );
+           std::copy( fillFalp.begin(), fillFalp.end(), pm.Falp ); }
     }
     ipm_logger->debug("CleanupStatus= {}", CleanupStatus);
     if( ntf )
