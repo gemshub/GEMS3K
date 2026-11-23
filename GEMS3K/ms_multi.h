@@ -542,10 +542,11 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// linear system; 0 = off.
     long int IpmBalanceStep = 2;
     /// pa_PsscCleanupBudget: phase selection: a species of a present solution phase that was set to zero is raised
-    /// again by at most the amount the bulk composition can supply. 2 = the raises of one pass share that amount, and a
-    /// species whose estimated mole fraction is above 1 is not raised (default); 1 = each raise has the full amount;
-    /// 0 = off (fixed raise).
-    long int PsscCleanupBudget = 2;
+    /// again by at most the amount the bulk composition can supply. 3 = as 2, and a present pure phase that stays
+    /// oversaturated, limited by a trace element, gets that element from its dissolved species up to saturation (default);
+    /// 2 = the raises of one pass share that amount, and a species whose estimated mole fraction is above 1 is not raised;
+    /// 1 = each raise has the full amount; 0 = off (fixed raise).
+    long int PsscCleanupBudget = 3;
     /// pa_DcMinMolecule: IPM solver, cold calls: a species is cut to zero only below one molecule in real moles,
     /// instead of below pa_DcMin. Use it together with pa_IpmBalanceStep. 1 = on, 0 = off (default).
     long int DcMinMolecule = 0;

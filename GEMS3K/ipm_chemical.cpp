@@ -1846,6 +1846,67 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
    } // k
 }
 
+    // pa_PsscCleanupBudget = 3: a present pure phase that stays oversaturated, limited by a trace IC that is dilute in every
+    // solution phase, is brought to saturation. The dissolved species of that IC are scaled down as if only the potential
+    // of that IC changed, and the freed amount goes into the phase. The balance repair after this step fixes the other ICs.
+    if( CleanupStatus && pa_p->PRD && pa_p->PsscCleanupBudget >= 3 )
+    {
+        const long int Zlim = pm.N - pm.E;
+        std::vector<long int> phOf( (size_t)pm.L );
+        std::vector<double> phY( (size_t)pm.FI, 0. );
+        {   long int j0 = 0;
+            for( long int k0 = 0; k0 < pm.FI; j0 += pm.L1[k0], k0++ )
+                for( long int q = j0; q < j0 + pm.L1[k0]; q++ ) { phOf[(size_t)q] = k0; phY[(size_t)k0] += pm.Y[q]; } }
+        long int jf = 0;
+        for( long int kf = 0; kf < pm.FI; jf += pm.L1[kf], kf++ )
+        {
+            if( pm.L1[kf] != 1 || !( pm.Falp[kf] >= pa_p->DF ) || !( pm.XF[kf] >= pm.DSM ) || !( pm.Y[jf] > 0. ) )
+                continue;
+            if( pm.DUL[jf] < 1e6 || pm.DLL[jf] > 0. )
+                continue;
+            long int il = -1;
+            double cap = -1.;
+            for( long int i = 0; i < Zlim; i++ )
+            {   const double a = pm.A[i + jf*pm.N];
+                if( a > 0. && ( cap < 0. || pm.B[i] / a < cap ) ) { cap = pm.B[i] / a; il = i; } }
+            if( il < 0 || !( cap < AmountThreshold ) )
+                continue;
+            const double aS = pm.A[il + jf*pm.N];
+            // Every other holder of the IC must be a dilute species of a solution phase without constraints.
+            std::vector<double> inPh( (size_t)pm.FI, 0. );
+            bool ok = true;
+            for( long int j = 0; j < pm.L && ok; j++ )
+            {   const double a = pm.A[il + j*pm.N];
+                if( j == jf || a == 0. || !( pm.Y[j] > 0. ) ) continue;
+                const long int kj = phOf[(size_t)j];
+                ok = a > 0. && pm.L1[kj] > 1 && pm.PHC[kj] != PH_SORPTION && pm.PHC[kj] != PH_POLYEL
+                     && !( pm.DUL[j] < 1e6 ) && !( pm.DLL[j] > 0. );
+                inPh[(size_t)kj] += pm.Y[j]; }
+            for( long int k0 = 0; k0 < pm.FI && ok; k0++ )
+                ok = !( inPh[(size_t)k0] > 1e-6 * phY[(size_t)k0] );
+            if( !ok )
+                continue;
+            double freed = 0.;
+            for( long int j = 0; j < pm.L; j++ )
+            {   const double a = pm.A[il + j*pm.N];
+                if( j == jf || a == 0. || !( pm.Y[j] > 0. ) ) continue;
+                const double y = pm.Y[j] * exp( -lg_to_ln * pm.Falp[kf] * a / aS );
+                freed += a * ( pm.Y[j] - y );
+                pm.Y[j] = y; }
+            const double before = pm.Y[jf], dlg = pm.Falp[kf] / aS;
+            pm.Y[jf] = std::min( pm.Y[jf] + freed / aS, cap );
+            // The potential of the IC moves by the same step, and so does the saturation index of each pure phase with it.
+            pm.U[il] -= lg_to_ln * dlg;
+            {   long int j0 = 0;
+                for( long int k0 = 0; k0 < pm.FI; j0 += pm.L1[k0], k0++ )
+                    if( pm.L1[k0] == 1 ) pm.Falp[k0] -= pm.A[il + j0*pm.N] * dlg; }
+            NeedToImproveMassBalance = true;
+            native_trace_decide( "psscfilltrace phase=%s ic=%s logSI=%.6e from=%.6e to=%.6e",
+                                 char_array_to_string( pm.SF[kf], MAXPHNAME+MAXSYMB ).c_str(),
+                                 char_array_to_string( pm.SB[il], MAXICNAME ).c_str(), dlg * aS, before, pm.Y[jf] );
+        }
+    }
+
     STEP_POINT("PSSC()");
 
 // Analysis of phase selection and cleanup status
