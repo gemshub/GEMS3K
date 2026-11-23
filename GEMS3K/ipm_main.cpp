@@ -139,8 +139,10 @@ static double balance_correction_step( const MULTI& pm, const double* amt, const
 /// It uses its own QR of sqrt(W) A^T with each IC column scaled to length 1, and d = sqrt(W) Q R^-T P^T (r / c).
 /// A species that the correction would take below 1 % of its amount keeps its amount; the correction is then
 /// solved again without it (at most four times). Returns false when no correction can be made.
+/// traceBack gives an IC that only trace species hold those species back. The repair after the refinement turns it off,
+/// so that it does not accept a start that only moved the trace balances.
 static bool balance_correction_qr( const MULTI& pm, const double* amt, long int N, const std::vector<double>& r, std::vector<double>& d,
-                                   long int dropRow = -1 )
+                                   long int dropRow = -1, bool traceBack = true )
 {
     std::vector<char> blocked( (size_t)pm.L, 0 );
     for( int attempt = 0; attempt < 4; attempt++ )
@@ -173,7 +175,7 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
             if( i == dropRow || !( pm.B[i] > 0. ) ) continue;
             bool held = false;
             for( long int j = 0; j < pm.L && !held; j++ ) held = inJs[(size_t)j] && pm.A[i + j*pm.N] != 0.;
-            if( held ) continue;
+            if( held || !traceBack ) continue;
             bool added = false;
             for( long int j = 0; j < pm.L; j++ )
                 if( !inJs[(size_t)j] && pm.A[i + j*pm.N] != 0. && usable( j ) ) { inJs[(size_t)j] = 1; added = true; }
@@ -4264,7 +4266,7 @@ STEP_POINT("FIA Iteration");
             const long int Nr = pm.NR;
             std::vector<double> rr( (size_t)Nr ), dd( (size_t)pm.L, 0. ), yKeep( pm.Y, pm.Y + pm.L );
             for( long int ii = 0; ii < Nr; ii++ ) rr[(size_t)ii] = pm.C[ii];
-            if( !balance_correction_qr( pm, pm.Y, Nr, rr, dd, hDrop ) ) break;
+            if( !balance_correction_qr( pm, pm.Y, Nr, rr, dd, hDrop, false ) ) break;
             const double sf = balance_correction_step( pm, pm.Y, dd );
             if( !( sf > 0. ) ) break;
             for( J = 0; J < pm.L; J++ ) pm.Y[J] += sf * dd[(size_t)J];
