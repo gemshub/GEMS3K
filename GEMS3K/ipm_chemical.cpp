@@ -582,8 +582,32 @@ case DC_SCM_SPECIES:
         double SmoSensT = 1e-5;   // to be adjusted
         dF0 = F0 - Fold;
         // Optima switches smoothing off; skip the blend there, since Fold + (F0 - Fold) rounds F0 away when Fold is huge.
+        // pa_PhaseSmoothing = 1: in a mixed phase other than the aqueous, sorption and polyelectrolyte phases, the
+        // update of a species is damped by the phase's own non-ideality, 1/(1 + sum of x|ln gamma|), unless it kept its
+        // sign since the last step (a steady drift, not damped). The aqueous, sorption and
+        // polyelectrolyte phases keep the pa_AG/pa_DGC rule. 0: the pa_AG/pa_DGC rule for every phase.
+        double sf = SmoothingFactor();
+        if( base_param()->PhaseSmoothing == 1 && !optima_disable_smoothing
+            && pm.PHC[k] != PH_AQUEL && pm.PHC[k] != PH_SORPTION && pm.PHC[k] != PH_POLYEL )
+        {
+            std::vector<double>& prevD = smoothPrevD_;
+            if( (long int)prevD.size() != pm.L || pm.IT < smoothPrevIT_ )
+                prevD.assign( (size_t)pm.L, 0. );
+            smoothPrevIT_ = pm.IT;
+            sf = 1.;
+            if( !( dF0 * prevD[(size_t)j] > 0. ) && pm.XF[k] > 0. )
+            {
+                long int jb = 0;
+                for( long int q = 0; q < k; q++ ) jb += pm.L1[q];
+                double c8 = 1.;
+                for( long int i = jb; i < jb + pm.L1[k]; i++ )
+                    c8 += pm.X[i] / pm.XF[k] * fabs( pm.lnGam[i] );
+                sf = 1. / c8;
+            }
+            prevD[(size_t)j] = dF0;
+        }
         if( !optima_disable_smoothing && pm.X[j] > std::min( pm.lowPosNum, pm.DcMinM ) && fabs( dF0 ) >= SmoSensT )
-       	    F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
+       	    F0 = Fold + dF0 * sf;    // Changed 18.06.2008 DK
     }
     return F0;
 }
@@ -746,8 +770,7 @@ double TMultiBase::DC_GibbsEnergyContribution(
 //
 double TMultiBase::GX( double LM  )
 {
-    long int i, j, k;
-    double x, XF, XFw, FX, Gi; // debug variable
+    long int i;
 //    double const1= pm.lowPosNum*10.,
 //           const2 = pm.lowPosNum*1000.;
 
@@ -767,6 +790,14 @@ double TMultiBase::GX( double LM  )
         }
     // calculate new total quantities of phases
     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    return GXofX();
+}
+
+/// G(X) of the current amounts pm.X, with the phase totals pm.XF and pm.XFA already up to date.
+double TMultiBase::GXofX()
+{
+    long int i, j, k;
+    double x, XF, XFw, FX, Gi;
 
     // calculating G(X)
     FX=0.;
@@ -1407,6 +1438,8 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
         AmThExp = 4.;
     }
     AmountThreshold = pow(10.,-AmThExp);
+    // pa_PsscCleanupBudget = 2: what the raises of this pass have taken from each IC so far.
+    std::vector<double> clnUsed( (size_t)pm.N, 0. );
 
     kfr = -1; kur = -1;
     if( !pm.K2 )
@@ -1719,6 +1752,33 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                      continue; // L1kZeroDCs++; No way to improve for pure substance
                   else  // possibly lost DC in a solution phase (only estimated mole fraction available)
                      YjCleaned = pm.EMU[j]*pm.YF[k]; // does not work for adsorption yet
+                  // pa_PsscCleanupBudget: a zeroed species is raised to at most what the bulk can supply.
+                  if( pa_p->PsscCleanupBudget == 1 && L1k > 1 )
+                  {   const double cap = PhaseInsertionCeiling( j );
+                      if( cap >= 0. && YjCleaned > cap )
+                      {   native_trace_decide( "cleanupraise capped species=%s raise=%.6e cap=%.6e",
+                                               char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), YjCleaned, cap );
+                          YjCleaned = cap; } }
+                  // Mode 2: no raise when the estimated mole fraction is above 1 (then it is not a mole fraction),
+                  // and the raises of one pass share the amount of each IC instead of each taking all of it.
+                  if( pa_p->PsscCleanupBudget >= 2 && L1k > 1 )
+                  {   if( !( pm.EMU[j] <= 1. ) )
+                      {   native_trace_decide( "cleanupraise skipped species=%s emu=%.6e",
+                                               char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), pm.EMU[j] );
+                          YjCleaned = 0.; }
+                      else
+                      {   double cap = -1.;
+                          for( long int i = 0; i < pm.N - pm.E; i++ )
+                          {   const double a = pm.A[ i + j*pm.N ];
+                              if( a > 0. ) { const double c = std::max( 0., pm.B[i] - clnUsed[(size_t)i] ) / a;
+                                             if( cap < 0. || c < cap ) cap = c; } }
+                          if( cap >= 0. && YjCleaned > cap )
+                          {   native_trace_decide( "cleanupraise capped species=%s raise=%.6e cap=%.6e shared=1",
+                                                   char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), YjCleaned, cap );
+                              YjCleaned = cap; }
+                          for( long int i = 0; i < pm.N - pm.E; i++ )
+                          {   const double a = pm.A[ i + j*pm.N ];
+                              if( a > 0. ) clnUsed[(size_t)i] += a * YjCleaned; } } }
              }
              YjDiff = YjCleaned - Yj;
              if( fabs( YjDiff ) > CutoffDistortionMBR )
@@ -1786,6 +1846,72 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
    } // k
 }
 
+    // pa_PsscCleanupBudget = 3: a present pure phase that stays oversaturated, limited by a trace IC that is dilute in every
+    // solution phase, is brought to saturation. The dissolved species of that IC are scaled down as if only the potential
+    // of that IC changed, and the freed amount goes into the phase. The balance repair after this step fixes the other ICs.
+    // The potentials before the fill are kept, so that a rejected pass can restore them with the amounts.
+    std::vector<double> fillU, fillFalp;
+    if( CleanupStatus && pa_p->PRD && pa_p->PsscCleanupBudget >= 3 )
+    {
+        const long int Zlim = pm.N - pm.E;
+        std::vector<long int> phOf( (size_t)pm.L );
+        std::vector<double> phY( (size_t)pm.FI, 0. );
+        {   long int j0 = 0;
+            for( long int k0 = 0; k0 < pm.FI; j0 += pm.L1[k0], k0++ )
+                for( long int q = j0; q < j0 + pm.L1[k0]; q++ ) { phOf[(size_t)q] = k0; phY[(size_t)k0] += pm.Y[q]; } }
+        long int jf = 0;
+        for( long int kf = 0; kf < pm.FI; jf += pm.L1[kf], kf++ )
+        {
+            if( pm.L1[kf] != 1 || !( pm.Falp[kf] >= pa_p->DF ) || !( pm.XF[kf] >= pm.DSM ) || !( pm.Y[jf] > 0. ) )
+                continue;
+            if( pm.DUL[jf] < 1e6 || pm.DLL[jf] > 0. )
+                continue;
+            long int il = -1;
+            double cap = -1.;
+            for( long int i = 0; i < Zlim; i++ )
+            {   const double a = pm.A[i + jf*pm.N];
+                if( a > 0. && ( cap < 0. || pm.B[i] / a < cap ) ) { cap = pm.B[i] / a; il = i; } }
+            if( il < 0 || !( cap < AmountThreshold ) )
+                continue;
+            const double aS = pm.A[il + jf*pm.N];
+            // Every other holder of the IC must be a dilute species of a solution phase without constraints.
+            std::vector<double> inPh( (size_t)pm.FI, 0. );
+            bool ok = true;
+            for( long int j = 0; j < pm.L && ok; j++ )
+            {   const double a = pm.A[il + j*pm.N];
+                if( j == jf || a == 0. || !( pm.Y[j] > 0. ) ) continue;
+                const long int kj = phOf[(size_t)j];
+                ok = a > 0. && pm.L1[kj] > 1 && pm.PHC[kj] != PH_SORPTION && pm.PHC[kj] != PH_POLYEL
+                     && !( pm.DUL[j] < 1e6 ) && !( pm.DLL[j] > 0. );
+                inPh[(size_t)kj] += pm.Y[j]; }
+            for( long int k0 = 0; k0 < pm.FI && ok; k0++ )
+                ok = !( inPh[(size_t)k0] > 1e-6 * phY[(size_t)k0] );
+            if( !ok )
+                continue;
+            double freed = 0.;
+            for( long int j = 0; j < pm.L; j++ )
+            {   const double a = pm.A[il + j*pm.N];
+                if( j == jf || a == 0. || !( pm.Y[j] > 0. ) ) continue;
+                const double y = pm.Y[j] * exp( -lg_to_ln * pm.Falp[kf] * a / aS );
+                freed += a * ( pm.Y[j] - y );
+                pm.Y[j] = y; }
+            const double before = pm.Y[jf], dlg = pm.Falp[kf] / aS;
+            pm.Y[jf] = std::min( pm.Y[jf] + freed / aS, cap );
+            if( fillU.empty() )
+            {   fillU.assign( pm.U, pm.U + pm.N );
+                fillFalp.assign( pm.Falp, pm.Falp + pm.FI ); }
+            // The potential of the IC moves by the same step, and so does the saturation index of each pure phase with it.
+            pm.U[il] -= lg_to_ln * dlg;
+            {   long int j0 = 0;
+                for( long int k0 = 0; k0 < pm.FI; j0 += pm.L1[k0], k0++ )
+                    if( pm.L1[k0] == 1 ) pm.Falp[k0] -= pm.A[il + j0*pm.N] * dlg; }
+            NeedToImproveMassBalance = true;
+            native_trace_decide( "psscfilltrace phase=%s ic=%s logSI=%.6e from=%.6e to=%.6e",
+                                 char_array_to_string( pm.SF[kf], MAXPHNAME+MAXSYMB ).c_str(),
+                                 char_array_to_string( pm.SB[il], MAXICNAME ).c_str(), dlg * aS, before, pm.Y[jf] );
+        }
+    }
+
     STEP_POINT("PSSC()");
 
 // Analysis of phase selection and cleanup status
@@ -1827,6 +1953,9 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     {  // changes in Y vector are not accepted - restore (too many IPM loops)
        for(j=0;j<pm.L;j++)
           pm.Y[j]=pm.XY[j];
+       if( !fillU.empty() )
+       {   std::copy( fillU.begin(), fillU.end(), pm.U );
+           std::copy( fillFalp.begin(), fillFalp.end(), pm.Falp ); }
     }
     ipm_logger->debug("CleanupStatus= {}", CleanupStatus);
     if( ntf )

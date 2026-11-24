@@ -205,11 +205,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
 
     /// pa_OptimaDimReduce: before the full Optima solve, solve a reduced problem with only the
     /// species likely to be present, add back any that want to form, then use the result as the
-    /// start of the full solve. > 0 = limit on add-back passes; 0 = AUTO, on for large systems
-    /// (optima_dimreduce_passes()); < 0 = off. Not used with control conditions or in ROP; on the
-    /// HOP leg only for an explicit positive value.
-    /// In plain words: makes large systems much faster by first solving with only the
-    /// species that are likely to be present.
+    /// start of the full solve. Experimental. > 0 = on, with this limit on add-back passes;
+    /// 0 (default) or < 0 = off. Not used with control conditions or in ROP.
+    /// In plain words: first solves with only the species that are likely to be present.
     long int OptimaDimReduce = 0;
 
     /// pa_OptimaDimReduceTol: which species the reduced problem of pa_OptimaDimReduce starts with.
@@ -533,6 +531,33 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// standard energies and model parameters) swap their amounts when the other copy's major end-members (class M)
     /// fit the composition better. G does not change. 0 = off, 1 = on (default).
     long int OptimaTwinLabel = 1;
+    /// pa_PhaseSmoothing: native IPM solver: how the activity terms of a non-ideal phase are damped between
+    /// iterations. 1 = in a solid or melt solution, by the phase's own non-ideality, factor 1/(1 + sum of x|ln gamma|),
+    /// only when a species' correction changes direction; the aqueous, sorption and polyelectrolyte phases keep the
+    /// pa_AG / pa_DGC rule (default). 0 = the pa_AG / pa_DGC rule for every phase.
+    long int PhaseSmoothing = 1;
+    /// pa_IpmBalanceStep: IPM solver: after each step, add the step part that restores the mass balance.
+    /// 2 = the part has its own factor with scaled columns and leaves trace species out (default); 3 = as 2, but only
+    /// after a step that leaves the balance outside its tolerance; 1 = the part uses the factor of the step's own
+    /// linear system; 0 = off.
+    long int IpmBalanceStep = 2;
+    /// pa_PsscCleanupBudget: phase selection: a species of a present solution phase that was set to zero is raised
+    /// again by at most the amount the bulk composition can supply. 3 = as 2, and a present pure phase that stays
+    /// oversaturated, limited by a trace element, gets that element from its dissolved species up to saturation (default);
+    /// 2 = the raises of one pass share that amount, and a species whose estimated mole fraction is above 1 is not raised;
+    /// 1 = each raise has the full amount; 0 = off (fixed raise).
+    long int PsscCleanupBudget = 3;
+    /// pa_DcMinMolecule: IPM solver, cold calls: a species is cut to zero only below one molecule in real moles,
+    /// instead of below pa_DcMin. Use it together with pa_IpmBalanceStep. 1 = on, 0 = off (default).
+    long int DcMinMolecule = 0;
+    /// pa_IpmJumpAhead: IPM solver: when two successive steps point the same way and shrink at a steady ratio r,
+    /// try the step times 1/(1 - r) and keep it only if the energy falls and the mass balance does not get worse.
+    /// 1 = on, 0 = off (default).
+    long int IpmJumpAhead = 0;
+    /// pa_OptimaJumpAhead: Optima solver: when two successive steps point the same way and shrink at a steady ratio,
+    /// try a longer step. The step is not tried if it would cross a bound, and it is kept only if the error falls.
+    /// 1 = on (default), 0 = off.
+    long int OptimaJumpAhead = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -572,16 +597,8 @@ extern thread_local OptimaQuickTryWatch g_optimaQuickTry;   // defined in node.c
 /// packDataBr() checks for it, so an answer that was never priced is reported.
 constexpr double kTotalGibbsEnergyUnset = 7777777.;
 
-/// Species-count gate at or above which pa_OptimaDimReduce = 0 (AUTO) turns the
-/// dimension-reduction pre-solve on.
-constexpr long int kOptimaDimReduceAutoMinDC  = 200;
-/// Pass count AUTO selects when the gate opens.
-constexpr long int kOptimaDimReduceAutoPasses = 8;
-
-/// Resolves pa_OptimaDimReduce's three-valued setting to the pass count the solver
-/// attempts: > 0 explicit count, < 0 off, 0 AUTO. `nDC` is the species count (pm.L).
-/// Whether the pre-solve is reached also depends on the call: it runs on a cold Optima
-/// leg (pm.pNP == 0), and on a HOP leg only under an explicit positive setting.
+/// Resolves pa_OptimaDimReduce to the pass count the solver attempts: > 0 that count,
+/// otherwise off. The pre-solve runs on a cold Optima leg (pm.pNP == 0) and on a HOP leg.
 /// Iteration cap of one Optima call (pa_OptimaCallCap): -1 = max(1000, 20 per species), 0 = none.
 /// Used by both the solver and the EFF trace line.
 inline long int optima_call_cap( long int configured, long int nDC )
@@ -591,11 +608,9 @@ inline long int optima_call_cap( long int configured, long int nDC )
     return configured;
 }
 
-inline long int optima_dimreduce_passes( long int configured, long int nDC )
+inline long int optima_dimreduce_passes( long int configured, long int /*nDC*/ )
 {
-    if( configured == 0 && nDC >= kOptimaDimReduceAutoMinDC )
-        return kOptimaDimReduceAutoPasses;
-    return configured;
+    return configured > 0 ? configured : 0;
 }
 
 /// Per-pass Optima iteration budget of OptimaReducedPreSolve(): max(2000, pa_IIM),
@@ -1150,6 +1165,9 @@ class TMultiBase
 
     /// Species list of the last zero-width kinetic box warning; the same list again is logged at debug level
     std::string kinDegenWarned_;
+    /// pa_PhaseSmoothing = 1: the last update of each species and the iteration it was made in (cleared per solve)
+    std::vector<double> smoothPrevD_;
+    long int smoothPrevIT_ = -1;
     /// Input of the previous GEMS3K IPM solve: bulk composition (mol), T, P and which species have a positive
     /// upper limit. warmInputChanged_ is true if this solve has another input (read by the warm zero check).
     std::vector<double> prevBulkMol_;
@@ -1424,6 +1442,10 @@ public:
     /// caller returns an earlier solve's answer).
     void RestoreControlConditions( const std::vector<EqControlCondition>& saved )
     { optima_control_conditions = saved; }
+    /// pa_IpmBalanceStep = 2: the H balance row when the bulk is redox-free with no spare electrons above 10 * DHBM,
+    /// else -1. Then the H balance depends on the O and charge balances, and the mass-balance steps leave it out.
+    /// Always -1 in a build without Optima.
+    long int RedoxFreeDropRow() const;
 #ifdef USE_OPTIMA_SOLVER
     // Equilibrium via the Optima interior-point solver, as an alternative to the IPM/MBR loop
     // (ipm_optima.cpp). Dispatched from TNode::GEM_run() for NEED_GEM_AOP/SOP: pm.pNP == 0 is a
@@ -1491,6 +1513,7 @@ public:
         bool consistent = false;  ///< every element in the bulk has only one valence
         bool determined = false;  ///< every element's valences are known and the search finished
         bool free = false;
+        bool exact = false;       ///< free, and every species keeps each element at that one valence
         double excess = 0.;       ///< electron excess of the bulk for the closest choice, mol
         double rel = 0.;          ///< excess over the bulk's total valence amount
     };
@@ -1761,6 +1784,7 @@ protected:
     double DC_GibbsEnergyContribution(   double G,  double x,  double logXF,
                                          double logXw,  char DCCW );
     double GX( double LM  );
+    double GXofX();
     void ConvertDCC();
     long int  getXvolume();
 
@@ -2093,7 +2117,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing, f_pa_IpmBalanceStep, f_pa_PsscCleanupBudget, f_pa_DcMinMolecule, f_pa_IpmJumpAhead, f_pa_OptimaJumpAhead
 
 } MULTI_DYNAMIC_FIELDS;
 

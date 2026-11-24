@@ -566,6 +566,25 @@ TMultiBase::RedoxFreeCheck TMultiBase::CheckRedoxFree() const
     if( visits > kMaxVisits ) r.determined = false;
     r.excess = best < 1e300 ? bestE : 0.;
     r.rel = std::fabs( r.excess ) / std::max( scale, 1e-300 );
+    // The H balance is a copy of the others only when every species keeps each element at its one valence.
+    // H2, O2 or an element with two valences breaks this.
+    if( r.free && r.consistent && r.determined )
+    {
+        r.exact = true;
+        for( long int j = 0; j < L && r.exact; j++ )
+        {
+            if( pm.DUL[j] <= 0. ) continue;
+            double e = rest( j );
+            bool absent = false;
+            for( long int i = 0; i < N; i++ )
+            {
+                if( !isOther( i ) || a( j, i ) == 0. ) continue;
+                if( pm.B[i] == 0. || val[(size_t)i].size() != 1 ) { absent = true; break; }
+                e -= val[(size_t)i][0] * a( j, i );
+            }
+            if( !absent && std::fabs( e ) > 1e-6 ) r.exact = false;
+        }
+    }
     return r;
 }
 
@@ -1847,6 +1866,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     // max(2000, pa_IIM), or less on the first attempt (pa_OptimaPreSolveFirstIters).
     options.maxiters = (unsigned)passBudget;
     options.convergence.tolerance = pa_p->OptimaTol;
+    options.jumpahead = pa_p->OptimaJumpAhead > 0;   // pa_OptimaJumpAhead
     apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
     apply_optima_lu( options, pa_p->OptimaPartialPivLU );
@@ -2899,7 +2919,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // Skipped with control conditions and in ROP. Cold starts only (pm.pNP == 0): a warm
         // start already carries a consistent (primal, dual) pair, which a reduction would
         // overwrite. Exception: the HOP leg under an explicit positive setting (optima_hop_leg).
-        // The pass count, including AUTO's size gate, comes from optima_dimreduce_passes().
+        // The pass count comes from optima_dimreduce_passes().
 
         // Fallback initial-set rule, used once if the configured rule's pre-solve is discarded:
         // the threshold rule and the rank rule tend to fail on different projects. A discarded
@@ -2910,8 +2930,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
         const long int dimReducePasses = optima_dimreduce_passes( pa_p->OptimaDimReduce, L );
 
-        // On the HOP leg the reduction runs only for an explicit pa_OptimaDimReduce > 0; AUTO
-        // does not reach it (there the warm verification is usually already cheap).
+        // On the HOP leg the reduction runs only for pa_OptimaDimReduce > 0.
         const bool hopReduce = optima_hop_leg && pa_p->OptimaDimReduce > 0;
 
         long int dimReduceIters = 0;
@@ -3636,6 +3655,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // pa_OptimaEarlyStabilityAt's cap is enforced in the convergence hook, not as a
             // maxiters clamp, so maxiters keeps the full budget.
             options.convergence.tolerance = pa_p->OptimaTol;
+            // pa_OptimaJumpAhead: a longer step when steps shrink at a steady ratio; never across a bound.
+            options.jumpahead = pa_p->OptimaJumpAhead > 0;
+            native_trace_decide( "optimajumpahead on=%d", options.jumpahead ? 1 : 0 );
             apply_optima_linesearch( options, pa_p->OptimaLineSearch, pa_p->OptimaLSStallEscape,
                              pa_p->OptimaLSRejectWorse );
             apply_optima_lu( options, pa_p->OptimaPartialPivLU );
@@ -6965,8 +6987,8 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
     const double timeNativeLeg = calcTime;
 
     // Tell the Optima leg it runs on top of native's assemblage, which lets the
-    // dimension reduction run in front of it when pa_OptimaDimReduce > 0 (AUTO does not
-    // reach it). Set only when native produced an answer. RAII, so the flag never leaks
+    // dimension reduction run in front of it when pa_OptimaDimReduce > 0.
+    // Set only when native produced an answer. RAII, so the flag never leaks
     // into a later call.
     struct HopLegGuard {
         TMultiBase* m;
