@@ -4,6 +4,9 @@
 # Ensure dependencies from the conda environment are used (e.g., Boost).
 list(APPEND CMAKE_PREFIX_PATH $ENV{CONDA_PREFIX})
 
+# A package can install its own Optima in a folder of its own (GEMS3K_OPTIMA_SUBDIR). Set before the includes below.
+set(_gems3k_optima_dir "${PACKAGE_PREFIX_DIR}/@GEMS3K_OPTIMA_SUBDIR@/@CMAKE_INSTALL_LIBDIR@/cmake/Optima")
+
 # Include the cmake targets of the project if they have not been yet.
 if(NOT TARGET GEMS3K::GEMS3K)
     include("@PACKAGE_GEMS3K_INSTALL_CONFIGDIR@/GEMS3KTargets.cmake")
@@ -13,7 +16,12 @@ endif()
 # After the include above: Optima's own dependencies reset PACKAGE_PREFIX_DIR.
 if(@USE_OPTIMA_SOLVER@)
     include(CMakeFindDependencyMacro)
-    find_dependency(Optima)
+    # Use the package's own Optima first.
+    if(NOT "@GEMS3K_OPTIMA_SUBDIR@" STREQUAL "" AND EXISTS "${_gems3k_optima_dir}/OptimaConfig.cmake")
+        find_dependency(Optima PATHS "${_gems3k_optima_dir}" NO_DEFAULT_PATH)
+    else()
+        find_dependency(Optima)
+    endif()
 endif()
 
 # Recommended check at the end of a cmake config file.

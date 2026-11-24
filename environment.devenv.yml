@@ -19,4 +19,4 @@ dependencies:
   - autodiff>=1.1.1
   - eigen
   - nlohmann_json
-  - thermofun>=0.7.1
+  - thermofun>=0.7.1,<1  # GEMS3K 5.2 needs a ThermoFun 0.x

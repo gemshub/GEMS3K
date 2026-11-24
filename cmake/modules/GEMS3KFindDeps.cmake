@@ -38,6 +38,11 @@ if(USE_THERMOFUN MATCHES ON)
     if(ThermoFun_VERSION VERSION_LESS 0.7.0)
       message(WARNING "ThermoFun ${ThermoFun_VERSION} has a property cache that can return values of an earlier pressure. Use ThermoFun 0.7.0 or newer (see environment.yml).")
     endif()
+    # ThermoFun 1.0 changes the default gas properties and the volume unit. This GEMS3K adds the pressure and
+    # fugacity terms of gases itself and reads volumes in J/bar, so it needs a ThermoFun 0.x.
+    if(NOT ThermoFun_VERSION VERSION_LESS 1.0)
+      message(FATAL_ERROR "ThermoFun ${ThermoFun_VERSION} is not supported: this GEMS3K needs ThermoFun 0.7 or a later 0.x version.")
+    endif()
   endif()
 
   find_package(ChemicalFun REQUIRED)
