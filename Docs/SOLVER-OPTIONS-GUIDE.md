@@ -1,4 +1,4 @@
-# GEMS3K 5.2.0 — options guide
+# GEMS3K 5.2.2 — options guide
 
 This guide tells you what is new in this version. It tells you how to choose a solver and how to run it from
 code. It tells you how to change a setting in the project file. It describes each setting and the known

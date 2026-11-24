@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="GEMS3K 5.2.0: what runs, in what order, in each calculation mode, and what is tried when a calculation fails.">
+<meta name="description" content="GEMS3K 5.2.2: what runs, in what order, in each calculation mode, and what is tried when a calculation fails.">
 <title>GEMS3K Solver Paths</title>
 <style>
 :root{
@@ -95,7 +95,7 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
 <div class="wrap">
 
 <header>
-  <p class="eyebrow">GEMS3K 5.2.0 · solver paths</p>
+  <p class="eyebrow">GEMS3K 5.2.2 · solver paths</p>
   <h1>What runs, and in what order</h1>
   <p class="lede">This page shows, for each calculation mode, which solver runs first. It shows what the solver
   tries when a calculation fails and when it stops. The same content as plain text is in
@@ -291,13 +291,17 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
       the solver uses the previous result. If the system has only pure phases, this step gives the final result.
       If the system has no aqueous, gas or sorption phases, the solver starts from the leveled solution
       (<code>pa_IpmLevelStart</code>). If this call fails, GEMS3K solves it again from the usual start.</li>
-    <li><b>Mass balance fix.</b> The solver changes the amounts until each element agrees with the bulk composition.</li>
+    <li><b>Mass balance fix.</b> The solver changes the amounts until each element agrees with the bulk composition.
+      If this fix stops at its iteration limit, a separate correction can finish it (<code>pa_IpmBalanceStep</code> = 2 or 3).</li>
     <li><b>Main descent.</b> The solver lowers the Gibbs energy step by step until the steps are small enough.
+      After each step, a small correction restores the mass balance (<code>pa_IpmBalanceStep</code>).
       If the energy does not improve for 500 iterations (<code>pa_IpmNoProgress</code>), the descent stops and Optima
       finishes the result. If Optima fails, GEMS3K solves the call again without this stop.</li>
     <li><b>Phase check</b> (<code>pa_PC</code> = 2, the default). It removes phases that must not be there. It adds
       phases that must be there. It removes very small amounts. It never adds a phase in a larger amount than the bulk
-      composition can supply. If the phases change, steps 2 to 4 run again.</li>
+      composition can supply. A present pure phase can stay oversaturated because a trace element limits it. Then it
+      gets that element from its dissolved species, up to saturation (<code>pa_PsscCleanupBudget</code> = 3).
+      If the phases change, steps 2 to 4 run again.</li>
     <li><b>Second mass balance fix.</b> This step uses the final set of phases.</li>
     <li><b>Final checks.</b> If an element does not agree with the bulk composition, the solver does one repair
       (<code>pa_MbReproject</code>, on). If the repair does not help, the solver gives the result and writes a warning in the log.</li>

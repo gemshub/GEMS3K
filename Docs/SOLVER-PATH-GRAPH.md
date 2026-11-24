@@ -1,4 +1,4 @@
-# GEMS3K 5.2.0 — solver paths
+# GEMS3K 5.2.2 — solver paths
 
 This page shows what happens when you call `GEM_run()` in each calculation mode. It shows which solver runs
 first. It shows what the solver tries when a calculation fails. It shows when the solver stops.
@@ -65,14 +65,18 @@ The GEMS3K IPM solver runs in AIA and SIA. It also runs as the first part of HOP
      is the linear calculation with the mixed phases at their best compositions (`pa_IpmLevelStart`).
      If this call fails, GEMS3K solves it again from the usual start.
 2. **Mass balance fix.** The solver changes the amounts until each element agrees with the bulk composition.
+   - If this fix stops at its iteration limit, a separate correction can finish it (`pa_IpmBalanceStep` = 2 or 3).
 3. **Main descent.** The solver lowers the Gibbs energy step by step and keeps the mass balance. It stops
    when the steps are small enough.
+   - After each step, a small correction restores the mass balance (`pa_IpmBalanceStep`).
    - If the energy does not improve for 500 iterations (`pa_IpmNoProgress`), the descent stops. Optima then
      finishes the result from that point.
    - If Optima fails, GEMS3K solves the call again without this stop.
 4. **Phase check.** This step runs when `pa_PC` = 2 (the default). It removes phases that must not be there.
    It adds phases that must be there. It removes very small amounts.
    - It never adds a phase in a larger amount than the bulk composition can supply.
+   - A present pure phase can stay oversaturated because a trace element limits it. Then it gets that element
+     from its dissolved species, up to saturation (`pa_PsscCleanupBudget` = 3).
    - If the phase check changes the phases, steps 2 to 4 run again. The number of passes has a limit.
 5. **Second mass balance fix.** This step uses the final set of phases.
 6. **Final checks.** If an element does not agree with the bulk composition, the solver does one repair
