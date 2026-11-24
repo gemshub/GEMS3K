@@ -117,7 +117,7 @@ sudo ./install_no_thermofun.sh
 
 #### The options and cases for compiling the code
 
-* USE_THERMOFUN (default ON) - Enable using the ThermoFun library for calculating the standard state thermodynamic properties of substances and reactions at a given temperature and pressure. Otherwise possible only load thermodynamic data from DATACH using Lagrangian Interpolator.
+* USE_THERMOFUN (default ON) - Enable using the ThermoFun library for calculating the standard state thermodynamic properties of substances and reactions at a given temperature and pressure. Otherwise possible only load thermodynamic data from DATACH using Lagrangian Interpolator. This version needs ThermoFun 0.7 or a later 0.x version. CMake stops with ThermoFun 1.0 or newer.
 
 * BUILD_SOLMOD  (default ON) - Enable building the [tsolmod4rkt library](tsolmod4rkt/README.md) of mixing and activity models into a separate library with C++ and Python APIs. 
 
@@ -126,6 +126,8 @@ sudo ./install_no_thermofun.sh
 * BUILD_TOOLS   (default ON) - Enable building the [kva2json utility](tools/README.md) to convert GEMS3K files formats. 
 
 * USE_OPTIMA_SOLVER (default OFF) - Enable the Optima solver (modes AOP, SOP, HOP, SHP). Install Optima first; CMake finds it through CMAKE_PREFIX_PATH. GEMS3K then uses the Eigen version of the Optima build. GEMS3K supports Eigen 3.4 and Eigen 5. Without this option, the Optima modes run with the GEMS3K IPM solver, with a warning.
+
+* GEMS3K_OPTIMA_SUBDIR (default empty) - A folder below the install prefix that holds an Optima of its own, for example `lib/gems3k-optima`. Programs that find GEMS3K then use this Optima first. Use it when a package carries Optima with GEMS3K.
 
 * BUILD_NLOHMANNJSON (default OFF) - Enable using the [nlohmann JSON](https://github.com/nlohmann/json) to serialize/deserialize input files, otherwise, the simdjson library is used.
 
