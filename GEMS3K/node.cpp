@@ -1595,6 +1595,10 @@ long int TNode::GEM_run_single( bool uPrimalSol )
 #else
             CalcTime = multi_ptr()->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
 #endif
+            // pa_TracePolish: solve each trace element again with the other potentials fixed.
+            if( ( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_SIA ) && CNode->dt <= 0.
+                && multi_ptr()->base_param()->TracePolish > 0. )
+                multi_ptr()->TracePolish( multi_ptr()->base_param()->TracePolish );
             // A dissolved species whose activity does not match its molality: the same finish (or a warning).
             if( ( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_SIA ) && CNode->dt <= 0. )
                 multi_ptr()->ActivityConsistencyCheck();

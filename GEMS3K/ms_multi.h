@@ -558,6 +558,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// try a longer step. The step is not tried if it would cross a bound, and it is kept only if the error falls.
     /// 1 = on (default), 0 = off.
     long int OptimaJumpAhead = 1;
+    /// pa_TracePolish: IPM solver: after the solve, each trace element (bulk amount below this fraction of the system)
+    /// is solved again with the potentials of the other elements fixed, and kept only if G does not rise.
+    /// 1e-5 = default; 0 = off.
+    double TracePolish = 1e-5;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -1890,6 +1894,8 @@ protected:
     /// After a native solve: a dissolved species whose molality times activity coefficient differs from its
     /// activity by more than 0.01 in log10 asks for the Optima finish (or a warning), as TraceGrowthCheck() does.
     void ActivityConsistencyCheck();
+    /// After a native solve: solves each trace element again with the other potentials fixed. True if the result was kept.
+    bool TracePolish( double fracTrace );
     /// Set by TraceGrowthCheck() when a trace phase still tends to grow, with its warning text;
     /// cleared at the start of each native solve.
     bool trace_growth_stuck = false;
@@ -2120,7 +2126,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing, f_pa_IpmBalanceStep, f_pa_PsscCleanupBudget, f_pa_DcMinMolecule, f_pa_IpmJumpAhead, f_pa_OptimaJumpAhead
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing, f_pa_IpmBalanceStep, f_pa_PsscCleanupBudget, f_pa_DcMinMolecule, f_pa_IpmJumpAhead, f_pa_OptimaJumpAhead, f_pa_TracePolish
 
 } MULTI_DYNAMIC_FIELDS;
 
