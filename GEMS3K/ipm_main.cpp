@@ -2945,6 +2945,8 @@ bool TMultiBase::TracePolish( double fracTrace )
             pm.F[j] = C[(size_t)j]; }
     }
     TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+    // Phase bulk, volume, mass and element molalities follow the new amounts.
+    CalculateConcentrations( pm.X, pm.XF, pm.XFA );
     pm.FX += dGpolish;
     return true;
 }
@@ -2963,7 +2965,7 @@ void TMultiBase::ActivityConsistencyCheck()
     double worst = 0.;
     for( long int j = 0; j < pm.L1[0] && j < pm.L; j++ )
     {
-        if( j == pm.LO || pm.DCC[j] == DC_AQ_ELECTRON || !( pm.X[j] > 0. ) || !( pm.Y_m[j] > mMin ) || !( pm.Gamma[j] > 0. ) )
+        if( j == pm.LO || pm.DCC[j] == DC_AQ_SOLVENT || pm.DCC[j] == DC_AQ_SOLVCOM || pm.DCC[j] == DC_AQ_ELECTRON || !( pm.X[j] > 0. ) || !( pm.Y_m[j] > mMin ) || !( pm.Gamma[j] > 0. ) )
             continue;
         if( pm.DUL && pm.DUL[j] < 1e6 && pm.X[j] >= pm.DUL[j] * ( 1. - 1e-9 ) ) continue;   // held at its upper limit
         if( pm.DLL && pm.DLL[j] > 0. && pm.X[j] <= pm.DLL[j] * ( 1. + 1e-9 ) ) continue;    // held at its lower limit
@@ -2984,7 +2986,8 @@ void TMultiBase::ActivityConsistencyCheck()
     trace_growth_stuck = true;
     activity_mismatch = true;
 #ifdef USE_OPTIMA_SOLVER
-    if( base_param()->NativeOptimaFinish > 0 ) return;   // the Optima finish reports instead
+    // The Optima finish reports instead; it does not run when a pH or Eh target is set.
+    if( base_param()->NativeOptimaFinish > 0 && optima_control_conditions.empty() ) return;
 #endif
     gems_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "actconsist" )
                           ? spdlog::level::warn : spdlog::level::debug, "{}", note );
@@ -3042,7 +3045,8 @@ void TMultiBase::TraceGrowthCheck()
                        nFound > 1 ? fmt::format( " ({} such phases: {})", nFound, listed ) : std::string() );
     native_trace_decide( "tracegrowth phases=%ld worstgain=%.3e tol=%.1e list=%s", (long)nFound, worst, tol, listed.c_str() );
 #ifdef USE_OPTIMA_SOLVER
-    if( base_param()->NativeOptimaFinish > 0 ) return;   // the Optima finish reports instead
+    // The Optima finish reports instead; it does not run when a pH or Eh target is set.
+    if( base_param()->NativeOptimaFinish > 0 && optima_control_conditions.empty() ) return;
 #endif
     gems_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "tracegrowth" )
                           ? spdlog::level::warn : spdlog::level::debug, "{}", trace_growth_note );
