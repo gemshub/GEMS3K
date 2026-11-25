@@ -1900,6 +1900,9 @@ protected:
     /// cleared at the start of each native solve.
     bool trace_growth_stuck = false;
     std::string trace_growth_note;
+    /// Set by ActivityConsistencyCheck(): the Optima finish was asked for by a dissolved species whose activity
+    /// does not match. Only then does a finish that is not kept put back the whole native state.
+    bool activity_mismatch = false;
     /// One entry per phase: 1 when the last accepted Optima answer left the whole phase at the
     /// solver's lower bound and the phase is not supersaturated, so it is absent. Cleared at the
     /// start of each native and Optima solve.

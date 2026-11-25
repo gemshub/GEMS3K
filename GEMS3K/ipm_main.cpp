@@ -2979,6 +2979,7 @@ void TMultiBase::ActivityConsistencyCheck()
                                                  : std::string() );
     trace_growth_note = trace_growth_stuck ? trace_growth_note + " " + note : note;
     trace_growth_stuck = true;
+    activity_mismatch = true;
 #ifdef USE_OPTIMA_SOLVER
     if( base_param()->NativeOptimaFinish > 0 ) return;   // the Optima finish reports instead
 #endif

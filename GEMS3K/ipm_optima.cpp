@@ -7175,14 +7175,19 @@ double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIP
         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
         CalculateConcentrations( pm.X, pm.XF, pm.XFA );   // activity coefficients were put back above
         pm.MK = savedMK; pm.PZ = savedPZ;
-        copyMULTIData( *nativeState, false );
-        std::copy( fitVar0.begin(), fitVar0.end(), pm.FitVar );
-        if( pm.BF && !bf0.empty() ) std::copy( bf0.begin(), bf0.end(), pm.BF );
-        if( pm.BFC && !bfc0.empty() ) std::copy( bfc0.begin(), bfc0.end(), pm.BFC );
-        pm.ITF = itf0; pm.ITG = itg0; pm.IT = it0;
-        zeroed_floor_amount = zeroedFloor0;
-        phase_floor_parked = floorParked0;
-        prev_scfact = prevScFact0;
+        // Asked for by the activity check: put back the whole native state, so a later warm call starts as it
+        // would have without the finish. Asked for by a growing trace solid only: keep the earlier behaviour.
+        if( activity_mismatch )
+        {
+            copyMULTIData( *nativeState, false );
+            std::copy( fitVar0.begin(), fitVar0.end(), pm.FitVar );
+            if( pm.BF && !bf0.empty() ) std::copy( bf0.begin(), bf0.end(), pm.BF );
+            if( pm.BFC && !bfc0.empty() ) std::copy( bfc0.begin(), bfc0.end(), pm.BFC );
+            pm.ITF = itf0; pm.ITG = itg0; pm.IT = it0;
+            zeroed_floor_amount = zeroedFloor0;
+            phase_floor_parked = floorParked0;
+            prev_scfact = prevScFact0;
+        }
         ipm_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "tracegrowth" )
                              ? spdlog::level::warn : spdlog::level::debug, "{}", trace_growth_note );
     }

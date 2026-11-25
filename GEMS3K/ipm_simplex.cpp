@@ -513,6 +513,7 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
 
   InitalizeGEM_IPM_Data();
   trace_growth_stuck = false;
+  activity_mismatch = false;
   phase_floor_parked.clear();
   warm_floor_seed.swap( zeroed_floor_amount );   // read by the warm start in GEM_IPM_InitialApproximation()
   zeroed_floor_amount.clear();
