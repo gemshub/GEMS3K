@@ -7110,6 +7110,20 @@ double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIP
     if( cap <= 0 || !trace_growth_stuck || pm.MK || pm.PZ || !optima_control_conditions.empty() )
         return 0.;
     const long int savedPNP = pm.pNP, savedMK = pm.MK, savedPZ = pm.PZ;
+    // An exact copy of native's whole state: when Optima's answer is not kept, every value is put back,
+    // so a later warm call starts as it would have without the finish.
+    std::unique_ptr<TMultiBase> nativeState( new TMultiBase( node1 ) );
+    nativeState->set_def();
+    nativeState->copyMULTI( *this );
+    // copyMULTI() leaves out the smoothing factors, the phase bulk compositions and the iteration counts.
+    const std::vector<double> fitVar0( pm.FitVar, pm.FitVar + 5 );
+    const std::vector<double> bf0 = pm.BF ? std::vector<double>( pm.BF, pm.BF + pm.FIs * pm.N ) : std::vector<double>();
+    const std::vector<double> bfc0 = pm.BFC ? std::vector<double>( pm.BFC, pm.BFC + pm.N ) : std::vector<double>();
+    const long int itf0 = pm.ITF, itg0 = pm.ITG, it0 = pm.IT;
+    // The notes an Optima answer leaves for the next warm start belong to native's answer as well.
+    const std::vector<double> zeroedFloor0 = zeroed_floor_amount;
+    const std::vector<char> floorParked0 = phase_floor_parked;
+    const double prevScFact0 = prev_scfact;
     auto snap = [&]( const double* p, long int n ) { return std::vector<double>( p, p + n ); };
     // Native's total G, without disturbing the phase totals it recomputes.
     const std::vector<double> X0 = snap( pm.X, pm.L ), XF0 = snap( pm.XF, pm.FI ), XFA0 = snap( pm.XFA, pm.FIs );
@@ -7161,6 +7175,14 @@ double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIP
         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
         CalculateConcentrations( pm.X, pm.XF, pm.XFA );   // activity coefficients were put back above
         pm.MK = savedMK; pm.PZ = savedPZ;
+        copyMULTIData( *nativeState, false );
+        std::copy( fitVar0.begin(), fitVar0.end(), pm.FitVar );
+        if( pm.BF && !bf0.empty() ) std::copy( bf0.begin(), bf0.end(), pm.BF );
+        if( pm.BFC && !bfc0.empty() ) std::copy( bfc0.begin(), bfc0.end(), pm.BFC );
+        pm.ITF = itf0; pm.ITG = itg0; pm.IT = it0;
+        zeroed_floor_amount = zeroedFloor0;
+        phase_floor_parked = floorParked0;
+        prev_scfact = prevScFact0;
         ipm_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "tracegrowth" )
                              ? spdlog::level::warn : spdlog::level::debug, "{}", trace_growth_note );
     }

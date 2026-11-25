@@ -1887,6 +1887,9 @@ protected:
     /// Warns when a solid phase is present only in a trace amount but still tends to grow:
     /// the answer may stop short of equilibrium. Read-only.
     void TraceGrowthCheck();
+    /// After a native solve: a dissolved species whose molality times activity coefficient differs from its
+    /// activity by more than 0.01 in log10 asks for the Optima finish (or a warning), as TraceGrowthCheck() does.
+    void ActivityConsistencyCheck();
     /// Set by TraceGrowthCheck() when a trace phase still tends to grow, with its warning text;
     /// cleared at the start of each native solve.
     bool trace_growth_stuck = false;

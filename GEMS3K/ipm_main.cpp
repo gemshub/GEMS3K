@@ -108,6 +108,67 @@ static thread_local long int s_balTraceIC = 0;
 /// pa_IpmBalanceStep = 2: refinement steps taken with the balance correction, in the current IPM call.
 static thread_local long int s_mbrQrSteps = 0;
 
+/// The nonzero entries of the matrix A, by species and by IC, for the balance step. A sum over species that skips
+/// the zero entries gives the same result as the full sum, because each IC adds its terms in the same order.
+struct BalanceSparseA
+{
+    const double* A = nullptr;
+    long int N = -1, L = -1;
+    std::vector<long int> colStart, colIc;    // species j: ICs colIc[colStart[j] .. colStart[j+1]-1]
+    std::vector<double> colA;                 // and their entries of A
+    std::vector<long int> rowStart, rowDc;    // IC i: species rowDc[rowStart[i] .. rowStart[i+1]-1]
+};
+static thread_local BalanceSparseA s_balA;
+
+/// Make s_balA for the matrix of pm. A new IPM call makes it again, so a changed matrix is never used.
+static void balance_sparse_build( const MULTI& pm )
+{
+    BalanceSparseA& s = s_balA;
+    s.A = pm.A; s.N = pm.N; s.L = pm.L;
+    s.colStart.assign( (size_t)pm.L + 1, 0 ); s.colIc.clear(); s.colA.clear();
+    std::vector<long int> rowCount( (size_t)pm.N, 0 );
+    for( long int j = 0; j < pm.L; j++ )
+    {
+        for( long int i = 0; i < pm.N; i++ )
+        {   const double a = pm.A[i + j*pm.N];
+            if( a != 0. ) { s.colIc.push_back( i ); s.colA.push_back( a ); rowCount[(size_t)i]++; } }
+        s.colStart[(size_t)j + 1] = (long int)s.colIc.size();
+    }
+    s.rowStart.assign( (size_t)pm.N + 1, 0 );
+    for( long int i = 0; i < pm.N; i++ ) s.rowStart[(size_t)i + 1] = s.rowStart[(size_t)i] + rowCount[(size_t)i];
+    s.rowDc.assign( (size_t)s.rowStart[(size_t)pm.N], 0 );
+    std::vector<long int> pos( s.rowStart.begin(), s.rowStart.end() - 1 );
+    for( long int j = 0; j < pm.L; j++ )
+        for( long int k = s.colStart[(size_t)j]; k < s.colStart[(size_t)j + 1]; k++ )
+            s.rowDc[(size_t)pos[(size_t)s.colIc[(size_t)k]]++] = j;
+}
+
+/// s_balA for pm, made again if it belongs to another matrix.
+static const BalanceSparseA& balance_sparse( const MULTI& pm )
+{
+    if( s_balA.A != pm.A || s_balA.N != pm.N || s_balA.L != pm.L ) balance_sparse_build( pm );
+    return s_balA;
+}
+
+/// r = B - A amt for all N ICs, and the worst residual relative to its bar B[i] * DHBM over the first N - E ICs,
+/// as in native_trace_mb_of(). The terms of each IC are added in species order, so r is the same as the full sum.
+static double balance_residual( const MULTI& pm, const BalanceSparseA& sa, const double* amt, std::vector<double>& r )
+{
+    r.assign( pm.B, pm.B + pm.N );
+    for( long int j = 0; j < pm.L; j++ )
+    {   const double x = amt[j];
+        if( x == 0. ) continue;
+        for( long int k = sa.colStart[(size_t)j]; k < sa.colStart[(size_t)j + 1]; k++ )
+            r[(size_t)sa.colIc[(size_t)k]] -= sa.colA[(size_t)k] * x; }
+    double relOut = 0.;
+    for( long int i = 0; i < pm.N - pm.E; i++ )
+    {   const double a = fabs( r[(size_t)i] );
+        const double bar = pm.B[i] * pm.DHBM;
+        const double rel = bar > 0. ? a / bar : ( a > 0. ? 1e300 : 0. );
+        if( rel > relOut ) relOut = rel; }
+    return relOut;
+}
+
 /// The largest part (at most 1) of the balance correction d that keeps every amount inside its limits.
 /// It stops 1 % short of a limit, and returns 0 if d moves an amount already on a kinetic limit further out.
 static double balance_correction_step( const MULTI& pm, const double* amt, const std::vector<double>& d )
@@ -170,15 +231,18 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
             {   js.push_back( j ); inJs[(size_t)j] = 1; }
         // An IC that is held only by trace species (for example Na at 1e-9 mol) gets those species back.
         // Without them, the balance of that IC cannot be corrected and the IPM loop does not stop.
+        const BalanceSparseA& sa = balance_sparse( pm );
         for( long int i = 0; i < N; i++ )
         {
             if( i == dropRow || !( pm.B[i] > 0. ) ) continue;
+            const long int k0 = sa.rowStart[(size_t)i], k1 = sa.rowStart[(size_t)i + 1];
             bool held = false;
-            for( long int j = 0; j < pm.L && !held; j++ ) held = inJs[(size_t)j] && pm.A[i + j*pm.N] != 0.;
+            for( long int k = k0; k < k1 && !held; k++ ) held = inJs[(size_t)sa.rowDc[(size_t)k]];
             if( held || !traceBack ) continue;
             bool added = false;
-            for( long int j = 0; j < pm.L; j++ )
-                if( !inJs[(size_t)j] && pm.A[i + j*pm.N] != 0. && usable( j ) ) { inJs[(size_t)j] = 1; added = true; }
+            for( long int k = k0; k < k1; k++ )
+            {   const long int j = sa.rowDc[(size_t)k];
+                if( !inJs[(size_t)j] && usable( j ) ) { inJs[(size_t)j] = 1; added = true; } }
             if( added ) traceIC = true;
         }
         if( traceIC ) s_balTraceIC++;
@@ -2580,6 +2644,46 @@ void TMultiBase::EnergyDeterminacyCheck()
 // A solid phase at a trace amount barely moves, because each step is scaled by the amount itself.
 // If it still tends to grow at the end, the answer may stop short of equilibrium: say so. A single solid
 // left out while it would form (stability index below the insertion threshold) is treated the same way.
+void TMultiBase::ActivityConsistencyCheck()
+{
+    // A species whose activity term was still being smoothed when the IPM loop stopped is not at equilibrium:
+    // its molality times activity coefficient and its activity from the element potentials then differ.
+    // Such species are usually trace species, so the loop's stopping test does not see them.
+    if( pm.MK || pm.PZ || pm.FI < 1 || pm.PHC[0] != PH_AQUEL || !pm.Y_m || !pm.Gamma || !pm.Y_la || !pm.L1
+        || !( pm.XF[0] > pm.DSM ) )
+        return;
+    const double tol = 0.01;      // in log10 units
+    const double mMin = 1e-13;    // molality below which a species is not checked
+    long int nFound = 0, jWorst = -1;
+    double worst = 0.;
+    for( long int j = 0; j < pm.L1[0] && j < pm.L; j++ )
+    {
+        if( j == pm.LO || pm.DCC[j] == DC_AQ_ELECTRON || !( pm.X[j] > 0. ) || !( pm.Y_m[j] > mMin ) || !( pm.Gamma[j] > 0. ) )
+            continue;
+        if( pm.DUL && pm.DUL[j] < 1e6 && pm.X[j] >= pm.DUL[j] * ( 1. - 1e-9 ) ) continue;   // held at its upper limit
+        if( pm.DLL && pm.DLL[j] > 0. && pm.X[j] <= pm.DLL[j] * ( 1. + 1e-9 ) ) continue;    // held at its lower limit
+        const double dev = fabs( log10( pm.Y_m[j] * pm.Gamma[j] ) - pm.Y_la[j] );
+        if( !( dev > tol ) ) continue;
+        nFound++;
+        if( dev > worst ) { worst = dev; jWorst = j; }
+    }
+    if( nFound == 0 )
+        return;
+    const std::string name = trace_safe_name( char_array_to_string( pm.SM[jWorst], MAXDCNAME ) );
+    native_trace_decide( "actconsist species=%ld worst=%.3e name=%s tol=%.1e", (long)nFound, worst, name.c_str(), tol );
+    const std::string note = fmt::format( "The activity of {} differs from its molality times activity coefficient by {:.2g} in log10{}, "
+                         "so the result may stop short of equilibrium. Try HOP or AOP for this system.",
+                         name, worst, nFound > 1 ? fmt::format( " ({} dissolved species differ by more than {})", nFound, tol )
+                                                 : std::string() );
+    trace_growth_note = trace_growth_stuck ? trace_growth_note + " " + note : note;
+    trace_growth_stuck = true;
+#ifdef USE_OPTIMA_SOLVER
+    if( base_param()->NativeOptimaFinish > 0 ) return;   // the Optima finish reports instead
+#endif
+    gems_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "actconsist" )
+                          ? spdlog::level::warn : spdlog::level::debug, "{}", note );
+}
+
 void TMultiBase::TraceGrowthCheck()
 {
     const long int N = pm.N, L = pm.L;
@@ -4260,6 +4364,7 @@ STEP_POINT("FIA Iteration");
         MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
         double res = ResidualMetric();
         int kept = 0;
+        balance_sparse_build( pm );
         for( int pass = 0; pass < 5 && res > 1.; pass++ )
         {
             WeightMultipliers( true );
@@ -4355,6 +4460,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     s_ipmQrSortPivot = 0;
     // pa_IpmBalanceStep and pa_IpmJumpAhead for this call.
     s_feasKeep = pa_p->IpmBalanceStep > 0;
+    if( s_feasKeep ) balance_sparse_build( pm );
     s_balTried = s_balKept = s_balShort = 0;
     s_balTraceIC = 0;
     s_mbrQrSteps = 0;
@@ -4515,16 +4621,18 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
        // Mode 1 uses the factor kept from the step's own linear system; mode 2 makes its own factor.
        const bool balOwnQr = pa_p->IpmBalanceStep >= 2;
        int balKeptNow = 0;
+       // The residual of the current amounts; a kept pass gives the residual of the next one.
+       std::vector<double> balR;
+       double balRel = -1.;
        for( int feasPass = 0; feasPass < 3 && s_feasKeep && ( balOwnQr || ( s_feasOk && s_feasN == N ) ); feasPass++ )
        {
-           long int fi1, fi2; double frBefore, fa1; native_trace_mb_of( pm, pm.X, fi1, frBefore, fi2, fa1 );
+           const BalanceSparseA& sa = balance_sparse( pm );
+           if( balRel < 0. ) balRel = balance_residual( pm, sa, pm.X, balR );
+           const double frBefore = balRel;
            // Mode 3: as mode 2, but only when the step left the balance outside its own tolerance.
            if( pa_p->IpmBalanceStep >= 3 && !( frBefore > 1. ) ) break;
            std::vector<double> xKeep( pm.X, pm.X + pm.L );
-           std::vector<double> r( (size_t)N ), d( (size_t)pm.L, 0. );
-           for( long int i = 0; i < N; i++ ) r[(size_t)i] = pm.B[i];
-           for( long int j = 0; j < pm.L; j++ )
-               if( pm.X[j] != 0. ) for( long int i = 0; i < N; i++ ) r[(size_t)i] -= pm.A[i + j*pm.N] * pm.X[j];
+           std::vector<double> r( balR.begin(), balR.begin() + N ), d( (size_t)pm.L, 0. );
            if( balOwnQr )
            {
                if( !balance_correction_qr( pm, pm.X, N, r, d ) ) break;
@@ -4558,7 +4666,8 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
            if( sf < 1. ) s_balShort++;
            if( !( sf > 0. ) ) break;
            for( long int j = 0; j < pm.L; j++ ) pm.X[j] += sf * d[(size_t)j];
-           long int fi3, fi4; double frAfter, fa2; native_trace_mb_of( pm, pm.X, fi3, frAfter, fi4, fa2 );
+           const double frAfter = balance_residual( pm, sa, pm.X, balR );
+           balRel = frAfter;
            if( !( frAfter < frBefore ) )
            {   std::copy( xKeep.begin(), xKeep.end(), pm.X ); TotalPhasesAmounts( pm.X, pm.XF, pm.XFA ); break; }
            s_balKept++;
