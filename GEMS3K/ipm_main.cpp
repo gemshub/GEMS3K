@@ -2676,6 +2676,8 @@ bool TMultiBase::TracePolish( double fracTrace )
     std::vector<double> C( (size_t)L, 0. );
     std::vector<char> kind( (size_t)L, 0 );
     std::vector<long int> phOf( (size_t)L, -1 );
+    // A dissolved species that the input switches off (upper limit 0) keeps its amount; it is never solved for.
+    auto heldOut = [&]( long int j ) { return pm.DUL && pm.DUL[j] <= 0. && kind[(size_t)j] != 2; };
     auto phaseTerms = [&]() {
     std::fill( kind.begin(), kind.end(), 0 );
     for( long int k = 0, jb = 0; k < pm.FI; jb += pm.L1[k], k++ )
@@ -2704,6 +2706,7 @@ bool TMultiBase::TracePolish( double fracTrace )
             // potential of a present species.
             if( kind[(size_t)j] == 1 && pm.PHC[k] != PH_AQUEL && pm.X[j] > std::min( pm.DcMinM, pm.lowPosNum ) && pm.F[j] != 0. )
                 C[(size_t)j] = pm.F[j] - log( pm.X[j] );
+            if( heldOut( j ) ) kind[(size_t)j] = 0;
         }
     }
     };
@@ -2720,7 +2723,7 @@ bool TMultiBase::TracePolish( double fracTrace )
         for( long int j = 0; j < L && good; j++ )
         {
             const double a = pm.A[i + j*N];
-            if( a == 0. ) continue;
+            if( a == 0. || heldOut( j ) ) continue;
             const bool limited = ( pm.DUL && pm.DUL[j] < 1e6 && pm.DUL[j] > 0. ) || ( pm.DLL && pm.DLL[j] > 0. );
             if( kind[(size_t)j] == 1 )
             {   if( limited || !( a > 0. ) ) good = false; else phTrace[(size_t)phOf[(size_t)j]] += pm.X[j]; }
