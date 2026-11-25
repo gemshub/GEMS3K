@@ -90,7 +90,8 @@ The GEMS3K IPM solver runs in AIA and SIA. It also runs as the first part of HOP
    - The descent can stop at its iteration limit. It can also stop when it cannot solve its equations.
      Then Optima finishes the result from that point.
    - The amount of a dissolved species can disagree with its activity. Then Optima also finishes the result.
-     If GEMS3K does not keep the Optima result, it puts back the full result of the GEMS3K IPM solver.
+     If GEMS3K does not keep the Optima result, it puts back the result of the GEMS3K IPM solver.
+     If the activity check started the finish, GEMS3K also puts back the full solver state, so a later warm start is the same.
 
 **Restarts in the solver.**
 - If a warm start (SIA) fails in one of these steps, the solver makes a new cold start in the same call.
