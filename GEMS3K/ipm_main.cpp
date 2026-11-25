@@ -2978,10 +2978,26 @@ void TMultiBase::ActivityConsistencyCheck()
         return;
     const std::string name = trace_safe_name( char_array_to_string( pm.SM[jWorst], MAXDCNAME ) );
     native_trace_decide( "actconsist species=%ld worst=%.3e name=%s tol=%.1e", (long)nFound, worst, name.c_str(), tol );
-    const std::string note = fmt::format( "The activity of {} differs from its molality times activity coefficient by {:.2g} in log10{}, "
-                         "so the result may stop short of equilibrium. Try HOP or AOP for this system.",
-                         name, worst, nFound > 1 ? fmt::format( " ({} dissolved species differ by more than {})", nFound, tol )
-                                                 : std::string() );
+    // When nothing in the bulk fixes the redox level, the energy does not fix the activity of a species such as H2 or O2.
+    // Only the text changes: the Optima finish still runs.
+    bool redoxNote = false;
+#ifdef USE_OPTIMA_SOLVER
+    if( optima_control_conditions.empty() )
+    {
+        const RedoxFreeCheck rf = CheckRedoxFree();
+        const double e = RedoxShift( rf, jWorst );
+        redoxNote = !std::isnan( e ) && fabs( e ) > 1e-6;
+        if( redoxNote )
+            native_trace_decide( "actconsist-redoxfree name=%s shift=%g", name.c_str(), e );
+    }
+#endif
+    const std::string more = nFound > 1 ? fmt::format( " ({} dissolved species differ by more than {})", nFound, tol ) : std::string();
+    const std::string note = redoxNote
+        ? fmt::format( "The activity of {} differs from its molality times activity coefficient by {:.2g} in log10{}. "
+                       "Nothing in the input fixes the redox level, so the activity of {} is not determined. "
+                       "Set an Eh target or add a redox buffer.", name, worst, more, name )
+        : fmt::format( "The activity of {} differs from its molality times activity coefficient by {:.2g} in log10{}, "
+                       "so the result may stop short of equilibrium. Try HOP or AOP for this system.", name, worst, more );
     trace_growth_note = trace_growth_stuck ? trace_growth_note + " " + note : note;
     trace_growth_stuck = true;
     activity_mismatch = true;

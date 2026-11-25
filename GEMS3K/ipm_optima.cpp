@@ -547,6 +547,7 @@ TMultiBase::RedoxFreeCheck TMultiBase::CheckRedoxFree() const
     const double tol = 1e-12 * std::max( scale, 1e-300 );   // rounding of the input amounts, not a real trace oxidant
     double best = 1e300, bestE = 0.;
     long int visits = 0;
+    std::vector<double> cur( (size_t)N, std::numeric_limits<double>::quiet_NaN() );   // the valences of the current choice
     const long int kMaxVisits = 200000;
     std::function<bool( size_t, double )> search = [&]( size_t k, double e ) -> bool
     {
@@ -559,10 +560,14 @@ TMultiBase::RedoxFreeCheck TMultiBase::CheckRedoxFree() const
         if( e + loRest[k] > tol || e + hiRest[k] < -tol )
             return false;
         for( double v : val[(size_t)els[k]] )
+        {
+            cur[(size_t)els[k]] = v;
             if( search( k + 1, e + v * pm.B[els[k]] ) ) return true;
+        }
         return false;
     };
     r.free = search( 0, -2. * pm.B[iO] + pm.B[iH] - pm.B[iZ] );
+    if( r.free ) r.valence = cur;
     if( visits > kMaxVisits ) r.determined = false;
     r.excess = best < 1e300 ? bestE : 0.;
     r.rel = std::fabs( r.excess ) / std::max( scale, 1e-300 );
@@ -586,6 +591,25 @@ TMultiBase::RedoxFreeCheck TMultiBase::CheckRedoxFree() const
         }
     }
     return r;
+}
+
+double TMultiBase::RedoxShift( const RedoxFreeCheck& rf, long int j ) const
+{
+    const long int N = pm.N;
+    if( !rf.free || (long int)rf.valence.size() != N || j < 0 || j >= pm.L )
+        return std::numeric_limits<double>::quiet_NaN();
+    double e = 0.;
+    for( long int i = 0; i < N; i++ )
+    {
+        const double a = pm.A[ i + j*N ];
+        if( a == 0. ) continue;
+        if( pm.ICC[i] == IC_CHARGE ) e += a;
+        else if( pm.ICC[i] == IC_OXYGEN ) e += 2. * a;
+        else if( pm.ICC[i] == IC_HYDROGEN ) e -= a;
+        else if( std::isnan( rf.valence[(size_t)i] ) ) return std::numeric_limits<double>::quiet_NaN();
+        else e -= rf.valence[(size_t)i] * a;
+    }
+    return e;
 }
 
 /// pa_OptimaTwinLabel: for two present copies of one solid solution that are the same in every input (end-members

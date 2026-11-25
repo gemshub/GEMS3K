@@ -1520,7 +1520,11 @@ public:
         bool exact = false;       ///< free, and every species keeps each element at that one valence
         double excess = 0.;       ///< electron excess of the bulk for the closest choice, mol
         double rel = 0.;          ///< excess over the bulk's total valence amount
+        std::vector<double> valence;   ///< when free: the valence chosen per element (NaN for O, H, charge and absent ones)
     };
+    /// When the bulk is redox-free: the electrons species j carries beyond the chosen valences (0 for H2O, OH-, H+;
+    /// -2 for H2, +4 for O2). NaN when an element of j has no chosen valence.
+    double RedoxShift( const RedoxFreeCheck& rf, long int j ) const;
     /// Checks whether nothing in the bulk fixes the redox level (pa_OptimaRedoxFree).
     RedoxFreeCheck CheckRedoxFree() const;
 
