@@ -2678,6 +2678,8 @@ bool TMultiBase::TracePolish( double fracTrace )
     std::vector<long int> phOf( (size_t)L, -1 );
     // A dissolved species that the input switches off (upper limit 0) keeps its amount; it is never solved for.
     auto heldOut = [&]( long int j ) { return pm.DUL && pm.DUL[j] <= 0. && kind[(size_t)j] != 2; };
+    // The fixed term taken from the solver's potential (non-aqueous species) is read once, before any amount moves.
+    std::vector<double> cFromF( (size_t)L, std::numeric_limits<double>::quiet_NaN() );
     auto phaseTerms = [&]() {
     std::fill( kind.begin(), kind.end(), 0 );
     for( long int k = 0, jb = 0; k < pm.FI; jb += pm.L1[k], k++ )
@@ -2704,8 +2706,12 @@ bool TMultiBase::TracePolish( double fracTrace )
             else if( pm.DCCW[j] == DC_SYMMETRIC ) { C[(size_t)j] = Gj - log( XF ); kind[(size_t)j] = 1; }
             // Outside the aqueous phase the activity term can hold more (surface terms): take it from the solver's own
             // potential of a present species.
-            if( kind[(size_t)j] == 1 && pm.PHC[k] != PH_AQUEL && pm.X[j] > std::min( pm.DcMinM, pm.lowPosNum ) && pm.F[j] != 0. )
-                C[(size_t)j] = pm.F[j] - log( pm.X[j] );
+            if( kind[(size_t)j] == 1 && pm.PHC[k] != PH_AQUEL )
+            {
+                if( std::isnan( cFromF[(size_t)j] ) && pm.X[j] > std::min( pm.DcMinM, pm.lowPosNum ) && pm.F[j] != 0. )
+                    cFromF[(size_t)j] = pm.F[j] - log( pm.X[j] );
+                if( !std::isnan( cFromF[(size_t)j] ) ) C[(size_t)j] = cFromF[(size_t)j];
+            }
             if( heldOut( j ) ) kind[(size_t)j] = 0;
         }
     }
