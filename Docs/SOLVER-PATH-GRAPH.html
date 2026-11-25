@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="GEMS3K 5.2.2: what runs, in what order, in each calculation mode, and what is tried when a calculation fails.">
+<meta name="description" content="GEMS3K 5.2.3: what runs, in what order, in each calculation mode, and what is tried when a calculation fails.">
 <title>GEMS3K Solver Paths</title>
 <style>
 :root{
@@ -95,7 +95,7 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
 <div class="wrap">
 
 <header>
-  <p class="eyebrow">GEMS3K 5.2.2 · solver paths</p>
+  <p class="eyebrow">GEMS3K 5.2.3 · solver paths</p>
   <h1>What runs, and in what order</h1>
   <p class="lede">This page shows, for each calculation mode, which solver runs first. It shows what the solver
   tries when a calculation fails and when it stops. The same content as plain text is in
@@ -304,11 +304,14 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
       If the phases change, steps 2 to 4 run again.</li>
     <li><b>Second mass balance fix.</b> This step uses the final set of phases.</li>
     <li><b>Final checks.</b> If an element does not agree with the bulk composition, the solver does one repair
-      (<code>pa_MbReproject</code>, on). If the repair does not help, the solver gives the result and writes a warning in the log.</li>
+      (<code>pa_MbReproject</code>, on). If the repair does not help, the solver gives the result and writes a warning in the log.
+      Then the solver calculates each trace element again (<code>pa_TracePolish</code>). The potentials of the other
+      elements stay fixed. GEMS3K keeps the new amounts only if the energy does not increase.</li>
     <li><b>Optima finish</b> (<code>pa_NativeOptimaFinish</code>, needs a build with Optima). A solid can be left out of the
       result but still tend to form. Then Optima finishes the result. GEMS3K keeps the new result only if it is better.
       The descent can stop at its iteration limit, or it can fail to solve its equations. Then Optima finishes the result
-      from that point.</li>
+      from that point. The amount of a dissolved species can disagree with its activity. Then Optima also finishes
+      the result. If GEMS3K does not keep the Optima result, it puts back the full result of the GEMS3K IPM solver.</li>
   </ol>
   <p>A cold start can fail because the numbers grow without limit. Then the solver starts again one more time.
   It uses a simpler phase check. Then it stops.</p>

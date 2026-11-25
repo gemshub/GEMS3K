@@ -1,4 +1,4 @@
-# GEMS3K 5.2.2 — advanced settings
+# GEMS3K 5.2.3 — advanced settings
 
 These settings are for tests. Keep them at the default value. For the user settings, see the
 [options guide](SOLVER-OPTIONS-GUIDE.md#settings).

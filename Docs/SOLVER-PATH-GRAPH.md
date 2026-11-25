@@ -1,4 +1,4 @@
-# GEMS3K 5.2.2 — solver paths
+# GEMS3K 5.2.3 — solver paths
 
 This page shows what happens when you call `GEM_run()` in each calculation mode. It shows which solver runs
 first. It shows what the solver tries when a calculation fails. It shows when the solver stops.
@@ -82,11 +82,15 @@ The GEMS3K IPM solver runs in AIA and SIA. It also runs as the first part of HOP
 6. **Final checks.** If an element does not agree with the bulk composition, the solver does one repair
    (`pa_MbReproject`, on by default). If the repair does not help, the solver gives the result and writes a
    warning in the log.
+   - Then the solver calculates each trace element again (`pa_TracePolish`). The potentials of the other
+     elements stay fixed. GEMS3K keeps the new amounts only if the energy does not increase.
 7. **Optima finish.** This step needs a build with Optima (`pa_NativeOptimaFinish`).
    - A solid can be left out of the result but still tend to form. Then Optima finishes the result.
      GEMS3K keeps the new result only if it is better.
    - The descent can stop at its iteration limit. It can also stop when it cannot solve its equations.
      Then Optima finishes the result from that point.
+   - The amount of a dissolved species can disagree with its activity. Then Optima also finishes the result.
+     If GEMS3K does not keep the Optima result, it puts back the full result of the GEMS3K IPM solver.
 
 **Restarts in the solver.**
 - If a warm start (SIA) fails in one of these steps, the solver makes a new cold start in the same call.

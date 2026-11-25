@@ -1,4 +1,4 @@
-# GEMS3K 5.2.2 — advanced usage
+# GEMS3K 5.2.3 — advanced usage
 
 This page is for batch runs, reactive transport, grids and other special cases. For the solvers, the modes and the
 user settings, see the [options guide](SOLVER-OPTIONS-GUIDE.md). For the settings that are for tests, see
