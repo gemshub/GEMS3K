@@ -57,6 +57,7 @@ If no step gives a good result, you get the best attempt that keeps the element 
 - The GEMS3K IPM solver stops when its energy does not improve. Optima then finishes the result.
 - A cold call without aqueous, gas or sorption phases starts from a better estimate.
 - Optima uses faster linear algebra on large systems. It does fewer steps that are not necessary.
+- The GEMS3K IPM solver needs far fewer steps on systems with absent pure solids, for example cement systems.
 
 **Better trace elements.** After the GEMS3K IPM solver stops, it calculates each trace element again
 (`pa_TracePolish`). The amounts of trace species then agree with their activities. If they still do not
