@@ -1453,6 +1453,10 @@ protected:
     /// entered, titrSolved_ the one the solve wrote back. A later call in a mode that does not apply targets puts
     /// the entered composition back, unless the caller has changed bIC since.
     std::vector<double> titrEntered_, titrSolved_;
+    /// The node handle (DATABR NodeHandle) whose first kinetic step started the rate laws of this TNode, and whether
+    /// a step of another node was already warned about.
+    long int kinOwnerHandle = 0;
+    bool kinOwnerWarned = false;
     void restoreEnteredComposition( long int mode );
     void rememberTitration( long int mode, const std::vector<double>& before );
     /// The program's pH and Eh conditions that a DBR target replaced; they come back when the DBR target goes

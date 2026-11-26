@@ -1540,6 +1540,9 @@ long int TNode::GEM_run_single( bool uPrimalSol )
         if( CNode->NodeStatusCH == NEED_GEM_SIA || CNode->NodeStatusCH == NEED_GEM_SOP )
         {
             pmm->pNP = 1;
+            // a kinetic step reads the node's own amounts, as in a cold call: the solver may hold another node's
+            if( CNode->dt > 0. )
+                uPrimalSol = true;
             unpackDataBr( uPrimalSol );
         }
         else if( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_AOP
@@ -1581,9 +1584,22 @@ long int TNode::GEM_run_single( bool uPrimalSol )
             {   // we need to initialize TKinMet
                 pmm->pKMM = -1;
                 pmm->ITau = -1;
+                kinOwnerHandle = CNode->NodeHandle;
             }
             else  // TKinMet exists, simulation continues
+            {
                 pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
+                // The rate laws keep the starting amounts and surface areas of the node that started them.
+                if( CNode->NodeHandle != kinOwnerHandle )
+                {
+                    native_trace_decide( "kinowner node=%ld owner=%ld", (long)CNode->NodeHandle, (long)kinOwnerHandle );
+                    if( !kinOwnerWarned )
+                        node_logger->warn( "GEM_run(): node {} takes a kinetic step with the rate-law history (starting amounts, "
+                                           "surface areas) of node {}. Use one TNode for each node with kinetics.",
+                                           CNode->NodeHandle, kinOwnerHandle );
+                    kinOwnerWarned = true;
+                }
+            }
         }
 
         // Invalidate the previous call's per-leg split before the dispatch, so only a mode that
