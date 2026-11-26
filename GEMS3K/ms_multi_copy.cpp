@@ -130,10 +130,10 @@ void TMultiBase::copyMULTIData( const TMultiBase& otherMulti, bool realloc )
     }
 
     // Part 2  not requited arrays
+    copyValues( pm.BFC, otherPM->BFC, pm.N);   // allocated also when there is no solution phase
     if( pm.FIs > 0 && pm.Ls > 0 )
     {
         copyValues( pm.BF, otherPM->BF, pm.FIs*pm.N);
-        copyValues( pm.BFC, otherPM->BFC, pm.N);
         copyValues(pm.XFA, otherPM->XFA, pm.FIs);
         copyValues(pm.YFA, otherPM->YFA, pm.FIs);
         copyValues(pm.PUL, otherPM->PUL, pm.FIs);

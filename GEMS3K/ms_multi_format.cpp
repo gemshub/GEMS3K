@@ -1325,19 +1325,19 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             rddar.readArray( "MASDT", &pm.MASDT[0][0], pm.FIs*pm.FIat);
             break;
         case f_C1: if( !pm.XcapA )
-                Error( "Reading IPM file", "Array XcapA is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
+                Error( "Reading IPM file", "Array C1 is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "C1", &pm.XcapA[0][0], pm.FIs*pm.FIat);
             break;
         case f_C2: if( !pm.XcapB )
-                Error( "Reading IPM file", "Array XcapB is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
+                Error( "Reading IPM file", "Array C2 is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "C2", &pm.XcapB[0][0], pm.FIs*pm.FIat);
             break;
         case f_C3: if( !pm.XcapF )
-                Error( "Reading IPM file", "Array XcapF is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
+                Error( "Reading IPM file", "Array C3 is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "C3", &pm.XcapF[0][0], pm.FIs*pm.FIat);
             break;
         case f_pCh: if( !pm.Xetaf )
-                Error( "Reading IPM file", "Array Xetaf is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
+                Error( "Reading IPM file", "Array pCh is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "pCh", &pm.Xetaf[0][0], pm.FIs*pm.FIat);
             break;
         case f_SATX: if( !pm.SATX )
@@ -1353,11 +1353,11 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
             rddar.readArray( "SCM", pm.SCM[0], pm.FIs, pm.FIat );
             break;
         case f_SACT: if( !pm.SATT )
-                Error( "Reading IPM file", "Array SATT is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
+                Error( "Reading IPM file", "Array SACT is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "SACT", pm.SATT, pm.Lads, 1 );
             break;
         case f_DCads: if( !pm.DCC3 )
-                Error( "Reading IPM file", "Array DCC3 is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
+                Error( "Reading IPM file", "Array DCads is in the file but this problem does not use it (the dimension header says so). Try: remove the field, or re-export the project from GEMS.");
             rddar.readArray( "DCads", pm.DCC3, pm.Lads, 1 );
             break;
         case f_pa_DB: rddar.readArray( "pa_DB" , &pa_p->DB, 1);

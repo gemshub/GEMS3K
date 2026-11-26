@@ -1440,6 +1440,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     AmountThreshold = pow(10.,-AmThExp);
     // pa_PsscCleanupBudget = 2: what the raises of this pass have taken from each IC so far.
     std::vector<double> clnUsed( (size_t)pm.N, 0. );
+    std::vector<char> clnMark( (size_t)pm.L, 0 );   // the species whose raise is charged to that budget
 
     kfr = -1; kur = -1;
     if( !pm.K2 )
@@ -1776,9 +1777,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                           {   native_trace_decide( "cleanupraise capped species=%s raise=%.6e cap=%.6e shared=1",
                                                    char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), YjCleaned, cap );
                               YjCleaned = cap; }
-                          for( long int i = 0; i < pm.N - pm.E; i++ )
-                          {   const double a = pm.A[ i + j*pm.N ];
-                              if( a > 0. ) clnUsed[(size_t)i] += a * YjCleaned; } } }
+                          clnMark[(size_t)j] = 1; } }
              }
              YjDiff = YjCleaned - Yj;
              if( fabs( YjDiff ) > CutoffDistortionMBR )
@@ -1807,6 +1806,11 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                   DCremoved++;
                   L1kZeroDCs++;
               }
+              // The budget is charged with the increase actually applied, after the amount threshold and the cutoff.
+              if( clnMark[(size_t)j] && pm.Y[j] > Yj )
+                  for( long int i = 0; i < pm.N - pm.E; i++ )
+                  {   const double a = pm.A[ i + j*pm.N ];
+                      if( a > 0. ) clnUsed[(size_t)i] += a * ( pm.Y[j] - Yj ); }
 
         }  // for j
         if( L1k - L1kZeroDCs <= 1 && L1k > 1 )
