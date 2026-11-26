@@ -105,6 +105,8 @@ static thread_local bool s_feasKeep = false;          // pa_IpmBalanceStep of th
 static thread_local long int s_balTried = 0, s_balKept = 0, s_balShort = 0;
 /// pa_IpmBalanceStep = 2: corrections in which an IC held only by trace species got those species back.
 static thread_local long int s_balTraceIC = 0;
+/// pa_IpmBalanceStep = 2: corrections that left out a shrinking pure or vanishing phase, in the current IPM call.
+static thread_local long int s_balElemCut = 0;
 /// pa_IpmBalanceStep = 2: refinement steps taken with the balance correction, in the current IPM call.
 static thread_local long int s_mbrQrSteps = 0;
 
@@ -226,9 +228,37 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
         bool traceIC = false;
         auto usable = [&]( long int j ) {
             return amt[j] > std::min( pm.lowPosNum, pm.DcMinM ) && pm.W[j] > 0. && !blocked[(size_t)j]; };
+        // A pure phase, or a phase whose every species carries below 1e-10 of each element it holds, also gets no
+        // correction while the IPM step makes it smaller. Its species are never small against their own phase, so
+        // the rule above misses them. A phase that the step makes larger keeps its correction, so it can grow.
+        static const int s_balElem = getenv( "GEMS3K_EXP_BALELEM" ) ? atoi( getenv( "GEMS3K_EXP_BALELEM" ) ) : 3;
+        auto elemTrace = [&]( long int j ) {
+            bool any = false;
+            for( long int i = 0; i < N; i++ )
+            {   const double a = pm.A[i + j*pm.N];
+                if( a == 0. || !( pm.B[i] > 0. ) ) continue;
+                any = true;
+                if( fabs( a ) * amt[j] >= balTrace * pm.B[i] ) return false; }
+            return any; };
+        std::vector<char> phTrace( (size_t)pm.L, 0 );
+        if( s_balElem > 0 )
+        {   long int jb = 0;
+            for( long int k = 0; k < pm.FI; k++ )
+            {   bool all = true;
+                for( long int q = jb; q < jb + pm.L1[k] && all; q++ ) all = elemTrace( q );
+                // mode 3: only in the IPM step (amt is pm.X, pm.Y the previous point) and only while the phase shrinks
+                if( s_balElem >= 3 )
+                    for( long int q = jb; q < jb + pm.L1[k] && all; q++ ) all = ( amt == pm.X ) && pm.X[q] <= pm.Y[q];
+                // mode 1: every element-trace species (test only); mode 2: whole phase element-trace
+                for( long int q = jb; q < jb + pm.L1[k]; q++ )
+                    phTrace[(size_t)q] = s_balElem == 1 ? elemTrace( q ) : all;
+                jb += pm.L1[k]; } }
+        bool elemCut = false;
         for( long int j = 0; j < pm.L; j++ )
             if( usable( j ) && !( balTrace > 0. && amt[j] < balTrace * phTot[(size_t)j] ) )
-            {   js.push_back( j ); inJs[(size_t)j] = 1; }
+            {   if( phTrace[(size_t)j] ) { elemCut = true; continue; }
+                js.push_back( j ); inJs[(size_t)j] = 1; }
+        if( elemCut && attempt == 0 ) s_balElemCut++;
         // An IC that is held only by trace species (for example Na at 1e-9 mol) gets those species back.
         // Without them, the balance of that IC cannot be corrected and the IPM loop does not stop.
         const BalanceSparseA& sa = balance_sparse( pm );
@@ -3707,8 +3737,8 @@ STEP_POINT("After FIA");
    native_trace_stage( pm, pa_p, "IPM", "exit", eRet, true );
    if( pa_p->IpmBalanceStep > 0 )
    {
-       native_trace_decide( "balancestep-sum mode=%ld tried=%ld kept=%ld short=%ld mbrqr=%ld traceic=%ld", (long)pa_p->IpmBalanceStep,
-                            (long)s_balTried, (long)s_balKept, (long)s_balShort, (long)s_mbrQrSteps, (long)s_balTraceIC );
+       native_trace_decide( "balancestep-sum mode=%ld tried=%ld kept=%ld short=%ld mbrqr=%ld traceic=%ld elemcut=%ld", (long)pa_p->IpmBalanceStep,
+                            (long)s_balTried, (long)s_balKept, (long)s_balShort, (long)s_mbrQrSteps, (long)s_balTraceIC, (long)s_balElemCut );
        ipm_logger->debug( "Mass-balance step part (mode {}): {} passes, {} kept, {} shortened",
                           (long)pa_p->IpmBalanceStep, s_balTried, s_balKept, s_balShort );
    }
@@ -4795,6 +4825,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     if( s_feasKeep ) balance_sparse_build( pm );
     s_balTried = s_balKept = s_balShort = 0;
     s_balTraceIC = 0;
+    s_balElemCut = 0;
     s_mbrQrSteps = 0;
     native_trace_decide( "balancestep mode=%ld jumpahead=%ld", (long)pa_p->IpmBalanceStep, (long)pa_p->IpmJumpAhead );
     // pa_PhaseSmoothing: say once per call which damping rule the non-ideal phases get.
