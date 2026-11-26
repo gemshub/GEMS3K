@@ -44,6 +44,10 @@
 #include <set>
 #include <map>
 #include <string>
+#include <limits>
+#include <cmath>
+
+extern thread_local unsigned long g_balanceQrEpoch;   // defined below
 
 // Thread-safe logger to stdout with colors
 std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = gems3k_logger("ipm");
@@ -286,9 +290,10 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
             return attempt > 0;
         // The factor depends only on the species set, their weights, the balance rows used and the matrix A. The passes of one IPM step
         // share the weights, so a factor made for the same set and weights is used again.
-        static thread_local struct { const double* A = nullptr; long int N = -1, rows = -1, drop = -2; std::vector<long int> js;
+        // A factor is not kept across solves: A can change at the same address (the volume column at a new T and P).
+        static thread_local struct { const double* A = nullptr; unsigned long epoch = 0; long int N = -1, rows = -1, drop = -2; std::vector<long int> js;
                                      std::vector<double> w; Eigen::VectorXd c; Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr; } fc;
-        bool same = fc.A == pm.A && fc.N == pm.N && fc.rows == N && fc.drop == dropRow && fc.js == js;
+        bool same = fc.A == pm.A && fc.epoch == g_balanceQrEpoch && fc.N == pm.N && fc.rows == N && fc.drop == dropRow && fc.js == js;
         for( long int q = 0; same && q < La; q++ ) same = fc.w[(size_t)q] == pm.W[js[(size_t)q]];
         if( !same )
         {
@@ -302,7 +307,7 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
                 if( !( fc.c( i ) > 0. ) ) fc.c( i ) = 1.;
                 S.col( i ) /= fc.c( i ); }
             fc.qr.compute( S );
-            fc.A = pm.A; fc.N = pm.N; fc.rows = N; fc.drop = dropRow; fc.js = js;
+            fc.A = pm.A; fc.epoch = g_balanceQrEpoch; fc.N = pm.N; fc.rows = N; fc.drop = dropRow; fc.js = js;
             fc.w.resize( (size_t)La );
             for( long int q = 0; q < La; q++ ) fc.w[(size_t)q] = pm.W[js[(size_t)q]];
         }
@@ -547,7 +552,7 @@ static std::string trace_safe_name( std::string s )
 }
 
 /// Optima's free-dual search result for the CERT record - see the declaration.
-static int native_cert_dualfree_resolved = -1;
+static thread_local int native_cert_dualfree_resolved = -1;
 void native_cert_dualfree_reset() { native_cert_dualfree_resolved = -1; }
 void native_cert_dualfree_set( int resolved ) { native_cert_dualfree_resolved = resolved; }
 int  native_cert_dualfree_get() { return native_cert_dualfree_resolved; }
@@ -609,7 +614,8 @@ static bool CertSymEigMin( std::vector<double> a, int n, double& lmin, double* l
 
 void TMultiBase::CertPrimalPotentials( std::vector<double>& F ) const
 {
-    F.assign( (size_t)pm.L, 0. );
+    // NaN marks a species whose potential is not computed here; an exact 0 is a real potential
+    F.assign( (size_t)pm.L, std::numeric_limits<double>::quiet_NaN() );
     if( !pm.X || !pm.XF || !pm.G0 || !pm.fDQF || !pm.F0 || !pm.DCCW || !pm.L1 )
         return;
 
@@ -656,7 +662,7 @@ void TMultiBase::CertPrimalPotentials( std::vector<double>& F ) const
               case DC_ASYM_CARRIER: F[(size_t)j] = Gj + lx - logYFk + NonLogTerm + 1.0
                                                    - 1.0/( 1.0 - NonLogTerm );               break;
               case DC_SYMMETRIC:    F[(size_t)j] = Gj + lx - logYFk;                         break;
-              default:              F[(size_t)j] = 0.;                                       break;
+              default:              break;   // stays NaN: not scored
             }
         }
         j = i;
@@ -664,11 +670,11 @@ void TMultiBase::CertPrimalPotentials( std::vector<double>& F ) const
 }
 
 /// Is species j scorable for the reduced-gradient tests - present at the answer, and with a
-/// potential CertPrimalPotentials() actually filled in. A species left at 0 there is either
+/// potential CertPrimalPotentials() actually filled in. A species left at NaN there is either
 /// below pm.DcMinM or in a skipped phase, and its F carries no information.
 static inline bool cert_species_scorable( const MULTI& pm, const std::vector<double>& F, long int j )
 {
-    return pm.X[j] > pm.DcMinM && F[(size_t)j] != 0.;
+    return pm.X[j] > pm.DcMinM && std::isfinite( F[(size_t)j] );
 }
 
 /// The numerical floor on a species amount, as CalculateEquilibriumStateOptima() builds its
@@ -1031,6 +1037,8 @@ double TMultiBase::CertCurvMin( long int& worstPhase )
     const double kNone = 1e300;
     if( !pm.X || !pm.XF || !pm.L1 || pm.FIs <= 0 )
         return kNone;
+    struct SmoothKeep { TMultiBase* m; std::vector<double> d; long int it;
+        ~SmoothKeep() { m->smoothPrevD_ = d; m->smoothPrevIT_ = it; } } smoothKeep{ this, smoothPrevD_, smoothPrevIT_ };
 
     // Restore by copy, not by recomputation: CalculateActivityCoefficients(LINK_UX_MODE) is not
     // idempotent (it accumulates pm.lnGmo and blends pm.F0 through the smoothing factor
@@ -1452,7 +1460,9 @@ long int TMultiBase::ReportAbsentPhaseIndexes()
 // In plain words: searches for the composition at which a missing mixed phase would be most
 // stable, and says whether it should form.
 // pa_OptimaLevelStart: set while the leveled start is certified; widens the composition search.
+thread_local unsigned long g_balanceQrEpoch = 1;   // raised at each native solve; keys the balance-step QR factor
 thread_local bool g_tpdStrongSearch = false;
+thread_local bool g_tpdTrialThrew = false;   // the last NativeTpdPhase() stopped on an error in a trial composition
 // pa_IpmLevelStart: set when this call's native start came from the leveled solution; the second flag turns the start off for a retry.
 thread_local bool g_ipmLevelUsed = false;
 thread_local bool g_ipmNoProgArmed = false;   // pa_IpmNoProgress: set by the caller where the Optima finish follows
@@ -1460,6 +1470,9 @@ thread_local bool g_ipmNoProgFired = false;   // pa_IpmNoProgress stopped the lo
 thread_local bool g_ipmLevelOff = false;
 void TMultiBase::RefreshFromAmounts()
 {
+    // The activities are those of the amounts alone: smoothing would blend in the previous state's potentials.
+    struct NoSmoothing { bool& f; bool prev; NoSmoothing( bool& ff ) : f( ff ), prev( ff ) { f = true; } ~NoSmoothing() { f = prev; } }
+        noSmoothing( optima_disable_smoothing );
     for( long int j = 0; j < pm.L; j++ ) pm.X[j] = pm.Y[j];
     TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
@@ -1564,10 +1577,14 @@ bool TMultiBase::WarmTwinSplitCheck()
 double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>& ybest )
 {
     gems3k_timing::Scope timing( gems3k_timing::Tpd );
+    g_tpdTrialThrew = false;
     const long int n = pm.L1[k], p1 = p0 + n, N = pm.N;
     ybest.assign( (size_t)n, 1.0 / std::max( 1L, n ) );
     if( n <= 1 || p1 > pm.L || !pm.X || !pm.U || !pm.A || !pm.lnGam )
         return 1e300;
+    // The trial activity evaluations below also update the smoothing history; the solver's own is put back on exit.
+    struct SmoothKeep { TMultiBase* m; std::vector<double> d; long int it;
+        ~SmoothKeep() { m->smoothPrevD_ = d; m->smoothPrevIT_ = it; } } smoothKeep{ this, smoothPrevD_, smoothPrevIT_ };
     struct Save { double* p; std::vector<double> v; };
     std::vector<Save> saved;
     auto keep = [&saved]( double* p, long int m ) { if( p && m > 0 ) saved.push_back( { p, std::vector<double>( p, p + m ) } ); };
@@ -1740,7 +1757,7 @@ double TMultiBase::NativeTpdPhase( long int k, long int p0, std::vector<double>&
             }
         }
     }
-    catch( ... ) { tpdMin = 1e300; }
+    catch( ... ) { tpdMin = 1e300; g_tpdTrialThrew = true; }
     try
     {
         restoreBase();
@@ -1987,6 +2004,24 @@ static void native_trace_mb_of( const MULTI& pm, const double* amt,
         if( r > relOut ) { relOut = r; iRelOut = i; }
     }
 }
+/// True if some element fails its balance test. With an absolute cutoff, an element fails only if it is
+/// outside both its relative tolerance and the cutoff; both tests apply to the same element.
+static bool mb_some_ic_fails( const MULTI& pm, const double* amt, bool useAbs, double absCut )
+{
+    const long int Z = pm.N - pm.E;
+    for( long int i = 0; i < Z; i++ )
+    {
+        double c = pm.B[i];
+        for( long int j = 0; j < pm.L; j++ )
+            c -= pm.A[i + j*pm.N] * amt[j];
+        const double a = fabs( c );
+        const double bar = pm.B[i] * pm.DHBM;
+        const bool relOut = bar > 0. ? a > bar : a > 0.;
+        if( relOut && ( !useAbs || a > absCut ) )
+            return true;
+    }
+    return false;
+}
 static void native_trace_mb( const MULTI& pm, long int& iRelOut, double& relOut,
                                               long int& iAbsOut, double& absOut )
 {
@@ -2179,15 +2214,39 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
     long int nClampedPass = 0;
     for( long int c = 0; c < N; c++ )
     {
-        const double x = amt[piv[(size_t)c]];
+        const long int j = piv[(size_t)c];
+        const double x = amt[j];
         if( x + dy[(size_t)c] < 0. ) { dy[(size_t)c] = -x; nClampedPass++; }
+        // a species also stays inside its own limits when it starts inside them
+        else if( pm.DUL && x <= pm.DUL[j] && x + dy[(size_t)c] > pm.DUL[j] ) { dy[(size_t)c] = pm.DUL[j] - x; nClampedPass++; }
+        else if( pm.DLL && pm.DLL[j] > 0. && x >= pm.DLL[j] && x + dy[(size_t)c] < pm.DLL[j] ) { dy[(size_t)c] = pm.DLL[j] - x; nClampedPass++; }
     }
+
+    // the charge residual before this pass; a clamped pass no longer solves the charge row exactly
+    auto chargeResid = [&]() {
+        double worst = 0.;
+        for( long int i = N - pm.E; i < N; i++ )
+        {
+            double c = pm.B[i];
+            for( long int j = 0; j < L; j++ ) c -= pm.A[i + j*N] * amt[j];
+            worst = std::max( worst, fabs( c ) );
+        }
+        return worst; };
+    const double chargeOld = nClampedPass ? chargeResid() : 0.;
 
     for( long int c = 0; c < N; c++ ) amt[piv[(size_t)c]] += dy[(size_t)c];
 
     double relNew = 0., absNew = 0.;
     native_trace_mb_of( pm, amt, i1, relNew, i2, absNew );
-    if( !( relNew < relCur ) )               // this PASS did not help - undo this pass
+    bool chargeWorse = false;
+    if( nClampedPass && pm.E > 0 )
+    {   // a clamped pass may not add a charge imbalance above the balance tolerance of the largest element
+        double bMax = 0.;
+        for( long int i = 0; i < N - pm.E; i++ ) bMax = std::max( bMax, fabs( pm.B[i] ) );
+        const double chargeNew = chargeResid();
+        chargeWorse = chargeNew > chargeOld && chargeNew > pm.DHBM * bMax;
+    }
+    if( !( relNew < relCur ) || chargeWorse )   // this PASS did not help - undo this pass
     {
         for( long int j = 0; j < L; j++ ) amt[j] = Xpass[(size_t)j];
         break;
@@ -3641,8 +3700,7 @@ FORCED_AIA:
        const double absCut = ( dtExp < 2. ) ? pm.DHBM : pow( 10., -dtExp );
        // Same per-IC rule the convergence branches apply: with DT == 0 only the
        // relative test exists; with DT != 0 an IC must exceed BOTH.
-       bool fails = !base_param()->DT ? ( rel > 1. )
-                                      : ( rel > 1. && absr > absCut );
+       bool fails = mb_some_ic_fails( pm, pm.X, base_param()->DT != 0, absCut );
        // pa_MbReproject: try to repair the state before reporting it. Restores pm.X unless the
        // worst relative residual strictly improves.
        if( fails && iRel >= 0 && base_param()->MbReproject )
@@ -3650,8 +3708,7 @@ FORCED_AIA:
            if( MassBalanceReproject( pm.X ) )
            {
                native_trace_mb_of( pm, pm.X, iRel, rel, iAbs, absr );
-               fails = !base_param()->DT ? ( rel > 1. )
-                                         : ( rel > 1. && absr > absCut );
+               fails = mb_some_ic_fails( pm, pm.X, base_param()->DT != 0, absCut );
            }
        }
 
@@ -4469,16 +4526,22 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     {
         double worst = 0.;
         // With pa_MbClassRule, a trace IC keeps its relative tolerance, as in the convergence test below.
-        double traceB = 0.;
-        if( pa_p->MbClassRule > 0. )
+        double traceB = 0., absCls = 0.;
+        const bool classRule = pa_p->MbClassRule > 0.;
+        if( classRule )
         {   for( long int ii=0; ii<pm.N-pm.E; ii++ ) traceB = std::max( traceB, pm.B[ii] );
-            traceB *= pa_p->MbClassRule; }
+            traceB *= pa_p->MbClassRule;
+            // a major IC is judged on the absolute cutoff alone, as in the class-rule test below
+            const double e = fabs( (double)pa_p->DT );
+            absCls = ( e >= 2. ) ? pow( 10., -e ) : pm.DHBM * 1e5; }
         for( long int ii=0; ii<pm.N; ii++ )
         {
             if( ii == hDrop ) continue;
             double denom = pm.B[ii] * pm.DHBM;
             const bool isTrace = ( ii < pm.N - pm.E && pm.B[ii] < traceB );
-            if( pa_p->DT && !isTrace )
+            if( classRule && ii < pm.N - pm.E && !isTrace )
+                denom = absCls;
+            else if( pa_p->DT && !isTrace )
                 denom = std::max( denom, AbsMbCutoff_stall );
             if( denom <= 0. )
                 denom = ( pm.DHBM > 0. ? pm.DHBM : 1e-16 );
@@ -5965,7 +6028,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
         {
 #ifdef GEMS3K_BENCHMARK_DIAGNOSTICS
             pm.SolveTimeMs += std::chrono::duration<double, std::milli>(
-                                  std::chrono::high_resolution_clock::now() - solve_t0 ).count();
+                                  std::chrono::steady_clock::now() - solve_t0 ).count();
             pm.CondNumTimeMs += diag_ms;
 #endif
             return ret;

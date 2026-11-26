@@ -93,6 +93,15 @@ static thread_local bool g_lvlShortcut = false;
 // The leveled answer holds mixed phases: start from it, but solve it the ordinary way.
 static thread_local bool g_lvlCgStart = false;
 extern thread_local bool g_tpdStrongSearch;   // defined in ipm_main.cpp
+// start of the current Optima call: pa_OptimaMaxSeconds covers the pre-solve and the full solve together
+static thread_local std::chrono::steady_clock::time_point g_optimaCallStart = std::chrono::steady_clock::now();
+// inside NativeOptimaFinish() or NativeOptimaRescue(): a native-mode call, so no pe 4 target is added (pa_OptimaRedoxFree = 2)
+static thread_local bool g_optimaNativeHelper = false;
+struct NativeHelperScope {
+    bool prev;
+    NativeHelperScope() : prev( g_optimaNativeHelper ) { g_optimaNativeHelper = true; }
+    ~NativeHelperScope() { g_optimaNativeHelper = prev; }
+};
 extern thread_local bool g_aqueousAbsent;     // defined in ipm_chemical2.cpp; set when the aqueous phase has no water
 extern thread_local long int g_lvlFullCalls;  // defined in node.cpp
 extern thread_local bool g_optimaFixAccept;       // defined in node.cpp
@@ -1403,7 +1412,10 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
             if( dn[(size_t)a] < 0. )
             {
                 const double lim = ( j >= pm.Ls ) ? 1.0 : 0.9;
-                alpha = std::min( alpha, lim * n[(size_t)j] / ( -dn[(size_t)a] ) );
+                // a species with a lower limit above the floor stops at that limit, not at zero
+                const double room = ( xlo[(size_t)j] > dcFloor * ( 1. + 1e-6 ) && n[(size_t)j] > xlo[(size_t)j] )
+                                    ? n[(size_t)j] - xlo[(size_t)j] : n[(size_t)j];
+                alpha = std::min( alpha, lim * room / ( -dn[(size_t)a] ) );
             }
             else if( dn[(size_t)a] > 0. && xhi[(size_t)j] < 1e300 )
                 alpha = std::min( alpha, 0.9 * ( xhi[(size_t)j] - n[(size_t)j] ) / dn[(size_t)a] );
@@ -1425,7 +1437,9 @@ bool TMultiBase::PotentialSpaceFinish( double dcFloor, const std::vector<double>
         for( long int a = 0; a < nf; a++ )
         {
             const long int j = fr[(size_t)a];
-            if( n[(size_t)j] <= ( j >= pm.Ls ? 1e-9 : 1e-11 ) * bScale )
+            // a species that reached a lower limit above the floor leaves the set at that limit too
+            const bool atLimit = xlo[(size_t)j] > dcFloor * ( 1. + 1e-6 ) && n[(size_t)j] <= xlo[(size_t)j] * ( 1. + 1e-9 );
+            if( n[(size_t)j] <= ( j >= pm.Ls ? 1e-9 : 1e-11 ) * bScale || atLimit )
             {
                 n[(size_t)j] = std::max( xlo[(size_t)j], dcFloor );
                 freeSp[(size_t)j] = 0; tabu[(size_t)j] = 1; changes++; left++;
@@ -1696,10 +1710,11 @@ long int TMultiBase::WorstPhaseStabilityViolation( double presenceThreshold, dou
         // A water phase that has vanished (its water at or below XwMinM, as in PrimalChemicalPotentials() and the collapse
         // check, and its total below 1e-9 of all phases) counts as absent, so a water phase that should come back is judged by
         // its stability index (pa_OptimaCollapseCheck). A dried-out brine that keeps its solutes is not affected.
-        double allPhases = 0.;
-        for( long int kk = 0; kk < pm.FI; kk++ ) allPhases += std::max( pm.YF[kk], 0. );
-        const bool aqDry = pa_p->OptimaCollapseCheck && pm.PHC[k] == PH_AQUEL && pm.LO >= 0 && pm.Y[pm.LO] <= pm.XwMinM
-                           && pm.YF[k] <= 1e-9 * allPhases;
+        const bool aqCand = pa_p->OptimaCollapseCheck && pm.PHC[k] == PH_AQUEL && pm.LO >= 0 && pm.Y[pm.LO] <= pm.XwMinM;
+        double allPhases = 0.;   // summed only for the water phase that needs it
+        if( aqCand )
+            for( long int kk = 0; kk < pm.FI; kk++ ) allPhases += std::max( pm.YF[kk], 0. );
+        const bool aqDry = aqCand && pm.YF[k] <= 1e-9 * allPhases;
         const bool present = anyOffFloor && ( pm.YF[k] >= presenceThreshold ) && anySignificant && !aqDry;
         if( aqDry && logSI > pa_p->DF && anyOffFloor && pm.YF[k] >= presenceThreshold && anySignificant )
             native_trace_decide( "aqdryabsent water=%.3e logSI=%.3f stage=%s", pm.Y[pm.LO], logSI, probeStage ? probeStage : "check" );
@@ -1926,8 +1941,11 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     auto preWatch = std::make_shared<PreStallWatch>();
     preWatch->window     = pa_p->OptimaStallWindow;
     preWatch->maxSeconds = pa_p->OptimaMaxSeconds;
-    preWatch->started    = std::chrono::steady_clock::now();
+    preWatch->started    = g_optimaCallStart;
     preWatch->reset();
+    // a cancel is seen also when the full check below is not installed; a check that returns false changes nothing
+    options.convergence.check = [preWatch]( Optima::ConvergenceCheckArgs const& ) -> bool
+        { if( CalculationCancelled() ) { preWatch->timedOut = true; return true; } return false; };
     if( preWatch->window > 0 || preWatch->maxSeconds > 0. || g_optimaIterBudget >= 0 )
         options.convergence.check =
             [preWatch]( Optima::ConvergenceCheckArgs const& args ) -> bool
@@ -2170,11 +2188,13 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                 if( regRatio > 0. )
                 {
                     long int p0 = 0;
+                    // a cold AOP solve (not a warm call, a HOP leg or a finish after native) leaves a melt liquid without the floor
+                    const bool coldAopCall = pm.pNP == 0 && !optima_hop_leg && !g_optimaNativeHelper;
                     for( long int k = 0; k < pm.FIs; k++ )
                     {
                         const long int p1 = p0 + pm.L1[k];
                         const long int nEnd = p1 - p0;
-                        const bool isAq = ( pm.LO >= p0 && pm.LO < p1 );
+                        const bool isAq = ( pm.PHC[k] == PH_AQUEL || ( pm.PHC[k] == PH_LIQUID && coldAopCall ) );   // by phase type: no floor for water, nor for a melt in a cold AOP solve
                         if( !isAq && nEnd > 1 && p1 <= L )
                         {
                             double phTot = 0.;
@@ -2509,7 +2529,10 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                                     bool runKinetics )
 {
     gems3k_timing::Scope timing( gems3k_timing::OptimaCall );
+    g_optimaCallStart = std::chrono::steady_clock::now();
+    optima_dndb.clear(); optima_dndb_rows = optima_dndb_cols = 0;   // no sensitivity is left from an earlier call
     phase_floor_parked.clear();   // set again below only for an accepted answer
+    optima_soft_unconverged = false;
     zeroed_floor_amount.clear();
     // Disable the IPM-2 chemical-potential smoothing for this call (see
     // optima_disable_smoothing). RAII, so the flag is restored on every exit.
@@ -2604,8 +2627,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     if( pa_p->OptimaRedoxFree > 0 )
     {
         const RedoxFreeCheck rf = CheckRedoxFree();
+        // a native-mode finish or rescue solves the bulk as entered, as native does
         const bool apply = pa_p->OptimaRedoxFree >= 2 && rf.free && !referenceMode
-                           && optima_control_conditions.empty();
+                           && optima_control_conditions.empty() && !g_optimaNativeHelper;
         if( apply )
         {
             const double Eh = 4. * std::log( 10. ) * 0.000086 * pm.T;   // same Eh-to-dual factor as the Eh target
@@ -2904,7 +2928,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     long int j0seed = 0;
                     for( long int k = 0; k < pm.FIs; k++ )
                     {
-                        if( pm.LO >= j0seed && pm.LO < j0seed + pm.L1[k] ) { aqueousPhaseIdx = k; break; }
+                        if( pm.PHC[k] == PH_AQUEL ) { aqueousPhaseIdx = k; break; }
                         j0seed += pm.L1[k];
                     }
                 }
@@ -3067,7 +3091,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     fprintf( fh, "IC %5ld U=%.17g B=%.17g\n", (long)i, pm.U[i], pm.B[i] );
                 for( long int k = 0; k < pm.FI; k++ )
                     fprintf( fh, "PH %5ld XF=%.17g XFA=%.17g YF=%.17g\n",
-                             (long)k, pm.XF[k], pm.XFA[k], pm.YF[k] );
+                             (long)k, pm.XF[k], k < pm.FIs ? pm.XFA[k] : 0., pm.YF[k] );
                 fclose( fh );
             }
         }
@@ -3110,7 +3134,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             for( long int i = 0; i < N; i++ )
                 problem.Aex(i, L+k) = 0.;
             for( const auto& rc : conditions[k].stoich )
-                problem.Aex( rc.first, L+k ) = rc.second;
+                problem.Aex( rc.first, L+k ) += rc.second;   // repeated rows add up, as in the bulk update
         }
         for( long int i = 0; i < N; i++ )
             problem.be[i] = pm.B[i];
@@ -3468,12 +3492,14 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     if( regRatio > 0. )
                     {
                         long int p0 = 0;
+                        // a cold AOP solve (not a warm call, a HOP leg or a finish after native) leaves a melt liquid without the floor
+                        const bool coldAopCall = pm.pNP == 0 && !optima_hop_leg && !g_optimaNativeHelper;
                         gems3k_timing::Scope timingBlock( gems3k_timing::FdBlock );
                         for( long int k = 0; k < pm.FIs; k++ )
                         {
                             const long int p1 = p0 + pm.L1[k];
                             const long int nEnd = p1 - p0;
-                            const bool isAq = ( pm.LO >= p0 && pm.LO < p1 );
+                            const bool isAq = ( pm.PHC[k] == PH_AQUEL || ( pm.PHC[k] == PH_LIQUID && coldAopCall ) );   // by phase type: no floor for water, nor for a melt in a cold AOP solve
                             if( !isAq && nEnd > 1 && p1 <= L )
                             {
                                 // Only end-members that are actually present: a floor
@@ -3779,7 +3805,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         auto stallWatch = std::make_shared<StallWatch>();
         stallWatch->window = pa_p->OptimaStallWindow;
         stallWatch->maxSeconds = pa_p->OptimaMaxSeconds;
-        stallWatch->started = std::chrono::steady_clock::now();
+        stallWatch->started = g_optimaCallStart;
         if( pa_p->OptimaDryOut > 0 && HasAqueousPhase() )   // pa_OptimaDryOut
         {
             // Water cannot vanish if an element in the bulk has no carrier outside the water phase.
@@ -3808,7 +3834,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 ipm_logger->info( "Optima: water-only elements ({}), the dry-out is off (pa_OptimaDryOut)", onlyAq );
         }
         stallWatch->reset();
-        if( pa_p->OptimaDryRetry && !g_optimaDryOff && pm.LO >= 0 && pm.LO < pm.L )
+        if( pa_p->OptimaDryRetry && !g_optimaDryOff && HasAqueousPhase() && pm.LO >= 0 && pm.LO < pm.L )
         {
             const long int xHd = ic_index_by_name( pm, "H" );
             const long int xOd = ic_index_by_name( pm, "O" );
@@ -3901,6 +3927,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         for( long int k = 0; k < pm.FIs; k++ )
             if( pm.L1[k] > 1 && !( hasAq && pm.LO >= phStart[(size_t)k] && pm.LO < phStart[(size_t)k+1] ) )
                 for( long int j = phStart[(size_t)k]; j < phStart[(size_t)k+1]; j++ ) solidPhaseOf[(size_t)j] = k;
+        // a cancel is seen also when the full check below is not installed; a check that returns false changes nothing
+        options.convergence.check = [stallWatch]( Optima::ConvergenceCheckArgs const& ) -> bool
+            { if( CalculationCancelled() ) { stallWatch->timedOut = true; return true; } return false; };
         if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. || earlyTrendN > 0
             || earlyCapN > 0 || g_optimaIterBudget >= 0 )
             options.convergence.check =
@@ -4560,10 +4589,12 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // told apart from "never reached".
             native_trace_decide( "earlystop form=cap fired=0 at=%ld dwrel=%.6e",
                                  earlyCapN, *earlyStopDwRel );
+        std::vector<double> sensPrimaryX;
         if( wantSens )
         {
             // Captured from the primary solve only: a retry solves a different problem
             // (reseeded, or with phases pinned).
+            sensPrimaryX.assign( state.x.data(), state.x.data() + state.x.size() );   // to tell a retry's answer later
             optima_dndb_rows = L + R;
             optima_dndb_cols = N;
             optima_dndb.assign( (size_t)(( L + R ) * N), 0. );
@@ -4785,7 +4816,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                result.succeeded ? 1 : 0 );
         }
         // pa_OptimaDryOut: after a dry solve, check the dry answer against a solve that keeps the water.
-        if( stallWatch->dryDone && result.succeeded && pm.LO >= 0 )
+        // pa_OptimaWaterKeep = 2: a dry answer certified by the tail stop needs no comparison with a wet solve
+        const bool dryCertifiedEarly = stallWatch->dryDone && result.succeeded && pa_p->OptimaWaterKeep >= 2 && tailAccepted;
+        if( dryCertifiedEarly )
+            native_trace_decide( "drycompare skipped=certified" );
+        if( stallWatch->dryDone && result.succeeded && pm.LO >= 0 && !dryCertifiedEarly )
         {
             long int j0 = 0, j1 = 0, kAq = -1;
             for( long int k = 0; k < pm.FIs; k++ )
@@ -4973,7 +5008,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 long int j0b = 0;
                 for( long int k = 0; k < pm.FIs; k++ )
                 {
-                    if( pm.LO >= j0b && pm.LO < j0b + pm.L1[k] ) { aqueousPhaseIdx = k; break; }
+                    if( pm.PHC[k] == PH_AQUEL ) { aqueousPhaseIdx = k; break; }
                     j0b += pm.L1[k];
                 }
             }
@@ -5053,7 +5088,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 long int j0 = 0;
                 for( long int k = 0; k < pm.FIs; k++ )
                 {
-                    if( pm.LO >= j0 && pm.LO < j0 + pm.L1[k] ) { aqueousPhaseIdx = k; break; }
+                    if( pm.PHC[k] == PH_AQUEL ) { aqueousPhaseIdx = k; break; }
                     j0 += pm.L1[k];
                 }
             }
@@ -5157,7 +5192,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     long int j0aq = 0;
                     for( long int k = 0; k < pm.FIs; k++ )
                     {
-                        if( pm.LO >= j0aq && pm.LO < j0aq + pm.L1[k] ) { aqueousPhaseIdx = k; break; }
+                        if( pm.PHC[k] == PH_AQUEL ) { aqueousPhaseIdx = k; break; }
                         j0aq += pm.L1[k];
                     }
                 }
@@ -5372,8 +5407,13 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                             for( long int k = 0; k < pm.FI; k++ )
                             {
                                 const long int jeR = jbR + pm.L1[k];
+                                // Absent as the stability scan judges it: a small total, or every species at its floor.
+                                bool offFloor = false;
+                                for( long int jj = jbR; jj < jeR && jj < L && !offFloor; jj++ )
+                                    offFloor = pm.Y[jj] > std::max( pm.DLL[jj], dcFloor ) * ( 1. + 1e-6 );
+                                const bool absentR = pm.YF[k] < presenceThreshold || !offFloor;
                                 if( phSelState[(size_t)k] == 1 && jeR <= L
-                                    && pm.YF[k] < presenceThreshold && pm.Falp[k] > pa_p->DF )
+                                    && absentR && pm.Falp[k] > pa_p->DF )
                                 {
                                     const double nEnd = (double)( jeR - jbR );
                                     for( long int jj = jbR; jj < jeR; jj++ )
@@ -5553,6 +5593,17 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
             netUnpinned.clear();
         };
+        // A failed extinction tier gives back the boxes it fixed in this call; earlier fixings stay.
+        auto unfixExtinctSince = [&]( const std::vector<char>& before )
+        {
+            for( long int j = 0; j < L && (size_t)j < extinctFixed.size(); j++ )
+                if( extinctFixed[(size_t)j] && !before[(size_t)j] )
+                {
+                    problem.xlower[j] = extLo[(size_t)j];
+                    problem.xupper[j] = extHi[(size_t)j];
+                    extinctFixed[(size_t)j] = 0;
+                }
+        };
 
 
         // pa_OptimaFinishFirst: a stalled failed solve first tries the Newton finish on its own end point.
@@ -5623,6 +5674,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             Optima::State  nsState  = initialState;
             Optima::Result nsResult = timed_solve( solverNS, problem, nsState );
             optimaIterTotal += nsResult.iterations;
+            if( stallWatch->timedOut ) nsResult.succeeded = false;   // stopped by cancellation or the budget, not converged
             native_trace_decide( "stallnet outcome=%s it=%ld cap=%ld stallat=%ld", nsResult.succeeded ? "converged" : "failed",
                                  (long int)nsResult.iterations, (long int)netOptions.maxiters, stallWatch->stallAt );
             stallWatch->window = savedWindow;
@@ -5718,6 +5770,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 const Optima::Result savedResult = result;
                 state  = epState;
                 result = epResult;
+                const std::vector<char> extBefore( extinctFixed );
                 runExtinctionTier( false );
                 if( result.succeeded )
                     ipm_logger->debug( "CalculateEquilibriumStateOptima: the full-budget re-solve"
@@ -5728,6 +5781,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 {
                     state  = savedState;
                     result = savedResult;
+                    unfixExtinctSince( extBefore );
                     repinAfterNet();     // nothing won - the boxes go back with the state
                 }
                 if( result.succeeded )
@@ -5771,6 +5825,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     const Optima::Result savedResult2 = result;
                     state  = fbState;
                     result = fbResult;
+                    const std::vector<char> extBefore2( extinctFixed );
                     runExtinctionTier( false );
                     if( result.succeeded )
                         netUnpinned.clear();
@@ -5778,6 +5833,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     {
                         state  = savedState2;
                         result = savedResult2;
+                        unfixExtinctSince( extBefore2 );
                         repinAfterNet();
                     }
                 }
@@ -5788,6 +5844,12 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
         ipm_logger->debug( "CalculateEquilibriumStateOptima: pNP={} referenceMode={} succeeded={} iterations={} nConditions={}",
                            pm.pNP, referenceMode, result.succeeded, result.iterations, R );
+        // dn/db belongs to the primary solve: an answer from a retry gets none
+        if( !optima_dndb.empty() && ( sensPrimaryX.size() != (size_t)state.x.size()
+                                      || !std::equal( sensPrimaryX.begin(), sensPrimaryX.end(), state.x.data() ) ) )
+        {
+            optima_dndb.clear(); optima_dndb_rows = optima_dndb_cols = 0;
+        }
 
         for( long int j = 0; j < L; j++ )
         {
@@ -5813,6 +5875,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     const double a = pm.A[ i + j*N ];
                     if( !( a > 0. ) ) continue;
                     tot += a * pm.X[j];
+                    // A species held in a fixed box (for example switched off, DUL = 0) keeps its amount.
+                    if( !( problem.xupper[j] > problem.xlower[j] * ( 1. + 1e-6 ) ) ) { fixedPart += a * pm.X[j]; continue; }
                     if( pm.X[j] <= problem.xlower[j] * 10. && pm.DLL[j] <= 0. ) fl.push_back( j );
                     else { fixedPart += a * pm.X[j]; present = true; }
                 }
@@ -6195,6 +6259,31 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             if( tol < 0. && conditions[k].defaultToleranceFn )
                 tol = conditions[k].defaultToleranceFn();
             conditions[k].targetMet = std::fabs( conditions[k].achievedValue - conditions[k].target ) <= tol;
+            // The pH target uses the molar mass of pure water. With a co-solvent the published pH uses the solvent's
+            // mean molar mass, so that pH is checked too; a miss is reported, not corrected.
+            if( conditions[k].name == "pH" && pm.FIs > 0 && pm.PHC[0] == PH_AQUEL && pm.XFA[0] > pm.XwMinM )
+            {
+                double mmc = 0.; bool coSolvent = false;
+                for( long int j = 0; j < pm.L1[0]; j++ )
+                    if( pm.DCC[j] == DC_AQ_SOLVENT || pm.DCC[j] == DC_AQ_SOLVCOM )
+                    {
+                        mmc += pm.MM[j] * pm.X[j] / pm.XFA[0];
+                        if( pm.DCC[j] == DC_AQ_SOLVCOM && pm.X[j] > 0. ) coSolvent = true;
+                    }
+                if( coSolvent && mmc > 0. )
+                {
+                    const double pHpub = conditions[k].achievedValue - ln_to_lg * ( std::log( 1000. / mmc ) - kLnFmol );
+                    native_trace_decide( "phcosolvent mmc=%.6g ph_target_scale=%.6f ph_published=%.6f", mmc,
+                                         conditions[k].achievedValue, pHpub );
+                    if( std::fabs( pHpub - conditions[k].target ) > tol )
+                    {
+                        ipm_logger->info( "pH target {}: with the co-solvent the published pH is {:.4f} (solvent molar mass {:.4g} g/mol); "
+                                          "the target is reported as not met", conditions[k].target, pHpub, mmc );
+                        conditions[k].targetMet = false;
+                    }
+                    conditions[k].achievedValue = pHpub;
+                }
+            }
             // A pH or Eh with no water left is not an answer: the value above then describes
             // nothing, and the reported pH/Eh would be left over from before. Same water test
             // as the molality calculation.
@@ -6233,7 +6322,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 if( d > 1.0 ) nfar++;
                 if( pm.Y[j] > 1e-12 * ScFact ) { npresent++; dinfp = std::max( dinfp, d ); if( d > 1.0 ) nfarp++; }
             }
-            fprintf( tfp, "ANSWER solve=%ld it_first=%ld succ_first=%d it_retry=%ld succ_retry=%d retried=%d it_reported=%ld f=%.12e err=%.6e"
+            fprintf( tfp, "ANSWER solve=%ld it_first=%ld succ_first=%d it_retry=%ld succ_retry=%d retried=%d it_reported=%ld f_lasteval=%.12e err=%.6e"
                           " dx0_inf=%.6e dx0_n_far=%ld dx0_inf_present=%.6e dx0_n_far_present=%ld n_present=%ld"
                           " F_updates_first=%ld F_updates_total=%ld fx_evals_first=%ld fx_evals_total=%ld ok=%d\n",
                      ts.solve, traceFirstIt, traceFirstOk ? 1 : 0, retried ? (long)optimaIterTotal - traceFirstIt : 0L,
@@ -6809,6 +6898,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
         }
 
+        optima_soft_unconverged = !result.succeeded && !pa_p->DW;
         if( !result.succeeded && pa_p->DW )
         {
             // pa_DW gates the same decision for native's "MBR iterations exceeded" case.
@@ -6888,6 +6978,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         std::vector<double> XFsave( pm.XF, pm.XF  + pm.FI );
         std::vector<double> XFAsave( pm.XFA, pm.XFA + pm.FIs );
         pm.FX = TotalGibbsEnergy();
+        // the energy of the answer returned (ANSWER's f_lasteval is the last objective evaluation, maybe of another attempt)
+        if( auto* tfpA = Optima::trace::file() )
+            fprintf( tfpA, "ANSWERG g=%.12e\n", pm.FX );
         for( long int j = 0; j < pm.L; j++ )    pm.X[j]   = Xsave[(size_t)j];
         for( long int k = 0; k < pm.FI; k++ )   pm.XF[k]  = XFsave[(size_t)k];
         for( long int k = 0; k < pm.FIs; k++ )  pm.XFA[k] = XFAsave[(size_t)k];
@@ -6979,7 +7072,8 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             try
             {
                 pm.pNP = 0;
-                calcTime = CalculateEquilibriumState( fiaN, ipmN );
+                // the warm leg already ran the kinetic step for this time step, so it is not run again
+                calcTime = CalculateEquilibriumState( fiaN, ipmN, false );
                 Ysave.assign( pm.Y, pm.Y + pm.L );
                 Usave.assign( pm.U, pm.U + pm.N );
                 FXsave = pm.FX;
@@ -7084,15 +7178,9 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
         // The Optima leg changes the bulk composition and the control results; keep them.
         const std::vector<double> Bsave( pm.B, pm.B + pm.N );
         const std::vector<EqControlCondition> controlsSave = optima_control_conditions;
-        try
-        {
-            calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false,
-                              /* runKinetics */ false );  // the native leg already advanced it
-        }
-        catch( TError& oerr )
-        {
-            // Restore native's converged primal and dual, and recompute every quantity
-            // derived from the primal, which the Optima leg's objective may have changed.
+        // Restore native's converged primal and dual, and recompute every quantity
+        // derived from the primal, which the Optima leg's objective may have changed.
+        auto restoreNative = [&]( const std::string& what ) {
             for( long int j = 0; j < pm.L; j++ ) pm.Y[j] = pm.X[j] = Ysave[(size_t)j];
             for( long int i = 0; i < pm.N; i++ ) pm.U[i] = Usave[(size_t)i];
             // pm.FX too: the Optima leg resets it to kTotalGibbsEnergyUnset. Native's value
@@ -7106,14 +7194,28 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             // Soft failure (pm.MK = 2, read by testMulti()): native's answer is reported.
             pm.MK = 2;
             std::string buf = std::string("Optima leg failed after a successful native solve (")
-                             + oerr.title + oerr.mess
-                             + "); reporting native's own converged state instead";
+                             + what + "); reporting native's own converged state instead";
             setErrorMessage( 21, "W21IPM: HOP: ", buf.c_str() );
+            ipm_logger->warn( "HOP: Optima leg failed after a good native solve ({}). Native's own "
+                               "answer is returned as BAD_GEM_HOP. Try: AOP, or check the bulk "
+                               "composition for very small amounts", what ); };
+        try
+        {
+            calcTime += CalculateEquilibriumStateOptima( fiaO, ipmO, false,
+                              /* runKinetics */ false );  // the native leg already advanced it
+            // a leg that stops without converging and without an error (pa_DW = 0) gives native's answer back,
+            // as a leg that throws does; a converged leg that fails a later check keeps its own answer
+            if( pm.MK == 2 && optima_soft_unconverged )
+            {
+                native_trace_decide( "hop-softfail restored=native" );
+                restoreNative( "not converged" );
+            }
+        }
+        catch( TError& oerr )
+        {
             // fiaO/ipmO were set by CalculateEquilibriumStateOptima()'s own catch before it
             // re-threw; the iterations spent are kept, only the state is discarded.
-            ipm_logger->warn( "HOP: Optima leg failed after a good native solve ({}: {}). Native's own "
-                               "answer is returned as BAD_GEM_HOP. Try: AOP, or check the bulk "
-                               "composition for very small amounts", oerr.title, oerr.mess );
+            restoreNative( oerr.title + ": " + oerr.mess );
         }
     }
 
@@ -7133,6 +7235,7 @@ double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIP
     const long int cap = base_param()->NativeOptimaFinish;
     if( cap <= 0 || !trace_growth_stuck || pm.MK || pm.PZ || !optima_control_conditions.empty() )
         return 0.;
+    NativeHelperScope nativeHelper;
     const long int savedPNP = pm.pNP, savedMK = pm.MK, savedPZ = pm.PZ;
     // An exact copy of native's whole state: when Optima's answer is not kept, every value is put back,
     // so a later warm call starts as it would have without the finish.
@@ -7232,6 +7335,7 @@ bool TMultiBase::NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM,
     const long int cap = base_param()->NativeOptimaFinish;
     if( cap <= 0 || !optima_control_conditions.empty() )
         return false;
+    NativeHelperScope nativeHelper;
     const long int savedPNP = pm.pNP;
     long int fiaO = 0, ipmO = 0;
     bool ok = false;

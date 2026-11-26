@@ -31,6 +31,7 @@
 #include "ms_multi.h"
 
 extern thread_local bool g_tpdStrongSearch;   // defined in ipm_main.cpp
+extern thread_local bool g_tpdTrialThrew;     // defined in ipm_main.cpp
 
 // pa_OptimaLevelStart: the column-generation LP's last round, and the certified start it gives.
 thread_local bool g_cgConverged = false;
@@ -191,10 +192,18 @@ bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
     if( !runSimplex( nCols, maxIter, eps * cMax ) )
         return false;
 
-    xOut.assign( (size_t)nCols, 0. );
+    std::vector<double> xSol( (size_t)nCols, 0. );
     for( long int i = 0; i < nCon; i++ )
         if( basis[i] < nCols )
-            xOut[ (size_t)basis[i] ] = std::max( 0., Tref(i,nVar) );
+            xSol[ (size_t)basis[i] ] = std::max( 0., Tref(i,nVar) );
+    // An artificial left in the basis can take a nonzero value in phase 2; then the point does not satisfy A x = b.
+    for( long int i = 0; i < nCon; i++ )
+    {
+        double r = -b[i];
+        for( long int j = 0; j < nCols; j++ ) r += a(i,j) * xSol[(size_t)j];
+        if( std::fabs( r ) > feasTol )
+            return false;
+    }
 
     // Dual of the equality rows. Artificial column i is e_i in the FLIPPED
     // system and costs 0, so its reduced cost is c-z = -y'_i; un-flip with the
@@ -227,6 +236,7 @@ bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
             return false;
         for( long int i = 0; i < nCon; i++ ) yOut[i] = y[(size_t)i];
     }
+    xOut.swap( xSol );
     return true;
 }
 
@@ -259,6 +269,7 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
     std::vector<double> Usave( pm.U, pm.U + N );
     std::vector<double> x, y( (size_t)N, 0. ), cost;
     int rounds = 0; long int added = 0, lastAdded = 0;
+    bool negSuppressed = false;   // a phase with a negative price was left out only as a near copy of a column
     bool solved = false;
     for( ; rounds < 20; rounds++ )
     {
@@ -271,6 +282,7 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
         solved = true;
         for( long int i = 0; i < N; i++ ) pm.U[i] = y[(size_t)i];
         lastAdded = 0;
+        negSuppressed = false;
         long int jb = 0;
         for( long int k = 0; k < pm.FIs; k++ )
         {
@@ -291,6 +303,7 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
                             for( long int a = 0; a < n; a++ ) d = std::max( d, std::fabs( c.y[(size_t)a] - yb[(size_t)a] ) );
                             if( d < 1e-4 ) { dup = true; break; }
                         }
+                    if( dup ) negSuppressed = true;
                     if( !dup )
                     {
                         Col c; c.j = -1; c.k = k; c.jb = jb; c.y = yb; c.a.assign( (size_t)N, 0. );
@@ -338,7 +351,7 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
                 for( size_t a = 0; a < cols[c].y.size(); a++ ) dy = std::max( dy, std::fabs( cols[c].y[a] - cols[d].y[a] ) );
                 if( dy > 0.1 ) { g_cgGap = true; break; }
             }
-    g_cgConverged = ( lastAdded == 0 );
+    g_cgConverged = ( lastAdded == 0 && !negSuppressed );
     g_cgPseudo = nPseudoUsed;
     g_cgDual = y;
     if( g_tpdStrongSearch && base_param()->TpdStrongBasins > 0 )
@@ -378,7 +391,9 @@ double TMultiBase::AbsentPhaseWorstDrive( long int& worstPhase )
             g_tpdStrongSearch = true;
             const double t = NativeTpdPhase( k, jb, yb );
             g_tpdStrongSearch = false;
-            if( t < worst ) { worst = t; worstPhase = k; }
+            // a search stopped by an error cannot show that the phase does not form, so it counts as a drive
+            const double tk = g_tpdTrialThrew ? -1e300 : t;
+            if( tk < worst ) { worst = tk; worstPhase = k; }
         }
         jb += n;
     }

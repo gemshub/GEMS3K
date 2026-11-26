@@ -106,8 +106,25 @@ TNode::TNode( const TNode& otherNode )
     multi_ptr()->copyMULTI( *otherNode.multi_base );
     // the targets go with the copy: the registered conditions and which of them came from the DBR
 #ifdef USE_OPTIMA_SOLVER
-    multi_ptr()->RestoreControlConditions( otherNode.multi_base->GetControlConditions() );
+    {   // a pH or Eh condition reads the temperature and settings of its own node, so it is made again for the copy
+        std::vector<EqControlCondition> conds = otherNode.multi_base->GetControlConditions();
+        for( auto& c : conds )
+        {
+            if( c.name != "pH" && c.name != "Eh" )
+                continue;
+            multi_ptr()->ClearControlConditions();
+            if( c.name == "pH" ) multi_ptr()->SetControlCondition_pH( c.target, c.tolerance );
+            else multi_ptr()->SetControlCondition_Eh( c.target, c.tolerance );
+            const EqControlCondition& fresh = multi_ptr()->GetControlConditions().front();
+            c.defaultToleranceFn = fresh.defaultToleranceFn;
+            c.fixedGradientFn = fresh.fixedGradientFn;
+            c.achievedValueFn = fresh.achievedValueFn;
+        }
+        multi_ptr()->RestoreControlConditions( conds );
+    }
 #endif
+    titrEntered_ = otherNode.titrEntered_;
+    titrSolved_ = otherNode.titrSolved_;
     dbrTarget_pH = otherNode.dbrTarget_pH;
     dbrTarget_Eh = otherNode.dbrTarget_Eh;
     dbrTargetWarned = otherNode.dbrTargetWarned;
@@ -237,6 +254,9 @@ bool TNode::SyncMultiWithDataBr()
         same = ( CNode->xDC[i] == pmm->X[ CSD->xdc[i] ] );
     for( long int i = 0; i < CSD->nICb && same; i++ )
         same = ( CNode->uIC[i] == pmm->U[ CSD->xic[i] ] );
+    // the bulk too: an answer of a pH/Eh target call carries its own titrated bulk
+    for( long int i = 0; i < CSD->nICb && same; i++ )
+        same = std::fabs( CNode->bIC[i] - pmm->B[ CSD->xic[i] ] ) <= 1e-12 * std::max( std::fabs( CNode->bIC[i] ), 1e-300 );
     if( same )
         return false;
     unpackDataBr( true );
@@ -324,6 +344,8 @@ long int TNode::GEM_run( bool uPrimalSol )
     restoreEnteredComposition( requested );
     const std::vector<double> bBefore( CNode->bIC, CNode->bIC + CSD->nICb );
     long int st;
+    if( gems3k_timing::enabled() )
+        gems3k_timing::acc = gems3k_timing::Acc();   // a call that ended on an error leaves no sums for this one
     {
         gems3k_timing::Scope t( gems3k_timing::Call );
         // A failed attempt is followed by retries: its error goes to the debug level here, and the
@@ -518,7 +540,11 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     }
 
     const long int nIC = CSD->nICb;
-    const std::vector<double> b0( CNode->bIC, CNode->bIC + nIC );
+    // A pH/Eh target call titrates the bulk: its retries start from the bulk that was entered, and each answer is
+    // checked against its own titrated bulk, which it keeps.
+    const bool targetCall = !multi_ptr()->GetControlConditions().empty();
+    const std::vector<double> b0 = targetCall ? std::vector<double>( D0->bIC, D0->bIC + nIC )
+                                              : std::vector<double>( CNode->bIC, CNode->bIC + nIC );
     const bool kinetics = D0->dt > 0.;
     const double dt0 = D0->dt;
     const long int warmMode = ( requested == NEED_GEM_AIA || requested == NEED_GEM_SIA ) ? NEED_GEM_SIA
@@ -532,13 +558,14 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     double seconds = CalcTime;
     long int nAttempts = 0;
 
-    struct Entry { DATABR* d; double rel; double G; long int step; std::vector<EqControlCondition> cc; bool targetsMet; };
+    struct Entry { DATABR* d; double rel; double G; long int step; std::vector<EqControlCondition> cc; bool targetsMet; bool balances; };
     std::vector<Entry> pool;
     auto addToPool = [&]( long int s, long int step ) {
         if( !isOk( s ) && !isBad( s ) )
             return;   // an error leaves no packed answer
         double rel = 0.;
-        NudgedAnswerBalances( CNode, b0, rel );
+        const std::vector<double> bOwn( CNode->bIC, CNode->bIC + nIC );
+        const bool balances = NudgedAnswerBalances( CNode, targetCall ? bOwn : b0, rel );
         // under pH/Eh control an attempt counts only if the answer itself meets every target (a hybrid's BAD answer is
         // native's, while the control record is its Optima leg's, so the record alone cannot tell)
         bool met = true;
@@ -549,7 +576,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             else if( c.name == "Eh" ) met = met && fabs( CNode->Eh - c.target ) <= tol;
             else met = met && c.targetMet;
         }
-        pool.push_back( { snap(), rel, CNode->Gs, step, multi_ptr()->GetControlConditions(), met } ); };
+        pool.push_back( { snap(), rel, CNode->Gs, step, multi_ptr()->GetControlConditions(), met, balances } ); };
     if( isBad( st ) )
         addToPool( st, 0 );
 
@@ -723,11 +750,12 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             return best;
         for( size_t e = 0; e < pool.size(); e++ )
         {
-            if( pool[e].rel > 1. || !pool[e].targetsMet ) continue;
+            // the same per-element test as the solve: relative, or also absolute with pa_DT
+            if( !pool[e].balances || !pool[e].targetsMet ) continue;
             if( best < 0 || pool[e].G < pool[(size_t)best].G ) best = (long int)e;
         }
         return best; };
-    if( !passed && !noResultKinetic )
+    if( !passed && !noResultKinetic && !CalculationCancelled() )   // a cancelled call starts no other solver
     {
         std::vector<long int> others;
         // native does not apply pH/Eh control conditions, so a controlled call never goes to it
@@ -745,7 +773,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             if( bi >= 0 )
             {
                 databr_copy( pool[(size_t)bi].d );
-                setB( b0 );
+                setB( b0 );   // a target call titrates again from the entered bulk
                 s = run( other, true, true );
             }
             else
@@ -761,9 +789,15 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     native_trace_quiet( false );
 
     long int result;
+    // the status is reported under the mode that ran: without Optima, an Optima mode ran as native AIA or SIA
+    long int ranMode = requested;
+#ifndef USE_OPTIMA_SOLVER
+    if( requested == NEED_GEM_AOP || requested == NEED_GEM_HOP || requested == NEED_GEM_ROP ) ranMode = NEED_GEM_AIA;
+    else if( requested == NEED_GEM_SOP || requested == NEED_GEM_SHP ) ranMode = NEED_GEM_SIA;
+#endif
     if( passed )
     {
-        result = requested + 1;
+        result = ranMode + 1;
         CNode->NodeStatusCH = result;
         native_trace_run_result( *pmm, requested, result, multi_base );
     }
@@ -774,9 +808,9 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         {
             databr_copy( pool[(size_t)bi].d );
             multi_ptr()->RestoreControlConditions( pool[(size_t)bi].cc );
-            setB( b0 );
+            if( !targetCall ) setB( b0 );   // a target answer keeps its own titrated bulk
             CNode->dt = dt0;
-            result = requested + 2;
+            result = ranMode + 2;
             CNode->NodeStatusCH = result;
             rescueStep = 6;
             node_logger->warn( "GEM_run(): mode {} failed ({}); every rescue step failed, returned the best balanced attempt "
@@ -818,6 +852,8 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
     {
         const long int req = CNode->NodeStatusCH;
         const long int capNudges = capPa->OptimaCapNudges;
+        // the cap is lifted on every exit, also when an allocation or a solve throws
+        struct CapLift { ~CapLift() { g_optimaIterBudget = -1; g_optimaCapAllowance = 0; g_optimaCapCall = false; } } capLift;
         g_optimaCapCall = true;
         g_optimaIterBudget = cap;
         g_optimaCapAllowance = cap / 2;
@@ -970,6 +1006,10 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     long int fastF = 0, fastG = 0;
     double fastSec = 0.;
     bool fastFailed = false;
+    // A quick try that ended OK but was set aside: kept, so the full solve's answer can be compared with it.
+    DATABR* fastAnswer = nullptr;
+    double fastAnswerG = 0.;
+    bool fastAqAbsent = false;
     const long int fastCap = multi_ptr()->base_param()->OptimaFastFirst;
 #ifdef USE_OPTIMA_SOLVER   // the quick try is an Optima solve
     if( requested == NEED_GEM_AOP && !kinetics && fastCap > 0 )
@@ -1020,10 +1060,12 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
                 if( !twin[(size_t)k] ) continue;
                 if( pmm->XF[k] > 1e-9 * tot ) { twinsPresent++; continue; }
                 extern thread_local bool g_tpdStrongSearch;
+                extern thread_local bool g_tpdTrialThrew;
                 std::vector<double> yb;
                 g_tpdStrongSearch = true;
-                twinDrive = std::min( twinDrive, multi_ptr()->NativeTpdPhase( k, jb, yb ) );
+                const double td = multi_ptr()->NativeTpdPhase( k, jb, yb );
                 g_tpdStrongSearch = false;
+                twinDrive = std::min( twinDrive, g_tpdTrialThrew ? -1e300 : td );   // a failed search counts as a drive
             }
             const bool keep = !( worst < -1e-6 ) && twinsPresent < 2 && !( twinsPresent > 0 && twinDrive < -1e-10 );
             native_trace_decide( "fastcutaccept keep=%d worst=%.3e phase=%ld twins=%ld twindrive=%.3e", keep ? 1 : 0, worst, wk,
@@ -1037,6 +1079,16 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
             g_optimaIterBudget = budget0;
             databr_free( fastBefore );
             return fast;
+        }
+        // the quick answer can be compared by energy only at the bulk that was entered (no pH or Eh target)
+        if( fast == OK_GEM_AOP && multi_ptr()->GetControlConditions().empty() )
+        {
+            fastAnswer = new DATABR;
+            dbr_dch_api::databr_reset( fastAnswer, 1 );
+            dbr_dch_api::databr_realloc( CSD, fastAnswer );
+            { DATABR* live = CNode; CNode = fastAnswer; databr_copy( live ); CNode = live; }
+            fastAnswerG = CNode->Gs;
+            fastAqAbsent = g_aqueousAbsent;
         }
         fastF = pmm->ITF; fastG = pmm->ITG; fastSec = CalcTime; fastFailed = true;
         g_optimaIterBudget = budget0 < 0 ? -1 : std::max( 0L, budget0 - used );
@@ -1162,7 +1214,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     // failed cold call is tried once more from the column-generation seed. A retry that is not OK
     // hands the failed call back exactly as it was.
     const bool optimaColdRetry = ( multi_ptr()->base_param()->OptimaColdRetry > 0 );   // pa_OptimaColdRetry
-    if( optimaColdRetry && !kinetics && ( requested == NEED_GEM_SOP || requested == NEED_GEM_SHP )
+    if( optimaColdRetry && !kinetics && !CalculationCancelled() && ( requested == NEED_GEM_SOP || requested == NEED_GEM_SHP )
         && status != OK_GEM_SOP && status != OK_GEM_SHP && status != OK_GEM_AOP
         && status != OK_GEM_SIA && status != OK_GEM_AIA )
         status = GEM_run_optima_cold_retry( requested );
@@ -1182,6 +1234,26 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
         CNode->IterDone = itf + itg; CalcTime = seconds;
         status = CNode->NodeStatusCH;
+    }
+    if( fastAnswer )
+    {
+        // The full solve can end in another basin than the quick try; the lower energy is returned.
+        const bool fullHasG = status == OK_GEM_AOP || status == BAD_GEM_AOP;
+        const double gFull = CNode->Gs;
+        const bool quickBetter = fullHasG && fastAnswerG < gFull - 1e-9 * std::max( 1., fabs( gFull ) );
+        native_trace_decide( "fastkeepbetter quick=%.12e full=%.12e status=%ld kept=%s", fastAnswerG, gFull, (long)status,
+                             quickBetter ? "quick" : "full" );
+        if( quickBetter )
+        {
+            databr_copy( fastAnswer );
+            CNode->NodeStatusCH = status = OK_GEM_AOP;
+            g_aqueousAbsent = fastAqAbsent;
+            SyncMultiWithDataBr();   // a later warm start begins from the answer returned
+            clearipmLogError();
+            node_logger->debug( "GEM_run(): the quick try's answer has a lower Gibbs energy than the full solve's; it is returned" );
+        }
+        databr_free( fastAnswer );
+        fastAnswer = nullptr;
     }
     if( fastFailed )
     {
@@ -1351,6 +1423,7 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
     // The first nudged cold answer, kept in case the warm re-solve at the exact composition fails.
     DATABR* nudgedOk = nullptr;
     double nudgedK = 0.;
+    bool nudgedBal = false;
     for( long int n = 0; n < maxNudges && result == ERR_GEM_AIA; n++ )
     {
         const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
@@ -1362,13 +1435,20 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
         long int warm = -1;
         if( cold == OK_GEM_AIA )
         {
-            if( !nudgedOk )
+            // the first nudged answer is kept; a later one replaces it only if it balances and the kept one does not
+            double relNow = 0.;
+            const bool balNow = NudgedAnswerBalances( CNode, b0, relNow );
+            if( !nudgedOk || ( balNow && !nudgedBal ) )
             {
-                nudgedOk = new DATABR;
-                dbr_dch_api::databr_reset( nudgedOk, 1 );
-                dbr_dch_api::databr_realloc( CSD, nudgedOk );
+                if( !nudgedOk )
+                {
+                    nudgedOk = new DATABR;
+                    dbr_dch_api::databr_reset( nudgedOk, 1 );
+                    dbr_dch_api::databr_realloc( CSD, nudgedOk );
+                }
                 { DATABR* live = CNode; CNode = nudgedOk; databr_copy( live ); CNode = live; }
                 nudgedK = k;
+                nudgedBal = balNow;
             }
             for( long int i = 0; i < nIC; i++ )
                 CNode->bIC[i] = b0[(size_t)i];
@@ -1460,6 +1540,9 @@ long int TNode::GEM_run_single( bool uPrimalSol )
         if( CNode->NodeStatusCH == NEED_GEM_SIA || CNode->NodeStatusCH == NEED_GEM_SOP )
         {
             pmm->pNP = 1;
+            // a kinetic step reads the node's own amounts, as in a cold call: the solver may hold another node's
+            if( CNode->dt > 0. )
+                uPrimalSol = true;
             unpackDataBr( uPrimalSol );
         }
         else if( CNode->NodeStatusCH == NEED_GEM_AIA || CNode->NodeStatusCH == NEED_GEM_AOP
@@ -1501,9 +1584,22 @@ long int TNode::GEM_run_single( bool uPrimalSol )
             {   // we need to initialize TKinMet
                 pmm->pKMM = -1;
                 pmm->ITau = -1;
+                kinOwnerHandle = CNode->NodeHandle;
             }
             else  // TKinMet exists, simulation continues
+            {
                 pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
+                // The rate laws keep the starting amounts and surface areas of the node that started them.
+                if( CNode->NodeHandle != kinOwnerHandle )
+                {
+                    native_trace_decide( "kinowner node=%ld owner=%ld", (long)CNode->NodeHandle, (long)kinOwnerHandle );
+                    if( !kinOwnerWarned )
+                        node_logger->warn( "GEM_run(): node {} takes a kinetic step with the rate-law history (starting amounts, "
+                                           "surface areas) of node {}. Use one TNode for each node with kinetics.",
+                                           CNode->NodeHandle, kinOwnerHandle );
+                    kinOwnerWarned = true;
+                }
+            }
         }
 
         // Invalidate the previous call's per-leg split before the dispatch, so only a mode that

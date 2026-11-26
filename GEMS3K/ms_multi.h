@@ -198,7 +198,7 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     ///   0    AUTO (default): a cap when the system has a multisite solid solution, else off
     ///        (optima_earlystability_at()).
     /// If the cap stopped the attempt and nothing recovered, the call is re-solved in full. To
-    /// switch it off, set a cap larger than pa_IIM.
+    /// switch it off, set a cap larger than the iteration limit of the Optima attempt (at least 2000).
     /// In plain words: lets the solver notice a phase that should disappear early, instead of
     /// after a long, slow dissolution.
     long int OptimaEarlyStabilityAt = 0;
@@ -651,7 +651,9 @@ inline int optima_net_resume_mode()
 {
     static const int mode = []() -> int {
         const char* e = std::getenv( "GEMS3K_OPTIMA_NET_RESUME" );
-        return ( e && *e ) ? std::atoi( e ) : kOptimaNetResumeDefault;
+        // Only a single digit 0-3 is accepted; anything else keeps the default.
+        if( e && e[0] >= '0' && e[0] <= '3' && e[1] == '\0' ) return e[0] - '0';
+        return kOptimaNetResumeDefault;
     }();
     return mode;
 }
@@ -1172,6 +1174,8 @@ class TMultiBase
     /// pa_PhaseSmoothing = 1: the last update of each species and the iteration it was made in (cleared per solve)
     std::vector<double> smoothPrevD_;
     long int smoothPrevIT_ = -1;
+    long int smoothC8Phase_ = -1;   ///< phase whose pa_PhaseSmoothing sum smoothC8_ holds in the current activity loop; -1 = none
+    double smoothC8_ = 1.;
     /// Input of the previous GEMS3K IPM solve: bulk composition (mol), T, P and which species have a positive
     /// upper limit. warmInputChanged_ is true if this solve has another input (read by the warm zero check).
     std::vector<double> prevBulkMol_;
@@ -1424,7 +1428,8 @@ public:
     bool optima_want_sensitivity = false;
 
     /// dn/db from the last solve when optima_want_sensitivity was set, row-major
-    /// [ (L+R) x N ]. Empty if not requested or the solve did not reach the sensitivity step.
+    /// [ (L+R) x N ]. Empty if not requested, if the solve did not reach the sensitivity step,
+    /// or if the answer came from a retry.
     std::vector<double> optima_dndb;
     long int optima_dndb_rows = 0, optima_dndb_cols = 0;
 
@@ -1653,6 +1658,8 @@ protected:
     /// gradients Optima's own test may reject). Takes effect only for pa_OptimaDimReduce > 0;
     /// AUTO (0) does not reach it.
     bool optima_hop_leg = false;
+    /// The last Optima call stopped without converging and gave a soft failure (pa_DW = 0).
+    bool optima_soft_unconverged = false;
     /// Scale factor of this node's previous solve (native or Optima); 0 before the first one.
     double prev_scfact = 0.;
 
@@ -1835,8 +1842,8 @@ protected:
     // New stuff for TKinMet class implementation
     long int CalculateKinMet( long int LinkMode  );
 
-    /// One kinetics/metastability time step (TKinMet), for every solver path. Must run
-    /// before ExcludeRedundantDCs() and ScaleSystemToInternal(); HOP's Optima leg does not
+    /// One kinetics/metastability time step (TKinMet), for every solver path. Runs after
+    /// ExcludeRedundantDCs() and before ScaleSystemToInternal(); HOP's Optima leg does not
     /// run it.
     /// In plain words: applies the time-dependent (kinetic) limits before the solve.
     void RunKineticsStep();

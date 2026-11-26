@@ -125,7 +125,7 @@ sudo ./install_no_thermofun.sh
 
 * BUILD_TOOLS   (default ON) - Enable building the [kva2json utility](tools/README.md) to convert GEMS3K files formats. 
 
-* USE_OPTIMA_SOLVER (default OFF) - Enable the Optima solver (modes AOP, SOP, HOP, SHP). Install Optima first; CMake finds it through CMAKE_PREFIX_PATH. GEMS3K then uses the Eigen version of the Optima build. GEMS3K supports Eigen 3.4 and Eigen 5. Without this option, the Optima modes run with the GEMS3K IPM solver, with a warning.
+* USE_OPTIMA_SOLVER (default OFF) - Enable the Optima solver (modes AOP, SOP, HOP, SHP). Install Optima first; CMake finds it through CMAKE_PREFIX_PATH. GEMS3K then uses the Eigen version of the Optima build. GEMS3K supports Eigen 3.4 and Eigen 5. GEMS3K needs the modified Optima of gemshub (branch optima_develop3); CMake stops with a message if the Optima found does not have it. Without this option, the Optima modes run with the GEMS3K IPM solver, with a warning.
 
 * GEMS3K_OPTIMA_SUBDIR (default empty) - A folder below the install prefix that holds an Optima of its own, for example `lib/gems3k-optima`. Programs that find GEMS3K then use this Optima first. Use it when a package carries Optima with GEMS3K.
 

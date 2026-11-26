@@ -20,6 +20,18 @@ endif()
 # With Optima, Optima is found first and brings the Eigen it was built with.
 if(USE_OPTIMA_SOLVER)
   find_package(Optima REQUIRED)
+  # GEMS3K needs the modified Optima: its Trace.hpp header and the jumpahead option.
+  include(CheckCXXSourceCompiles)
+  set(CMAKE_REQUIRED_LIBRARIES Optima::Optima)
+  check_cxx_source_compiles("
+    #include <Optima/Optima.hpp>
+    #include <Optima/Trace.hpp>
+    int main() { Optima::Options o; return o.jumpahead ? 1 : 0; }" GEMS3K_OPTIMA_IS_MODIFIED)
+  unset(CMAKE_REQUIRED_LIBRARIES)
+  if(NOT GEMS3K_OPTIMA_IS_MODIFIED)
+    message(FATAL_ERROR "The Optima found in ${Optima_DIR} does not have Optima/Trace.hpp or Options::jumpahead. "
+                        "Use the modified Optima of gemshub (branch optima_develop3).")
+  endif()
 endif()
 find_package(Eigen3 REQUIRED NO_MODULE)
 if(Eigen3_VERSION VERSION_LESS 3.4)

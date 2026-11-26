@@ -18,6 +18,8 @@ if(@USE_OPTIMA_SOLVER@)
     include(CMakeFindDependencyMacro)
     # Use the package's own Optima first.
     if(NOT "@GEMS3K_OPTIMA_SUBDIR@" STREQUAL "" AND EXISTS "${_gems3k_optima_dir}/OptimaConfig.cmake")
+        # Optima_DIR is set first: find_dependency() uses an Optima_DIR from the cache before PATHS.
+        set(Optima_DIR "${_gems3k_optima_dir}")
         find_dependency(Optima PATHS "${_gems3k_optima_dir}" NO_DEFAULT_PATH)
     else()
         find_dependency(Optima)

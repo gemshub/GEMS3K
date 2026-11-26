@@ -50,7 +50,8 @@ tries again automatically. It uses one of these methods:
 - a finish on the phases that it already found
 
 **A rescue for failed calls.** A call can still fail. Then GEMS3K tries it again in steps (`pa_FailRescue`).
-If no step gives a good result, you get the best attempt that keeps the element totals. Its status is BAD.
+If no step gives a good result and an attempt keeps the element totals, you get the best such attempt. Its status is BAD.
+If no attempt keeps the element totals, you get the original failure status, and the failed state is put back.
 `GEM_rescue_step()` tells you which step gave the result. See [Reading the result](#reading-the-result).
 
 **Faster calculations.**
@@ -224,6 +225,8 @@ if (status == OK_GEM_AOP)
   - A failed SOP or SHP call is solved again with a cold start. It can return `OK_GEM_AOP` (see
     `pa_OptimaColdRetry`).
   - A failed HOP call returns the GEMS3K IPM result without the target.
+- With a co-solvent in the aqueous phase (for example an alcohol), the reported pH uses the mean molar mass of the solvent.
+  If that pH is outside the target tolerance, GEMS3K reports the target as not met and writes the reason in the log.
 - An `OK` status means that the solver met the target in its own model. An extreme target can still give a
   result that has no physical meaning (for example, a pH far outside 0 to 14). Judge the target. Do not
   only look at the status.
@@ -279,7 +282,7 @@ In a text file (`…-ipm.dat`), add the setting after the `<END_DIM>` line. For 
 ```
 
 Put each setting in the file one time only. If a name is in the file two times, GEMS3K uses the later value.
-GEMS3K does not read a setting that is before `<END_DIM>` in a text file.
+GEMS3K does not read a setting that is before `<END_DIM>` in a text file. The exception is the allocation flags of the header section, for example `<pa_PE>`: GEMS3K reads them there.
 
 
 **Suggested settings for common cases** (transport, grids, dry systems and others): see [Advanced usage](SOLVER-ADVANCED-USAGE.md#suggested-settings-for-common-cases).
@@ -292,11 +295,11 @@ These are the Optima settings that a user can change. Advanced settings has all 
 | Setting | Default | What it does | When it can help | Other values |
 |---|---|---|---|---|
 | `pa_OptimaTol` | 1e-8 | Sets how precisely Optima must converge. | Make it a little larger to get more speed and less accuracy on large systems. Make it smaller only if a result is not converged enough. | Any positive number. A smaller number is stricter. |
-| `pa_OptimaMaxSeconds` | 0 (off) | Sets a time limit in seconds for one Optima solve with its tries. Each rescue step starts the limit again. The results then depend on the speed of the computer. | Long batch runs or transport runs. One stuck calculation must not stop the other calculations. | Any positive number of seconds. |
+| `pa_OptimaMaxSeconds` | 0 (off) | Sets a time limit in seconds for one Optima call, with its quick pre-solve and its tries. Each rescue step starts the limit again. The results then depend on the speed of the computer. | Long batch runs or transport runs. One stuck calculation must not stop the other calculations. | Any positive number of seconds. |
 | `pa_OptimaColdRetry` | 2 (fail fast) | A warm-start calculation (SOP, SHP) can fail. Then the solver makes a new cold start. The value 2 stops the first attempt early. | Use 1 if the warm start usually succeeds but needs many iterations. Use 0 only for tests. | 0 = no new try. 1 = a new try only after the first attempt used its full budget. 2 = the first attempt stops early. |
 | `pa_OptimaAcceptRepair` | 0 (off) | Optima can accept a result that is almost converged. Then the solver first corrects a small error in the element totals. | Systems with very little water. Other cases where Optima ends near the result with element totals that are not exactly balanced. | 1 = on. |
 | `pa_OptimaZeroAbsent` | 3 | Sets how absent phases are shown. With 3, Optima uses the same rule as the GEMS3K IPM solver and shows an absent phase as 0. If 0 would break the balance of an element, the phase keeps a very small amount. A trace species of a present phase gets its real amount. | Keep the default. | 0 = very small amounts without a change. 1 = absent phases set to 0 by an older rule. 2 = very small amounts, element totals corrected. |
-| `pa_OptimaRedoxFree` | 1 (write to the log) | Checks before the calculation if the bulk fixes the redox level. This is the case if each element has one oxidation state and no spare oxidant or reductant exists. If the bulk does not fix the level, the solver writes this in the log. | Systems with no redox buffer. In these systems, the input does not fix Eh and the species that depend on it. | 0 = off. 2 = also aim the calculation at pe 4 when you give no pH target or Eh target. |
+| `pa_OptimaRedoxFree` | 1 (write to the log) | Checks before the calculation if the bulk fixes the redox level. This is the case if each element has one oxidation state and no spare oxidant or reductant exists. If the bulk does not fix the level, the solver writes this in the log. | Systems with no redox buffer. In these systems, the input does not fix Eh and the species that depend on it. | 0 = off. 2 = also aim the calculation at pe 4 when you give no pH target or Eh target. An Optima finish after a GEMS3K IPM calculation does not use pe 4. |
 | `pa_OptimaCallCap` | 0 (no cap) | Sets the largest number of iterations for one calculation (AOP, SOP). After that number, the solver repeats the calculation with amounts that are changed by a very small amount. | Batch runs where a calculation sometimes runs for a very long time. | -1 = chosen from the size of the system. A positive number = that number of iterations. |
 | `pa_OptimaDryOut` | 0 (off) | The water can run out during a calculation. Then the solver takes the water phase out and solves the solids alone. It compares this result with a solve that keeps the water. It keeps the result with the lower energy. If the dry solve fails, the calculation continues with the water back. The solver does not use this if an element can only be in the water. It needs `pa_OptimaStallWindow` to be on. | Use 1 for systems where the water is used up by design, for example cement hydration with little water. It is off by default. If the water only becomes low during a calculation, the dry result can be wrong. | 0 = off. 1 = on. |
 

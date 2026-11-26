@@ -506,12 +506,15 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA1, A, Q, &ITER);
 /// Main call to GEM IPM calculation of equilibrium state in MULTI
 /// (with internal re-scaling of the system).
 //
+extern thread_local unsigned long g_balanceQrEpoch;   // ipm_main.cpp
+
 double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM, bool runKinetics )
 {
   gems3k_timing::Scope timing( gems3k_timing::Native );
   double ScFact=1.;
 
   InitalizeGEM_IPM_Data();
+  g_balanceQrEpoch++;   // a new solve: the balance-step QR factor is made again
   trace_growth_stuck = false;
   activity_mismatch = false;
   phase_floor_parked.clear();
@@ -536,6 +539,9 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
   if( runKinetics )
       RunKineticsStep();
 
+    // memory for the warm-input record is taken before scaling, so no allocation can fail while the system is scaled
+    prevBulkMol_.reserve( (size_t)pm.N );
+    prevDulPositive_.reserve( (size_t)pm.L );
     if( base_param()->DG > 1e-5 )
     {
         ScFact = SystemTotalMolesIC();
@@ -606,6 +612,8 @@ try{
   }
   catch( TError& xcpt )
   {
+      // a failed solve leaves no answer to compare with, so the next call counts as a changed input
+      prevBulkMol_.clear();
 
       if( base_param()->DG > 1e-5 )
          RescaleSystemFromInternal( ScFact );

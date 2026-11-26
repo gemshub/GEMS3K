@@ -382,7 +382,8 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
           steps. It stops early if the energy keeps going up or becomes very large. It stops early if its steps do not
           change anything. It stops early if its error does not improve after a jump in energy. Then the normal solve
           starts from the same inputs. If the quick try uses all its iterations but ends OK, GEMS3K keeps the result
-          when no missing phase can form (<code>pa_OptimaFastAcceptCut</code>).</li>
+          when no missing phase can form (<code>pa_OptimaFastAcceptCut</code>). If the quick try ends OK and the normal
+          solve still runs, GEMS3K returns the result with the lower Gibbs energy.</li>
         <li>Cold start: a linear calculation puts the mass in as few species as it can. If this leaves almost no
           water, or leaves a mixed phase empty, GEMS3K corrects the guess first.</li>
         <li>Warm start: GEMS3K uses the previous result. If the node was never solved, GEMS3K writes a warning
