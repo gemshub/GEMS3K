@@ -2188,11 +2188,13 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                 if( regRatio > 0. )
                 {
                     long int p0 = 0;
+                    // a cold AOP solve (not a warm call, a HOP leg or a finish after native) leaves a melt liquid without the floor
+                    const bool coldAopCall = pm.pNP == 0 && !optima_hop_leg && !g_optimaNativeHelper;
                     for( long int k = 0; k < pm.FIs; k++ )
                     {
                         const long int p1 = p0 + pm.L1[k];
                         const long int nEnd = p1 - p0;
-                        const bool isAq = ( pm.PHC[k] == PH_AQUEL || pm.PHC[k] == PH_LIQUID );   // by phase type (pm.LO is 0 without water): no curvature floor for water or a melt
+                        const bool isAq = ( pm.PHC[k] == PH_AQUEL || ( pm.PHC[k] == PH_LIQUID && coldAopCall ) );   // by phase type: no floor for water, nor for a melt in a cold AOP solve
                         if( !isAq && nEnd > 1 && p1 <= L )
                         {
                             double phTot = 0.;
@@ -3490,12 +3492,14 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     if( regRatio > 0. )
                     {
                         long int p0 = 0;
+                        // a cold AOP solve (not a warm call, a HOP leg or a finish after native) leaves a melt liquid without the floor
+                        const bool coldAopCall = pm.pNP == 0 && !optima_hop_leg && !g_optimaNativeHelper;
                         gems3k_timing::Scope timingBlock( gems3k_timing::FdBlock );
                         for( long int k = 0; k < pm.FIs; k++ )
                         {
                             const long int p1 = p0 + pm.L1[k];
                             const long int nEnd = p1 - p0;
-                            const bool isAq = ( pm.PHC[k] == PH_AQUEL || pm.PHC[k] == PH_LIQUID );   // by phase type (pm.LO is 0 without water): no curvature floor for water or a melt
+                            const bool isAq = ( pm.PHC[k] == PH_AQUEL || ( pm.PHC[k] == PH_LIQUID && coldAopCall ) );   // by phase type: no floor for water, nor for a melt in a cold AOP solve
                             if( !isAq && nEnd > 1 && p1 <= L )
                             {
                                 // Only end-members that are actually present: a floor
