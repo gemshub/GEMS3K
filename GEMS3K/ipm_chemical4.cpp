@@ -112,28 +112,39 @@ void TMultiBase::RunKineticsStep()
                 break;
             }
 
-    if( pm.pKMM < 2 )
-    {
-        if( pm.ITau < 0 || pm.pKMM != 1 )
+    // puts back the amounts and the pH changed above for the rate law (also when the rate law throws)
+    auto restoreKinState = [&]() {
+        if( coldAmounts )
         {
-            CalculateKinMet( LINK_TP_MODE );   // Re-create TKinMet class instances
-            pm.ITau = 0; pm.pKMM = 1;
-            CalculateKinMet( LINK_IN_MODE );   // Initial state calculation of rates
+            for( long int j = 0; j < pm.L; j++ ) pm.X[j] = coldX[(size_t)j];
+            for( long int k = 0; k < pm.FI; k++ ) pm.XF[k] = coldXF[(size_t)k];
+            for( long int k = 0; k < pm.FIs; k++ ) pm.XFA[k] = coldXFA[(size_t)k];
+            for( long int k = 0; k < pm.FI; k++ ) pm.FVOL[k] = coldFVOL[(size_t)k];
+            pm.pH = coldPH; pm.pe = coldPE; pm.Eh = coldEH; pm.IC = coldIC;
         }
-        else if( pm.ITau >= 0 ) {
-            CalculateKinMet( LINK_PP_MODE );   // Rates and metast. constraints at time step
-        }
-    }
-    if( coldAmounts )
+        if( kinPHset && !coldAmounts )
+            pm.pH = kinPHsaved; };
+    try
     {
-        for( long int j = 0; j < pm.L; j++ ) pm.X[j] = coldX[(size_t)j];
-        for( long int k = 0; k < pm.FI; k++ ) pm.XF[k] = coldXF[(size_t)k];
-        for( long int k = 0; k < pm.FIs; k++ ) pm.XFA[k] = coldXFA[(size_t)k];
-        for( long int k = 0; k < pm.FI; k++ ) pm.FVOL[k] = coldFVOL[(size_t)k];
-        pm.pH = coldPH; pm.pe = coldPE; pm.Eh = coldEH; pm.IC = coldIC;
+        if( pm.pKMM < 2 )
+        {
+            if( pm.ITau < 0 || pm.pKMM != 1 )
+            {
+                CalculateKinMet( LINK_TP_MODE );   // Re-create TKinMet class instances
+                pm.ITau = 0; pm.pKMM = 1;
+                CalculateKinMet( LINK_IN_MODE );   // Initial state calculation of rates
+            }
+            else if( pm.ITau >= 0 ) {
+                CalculateKinMet( LINK_PP_MODE );   // Rates and metast. constraints at time step
+            }
+        }
     }
-    if( kinPHset && !coldAmounts )
-        pm.pH = kinPHsaved;
+    catch( ... )
+    {
+        restoreKinState();
+        throw;
+    }
+    restoreKinState();
 
     if( kinmWillRun )
     {

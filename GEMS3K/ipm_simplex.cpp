@@ -536,6 +536,9 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
   if( runKinetics )
       RunKineticsStep();
 
+    // memory for the warm-input record is taken before scaling, so no allocation can fail while the system is scaled
+    prevBulkMol_.reserve( (size_t)pm.N );
+    prevDulPositive_.reserve( (size_t)pm.L );
     if( base_param()->DG > 1e-5 )
     {
         ScFact = SystemTotalMolesIC();
@@ -606,6 +609,8 @@ try{
   }
   catch( TError& xcpt )
   {
+      // a failed solve leaves no answer to compare with, so the next call counts as a changed input
+      prevBulkMol_.clear();
 
       if( base_param()->DG > 1e-5 )
          RescaleSystemFromInternal( ScFact );

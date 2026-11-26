@@ -847,6 +847,8 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
     {
         const long int req = CNode->NodeStatusCH;
         const long int capNudges = capPa->OptimaCapNudges;
+        // the cap is lifted on every exit, also when an allocation or a solve throws
+        struct CapLift { ~CapLift() { g_optimaIterBudget = -1; g_optimaCapAllowance = 0; g_optimaCapCall = false; } } capLift;
         g_optimaCapCall = true;
         g_optimaIterBudget = cap;
         g_optimaCapAllowance = cap / 2;

@@ -93,6 +93,15 @@ static thread_local bool g_lvlShortcut = false;
 // The leveled answer holds mixed phases: start from it, but solve it the ordinary way.
 static thread_local bool g_lvlCgStart = false;
 extern thread_local bool g_tpdStrongSearch;   // defined in ipm_main.cpp
+// start of the current Optima call: pa_OptimaMaxSeconds covers the pre-solve and the full solve together
+static thread_local std::chrono::steady_clock::time_point g_optimaCallStart = std::chrono::steady_clock::now();
+// inside NativeOptimaFinish() or NativeOptimaRescue(): a native-mode call, so no pe 4 target is added (pa_OptimaRedoxFree = 2)
+static thread_local bool g_optimaNativeHelper = false;
+struct NativeHelperScope {
+    bool prev;
+    NativeHelperScope() : prev( g_optimaNativeHelper ) { g_optimaNativeHelper = true; }
+    ~NativeHelperScope() { g_optimaNativeHelper = prev; }
+};
 extern thread_local bool g_aqueousAbsent;     // defined in ipm_chemical2.cpp; set when the aqueous phase has no water
 extern thread_local long int g_lvlFullCalls;  // defined in node.cpp
 extern thread_local bool g_optimaFixAccept;       // defined in node.cpp
@@ -1932,7 +1941,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     auto preWatch = std::make_shared<PreStallWatch>();
     preWatch->window     = pa_p->OptimaStallWindow;
     preWatch->maxSeconds = pa_p->OptimaMaxSeconds;
-    preWatch->started    = std::chrono::steady_clock::now();
+    preWatch->started    = g_optimaCallStart;
     preWatch->reset();
     if( preWatch->window > 0 || preWatch->maxSeconds > 0. || g_optimaIterBudget >= 0 )
         options.convergence.check =
@@ -2515,6 +2524,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                                     bool runKinetics )
 {
     gems3k_timing::Scope timing( gems3k_timing::OptimaCall );
+    g_optimaCallStart = std::chrono::steady_clock::now();
+    optima_dndb.clear(); optima_dndb_rows = optima_dndb_cols = 0;   // no sensitivity is left from an earlier call
     phase_floor_parked.clear();   // set again below only for an accepted answer
     optima_soft_unconverged = false;
     zeroed_floor_amount.clear();
@@ -2611,8 +2622,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     if( pa_p->OptimaRedoxFree > 0 )
     {
         const RedoxFreeCheck rf = CheckRedoxFree();
+        // a native-mode finish or rescue solves the bulk as entered, as native does
         const bool apply = pa_p->OptimaRedoxFree >= 2 && rf.free && !referenceMode
-                           && optima_control_conditions.empty();
+                           && optima_control_conditions.empty() && !g_optimaNativeHelper;
         if( apply )
         {
             const double Eh = 4. * std::log( 10. ) * 0.000086 * pm.T;   // same Eh-to-dual factor as the Eh target
@@ -3786,7 +3798,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         auto stallWatch = std::make_shared<StallWatch>();
         stallWatch->window = pa_p->OptimaStallWindow;
         stallWatch->maxSeconds = pa_p->OptimaMaxSeconds;
-        stallWatch->started = std::chrono::steady_clock::now();
+        stallWatch->started = g_optimaCallStart;
         if( pa_p->OptimaDryOut > 0 && HasAqueousPhase() )   // pa_OptimaDryOut
         {
             // Water cannot vanish if an element in the bulk has no carrier outside the water phase.
@@ -5646,6 +5658,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             Optima::State  nsState  = initialState;
             Optima::Result nsResult = timed_solve( solverNS, problem, nsState );
             optimaIterTotal += nsResult.iterations;
+            if( stallWatch->timedOut ) nsResult.succeeded = false;   // stopped by cancellation or the budget, not converged
             native_trace_decide( "stallnet outcome=%s it=%ld cap=%ld stallat=%ld", nsResult.succeeded ? "converged" : "failed",
                                  (long int)nsResult.iterations, (long int)netOptions.maxiters, stallWatch->stallAt );
             stallWatch->window = savedWindow;
@@ -7172,6 +7185,7 @@ double TMultiBase::NativeOptimaFinish( long int& NumIterFIA, long int& NumIterIP
     const long int cap = base_param()->NativeOptimaFinish;
     if( cap <= 0 || !trace_growth_stuck || pm.MK || pm.PZ || !optima_control_conditions.empty() )
         return 0.;
+    NativeHelperScope nativeHelper;
     const long int savedPNP = pm.pNP, savedMK = pm.MK, savedPZ = pm.PZ;
     // An exact copy of native's whole state: when Optima's answer is not kept, every value is put back,
     // so a later warm call starts as it would have without the finish.
@@ -7271,6 +7285,7 @@ bool TMultiBase::NativeOptimaRescue( long int& NumIterFIA, long int& NumIterIPM,
     const long int cap = base_param()->NativeOptimaFinish;
     if( cap <= 0 || !optima_control_conditions.empty() )
         return false;
+    NativeHelperScope nativeHelper;
     const long int savedPNP = pm.pNP;
     long int fiaO = 0, ipmO = 0;
     bool ok = false;
