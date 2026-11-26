@@ -558,6 +558,10 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// try a longer step. The step is not tried if it would cross a bound, and it is kept only if the error falls.
     /// 1 = on (default), 0 = off.
     long int OptimaJumpAhead = 1;
+    /// pa_TracePolish: IPM solver: after the solve, each trace element (bulk amount below this fraction of the system)
+    /// is solved again with the potentials of the other elements fixed, and kept only if G does not rise.
+    /// 1e-5 = default; 0 = off.
+    double TracePolish = 1e-5;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -1516,7 +1520,11 @@ public:
         bool exact = false;       ///< free, and every species keeps each element at that one valence
         double excess = 0.;       ///< electron excess of the bulk for the closest choice, mol
         double rel = 0.;          ///< excess over the bulk's total valence amount
+        std::vector<double> valence;   ///< when free: the valence chosen per element (NaN for O, H, charge and absent ones)
     };
+    /// When the bulk is redox-free: the electrons species j carries beyond the chosen valences (0 for H2O, OH-, H+;
+    /// -2 for H2, +4 for O2). NaN when an element of j has no chosen valence.
+    double RedoxShift( const RedoxFreeCheck& rf, long int j ) const;
     /// Checks whether nothing in the bulk fixes the redox level (pa_OptimaRedoxFree).
     RedoxFreeCheck CheckRedoxFree() const;
 
@@ -1887,10 +1895,18 @@ protected:
     /// Warns when a solid phase is present only in a trace amount but still tends to grow:
     /// the answer may stop short of equilibrium. Read-only.
     void TraceGrowthCheck();
+    /// After a native solve: a dissolved species whose molality times activity coefficient differs from its
+    /// activity by more than 0.01 in log10 asks for the Optima finish (or a warning), as TraceGrowthCheck() does.
+    void ActivityConsistencyCheck();
+    /// After a native solve: solves each trace element again with the other potentials fixed. True if the result was kept.
+    bool TracePolish( double fracTrace );
     /// Set by TraceGrowthCheck() when a trace phase still tends to grow, with its warning text;
     /// cleared at the start of each native solve.
     bool trace_growth_stuck = false;
     std::string trace_growth_note;
+    /// Set by ActivityConsistencyCheck(): the Optima finish was asked for by a dissolved species whose activity
+    /// does not match. Only then does a finish that is not kept put back the whole native state.
+    bool activity_mismatch = false;
     /// One entry per phase: 1 when the last accepted Optima answer left the whole phase at the
     /// solver's lower bound and the phase is not supersaturated, so it is absent. Cleared at the
     /// start of each native and Optima solve.
@@ -2117,7 +2133,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing, f_pa_IpmBalanceStep, f_pa_PsscCleanupBudget, f_pa_DcMinMolecule, f_pa_IpmJumpAhead, f_pa_OptimaJumpAhead
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing, f_pa_IpmBalanceStep, f_pa_PsscCleanupBudget, f_pa_DcMinMolecule, f_pa_IpmJumpAhead, f_pa_OptimaJumpAhead, f_pa_TracePolish
 
 } MULTI_DYNAMIC_FIELDS;
 

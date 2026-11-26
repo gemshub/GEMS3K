@@ -105,8 +105,71 @@ static thread_local bool s_feasKeep = false;          // pa_IpmBalanceStep of th
 static thread_local long int s_balTried = 0, s_balKept = 0, s_balShort = 0;
 /// pa_IpmBalanceStep = 2: corrections in which an IC held only by trace species got those species back.
 static thread_local long int s_balTraceIC = 0;
+/// pa_IpmBalanceStep = 2: corrections that left out a shrinking pure or vanishing phase, in the current IPM call.
+static thread_local long int s_balElemCut = 0;
 /// pa_IpmBalanceStep = 2: refinement steps taken with the balance correction, in the current IPM call.
 static thread_local long int s_mbrQrSteps = 0;
+
+/// The nonzero entries of the matrix A, by species and by IC, for the balance step. A sum over species that skips
+/// the zero entries gives the same result as the full sum, because each IC adds its terms in the same order.
+struct BalanceSparseA
+{
+    const double* A = nullptr;
+    long int N = -1, L = -1;
+    std::vector<long int> colStart, colIc;    // species j: ICs colIc[colStart[j] .. colStart[j+1]-1]
+    std::vector<double> colA;                 // and their entries of A
+    std::vector<long int> rowStart, rowDc;    // IC i: species rowDc[rowStart[i] .. rowStart[i+1]-1]
+};
+static thread_local BalanceSparseA s_balA;
+
+/// Make s_balA for the matrix of pm. A new IPM call makes it again, so a changed matrix is never used.
+static void balance_sparse_build( const MULTI& pm )
+{
+    BalanceSparseA& s = s_balA;
+    s.A = pm.A; s.N = pm.N; s.L = pm.L;
+    s.colStart.assign( (size_t)pm.L + 1, 0 ); s.colIc.clear(); s.colA.clear();
+    std::vector<long int> rowCount( (size_t)pm.N, 0 );
+    for( long int j = 0; j < pm.L; j++ )
+    {
+        for( long int i = 0; i < pm.N; i++ )
+        {   const double a = pm.A[i + j*pm.N];
+            if( a != 0. ) { s.colIc.push_back( i ); s.colA.push_back( a ); rowCount[(size_t)i]++; } }
+        s.colStart[(size_t)j + 1] = (long int)s.colIc.size();
+    }
+    s.rowStart.assign( (size_t)pm.N + 1, 0 );
+    for( long int i = 0; i < pm.N; i++ ) s.rowStart[(size_t)i + 1] = s.rowStart[(size_t)i] + rowCount[(size_t)i];
+    s.rowDc.assign( (size_t)s.rowStart[(size_t)pm.N], 0 );
+    std::vector<long int> pos( s.rowStart.begin(), s.rowStart.end() - 1 );
+    for( long int j = 0; j < pm.L; j++ )
+        for( long int k = s.colStart[(size_t)j]; k < s.colStart[(size_t)j + 1]; k++ )
+            s.rowDc[(size_t)pos[(size_t)s.colIc[(size_t)k]]++] = j;
+}
+
+/// s_balA for pm, made again if it belongs to another matrix.
+static const BalanceSparseA& balance_sparse( const MULTI& pm )
+{
+    if( s_balA.A != pm.A || s_balA.N != pm.N || s_balA.L != pm.L ) balance_sparse_build( pm );
+    return s_balA;
+}
+
+/// r = B - A amt for all N ICs, and the worst residual relative to its bar B[i] * DHBM over the first N - E ICs,
+/// as in native_trace_mb_of(). The terms of each IC are added in species order, so r is the same as the full sum.
+static double balance_residual( const MULTI& pm, const BalanceSparseA& sa, const double* amt, std::vector<double>& r )
+{
+    r.assign( pm.B, pm.B + pm.N );
+    for( long int j = 0; j < pm.L; j++ )
+    {   const double x = amt[j];
+        if( x == 0. ) continue;
+        for( long int k = sa.colStart[(size_t)j]; k < sa.colStart[(size_t)j + 1]; k++ )
+            r[(size_t)sa.colIc[(size_t)k]] -= sa.colA[(size_t)k] * x; }
+    double relOut = 0.;
+    for( long int i = 0; i < pm.N - pm.E; i++ )
+    {   const double a = fabs( r[(size_t)i] );
+        const double bar = pm.B[i] * pm.DHBM;
+        const double rel = bar > 0. ? a / bar : ( a > 0. ? 1e300 : 0. );
+        if( rel > relOut ) relOut = rel; }
+    return relOut;
+}
 
 /// The largest part (at most 1) of the balance correction d that keeps every amount inside its limits.
 /// It stops 1 % short of a limit, and returns 0 if d moves an amount already on a kinetic limit further out.
@@ -165,20 +228,51 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
         bool traceIC = false;
         auto usable = [&]( long int j ) {
             return amt[j] > std::min( pm.lowPosNum, pm.DcMinM ) && pm.W[j] > 0. && !blocked[(size_t)j]; };
+        // A pure phase, or a phase whose every species carries below 1e-10 of each element it holds, also gets no
+        // correction while the IPM step makes it smaller. Its species are never small against their own phase, so
+        // the rule above misses them. A phase that the step makes larger keeps its correction, so it can grow.
+        static const int s_balElem = getenv( "GEMS3K_EXP_BALELEM" ) ? atoi( getenv( "GEMS3K_EXP_BALELEM" ) ) : 3;
+        auto elemTrace = [&]( long int j ) {
+            bool any = false;
+            for( long int i = 0; i < N; i++ )
+            {   const double a = pm.A[i + j*pm.N];
+                if( a == 0. || !( pm.B[i] > 0. ) ) continue;
+                any = true;
+                if( fabs( a ) * amt[j] >= balTrace * pm.B[i] ) return false; }
+            return any; };
+        std::vector<char> phTrace( (size_t)pm.L, 0 );
+        if( s_balElem > 0 )
+        {   long int jb = 0;
+            for( long int k = 0; k < pm.FI; k++ )
+            {   bool all = true;
+                for( long int q = jb; q < jb + pm.L1[k] && all; q++ ) all = elemTrace( q );
+                // mode 3: only in the IPM step (amt is pm.X, pm.Y the previous point) and only while the phase shrinks
+                if( s_balElem >= 3 )
+                    for( long int q = jb; q < jb + pm.L1[k] && all; q++ ) all = ( amt == pm.X ) && pm.X[q] <= pm.Y[q];
+                // mode 1: every element-trace species (test only); mode 2: whole phase element-trace
+                for( long int q = jb; q < jb + pm.L1[k]; q++ )
+                    phTrace[(size_t)q] = s_balElem == 1 ? elemTrace( q ) : all;
+                jb += pm.L1[k]; } }
+        bool elemCut = false;
         for( long int j = 0; j < pm.L; j++ )
             if( usable( j ) && !( balTrace > 0. && amt[j] < balTrace * phTot[(size_t)j] ) )
-            {   js.push_back( j ); inJs[(size_t)j] = 1; }
+            {   if( phTrace[(size_t)j] ) { elemCut = true; continue; }
+                js.push_back( j ); inJs[(size_t)j] = 1; }
+        if( elemCut && attempt == 0 ) s_balElemCut++;
         // An IC that is held only by trace species (for example Na at 1e-9 mol) gets those species back.
         // Without them, the balance of that IC cannot be corrected and the IPM loop does not stop.
+        const BalanceSparseA& sa = balance_sparse( pm );
         for( long int i = 0; i < N; i++ )
         {
             if( i == dropRow || !( pm.B[i] > 0. ) ) continue;
+            const long int k0 = sa.rowStart[(size_t)i], k1 = sa.rowStart[(size_t)i + 1];
             bool held = false;
-            for( long int j = 0; j < pm.L && !held; j++ ) held = inJs[(size_t)j] && pm.A[i + j*pm.N] != 0.;
+            for( long int k = k0; k < k1 && !held; k++ ) held = inJs[(size_t)sa.rowDc[(size_t)k]];
             if( held || !traceBack ) continue;
             bool added = false;
-            for( long int j = 0; j < pm.L; j++ )
-                if( !inJs[(size_t)j] && pm.A[i + j*pm.N] != 0. && usable( j ) ) { inJs[(size_t)j] = 1; added = true; }
+            for( long int k = k0; k < k1; k++ )
+            {   const long int j = sa.rowDc[(size_t)k];
+                if( !inJs[(size_t)j] && usable( j ) ) { inJs[(size_t)j] = 1; added = true; } }
             if( added ) traceIC = true;
         }
         if( traceIC ) s_balTraceIC++;
@@ -330,7 +424,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld pa_IpmTwinSplit=%g pa_OptimaTwinLabel=%ld pa_PhaseSmoothing=%ld pa_IpmBalanceStep=%ld pa_PsscCleanupBudget=%ld pa_DcMinMolecule=%ld pa_IpmJumpAhead=%ld pa_OptimaJumpAhead=%ld\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld pa_IpmTwinSplit=%g pa_OptimaTwinLabel=%ld pa_PhaseSmoothing=%ld pa_IpmBalanceStep=%ld pa_PsscCleanupBudget=%ld pa_DcMinMolecule=%ld pa_IpmJumpAhead=%ld pa_OptimaJumpAhead=%ld pa_TracePolish=%g\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -361,7 +455,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
              (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot, (long)pa->OptimaLSWarmTrials,
-             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor, pa->IpmTwinSplit, (long)pa->OptimaTwinLabel, (long)pa->PhaseSmoothing, (long)pa->IpmBalanceStep, (long)pa->PsscCleanupBudget, (long)pa->DcMinMolecule, (long)pa->IpmJumpAhead, (long)pa->OptimaJumpAhead );
+             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor, pa->IpmTwinSplit, (long)pa->OptimaTwinLabel, (long)pa->PhaseSmoothing, (long)pa->IpmBalanceStep, (long)pa->PsscCleanupBudget, (long)pa->DcMinMolecule, (long)pa->IpmJumpAhead, (long)pa->OptimaJumpAhead, pa->TracePolish );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -2580,6 +2674,390 @@ void TMultiBase::EnergyDeterminacyCheck()
 // A solid phase at a trace amount barely moves, because each step is scaled by the amount itself.
 // If it still tends to grow at the end, the answer may stop short of equilibrium: say so. A single solid
 // left out while it would form (stability index below the insertion threshold) is treated the same way.
+/// Trace polish after a native solve. The IPM steps move a trace species or a trace solid very little, and the stopping test
+/// weighs species by amount, so a trace element can end far from equilibrium while the major elements are right.
+/// Each trace element is solved again on its own, with the potentials of all other elements fixed: its dissolved and sorbed
+/// species follow from its potential, and a pure solid that contains it caps that potential at saturation and takes the rest.
+/// The small change of the major balances is then corrected. The result is kept only if G does not rise and the mass
+/// balance does not get worse. fracTrace: an element is trace below this fraction of the total amount of the system.
+bool TMultiBase::TracePolish( double fracTrace )
+{
+    if( pm.MK || pm.PZ || !( fracTrace > 0. ) || !pm.A || !pm.U || !pm.G || !pm.L1 )
+        return false;
+    const long int N = pm.N, L = pm.L;
+    // Phase totals as the solver left them, put back whenever nothing is kept.
+    const std::vector<double> xfIn( pm.XF, pm.XF + pm.FI ), xfaIn( pm.XFA, pm.XFA + pm.FIs );
+    auto putBackTotals = [&]() { std::copy( xfIn.begin(), xfIn.end(), pm.XF ); std::copy( xfaIn.begin(), xfaIn.end(), pm.XFA ); };
+    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    double tot = 0.;
+    for( long int j = 0; j < L; j++ ) if( pm.X[j] > 0. ) tot += pm.X[j];
+    std::vector<char> trace( (size_t)N, 0 );
+    long int nTrace = 0;
+    for( long int i = 0; i < N; i++ )
+    {
+        const char c = pm.ICC ? pm.ICC[i] : 0;
+        if( c == IC_CHARGE || c == IC_VOLUME || c == IC_HYDROGEN || c == IC_OXYGEN || c == IC_ADDIT || c == IC_SITE ) continue;
+        if( pm.B[i] > 0. && pm.B[i] < fracTrace * tot ) { trace[(size_t)i] = 1; nTrace++; }
+    }
+    if( !nTrace ) { putBackTotals(); return false; }
+
+    // The part of each species' potential that does not depend on its own amount: F_j = C_j + ln x_j (as in
+    // PrimalChemicalPotentials()). kind: 1 = species of a present mixed phase, 2 = pure phase, 0 = not handled.
+    std::vector<double> C( (size_t)L, 0. );
+    std::vector<char> kind( (size_t)L, 0 );
+    std::vector<long int> phOf( (size_t)L, -1 );
+    // A dissolved species that the input switches off (upper limit 0) keeps its amount; it is never solved for.
+    auto heldOut = [&]( long int j ) { return pm.DUL && pm.DUL[j] <= 0. && kind[(size_t)j] != 2; };
+    // The fixed term taken from the solver's potential (non-aqueous species) is read once, before any amount moves.
+    std::vector<double> cFromF( (size_t)L, std::numeric_limits<double>::quiet_NaN() );
+    auto phaseTerms = [&]() {
+    std::fill( kind.begin(), kind.end(), 0 );
+    for( long int k = 0, jb = 0; k < pm.FI; jb += pm.L1[k], k++ )
+    {
+        const long int je = jb + pm.L1[k];
+        for( long int j = jb; j < je; j++ ) phOf[(size_t)j] = k;
+        if( pm.L1[k] == 1 )
+        {   if( pm.PHC[k] != PH_AQUEL && pm.PHC[k] != PH_GASMIX ) { C[(size_t)jb] = pm.G0[jb] + pm.fDQF[jb]; kind[(size_t)jb] = 2; }
+            continue; }
+        const double XF = pm.XF[k];
+        if( !( XF > pm.DSM ) ) continue;
+        const double XFA = ( pm.FIs && k < pm.FIs ) ? pm.XFA[k] : 0.;
+        const bool carrier = ( pm.PHC[k] == PH_AQUEL && XFA >= pm.XwMinM )
+                          || ( ( pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL ) && XFA >= pm.ScMinM );
+        if( pm.PHC[k] == PH_AQUEL && !carrier ) continue;
+        const double logXw = carrier ? log( XFA ) : 0.;
+        double nonLog = 0.;
+        if( carrier && ( k >= pm.FIs || pm.sMod[k][SPHAS_TYP] != SM_AQPITZ ) ) nonLog = 1. - XFA / XF;
+        for( long int j = jb; j < je; j++ )
+        {
+            // F = G + ln x - ln Xw + nonLog (or - ln XF); for a present species take C from F itself.
+            const double Gj = pm.G0[j] + pm.fDQF[j] + pm.lnGmM[j] + pm.lnGam[j];
+            if( pm.DCCW[j] == DC_ASYM_SPECIES && carrier ) { C[(size_t)j] = Gj - logXw + nonLog; kind[(size_t)j] = 1; }
+            else if( pm.DCCW[j] == DC_SYMMETRIC ) { C[(size_t)j] = Gj - log( XF ); kind[(size_t)j] = 1; }
+            // Outside the aqueous phase the activity term can hold more (surface terms): take it from the solver's own
+            // potential of a present species.
+            if( kind[(size_t)j] == 1 && pm.PHC[k] != PH_AQUEL )
+            {
+                if( std::isnan( cFromF[(size_t)j] ) && pm.X[j] > std::min( pm.DcMinM, pm.lowPosNum ) && pm.F[j] != 0. )
+                    cFromF[(size_t)j] = pm.F[j] - log( pm.X[j] );
+                if( !std::isnan( cFromF[(size_t)j] ) ) C[(size_t)j] = cFromF[(size_t)j];
+            }
+            if( heldOut( j ) ) kind[(size_t)j] = 0;
+        }
+    }
+    };
+    phaseTerms();
+    // Which trace elements can be solved this way.
+    std::vector<char> ok( (size_t)N, 0 );
+    std::vector<char> ignored( (size_t)L, 0 );   // absent solids of two trace elements, far from saturation
+    auto mu0 = [&]( long int j ) { double s = 0.; for( long int l = 0; l < N; l++ ) s += pm.U[l] * pm.A[l + j*N]; return s; };
+    std::vector<double> phTrace( (size_t)pm.FI, 0. );
+    for( long int i = 0; i < N; i++ )
+    {
+        if( !trace[(size_t)i] ) continue;
+        bool good = true;
+        for( long int j = 0; j < L && good; j++ )
+        {
+            const double a = pm.A[i + j*N];
+            if( a == 0. || heldOut( j ) ) continue;
+            const bool limited = ( pm.DUL && pm.DUL[j] < 1e6 && pm.DUL[j] > 0. ) || ( pm.DLL && pm.DLL[j] > 0. );
+            if( kind[(size_t)j] == 1 )
+            {   if( limited || !( a > 0. ) ) good = false; else phTrace[(size_t)phOf[(size_t)j]] += pm.X[j]; }
+            else if( kind[(size_t)j] == 2 )
+            {
+                if( limited || !( a > 0. ) ) good = false;
+                bool two = false;   // a solid of two trace elements
+                for( long int l = 0; l < N; l++ )
+                    if( l != i && trace[(size_t)l] && pm.A[l + j*N] != 0. ) two = true;
+                if( pm.DUL && pm.DUL[j] <= 0. ) ignored[(size_t)j] = 2;   // suppressed by the input: never forms
+                else if( two )
+                {   if( pm.X[j] > 0. || mu0( j ) - C[(size_t)j] > -0.5 ) good = false;   // present or near saturation
+                    else ignored[(size_t)j] = 1; }
+            }
+            else if( pm.X[j] > 0. && phOf[(size_t)j] >= 0 && pm.L1[phOf[(size_t)j]] > 1 && pm.XF[phOf[(size_t)j]] > pm.DSM )
+                good = false;   // a species of a present phase that this cannot handle (e.g. the solvent)
+        }
+        ok[(size_t)i] = good;
+    }
+    for( long int k = 0; k < pm.FI; k++ )   // the phase must stay dilute in the trace species
+        if( phTrace[(size_t)k] > 0.05 * pm.XF[k] )
+            for( long int i = 0; i < N; i++ ) if( ok[(size_t)i] )
+                for( long int j = 0; j < L; j++ )
+                    if( phOf[(size_t)j] == k && pm.A[i + j*N] != 0. ) { ok[(size_t)i] = 0; break; }
+    long int nOk = 0;
+    for( long int i = 0; i < N; i++ ) nOk += ok[(size_t)i];
+    if( !nOk ) { putBackTotals(); return false; }
+
+    // An exact copy, to put everything back if the result is not better.
+    std::unique_ptr<TMultiBase> saved( new TMultiBase( node1 ) );
+    saved->set_def();
+    saved->copyMULTI( *this );
+    long int i1, i2; double mbBefore, a1;
+    native_trace_mb_of( pm, pm.X, i1, mbBefore, i2, a1 );
+    const std::vector<double> x0( pm.X, pm.X + L ), u0( pm.U, pm.U + N );
+
+    auto mu = [&]( long int j ) { double s = 0.; for( long int l = 0; l < N; l++ ) s += pm.U[l] * pm.A[l + j*N]; return s; };
+    double maxDu = 0.;
+    long int sweep = 0, outer = 0;
+    for( ; outer < 5; outer++ )
+    {
+    if( outer > 0 )
+    {   TotalPhasesAmounts( pm.X, pm.XF, pm.XFA ); phaseTerms(); }
+    double maxDuOuter = 0.;
+    for( sweep = 0; sweep < 100; sweep++ )
+    {
+        maxDu = 0.;
+        for( long int i = 0; i < N; i++ )
+        {
+            if( !ok[(size_t)i] ) continue;
+            const double ui = pm.U[i];
+            std::vector<long int> S, P;
+            double fixedB = 0.;
+            for( long int j = 0; j < L; j++ )
+            {
+                const double a = pm.A[i + j*N];
+                if( a == 0. ) continue;
+                if( kind[(size_t)j] == 1 ) S.push_back( j );
+                else if( kind[(size_t)j] == 2 && ignored[(size_t)j] ) continue;
+                else if( kind[(size_t)j] == 2 && !( pm.DUL && pm.DUL[j] <= 0. ) ) P.push_back( j );
+                else fixedB += a * pm.X[j];
+            }
+            const double T = pm.B[i] - fixedB;
+            if( !( T > 0. ) ) continue;
+            std::vector<double> base( S.size() );
+            for( size_t q = 0; q < S.size(); q++ )
+            {   const long int j = S[q]; base[q] = mu( j ) - pm.A[i + j*N] * ui - C[(size_t)j]; }
+            auto g = [&]( double u, double* dg ) {
+                double s = 0., d = 0.;
+                for( size_t q = 0; q < S.size(); q++ )
+                {   const double a = pm.A[i + S[q]*N], x = exp( std::min( base[q] + a * u, 700. ) ); s += a * x; d += a * a * x; }
+                if( dg ) *dg = d;
+                return s; };
+            double uCap = 1e300; long int pCap = -1;
+            for( long int p : P )
+            {   const double a = pm.A[i + p*N];
+                const double cap = ( C[(size_t)p] - ( mu( p ) - a * ui ) ) / a;
+                if( cap < uCap ) { uCap = cap; pCap = p; } }
+            double u = ui, y = 0.;
+            if( S.empty() )
+            {   if( pCap < 0 ) continue; u = uCap; y = T / pm.A[i + pCap*N]; }
+            else
+            {
+                for( int it = 0; it < 100; it++ )   // Newton on ln g(u) = ln T; g is increasing in u
+                {   double dg; const double gv = g( u, &dg );
+                    if( !( gv > 0. ) || !( dg > 0. ) ) { u += 5.; continue; }
+                    double du = ( log( T ) - log( gv ) ) * gv / dg;
+                    du = std::max( -5., std::min( 5., du ) );
+                    u += du;
+                    if( fabs( du ) < 1e-13 * std::max( 1., fabs( u ) ) ) break; }
+                if( pCap >= 0 && u > uCap )
+                {   u = uCap; y = std::max( 0., ( T - g( uCap, nullptr ) ) / pm.A[i + pCap*N] ); }
+            }
+            maxDu = std::max( maxDu, fabs( u - ui ) );
+            pm.U[i] = u;
+            for( size_t q = 0; q < S.size(); q++ )
+                pm.X[S[q]] = exp( std::min( base[q] + pm.A[i + S[q]*N] * u, 700. ) );
+            for( long int p : P ) pm.X[p] = ( p == pCap ) ? y : 0.;
+        }
+        maxDuOuter = std::max( maxDuOuter, maxDu );
+        if( maxDu < 1e-12 ) break;
+    }
+    if( maxDuOuter < 1e-10 ) break;
+    }
+    // A species that the solver had left at zero stays at zero unless it now holds a real share of a trace element;
+    // otherwise the next warm start would begin with many more species to carry.
+    for( long int j = 0; j < L; j++ )
+    {
+        if( kind[(size_t)j] != 1 || x0[(size_t)j] != 0. || pm.X[j] == 0. ) continue;
+        bool keep = false;
+        for( long int i = 0; i < N && !keep; i++ )
+            if( ok[(size_t)i] && pm.A[i + j*N] > 0. && pm.A[i + j*N] * pm.X[j] > 1e-6 * pm.B[i] ) keep = true;
+        if( !keep ) pm.X[j] = 0.;
+    }
+    // Close each trace balance exactly (its tolerance is pa_DHB times its own small amount): the remainder goes to the
+    // saturated solid, or else the element's species are scaled.
+    for( int rep = 0; rep < 3; rep++ )
+        for( long int i = 0; i < N; i++ )
+        {
+            if( !ok[(size_t)i] ) continue;
+            double sumS = 0., other = 0.; long int pSat = -1;
+            for( long int j = 0; j < L; j++ )
+            {   const double a = pm.A[i + j*N];
+                if( a == 0. || pm.X[j] == 0. ) continue;
+                if( kind[(size_t)j] == 1 ) sumS += a * pm.X[j];
+                else if( kind[(size_t)j] == 2 && pSat < 0 ) { pSat = j; other += a * pm.X[j]; }
+                else other += a * pm.X[j]; }
+            const double rest = pm.B[i] - sumS - other;
+            if( pSat >= 0 && pm.X[pSat] + rest / pm.A[i + pSat*N] >= 0. ) pm.X[pSat] += rest / pm.A[i + pSat*N];
+            else if( sumS > 0. )
+            {   const double f = ( pm.B[i] - other ) / sumS;
+                if( f > 0. ) for( long int j = 0; j < L; j++ )
+                    if( kind[(size_t)j] == 1 && pm.A[i + j*N] != 0. ) pm.X[j] *= f; }
+        }
+    // An ignored solid must still be undersaturated.
+    bool ignoredOk = true;
+    for( long int j = 0; j < L; j++ ) if( ignored[(size_t)j] == 1 && mu( j ) - C[(size_t)j] > 1e-6 )
+    {   ignoredOk = false;
+        native_trace_decide( "tracepolish-ignored-supersat solid=%s si=%.3e", trace_safe_name( char_array_to_string( pm.SM[j], MAXDCNAME ) ).c_str(), mu( j ) - C[(size_t)j] ); }
+    // Energy change of the moved trace species at fixed phase terms, with the change of the other balances valued at
+    // their potentials: f(x) = x (C + ln x - 1) for a species of a mixed phase, x C for a pure phase.
+    double dGpolish = 0.;
+    for( long int j = 0; j < L; j++ )
+    {
+        if( pm.X[j] == x0[(size_t)j] || !kind[(size_t)j] ) continue;
+        auto f = [&]( double x ) { return kind[(size_t)j] == 2 ? x * C[(size_t)j]
+                                         : ( x > 0. ? x * ( C[(size_t)j] + log( x ) - 1. ) : 0. ); };
+        double db = 0.;
+        for( long int i = 0; i < N; i++ ) if( !ok[(size_t)i] ) db += u0[(size_t)i] * pm.A[i + j*N];
+        dGpolish += f( pm.X[j] ) - f( x0[(size_t)j] ) - db * ( pm.X[j] - x0[(size_t)j] );
+    }
+    // Correct the major balances, which the trace species changed slightly.
+    for( int pass = 0; pass < 3; pass++ )
+    {
+        std::vector<double> r( (size_t)N ), d( (size_t)L, 0. );
+        for( long int i = 0; i < N; i++ ) r[(size_t)i] = pm.B[i];
+        for( long int j = 0; j < L; j++ ) if( pm.X[j] != 0. ) for( long int i = 0; i < N; i++ ) r[(size_t)i] -= pm.A[i + j*N] * pm.X[j];
+        for( long int i = 0; i < N; i++ ) if( ok[(size_t)i] ) r[(size_t)i] = 0.;
+        long int b1, b2; double before, b3; native_trace_mb_of( pm, pm.X, b1, before, b2, b3 );
+        if( !( before > 1e-3 ) ) break;
+        if( !balance_correction_qr( pm, pm.X, N, r, d, -1, false ) ) break;
+        const double sf = balance_correction_step( pm, pm.X, d );
+        if( !( sf > 0. ) ) break;
+        std::vector<double> keep( pm.X, pm.X + L );
+        for( long int j = 0; j < L; j++ ) pm.X[j] += sf * d[(size_t)j];
+        long int c1, c2; double after, c3; native_trace_mb_of( pm, pm.X, c1, after, c2, c3 );
+        if( !( after < before ) ) { std::copy( keep.begin(), keep.end(), pm.X ); break; }
+    }
+    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    // The phase terms were taken from the phases as they were; the result is valid only if each phase is still dilute
+    // in the moved trace species.
+    bool diluteOk = true;
+    {   std::vector<double> phNow( (size_t)pm.FI, 0. );
+        for( long int j = 0; j < L; j++ )
+        {   if( kind[(size_t)j] != 1 || phOf[(size_t)j] < 0 ) continue;
+            for( long int i = 0; i < N; i++ )
+                if( ok[(size_t)i] && pm.A[i + j*N] != 0. ) { phNow[(size_t)phOf[(size_t)j]] += pm.X[j]; break; } }
+        for( long int k = 0; k < pm.FI && diluteOk; k++ )
+            if( phNow[(size_t)k] > 0.05 * pm.XF[k] )
+            {   diluteOk = false;
+                native_trace_decide( "tracepolish-notdilute phase=%s share=%.3e", trace_safe_name( char_array_to_string( pm.SF[k], MAXPHNAME ) ).c_str(),
+                                     pm.XF[k] > 0. ? phNow[(size_t)k] / pm.XF[k] : 1. ); } }
+    long int j1, j2; double mbAfter, a2;
+    native_trace_mb_of( pm, pm.X, j1, mbAfter, j2, a2 );
+    const bool accept = ignoredOk && diluteOk && dGpolish <= 1e-12 * std::max( 1., fabs( pm.FX ) ) && mbAfter <= std::max( mbBefore, 1. );
+    native_trace_decide( "tracepolish-worst ic=%s polished=%d", j1 >= 0 ? trace_safe_name( char_array_to_string( pm.SB[j1], MAXICNAME ) ).c_str() : "-", j1 >= 0 ? (int)ok[(size_t)j1] : -1 );
+    native_trace_decide( "tracepolish ics=%ld outer=%ld sweeps=%ld maxdu=%.3e dG=%.3e mbbefore=%.3e mbafter=%.3e ok=%d",
+                         nOk, outer, sweep, maxDu, dGpolish, mbBefore, mbAfter, accept ? 1 : 0 );
+    if( !accept )
+    {
+        copyMULTIData( *saved, false );
+        putBackTotals();
+        return false;
+    }
+    ipm_logger->debug( "Trace polish: {} trace elements solved again, G changed by {:.3g} RT", nOk, dGpolish );
+    // Nothing moved: put back the exact state, so the result is the same as without the polish.
+    double maxDx = 0.;   // largest share of a polished element's bulk that moved
+    for( long int i = 0; i < N; i++ )
+    {
+        if( !ok[(size_t)i] ) continue;
+        double moved = 0.;
+        for( long int j = 0; j < L; j++ ) moved += fabs( pm.A[i + j*N] * ( pm.X[j] - x0[(size_t)j] ) );
+        maxDx = std::max( maxDx, moved / pm.B[i] );
+    }
+    if( !( maxDx > 1e-9 ) )
+    {
+        copyMULTIData( *saved, false );
+        putBackTotals();
+        return false;
+    }
+    // Update only the values of the moved species and of the polished elements; the rest stays as the solver left it.
+    const double ln10 = log( 10. );
+    double ymPerX = 0.;   // molality per mole in the aqueous phase, from an unmoved solute
+    for( long int j = 0; j < L && ymPerX == 0.; j++ )
+        if( phOf[(size_t)j] == 0 && pm.PHC[0] == PH_AQUEL && j != pm.LO && pm.X[j] == x0[(size_t)j] && pm.X[j] > 0. && pm.Y_m && pm.Y_m[j] > 0. )
+            ymPerX = pm.Y_m[j] / pm.X[j];
+    for( long int j = 0; j < L; j++ )
+    {
+        bool moved = pm.X[j] != x0[(size_t)j];
+        double dmu = 0.;
+        for( long int i = 0; i < N; i++ ) if( pm.A[i + j*N] != 0. && pm.U[i] != u0[(size_t)i] ) { dmu += pm.A[i + j*N] * ( pm.U[i] - u0[(size_t)i] ); moved = true; }
+        if( !moved ) continue;
+        pm.Y[j] = pm.X[j];
+        if( pm.Y_la ) pm.Y_la[j] += dmu / ln10;
+        if( pm.Y_m )
+        {   if( x0[(size_t)j] > 0. ) pm.Y_m[j] *= pm.X[j] / x0[(size_t)j];
+            else if( phOf[(size_t)j] == 0 ) pm.Y_m[j] = pm.X[j] * ymPerX; }
+        if( kind[(size_t)j] == 1 && pm.X[j] > 0. ) pm.F[j] = C[(size_t)j] + log( pm.X[j] );
+        if( kind[(size_t)j] == 2 )
+        {   const long int k = phOf[(size_t)j];
+            pm.Falp[k] = ( mu( j ) - C[(size_t)j] ) / ln10;
+            pm.F[j] = C[(size_t)j]; }
+    }
+    TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
+    // Phase bulk, volume, mass and element molalities follow the new amounts.
+    CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+    pm.FX += dGpolish;
+    return true;
+}
+
+void TMultiBase::ActivityConsistencyCheck()
+{
+    // A species whose activity term was still being smoothed when the IPM loop stopped is not at equilibrium:
+    // its molality times activity coefficient and its activity from the element potentials then differ.
+    // Such species are usually trace species, so the loop's stopping test does not see them.
+    if( pm.MK || pm.PZ || pm.FI < 1 || pm.PHC[0] != PH_AQUEL || !pm.Y_m || !pm.Gamma || !pm.Y_la || !pm.L1
+        || !( pm.XF[0] > pm.DSM ) )
+        return;
+    const double tol = 0.01;      // in log10 units
+    const double mMin = 1e-13;    // molality below which a species is not checked
+    long int nFound = 0, jWorst = -1;
+    double worst = 0.;
+    for( long int j = 0; j < pm.L1[0] && j < pm.L; j++ )
+    {
+        if( j == pm.LO || pm.DCC[j] == DC_AQ_SOLVENT || pm.DCC[j] == DC_AQ_SOLVCOM || pm.DCC[j] == DC_AQ_ELECTRON || !( pm.X[j] > 0. ) || !( pm.Y_m[j] > mMin ) || !( pm.Gamma[j] > 0. ) )
+            continue;
+        if( pm.DUL && pm.DUL[j] < 1e6 && pm.X[j] >= pm.DUL[j] * ( 1. - 1e-9 ) ) continue;   // held at its upper limit
+        if( pm.DLL && pm.DLL[j] > 0. && pm.X[j] <= pm.DLL[j] * ( 1. + 1e-9 ) ) continue;    // held at its lower limit
+        const double dev = fabs( log10( pm.Y_m[j] * pm.Gamma[j] ) - pm.Y_la[j] );
+        if( !( dev > tol ) ) continue;
+        nFound++;
+        if( dev > worst ) { worst = dev; jWorst = j; }
+    }
+    if( nFound == 0 )
+        return;
+    const std::string name = trace_safe_name( char_array_to_string( pm.SM[jWorst], MAXDCNAME ) );
+    native_trace_decide( "actconsist species=%ld worst=%.3e name=%s tol=%.1e", (long)nFound, worst, name.c_str(), tol );
+    // When nothing in the bulk fixes the redox level, the energy does not fix the activity of a species such as H2 or O2.
+    // Only the text changes: the Optima finish still runs.
+    bool redoxNote = false;
+#ifdef USE_OPTIMA_SOLVER
+    if( optima_control_conditions.empty() )
+    {
+        const RedoxFreeCheck rf = CheckRedoxFree();
+        const double e = RedoxShift( rf, jWorst );
+        redoxNote = !std::isnan( e ) && fabs( e ) > 1e-6;
+        if( redoxNote )
+            native_trace_decide( "actconsist-redoxfree name=%s shift=%g", name.c_str(), e );
+    }
+#endif
+    const std::string more = nFound > 1 ? fmt::format( " ({} dissolved species differ by more than {})", nFound, tol ) : std::string();
+    const std::string note = redoxNote
+        ? fmt::format( "The activity of {} differs from its molality times activity coefficient by {:.2g} in log10{}. "
+                       "Nothing in the input fixes the redox level, so the activity of {} is not determined. "
+                       "Set an Eh target or add a redox buffer.", name, worst, more, name )
+        : fmt::format( "The activity of {} differs from its molality times activity coefficient by {:.2g} in log10{}, "
+                       "so the result may stop short of equilibrium. Try HOP or AOP for this system.", name, worst, more );
+    trace_growth_note = trace_growth_stuck ? trace_growth_note + " " + note : note;
+    trace_growth_stuck = true;
+    activity_mismatch = true;
+#ifdef USE_OPTIMA_SOLVER
+    // The Optima finish reports instead; it does not run when a pH or Eh target is set.
+    if( base_param()->NativeOptimaFinish > 0 && optima_control_conditions.empty() ) return;
+#endif
+    gems_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "actconsist" )
+                          ? spdlog::level::warn : spdlog::level::debug, "{}", note );
+}
+
 void TMultiBase::TraceGrowthCheck()
 {
     const long int N = pm.N, L = pm.L;
@@ -2632,7 +3110,8 @@ void TMultiBase::TraceGrowthCheck()
                        nFound > 1 ? fmt::format( " ({} such phases: {})", nFound, listed ) : std::string() );
     native_trace_decide( "tracegrowth phases=%ld worstgain=%.3e tol=%.1e list=%s", (long)nFound, worst, tol, listed.c_str() );
 #ifdef USE_OPTIMA_SOLVER
-    if( base_param()->NativeOptimaFinish > 0 ) return;   // the Optima finish reports instead
+    // The Optima finish reports instead; it does not run when a pH or Eh target is set.
+    if( base_param()->NativeOptimaFinish > 0 && optima_control_conditions.empty() ) return;
 #endif
     gems_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "tracegrowth" )
                           ? spdlog::level::warn : spdlog::level::debug, "{}", trace_growth_note );
@@ -3271,8 +3750,8 @@ STEP_POINT("After FIA");
    native_trace_stage( pm, pa_p, "IPM", "exit", eRet, true );
    if( pa_p->IpmBalanceStep > 0 )
    {
-       native_trace_decide( "balancestep-sum mode=%ld tried=%ld kept=%ld short=%ld mbrqr=%ld traceic=%ld", (long)pa_p->IpmBalanceStep,
-                            (long)s_balTried, (long)s_balKept, (long)s_balShort, (long)s_mbrQrSteps, (long)s_balTraceIC );
+       native_trace_decide( "balancestep-sum mode=%ld tried=%ld kept=%ld short=%ld mbrqr=%ld traceic=%ld elemcut=%ld", (long)pa_p->IpmBalanceStep,
+                            (long)s_balTried, (long)s_balKept, (long)s_balShort, (long)s_mbrQrSteps, (long)s_balTraceIC, (long)s_balElemCut );
        ipm_logger->debug( "Mass-balance step part (mode {}): {} passes, {} kept, {} shortened",
                           (long)pa_p->IpmBalanceStep, s_balTried, s_balKept, s_balShort );
    }
@@ -4260,6 +4739,7 @@ STEP_POINT("FIA Iteration");
         MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
         double res = ResidualMetric();
         int kept = 0;
+        balance_sparse_build( pm );
         for( int pass = 0; pass < 5 && res > 1.; pass++ )
         {
             WeightMultipliers( true );
@@ -4355,8 +4835,10 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     s_ipmQrSortPivot = 0;
     // pa_IpmBalanceStep and pa_IpmJumpAhead for this call.
     s_feasKeep = pa_p->IpmBalanceStep > 0;
+    if( s_feasKeep ) balance_sparse_build( pm );
     s_balTried = s_balKept = s_balShort = 0;
     s_balTraceIC = 0;
+    s_balElemCut = 0;
     s_mbrQrSteps = 0;
     native_trace_decide( "balancestep mode=%ld jumpahead=%ld", (long)pa_p->IpmBalanceStep, (long)pa_p->IpmJumpAhead );
     // pa_PhaseSmoothing: say once per call which damping rule the non-ideal phases get.
@@ -4515,16 +4997,18 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
        // Mode 1 uses the factor kept from the step's own linear system; mode 2 makes its own factor.
        const bool balOwnQr = pa_p->IpmBalanceStep >= 2;
        int balKeptNow = 0;
+       // The residual of the current amounts; a kept pass gives the residual of the next one.
+       std::vector<double> balR;
+       double balRel = -1.;
        for( int feasPass = 0; feasPass < 3 && s_feasKeep && ( balOwnQr || ( s_feasOk && s_feasN == N ) ); feasPass++ )
        {
-           long int fi1, fi2; double frBefore, fa1; native_trace_mb_of( pm, pm.X, fi1, frBefore, fi2, fa1 );
+           const BalanceSparseA& sa = balance_sparse( pm );
+           if( balRel < 0. ) balRel = balance_residual( pm, sa, pm.X, balR );
+           const double frBefore = balRel;
            // Mode 3: as mode 2, but only when the step left the balance outside its own tolerance.
            if( pa_p->IpmBalanceStep >= 3 && !( frBefore > 1. ) ) break;
            std::vector<double> xKeep( pm.X, pm.X + pm.L );
-           std::vector<double> r( (size_t)N ), d( (size_t)pm.L, 0. );
-           for( long int i = 0; i < N; i++ ) r[(size_t)i] = pm.B[i];
-           for( long int j = 0; j < pm.L; j++ )
-               if( pm.X[j] != 0. ) for( long int i = 0; i < N; i++ ) r[(size_t)i] -= pm.A[i + j*pm.N] * pm.X[j];
+           std::vector<double> r( balR.begin(), balR.begin() + N ), d( (size_t)pm.L, 0. );
            if( balOwnQr )
            {
                if( !balance_correction_qr( pm, pm.X, N, r, d ) ) break;
@@ -4558,7 +5042,8 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
            if( sf < 1. ) s_balShort++;
            if( !( sf > 0. ) ) break;
            for( long int j = 0; j < pm.L; j++ ) pm.X[j] += sf * d[(size_t)j];
-           long int fi3, fi4; double frAfter, fa2; native_trace_mb_of( pm, pm.X, fi3, frAfter, fi4, fa2 );
+           const double frAfter = balance_residual( pm, sa, pm.X, balR );
+           balRel = frAfter;
            if( !( frAfter < frBefore ) )
            {   std::copy( xKeep.begin(), xKeep.end(), pm.X ); TotalPhasesAmounts( pm.X, pm.XF, pm.XFA ); break; }
            s_balKept++;

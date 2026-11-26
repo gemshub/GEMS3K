@@ -1,4 +1,4 @@
-# GEMS3K 5.2.2 — glossary
+# GEMS3K 5.2.3 — glossary
 
 These words have one meaning in the [options guide](SOLVER-OPTIONS-GUIDE.md), the
 [solver paths](SOLVER-PATH-GRAPH.md) and the [advanced settings](SOLVER-ADVANCED-SETTINGS.md).
