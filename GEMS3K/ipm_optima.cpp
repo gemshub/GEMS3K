@@ -2188,8 +2188,8 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                 if( regRatio > 0. )
                 {
                     long int p0 = 0;
-                    // a cold AOP solve (not a warm call, a HOP leg or a finish after native) leaves a melt liquid without the floor
-                    const bool coldAopCall = pm.pNP == 0 && !optima_hop_leg && !g_optimaNativeHelper;
+                    // a cold AOP solve (not a warm call, a HOP leg, a finish after native or ROP) leaves a melt liquid without the floor
+                    const bool coldAopCall = pm.pNP == 0 && !optima_hop_leg && !g_optimaNativeHelper && !optima_reference_call;
                     for( long int k = 0; k < pm.FIs; k++ )
                     {
                         const long int p1 = p0 + pm.L1[k];
@@ -2533,6 +2533,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
     optima_dndb.clear(); optima_dndb_rows = optima_dndb_cols = 0;   // no sensitivity is left from an earlier call
     phase_floor_parked.clear();   // set again below only for an accepted answer
     optima_soft_unconverged = false;
+    optima_reference_call = referenceMode;
     zeroed_floor_amount.clear();
     // Disable the IPM-2 chemical-potential smoothing for this call (see
     // optima_disable_smoothing). RAII, so the flag is restored on every exit.
@@ -3492,8 +3493,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     if( regRatio > 0. )
                     {
                         long int p0 = 0;
-                        // a cold AOP solve (not a warm call, a HOP leg or a finish after native) leaves a melt liquid without the floor
-                        const bool coldAopCall = pm.pNP == 0 && !optima_hop_leg && !g_optimaNativeHelper;
+                        // a cold AOP solve (not a warm call, a HOP leg, a finish after native or ROP) leaves a melt liquid without the floor
+                        const bool coldAopCall = pm.pNP == 0 && !optima_hop_leg && !g_optimaNativeHelper && !optima_reference_call;
                         gems3k_timing::Scope timingBlock( gems3k_timing::FdBlock );
                         for( long int k = 0; k < pm.FIs; k++ )
                         {
@@ -4609,6 +4610,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // Optima's iteration count, summed over every solve() this function makes, goes
         // into pm.ITG below; pm.ITF stays 0.
         long int optimaIterTotal = result.iterations + fdCheapIterations + dimReduceIters;
+        const long int sensPrimaryIt = optimaIterTotal;   // a later solve adds to the total: its answer has no dn/db
         // pa_OptimaDryOut: the water ran out - fix every water-phase species at the floor, set the
         // charge row to what those fixed amounts carry (native drops that row once the water is gone),
         // and solve the rest from where the solve stopped.
@@ -5319,7 +5321,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 const int kMaxPhaseSelectLoops = 5;
                 // Same threshold as the final check, so this loop never chases a violation
                 // that check would not report.
-                for( int psLoop = 0; psLoop < kMaxPhaseSelectLoops; psLoop++ )
+                // a cancelled call starts no phase-selection solve
+                for( int psLoop = 0; psLoop < kMaxPhaseSelectLoops && !CalculationCancelled(); psLoop++ )
                 {
                     // Evaluate the assemblage on the current state through the same
                     // pipeline the final check uses (pm.Gamma, pm.Y_la, pm.YF/YFA).
@@ -5844,12 +5847,6 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
         ipm_logger->debug( "CalculateEquilibriumStateOptima: pNP={} referenceMode={} succeeded={} iterations={} nConditions={}",
                            pm.pNP, referenceMode, result.succeeded, result.iterations, R );
-        // dn/db belongs to the primary solve: an answer from a retry gets none
-        if( !optima_dndb.empty() && ( sensPrimaryX.size() != (size_t)state.x.size()
-                                      || !std::equal( sensPrimaryX.begin(), sensPrimaryX.end(), state.x.data() ) ) )
-        {
-            optima_dndb.clear(); optima_dndb_rows = optima_dndb_cols = 0;
-        }
 
         for( long int j = 0; j < L; j++ )
         {
@@ -6275,12 +6272,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     const double pHpub = conditions[k].achievedValue - ln_to_lg * ( std::log( 1000. / mmc ) - kLnFmol );
                     native_trace_decide( "phcosolvent mmc=%.6g ph_target_scale=%.6f ph_published=%.6f", mmc,
                                          conditions[k].achievedValue, pHpub );
-                    if( std::fabs( pHpub - conditions[k].target ) > tol )
-                    {
+                    // the verdict is taken on the published pH
+                    conditions[k].targetMet = std::fabs( pHpub - conditions[k].target ) <= tol;
+                    if( !conditions[k].targetMet )
                         ipm_logger->info( "pH target {}: with the co-solvent the published pH is {:.4f} (solvent molar mass {:.4g} g/mol); "
                                           "the target is reported as not met", conditions[k].target, pHpub, mmc );
-                        conditions[k].targetMet = false;
-                    }
                     conditions[k].achievedValue = pHpub;
                 }
             }
@@ -6547,7 +6543,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         // even if the solver's own stopping test was not met.
         {
             const double tpdAccTol = pa_p->OptimaTpdAccept;   // pa_OptimaTpdAccept; 0 = off
-            if( tpdAccTol > 0. && ( !result.succeeded || !kktOk || !stabilityOk ) && massBalanceBadIC < 0 && allTargetsMet )
+            // a cancelled call is not promoted to success
+            if( tpdAccTol > 0. && !CalculationCancelled() && ( !result.succeeded || !kktOk || !stabilityOk ) && massBalanceBadIC < 0 && allTargetsMet )
             {
                 auto atLo = [&]( long int j ) {
                     return pm.X[j] <= problem.xlower[j] + std::max( dcFloor, problem.xlower[j]*1e-6 ); };
@@ -6933,6 +6930,16 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             }
             setErrorMessage( 21, "W21IPM: Optima solver: ", buf.c_str() );
         }
+        // dn/db belongs to the primary solve: an answer from another solve, or one changed afterwards (trace respread,
+        // Newton finish, floor moves), gets none
+        if( !optima_dndb.empty() )
+        {
+            bool same = optimaIterTotal == sensPrimaryIt && sensPrimaryX.size() >= (size_t)L;
+            // amounts at the floor level are moved by the zeroing of absent phases and do not count
+            for( long int j = 0; j < L && same; j++ )
+                same = std::fabs( pm.Y[j] - sensPrimaryX[(size_t)j] ) <= std::max( 1e-9 * std::fabs( sensPrimaryX[(size_t)j] ), 10. * dcFloor );
+            if( !same ) { optima_dndb.clear(); optima_dndb_rows = optima_dndb_cols = 0; }
+        }
         // Same read-only system-definition check as native's converged answer. Runs while
         // still in pa_DG's internal scale; the check reports real moles itself.
         if( result.succeeded && pm.MK == 0 )
@@ -7188,6 +7195,7 @@ double TMultiBase::CalculateEquilibriumStateHOP( long int& NumIterFIA, long int&
             pm.FX = FXsave;
             for( long int i = 0; i < pm.N; i++ ) pm.B[i] = Bsave[(size_t)i];
             optima_control_conditions = controlsSave;
+            optima_dndb.clear(); optima_dndb_rows = optima_dndb_cols = 0;   // the sensitivity belongs to the discarded Optima answer
             TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
             CalculateActivityCoefficients( LINK_UX_MODE );
             CalculateConcentrations( pm.X, pm.XF, pm.XFA );

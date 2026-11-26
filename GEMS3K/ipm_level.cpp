@@ -270,6 +270,7 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
     std::vector<double> x, y( (size_t)N, 0. ), cost;
     int rounds = 0; long int added = 0, lastAdded = 0;
     bool negSuppressed = false;   // a phase with a negative price was left out only as a near copy of a column
+    bool pricingFailed = false;   // a phase search of the last round stopped on an error
     bool solved = false;
     for( ; rounds < 20; rounds++ )
     {
@@ -283,6 +284,7 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
         for( long int i = 0; i < N; i++ ) pm.U[i] = y[(size_t)i];
         lastAdded = 0;
         negSuppressed = false;
+        pricingFailed = false;
         long int jb = 0;
         for( long int k = 0; k < pm.FIs; k++ )
         {
@@ -293,6 +295,7 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
             {
                 std::vector<double> yb;
                 const double tpd = NativeTpdPhase( k, jb, yb );
+                if( g_tpdTrialThrew ) pricingFailed = true;
                 if( tpd < -tol && tpd > -1e299 )
                 {
                     bool dup = false;
@@ -351,7 +354,7 @@ bool TMultiBase::ColumnGenerationSeed( std::vector<double>& nOut, double tol )
                 for( size_t a = 0; a < cols[c].y.size(); a++ ) dy = std::max( dy, std::fabs( cols[c].y[a] - cols[d].y[a] ) );
                 if( dy > 0.1 ) { g_cgGap = true; break; }
             }
-    g_cgConverged = ( lastAdded == 0 && !negSuppressed );
+    g_cgConverged = ( lastAdded == 0 && !negSuppressed && !pricingFailed );
     g_cgPseudo = nPseudoUsed;
     g_cgDual = y;
     if( g_tpdStrongSearch && base_param()->TpdStrongBasins > 0 )

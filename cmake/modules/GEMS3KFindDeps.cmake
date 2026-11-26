@@ -23,6 +23,7 @@ if(USE_OPTIMA_SOLVER)
   # GEMS3K needs the modified Optima: its Trace.hpp header and the jumpahead option.
   include(CheckCXXSourceCompiles)
   set(CMAKE_REQUIRED_LIBRARIES Optima::Optima)
+  unset(GEMS3K_OPTIMA_IS_MODIFIED CACHE)   # checked again on every configure: Optima_DIR can change
   check_cxx_source_compiles("
     #include <Optima/Optima.hpp>
     #include <Optima/Trace.hpp>

@@ -358,6 +358,11 @@ void TMultiBase::multi_realloc( char PAalp, char PSigm )
     if( pm.N < 2 || pm.L < 2 || pm.FI < 1 )
         Error( "Multi", "pm.N < 2 || pm.L < 2 || pm.FI < 1" );
 
+    // The phase models keep pointers into the arrays allocated below, so they are made again
+    Free_TSolMod();
+    Free_TSorpMod();
+    Free_TKinMet();
+
     // Part 1
     // need  always to alloc vectors
     pm.L1 = new long int[pm.FI];

@@ -106,8 +106,9 @@ TNode::TNode( const TNode& otherNode )
     multi_ptr()->copyMULTI( *otherNode.multi_base );
     // the targets go with the copy: the registered conditions and which of them came from the DBR
 #ifdef USE_OPTIMA_SOLVER
-    {   // a pH or Eh condition reads the temperature and settings of its own node, so it is made again for the copy
-        std::vector<EqControlCondition> conds = otherNode.multi_base->GetControlConditions();
+    // a pH or Eh condition reads the temperature and settings of its own node, so it is made again for the copy;
+    // this holds for the active conditions and for the program-set ones a DBR target has put aside
+    auto rebind = [this]( std::vector<EqControlCondition> conds ) {
         for( auto& c : conds )
         {
             if( c.name != "pH" && c.name != "Eh" )
@@ -120,16 +121,19 @@ TNode::TNode( const TNode& otherNode )
             c.fixedGradientFn = fresh.fixedGradientFn;
             c.achievedValueFn = fresh.achievedValueFn;
         }
-        multi_ptr()->RestoreControlConditions( conds );
-    }
+        return conds; };
+    apiTarget_pH = rebind( otherNode.apiTarget_pH );
+    apiTarget_Eh = rebind( otherNode.apiTarget_Eh );
+    multi_ptr()->RestoreControlConditions( rebind( otherNode.multi_base->GetControlConditions() ) );
+#else
+    apiTarget_pH = otherNode.apiTarget_pH;
+    apiTarget_Eh = otherNode.apiTarget_Eh;
 #endif
     titrEntered_ = otherNode.titrEntered_;
     titrSolved_ = otherNode.titrSolved_;
     dbrTarget_pH = otherNode.dbrTarget_pH;
     dbrTarget_Eh = otherNode.dbrTarget_Eh;
     dbrTargetWarned = otherNode.dbrTargetWarned;
-    apiTarget_pH = otherNode.apiTarget_pH;
-    apiTarget_Eh = otherNode.apiTarget_Eh;
 
     // copy intervals for minimizatiom
     pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
@@ -810,6 +814,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             multi_ptr()->RestoreControlConditions( pool[(size_t)bi].cc );
             if( !targetCall ) setB( b0 );   // a target answer keeps its own titrated bulk
             CNode->dt = dt0;
+            SyncMultiWithDataBr();   // a later warm start begins from the answer returned, not from the last attempt
             result = ranMode + 2;
             CNode->NodeStatusCH = result;
             rescueStep = 6;
@@ -854,6 +859,8 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
         const long int capNudges = capPa->OptimaCapNudges;
         // the cap is lifted on every exit, also when an allocation or a solve throws
         struct CapLift { ~CapLift() { g_optimaIterBudget = -1; g_optimaCapAllowance = 0; g_optimaCapCall = false; } } capLift;
+        // the bulk as entered: a failed pH or Eh attempt leaves its titrated bulk in the DATABR
+        const std::vector<double> bEntered( CNode->bIC, CNode->bIC + CSD->nICb );
         g_optimaCapCall = true;
         g_optimaIterBudget = cap;
         g_optimaCapAllowance = cap / 2;
@@ -870,7 +877,7 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
             dbr_dch_api::databr_realloc( CSD, failed );
             { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
             const std::string failedError = ipmlog_error;
-            const std::vector<double> b0( CNode->bIC, CNode->bIC + nIC );
+            const std::vector<double>& b0 = bEntered;
             long int result = st;
             bool recovered = false;
             for( long int n = 0; n < capNudges && !recovered; n++ )
@@ -900,9 +907,10 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
                     total += CNode->IterDone;
                     bool keep = true;
                     if( warm != OK_GEM_SOP && warm != OK_GEM_AOP )
-                    {   // keep the nudged answer, reported at the exact composition, if it balances that composition
+                    {   // keep the nudged answer, reported at the exact composition, if it balances that composition;
+                        // a pH or Eh target answer has its own titrated bulk, so it cannot be checked that way and is not kept
                         double worstRel = 0.;
-                        keep = NudgedAnswerBalances( nudgedOk, b0, worstRel );
+                        keep = multi_ptr()->GetControlConditions().empty() && NudgedAnswerBalances( nudgedOk, b0, worstRel );
                         if( keep )
                         {
                             databr_copy( nudgedOk );
@@ -1045,6 +1053,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         // Only a quick try that finished within its cap counts; one cut at the cap goes to the normal solve,
         // unless it ended OK and no missing phase would form (pa_OptimaFastAcceptCut).
         bool fastCut = ( used >= budgetSet );
+        bool screenFailed = false;   // a phase search of the check below stopped on an error
         if( fastCut && fast == OK_GEM_AOP && saved.OptimaFastAcceptCut > 0 )
         {
             long int wk = -1;
@@ -1067,6 +1076,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
                 g_tpdStrongSearch = false;
                 twinDrive = std::min( twinDrive, g_tpdTrialThrew ? -1e300 : td );   // a failed search counts as a drive
             }
+            screenFailed = worst <= -1e299 || twinDrive <= -1e299;
             const bool keep = !( worst < -1e-6 ) && twinsPresent < 2 && !( twinsPresent > 0 && twinDrive < -1e-10 );
             native_trace_decide( "fastcutaccept keep=%d worst=%.3e phase=%ld twins=%ld twindrive=%.3e", keep ? 1 : 0, worst, wk,
                                  twinsPresent, twinDrive );
@@ -1081,7 +1091,8 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
             return fast;
         }
         // the quick answer can be compared by energy only at the bulk that was entered (no pH or Eh target)
-        if( fast == OK_GEM_AOP && multi_ptr()->GetControlConditions().empty() )
+        // and only when its phase check did not stop on an error
+        if( fast == OK_GEM_AOP && !screenFailed && multi_ptr()->GetControlConditions().empty() )
         {
             fastAnswer = new DATABR;
             dbr_dch_api::databr_reset( fastAnswer, 1 );
