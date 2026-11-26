@@ -1405,6 +1405,16 @@ bool TNode::NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b,
         traceB *= classRule;
     }
     const double absCls = ( dtExp >= 2. ) ? pow( 10., -dtExp ) : pmm->DHBM * 1e5;
+    // The solver applies the absolute cutoffs to the rescaled system (pa_DG): its scale factor is pa_DG over the sum of the
+    // element amounts (SystemTotalMolesIC()), so a residual here is multiplied by the same factor before those comparisons.
+    double scale = 1.;
+    if( multi_ptr()->base_param()->DG > 1e-5 )
+    {
+        double sumB = 0.;
+        for( long int i = 0; i < CSD->nICb; i++ )
+            if( CSD->ccIC[ CSD->xic[i] ] != IC_CHARGE ) sumB += b[(size_t)i];
+        if( sumB > 0. ) scale = multi_ptr()->base_param()->DG / sumB;
+    }
     bool ok = true;
     for( long int i = 0; i < CSD->nICb; i++ )
     {
@@ -1417,12 +1427,13 @@ bool TNode::NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b,
         const double a = fabs( c ), bar = b[(size_t)i] * pmm->DHBM;
         const double r = bar > 0. ? a / bar : ( a > 0. ? 1e300 : 0. );
         worstRel = std::max( worstRel, r );
+        const double aScaled = a * scale;   // the residual in the solver's units, for the absolute cutoffs
         if( classRule > 0. )
         {
-            if( b[(size_t)i] < traceB ? ( r > 1. ) : ( a > absCls ) )
+            if( b[(size_t)i] < traceB ? ( r > 1. ) : ( aScaled > absCls ) )
                 ok = false;
         }
-        else if( !multi_ptr()->base_param()->DT ? ( r > 1. ) : ( r > 1. && a > absCut ) )
+        else if( !multi_ptr()->base_param()->DT ? ( r > 1. ) : ( r > 1. && aScaled > absCut ) )
             ok = false;
     }
     return ok;
