@@ -2929,9 +2929,22 @@ bool TMultiBase::TracePolish( double fracTrace )
         if( !( after < before ) ) { std::copy( keep.begin(), keep.end(), pm.X ); break; }
     }
     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    // The phase terms were taken from the phases as they were; the result is valid only if each phase is still dilute
+    // in the moved trace species.
+    bool diluteOk = true;
+    {   std::vector<double> phNow( (size_t)pm.FI, 0. );
+        for( long int j = 0; j < L; j++ )
+        {   if( kind[(size_t)j] != 1 || phOf[(size_t)j] < 0 ) continue;
+            for( long int i = 0; i < N; i++ )
+                if( ok[(size_t)i] && pm.A[i + j*N] != 0. ) { phNow[(size_t)phOf[(size_t)j]] += pm.X[j]; break; } }
+        for( long int k = 0; k < pm.FI && diluteOk; k++ )
+            if( phNow[(size_t)k] > 0.05 * pm.XF[k] )
+            {   diluteOk = false;
+                native_trace_decide( "tracepolish-notdilute phase=%s share=%.3e", trace_safe_name( char_array_to_string( pm.SF[k], MAXPHNAME ) ).c_str(),
+                                     pm.XF[k] > 0. ? phNow[(size_t)k] / pm.XF[k] : 1. ); } }
     long int j1, j2; double mbAfter, a2;
     native_trace_mb_of( pm, pm.X, j1, mbAfter, j2, a2 );
-    const bool accept = ignoredOk && dGpolish <= 1e-12 * std::max( 1., fabs( pm.FX ) ) && mbAfter <= std::max( mbBefore, 1. );
+    const bool accept = ignoredOk && diluteOk && dGpolish <= 1e-12 * std::max( 1., fabs( pm.FX ) ) && mbAfter <= std::max( mbBefore, 1. );
     native_trace_decide( "tracepolish-worst ic=%s polished=%d", j1 >= 0 ? trace_safe_name( char_array_to_string( pm.SB[j1], MAXICNAME ) ).c_str() : "-", j1 >= 0 ? (int)ok[(size_t)j1] : -1 );
     native_trace_decide( "tracepolish ics=%ld outer=%ld sweeps=%ld maxdu=%.3e dG=%.3e mbbefore=%.3e mbafter=%.3e ok=%d",
                          nOk, outer, sweep, maxDu, dGpolish, mbBefore, mbAfter, accept ? 1 : 0 );
