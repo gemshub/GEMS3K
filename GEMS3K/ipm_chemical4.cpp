@@ -83,7 +83,7 @@ void TMultiBase::RunKineticsStep()
     const bool coldAmounts = kinmWillRun && !pm.pNP;
     // The concentrations and ionic strength likewise: a warm setup recomputes them from the amounts
     // (CalculateConcentrations()), a cold one keeps the previous solve's, so the cold call recomputes them here.
-    std::vector<double> coldX, coldXF, coldXFA, coldFVOL, coldFWGT;
+    std::vector<double> coldX, coldXF, coldXFA, coldFVOL, coldFWGT, coldYla;
     double coldPH = 0., coldPE = 0., coldEH = 0., coldIC = 0.;
     if( coldAmounts )
     {
@@ -96,6 +96,13 @@ void TMultiBase::RunKineticsStep()
         for( long int j = 0; j < pm.L; j++ ) pm.X[j] = pm.Y[j];
         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
         CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+        // CalculateConcentrations() takes the activities from the element potentials, which belong to the previous solve;
+        // the rate law gets those of the dissolved species from the handed-in molalities instead, as the pH below
+        coldYla.assign( pm.Y_la, pm.Y_la + pm.L );
+        if( pm.FIs > 0 && pm.PHC[0] == PH_AQUEL )
+            for( long int j = 0; j < pm.L1[0]; j++ )
+                if( pm.DCC[j] != DC_AQ_SOLVENT && pm.Y_m[j] > 0. && pm.Gamma[j] > 0. )
+                    pm.Y_la[j] = log10( pm.Y_m[j] * pm.Gamma[j] );
         native_trace_decide( "kincold amounts=handed-in IC=%.4e IC_before=%.4e", pm.IC, coldIC );
     }
     // pH for the rate law, in every kinetic call: CalculateConcentrations() takes it from the dual potentials,
@@ -122,6 +129,7 @@ void TMultiBase::RunKineticsStep()
             for( long int k = 0; k < pm.FIs; k++ ) pm.XFA[k] = coldXFA[(size_t)k];
             for( long int k = 0; k < pm.FI; k++ ) pm.FVOL[k] = coldFVOL[(size_t)k];
             for( long int k = 0; k < pm.FI; k++ ) pm.FWGT[k] = coldFWGT[(size_t)k];
+            for( long int j = 0; j < pm.L && (size_t)j < coldYla.size(); j++ ) pm.Y_la[j] = coldYla[(size_t)j];
             pm.pH = coldPH; pm.pe = coldPE; pm.Eh = coldEH; pm.IC = coldIC;
         }
         if( kinPHset && !coldAmounts )

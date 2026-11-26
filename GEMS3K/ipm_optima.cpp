@@ -93,6 +93,7 @@ static thread_local bool g_lvlShortcut = false;
 // The leveled answer holds mixed phases: start from it, but solve it the ordinary way.
 static thread_local bool g_lvlCgStart = false;
 extern thread_local bool g_tpdStrongSearch;   // defined in ipm_main.cpp
+extern thread_local bool g_tpdTrialThrew;     // defined in ipm_main.cpp
 // start of the current Optima call: pa_OptimaMaxSeconds covers the pre-solve and the full solve together
 static thread_local std::chrono::steady_clock::time_point g_optimaCallStart = std::chrono::steady_clock::now();
 // inside NativeOptimaFinish() or NativeOptimaRescue(): a native-mode call, so no pe 4 target is added (pa_OptimaRedoxFree = 2)
@@ -4709,7 +4710,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 for( long int k : heldPh )
                 {
                     std::vector<double> yb;
-                    pinTpd = std::min( pinTpd, NativeTpdPhase( k, phStart[(size_t)k], yb ) );
+                    const double t = NativeTpdPhase( k, phStart[(size_t)k], yb );
+                    pinTpd = std::min( pinTpd, g_tpdTrialThrew ? -1e300 : t );   // a failed search keeps nothing held
                 }
                 // a solid mixture that was already absent is checked too: the held solve never looked at it
                 for( long int k = 0; k < pm.FIs; k++ )
@@ -4717,7 +4719,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         && std::find( heldPh.begin(), heldPh.end(), k ) == heldPh.end() )
                     {
                         std::vector<double> yb;
-                        pinTpd = std::min( pinTpd, NativeTpdPhase( k, phStart[(size_t)k], yb ) );
+                        const double t = NativeTpdPhase( k, phStart[(size_t)k], yb );
+                        pinTpd = std::min( pinTpd, g_tpdTrialThrew ? -1e300 : t );
                     }
                 g_tpdStrongSearch = strongWas;
             }
@@ -4769,7 +4772,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         && ph != PH_SORPTION && ph != PH_POLYEL && ph != PH_ADSORPT && ph != PH_IONEX )
                     {
                         std::vector<double> yb;
-                        const double tpd = NativeTpdPhase( k, jb, yb );
+                        double tpd = NativeTpdPhase( k, jb, yb );
+                        if( g_tpdTrialThrew ) tpd = -1e300;   // a failed search does not accept the stop point
                         tNtpd++;
                         if( tpd < tTpd ) { tTpd = tpd; tTpdPh = k; }
                     }
@@ -4784,7 +4788,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     long int jb = 0;
                     for( long int q = 0; q < k; q++ ) jb += pm.L1[q];
                     std::vector<double> yb;
-                    const double tpd = NativeTpdPhase( k, jb, yb );
+                    double tpd = NativeTpdPhase( k, jb, yb );
+                    if( g_tpdTrialThrew ) tpd = -1e300;
                     tNtpd++;
                     if( tpd < tTpd ) { tTpd = tpd; tTpdPh = k; }
                 }
@@ -5938,7 +5943,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                     finishTrace = true;
         }
         // A finish already tried on this same failed end point is not repeated.
-        if( pa_p->OptimaFinish > 0 && ( !result.succeeded || finishTrace ) && R == 0
+        if( pa_p->OptimaFinish > 0 && ( !result.succeeded || finishTrace ) && R == 0 && !CalculationCancelled()
             && !( finishFirstFailed && !result.succeeded ) )
         {
             std::vector<double> xlo( (size_t)L ), xhi( (size_t)L );
@@ -6973,7 +6978,8 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         RescaleSystemFromInternal( ScFact );
 
     // pa_OptimaTwinLabel: name the copies of one solid solution by their major end-members
-    OptimaTwinLabel();
+    // a swap of twin copies reorders the species amounts; the sensitivities would no longer match them
+    if( OptimaTwinLabel() > 0 ) { optima_dndb.clear(); optima_dndb_rows = optima_dndb_cols = 0; }
 
     // Store the total Gibbs energy in pm.FX, which packDataBr() publishes as DATABR.Gs.
     // Done after RescaleSystemFromInternal() (which divides pm.FX by ScFact) and after every

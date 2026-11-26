@@ -4848,8 +4848,7 @@ STEP_POINT("FIA Iteration");
             TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
             if( pm.PD == 2 )
                 CalculateActivityCoefficients( LINK_UX_MODE);
-            if( iRet == 1 )
-                iRet = 0;
+            iRet = 0;   // a converged repair is a success, whatever an earlier step reported
             native_trace_decide( "mbr-qr-finish-ok from=%ld", (long)WhereCalledFrom );
             native_trace_mbr_exit( pm, pa_p, "converged_repair", WhereCalledFrom, pa_p->DP, iRet, trRestored );
             return iRet;
