@@ -684,7 +684,7 @@ inline long int optima_multisite_phase_count( char (*sMod)[8], long int FIs )
 /// with identical stoichiometry and G0 (interchangeable twins), which an interior-point
 /// method approaches only asymptotically; stopping early lets the phase-selection and
 /// extinction steps resolve that. There is no "off" encoding: to disable it on a
-/// multisite system, set a cap larger than pa_IIM.
+/// multisite system, set a cap larger than the iteration limit of the Optima attempt (at least 2000).
 /// `warmLeg` is pm.pNP != 0. AUTO returns the short cap there; an explicit setting
 /// applies to both legs.
 inline long int optima_earlystability_at( long int configured, long int nMultisitePhases,
@@ -1660,6 +1660,8 @@ protected:
     bool optima_hop_leg = false;
     /// The last Optima call stopped without converging and gave a soft failure (pa_DW = 0).
     bool optima_soft_unconverged = false;
+    /// The current Optima call is the reference setup (ROP).
+    bool optima_reference_call = false;
     /// Scale factor of this node's previous solve (native or Optima); 0 before the first one.
     double prev_scfact = 0.;
 

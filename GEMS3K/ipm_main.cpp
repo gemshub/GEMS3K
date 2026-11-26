@@ -48,6 +48,7 @@
 #include <cmath>
 
 extern thread_local unsigned long g_balanceQrEpoch;   // defined below
+extern thread_local bool g_cgConverged;   // ipm_level.cpp: the last column generation priced every phase
 
 // Thread-safe logger to stdout with colors
 std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = gems3k_logger("ipm");
@@ -1096,6 +1097,7 @@ double TMultiBase::CertCurvMin( long int& worstPhase )
                 const double Xi = Xsave[(size_t)jc];
                 const double h = fabs(Xi) * 1e-7;
                 if( !( h > 0. ) ) continue;
+                smoothPrevD_ = smoothKeep.d; smoothPrevIT_ = smoothKeep.it;   // every column starts from the same smoothing history
                 pm.X[jc] = Xi + h;
                 perturbed = true;
                 TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
@@ -2006,9 +2008,19 @@ static void native_trace_mb_of( const MULTI& pm, const double* amt,
 }
 /// True if some element fails its balance test. With an absolute cutoff, an element fails only if it is
 /// outside both its relative tolerance and the cutoff; both tests apply to the same element.
-static bool mb_some_ic_fails( const MULTI& pm, const double* amt, bool useAbs, double absCut )
+/// With pa_MbClassRule > 0 (classRule), the test of the refinement is used instead: a trace element (below classRule
+/// times the largest element) keeps the relative test, a major one only the absolute cutoff of the class rule.
+static bool mb_some_ic_fails( const MULTI& pm, const double* amt, bool useAbs, double absCut, double classRule = 0., double dt = 0. )
 {
     const long int Z = pm.N - pm.E;
+    double traceB = 0., absCls = 0.;
+    if( classRule > 0. )
+    {
+        for( long int i = 0; i < Z; i++ ) traceB = std::max( traceB, pm.B[i] );
+        traceB *= classRule;
+        const double e = fabs( dt );
+        absCls = ( e >= 2. ) ? pow( 10., -e ) : pm.DHBM * 1e5;
+    }
     for( long int i = 0; i < Z; i++ )
     {
         double c = pm.B[i];
@@ -2017,6 +2029,12 @@ static bool mb_some_ic_fails( const MULTI& pm, const double* amt, bool useAbs, d
         const double a = fabs( c );
         const double bar = pm.B[i] * pm.DHBM;
         const bool relOut = bar > 0. ? a > bar : a > 0.;
+        if( classRule > 0. )
+        {
+            if( pm.B[i] < traceB ? relOut : a > absCls )
+                return true;
+            continue;
+        }
         if( relOut && ( !useAbs || a > absCut ) )
             return true;
     }
@@ -2216,10 +2234,10 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
     {
         const long int j = piv[(size_t)c];
         const double x = amt[j];
-        if( x + dy[(size_t)c] < 0. ) { dy[(size_t)c] = -x; nClampedPass++; }
-        // a species also stays inside its own limits when it starts inside them
+        // the lower bound is 0, or the species' own lower limit when it starts at or above it; the upper limit likewise
+        const double lo = ( pm.DLL && pm.DLL[j] > 0. && x >= pm.DLL[j] ) ? pm.DLL[j] : 0.;
+        if( x + dy[(size_t)c] < lo ) { dy[(size_t)c] = lo - x; nClampedPass++; }
         else if( pm.DUL && x <= pm.DUL[j] && x + dy[(size_t)c] > pm.DUL[j] ) { dy[(size_t)c] = pm.DUL[j] - x; nClampedPass++; }
-        else if( pm.DLL && pm.DLL[j] > 0. && x >= pm.DLL[j] && x + dy[(size_t)c] < pm.DLL[j] ) { dy[(size_t)c] = pm.DLL[j] - x; nClampedPass++; }
     }
 
     // the charge residual before this pass; a clamped pass no longer solves the charge row exactly
@@ -3700,7 +3718,7 @@ FORCED_AIA:
        const double absCut = ( dtExp < 2. ) ? pm.DHBM : pow( 10., -dtExp );
        // Same per-IC rule the convergence branches apply: with DT == 0 only the
        // relative test exists; with DT != 0 an IC must exceed BOTH.
-       bool fails = mb_some_ic_fails( pm, pm.X, base_param()->DT != 0, absCut );
+       bool fails = mb_some_ic_fails( pm, pm.X, base_param()->DT != 0, absCut, base_param()->MbClassRule, (double)base_param()->DT );
        // pa_MbReproject: try to repair the state before reporting it. Restores pm.X unless the
        // worst relative residual strictly improves.
        if( fails && iRel >= 0 && base_param()->MbReproject )
@@ -3708,7 +3726,7 @@ FORCED_AIA:
            if( MassBalanceReproject( pm.X ) )
            {
                native_trace_mb_of( pm, pm.X, iRel, rel, iAbs, absr );
-               fails = mb_some_ic_fails( pm, pm.X, base_param()->DT != 0, absCut );
+               fails = mb_some_ic_fails( pm, pm.X, base_param()->DT != 0, absCut, base_param()->MbClassRule, (double)base_param()->DT );
            }
        }
 
@@ -4308,11 +4326,12 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
                 {
                     for( j = 0; j < pm.Ls; j++ ) if( nCg[(size_t)j] > 0. ) inSoln++;
                     for( j = 0; j < pm.L; j++ ) pm.Y[j] = nCg[(size_t)j];
-                    // A leveled solution without mixed-phase members shows they cannot form; leave them out.
-                    lvlLeaveOut = ( pa_p->IpmLevelStart >= 2 && inSoln == 0 );
+                    // A leveled solution without mixed-phase members shows they cannot form; leave them out, but only
+                    // when every phase search finished and none prices below the solution (a feasible start alone shows nothing).
+                    lvlLeaveOut = ( pa_p->IpmLevelStart >= 2 && inSoln == 0 && g_cgConverged );
                     g_ipmLevelUsed = true;
                 }
-                native_trace_decide( "natlvl used=%d insoln=%ld leftout=%d outside=%ld", cgOk ? 1 : 0, inSoln, lvlLeaveOut ? 1 : 0, outside );
+                native_trace_decide( "natlvl used=%d insoln=%ld leftout=%d outside=%ld priced=%d", cgOk ? 1 : 0, inSoln, lvlLeaveOut ? 1 : 0, outside, g_cgConverged ? 1 : 0 );
                 ipm_logger->debug( "Native start from the leveled solution: used={} mixed-phase members={} left out={}",
                                    cgOk, inSoln, lvlLeaveOut );
             }

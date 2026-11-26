@@ -610,7 +610,7 @@ try{
             break;
         }
   }
-  catch( TError& xcpt )
+  catch( ... )
   {
       // a failed solve leaves no answer to compare with, so the next call counts as a changed input
       prevBulkMol_.clear();
@@ -662,6 +662,14 @@ void TMultiBase::ScaleSystemToInternal(  double ScFact )
 {
  long int i, j, k;
 
+  // the snapshots are allocated first, so a failed allocation leaves the state unscaled
+  DUL_preScale_.assign( (size_t)pm.L, 0. );
+  DUL_postScale_.assign( (size_t)pm.L, 0. );
+  DLL_preScale_.assign( (size_t)pm.L, 0. );
+  DLL_postScale_.assign( (size_t)pm.L, 0. );
+  PUL_preScale_.assign( (size_t)pm.FIs, 0. );
+  PUL_postScale_.assign( (size_t)pm.FIs, 0. );
+
   pm.SizeFactor = ScFact;
   pm.MBX *= ScFact;
   pm.FitVar[0] *= ScFact;  // added: bugfix by DK 31.05.2010
@@ -673,10 +681,6 @@ void TMultiBase::ScaleSystemToInternal(  double ScFact )
 
   // Record the pre-scale value and the value this call leaves, per index, so
   // RescaleSystemFromInternal() replays this decision (see DUL_preScale_).
-  DUL_preScale_.assign( (size_t)pm.L, 0. );
-  DUL_postScale_.assign( (size_t)pm.L, 0. );
-  DLL_preScale_.assign( (size_t)pm.L, 0. );
-  DLL_postScale_.assign( (size_t)pm.L, 0. );
   for( j=0; j<pm.L; j++ )
   {
     DUL_preScale_[(size_t)j] = pm.DUL[j];
@@ -714,8 +718,6 @@ void TMultiBase::ScaleSystemToInternal(  double ScFact )
     pm.FWGT[k] *= ScFact;
   }
 
-  PUL_preScale_.assign( (size_t)pm.FIs, 0. );
-  PUL_postScale_.assign( (size_t)pm.FIs, 0. );
   for( k=0; k<pm.FIs; k++ )
   {
       pm.XFA[k] *= ScFact;
@@ -1039,6 +1041,7 @@ double TMultiBase::HelmholtzEnergy( double x )
 {
     pm.P = x;
     DC_LoadThermodynamicData(); // from lookup arrays
+    g_balanceQrEpoch++;   // the reload can rewrite pm.A
     GibbsEnergyMinimization();
     return( pm.VXc - pm.VX_ ); // VXc current value, VX_ value from key
 }
@@ -1060,6 +1063,7 @@ double TMultiBase::InternalEnergy( double TC, double P )
     pm.P = P;
     pm.TC = TC;
     DC_LoadThermodynamicData(); // from lookup arrays
+    g_balanceQrEpoch++;   // the reload can rewrite pm.A
     GibbsEnergyMinimization();
     return( (pm.VXc - pm.VX_)+(pm.SXc - pm.SX_) ); // VXc current value, VX_ value from key
 }

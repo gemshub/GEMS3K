@@ -83,7 +83,7 @@ void TMultiBase::RunKineticsStep()
     const bool coldAmounts = kinmWillRun && !pm.pNP;
     // The concentrations and ionic strength likewise: a warm setup recomputes them from the amounts
     // (CalculateConcentrations()), a cold one keeps the previous solve's, so the cold call recomputes them here.
-    std::vector<double> coldX, coldXF, coldXFA, coldFVOL;
+    std::vector<double> coldX, coldXF, coldXFA, coldFVOL, coldFWGT;
     double coldPH = 0., coldPE = 0., coldEH = 0., coldIC = 0.;
     if( coldAmounts )
     {
@@ -91,6 +91,7 @@ void TMultiBase::RunKineticsStep()
         coldXF.assign( pm.XF, pm.XF + pm.FI );
         coldXFA.assign( pm.XFA, pm.XFA + pm.FIs );
         coldFVOL.assign( pm.FVOL, pm.FVOL + pm.FI );
+        coldFWGT.assign( pm.FWGT, pm.FWGT + pm.FI );
         coldPH = pm.pH; coldPE = pm.pe; coldEH = pm.Eh; coldIC = pm.IC;
         for( long int j = 0; j < pm.L; j++ ) pm.X[j] = pm.Y[j];
         TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
@@ -120,6 +121,7 @@ void TMultiBase::RunKineticsStep()
             for( long int k = 0; k < pm.FI; k++ ) pm.XF[k] = coldXF[(size_t)k];
             for( long int k = 0; k < pm.FIs; k++ ) pm.XFA[k] = coldXFA[(size_t)k];
             for( long int k = 0; k < pm.FI; k++ ) pm.FVOL[k] = coldFVOL[(size_t)k];
+            for( long int k = 0; k < pm.FI; k++ ) pm.FWGT[k] = coldFWGT[(size_t)k];
             pm.pH = coldPH; pm.pe = coldPE; pm.Eh = coldEH; pm.IC = coldIC;
         }
         if( kinPHset && !coldAmounts )

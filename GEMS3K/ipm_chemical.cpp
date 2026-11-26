@@ -1578,8 +1578,9 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                    budgetSized = true;
                }
                if( L1k > 1 )
-                  DC_RaiseZeroedOff( jb, jb+L1k, k );
-               pm.Y[jb] = insAmt; // pa_DFYs for a major phase, the composition ceiling for a trace one
+                  DC_RaiseZeroedOff( jb, jb+L1k, k );   // a mixed phase keeps the seeds of its end-members
+               else
+                  pm.Y[jb] = insAmt; // pa_DFYs for a major phase, the composition ceiling for a trace one
                DCinserted += L1k;
                PHinserted++;
                kfr = k;
@@ -1868,7 +1869,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
         std::vector<double> phY( (size_t)pm.FI, 0. );
         {   long int j0 = 0;
             for( long int k0 = 0; k0 < pm.FI; j0 += pm.L1[k0], k0++ )
-                for( long int q = j0; q < j0 + pm.L1[k0]; q++ ) { phOf[(size_t)q] = k0; phY[(size_t)k0] += pm.Y[q]; } }
+                for( long int q = j0; q < j0 + pm.L1[k0]; q++ ) phOf[(size_t)q] = k0; }
         long int jf = 0;
         for( long int kf = 0; kf < pm.FI; jf += pm.L1[kf], kf++ )
         {
@@ -1894,6 +1895,9 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                 ok = a > 0. && pm.L1[kj] > 1 && pm.PHC[kj] != PH_SORPTION && pm.PHC[kj] != PH_POLYEL
                      && !( pm.DUL[j] < 1e6 ) && !( pm.DLL[j] > 0. );
                 inPh[(size_t)kj] += pm.Y[j]; }
+            // the phase totals from the current amounts: an earlier fill has already lowered some of them
+            std::fill( phY.begin(), phY.end(), 0. );
+            for( long int q = 0; q < pm.L; q++ ) phY[(size_t)phOf[(size_t)q]] += pm.Y[q];
             for( long int k0 = 0; k0 < pm.FI && ok; k0++ )
                 ok = !( inPh[(size_t)k0] > 1e-6 * phY[(size_t)k0] );
             if( !ok )
