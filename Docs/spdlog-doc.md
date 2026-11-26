@@ -104,10 +104,10 @@ std::shared_ptr<spdlog::logger> TNode::ipmlog_file;   // logger name "ipmlog"
 | `use_stdout` (xGEMS: `use_cout`) | `true` | Messages are also written to the console (stdout), coloured, with pattern `[%n] [%^%l%$] %v` (logger name, level, text). |
 | | `false` | Nothing is written to the console. |
 | `logfile_name` | a name, e.g. `"xGEMS.log"` | Messages are also written to this rotating file (default size 1 MiB, 1 file), in `GemsSettings::data_logger_directory` (the working directory by default). The file is created when the **first message** is written, so no empty file is left when nothing is logged. |
-| | `""` (empty) | No log file. |
-| `log_level` | 0 `trace` | Everything, including solver path decisions, for example `ITF=.. IT=..  ! PIA->AIA on E04IPM` in `ipmlog`. |
-| | 1 `debug` | Plus one line per equilibrium run, for example `GEMIPM TC=..`. Also the details of attempts that a retry recovered, and the notes of the **Optima** solver (see below). |
-| | 2 `info` | Plus one line for each choice of route the solver makes: retries, fallbacks, the quick first try, the dry-out steps. |
+| | `""` (empty) | No shared log file. The solver still writes `ipmlog.txt`; set `pa_PSM = 0` to switch that file off. |
+| `log_level` | 0 `trace` | All messages. Trace messages show the solver path decisions, for example `ITF=.. IT=..  ! PIA->AIA on E04IPM` in `ipmlog`. |
+| | 1 `debug` | Debug messages and above, without trace messages. Debug messages give one line per equilibrium run, for example `GEMIPM TC=..`. Also the details of attempts that a retry recovered, and the notes of the **Optima** solver (see below). |
+| | 2 `info` | Info messages and above, without debug messages. Info messages give one line for each choice of route the solver makes: retries, fallbacks, the quick first try, the dry-out steps. |
 | | 3 `warn` | Warnings only and above: failed or doubtful calculations (error code and text). A failed attempt that a retry recovered prints nothing at this level. xGEMS starts with this level (`update_loggers(false, "xGEMS.log", 3)` at import). |
 | | 4 `err` | Errors and above. |
 | | 5 `critical` | Only critical errors. |

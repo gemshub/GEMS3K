@@ -50,7 +50,8 @@ tries again automatically. It uses one of these methods:
 - a finish on the phases that it already found
 
 **A rescue for failed calls.** A call can still fail. Then GEMS3K tries it again in steps (`pa_FailRescue`).
-If no step gives a good result, you get the best attempt that keeps the element totals. Its status is BAD.
+If no step gives a good result and an attempt keeps the element totals, you get the best such attempt. Its status is BAD.
+If no attempt keeps the element totals, you get the original failure status, and the failed state is put back.
 `GEM_rescue_step()` tells you which step gave the result. See [Reading the result](#reading-the-result).
 
 **Faster calculations.**
@@ -279,7 +280,7 @@ In a text file (`…-ipm.dat`), add the setting after the `<END_DIM>` line. For 
 ```
 
 Put each setting in the file one time only. If a name is in the file two times, GEMS3K uses the later value.
-GEMS3K does not read a setting that is before `<END_DIM>` in a text file.
+GEMS3K does not read a setting that is before `<END_DIM>` in a text file. The exception is the allocation flags of the header section, for example `<pa_PE>`: GEMS3K reads them there.
 
 
 **Suggested settings for common cases** (transport, grids, dry systems and others): see [Advanced usage](SOLVER-ADVANCED-USAGE.md#suggested-settings-for-common-cases).
