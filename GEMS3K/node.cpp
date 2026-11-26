@@ -1395,6 +1395,16 @@ bool TNode::NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b,
         return false;
     const double dtExp = fabs( (double)multi_ptr()->base_param()->DT );
     const double absCut = ( dtExp < 2. ) ? pmm->DHBM : pow( 10., -dtExp );
+    // pa_MbClassRule > 0: as the solver's own test, a trace element keeps the relative test, a major one only an absolute cutoff
+    const double classRule = multi_ptr()->base_param()->MbClassRule;
+    double traceB = 0.;
+    if( classRule > 0. )
+    {
+        for( long int i = 0; i < CSD->nICb; i++ )
+            if( CSD->ccIC[ CSD->xic[i] ] != IC_CHARGE ) traceB = std::max( traceB, b[(size_t)i] );
+        traceB *= classRule;
+    }
+    const double absCls = ( dtExp >= 2. ) ? pow( 10., -dtExp ) : pmm->DHBM * 1e5;
     bool ok = true;
     for( long int i = 0; i < CSD->nICb; i++ )
     {
@@ -1407,7 +1417,12 @@ bool TNode::NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b,
         const double a = fabs( c ), bar = b[(size_t)i] * pmm->DHBM;
         const double r = bar > 0. ? a / bar : ( a > 0. ? 1e300 : 0. );
         worstRel = std::max( worstRel, r );
-        if( !multi_ptr()->base_param()->DT ? ( r > 1. ) : ( r > 1. && a > absCut ) )
+        if( classRule > 0. )
+        {
+            if( b[(size_t)i] < traceB ? ( r > 1. ) : ( a > absCls ) )
+                ok = false;
+        }
+        else if( !multi_ptr()->base_param()->DT ? ( r > 1. ) : ( r > 1. && a > absCut ) )
             ok = false;
     }
     return ok;
