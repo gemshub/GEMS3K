@@ -597,12 +597,18 @@ case DC_SCM_SPECIES:
             sf = 1.;
             if( !( dF0 * prevD[(size_t)j] > 0. ) && pm.XF[k] > 0. )
             {
-                long int jb = 0;
-                for( long int q = 0; q < k; q++ ) jb += pm.L1[q];
-                double c8 = 1.;
-                for( long int i = jb; i < jb + pm.L1[k]; i++ )
-                    c8 += pm.X[i] / pm.XF[k] * fabs( pm.lnGam[i] );
-                sf = 1. / c8;
+                // the phase sum is the same for every species of the phase in one activity loop, so it is kept
+                if( smoothC8Phase_ != k )
+                {
+                    long int jb = 0;
+                    for( long int q = 0; q < k; q++ ) jb += pm.L1[q];
+                    double c8 = 1.;
+                    for( long int i = jb; i < jb + pm.L1[k]; i++ )
+                        c8 += pm.X[i] / pm.XF[k] * fabs( pm.lnGam[i] );
+                    smoothC8_ = c8;
+                    smoothC8Phase_ = k;
+                }
+                sf = 1. / smoothC8_;
             }
             prevD[(size_t)j] = dF0;
         }

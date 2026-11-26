@@ -563,6 +563,7 @@ TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
         else if(LinkMode == LINK_UX_MODE )  // Bugfix! DK 06.04.11
         { // Real mode for activity coefficients
             double lnGamG;
+            smoothC8Phase_ = -1;   // the smoothing sum of this phase is computed again
             for( j=jb; j<je; j++ )
             {
                 if( pm.DCC[j] == DC_AQ_SURCOMP )  // Workaround for aqueous surface complexes DK 22.07.09

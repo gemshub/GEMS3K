@@ -1943,6 +1943,9 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
     preWatch->maxSeconds = pa_p->OptimaMaxSeconds;
     preWatch->started    = g_optimaCallStart;
     preWatch->reset();
+    // a cancel is seen also when the full check below is not installed; a check that returns false changes nothing
+    options.convergence.check = [preWatch]( Optima::ConvergenceCheckArgs const& ) -> bool
+        { if( CalculationCancelled() ) { preWatch->timedOut = true; return true; } return false; };
     if( preWatch->window > 0 || preWatch->maxSeconds > 0. || g_optimaIterBudget >= 0 )
         options.convergence.check =
             [preWatch]( Optima::ConvergenceCheckArgs const& args ) -> bool
@@ -3920,6 +3923,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         for( long int k = 0; k < pm.FIs; k++ )
             if( pm.L1[k] > 1 && !( hasAq && pm.LO >= phStart[(size_t)k] && pm.LO < phStart[(size_t)k+1] ) )
                 for( long int j = phStart[(size_t)k]; j < phStart[(size_t)k+1]; j++ ) solidPhaseOf[(size_t)j] = k;
+        // a cancel is seen also when the full check below is not installed; a check that returns false changes nothing
+        options.convergence.check = [stallWatch]( Optima::ConvergenceCheckArgs const& ) -> bool
+            { if( CalculationCancelled() ) { stallWatch->timedOut = true; return true; } return false; };
         if( stallWatch->window > 0 || stallWatch->maxSeconds > 0. || earlyTrendN > 0
             || earlyCapN > 0 || g_optimaIterBudget >= 0 )
             options.convergence.check =
@@ -4579,10 +4585,12 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             // told apart from "never reached".
             native_trace_decide( "earlystop form=cap fired=0 at=%ld dwrel=%.6e",
                                  earlyCapN, *earlyStopDwRel );
+        std::vector<double> sensPrimaryX;
         if( wantSens )
         {
             // Captured from the primary solve only: a retry solves a different problem
             // (reseeded, or with phases pinned).
+            sensPrimaryX.assign( state.x.data(), state.x.data() + state.x.size() );   // to tell a retry's answer later
             optima_dndb_rows = L + R;
             optima_dndb_cols = N;
             optima_dndb.assign( (size_t)(( L + R ) * N), 0. );
@@ -4804,7 +4812,11 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                                result.succeeded ? 1 : 0 );
         }
         // pa_OptimaDryOut: after a dry solve, check the dry answer against a solve that keeps the water.
-        if( stallWatch->dryDone && result.succeeded && pm.LO >= 0 )
+        // pa_OptimaWaterKeep = 2: a dry answer certified by the tail stop needs no comparison with a wet solve
+        const bool dryCertifiedEarly = stallWatch->dryDone && result.succeeded && pa_p->OptimaWaterKeep >= 2 && tailAccepted;
+        if( dryCertifiedEarly )
+            native_trace_decide( "drycompare skipped=certified" );
+        if( stallWatch->dryDone && result.succeeded && pm.LO >= 0 && !dryCertifiedEarly )
         {
             long int j0 = 0, j1 = 0, kAq = -1;
             for( long int k = 0; k < pm.FIs; k++ )
@@ -5828,6 +5840,12 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
 
         ipm_logger->debug( "CalculateEquilibriumStateOptima: pNP={} referenceMode={} succeeded={} iterations={} nConditions={}",
                            pm.pNP, referenceMode, result.succeeded, result.iterations, R );
+        // dn/db belongs to the primary solve: an answer from a retry gets none
+        if( !optima_dndb.empty() && ( sensPrimaryX.size() != (size_t)state.x.size()
+                                      || !std::equal( sensPrimaryX.begin(), sensPrimaryX.end(), state.x.data() ) ) )
+        {
+            optima_dndb.clear(); optima_dndb_rows = optima_dndb_cols = 0;
+        }
 
         for( long int j = 0; j < L; j++ )
         {
@@ -6237,6 +6255,31 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
             if( tol < 0. && conditions[k].defaultToleranceFn )
                 tol = conditions[k].defaultToleranceFn();
             conditions[k].targetMet = std::fabs( conditions[k].achievedValue - conditions[k].target ) <= tol;
+            // The pH target uses the molar mass of pure water. With a co-solvent the published pH uses the solvent's
+            // mean molar mass, so that pH is checked too; a miss is reported, not corrected.
+            if( conditions[k].name == "pH" && pm.FIs > 0 && pm.PHC[0] == PH_AQUEL && pm.XFA[0] > pm.XwMinM )
+            {
+                double mmc = 0.; bool coSolvent = false;
+                for( long int j = 0; j < pm.L1[0]; j++ )
+                    if( pm.DCC[j] == DC_AQ_SOLVENT || pm.DCC[j] == DC_AQ_SOLVCOM )
+                    {
+                        mmc += pm.MM[j] * pm.X[j] / pm.XFA[0];
+                        if( pm.DCC[j] == DC_AQ_SOLVCOM && pm.X[j] > 0. ) coSolvent = true;
+                    }
+                if( coSolvent && mmc > 0. )
+                {
+                    const double pHpub = conditions[k].achievedValue - ln_to_lg * ( std::log( 1000. / mmc ) - kLnFmol );
+                    native_trace_decide( "phcosolvent mmc=%.6g ph_target_scale=%.6f ph_published=%.6f", mmc,
+                                         conditions[k].achievedValue, pHpub );
+                    if( std::fabs( pHpub - conditions[k].target ) > tol )
+                    {
+                        ipm_logger->info( "pH target {}: with the co-solvent the published pH is {:.4f} (solvent molar mass {:.4g} g/mol); "
+                                          "the target is reported as not met", conditions[k].target, pHpub, mmc );
+                        conditions[k].targetMet = false;
+                    }
+                    conditions[k].achievedValue = pHpub;
+                }
+            }
             // A pH or Eh with no water left is not an answer: the value above then describes
             // nothing, and the reported pH/Eh would be left over from before. Same water test
             // as the molality calculation.
@@ -6275,7 +6318,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                 if( d > 1.0 ) nfar++;
                 if( pm.Y[j] > 1e-12 * ScFact ) { npresent++; dinfp = std::max( dinfp, d ); if( d > 1.0 ) nfarp++; }
             }
-            fprintf( tfp, "ANSWER solve=%ld it_first=%ld succ_first=%d it_retry=%ld succ_retry=%d retried=%d it_reported=%ld f=%.12e err=%.6e"
+            fprintf( tfp, "ANSWER solve=%ld it_first=%ld succ_first=%d it_retry=%ld succ_retry=%d retried=%d it_reported=%ld f_lasteval=%.12e err=%.6e"
                           " dx0_inf=%.6e dx0_n_far=%ld dx0_inf_present=%.6e dx0_n_far_present=%ld n_present=%ld"
                           " F_updates_first=%ld F_updates_total=%ld fx_evals_first=%ld fx_evals_total=%ld ok=%d\n",
                      ts.solve, traceFirstIt, traceFirstOk ? 1 : 0, retried ? (long)optimaIterTotal - traceFirstIt : 0L,
@@ -6931,6 +6974,9 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
         std::vector<double> XFsave( pm.XF, pm.XF  + pm.FI );
         std::vector<double> XFAsave( pm.XFA, pm.XFA + pm.FIs );
         pm.FX = TotalGibbsEnergy();
+        // the energy of the answer returned (ANSWER's f_lasteval is the last objective evaluation, maybe of another attempt)
+        if( auto* tfpA = Optima::trace::file() )
+            fprintf( tfpA, "ANSWERG g=%.12e\n", pm.FX );
         for( long int j = 0; j < pm.L; j++ )    pm.X[j]   = Xsave[(size_t)j];
         for( long int k = 0; k < pm.FI; k++ )   pm.XF[k]  = XFsave[(size_t)k];
         for( long int k = 0; k < pm.FIs; k++ )  pm.XFA[k] = XFAsave[(size_t)k];

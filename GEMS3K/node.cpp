@@ -540,7 +540,11 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     }
 
     const long int nIC = CSD->nICb;
-    const std::vector<double> b0( CNode->bIC, CNode->bIC + nIC );
+    // A pH/Eh target call titrates the bulk: its retries start from the bulk that was entered, and each answer is
+    // checked against its own titrated bulk, which it keeps.
+    const bool targetCall = !multi_ptr()->GetControlConditions().empty();
+    const std::vector<double> b0 = targetCall ? std::vector<double>( D0->bIC, D0->bIC + nIC )
+                                              : std::vector<double>( CNode->bIC, CNode->bIC + nIC );
     const bool kinetics = D0->dt > 0.;
     const double dt0 = D0->dt;
     const long int warmMode = ( requested == NEED_GEM_AIA || requested == NEED_GEM_SIA ) ? NEED_GEM_SIA
@@ -560,7 +564,8 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         if( !isOk( s ) && !isBad( s ) )
             return;   // an error leaves no packed answer
         double rel = 0.;
-        const bool balances = NudgedAnswerBalances( CNode, b0, rel );
+        const std::vector<double> bOwn( CNode->bIC, CNode->bIC + nIC );
+        const bool balances = NudgedAnswerBalances( CNode, targetCall ? bOwn : b0, rel );
         // under pH/Eh control an attempt counts only if the answer itself meets every target (a hybrid's BAD answer is
         // native's, while the control record is its Optima leg's, so the record alone cannot tell)
         bool met = true;
@@ -768,7 +773,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             if( bi >= 0 )
             {
                 databr_copy( pool[(size_t)bi].d );
-                setB( b0 );
+                setB( b0 );   // a target call titrates again from the entered bulk
                 s = run( other, true, true );
             }
             else
@@ -803,7 +808,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         {
             databr_copy( pool[(size_t)bi].d );
             multi_ptr()->RestoreControlConditions( pool[(size_t)bi].cc );
-            setB( b0 );
+            if( !targetCall ) setB( b0 );   // a target answer keeps its own titrated bulk
             CNode->dt = dt0;
             result = ranMode + 2;
             CNode->NodeStatusCH = result;

@@ -44,6 +44,10 @@
 #include <set>
 #include <map>
 #include <string>
+#include <limits>
+#include <cmath>
+
+extern thread_local unsigned long g_balanceQrEpoch;   // defined below
 
 // Thread-safe logger to stdout with colors
 std::shared_ptr<spdlog::logger> TMultiBase::ipm_logger = gems3k_logger("ipm");
@@ -286,9 +290,10 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
             return attempt > 0;
         // The factor depends only on the species set, their weights, the balance rows used and the matrix A. The passes of one IPM step
         // share the weights, so a factor made for the same set and weights is used again.
-        static thread_local struct { const double* A = nullptr; long int N = -1, rows = -1, drop = -2; std::vector<long int> js;
+        // A factor is not kept across solves: A can change at the same address (the volume column at a new T and P).
+        static thread_local struct { const double* A = nullptr; unsigned long epoch = 0; long int N = -1, rows = -1, drop = -2; std::vector<long int> js;
                                      std::vector<double> w; Eigen::VectorXd c; Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr; } fc;
-        bool same = fc.A == pm.A && fc.N == pm.N && fc.rows == N && fc.drop == dropRow && fc.js == js;
+        bool same = fc.A == pm.A && fc.epoch == g_balanceQrEpoch && fc.N == pm.N && fc.rows == N && fc.drop == dropRow && fc.js == js;
         for( long int q = 0; same && q < La; q++ ) same = fc.w[(size_t)q] == pm.W[js[(size_t)q]];
         if( !same )
         {
@@ -302,7 +307,7 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
                 if( !( fc.c( i ) > 0. ) ) fc.c( i ) = 1.;
                 S.col( i ) /= fc.c( i ); }
             fc.qr.compute( S );
-            fc.A = pm.A; fc.N = pm.N; fc.rows = N; fc.drop = dropRow; fc.js = js;
+            fc.A = pm.A; fc.epoch = g_balanceQrEpoch; fc.N = pm.N; fc.rows = N; fc.drop = dropRow; fc.js = js;
             fc.w.resize( (size_t)La );
             for( long int q = 0; q < La; q++ ) fc.w[(size_t)q] = pm.W[js[(size_t)q]];
         }
@@ -609,7 +614,8 @@ static bool CertSymEigMin( std::vector<double> a, int n, double& lmin, double* l
 
 void TMultiBase::CertPrimalPotentials( std::vector<double>& F ) const
 {
-    F.assign( (size_t)pm.L, 0. );
+    // NaN marks a species whose potential is not computed here; an exact 0 is a real potential
+    F.assign( (size_t)pm.L, std::numeric_limits<double>::quiet_NaN() );
     if( !pm.X || !pm.XF || !pm.G0 || !pm.fDQF || !pm.F0 || !pm.DCCW || !pm.L1 )
         return;
 
@@ -656,7 +662,7 @@ void TMultiBase::CertPrimalPotentials( std::vector<double>& F ) const
               case DC_ASYM_CARRIER: F[(size_t)j] = Gj + lx - logYFk + NonLogTerm + 1.0
                                                    - 1.0/( 1.0 - NonLogTerm );               break;
               case DC_SYMMETRIC:    F[(size_t)j] = Gj + lx - logYFk;                         break;
-              default:              F[(size_t)j] = 0.;                                       break;
+              default:              break;   // stays NaN: not scored
             }
         }
         j = i;
@@ -664,11 +670,11 @@ void TMultiBase::CertPrimalPotentials( std::vector<double>& F ) const
 }
 
 /// Is species j scorable for the reduced-gradient tests - present at the answer, and with a
-/// potential CertPrimalPotentials() actually filled in. A species left at 0 there is either
+/// potential CertPrimalPotentials() actually filled in. A species left at NaN there is either
 /// below pm.DcMinM or in a skipped phase, and its F carries no information.
 static inline bool cert_species_scorable( const MULTI& pm, const std::vector<double>& F, long int j )
 {
-    return pm.X[j] > pm.DcMinM && F[(size_t)j] != 0.;
+    return pm.X[j] > pm.DcMinM && std::isfinite( F[(size_t)j] );
 }
 
 /// The numerical floor on a species amount, as CalculateEquilibriumStateOptima() builds its
@@ -1454,6 +1460,7 @@ long int TMultiBase::ReportAbsentPhaseIndexes()
 // In plain words: searches for the composition at which a missing mixed phase would be most
 // stable, and says whether it should form.
 // pa_OptimaLevelStart: set while the leveled start is certified; widens the composition search.
+thread_local unsigned long g_balanceQrEpoch = 1;   // raised at each native solve; keys the balance-step QR factor
 thread_local bool g_tpdStrongSearch = false;
 thread_local bool g_tpdTrialThrew = false;   // the last NativeTpdPhase() stopped on an error in a trial composition
 // pa_IpmLevelStart: set when this call's native start came from the leveled solution; the second flag turns the start off for a retry.
@@ -4516,16 +4523,22 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     {
         double worst = 0.;
         // With pa_MbClassRule, a trace IC keeps its relative tolerance, as in the convergence test below.
-        double traceB = 0.;
-        if( pa_p->MbClassRule > 0. )
+        double traceB = 0., absCls = 0.;
+        const bool classRule = pa_p->MbClassRule > 0.;
+        if( classRule )
         {   for( long int ii=0; ii<pm.N-pm.E; ii++ ) traceB = std::max( traceB, pm.B[ii] );
-            traceB *= pa_p->MbClassRule; }
+            traceB *= pa_p->MbClassRule;
+            // a major IC is judged on the absolute cutoff alone, as in the class-rule test below
+            const double e = fabs( (double)pa_p->DT );
+            absCls = ( e >= 2. ) ? pow( 10., -e ) : pm.DHBM * 1e5; }
         for( long int ii=0; ii<pm.N; ii++ )
         {
             if( ii == hDrop ) continue;
             double denom = pm.B[ii] * pm.DHBM;
             const bool isTrace = ( ii < pm.N - pm.E && pm.B[ii] < traceB );
-            if( pa_p->DT && !isTrace )
+            if( classRule && ii < pm.N - pm.E && !isTrace )
+                denom = absCls;
+            else if( pa_p->DT && !isTrace )
                 denom = std::max( denom, AbsMbCutoff_stall );
             if( denom <= 0. )
                 denom = ( pm.DHBM > 0. ? pm.DHBM : 1e-16 );

@@ -506,12 +506,15 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA1, A, Q, &ITER);
 /// Main call to GEM IPM calculation of equilibrium state in MULTI
 /// (with internal re-scaling of the system).
 //
+extern thread_local unsigned long g_balanceQrEpoch;   // ipm_main.cpp
+
 double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM, bool runKinetics )
 {
   gems3k_timing::Scope timing( gems3k_timing::Native );
   double ScFact=1.;
 
   InitalizeGEM_IPM_Data();
+  g_balanceQrEpoch++;   // a new solve: the balance-step QR factor is made again
   trace_growth_stuck = false;
   activity_mismatch = false;
   phase_floor_parked.clear();

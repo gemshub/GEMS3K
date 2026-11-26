@@ -192,10 +192,18 @@ bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
     if( !runSimplex( nCols, maxIter, eps * cMax ) )
         return false;
 
-    xOut.assign( (size_t)nCols, 0. );
+    std::vector<double> xSol( (size_t)nCols, 0. );
     for( long int i = 0; i < nCon; i++ )
         if( basis[i] < nCols )
-            xOut[ (size_t)basis[i] ] = std::max( 0., Tref(i,nVar) );
+            xSol[ (size_t)basis[i] ] = std::max( 0., Tref(i,nVar) );
+    // An artificial left in the basis can take a nonzero value in phase 2; then the point does not satisfy A x = b.
+    for( long int i = 0; i < nCon; i++ )
+    {
+        double r = -b[i];
+        for( long int j = 0; j < nCols; j++ ) r += a(i,j) * xSol[(size_t)j];
+        if( std::fabs( r ) > feasTol )
+            return false;
+    }
 
     // Dual of the equality rows. Artificial column i is e_i in the FLIPPED
     // system and costs 0, so its reduced cost is c-z = -y'_i; un-flip with the
@@ -228,6 +236,7 @@ bool TwoPhaseSimplexMinSum( long int nRows, long int nCols,
             return false;
         for( long int i = 0; i < nCon; i++ ) yOut[i] = y[(size_t)i];
     }
+    xOut.swap( xSol );
     return true;
 }
 

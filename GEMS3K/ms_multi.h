@@ -1174,6 +1174,8 @@ class TMultiBase
     /// pa_PhaseSmoothing = 1: the last update of each species and the iteration it was made in (cleared per solve)
     std::vector<double> smoothPrevD_;
     long int smoothPrevIT_ = -1;
+    long int smoothC8Phase_ = -1;   ///< phase whose pa_PhaseSmoothing sum smoothC8_ holds in the current activity loop; -1 = none
+    double smoothC8_ = 1.;
     /// Input of the previous GEMS3K IPM solve: bulk composition (mol), T, P and which species have a positive
     /// upper limit. warmInputChanged_ is true if this solve has another input (read by the warm zero check).
     std::vector<double> prevBulkMol_;
@@ -1426,7 +1428,8 @@ public:
     bool optima_want_sensitivity = false;
 
     /// dn/db from the last solve when optima_want_sensitivity was set, row-major
-    /// [ (L+R) x N ]. Empty if not requested or the solve did not reach the sensitivity step.
+    /// [ (L+R) x N ]. Empty if not requested, if the solve did not reach the sensitivity step,
+    /// or if the answer came from a retry.
     std::vector<double> optima_dndb;
     long int optima_dndb_rows = 0, optima_dndb_cols = 0;
 
