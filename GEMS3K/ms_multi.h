@@ -1802,6 +1802,7 @@ protected:
                                          double logXw,  char DCCW );
     double GX( double LM  );
     double GXofX();
+    template<bool Trial> double GibbsSumOfX();   ///< shared phase/species walk of GXofX() and TotalGibbsEnergy()
     void ConvertDCC();
     long int  getXvolume();
 

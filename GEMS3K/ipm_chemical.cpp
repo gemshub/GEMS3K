@@ -799,119 +799,50 @@ double TMultiBase::GX( double LM  )
     return GXofX();
 }
 
-/// G(X) of the current amounts pm.X, with the phase totals pm.XF and pm.XFA already up to date.
-double TMultiBase::GXofX()
-{
-    long int i, j, k;
-    double x, XF, XFw, FX, Gi;
-
-    // calculating G(X)
-    FX=0.;
-    j=0;
-    for( k=0; k<pm.FI; k++ )
-    { // loop for phases
-        i=j+pm.L1[k];
-        pm.logXw = -101.;
-        XFw = 0.0;  // calculating mole amount of the solvent/sorbent
-        if( pm.FIs && k<pm.FIs )
-            XFw = pm.XFA[k];
- //       if( XFw > const1 )
-        if( ( pm.PHC[k] == PH_AQUEL && XFw >= pm.XwMinM )
-                        || ( pm.PHC[k] == PH_SORPTION && XFw >= pm.ScMinM )
-                        || ( pm.PHC[k] == PH_POLYEL && XFw >= pm.ScMinM ) )
-             pm.logXw = log( XFw );
-        /*   */
-        XF = pm.XF[k];
-        if( !(pm.FIs && k < pm.FIs) )
-        {
-                if( XF < pm.PhMinM )
-        		goto NEXT_PHASE;
-        }
-        else if( XF < pm.DSM && pm.logXw < -100. )
-        	goto NEXT_PHASE;
-
-        pm.logYFk = log( XF );
-
-        for( ; j<i; j++ )
-        { // DCs (species)
-            x = pm.X[j];
-            if( x < pm.DcMinM )
-                continue;
-            // calculating increment of G(x)
-            // Gi = DC_GibbsEnergyContribution( pm.G[j], x, pm.logYFk, pm.logXw,
-            //                     pm.DCCW[j] );
-            // call replaced here by inline variant for higher performance
-            switch( pm.DCCW[j] )
-            {
-             case DC_ASYM_SPECIES:
-                    Gi = x * ( pm.G[j] + log(x) - pm.logXw );
-                    break;
-            case DC_ASYM_CARRIER:
-            case DC_SYMMETRIC:
-                   Gi = x * ( pm.G[j] + log(x) - pm.logYFk );
-                   break;
-            case DC_SINGLE:
-                   Gi = pm.G[j] * x;
-                   break;
-           default:
-                    Gi = 7777777.;
-           }
-          FX += Gi;
-        }   // j
-NEXT_PHASE:
-        j = i;
-    }  // k
-    ipm_logger->trace("GX  {}", FX);
-    return(FX);
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/// Total Gibbs energy G(X) of the converged system, in RT units, on a basis identical for every
-/// solver path. Does not reuse GX(), which reads pm.G[]: native's GEM_IPM() resets
-/// pm.G[i] = pm.G0[i] on exit, while the Optima path leaves G0 + fDQF + F0 there. The excess
-/// term is rebuilt from G0[]+fDQF[]+F0[], which both paths leave current. Everything else (the
-/// Y->X copy, the phase-inclusion tests, the DcMinM cutoff, the per-class formulas) mirrors
-/// GX(0.). Post-solve only: it copies Y into X and refreshes pm.XF/pm.XFA.
-double TMultiBase::TotalGibbsEnergy()
+/// G(X) of the amounts pm.X with the phase totals pm.XF and pm.XFA, using the solver's rules for which phases and species
+/// count. Trial = true: the trial energies pm.G[], and pm.logXw / pm.logYFk are set as the solver expects. Trial = false: the
+/// converged energies G0 + fDQF + F0 (the same on every solver path), and no member is written.
+template<bool Trial>
+double TMultiBase::GibbsSumOfX()
 {
     long int i, j, k;
     double x, XF, XFw, FX, Gi, Gj, logXw, logYFk;
 
-    for( i=0; i<pm.L; i++ )
-        pm.X[i] = pm.Y[i];
-    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-
     FX = 0.;
     j = 0;
     for( k=0; k<pm.FI; k++ )
-    {
+    { // loop for phases
         i = j + pm.L1[k];
         logXw = -101.;
-        XFw = 0.0;
+        XFw = 0.0;  // mole amount of the solvent/sorbent
         if( pm.FIs && k < pm.FIs )
             XFw = pm.XFA[k];
         if( ( pm.PHC[k] == PH_AQUEL && XFw >= pm.XwMinM )
                 || ( pm.PHC[k] == PH_SORPTION && XFw >= pm.ScMinM )
                 || ( pm.PHC[k] == PH_POLYEL && XFw >= pm.ScMinM ) )
             logXw = log( XFw );
+        if( Trial )
+            pm.logXw = logXw;
 
         XF = pm.XF[k];
         if( !(pm.FIs && k < pm.FIs) )
         {
             if( XF < pm.PhMinM )
-                goto NEXT_PHASE_TG;
+                goto NEXT_PHASE;
         }
         else if( XF < pm.DSM && logXw < -100. )
-            goto NEXT_PHASE_TG;
+            goto NEXT_PHASE;
 
         logYFk = log( XF );
+        if( Trial )
+            pm.logYFk = logYFk;
 
         for( ; j<i; j++ )
-        {
+        { // DCs (species)
             x = pm.X[j];
             if( x < pm.DcMinM )
                 continue;
-            Gj = pm.G0[j] + pm.fDQF[j] + pm.F0[j];   // rebuilt, not pm.G[j]
+            Gj = Trial ? pm.G[j] : pm.G0[j] + pm.fDQF[j] + pm.F0[j];
             switch( pm.DCCW[j] )
             {
             case DC_ASYM_SPECIES:
@@ -929,11 +860,33 @@ double TMultiBase::TotalGibbsEnergy()
             }
             FX += Gi;
         }   // j
-NEXT_PHASE_TG:
+NEXT_PHASE:
         j = i;
     }  // k
+    return FX;
+}
+
+/// G(X) of the current amounts pm.X, with the phase totals pm.XF and pm.XFA already up to date.
+double TMultiBase::GXofX()
+{
+    const double FX = GibbsSumOfX<true>();
+    ipm_logger->trace("GX  {}", FX);
+    return FX;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/// Total Gibbs energy G(X) of the converged system, in RT units, on a basis identical for every
+/// solver path. Does not use pm.G[]: native's GEM_IPM() resets pm.G[i] = pm.G0[i] on exit, while the
+/// Optima path leaves G0 + fDQF + F0 there; G0 + fDQF + F0 is current on both. Post-solve only: it
+/// copies Y into X and refreshes pm.XF/pm.XFA.
+double TMultiBase::TotalGibbsEnergy()
+{
+    for( long int i=0; i<pm.L; i++ )
+        pm.X[i] = pm.Y[i];
+    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    const double FX = GibbsSumOfX<false>();
     ipm_logger->trace("TotalGibbsEnergy  {}", FX);
-    return(FX);
+    return FX;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
