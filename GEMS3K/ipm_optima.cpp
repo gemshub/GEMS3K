@@ -2192,7 +2192,7 @@ bool TMultiBase::OptimaReducedPreSolve( long int maxPasses, double dcFloor, doub
                     {
                         const long int p1 = p0 + pm.L1[k];
                         const long int nEnd = p1 - p0;
-                        const bool isAq = ( pm.PHC[k] == PH_AQUEL );   // the phase itself, not pm.LO (0 when there is no water)
+                        const bool isAq = ( pm.PHC[k] == PH_AQUEL || pm.PHC[k] == PH_LIQUID );   // by phase type (pm.LO is 0 without water): no curvature floor for water or a melt
                         if( !isAq && nEnd > 1 && p1 <= L )
                         {
                             double phTot = 0.;
@@ -3495,7 +3495,7 @@ double TMultiBase::CalculateEquilibriumStateOptima( long int& NumIterFIA, long i
                         {
                             const long int p1 = p0 + pm.L1[k];
                             const long int nEnd = p1 - p0;
-                            const bool isAq = ( pm.PHC[k] == PH_AQUEL );   // the phase itself, not pm.LO (0 when there is no water)
+                            const bool isAq = ( pm.PHC[k] == PH_AQUEL || pm.PHC[k] == PH_LIQUID );   // by phase type (pm.LO is 0 without water): no curvature floor for water or a melt
                             if( !isAq && nEnd > 1 && p1 <= L )
                             {
                                 // Only end-members that are actually present: a floor

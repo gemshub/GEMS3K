@@ -1470,6 +1470,9 @@ thread_local bool g_ipmNoProgFired = false;   // pa_IpmNoProgress stopped the lo
 thread_local bool g_ipmLevelOff = false;
 void TMultiBase::RefreshFromAmounts()
 {
+    // The activities are those of the amounts alone: smoothing would blend in the previous state's potentials.
+    struct NoSmoothing { bool& f; bool prev; NoSmoothing( bool& ff ) : f( ff ), prev( ff ) { f = true; } ~NoSmoothing() { f = prev; } }
+        noSmoothing( optima_disable_smoothing );
     for( long int j = 0; j < pm.L; j++ ) pm.X[j] = pm.Y[j];
     TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );

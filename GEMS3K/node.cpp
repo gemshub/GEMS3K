@@ -1006,6 +1006,10 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     long int fastF = 0, fastG = 0;
     double fastSec = 0.;
     bool fastFailed = false;
+    // A quick try that ended OK but was set aside: kept, so the full solve's answer can be compared with it.
+    DATABR* fastAnswer = nullptr;
+    double fastAnswerG = 0.;
+    bool fastAqAbsent = false;
     const long int fastCap = multi_ptr()->base_param()->OptimaFastFirst;
 #ifdef USE_OPTIMA_SOLVER   // the quick try is an Optima solve
     if( requested == NEED_GEM_AOP && !kinetics && fastCap > 0 )
@@ -1075,6 +1079,16 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
             g_optimaIterBudget = budget0;
             databr_free( fastBefore );
             return fast;
+        }
+        // the quick answer can be compared by energy only at the bulk that was entered (no pH or Eh target)
+        if( fast == OK_GEM_AOP && multi_ptr()->GetControlConditions().empty() )
+        {
+            fastAnswer = new DATABR;
+            dbr_dch_api::databr_reset( fastAnswer, 1 );
+            dbr_dch_api::databr_realloc( CSD, fastAnswer );
+            { DATABR* live = CNode; CNode = fastAnswer; databr_copy( live ); CNode = live; }
+            fastAnswerG = CNode->Gs;
+            fastAqAbsent = g_aqueousAbsent;
         }
         fastF = pmm->ITF; fastG = pmm->ITG; fastSec = CalcTime; fastFailed = true;
         g_optimaIterBudget = budget0 < 0 ? -1 : std::max( 0L, budget0 - used );
@@ -1220,6 +1234,26 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
         CNode->IterDone = itf + itg; CalcTime = seconds;
         status = CNode->NodeStatusCH;
+    }
+    if( fastAnswer )
+    {
+        // The full solve can end in another basin than the quick try; the lower energy is returned.
+        const bool fullHasG = status == OK_GEM_AOP || status == BAD_GEM_AOP;
+        const double gFull = CNode->Gs;
+        const bool quickBetter = fullHasG && fastAnswerG < gFull - 1e-9 * std::max( 1., fabs( gFull ) );
+        native_trace_decide( "fastkeepbetter quick=%.12e full=%.12e status=%ld kept=%s", fastAnswerG, gFull, (long)status,
+                             quickBetter ? "quick" : "full" );
+        if( quickBetter )
+        {
+            databr_copy( fastAnswer );
+            CNode->NodeStatusCH = status = OK_GEM_AOP;
+            g_aqueousAbsent = fastAqAbsent;
+            SyncMultiWithDataBr();   // a later warm start begins from the answer returned
+            clearipmLogError();
+            node_logger->debug( "GEM_run(): the quick try's answer has a lower Gibbs energy than the full solve's; it is returned" );
+        }
+        databr_free( fastAnswer );
+        fastAnswer = nullptr;
     }
     if( fastFailed )
     {
