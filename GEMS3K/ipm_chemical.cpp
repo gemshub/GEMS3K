@@ -1531,8 +1531,10 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                    budgetSized = true;
                }
                if( L1k > 1 )
-                  DC_RaiseZeroedOff( jb, jb+L1k, k );   // a mixed phase keeps the seeds of its end-members
-               else
+                  DC_RaiseZeroedOff( jb, jb+L1k, k );
+               // a gas or fluid mixture keeps the seeds of all its members; a pure phase and a condensed mixture
+               // get the insertion amount on the first member
+               if( L1k == 1 || !( pm.PHC[k] == PH_GASMIX || pm.PHC[k] == PH_PLASMA || pm.PHC[k] == PH_FLUID ) )
                   pm.Y[jb] = insAmt; // pa_DFYs for a major phase, the composition ceiling for a trace one
                DCinserted += L1k;
                PHinserted++;
