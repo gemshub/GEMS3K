@@ -126,7 +126,8 @@ solver goes on after each note, so they are details. They follow `update_loggers
 true and `log_level <= 1`, in the log file if a file is given and `log_level <= 1`, nowhere if `log_level >= 2`. (Optima itself prints to `std::cout` when it is used without GEMS3K.)
 
 **`ipmlog.txt` and `pa_PSM`.** The IPM solver writes its own diagnostics to `ipmlog.txt` (logger `ipmlog`). How much it writes
-is set by the project setting `pa_PSM` (0 = nothing, 2 = also warnings, 3 = detailed trace) *and* by the logger level above; the
+is set by the project setting `pa_PSM` (0 = fewest records, 2 = also warnings, 3 = detailed trace) *and* by the logger level above.
+With `pa_PSM = 0` some records (debug entries, the error summary) are still written. Log level 6 writes nothing. The
 file is created when the first message is written.
 
 ### API for changing loggers settings in source code
