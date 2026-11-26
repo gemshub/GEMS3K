@@ -97,14 +97,15 @@ std::shared_ptr<spdlog::logger> TNode::ipmlog_file;   // logger name "ipmlog"
 
 `GemsSettings::gems3k_update_loggers(use_stdout, logfile_name, log_level)` is the call behind `xGEMS::update_loggers(...)` and
 `xgems.update_loggers(...)` in Python. It applies to every logger listed above (`gems3k`, `ipm`, `tnode`, `kinmet`, `solmod`,
-`thermofun`, `chemicalfun`), and it also sets the level of the `ipmlog` file logger.
+`thermofun`, `chemicalfun`), and it also sets the level of the `ipmlog` file logger. The `ipmlog` logger exists only after the first
+`TNode` is made. Call `update_loggers` after that, or the `ipmlog` level is not changed.
 
 | Argument | Value | Effect |
 |---|---|---|
 | `use_stdout` (xGEMS: `use_cout`) | `true` | Messages are also written to the console (stdout), coloured, with pattern `[%n] [%^%l%$] %v` (logger name, level, text). |
 | | `false` | Nothing is written to the console. |
 | `logfile_name` | a name, e.g. `"xGEMS.log"` | Messages are also written to this rotating file (default size 1 MiB, 1 file), in `GemsSettings::data_logger_directory` (the working directory by default). The file is created when the **first message** is written, so no empty file is left when nothing is logged. |
-| | `""` (empty) | No shared log file. The solver still writes `ipmlog.txt`; set `pa_PSM = 0` to switch that file off. |
+| | `""` (empty) | No shared log file. The solver can still write `ipmlog.txt`. `pa_PSM = 0` stops some records only. To write no `ipmlog.txt`, set `log_level` 6 after the first `TNode` is made. |
 | `log_level` | 0 `trace` | All messages. Trace messages show the solver path decisions, for example `ITF=.. IT=..  ! PIA->AIA on E04IPM` in `ipmlog`. |
 | | 1 `debug` | Debug messages and above, without trace messages. Debug messages give one line per equilibrium run, for example `GEMIPM TC=..`. Also the details of attempts that a retry recovered, and the notes of the **Optima** solver (see below). |
 | | 2 `info` | Info messages and above, without debug messages. Info messages give one line for each choice of route the solver makes: retries, fallbacks, the quick first try, the dry-out steps. |

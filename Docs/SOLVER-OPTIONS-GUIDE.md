@@ -51,6 +51,7 @@ tries again automatically. It uses one of these methods:
 
 **A rescue for failed calls.** A call can still fail. Then GEMS3K tries it again in steps (`pa_FailRescue`).
 If no step gives a good result and an attempt keeps the element totals, you get the best such attempt. Its status is BAD.
+With a pH or Eh target, the attempt must also meet the target.
 If no attempt keeps the element totals, you get the original failure status, and the failed state is put back.
 `GEM_rescue_step()` tells you which step gave the result. See [Reading the result](#reading-the-result).
 
