@@ -114,6 +114,8 @@ The Optima solver runs in AOP and SOP. It also runs as the second part of HOP an
      of both.
    - If it uses all its iterations but ends OK, GEMS3K keeps the result when no missing phase can form
      (`pa_OptimaFastAcceptCut`).
+   - If it ends OK but the normal solve still runs, GEMS3K compares the two results. It returns the result
+     with the lower Gibbs energy.
 2. **First guess.**
    - Cold start: a linear calculation puts the mass in as few species as it can. If this leaves almost no
      water, or leaves a mixed phase empty, GEMS3K corrects the guess first. On a second try (see below), GEMS3K
