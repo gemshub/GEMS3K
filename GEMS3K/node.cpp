@@ -229,6 +229,10 @@ void TNode::Get_sMod(int ndx, std::string &sMod)
 thread_local bool g_optimaLineSearchRetry = false;
 thread_local bool g_optimaLSEscapeOff = false;
 thread_local bool g_optimaEscRetryNext = false;   // a failed attempt is re-run with the stall escape off (escretry)
+// Runs a function when the scope ends, also when an error is thrown.
+template<class F> struct OnScopeExit { F f; ~OnScopeExit() { f(); } };
+template<class F> static OnScopeExit<F> onScopeExit( F f ) { return OnScopeExit<F>{ f }; }
+
 thread_local bool g_optimaCgSeedArmed = false;
 thread_local bool g_optimaTargetWarned = false;   // the unusual-target warning is shown once per GEM_run()
 thread_local long int g_optimaIterBudget = -1;     // Optima iterations left for this call; -1 = no limit
@@ -347,8 +351,10 @@ long int TNode::GEM_run( bool uPrimalSol )
     const long int requested = CNode->NodeStatusCH;
     ApplyDbrTargets( requested );
     restoreEnteredComposition( requested );
-    const std::vector<double> bBefore( CNode->bIC, CNode->bIC + CSD->nICb );
-    long int st;
+#ifdef USE_OPTIMA_SOLVER
+    multi_ptr()->hop_split = TMultiBase::HopLegSplit();   // no split of an earlier call is reported for this one
+#endif
+    long int st = T_ERROR_GEM;
     if( gems3k_timing::enabled() )
         gems3k_timing::acc = gems3k_timing::Acc();   // a call that ended on an error leaves no sums for this one
     {
@@ -358,7 +364,9 @@ long int TNode::GEM_run( bool uPrimalSol )
         g_errorsHandledByCaller++;
         try
         {
+            const std::vector<double> bBefore( CNode->bIC, CNode->bIC + CSD->nICb );
             st = GEM_run_rescue( uPrimalSol );
+            rememberTitration( requested, bBefore );
         }
         catch( TError& e )
         {
@@ -369,7 +377,9 @@ long int TNode::GEM_run( bool uPrimalSol )
         catch( const std::bad_alloc& )
         {
             // out of memory outside the solve itself (for example a copy before a retry): an error status, not a throw
-            ipmlog_error = "out of memory";
+            titrEntered_.clear();   // no titration is remembered, so the next call starts from its own bulk
+            titrSolved_.clear();
+            try { ipmlog_error = "out of memory"; } catch( ... ) {}
             CNode->NodeStatusCH = T_ERROR_GEM;
             st = T_ERROR_GEM;
         }
@@ -380,9 +390,12 @@ long int TNode::GEM_run( bool uPrimalSol )
         }
         g_errorsHandledByCaller--;
     }
-    if( !ipmlog_error.empty() && callFailed( st ) )
-        node_logger->error( "{}", ipmlog_error );
-    rememberTitration( requested, bBefore );
+    try
+    {
+        if( !ipmlog_error.empty() && callFailed( st ) )
+            node_logger->error( "{}", ipmlog_error );
+    }
+    catch( ... ) {}   // the status is returned even if the message cannot be written
     gems3k_timing::flush( requested, st, CNode->IterDone );
     return st;
 }
@@ -511,7 +524,7 @@ void TNode::ApplyDbrTargets( long int mode )
 TNode::DbrCopy TNode::NewNodeData()
 {
     DbrCopy c( new DATABR );
-    dbr_dch_api::databr_reset( c.get(), 1 );   // no allocation; sets the arrays to null first
+    dbr_dch_api::databr_reset( c.get(), 2 );   // sets the array pointers to null before databr_realloc allocates them
     dbr_dch_api::databr_realloc( CSD, c.get() );
     return c;
 }
@@ -616,14 +629,16 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         const double kTau = pmm->kTau, kdT = pmm->kdT;
         if( kinetics && frozenBox ) CNode->dt = 0.;
         if( kinetics && !frozenBox ) { pmm->ITau = ITau0; pmm->pKMM = pKMM0; }   // repeat this time step, not the next one
+        // the time step and the kinetic counters come back also when the solve throws
+        auto kinBack = onScopeExit( [&]() {
+            if( kinetics && frozenBox )
+            {
+                CNode->dt = dt0;
+                pmm->ITau = ITau; pmm->pKMM = pKMM; pmm->kTau = kTau; pmm->kdT = kdT;
+            } } );
         CNode->NodeStatusCH = mode;
         CNode->IterDone = 0;   // a failed solve does not write it, so a loaded count is not counted again
         const long int s = GEM_run_capped( primal );
-        if( kinetics && frozenBox )
-        {
-            CNode->dt = dt0;
-            pmm->ITau = ITau; pmm->pKMM = pKMM; pmm->kTau = kTau; pmm->kdT = kdT;
-        }
         itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
         itTotal += CNode->IterDone > 0 ? CNode->IterDone : pmm->ITF + pmm->ITG;
         nAttempts++;
@@ -638,6 +653,8 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         return isOk( s ); };
 
     native_trace_quiet( true );
+    bool quietOn = true;   // trace output comes back also when a retry throws
+    auto quietBack = onScopeExit( [&]() { if( quietOn ) native_trace_quiet( false ); } );
     bool passed = false;
     // pa_RescueBudget: true once the call has used its iterations; no new attempt of steps 1-4 starts then
     bool budgetUsed = false;
@@ -816,6 +833,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         }
     }
     native_trace_quiet( false );
+    quietOn = false;
 
     long int result;
     // the status is reported under the mode that ran: without Optima, an Optima mode ran as native AIA or SIA
@@ -995,6 +1013,9 @@ long int TNode::GEM_run_dry_redo( bool uPrimalSol )
         && ( CNode->NodeStatusCH == NEED_GEM_AOP || CNode->NodeStatusCH == NEED_GEM_SOP ) )
     {
         const long int req = CNode->NodeStatusCH;
+        // the dry-redo flags come back to their values on entry also when a retry throws
+        auto dryBack = onScopeExit( [redo0 = g_optimaDryRedoCall, off0 = g_optimaDryOff]() {
+            g_optimaDryRedoCall = redo0; g_optimaDryOff = off0; } );
         g_optimaDryRedoCall = true;
         g_optimaDryFailed = false;
         const long int budget0 = g_optimaIterBudget;
@@ -1035,6 +1056,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     // A quick try that ended OK but was set aside: kept, so the full solve's answer can be compared with it.
     DbrCopy fastAnswer;
     double fastAnswerG = 0.;
+    std::vector<double> fastFloorParked;   // the floor marks of the quick answer
     bool fastAqAbsent = false;
     const long int fastCap = multi_ptr()->base_param()->OptimaFastFirst;
 #ifdef USE_OPTIMA_SOLVER   // the quick try is an Optima solve
@@ -1111,6 +1133,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         {
             fastAnswer = CopyNodeData();
             fastAnswerG = CNode->Gs;
+            fastFloorParked = floorParkedAmount;
             fastAqAbsent = g_aqueousAbsent;
         }
         fastF = pmm->ITF; fastG = pmm->ITG; fastSec = CalcTime; fastFailed = true;
@@ -1254,6 +1277,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         if( quickBetter )
         {
             databr_copy( fastAnswer.get() );
+            floorParkedAmount = fastFloorParked;   // the phase marks belong to the same answer
             CNode->NodeStatusCH = status = OK_GEM_AOP;
             g_aqueousAbsent = fastAqAbsent;
             SyncMultiWithDataBr();   // a later warm start begins from the answer returned
@@ -1328,9 +1352,13 @@ long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, lon
 long int TNode::GEM_run_aop_cgseed( long int& itf, long int& itg, double& seconds )
 {
     CNode->NodeStatusCH = NEED_GEM_AOP;
-    g_optimaCgSeedArmed = true;
-    const long int st = GEM_run_single_legacy_retry( false, itf, itg, seconds, "cgseed" );
-    g_optimaCgSeedArmed = false;
+    long int st;
+    {
+        // the seed is armed for this retry only, also when it throws
+        auto seedBack = onScopeExit( [armed0 = g_optimaCgSeedArmed]() { g_optimaCgSeedArmed = armed0; } );
+        g_optimaCgSeedArmed = true;
+        st = GEM_run_single_legacy_retry( false, itf, itg, seconds, "cgseed" );
+    }
     native_trace_decide( "cgseedretry aop=%ld", (long)st );
     node_logger->log( retryLevel( st == OK_GEM_AOP ), "GEM_run(): cold AOP failed - retried from the column-generation seed: {}",
                        st == OK_GEM_AOP ? "recovered" : "still failed" );
@@ -1440,6 +1468,8 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
     double seconds = CalcTime;
 
     native_trace_quiet( true );
+    bool quietOn = true;   // trace output comes back also when a retry throws
+    auto quietBack = onScopeExit( [&]() { if( quietOn ) native_trace_quiet( false ); } );
     long int result = ERR_GEM_AIA;
     // The first nudged cold answer, kept in case the warm re-solve at the exact composition fails.
     DbrCopy nudgedOk;
@@ -1503,6 +1533,7 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
                              (long)( n + 1 ), k, (long)cold, (long)warm, (long)itf, (long)itg );
     }
     native_trace_quiet( false );
+    quietOn = false;
     if( nudgedOk )
         nudgedOk.reset();
     node_logger->log( retryLevel( result != ERR_GEM_AIA ), "GEM_run(): cold native call failed - retried from nudged compositions (up to {}): {}",

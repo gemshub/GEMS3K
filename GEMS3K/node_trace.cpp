@@ -46,11 +46,22 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
     std::unique_ptr<TMultiBase> savedMulti( new TMultiBase( this ) );
     savedMulti->set_def();
     savedMulti->copyMULTI( *multi_base );
+    // the phase marks and the titration history of the node are kept too
+    const std::vector<double> savedFloorParked = floorParkedAmount;
+    const std::vector<double> savedTitrEntered = titrEntered_, savedTitrSolved = titrSolved_;
+    bool restored = false;
     auto restoreNode = [&]() {
+        if( restored ) return;
+        restored = true;
         databr_copy( backup.get() );
         backup.reset();
         multi_base->copyMULTIData( *savedMulti, false );
+        floorParkedAmount = savedFloorParked;
+        titrEntered_ = savedTitrEntered;
+        titrSolved_ = savedTitrSolved;
     };
+    // the node is restored on every exit, also when the result tables below run out of memory
+    struct RestoreAtExit { decltype( restoreNode )* f; ~RestoreAtExit() { try { (*f)(); } catch( ... ) {} } } restoreAtExit{ &restoreNode };
 
     std::vector<double> runFactors{ 1. };
     runFactors.insert( runFactors.end(), factors.begin(), factors.end() );
