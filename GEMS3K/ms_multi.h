@@ -1934,6 +1934,7 @@ protected:
     void MassBalanceResiduals( long int N, long int L, double *A, double *Y,
                                double *B, double *C );
     double OptimizeStepSize( double LM );
+    double StepSizeBrent( double A, double B, double C );   // Brent's search on [A, B] (GEMS3K_EXP_LSBRENT=1 turns it on, test only)
     void DC_ZeroOff( long int jStart, long int jEnd, long int k=-1L );
     void DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k=-1L );
     /// pa_FilloutBudget: scales the class fill-out so it changes each element's mass balance

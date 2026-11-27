@@ -5396,6 +5396,11 @@ double TMultiBase::OptimizeStepSize( double LM )
     if( LM<2. )
         C=.05*LM;
     else C=.1;
+    // GEMS3K_EXP_LSBRENT=1 (test only, off): Brent's search (a parabola through three points, golden steps as fallback)
+    // to the same interval width, with fewer energy evaluations. Off because it can make a HOP call very long (case-275).
+    static const bool s_lsBrent = getenv( "GEMS3K_EXP_LSBRENT" ) && atoi( getenv( "GEMS3K_EXP_LSBRENT" ) ) == 1;
+    if( s_lsBrent && B-A >= C )
+        return StepSizeBrent( A, B, C );
     if( B-A<C)
         goto OCT;
     LM1=A+.382*(B-A);
@@ -5432,6 +5437,61 @@ SH3:
 OCT:
     LM1=A+(B-A)/2;
     return(LM1);
+}
+
+/// Brent's minimisation of G(X) along the step on [A, B], stopped at an interval of width C (as the golden search).
+/// Returns the point with the lowest G found.
+double TMultiBase::StepSizeBrent( double A, double B, double C )
+{
+    const double cg = 0.381966011250105;   // golden section fraction
+    double x = A + cg*( B - A ), w = x, v = x;
+    double fx = GX( x ), fw = fx, fv = fx;
+    double d = 0., e = 0.;
+    for( int it = 0; it < 50; it++ )
+    {
+        const double xm = 0.5*( A + B );
+        if( B - A < C )
+            break;
+        // the same flat test as the golden search: no further fall can be seen at this precision
+        if( it > 1 && fabs( fw - fx ) <= std::max( fabs( fw ), fabs( fx ) ) * 1e-13 )
+            break;
+        bool golden = true;
+        if( fabs( e ) > 1e-3*C )
+        {   // parabola through x, w, v
+            const double r = ( x - w )*( fx - fv ), q0 = ( x - v )*( fx - fw );
+            double p = ( x - v )*q0 - ( x - w )*r, q = 2.*( q0 - r );
+            if( q > 0. ) p = -p; else q = -q;
+            const double etemp = e;
+            e = d;
+            if( fabs( p ) < fabs( 0.5*q*etemp ) && p > q*( A - x ) && p < q*( B - x ) )
+            {
+                d = p/q;
+                const double u = x + d;
+                if( u - A < 0.25*C || B - u < 0.25*C )
+                    d = ( xm >= x ) ? 0.25*C : -0.25*C;
+                golden = false;
+            }
+        }
+        if( golden )
+        {
+            e = ( x >= xm ) ? A - x : B - x;
+            d = cg*e;
+        }
+        const double u = ( fabs( d ) >= 0.25*C ) ? x + d : x + ( d > 0. ? 0.25*C : -0.25*C );
+        const double fu = GX( u );
+        if( fu <= fx )
+        {
+            if( u >= x ) A = x; else B = x;
+            v = w; fv = fw; w = x; fw = fx; x = u; fx = fu;
+        }
+        else
+        {
+            if( u < x ) A = u; else B = u;
+            if( fu <= fw || w == x ) { v = w; fv = fw; w = u; fw = fu; }
+            else if( fu <= fv || v == x || v == w ) { v = u; fv = fu; }
+        }
+    }
+    return x;
 }
 
 //===================================================================
