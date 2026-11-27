@@ -2154,17 +2154,24 @@ double TBerman::dGref_dysigma( const long int j, const long int s, const long in
     long int l, m, nmem;
     double krond=0., ys, dst, dsum=0.;
     bool kron;
-    // the moieties of end member j on site s that are not in all end members (independent of l)
-    std::vector<long int> mj;
-    for( m=0; m < NMoi; m++ ) // Looking through moieties
+    // the moieties of end member j on site s that are not in all end members (independent of l);
+    // the site table does not change, so the lists are made once
+    if( mjTable.empty() )
     {
-       nmem = em_howmany( s, m );
-       if( nmem == NComp )
-           continue;  // ignoring the moiety which is present in all end members
-       krond = KronDelta( j, s, m );
-       if( noZero( krond ) )
-           mj.push_back( m );
+        mjTable.assign( (size_t)NComp * (size_t)NSub, std::vector<long int>() );
+        for( long int j1=0; j1<NComp; j1++ )
+            for( long int s1=0; s1<NSub; s1++ )
+                for( m=0; m < NMoi; m++ ) // Looking through moieties
+                {
+                   nmem = em_howmany( s1, m );
+                   if( nmem == NComp )
+                       continue;  // ignoring the moiety which is present in all end members
+                   krond = KronDelta( j1, s1, m );
+                   if( noZero( krond ) )
+                       mjTable[(size_t)(j1*NSub+s1)].push_back( m );
+                }
     }
+    const std::vector<long int>& mj = mjTable[(size_t)(j*NSub+s)];
     for( l=0; l<NComp; l++ )
     {
        if( l == ex_j )   // this end member is marked to be skipped
