@@ -2129,8 +2129,8 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
     // The state on entry, for a full revert if the whole attempt fails to improve.
     std::vector<double> Xorig( amt, amt + L );
 
-    // Iterated projection: when a component has to be clamped, the next pass sorts it last, so
-    // the rank-revealing selection picks a different carrier for that direction. Each pass must
+    // Iterated projection: when a component has to be clamped (at 0 or at its own limit), the next
+    // pass sorts it last, so the rank-revealing selection picks a different carrier for that direction. Each pass must
     // strictly improve the worst relative residual or it is undone and the loop stops.
     // Bounded: the extra passes are kept only if they bring the answer under its own tolerance;
     // otherwise the single-pass result is kept, since a partial repair still moves the answer.
@@ -2142,6 +2142,7 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
     bool improved = false;
     std::vector<double> Xsingle; double relSingle = 0., absSingle = 0.;
     std::vector<long int> pivKept, pivSingle;       // carrier species of the repair that is kept
+    std::vector<char> held( (size_t)L, 0 );         // species that a pass stopped at one of its limits
 
     for( long int pass = 0; pass < maxPass; pass++ )
     {
@@ -2160,8 +2161,10 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
     // already failed its own mass-balance test.
     std::vector<long int> ord( (size_t)L );
     for( long int j = 0; j < L; j++ ) ord[(size_t)j] = j;
+    // a species held at a limit by an earlier pass comes last, so other species carry the repair
     std::sort( ord.begin(), ord.end(),
-               [amt]( long int a, long int b ) { return amt[a] > amt[b]; } );
+               [amt, &held]( long int a, long int b )
+               { return held[(size_t)a] != held[(size_t)b] ? held[(size_t)b] != 0 : amt[a] > amt[b]; } );
 
     std::vector<long int> piv;
     std::vector<double> Q, r( (size_t)N );
@@ -2236,8 +2239,8 @@ bool TMultiBase::MassBalanceReproject( double* amt, bool keepPartial )
         const double x = amt[j];
         // the lower bound is 0, or the species' own lower limit when it starts at or above it; the upper limit likewise
         const double lo = ( pm.DLL && pm.DLL[j] > 0. && x >= pm.DLL[j] ) ? pm.DLL[j] : 0.;
-        if( x + dy[(size_t)c] < lo ) { dy[(size_t)c] = lo - x; nClampedPass++; }
-        else if( pm.DUL && x <= pm.DUL[j] && x + dy[(size_t)c] > pm.DUL[j] ) { dy[(size_t)c] = pm.DUL[j] - x; nClampedPass++; }
+        if( x + dy[(size_t)c] < lo ) { dy[(size_t)c] = lo - x; nClampedPass++; held[(size_t)j] = 1; }
+        else if( pm.DUL && x <= pm.DUL[j] && x + dy[(size_t)c] > pm.DUL[j] ) { dy[(size_t)c] = pm.DUL[j] - x; nClampedPass++; held[(size_t)j] = 1; }
     }
 
     // the charge residual before this pass; a clamped pass no longer solves the charge row exactly
