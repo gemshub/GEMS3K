@@ -103,6 +103,7 @@ TNode::TNode( const TNode& otherNode )
     // copy data from otherNode
     datach_copy( otherNode.CSD );
     databr_copy( otherNode.CNode );
+    floorParkedAmount = otherNode.floorParkedAmount;   // the copy reports the same phases
 
     multi_ptr()->copyMULTI( *otherNode.multi_base );
     // the targets go with the copy: the registered conditions and which of them came from the DBR
@@ -538,7 +539,15 @@ TNode::DbrCopy TNode::CopyNodeData()
     try { databr_copy( live ); }
     catch( ... ) { CNode = live; throw; }
     CNode = live;
+    c.parked = floorParkedAmount;
     return c;
+}
+
+// Puts a copy back into the work node data, with its phase marks.
+void TNode::RestoreNodeData( const DbrCopy& c )
+{
+    databr_copy( c.get() );
+    floorParkedAmount = c.parked;
 }
 
 // pa_FailRescue: a call that ends with an error or a bad result is tried again in steps, stopping at the
@@ -674,7 +683,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     const bool coldReq = requested == NEED_GEM_AIA || requested == NEED_GEM_AOP || requested == NEED_GEM_HOP;
     if( coldReq && xPrev > 0. && !overBudget() )
     {
-        databr_copy( D0.get() );
+        RestoreNodeData( D0 );
         const long int s = run( warmMode, true, false );
         addToPool( s, 1 );
         if( isOk( s ) ) { passed = true; rescueStep = 1; }
@@ -685,7 +694,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     for( long int n = 0; n < bp->ColdRetryNudges && !passed && !overBudget(); n++ )
     {
         const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
-        databr_copy( D0.get() );
+        RestoreNodeData( D0 );
         for( long int i = 0; i < nIC; i++ )
             CNode->bIC[i] = b0[(size_t)i] * ( 1. + ( ( i % 2 ) ? -1. : 1. ) * k * 1e-15 );
         const long int s = run( requested, uPrimalSol, false );
@@ -719,15 +728,15 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         if( xSum > 0. && dist > 1e-12 && boxFrom )
         {
             DbrCopy good = snap();
-            databr_copy( D0.get() );
+            RestoreNodeData( D0 );
             for( long int jj = 0; jj < CSD->nDCb; jj++ ) { CNode->dul[jj] = boxFrom->dul[jj]; CNode->dll[jj] = boxFrom->dll[jj]; }
-            { DATABR* live = CNode; CNode = good.get(); databr_copy( live ); CNode = live; }
+            { DATABR* live = CNode; CNode = good.get(); databr_copy( live ); CNode = live; good.parked = floorParkedAmount; }
             double tGood = 0., h = 1. / (double)bp->RescueWalkSteps;
             long int halvings = 0, steps = 0, s = -1;
             while( tGood < 1. && !overBudget() )
             {
                 const double t = std::min( 1., tGood + h );
-                databr_copy( good.get() );
+                RestoreNodeData( good );
                 std::vector<double> b( (size_t)nIC );
                 for( long int i = 0; i < nIC; i++ )
                     b[(size_t)i] = ( t >= 1. ) ? b0[(size_t)i] : bPrev[(size_t)i] + t * ( b0[(size_t)i] - bPrev[(size_t)i] );
@@ -737,7 +746,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
                 if( isOk( s ) )
                 {
                     tGood = t;
-                    { DATABR* live = CNode; CNode = good.get(); databr_copy( live ); CNode = live; }
+                    { DATABR* live = CNode; CNode = good.get(); databr_copy( live ); CNode = live; good.parked = floorParkedAmount; }
                 }
                 else if( t >= 1. && isBad( s ) )
                 {
@@ -767,7 +776,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     // (4) one solve with looser settings, then the finish with the normal ones.
     if( !passed && !noResultKinetic && !overBudget() )
     {
-        databr_copy( D0.get() );
+        RestoreNodeData( D0 );
         TMultiBase::LocalSettings ownSettings( *multi_ptr() );   // the other nodes keep their settings
         BASE_PARAM* bp4 = multi_ptr()->base_param();
         const BASE_PARAM saved = *bp4;
@@ -818,13 +827,13 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             long int s;
             if( bi >= 0 )
             {
-                databr_copy( pool[(size_t)bi].d.get() );
+                RestoreNodeData( pool[(size_t)bi].d );
                 setB( b0 );   // a target call titrates again from the entered bulk
                 s = run( other, true, true );
             }
             else
             {
-                databr_copy( D0.get() );
+                RestoreNodeData( D0 );
                 s = run( other, uPrimalSol, false );
             }
             addToPool( s, 5 );
@@ -853,7 +862,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         const long int bi = ( level >= 2 ) ? bestIndex() : -1;
         if( bi >= 0 )
         {
-            databr_copy( pool[(size_t)bi].d.get() );
+            RestoreNodeData( pool[(size_t)bi].d );
             multi_ptr()->RestoreControlConditions( pool[(size_t)bi].cc );
             if( !targetCall ) setB( b0 );   // a target answer keeps its own titrated bulk
             CNode->dt = dt0;
@@ -866,7 +875,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         }
         else
         {
-            databr_copy( failed.get() );
+            RestoreNodeData( failed );
             multi_ptr()->RestoreControlConditions( failedCC );
             ipmlog_error = failedError;
             result = st;
@@ -922,7 +931,7 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
             for( long int n = 0; n < capNudges && !recovered; n++ )
             {
                 const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
-                databr_copy( failed.get() );
+                RestoreNodeData( failed );
                 for( long int i = 0; i < nIC; i++ )
                     CNode->bIC[i] = b0[(size_t)i] * ( 1. + ( ( i % 2 ) ? -1. : 1. ) * k * 1e-15 );
                 CNode->NodeStatusCH = NEED_GEM_AOP;
@@ -949,7 +958,7 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
                         keep = multi_ptr()->GetControlConditions().empty() && NudgedAnswerBalances( nudgedOk.get(), b0, worstRel );
                         if( keep )
                         {
-                            databr_copy( nudgedOk.get() );
+                            RestoreNodeData( nudgedOk );
                             for( long int i = 0; i < nIC; i++ )
                                 CNode->bIC[i] = b0[(size_t)i];
                             native_trace_decide( "capretry-keepnudged nudge=%+g mb_rel=%.3e", k, worstRel );
@@ -969,7 +978,7 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
             }
             if( !recovered )
             {   // last try: the original call without the cap
-                databr_copy( failed.get() );
+                RestoreNodeData( failed );
                 for( long int i = 0; i < nIC; i++ )
                     CNode->bIC[i] = b0[(size_t)i];
                 CNode->NodeStatusCH = req;
@@ -986,7 +995,7 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
             }
             if( !recovered )
             {
-                databr_copy( failed.get() );
+                RestoreNodeData( failed );
                 ipmlog_error = failedError;
                 result = st;
             }
@@ -1056,7 +1065,6 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     // A quick try that ended OK but was set aside: kept, so the full solve's answer can be compared with it.
     DbrCopy fastAnswer;
     double fastAnswerG = 0.;
-    std::vector<double> fastFloorParked;   // the floor marks of the quick answer
     bool fastAqAbsent = false;
     const long int fastCap = multi_ptr()->base_param()->OptimaFastFirst;
 #ifdef USE_OPTIMA_SOLVER   // the quick try is an Optima solve
@@ -1133,12 +1141,11 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         {
             fastAnswer = CopyNodeData();
             fastAnswerG = CNode->Gs;
-            fastFloorParked = floorParkedAmount;
             fastAqAbsent = g_aqueousAbsent;
         }
         fastF = pmm->ITF; fastG = pmm->ITG; fastSec = CalcTime; fastFailed = true;
         g_optimaIterBudget = budget0 < 0 ? -1 : std::max( 0L, budget0 - used );
-        databr_copy( fastBefore.get() );
+        RestoreNodeData( fastBefore );
         fastBefore.reset();
         CNode->NodeStatusCH = requested;
         clearipmLogError();
@@ -1188,7 +1195,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
             DbrCopy failed = CopyNodeData();
             const std::string failedError = ipmlog_error;
             long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
-            databr_copy( lsBefore.get() );                  // the first attempt's INPUTS
+            RestoreNodeData( lsBefore );                  // the first attempt's INPUTS
             CNode->NodeStatusCH = requested;
             if( lsRetryArmed ) g_optimaLineSearchRetry = true; else g_optimaLSEscapeOff = true;
             const long int second = GEM_run_single( uPrimalSol );
@@ -1202,7 +1209,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
                                isOkStatus( second ) ? "recovered" : "still failed" );
             const bool ok2 = second == OK_GEM_AOP || second == OK_GEM_SOP || second == OK_GEM_HOP || second == OK_GEM_SHP
                           || second == OK_GEM_AIA || second == OK_GEM_SIA;
-            if( !ok2 ) { databr_copy( failed.get() ); ipmlog_error = failedError; }
+            if( !ok2 ) { RestoreNodeData( failed ); ipmlog_error = failedError; }
             failed.reset();
             pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
             CNode->IterDone = itf + itg; CalcTime = seconds;
@@ -1219,7 +1226,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
             DbrCopy failed = CopyNodeData();
             const std::string failedError = ipmlog_error;
             long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
-            databr_copy( lvlBefore.get() );
+            RestoreNodeData( lvlBefore );
             CNode->NodeStatusCH = requested;
             clearipmLogError();
             g_ipmLevelOff = true;
@@ -1229,7 +1236,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
             native_trace_decide( "natlvlretry requested=%ld first=%ld second=%ld", (long)requested, (long)status, (long)second );
             node_logger->log( retryLevel( isOkStatus( second ) ), "GEM_run(): mode {} failed ({}) after the leveled start - solved again from the ordinary start: {}",
                                (long)requested, (long)status, isOkStatus( second ) ? "recovered" : "still failed" );
-            if( !isOkStatus( second ) ) { databr_copy( failed.get() ); ipmlog_error = failedError; }
+            if( !isOkStatus( second ) ) { RestoreNodeData( failed ); ipmlog_error = failedError; }
             failed.reset();
             pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
             CNode->IterDone = itf + itg; CalcTime = seconds;
@@ -1260,7 +1267,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         const std::string failedError = ipmlog_error;
         long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
         const long int second = GEM_run_aop_cgseed( itf, itg, seconds );
-        if( second != OK_GEM_AOP ) { databr_copy( failed.get() ); ipmlog_error = failedError; }
+        if( second != OK_GEM_AOP ) { RestoreNodeData( failed ); ipmlog_error = failedError; }
         failed.reset();
         pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
         CNode->IterDone = itf + itg; CalcTime = seconds;
@@ -1276,8 +1283,7 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
                              quickBetter ? "quick" : "full" );
         if( quickBetter )
         {
-            databr_copy( fastAnswer.get() );
-            floorParkedAmount = fastFloorParked;   // the phase marks belong to the same answer
+            RestoreNodeData( fastAnswer );
             CNode->NodeStatusCH = status = OK_GEM_AOP;
             g_aqueousAbsent = fastAqAbsent;
             SyncMultiWithDataBr();   // a later warm start begins from the answer returned
@@ -1331,7 +1337,7 @@ long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, lon
     {
         DbrCopy failed = CopyNodeData();
         const std::string failedError = ipmlog_error;
-        databr_copy( before.get() );
+        RestoreNodeData( before );
         CNode->NodeStatusCH = requested;
         g_optimaLSEscapeOff = true;
         const long int second = GEM_run_single( uPrimalSol );
@@ -1340,7 +1346,7 @@ long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, lon
         native_trace_decide( "escretry step=%s requested=%ld first=%ld second=%ld", step, (long)requested, (long)st, (long)second );
         node_logger->log( retryLevel( isOk( second ) ), "GEM_run(): {} attempt failed ({}) - re-solved with the stall escape off: {}",
                            step, (long)st, isOk( second ) ? "recovered" : "still failed" );
-        if( !isOk( second ) ) { databr_copy( failed.get() ); ipmlog_error = failedError; }
+        if( !isOk( second ) ) { RestoreNodeData( failed ); ipmlog_error = failedError; }
         failed.reset();
         st = CNode->NodeStatusCH;
     }
@@ -1387,7 +1393,7 @@ long int TNode::GEM_run_optima_cold_retry( long int requested )
                        (long)requested, (long)failedStatus, cold == OK_GEM_AOP ? "recovered" : "still failed" );
     if( cold != OK_GEM_AOP )
     {
-        databr_copy( failed.get() );
+        RestoreNodeData( failed );
         ipmlog_error = failedError;
     }
     failed.reset();
@@ -1495,7 +1501,7 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
                 {
                     nudgedOk = NewNodeData();
                 }
-                { DATABR* live = CNode; CNode = nudgedOk.get(); databr_copy( live ); CNode = live; }
+                { DATABR* live = CNode; CNode = nudgedOk.get(); databr_copy( live ); CNode = live; nudgedOk.parked = floorParkedAmount; }
                 nudgedK = k;
                 nudgedBal = balNow;
             }
@@ -1513,7 +1519,7 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
                 double worstRel = 0.;
                 if( NudgedAnswerBalances( nudgedOk.get(), b0, worstRel ) )
                 {
-                    databr_copy( nudgedOk.get() );
+                    RestoreNodeData( nudgedOk );
                     for( long int i = 0; i < nIC; i++ )
                         CNode->bIC[i] = b0[(size_t)i];
                     result = OK_GEM_AIA;
@@ -1541,7 +1547,7 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
 
     if( result == ERR_GEM_AIA )
     {
-        databr_copy( failed.get() );            // the failed call as it was, status ERR_GEM_AIA
+        RestoreNodeData( failed );            // the failed call as it was, status ERR_GEM_AIA
         ipmlog_error = failedError;
     }
     else

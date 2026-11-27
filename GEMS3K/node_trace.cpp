@@ -72,6 +72,8 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
     for( size_t r = 0; r < runFactors.size(); r++ )
     {
         databr_copy( backup.get() );
+        titrEntered_.clear();   // every trial solves the composition in backup, with no titration to undo
+        titrSolved_.clear();
         for( long int i : trace ) CNode->bIC[i] = b0[(size_t)i] * runFactors[r];
         CNode->NodeStatusCH = mode;
         const long int code = GEM_run( false );
@@ -84,7 +86,7 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
         {
             Ph_BC( k, bc.data() );
             for( long int i = 0; i < nIC; i++ ) runs[r].perPhase[(size_t)(k*nIC + i)] = bc[(size_t)i];
-            runs[r].present[(size_t)k] = CNode->xPH[k] > 0.;
+            runs[r].present[(size_t)k] = Ph_Present( k );   // a phase parked at its floor counts as absent
         }
     }
     } catch( ... ) { restoreNode(); throw; }

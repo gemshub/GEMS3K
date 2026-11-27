@@ -1529,26 +1529,31 @@ protected:
     void databr_copy( DATABR* otherCNode );
 
     /// A DATABR that frees itself when it goes out of scope, also when an error is thrown.
+    /// It also keeps the phase marks of the node (floorParkedAmount), so a restored answer reports the same phases.
     class DbrCopy
     {
         DATABR* d = nullptr;
     public:
+        std::vector<double> parked;   // floorParkedAmount when the copy was made
         DbrCopy() = default;
         explicit DbrCopy( DATABR* p ) : d( p ) {}
         DbrCopy( const DbrCopy& ) = delete;
         DbrCopy& operator=( const DbrCopy& ) = delete;
-        DbrCopy( DbrCopy&& o ) noexcept : d( o.d ) { o.d = nullptr; }
-        DbrCopy& operator=( DbrCopy&& o ) noexcept { if( this != &o ) { reset(); d = o.d; o.d = nullptr; } return *this; }
+        DbrCopy( DbrCopy&& o ) noexcept : d( o.d ), parked( std::move( o.parked ) ) { o.d = nullptr; }
+        DbrCopy& operator=( DbrCopy&& o ) noexcept
+        { if( this != &o ) { reset(); d = o.d; o.d = nullptr; parked = std::move( o.parked ); } return *this; }
         ~DbrCopy() { reset(); }
-        void reset() { if( d ) { dbr_dch_api::databr_free_internal( d ); delete d; d = nullptr; } }
+        void reset() { if( d ) { dbr_dch_api::databr_free_internal( d ); delete d; d = nullptr; } parked.clear(); }
         DATABR* get() const { return d; }
         DATABR* operator->() const { return d; }
         explicit operator bool() const { return d != nullptr; }
     };
     /// Returns an empty DATABR with the sizes of this node.
     DbrCopy NewNodeData();
-    /// Returns a copy of the work node data (CNode).
+    /// Returns a copy of the work node data (CNode) and its phase marks.
     DbrCopy CopyNodeData();
+    /// Puts a copy back into the work node data (CNode), with its phase marks.
+    void RestoreNodeData( const DbrCopy& c );
 
     /// Test to reload thermodynamic data from grid
     void CheckMtparam();
