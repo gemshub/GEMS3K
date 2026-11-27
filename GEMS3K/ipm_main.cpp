@@ -3128,11 +3128,14 @@ void TMultiBase::ActivityConsistencyCheck()
         : fmt::format( "The activity of {} differs from its molality times activity coefficient by {:.2g} in log10{}, "
                        "so the result may stop short of equilibrium. Try HOP or AOP for this system.", name, worst, more );
     trace_growth_note = trace_growth_stuck ? trace_growth_note + " " + note : note;
-    trace_growth_stuck = true;
     activity_mismatch = true;
+    // On an undetermined redox level the energy cannot rank two answers, so the Optima finish cannot improve this one:
+    // only the warning is given (owner decision 2026-11-25: either answer is correct).
+    if( !redoxNote )
+        trace_growth_stuck = true;
 #ifdef USE_OPTIMA_SOLVER
     // The Optima finish reports instead; it does not run when a pH or Eh target is set.
-    if( base_param()->NativeOptimaFinish > 0 && optima_control_conditions.empty() ) return;
+    if( trace_growth_stuck && base_param()->NativeOptimaFinish > 0 && optima_control_conditions.empty() ) return;
 #endif
     gems_logger->log( first_note_for_system( char_array_to_string( pm.stkey, EQ_RKLEN ).c_str(), "actconsist" )
                           ? spdlog::level::warn : spdlog::level::debug, "{}", note );
