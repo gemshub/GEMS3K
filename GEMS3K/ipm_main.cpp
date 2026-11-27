@@ -32,6 +32,7 @@
 #include "gems3k_timing.h"
 #include <cstdlib>
 #include <Eigen/QR>
+#include <Eigen/Cholesky>
 #include <cstdarg>
 #include "ms_multi.h"
 #include "jama_lu.h"
@@ -293,7 +294,11 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
         // share the weights, so a factor made for the same set and weights is used again.
         // A factor is not kept across solves: A can change at the same address (the volume column at a new T and P).
         static thread_local struct { const double* A = nullptr; unsigned long epoch = 0; long int N = -1, rows = -1, drop = -2; std::vector<long int> js;
-                                     std::vector<double> w; Eigen::VectorXd c; Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr; } fc;
+                                     std::vector<double> w; Eigen::VectorXd c; Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr;
+                                     bool ne = false; Eigen::MatrixXd S; Eigen::LDLT<Eigen::MatrixXd> ldlt; } fc;
+        // A system of full rank is solved from the small matrix S^T S (one row and column per IC), which costs far
+        // less than the QR of S; a nearly dependent one keeps the QR. GEMS3K_EXP_BALNE=0 always uses the QR (test only).
+        static const bool s_balNE = !getenv( "GEMS3K_EXP_BALNE" ) || atoi( getenv( "GEMS3K_EXP_BALNE" ) ) != 0;
         bool same = fc.A == pm.A && fc.epoch == g_balanceQrEpoch && fc.N == pm.N && fc.rows == N && fc.drop == dropRow && fc.js == js;
         for( long int q = 0; same && q < La; q++ ) same = fc.w[(size_t)q] == pm.W[js[(size_t)q]];
         if( !same )
@@ -307,12 +312,32 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
             {   fc.c( i ) = S.col( i ).norm();
                 if( !( fc.c( i ) > 0. ) ) fc.c( i ) = 1.;
                 S.col( i ) /= fc.c( i ); }
-            fc.qr.compute( S );
+            fc.ne = false;
+            if( s_balNE )
+            {
+                fc.ldlt.compute( S.transpose() * S );
+                const Eigen::VectorXd D = fc.ldlt.vectorD();
+                const double dMax = D.cwiseAbs().maxCoeff();
+                // columns of unit length: a pivot below 1e-10 of the largest means a dependent IC, which the QR handles
+                fc.ne = fc.ldlt.info() == Eigen::Success && dMax > 0. && D.minCoeff() > 1e-10 * dMax;
+                if( fc.ne ) fc.S = S;
+            }
+            if( !fc.ne )
+                fc.qr.compute( S );
             fc.A = pm.A; fc.epoch = g_balanceQrEpoch; fc.N = pm.N; fc.rows = N; fc.drop = dropRow; fc.js = js;
             fc.w.resize( (size_t)La );
             for( long int q = 0; q < La; q++ ) fc.w[(size_t)q] = pm.W[js[(size_t)q]];
         }
         const Eigen::VectorXd& c = fc.c;
+        Eigen::VectorXd e;
+        if( fc.ne )
+        {   // e = S (S^T S)^-1 (r / c): the same smallest correction as the QR gives on a system of full rank
+            Eigen::VectorXd rc( Nc );
+            for( long int i = 0; i < Nc; i++ ) rc( i ) = r[(size_t)ics[(size_t)i]] / c( i );
+            e.noalias() = fc.S * fc.ldlt.solve( rc );
+        }
+        else
+        {
         const Eigen::ColPivHouseholderQR<Eigen::MatrixXd>& qr = fc.qr;
         const long int rank = (long int)qr.rank();
         const Eigen::MatrixXd& QR = qr.matrixQR();
@@ -323,7 +348,8 @@ static bool balance_correction_qr( const MULTI& pm, const double* amt, long int 
             double sum = r[(size_t)ics[(size_t)i]] / c( i );
             for( long int m = 0; m < k; m++ ) sum -= QR( m, k ) * t( m );
             t( k ) = sum / QR( k, k ); }
-        const Eigen::VectorXd e = qr.householderQ() * t;
+        e = qr.householderQ() * t;
+        }
         for( long int q = 0; q < La; q++ )
         {   const long int j = js[(size_t)q];
             d[(size_t)j] = sqrt( pm.W[j] ) * e( q );
