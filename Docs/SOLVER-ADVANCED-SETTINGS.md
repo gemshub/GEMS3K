@@ -33,7 +33,7 @@ The [Glossary](GLOSSARY.md) explains the special words.
 | `pa_OptimaTailDryOnly` | 2 (on) | Sets where the tail stop acts. |
 | `pa_OptimaWaterKeep` | 2 (on) | The value 1: the solver keeps a converged result when the new try with more water fails. |
 | `pa_OptimaSnapLeaving` | 2 (on) | In a warm restart, a species that goes to zero can limit the step many times in a row. After this number of steps, the solver puts the species on its floor. The species then does not become smaller a little at a time. |
-| `pa_OptimaFastFirst` | 60 (on) | A cold-start calculation (AOP) first tries a quick solve that takes full steps. If the quick solve does not end well, the normal calculation runs from the same start. |
+| `pa_OptimaFastFirst` | 60 (on) | A cold-start calculation (AOP) first tries a quick solve that takes full steps. If the quick solve does not end well, the normal calculation runs from the same start. If the quick solve ends OK and the normal calculation still runs, GEMS3K keeps the result with the lower energy. |
 | `pa_OptimaFastFrozen` | 3 (on) | The quick first try stops when this number of steps in a row change almost nothing. |
 | `pa_OptimaFastDiverge` | 10 (on) | The quick first try stops when its energy jumps far above the start and its error does not improve by this factor. |
 | `pa_OptimaColdLevel` | 1 (on) | If the reduced first solve is not used, a cold-start calculation starts from a simple energy-minimising estimate. Two copies of one solid solution start at different compositions. |
