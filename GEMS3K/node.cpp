@@ -26,6 +26,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include <new>
 #include <algorithm>
 #include <cmath>
 #include "gems3k_timing.h"
@@ -365,6 +366,13 @@ long int TNode::GEM_run( bool uPrimalSol )
             LogError( e.title, e.mess );
             throw;
         }
+        catch( const std::bad_alloc& )
+        {
+            // out of memory outside the solve itself (for example a copy before a retry): an error status, not a throw
+            ipmlog_error = "out of memory";
+            CNode->NodeStatusCH = T_ERROR_GEM;
+            st = T_ERROR_GEM;
+        }
         catch( ... )
         {
             g_errorsHandledByCaller--;
@@ -499,6 +507,27 @@ void TNode::ApplyDbrTargets( long int mode )
 #endif
 }
 
+// An empty DATABR with the sizes of this node; it frees itself.
+TNode::DbrCopy TNode::NewNodeData()
+{
+    DbrCopy c( new DATABR );
+    dbr_dch_api::databr_reset( c.get(), 1 );   // no allocation; sets the arrays to null first
+    dbr_dch_api::databr_realloc( CSD, c.get() );
+    return c;
+}
+
+// A copy of the work node data (CNode); it frees itself.
+TNode::DbrCopy TNode::CopyNodeData()
+{
+    DbrCopy c = NewNodeData();
+    DATABR* live = CNode;
+    CNode = c.get();
+    try { databr_copy( live ); }
+    catch( ... ) { CNode = live; throw; }
+    CNode = live;
+    return c;
+}
+
 // pa_FailRescue: a call that ends with an error or a bad result is tried again in steps, stopping at the
 // first that passes: (1) a cold call solved warm from the node's previous answer, (2) nudged compositions,
 // (3) a walk from the node's previous answer to the new composition, (4) looser settings, (5) the other
@@ -521,17 +550,13 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         return GEM_run_capped( uPrimalSol );
 
     auto snap = [this]() {
-        DATABR* d = new DATABR;
-        dbr_dch_api::databr_reset( d, 1 );
-        dbr_dch_api::databr_realloc( CSD, d );
-        { DATABR* live = CNode; CNode = d; databr_copy( live ); CNode = live; }
-        return d; };
+        return CopyNodeData(); };
     auto isOk = []( long int s ) { return s == OK_GEM_AIA || s == OK_GEM_SIA || s == OK_GEM_AOP || s == OK_GEM_SOP
                                           || s == OK_GEM_HOP || s == OK_GEM_SHP; };
     auto isBad = []( long int s ) { return s == BAD_GEM_AIA || s == BAD_GEM_SIA || s == BAD_GEM_AOP || s == BAD_GEM_SOP
                                            || s == BAD_GEM_HOP || s == BAD_GEM_SHP; };
 
-    DATABR* D0 = snap();   // the call's inputs
+    DbrCopy D0 = snap();   // the call's inputs
     const long int ITau0 = pmm->ITau, pKMM0 = pmm->pKMM;   // kinetic state before the first attempt
     long int st = GEM_run_capped( uPrimalSol );
     // a warm call may report its outcome under the cold code of its solver, so any bad or error code counts
@@ -539,7 +564,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
                     || st == ERR_GEM_HOP || st == ERR_GEM_SHP;
     if( !isBad( st ) && !isErr )
     {
-        databr_free( D0 );
+        D0.reset();
         return st;
     }
 
@@ -553,7 +578,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     const double dt0 = D0->dt;
     const long int warmMode = ( requested == NEED_GEM_AIA || requested == NEED_GEM_SIA ) ? NEED_GEM_SIA
                             : ( requested == NEED_GEM_AOP || requested == NEED_GEM_SOP ) ? NEED_GEM_SOP : NEED_GEM_SHP;
-    DATABR* failed = snap();
+    DbrCopy failed = snap();
     const std::string failedError = ipmlog_error;
     // pH/Eh control results live outside the DATABR, so they are saved with every answer that may be returned
     const std::vector<EqControlCondition> failedCC = multi_ptr()->GetControlConditions();
@@ -562,7 +587,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     double seconds = CalcTime;
     long int nAttempts = 0;
 
-    struct Entry { DATABR* d; double rel; double G; long int step; std::vector<EqControlCondition> cc; bool targetsMet; bool balances; };
+    struct Entry { DbrCopy d; double rel; double G; long int step; std::vector<EqControlCondition> cc; bool targetsMet; bool balances; };
     std::vector<Entry> pool;
     auto addToPool = [&]( long int s, long int step ) {
         if( !isOk( s ) && !isBad( s ) )
@@ -632,7 +657,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     const bool coldReq = requested == NEED_GEM_AIA || requested == NEED_GEM_AOP || requested == NEED_GEM_HOP;
     if( coldReq && xPrev > 0. && !overBudget() )
     {
-        databr_copy( D0 );
+        databr_copy( D0.get() );
         const long int s = run( warmMode, true, false );
         addToPool( s, 1 );
         if( isOk( s ) ) { passed = true; rescueStep = 1; }
@@ -643,7 +668,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     for( long int n = 0; n < bp->ColdRetryNudges && !passed && !overBudget(); n++ )
     {
         const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
-        databr_copy( D0 );
+        databr_copy( D0.get() );
         for( long int i = 0; i < nIC; i++ )
             CNode->bIC[i] = b0[(size_t)i] * ( 1. + ( ( i % 2 ) ? -1. : 1. ) * k * 1e-15 );
         const long int s = run( requested, uPrimalSol, false );
@@ -673,19 +698,19 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         for( long int i = 0; i < nIC; i++ )
             if( CSD->ccIC[ CSD->xic[i] ] != IC_CHARGE )
                 dist = std::max( dist, fabs( b0[(size_t)i] - bPrev[(size_t)i] ) / std::max( fabs( b0[(size_t)i] ), 1e-300 ) );
-        const DATABR* boxFrom = kinetics ? ( pool.empty() ? nullptr : pool.back().d ) : D0;
+        const DATABR* boxFrom = kinetics ? ( pool.empty() ? nullptr : pool.back().d.get() ) : D0.get();
         if( xSum > 0. && dist > 1e-12 && boxFrom )
         {
-            DATABR* good = snap();
-            databr_copy( D0 );
+            DbrCopy good = snap();
+            databr_copy( D0.get() );
             for( long int jj = 0; jj < CSD->nDCb; jj++ ) { CNode->dul[jj] = boxFrom->dul[jj]; CNode->dll[jj] = boxFrom->dll[jj]; }
-            { DATABR* live = CNode; CNode = good; databr_copy( live ); CNode = live; }
+            { DATABR* live = CNode; CNode = good.get(); databr_copy( live ); CNode = live; }
             double tGood = 0., h = 1. / (double)bp->RescueWalkSteps;
             long int halvings = 0, steps = 0, s = -1;
             while( tGood < 1. && !overBudget() )
             {
                 const double t = std::min( 1., tGood + h );
-                databr_copy( good );
+                databr_copy( good.get() );
                 std::vector<double> b( (size_t)nIC );
                 for( long int i = 0; i < nIC; i++ )
                     b[(size_t)i] = ( t >= 1. ) ? b0[(size_t)i] : bPrev[(size_t)i] + t * ( b0[(size_t)i] - bPrev[(size_t)i] );
@@ -695,7 +720,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
                 if( isOk( s ) )
                 {
                     tGood = t;
-                    { DATABR* live = CNode; CNode = good; databr_copy( live ); CNode = live; }
+                    { DATABR* live = CNode; CNode = good.get(); databr_copy( live ); CNode = live; }
                 }
                 else if( t >= 1. && isBad( s ) )
                 {
@@ -708,7 +733,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
                     h *= 0.5;
             }
             if( tGood >= 1. ) { passed = true; rescueStep = 3; }
-            databr_free( good );
+            good.reset();
             native_trace_decide( "rescue step=3 steps=%ld halvings=%ld reached=%.4f dist=%.3e status=%ld it=%ld",
                                  steps, halvings, tGood, dist, s, itTotal );
         }
@@ -725,7 +750,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
     // (4) one solve with looser settings, then the finish with the normal ones.
     if( !passed && !noResultKinetic && !overBudget() )
     {
-        databr_copy( D0 );
+        databr_copy( D0.get() );
         TMultiBase::LocalSettings ownSettings( *multi_ptr() );   // the other nodes keep their settings
         BASE_PARAM* bp4 = multi_ptr()->base_param();
         const BASE_PARAM saved = *bp4;
@@ -776,13 +801,13 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
             long int s;
             if( bi >= 0 )
             {
-                databr_copy( pool[(size_t)bi].d );
+                databr_copy( pool[(size_t)bi].d.get() );
                 setB( b0 );   // a target call titrates again from the entered bulk
                 s = run( other, true, true );
             }
             else
             {
-                databr_copy( D0 );
+                databr_copy( D0.get() );
                 s = run( other, uPrimalSol, false );
             }
             addToPool( s, 5 );
@@ -810,7 +835,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         const long int bi = ( level >= 2 ) ? bestIndex() : -1;
         if( bi >= 0 )
         {
-            databr_copy( pool[(size_t)bi].d );
+            databr_copy( pool[(size_t)bi].d.get() );
             multi_ptr()->RestoreControlConditions( pool[(size_t)bi].cc );
             if( !targetCall ) setB( b0 );   // a target answer keeps its own titrated bulk
             CNode->dt = dt0;
@@ -823,7 +848,7 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
         }
         else
         {
-            databr_copy( failed );
+            databr_copy( failed.get() );
             multi_ptr()->RestoreControlConditions( failedCC );
             ipmlog_error = failedError;
             result = st;
@@ -835,9 +860,8 @@ long int TNode::GEM_run_rescue( bool uPrimalSol )
                        passed ? "recovered" : ( rescueStep == 6 ? "best attempt returned" : "still failed" ) );
     if( budgetUsed && !passed )
         node_logger->info( "GEM_run(): the rescue stopped at its iteration limit (pa_RescueBudget = {})", bp->RescueBudget );
-    for( auto& e : pool ) databr_free( e.d );
-    databr_free( failed );
-    databr_free( D0 );
+    failed.reset();
+    D0.reset();
     pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
     CNode->IterDone = itTotal; CalcTime = seconds;
     return result;
@@ -872,10 +896,7 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
         if( !okFirst && capHit )
         {
             const long int nIC = CSD->nICb;
-            DATABR* failed = new DATABR;
-            dbr_dch_api::databr_reset( failed, 1 );
-            dbr_dch_api::databr_realloc( CSD, failed );
-            { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+            DbrCopy failed = CopyNodeData();
             const std::string failedError = ipmlog_error;
             const std::vector<double>& b0 = bEntered;
             long int result = st;
@@ -883,7 +904,7 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
             for( long int n = 0; n < capNudges && !recovered; n++ )
             {
                 const double k = ( n % 2 == 0 ? 1. : -1. ) * (double)( n / 2 + 1 );
-                databr_copy( failed );
+                databr_copy( failed.get() );
                 for( long int i = 0; i < nIC; i++ )
                     CNode->bIC[i] = b0[(size_t)i] * ( 1. + ( ( i % 2 ) ? -1. : 1. ) * k * 1e-15 );
                 CNode->NodeStatusCH = NEED_GEM_AOP;
@@ -894,10 +915,7 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
                 long int warm = -1;
                 if( cold == OK_GEM_AOP )
                 {
-                    DATABR* nudgedOk = new DATABR;
-                    dbr_dch_api::databr_reset( nudgedOk, 1 );
-                    dbr_dch_api::databr_realloc( CSD, nudgedOk );
-                    { DATABR* live = CNode; CNode = nudgedOk; databr_copy( live ); CNode = live; }
+                    DbrCopy nudgedOk = CopyNodeData();
                     for( long int i = 0; i < nIC; i++ )
                         CNode->bIC[i] = b0[(size_t)i];
                     CNode->NodeStatusCH = NEED_GEM_SOP;
@@ -910,10 +928,10 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
                     {   // keep the nudged answer, reported at the exact composition, if it balances that composition;
                         // a pH or Eh target answer has its own titrated bulk, so it cannot be checked that way and is not kept
                         double worstRel = 0.;
-                        keep = multi_ptr()->GetControlConditions().empty() && NudgedAnswerBalances( nudgedOk, b0, worstRel );
+                        keep = multi_ptr()->GetControlConditions().empty() && NudgedAnswerBalances( nudgedOk.get(), b0, worstRel );
                         if( keep )
                         {
-                            databr_copy( nudgedOk );
+                            databr_copy( nudgedOk.get() );
                             for( long int i = 0; i < nIC; i++ )
                                 CNode->bIC[i] = b0[(size_t)i];
                             native_trace_decide( "capretry-keepnudged nudge=%+g mb_rel=%.3e", k, worstRel );
@@ -926,14 +944,14 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
                         result = ( req == NEED_GEM_AOP ) ? OK_GEM_AOP : OK_GEM_SOP;
                         recovered = true;
                     }
-                    databr_free( nudgedOk );
+                    nudgedOk.reset();
                 }
                 native_trace_decide( "capretry attempt=%ld nudge=%+g aop=%ld sop=%ld it=%ld",
                                      (long)( n + 1 ), k, (long)cold, (long)warm, (long)total );
             }
             if( !recovered )
             {   // last try: the original call without the cap
-                databr_copy( failed );
+                databr_copy( failed.get() );
                 for( long int i = 0; i < nIC; i++ )
                     CNode->bIC[i] = b0[(size_t)i];
                 CNode->NodeStatusCH = req;
@@ -950,13 +968,13 @@ long int TNode::GEM_run_capped( bool uPrimalSol )
             }
             if( !recovered )
             {
-                databr_copy( failed );
+                databr_copy( failed.get() );
                 ipmlog_error = failedError;
                 result = st;
             }
             CNode->NodeStatusCH = result;
             st = result;
-            databr_free( failed );
+            failed.reset();
             node_logger->info( "GEM_run(): Optima call reached its iteration cap ({}) - retried at nudged compositions"
                                " and without the cap: {}", cap, recovered ? "recovered" : "still failed" );
         }
@@ -1015,17 +1033,14 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     double fastSec = 0.;
     bool fastFailed = false;
     // A quick try that ended OK but was set aside: kept, so the full solve's answer can be compared with it.
-    DATABR* fastAnswer = nullptr;
+    DbrCopy fastAnswer;
     double fastAnswerG = 0.;
     bool fastAqAbsent = false;
     const long int fastCap = multi_ptr()->base_param()->OptimaFastFirst;
 #ifdef USE_OPTIMA_SOLVER   // the quick try is an Optima solve
     if( requested == NEED_GEM_AOP && !kinetics && fastCap > 0 )
     {
-        DATABR* fastBefore = new DATABR;
-        dbr_dch_api::databr_reset( fastBefore, 1 );
-        dbr_dch_api::databr_realloc( CSD, fastBefore );
-        { DATABR* live = CNode; CNode = fastBefore; databr_copy( live ); CNode = live; }
+        DbrCopy fastBefore = CopyNodeData();
         TMultiBase::LocalSettings ownSettings( *multi_ptr() );   // the other nodes keep their settings
         BASE_PARAM* bp = multi_ptr()->base_param();
         const BASE_PARAM saved = *bp;
@@ -1087,24 +1102,21 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
         if( fast == OK_GEM_AOP && !fastCut )
         {
             g_optimaIterBudget = budget0;
-            databr_free( fastBefore );
+            fastBefore.reset();
             return fast;
         }
         // the quick answer can be compared by energy only at the bulk that was entered (no pH or Eh target)
         // and only when its phase check did not stop on an error
         if( fast == OK_GEM_AOP && !screenFailed && multi_ptr()->GetControlConditions().empty() )
         {
-            fastAnswer = new DATABR;
-            dbr_dch_api::databr_reset( fastAnswer, 1 );
-            dbr_dch_api::databr_realloc( CSD, fastAnswer );
-            { DATABR* live = CNode; CNode = fastAnswer; databr_copy( live ); CNode = live; }
+            fastAnswer = CopyNodeData();
             fastAnswerG = CNode->Gs;
             fastAqAbsent = g_aqueousAbsent;
         }
         fastF = pmm->ITF; fastG = pmm->ITG; fastSec = CalcTime; fastFailed = true;
         g_optimaIterBudget = budget0 < 0 ? -1 : std::max( 0L, budget0 - used );
-        databr_copy( fastBefore );
-        databr_free( fastBefore );
+        databr_copy( fastBefore.get() );
+        fastBefore.reset();
         CNode->NodeStatusCH = requested;
         clearipmLogError();
     }
@@ -1123,24 +1135,18 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     const bool warmGoesCold = ( requested == NEED_GEM_SOP || requested == NEED_GEM_SHP )
                               && multi_ptr()->base_param()->OptimaColdRetry == 2;
     const bool escRetryArmed = optimaReq && !lsRetryArmed && !warmGoesCold && multi_ptr()->base_param()->OptimaLineSearch > 0.;
-    DATABR* lsBefore = nullptr;
+    DbrCopy lsBefore;
     if( lsRetryArmed || escRetryArmed )
     {
-        lsBefore = new DATABR;
-        dbr_dch_api::databr_reset( lsBefore, 1 );
-        dbr_dch_api::databr_realloc( CSD, lsBefore );
-        { DATABR* live = CNode; CNode = lsBefore; databr_copy( live ); CNode = live; }
+        lsBefore = CopyNodeData();
     }
     // pa_IpmLevelStart: keep the inputs of a call with a native part, in case its start from the leveled solution fails.
-    DATABR* lvlBefore = nullptr;
+    DbrCopy lvlBefore;
     g_ipmLevelUsed = false;
     if( !kinetics && ( requested == NEED_GEM_AIA || requested == NEED_GEM_SIA || requested == NEED_GEM_HOP || requested == NEED_GEM_SHP )
         && multi_ptr()->base_param()->IpmLevelStart > 0 )
     {
-        lvlBefore = new DATABR;
-        dbr_dch_api::databr_reset( lvlBefore, 1 );
-        dbr_dch_api::databr_realloc( CSD, lvlBefore );
-        { DATABR* live = CNode; CNode = lvlBefore; databr_copy( live ); CNode = live; }
+        lvlBefore = CopyNodeData();
     }
     g_optimaEscRetryNext = escRetryArmed;   // the first attempt leaves its last-resort re-solve to that retry
     long int status = GEM_run_single( uPrimalSol );
@@ -1156,13 +1162,10 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
                         || status == OK_GEM_AIA || status == OK_GEM_SIA;
         if( !okNow )
         {
-            DATABR* failed = new DATABR;
-            dbr_dch_api::databr_reset( failed, 1 );
-            dbr_dch_api::databr_realloc( CSD, failed );
-            { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+            DbrCopy failed = CopyNodeData();
             const std::string failedError = ipmlog_error;
             long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
-            databr_copy( lsBefore );                  // the first attempt's INPUTS
+            databr_copy( lsBefore.get() );                  // the first attempt's INPUTS
             CNode->NodeStatusCH = requested;
             if( lsRetryArmed ) g_optimaLineSearchRetry = true; else g_optimaLSEscapeOff = true;
             const long int second = GEM_run_single( uPrimalSol );
@@ -1176,13 +1179,13 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
                                isOkStatus( second ) ? "recovered" : "still failed" );
             const bool ok2 = second == OK_GEM_AOP || second == OK_GEM_SOP || second == OK_GEM_HOP || second == OK_GEM_SHP
                           || second == OK_GEM_AIA || second == OK_GEM_SIA;
-            if( !ok2 ) { databr_copy( failed ); ipmlog_error = failedError; }
-            databr_free( failed );
+            if( !ok2 ) { databr_copy( failed.get() ); ipmlog_error = failedError; }
+            failed.reset();
             pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
             CNode->IterDone = itf + itg; CalcTime = seconds;
             status = CNode->NodeStatusCH;
         }
-        databr_free( lsBefore );
+        lsBefore.reset();
     }
     // pa_IpmLevelStart: a call whose native part started from the leveled solution and did not end OK is solved
     // again once from the ordinary start; if that fails too, the first result is kept.
@@ -1190,13 +1193,10 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     {
         if( g_ipmLevelUsed && !isOkStatus( status ) )
         {
-            DATABR* failed = new DATABR;
-            dbr_dch_api::databr_reset( failed, 1 );
-            dbr_dch_api::databr_realloc( CSD, failed );
-            { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+            DbrCopy failed = CopyNodeData();
             const std::string failedError = ipmlog_error;
             long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
-            databr_copy( lvlBefore );
+            databr_copy( lvlBefore.get() );
             CNode->NodeStatusCH = requested;
             clearipmLogError();
             g_ipmLevelOff = true;
@@ -1206,13 +1206,13 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
             native_trace_decide( "natlvlretry requested=%ld first=%ld second=%ld", (long)requested, (long)status, (long)second );
             node_logger->log( retryLevel( isOkStatus( second ) ), "GEM_run(): mode {} failed ({}) after the leveled start - solved again from the ordinary start: {}",
                                (long)requested, (long)status, isOkStatus( second ) ? "recovered" : "still failed" );
-            if( !isOkStatus( second ) ) { databr_copy( failed ); ipmlog_error = failedError; }
-            databr_free( failed );
+            if( !isOkStatus( second ) ) { databr_copy( failed.get() ); ipmlog_error = failedError; }
+            failed.reset();
             pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
             CNode->IterDone = itf + itg; CalcTime = seconds;
             status = CNode->NodeStatusCH;
         }
-        databr_free( lvlBefore );
+        lvlBefore.reset();
     }
     if( requested == NEED_GEM_AIA && status == ERR_GEM_AIA && !kinetics && multi_ptr()->base_param()->FailRescue <= 0 )
     {
@@ -1233,15 +1233,12 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
     // g_optimaCgSeedArmed). A retry that is not OK hands the first failure back unchanged.
     if( multi_ptr()->base_param()->OptimaCgSeed > 0. && !kinetics && requested == NEED_GEM_AOP && status != OK_GEM_AOP )
     {
-        DATABR* failed = new DATABR;
-        dbr_dch_api::databr_reset( failed, 1 );
-        dbr_dch_api::databr_realloc( CSD, failed );
-        { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+        DbrCopy failed = CopyNodeData();
         const std::string failedError = ipmlog_error;
         long int itf = pmm->ITF, itg = pmm->ITG; double seconds = CalcTime;
         const long int second = GEM_run_aop_cgseed( itf, itg, seconds );
-        if( second != OK_GEM_AOP ) { databr_copy( failed ); ipmlog_error = failedError; }
-        databr_free( failed );
+        if( second != OK_GEM_AOP ) { databr_copy( failed.get() ); ipmlog_error = failedError; }
+        failed.reset();
         pmm->ITF = itf; pmm->ITG = itg; NumIterFIA = itf; NumIterIPM = itg;
         CNode->IterDone = itf + itg; CalcTime = seconds;
         status = CNode->NodeStatusCH;
@@ -1256,15 +1253,14 @@ long int TNode::GEM_run_tries( bool uPrimalSol )
                              quickBetter ? "quick" : "full" );
         if( quickBetter )
         {
-            databr_copy( fastAnswer );
+            databr_copy( fastAnswer.get() );
             CNode->NodeStatusCH = status = OK_GEM_AOP;
             g_aqueousAbsent = fastAqAbsent;
             SyncMultiWithDataBr();   // a later warm start begins from the answer returned
             clearipmLogError();
             node_logger->debug( "GEM_run(): the quick try's answer has a lower Gibbs energy than the full solve's; it is returned" );
         }
-        databr_free( fastAnswer );
-        fastAnswer = nullptr;
+        fastAnswer.reset();
     }
     if( fastFailed )
     {
@@ -1300,24 +1296,18 @@ long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, lon
     auto isOk = []( long int st ) { return st == OK_GEM_AOP || st == OK_GEM_SOP || st == OK_GEM_HOP || st == OK_GEM_SHP
                                            || st == OK_GEM_AIA || st == OK_GEM_SIA; };
     const bool armed = multi_ptr()->base_param()->OptimaLineSearch > 0. && !g_optimaLSEscapeOff;
-    DATABR* before = nullptr;
+    DbrCopy before;
     if( armed )
     {
-        before = new DATABR;
-        dbr_dch_api::databr_reset( before, 1 );
-        dbr_dch_api::databr_realloc( CSD, before );
-        { DATABR* live = CNode; CNode = before; databr_copy( live ); CNode = live; }
+        before = CopyNodeData();
     }
     long int st = GEM_run_single( uPrimalSol );
     itf += pmm->ITF; itg += pmm->ITG; seconds += CalcTime;
     if( armed && !isOk( st ) )
     {
-        DATABR* failed = new DATABR;
-        dbr_dch_api::databr_reset( failed, 1 );
-        dbr_dch_api::databr_realloc( CSD, failed );
-        { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+        DbrCopy failed = CopyNodeData();
         const std::string failedError = ipmlog_error;
-        databr_copy( before );
+        databr_copy( before.get() );
         CNode->NodeStatusCH = requested;
         g_optimaLSEscapeOff = true;
         const long int second = GEM_run_single( uPrimalSol );
@@ -1326,11 +1316,11 @@ long int TNode::GEM_run_single_legacy_retry( bool uPrimalSol, long int& itf, lon
         native_trace_decide( "escretry step=%s requested=%ld first=%ld second=%ld", step, (long)requested, (long)st, (long)second );
         node_logger->log( retryLevel( isOk( second ) ), "GEM_run(): {} attempt failed ({}) - re-solved with the stall escape off: {}",
                            step, (long)st, isOk( second ) ? "recovered" : "still failed" );
-        if( !isOk( second ) ) { databr_copy( failed ); ipmlog_error = failedError; }
-        databr_free( failed );
+        if( !isOk( second ) ) { databr_copy( failed.get() ); ipmlog_error = failedError; }
+        failed.reset();
         st = CNode->NodeStatusCH;
     }
-    if( before ) databr_free( before );
+    if( before ) before.reset();
     return st;
 }
 
@@ -1353,10 +1343,7 @@ long int TNode::GEM_run_aop_cgseed( long int& itf, long int& itg, double& second
 // failed call's DATABR, status and error message.
 long int TNode::GEM_run_optima_cold_retry( long int requested )
 {
-    DATABR* failed = new DATABR;
-    dbr_dch_api::databr_reset( failed, 1 );
-    dbr_dch_api::databr_realloc( CSD, failed );
-    { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+    DbrCopy failed = CopyNodeData();
     const std::string failedError = ipmlog_error;
     const long int failedStatus = failed->NodeStatusCH;
     long int itf = pmm->ITF, itg = pmm->ITG;
@@ -1372,10 +1359,10 @@ long int TNode::GEM_run_optima_cold_retry( long int requested )
                        (long)requested, (long)failedStatus, cold == OK_GEM_AOP ? "recovered" : "still failed" );
     if( cold != OK_GEM_AOP )
     {
-        databr_copy( failed );
+        databr_copy( failed.get() );
         ipmlog_error = failedError;
     }
-    databr_free( failed );
+    failed.reset();
     pmm->ITF = itf;
     pmm->ITG = itg;
     NumIterFIA = itf;
@@ -1446,10 +1433,7 @@ bool TNode::NudgedAnswerBalances( const DATABR* d, const std::vector<double>& b,
 long int TNode::GEM_run_cold_retry( long int maxNudges )
 {
     const long int nIC = CSD->nICb;
-    DATABR* failed = new DATABR;
-    dbr_dch_api::databr_reset( failed, 1 );
-    dbr_dch_api::databr_realloc( CSD, failed );
-    { DATABR* live = CNode; CNode = failed; databr_copy( live ); CNode = live; }
+    DbrCopy failed = CopyNodeData();
     const std::string failedError = ipmlog_error;
     const std::vector<double> b0( CNode->bIC, CNode->bIC + nIC );
     long int itf = pmm->ITF, itg = pmm->ITG;
@@ -1458,7 +1442,7 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
     native_trace_quiet( true );
     long int result = ERR_GEM_AIA;
     // The first nudged cold answer, kept in case the warm re-solve at the exact composition fails.
-    DATABR* nudgedOk = nullptr;
+    DbrCopy nudgedOk;
     double nudgedK = 0.;
     bool nudgedBal = false;
     for( long int n = 0; n < maxNudges && result == ERR_GEM_AIA; n++ )
@@ -1479,11 +1463,9 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
             {
                 if( !nudgedOk )
                 {
-                    nudgedOk = new DATABR;
-                    dbr_dch_api::databr_reset( nudgedOk, 1 );
-                    dbr_dch_api::databr_realloc( CSD, nudgedOk );
+                    nudgedOk = NewNodeData();
                 }
-                { DATABR* live = CNode; CNode = nudgedOk; databr_copy( live ); CNode = live; }
+                { DATABR* live = CNode; CNode = nudgedOk.get(); databr_copy( live ); CNode = live; }
                 nudgedK = k;
                 nudgedBal = balNow;
             }
@@ -1499,9 +1481,9 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
             else if( nudgedOk )
             {   // the nudged answer is off the exact composition by only |k|*1e-15 of each amount
                 double worstRel = 0.;
-                if( NudgedAnswerBalances( nudgedOk, b0, worstRel ) )
+                if( NudgedAnswerBalances( nudgedOk.get(), b0, worstRel ) )
                 {
-                    databr_copy( nudgedOk );
+                    databr_copy( nudgedOk.get() );
                     for( long int i = 0; i < nIC; i++ )
                         CNode->bIC[i] = b0[(size_t)i];
                     result = OK_GEM_AIA;
@@ -1522,13 +1504,13 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
     }
     native_trace_quiet( false );
     if( nudgedOk )
-        databr_free( nudgedOk );
+        nudgedOk.reset();
     node_logger->log( retryLevel( result != ERR_GEM_AIA ), "GEM_run(): cold native call failed - retried from nudged compositions (up to {}): {}",
                        (long)maxNudges, result == ERR_GEM_AIA ? "still failed" : "recovered" );
 
     if( result == ERR_GEM_AIA )
     {
-        databr_copy( failed );            // the failed call as it was, status ERR_GEM_AIA
+        databr_copy( failed.get() );            // the failed call as it was, status ERR_GEM_AIA
         ipmlog_error = failedError;
     }
     else
@@ -1536,7 +1518,7 @@ long int TNode::GEM_run_cold_retry( long int maxNudges )
         CNode->NodeStatusCH = result;
         native_trace_run_result( *pmm, NEED_GEM_AIA, result, multi_base );
     }
-    databr_free( failed );
+    failed.reset();
     pmm->ITF = itf;
     pmm->ITG = itg;
     NumIterFIA = itf;

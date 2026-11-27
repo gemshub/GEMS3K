@@ -1528,6 +1528,28 @@ protected:
     /// Reads node (work DATABR structure) data from other DBR.
     void databr_copy( DATABR* otherCNode );
 
+    /// A DATABR that frees itself when it goes out of scope, also when an error is thrown.
+    class DbrCopy
+    {
+        DATABR* d = nullptr;
+    public:
+        DbrCopy() = default;
+        explicit DbrCopy( DATABR* p ) : d( p ) {}
+        DbrCopy( const DbrCopy& ) = delete;
+        DbrCopy& operator=( const DbrCopy& ) = delete;
+        DbrCopy( DbrCopy&& o ) noexcept : d( o.d ) { o.d = nullptr; }
+        DbrCopy& operator=( DbrCopy&& o ) noexcept { if( this != &o ) { reset(); d = o.d; o.d = nullptr; } return *this; }
+        ~DbrCopy() { reset(); }
+        void reset() { if( d ) { dbr_dch_api::databr_free_internal( d ); delete d; d = nullptr; } }
+        DATABR* get() const { return d; }
+        DATABR* operator->() const { return d; }
+        explicit operator bool() const { return d != nullptr; }
+    };
+    /// Returns an empty DATABR with the sizes of this node.
+    DbrCopy NewNodeData();
+    /// Returns a copy of the work node data (CNode).
+    DbrCopy CopyNodeData();
+
     /// Test to reload thermodynamic data from grid
     void CheckMtparam();
     virtual void init_into_gems3k();

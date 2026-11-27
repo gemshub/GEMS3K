@@ -37,10 +37,7 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
     if( trace.empty() ) return out;
 
     // ---- exact backup of the node (inputs and results): databr_copy() copies INTO CNode
-    DATABR* backup = new DATABR;
-    dbr_dch_api::databr_reset( backup, 1 );
-    dbr_dch_api::databr_realloc( CSD, backup );
-    { DATABR* live = CNode; CNode = backup; databr_copy( live ); CNode = live; }
+    DbrCopy backup = CopyNodeData();
     // ... and of MULTI: a warm GEM_run(false) starts from MULTI's retained primal, so restoring
     // DATABR alone would leave the next warm call starting from the last check solve. The
     // snapshot is a fresh TMultiBase filled by copyMULTI(); the restore copies values back
@@ -50,9 +47,8 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
     savedMulti->set_def();
     savedMulti->copyMULTI( *multi_base );
     auto restoreNode = [&]() {
-        databr_copy( backup );
-        databr_free( backup );
-        backup = nullptr;
+        databr_copy( backup.get() );
+        backup.reset();
         multi_base->copyMULTIData( *savedMulti, false );
     };
 
@@ -64,7 +60,7 @@ std::vector<TNode::TraceRegime> TNode::GEM_trace_regimes( const std::vector<doub
     try {
     for( size_t r = 0; r < runFactors.size(); r++ )
     {
-        databr_copy( backup );
+        databr_copy( backup.get() );
         for( long int i : trace ) CNode->bIC[i] = b0[(size_t)i] * runFactors[r];
         CNode->NodeStatusCH = mode;
         const long int code = GEM_run( false );
