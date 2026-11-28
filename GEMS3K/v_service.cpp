@@ -1,3 +1,4 @@
+#include <cctype>
 #include <istream>
 #include <regex>
 #include <cstring>
@@ -49,6 +50,54 @@ void replaceall( std::string& str, const std::string& old_part, const std::strin
         posb = pos + new_part.length();
         pos = str.find( old_part, posb );
     }
+}
+
+void replace_json_inf_nan(std::string& str, const std::string& inf_text, const std::string& nan_text)
+{
+    // nothing to replace: the text stays as it is
+    if( str.find( "inf" ) == std::string::npos && str.find( "nan" ) == std::string::npos )
+        return;
+    auto word = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '.'; };
+    const size_t n = str.size();
+    std::string res;
+    res.reserve( n + 64 );
+    size_t ii = 0, from = 0;   // str[from, ii) is copied unchanged when a token or the end is reached
+    bool in_string = false;
+    while( ii < n )
+    {
+        if( in_string )
+        {   // jump to the closing quote; an escaped character is skipped
+            const size_t k = str.find_first_of( "\"\\", ii );
+            if( k == std::string::npos ) { ii = n; break; }
+            if( str[k] == '\\' ) { ii = std::min( k + 2, n ); continue; }
+            ii = k + 1;
+            in_string = false;
+            continue;
+        }
+        const char c = str[ii];
+        if( c == '"' ) { in_string = true; ii++; continue; }
+        if( ( c == 'i' || c == 'n' ) && ( ii == 0 || !word( str[ii-1] ) ) )
+        {
+            const char* tok = nullptr;
+            if( str.compare( ii, 3, "inf" ) == 0 ) tok = "inf";
+            else if( str.compare( ii, 3, "nan" ) == 0 ) tok = "nan";
+            if( tok && ( ii + 3 >= n || !word( str[ii+3] ) ) )
+            {
+                const bool minus = ii > from && str[ii-1] == '-';
+                res.append( str, from, ii - from - ( minus && tok[0] == 'i' ? 1 : 0 ) );
+                if( tok[0] == 'i' )
+                    res += minus ? "-" + ( inf_text[0] == '-' ? inf_text.substr(1) : inf_text ) : inf_text;
+                else
+                    res += nan_text;
+                ii += 3;
+                from = ii;
+                continue;
+            }
+        }
+        ii++;
+    }
+    res.append( str, from, n - from );
+    str.swap( res );
 }
 
 void replaceall(std::string& str, char ch1, char ch2)

@@ -108,9 +108,10 @@ const float FLOAT_NAN = 3.402800E+38F;
 const double DOUBLE_INFPLUS = 1.79769313486230000E+308;
 const double DOUBLE_INFMINUS = -1.79769313486230000E+308;
 const double DOUBLE_NAN = 1.797693000000000E+308;
-const std::string DOUBLE_INFPLUS_STR = std::to_string(DOUBLE_INFPLUS);
-const std::string DOUBLE_INFMINUS_STR = std::to_string(DOUBLE_INFMINUS);
-const std::string DOUBLE_NAN_STR = std::to_string(DOUBLE_NAN);
+// inline: made once per program, not once per source file that includes this header
+inline const std::string DOUBLE_INFPLUS_STR = std::to_string(DOUBLE_INFPLUS);
+inline const std::string DOUBLE_INFMINUS_STR = std::to_string(DOUBLE_INFMINUS);
+inline const std::string DOUBLE_NAN_STR = std::to_string(DOUBLE_NAN);
 
 template < typename T >
 T InfMinus()

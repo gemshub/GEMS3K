@@ -3596,7 +3596,7 @@ long int TELVIS::PTparam()
 
         if( R[j]<0. )
         {
-            solmod_logger->info("R[{}] = {}; A={}; B={}; C={}", j, R[j],
+            solmod_logger->debug("R[{}] = {}; A={}; B={}; C={}", j, R[j],
                                 aDCc[NP_DC*j+4] + aDCc[NP_DC*j+5]*Tk + aDCc[NP_DC*j+6]*Tk*Tk,
                                 (aDCc[NP_DC*j+7] + aDCc[NP_DC*j+8]*Tk + aDCc[NP_DC*j+9]*Tk*Tk) * (1.-Xw),
                                 (aDCc[NP_DC*j+10] + aDCc[NP_DC*j+11]*Tk + aDCc[NP_DC*j+12]*Tk*Tk) * (1.-Xw)*(1.-Xw));
@@ -3612,7 +3612,7 @@ long int TELVIS::PTparam()
 
         if( Q[j]<0. )
         {
-            solmod_logger->info("Q[{}] = {}", j, Q[j]);
+            solmod_logger->debug("Q[{}] = {}", j, Q[j]);
         }
 
 
@@ -4149,8 +4149,8 @@ void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC1 )
                         {
                                 if( err==DivideByZero_or_NegativeLogarithm )
                                 {
-                                    solmod_logger->error("R[{}] = {} | Q[{}] =  {}", j, R[j], j, Q[j]);
-                                    solmod_logger->error(": Careful: a zero-divide or negative-logarithm occured in the UNIQUAC part of ELVIS !!!! Check your interaction and component specific parameters !!!! ");
+                                    solmod_logger->error("UNIQUAC part of ELVIS: zero divide or negative logarithm at species {} (R={}, Q={}). "
+                                                         "Try: check the R, Q and interaction parameters of this phase.", j, R[j], Q[j]);
                                 }
                         }
 
@@ -4749,7 +4749,7 @@ double TELVIS::qsimp(const double m_infdil, const double m_j, long int& species,
                 os=s;
                 ost=st;
         }
-        solmod_logger->warn("Too many steps in routine qsimp");
+        solmod_logger->warn("Numerical integration (qsimp) did not converge within its step limit; the result is not valid. Try: check the model parameters of this phase.");
 
         return 77777777777777777777777.0;
 }

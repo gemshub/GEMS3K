@@ -12,10 +12,11 @@ dependencies:
   - sysroot_linux-64 # [linux] 
   - make  # [unix]
   - ninja
-  - python>=3.10
+  - python>=3.10,<3.15  # autodiff 1.x has no Python 3.15 build yet
   - pip
   - pytest
   - pybind11
-  - autodiff
+  - autodiff>=1.1.1
+  - eigen>=3.4   # GEMS3KFindDeps.cmake requires 3.4 or newer
   - nlohmann_json
-  - thermofun>=0.6.3
+  - thermofun>=0.7.1,<1  # GEMS3K 5.2 needs a ThermoFun 0.x

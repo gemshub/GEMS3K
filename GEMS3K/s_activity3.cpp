@@ -258,6 +258,8 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
             jb = je;
             je += act.L1[k];
             sMod = act.sMod[k];
+            if( !phSolMod[k] )  // no solution model object (one-species phase, skipped in LINK_TP_MODE)
+                continue;
                 switch( act.PHC[k] )
             {
               case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
@@ -512,6 +514,7 @@ void TActivity::SolModCreate( long int jb, long int jmb, long int jsb, long int 
     sd.arlnCnft = act.lnCnft+jb; // End member ln activity coeffs
 
     sd.aphVOL = act.FVOL+k;
+    sd.aphXF = act.XF+k;   // see ipm_chemical3.cpp
     sd.DC_Codes = act.DCC+jb;  // pointer to Dcomp class codes (added 02.05.2010 TW)
     sd.arMoiSN = act.MoiSN+jmb;  // Pointer to sublattice-moiety multiplicity array
     sd.arSitFr = act.SitFr+jsb;  // Pointer to sublattice-moiety multiplicity array

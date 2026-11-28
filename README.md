@@ -6,6 +6,10 @@ Just extended with an alternative Activity C++ API as the basis for a new Python
 Main version use [ThermoFun](https://bitbucket.org/gems4/thermofun/src/master/) - a code for calculating the standard state thermodynamic properties of substances and reactions at a given temperature and pressure. 
 
 
+**Choosing a solver and its settings:** see [Docs/SOLVER-OPTIONS-GUIDE.md](Docs/SOLVER-OPTIONS-GUIDE.md) — the two solvers (GEMS3K IPM and Optima), the six calculation modes, every `pa_` setting, and the known limitations. Suggested settings for batch runs, transport and grids: [Docs/SOLVER-ADVANCED-USAGE.md](Docs/SOLVER-ADVANCED-USAGE.md).
+
+**What each mode does, step by step:** see [Docs/SOLVER-PATH-GRAPH.md](Docs/SOLVER-PATH-GRAPH.md) ([drawn version](Docs/SOLVER-PATH-GRAPH.html)). It shows the order of the solver steps, the retries and the rescue.
+
 ## Briefly about GEMS3K
 
 The code Implements the improved GEM IPM-3 algorithm with excellent mass balance precision and fast convergence to Gibbs energy minimum even in very complex non-ideal chemical systems with two-sided metastability constraints (learn more on GEMS3K web page).
@@ -113,13 +117,17 @@ sudo ./install_no_thermofun.sh
 
 #### The options and cases for compiling the code
 
-* USE_THERMOFUN (default ON) - Enable using the ThermoFun library for calculating the standard state thermodynamic properties of substances and reactions at a given temperature and pressure. Otherwise possible only load thermodynamic data from DATACH using Lagrangian Interpolator.
+* USE_THERMOFUN (default ON) - Enable using the ThermoFun library for calculating the standard state thermodynamic properties of substances and reactions at a given temperature and pressure. Otherwise possible only load thermodynamic data from DATACH using Lagrangian Interpolator. This version needs ThermoFun 0.7 or a later 0.x version. CMake stops with ThermoFun 1.0 or newer.
 
 * BUILD_SOLMOD  (default ON) - Enable building the [tsolmod4rkt library](tsolmod4rkt/README.md) of mixing and activity models into a separate library with C++ and Python APIs. 
 
 * BUILD_GEM2MT  (default ON) - Enable building the standalone math-transport library.
 
 * BUILD_TOOLS   (default ON) - Enable building the [kva2json utility](tools/README.md) to convert GEMS3K files formats. 
+
+* USE_OPTIMA_SOLVER (default OFF) - Enable the Optima solver (modes AOP, SOP, HOP, SHP). Install Optima first; CMake finds it through CMAKE_PREFIX_PATH. GEMS3K then uses the Eigen version of the Optima build. GEMS3K supports Eigen 3.4 and Eigen 5. GEMS3K needs the modified Optima of gemshub (branch optima_develop3); CMake stops with a message if the Optima found does not have it. Without this option, the Optima modes run with the GEMS3K IPM solver, with a warning.
+
+* GEMS3K_OPTIMA_SUBDIR (default empty) - A folder below the install prefix that holds an Optima of its own, for example `lib/gems3k-optima`. Programs that find GEMS3K then use this Optima first. Use it when a package carries Optima with GEMS3K.
 
 * BUILD_NLOHMANNJSON (default OFF) - Enable using the [nlohmann JSON](https://github.com/nlohmann/json) to serialize/deserialize input files, otherwise, the simdjson library is used.
 

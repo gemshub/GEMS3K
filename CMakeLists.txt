@@ -2,8 +2,10 @@
 cmake_minimum_required(VERSION 3.16..4.2)
 
 # Set the name of the project
-project(GEMS3K VERSION 4.6.2 LANGUAGES CXX C)
+project(GEMS3K VERSION 5.2.3 LANGUAGES CXX C)
 
+# The tests are built only with -DBUILD_TESTING=ON; ctest then finds them
+set(BUILD_TESTING OFF CACHE BOOL "Build the GEMS3K tests")
 include(CTest)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -35,6 +37,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 option(BUILD_SHARED_LIBS "Build shared libraries." ON)
 option(BUILD_STATIC_LIBS "Build static libraries." ON)
 option(USE_THERMOFUN "Use ThermoFun" ON)
+# A folder below the install prefix that holds an Optima of its own, for packages that carry Optima with GEMS3K.
+# Programs that find GEMS3K then use that Optima. Empty: Optima is found the usual way.
+set(GEMS3K_OPTIMA_SUBDIR "" CACHE STRING "Folder below the install prefix with the Optima that GEMS3K was built with")
 option(BUILD_NLOHMANNJSON "Use nlohmann json." OFF)
 option(BUILD_TOOLS "Build tools" ON)
 option(BUILD_SOLMOD "Build isolate TSolMod " ON)

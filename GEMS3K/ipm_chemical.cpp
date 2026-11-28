@@ -351,7 +351,8 @@ void TMultiBase::Set_DC_limits( bool InitState )
                 if( XU > 1e6 ) XU = 1e6;
                 if( XL < 0.0 ) XL = 0.0;
                 if( XL > 1e6 ) XL = 1e6;
-                if( XU > XFU )
+                // only a phase with one species must have its species limits inside the phase limits
+                if( je - jb == 1 && XU > XFU )
                 {
      //               JJ = j;
     //                KK = k;
@@ -360,7 +361,7 @@ void TMultiBase::Set_DC_limits( bool InitState )
                     Error( "E11IPM: Set_DC_limits(): ",tbuf );
     //                XU = XFU; // - pm.lowPosNum;
                 }
-                if( XL < XFL )
+                if( je - jb == 1 && XL < XFL )
                 {
     //                JJ = j;
     //                KK = k;
@@ -580,8 +581,39 @@ case DC_SCM_SPECIES:
     {
         double SmoSensT = 1e-5;   // to be adjusted
         dF0 = F0 - Fold;
-        if( pm.X[j] > std::min( pm.lowPosNum, pm.DcMinM ) && fabs( dF0 ) >= SmoSensT )
-       	    F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
+        // Optima switches smoothing off; skip the blend there, since Fold + (F0 - Fold) rounds F0 away when Fold is huge.
+        // pa_PhaseSmoothing = 1: in a mixed phase other than the aqueous, sorption and polyelectrolyte phases, the
+        // update of a species is damped by the phase's own non-ideality, 1/(1 + sum of x|ln gamma|), unless it kept its
+        // sign since the last step (a steady drift, not damped). The aqueous, sorption and
+        // polyelectrolyte phases keep the pa_AG/pa_DGC rule. 0: the pa_AG/pa_DGC rule for every phase.
+        double sf = SmoothingFactor();
+        if( base_param()->PhaseSmoothing == 1 && !optima_disable_smoothing
+            && pm.PHC[k] != PH_AQUEL && pm.PHC[k] != PH_SORPTION && pm.PHC[k] != PH_POLYEL )
+        {
+            std::vector<double>& prevD = smoothPrevD_;
+            if( (long int)prevD.size() != pm.L || pm.IT < smoothPrevIT_ )
+                prevD.assign( (size_t)pm.L, 0. );
+            smoothPrevIT_ = pm.IT;
+            sf = 1.;
+            if( !( dF0 * prevD[(size_t)j] > 0. ) && pm.XF[k] > 0. )
+            {
+                // the phase sum is the same for every species of the phase in one activity loop, so it is kept
+                if( smoothC8Phase_ != k )
+                {
+                    long int jb = 0;
+                    for( long int q = 0; q < k; q++ ) jb += pm.L1[q];
+                    double c8 = 1.;
+                    for( long int i = jb; i < jb + pm.L1[k]; i++ )
+                        c8 += pm.X[i] / pm.XF[k] * fabs( pm.lnGam[i] );
+                    smoothC8_ = c8;
+                    smoothC8Phase_ = k;
+                }
+                sf = 1. / smoothC8_;
+            }
+            prevD[(size_t)j] = dF0;
+        }
+        if( !optima_disable_smoothing && pm.X[j] > std::min( pm.lowPosNum, pm.DcMinM ) && fabs( dF0 ) >= SmoSensT )
+       	    F0 = Fold + dF0 * sf;    // Changed 18.06.2008 DK
     }
     return F0;
 }
@@ -658,7 +690,7 @@ TMultiBase::PrimalChemicalPotentials( double F[], double Y[], double YF[], doubl
         {                 // error - will result in zerodivide!
            Error( "E13IPM: PrimalChemicalPotentials():",
                   std::string("Broken phase amount from primal approximation: Phase "+
-                  char_array_to_string(pm.SF[k],20)+"  Yf= "+std::to_string(Yf)));
+                  name_for_message(pm.SF[k],20)+" Yf= "+std::to_string(Yf)));
 //           Yf = pm.YFk;
         }
 //        if( pm.YFk > pm.lowPosNum*10. )
@@ -744,8 +776,7 @@ double TMultiBase::DC_GibbsEnergyContribution(
 //
 double TMultiBase::GX( double LM  )
 {
-    long int i, j, k;
-    double x, XF, XFw, FX, Gi; // debug variable
+    long int i;
 //    double const1= pm.lowPosNum*10.,
 //           const2 = pm.lowPosNum*1000.;
 
@@ -757,70 +788,105 @@ double TMultiBase::GX( double LM  )
         {  // gradient vector pm.MU - the direction of descent!
             pm.X[i]=pm.Y[i]+LM*pm.MU[i];
 //            if( pm.X[i] <  pm.lowPosNum )   // this is the Ls set cutoff !!!!!!!!!!
+            // This truncation to exact zero is where native's exact zeros come from (most of
+            // them appear before PSSC runs). An interior-point method on a box with a positive
+            // lower bound cannot do this; it can only approach the bound.
             if( pm.X[i] <  pm.DcMinM )
                 pm.X[i]=0.;
         }
     // calculate new total quantities of phases
     TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    return GXofX();
+}
 
-    // calculating G(X)
-    FX=0.;
-    j=0;
+/// G(X) of the amounts pm.X with the phase totals pm.XF and pm.XFA, using the solver's rules for which phases and species
+/// count. Trial = true: the trial energies pm.G[], and pm.logXw / pm.logYFk are set as the solver expects. Trial = false: the
+/// converged energies G0 + fDQF + F0 (the same on every solver path), and no member is written.
+template<bool Trial>
+double TMultiBase::GibbsSumOfX()
+{
+    long int i, j, k;
+    double x, XF, XFw, FX, Gi, Gj, logXw, logYFk;
+
+    FX = 0.;
+    j = 0;
     for( k=0; k<pm.FI; k++ )
     { // loop for phases
-        i=j+pm.L1[k];
-        pm.logXw = -101.;
-        XFw = 0.0;  // calculating mole amount of the solvent/sorbent
-        if( pm.FIs && k<pm.FIs )
+        i = j + pm.L1[k];
+        logXw = -101.;
+        XFw = 0.0;  // mole amount of the solvent/sorbent
+        if( pm.FIs && k < pm.FIs )
             XFw = pm.XFA[k];
- //       if( XFw > const1 )
         if( ( pm.PHC[k] == PH_AQUEL && XFw >= pm.XwMinM )
-                        || ( pm.PHC[k] == PH_SORPTION && XFw >= pm.ScMinM )
-                        || ( pm.PHC[k] == PH_POLYEL && XFw >= pm.ScMinM ) )
-             pm.logXw = log( XFw );
-        /*   */
+                || ( pm.PHC[k] == PH_SORPTION && XFw >= pm.ScMinM )
+                || ( pm.PHC[k] == PH_POLYEL && XFw >= pm.ScMinM ) )
+            logXw = log( XFw );
+        if( Trial )
+            pm.logXw = logXw;
+
         XF = pm.XF[k];
         if( !(pm.FIs && k < pm.FIs) )
         {
-                if( XF < pm.PhMinM )
-        		goto NEXT_PHASE;
+            if( XF < pm.PhMinM )
+                goto NEXT_PHASE;
         }
-        else if( XF < pm.DSM && pm.logXw < -100. )
-        	goto NEXT_PHASE;
+        else if( XF < pm.DSM && logXw < -100. )
+            goto NEXT_PHASE;
 
-        pm.logYFk = log( XF );
+        logYFk = log( XF );
+        if( Trial )
+            pm.logYFk = logYFk;
 
         for( ; j<i; j++ )
         { // DCs (species)
             x = pm.X[j];
             if( x < pm.DcMinM )
                 continue;
-            // calculating increment of G(x)
-            // Gi = DC_GibbsEnergyContribution( pm.G[j], x, pm.logYFk, pm.logXw,
-            //                     pm.DCCW[j] );
-            // call replaced here by inline variant for higher performance
+            Gj = Trial ? pm.G[j] : pm.G0[j] + pm.fDQF[j] + pm.F0[j];
             switch( pm.DCCW[j] )
             {
-             case DC_ASYM_SPECIES:
-                    Gi = x * ( pm.G[j] + log(x) - pm.logXw );
-                    break;
+            case DC_ASYM_SPECIES:
+                Gi = x * ( Gj + log(x) - logXw );
+                break;
             case DC_ASYM_CARRIER:
             case DC_SYMMETRIC:
-                   Gi = x * ( pm.G[j] + log(x) - pm.logYFk );
-                   break;
+                Gi = x * ( Gj + log(x) - logYFk );
+                break;
             case DC_SINGLE:
-                   Gi = pm.G[j] * x;
-                   break;
-           default:
-                    Gi = 7777777.;
-           }
-          FX += Gi;
+                Gi = Gj * x;
+                break;
+            default:
+                Gi = 7777777.;
+            }
+            FX += Gi;
         }   // j
 NEXT_PHASE:
         j = i;
     }  // k
+    return FX;
+}
+
+/// G(X) of the current amounts pm.X, with the phase totals pm.XF and pm.XFA already up to date.
+double TMultiBase::GXofX()
+{
+    const double FX = GibbsSumOfX<true>();
     ipm_logger->trace("GX  {}", FX);
-    return(FX);
+    return FX;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/// Total Gibbs energy G(X) of the converged system, in RT units, on a basis identical for every
+/// solver path. Does not use pm.G[]: native's GEM_IPM() resets pm.G[i] = pm.G0[i] on exit, while the
+/// Optima path leaves G0 + fDQF + F0 there; G0 + fDQF + F0 is current on both. Post-solve only: it
+/// copies Y into X and refreshes pm.XF/pm.XFA.
+double TMultiBase::TotalGibbsEnergy()
+{
+    for( long int i=0; i<pm.L; i++ )
+        pm.X[i] = pm.Y[i];
+    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+    const double FX = GibbsSumOfX<false>();
+    ipm_logger->trace("TotalGibbsEnergy  {}", FX);
+    return FX;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1145,7 +1211,8 @@ else  { // if phase is removed then a saved copy of activity coefficients is use
         pm.Falp[k] = sumWx - 1.;  // generalized Karpov critetion with metastable components
         if( fabs( pm.Falp[k] ) < pm.DSM )
             pm.Falp[k] = 0.;
-if( pm.L1[k] > 1 && YF <= pm.DSM && fRestore == false )
+// Cold start only, so after a warm start an absent mixture can come back
+if( pm.L1[k] > 1 && YF <= pm.DSM && fRestore == false && !pm.pNP )
     pm.Falp[k] = -1.;   // provisional - set to
     }  // k
 }
@@ -1278,6 +1345,28 @@ long int TMultiBase::SpeciationCleanup( double AmountCorrectionThreshold, double
    return NeedToImproveMassBalance;
 }
 
+// Largest amount of a single-species phase the bulk composition can supply: min over the ICs
+// it consumes of b_i / a(j,i). Charge rows are skipped. PSSC inserts a lost pure phase at the
+// fixed pa_DFYs; on a system whose limiting element is seeded at a trace amount that insertion
+// is infeasible and the assemblage never settles, so PhaseSelect() inserts at most this
+// amount, once. The same quantity bounds end-members in DetectPhaseCollapseAndReseed().
+double TMultiBase::PhaseInsertionCeiling( long int j )
+{
+    const long int Zlim = pm.N - pm.E;   // ordinary ICs only, as MBR's own loops scan
+    double cap = -1.;
+    for( long int i = 0; i < Zlim; i++ )
+    {
+        const double coef = pm.A[ i + j*pm.N ];
+        if( coef > 0. )
+        {
+            const double icBound = pm.B[i] / coef;
+            if( cap < 0. || icBound < cap )
+                cap = icBound;
+        }
+    }
+    return cap;   // negative if the species consumes no ordinary IC - caller falls back
+}
+
 //====================================================================================
 /// New simplified PSSC() algorithm   DK 01.05.2010.
 /// PhaseSelection() part only looks for phases to be inserted, also checks if some
@@ -1308,6 +1397,9 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
         AmThExp = 4.;
     }
     AmountThreshold = pow(10.,-AmThExp);
+    // pa_PsscCleanupBudget = 2: what the raises of this pass have taken from each IC so far.
+    std::vector<double> clnUsed( (size_t)pm.N, 0. );
+    std::vector<char> clnMark( (size_t)pm.L, 0 );   // the species whose raise is charged to that budget
 
     kfr = -1; kur = -1;
     if( !pm.K2 )
@@ -1322,10 +1414,26 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     StabilityIndexes( ); // Calculation of phase stability criteria
     (pm.K2)++;
 
+    // Native event trace (GEMS3K_NATIVE_TRACE_FILE): per pass and phase, the stability index,
+    // the threshold it was compared against, the amount and the branch taken, with names.
+    FILE* ntf = native_trace_file();
+    const long int trPass = pm.K2;   // pass index, 1-based; native bails out after 5
+    if( ntf )
+        fprintf( ntf, "PSSC  pass=%ld enter FI=%ld cleanup=%ld DF=%.6e DFM=%.6e"
+                      " DSM=%.6e DcMinM=%.6e AmountThreshold=%.6e MjuDiffCutoff=%.6e\n",
+                 (long)trPass, (long)pm.FI, (long)CleanupStatus, pa_p->DF, pa_p->DFM,
+                 pm.DSM, pm.DcMinM, AmountThreshold, MjuDiffCutoff );
+
+
     for(k=0;k<pm.FI;k++)
     {
        L1k = pm.L1[k]; // Number of components in the phase
        KinConstrPh = false;
+       // Trace state for this phase (read independently of PhaseAmount/logSI, which are
+       // assigned only after the kinetic-constraint check).
+       const char* trAction = "KEEP";
+       double trLogSI = pm.Falp[k], trAmount = pm.XF[k], trYbefore = 0.;
+       if( ntf ) for(j=jb; j<jb+L1k; j++) trYbefore += pm.Y[j];
   /*
        if( pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL )
        {
@@ -1374,7 +1482,10 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
  //      }
        if( pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL
                || KinConstrPh == true )
+       {
+           trAction = KinConstrPh ? "SKIP_KINCONSTR" : "SKIP_SORPTION";
            goto NextPhase;  // Temporary workaround
+       }
 
        PhaseAmount = pm.XF[k];
        logSI = pm.Falp[k];
@@ -1391,21 +1502,47 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
           }
           if( RemFlagDC == true )
              PHremoved++;
+          trAction = "ZERO_NEGLIGIBLE";   // stable, but present below DSM
           goto NextPhase;
        }
        if( logSI >= pa_p->DF )  // 2 - INSERTION CASE
        {  // this phase is stable or over-stable
-           if( PhaseAmount < pm.DSM ) // pm.DFYsM )
-           {  // phase appears to be lost - insertion of all components of the phase
+           if( PhaseAmount < pm.DSM ) // pm.DFYsM );
+           {  // phase appears to be lost - insertion of all components of the phase.
+              // Feasibility check first: pm.DFYsM (= pa_DFYs) is a fixed amount, so for a
+              // phase whose limiting IC the system barely contains, the insertion would
+              // demand more of that element than exists. Both quantities are in the
+              // internally rescaled frame, so they are directly comparable.
+               const double insCap = ( L1k > 1 ) ? -1. : PhaseInsertionCeiling( jb );
+               double insAmt      = pm.DFYsM;   // MAJOR phase: the fixed pa_DFYs, unchanged
+               bool   budgetSized = false;
+               if( insCap >= 0. && insCap < pm.DFYsM )
+               {   // Trace phase: the bulk composition cannot supply the fixed pa_DFYs.
+                   // Insert what the element budget allows, once per solve
+                   // (insBudgetTried); if it is lost again it is skipped from then on.
+                   const size_t kk = static_cast<size_t>( k );
+                   if( insCap <= 0. || kk >= insBudgetTried.size() || insBudgetTried[kk] )
+                   {   // nothing at all to give it, or it has already had its attempt
+                       trAction = "SKIP_INFEASIBLE";
+                       goto NextPhase;
+                   }
+                   insBudgetTried[kk] = 1;
+                   insAmt      = insCap;
+                   budgetSized = true;
+               }
                if( L1k > 1 )
                   DC_RaiseZeroedOff( jb, jb+L1k, k );
-               else
-                  pm.Y[jb] = pm.DFYsM; // Spec. value for pure phase insertion
+               // a gas or fluid mixture keeps the seeds of all its members; a pure phase and a condensed mixture
+               // get the insertion amount on the first member
+               if( L1k == 1 || !( pm.PHC[k] == PH_GASMIX || pm.PHC[k] == PH_PLASMA || pm.PHC[k] == PH_FLUID ) )
+                  pm.Y[jb] = insAmt; // pa_DFYs for a major phase, the composition ceiling for a trace one
                DCinserted += L1k;
                PHinserted++;
                kfr = k;
                MassBalanceViolation = true;
+               trAction = budgetSized ? "INSERT_BUDGET" : "INSERT";
            } // otherwise (if present), the phase is cleaned up
+           else trAction = "STABLE_PRESENT";
            goto NextPhase;
        }
        if( logSI <= -pa_p->DFM )  // 3 - ELIMINATION CASE
@@ -1433,10 +1570,25 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                 }
              }
              PHremoved++;
+             trAction = ( PhaseAmount <= AmountThreshold ) ? "ELIMINATE" : "ELIMINATE_MBVIOL";
           }
+          else trAction = "UNSTABLE_ABSENT";
           goto NextPhase;
        }
-     NextPhase: jb+=pm.L1[k];
+     NextPhase:
+       if( ntf )
+       {
+           double trYafter = 0.; long int trNzero = 0;
+           for(j=jb; j<jb+L1k; j++)
+           {   trYafter += pm.Y[j];
+               if( pm.Y[j] == 0. ) trNzero++;
+           }
+           fprintf( ntf, "PSSC  pass=%ld phase k=%ld %-20s L1=%ld logSI=%+.6e"
+                         " amount=%.6e Ybefore=%.6e Yafter=%.6e nzeroDC=%ld action=%s\n",
+                    (long)trPass, (long)k, char_array_to_string(pm.SF[k],MAXPHNAME+MAXSYMB).c_str(),
+                    (long)L1k, trLogSI, trAmount, trYbefore, trYafter, (long)trNzero, trAction );
+       }
+       jb+=pm.L1[k];
    } // k
    // First loop over phases finished
 
@@ -1449,6 +1601,11 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
        L1k = pm.L1[k]; // Number of components in the phase
        KinConstrPh = false;
        YFcleaned = 0.0;
+       double trYbeforeC = 0.; long int trNzeroBeforeC = 0;
+       if( ntf ) for(j=jb; j<jb+L1k; j++)
+       {   trYbeforeC += pm.Y[j];
+           if( pm.Y[j] == 0. ) trNzeroBeforeC++;
+       }
        for(j=jb; j<jb+L1k; j++)
        {  // Checking if a DC in phase is under kinetic control
           Yj = pm.Y[j];
@@ -1508,23 +1665,46 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                if( fabs( MjuDiff ) > MjuDiffCutoff )
                {
                    if(MjuDiff < -608.) {
-                       gems_logger->warn("MjuDiff clamped for DC j={}: {:.6e} -> -608 (overflow guard in PhaseSelectionSpeciationCleanup)", j, MjuDiff);
+                       gems_logger->debug("Overflow guard: species {} (#{}): the exponent argument {:.3e} is outside the safe range of exp() and is limited to -608 (so exp() of it stays a finite, representable number)", char_array_to_string(pm.SM[j],MAXDCNAME), j, MjuDiff);
                        MjuDiff = -608.;
                    }
                    else if(MjuDiff > 609.) {
-                       gems_logger->warn("MjuDiff clamped for DC j={}: {:.6e} -> 609 (overflow guard in PhaseSelectionSpeciationCleanup)", j, MjuDiff);
+                       gems_logger->debug("Overflow guard: species {} (#{}): the exponent argument {:.3e} is outside the safe range of exp() and is limited to 609 (so exp() of it stays a finite, representable number)", char_array_to_string(pm.SM[j],MAXDCNAME), j, MjuDiff);
                        MjuDiff = 609.;
                    }
                   YjCleaned = Yj / exp( MjuDiff ); // also applies to a DC in a solution phase
                   if( L1k == 1 )
                   {  // Pure phase
-                      if( logSI <= -0.4343*MjuDiffCutoff && YjCleaned < AmountThreshold )
+                      // Not applied to a composition-limited phase: when the phase's own
+                      // composition ceiling is below AmountThreshold, the absolute test carries
+                      // no information (every attainable amount is "small"), and the
+                      // dual-derived YjCleaned is kept. A phase the system can supply
+                      // AmountThreshold of keeps the original behaviour. L1k == 1, so j == jb.
+                      const double clnCap = PhaseInsertionCeiling( j );
+                      const bool compLimited = ( clnCap >= 0. && clnCap < AmountThreshold );
+                      if( logSI <= -0.4343*MjuDiffCutoff && YjCleaned < AmountThreshold
+                          && !compLimited )
                           YjCleaned = 0.;
+                      else if( compLimited && logSI <= -0.4343*MjuDiffCutoff
+                               && YjCleaned < AmountThreshold )
+                          native_trace_decide( "cleanupzero skipped phase=%s logSI=%.6e"
+                                               " amount=%.6e cap=%.6e threshold=%.6e",
+                                               char_array_to_string( pm.SF[k], MAXPHNAME+MAXSYMB ).c_str(),
+                                               logSI, YjCleaned, clnCap, AmountThreshold );
                       if( logSI >= pa_p->DF && YjCleaned < pm.DFYsM )
                       {   // over-stable phase in too small amount - insertion and next IPM loop (experimental)
-                          YjCleaned = pm.DFYsM;
-                          kfr = k;
-                          MassBalanceViolation = true;
+                          //
+                          // Not applied to a composition-limited phase (one whose ceiling is
+                          // below pm.DFYsM): there the fixed floor would undo the budget-sized
+                          // insertion above and keep re-firing every pass. A major phase keeps
+                          // the original behaviour. L1k == 1 here, so j == jb.
+                          const double clnCap = PhaseInsertionCeiling( j );
+                          if( !( clnCap >= 0. && clnCap < pm.DFYsM ) )
+                          {
+                              YjCleaned = pm.DFYsM;
+                              kfr = k;
+                              MassBalanceViolation = true;
+                          }
                       }
                   }
                }
@@ -1535,6 +1715,31 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                      continue; // L1kZeroDCs++; No way to improve for pure substance
                   else  // possibly lost DC in a solution phase (only estimated mole fraction available)
                      YjCleaned = pm.EMU[j]*pm.YF[k]; // does not work for adsorption yet
+                  // pa_PsscCleanupBudget: a zeroed species is raised to at most what the bulk can supply.
+                  if( pa_p->PsscCleanupBudget == 1 && L1k > 1 )
+                  {   const double cap = PhaseInsertionCeiling( j );
+                      if( cap >= 0. && YjCleaned > cap )
+                      {   native_trace_decide( "cleanupraise capped species=%s raise=%.6e cap=%.6e",
+                                               char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), YjCleaned, cap );
+                          YjCleaned = cap; } }
+                  // Mode 2: no raise when the estimated mole fraction is above 1 (then it is not a mole fraction),
+                  // and the raises of one pass share the amount of each IC instead of each taking all of it.
+                  if( pa_p->PsscCleanupBudget >= 2 && L1k > 1 )
+                  {   if( !( pm.EMU[j] <= 1. ) )
+                      {   native_trace_decide( "cleanupraise skipped species=%s emu=%.6e",
+                                               char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), pm.EMU[j] );
+                          YjCleaned = 0.; }
+                      else
+                      {   double cap = -1.;
+                          for( long int i = 0; i < pm.N - pm.E; i++ )
+                          {   const double a = pm.A[ i + j*pm.N ];
+                              if( a > 0. ) { const double c = std::max( 0., pm.B[i] - clnUsed[(size_t)i] ) / a;
+                                             if( cap < 0. || c < cap ) cap = c; } }
+                          if( cap >= 0. && YjCleaned > cap )
+                          {   native_trace_decide( "cleanupraise capped species=%s raise=%.6e cap=%.6e shared=1",
+                                                   char_array_to_string( pm.SM[j], MAXDCNAME ).c_str(), YjCleaned, cap );
+                              YjCleaned = cap; }
+                          clnMark[(size_t)j] = 1; } }
              }
              YjDiff = YjCleaned - Yj;
              if( fabs( YjDiff ) > CutoffDistortionMBR )
@@ -1563,6 +1768,11 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                   DCremoved++;
                   L1kZeroDCs++;
               }
+              // The budget is charged with the increase actually applied, after the amount threshold and the cutoff.
+              if( clnMark[(size_t)j] && pm.Y[j] > Yj )
+                  for( long int i = 0; i < pm.N - pm.E; i++ )
+                  {   const double a = pm.A[ i + j*pm.N ];
+                      if( a > 0. ) clnUsed[(size_t)i] += a * ( pm.Y[j] - Yj ); }
 
         }  // for j
         if( L1k - L1kZeroDCs <= 1 && L1k > 1 )
@@ -1580,9 +1790,96 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
         }
 //        goto NextPhaseC;
      }
-     NextPhaseC: jb+=pm.L1[k];
+     NextPhaseC:
+       // Only phases the speciation cleanup actually changed are logged.
+       if( ntf )
+       {
+           double trYafterC = 0.; long int trNzeroAfterC = 0;
+           for(j=jb; j<jb+L1k; j++)
+           {   trYafterC += pm.Y[j];
+               if( pm.Y[j] == 0. ) trNzeroAfterC++;
+           }
+           if( trNzeroAfterC != trNzeroBeforeC || trYafterC != trYbeforeC )
+           {
+               fprintf( ntf, "PSSCC pass=%ld phase k=%ld %-20s L1=%ld logSI=%+.6e"
+                             " Ybefore=%.6e Yafter=%.6e newZeroDC=%ld\n",
+                        (long)trPass, (long)k, char_array_to_string(pm.SF[k],MAXPHNAME+MAXSYMB).c_str(),
+                        (long)L1k, pm.Falp[k], trYbeforeC, trYafterC,
+                        (long)(trNzeroAfterC - trNzeroBeforeC) );
+           }
+       }
+       jb+=pm.L1[k];
    } // k
 }
+
+    // pa_PsscCleanupBudget = 3: a present pure phase that stays oversaturated, limited by a trace IC that is dilute in every
+    // solution phase, is brought to saturation. The dissolved species of that IC are scaled down as if only the potential
+    // of that IC changed, and the freed amount goes into the phase. The balance repair after this step fixes the other ICs.
+    // The potentials before the fill are kept, so that a rejected pass can restore them with the amounts.
+    std::vector<double> fillU, fillFalp;
+    if( CleanupStatus && pa_p->PRD && pa_p->PsscCleanupBudget >= 3 )
+    {
+        const long int Zlim = pm.N - pm.E;
+        std::vector<long int> phOf( (size_t)pm.L );
+        std::vector<double> phY( (size_t)pm.FI, 0. );
+        {   long int j0 = 0;
+            for( long int k0 = 0; k0 < pm.FI; j0 += pm.L1[k0], k0++ )
+                for( long int q = j0; q < j0 + pm.L1[k0]; q++ ) phOf[(size_t)q] = k0; }
+        long int jf = 0;
+        for( long int kf = 0; kf < pm.FI; jf += pm.L1[kf], kf++ )
+        {
+            if( pm.L1[kf] != 1 || !( pm.Falp[kf] >= pa_p->DF ) || !( pm.XF[kf] >= pm.DSM ) || !( pm.Y[jf] > 0. ) )
+                continue;
+            if( pm.DUL[jf] < 1e6 || pm.DLL[jf] > 0. )
+                continue;
+            long int il = -1;
+            double cap = -1.;
+            for( long int i = 0; i < Zlim; i++ )
+            {   const double a = pm.A[i + jf*pm.N];
+                if( a > 0. && ( cap < 0. || pm.B[i] / a < cap ) ) { cap = pm.B[i] / a; il = i; } }
+            if( il < 0 || !( cap < AmountThreshold ) )
+                continue;
+            const double aS = pm.A[il + jf*pm.N];
+            // Every other holder of the IC must be a dilute species of a solution phase without constraints.
+            std::vector<double> inPh( (size_t)pm.FI, 0. );
+            bool ok = true;
+            for( long int j = 0; j < pm.L && ok; j++ )
+            {   const double a = pm.A[il + j*pm.N];
+                if( j == jf || a == 0. || !( pm.Y[j] > 0. ) ) continue;
+                const long int kj = phOf[(size_t)j];
+                ok = a > 0. && pm.L1[kj] > 1 && pm.PHC[kj] != PH_SORPTION && pm.PHC[kj] != PH_POLYEL
+                     && !( pm.DUL[j] < 1e6 ) && !( pm.DLL[j] > 0. );
+                inPh[(size_t)kj] += pm.Y[j]; }
+            // the phase totals from the current amounts: an earlier fill has already lowered some of them
+            std::fill( phY.begin(), phY.end(), 0. );
+            for( long int q = 0; q < pm.L; q++ ) phY[(size_t)phOf[(size_t)q]] += pm.Y[q];
+            for( long int k0 = 0; k0 < pm.FI && ok; k0++ )
+                ok = !( inPh[(size_t)k0] > 1e-6 * phY[(size_t)k0] );
+            if( !ok )
+                continue;
+            double freed = 0.;
+            for( long int j = 0; j < pm.L; j++ )
+            {   const double a = pm.A[il + j*pm.N];
+                if( j == jf || a == 0. || !( pm.Y[j] > 0. ) ) continue;
+                const double y = pm.Y[j] * exp( -lg_to_ln * pm.Falp[kf] * a / aS );
+                freed += a * ( pm.Y[j] - y );
+                pm.Y[j] = y; }
+            const double before = pm.Y[jf], dlg = pm.Falp[kf] / aS;
+            pm.Y[jf] = std::min( pm.Y[jf] + freed / aS, cap );
+            if( fillU.empty() )
+            {   fillU.assign( pm.U, pm.U + pm.N );
+                fillFalp.assign( pm.Falp, pm.Falp + pm.FI ); }
+            // The potential of the IC moves by the same step, and so does the saturation index of each pure phase with it.
+            pm.U[il] -= lg_to_ln * dlg;
+            {   long int j0 = 0;
+                for( long int k0 = 0; k0 < pm.FI; j0 += pm.L1[k0], k0++ )
+                    if( pm.L1[k0] == 1 ) pm.Falp[k0] -= pm.A[il + j0*pm.N] * dlg; }
+            NeedToImproveMassBalance = true;
+            native_trace_decide( "psscfilltrace phase=%s ic=%s logSI=%.6e from=%.6e to=%.6e",
+                                 char_array_to_string( pm.SF[kf], MAXPHNAME+MAXSYMB ).c_str(),
+                                 char_array_to_string( pm.SB[il], MAXICNAME ).c_str(), dlg * aS, before, pm.Y[jf] );
+        }
+    }
 
     STEP_POINT("PSSC()");
 
@@ -1625,8 +1922,27 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     {  // changes in Y vector are not accepted - restore (too many IPM loops)
        for(j=0;j<pm.L;j++)
           pm.Y[j]=pm.XY[j];
+       if( !fillU.empty() )
+       {   std::copy( fillU.begin(), fillU.end(), pm.U );
+           std::copy( fillFalp.begin(), fillFalp.end(), pm.Falp ); }
     }
     ipm_logger->debug("CleanupStatus= {}", CleanupStatus);
+    if( ntf )
+    {
+        // status: 1 = final and consistent; 0 = phases changed, another IPM loop; -1 = still
+        // inconsistent after 5 loops, and the Y changes are discarded (restored from pm.XY).
+        long int trNzeroTotal = 0;
+        for( long int jj = 0; jj < pm.L; jj++ )
+            if( pm.Y[jj] == 0. ) trNzeroTotal++;
+        fprintf( ntf, "PSSC  pass=%ld exit status=%ld cleanupStatus=%ld PHins=%ld PHrem=%ld"
+                      " DCins=%ld DCrem=%ld kfr=%ld kur=%ld MBviol=%d needMB=%d"
+                      " zeroDCnow=%ld of %ld reverted=%d\n",
+                 (long)trPass, (long)status, (long)CleanupStatus, (long)PHinserted,
+                 (long)PHremoved, (long)DCinserted, (long)DCremoved, (long)kfr, (long)kur,
+                 (int)MassBalanceViolation, (int)NeedToImproveMassBalance,
+                 (long)trNzeroTotal, (long)pm.L, (int)( status == -1L ) );
+        fflush( ntf );
+    }
     return status;
 }
 
@@ -1714,11 +2030,11 @@ else fRestore = true;
           }
 
           if( ln_ax_dual < -608.) {
-              gems_logger->warn("ln_ax_dual clamped for DC j={}: {:.6e} -> -608 (overflow guard in StabilityIndexes)", j, ln_ax_dual);
+              gems_logger->debug("Overflow guard: species {} (#{}): the exponent argument {:.3e} is outside the safe range of exp() and is limited to -608 (so exp() of it stays a finite, representable number)", char_array_to_string(pm.SM[j],MAXDCNAME), j, ln_ax_dual);
               ln_ax_dual = -608.;
           }
           else if(ln_ax_dual > 609.) {
-              gems_logger->warn("ln_ax_dual clamped for DC j={}: {:.6e} -> 609 (overflow guard in StabilityIndexes)", j, ln_ax_dual);
+              gems_logger->debug("Overflow guard: species {} (#{}): the exponent argument {:.3e} is outside the safe range of exp() and is limited to 609 (so exp() of it stays a finite, representable number)", char_array_to_string(pm.SM[j],MAXDCNAME), j, ln_ax_dual);
               ln_ax_dual = 609.;
           }
           /* For IEEE-compatible type double, overflow is guaranteed if 709.8 < arg, and underflow is guaranteed if arg < -708.4
@@ -1735,7 +2051,9 @@ else fRestore = true;
        if( fabs( logSI ) < log10( pm.DSM ) )
            logSI = 0.;
        pm.Falp[k] = logSI; // NormDoubleRound( logSI, 3 );
-       if( L1k > 1 && fRestore == false && YFk < pm.DSM )
+       // Cold start only: an absent mixture with no activity coefficients of its own is not
+       // inserted on a rough guess. A warm start keeps the real index, so it can come back.
+       if( L1k > 1 && fRestore == false && YFk < pm.DSM && !pm.pNP )
            pm.Falp[k] = -1.; // provisional - to indicate impossibility to restore
        jb += pm.L1[k];
     }  // for k
