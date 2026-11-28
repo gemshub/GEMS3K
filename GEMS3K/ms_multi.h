@@ -562,6 +562,9 @@ struct BASE_PARAM /// Flags and thresholds for numeric modules
     /// is solved again with the potentials of the other elements fixed, and kept only if G does not rise.
     /// 1e-5 = default; 0 = off.
     double TracePolish = 1e-5;
+    /// pa_IpmWarmAbsent: after a warm GEMS3K IPM call, an absent solid solution is checked with its exact stability
+    /// index; if it is supersaturated, the call is solved again cold. 1 = on (default), 0 = off.
+    long int IpmWarmAbsent = 1;
 
     void write(GemDataStream& oss);
     void read(GemDataStream& iss);
@@ -1402,6 +1405,10 @@ public:
     /// that phase lower than the answer by more than pa_IpmTwinSplit (RT per mole). Then the copies should
     /// split, and the warm answer is a saddle. Read-only.
     bool WarmTwinSplitCheck();
+    /// After a warm solve: the index of an absent solid solution that is supersaturated by its own exact
+    /// stability index (ReportAbsentPhaseIndexes()), or -1 if there is none.
+    /// The solve is then repeated from a cold start.
+    long int WarmAbsentSolutionCheck();
     /// The leveled solution: species Gibbs LP plus mixed phases at their best compositions,
     /// priced by a tangent-plane search (ipm_level.cpp). Used by the native start and by Optima.
     bool ColumnGenerationSeed( std::vector<double>& nOut, double tol );
@@ -2144,7 +2151,7 @@ typedef enum {  // Field index into outField structure
     f_pa_OptimaDryOut, f_pa_OptimaTailStop, f_pa_OptimaTailStopWarm, f_pa_OptimaTailDryOnly, f_pa_OptimaWaterKeep,
     f_pa_OptimaSnapLeaving, f_pa_OptimaPartialPivLU, f_pa_IpmQrSortPivot, f_pa_OptimaLSWarmTrials,
     f_pa_TpdStrongBasins, f_pa_IpmLevelStart, f_pa_OptimaFastAcceptCut, f_pa_OptimaLevelFinish, f_pa_IpmNoProgress, f_pa_OptimaFDPureSkip, f_pa_OptimaFinishStall,
-    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing, f_pa_IpmBalanceStep, f_pa_PsscCleanupBudget, f_pa_DcMinMolecule, f_pa_IpmJumpAhead, f_pa_OptimaJumpAhead, f_pa_TracePolish
+    f_pa_OptimaTraceRespread, f_pa_FailRescue, f_pa_RescueWalkSteps, f_pa_RescueBudget, f_pa_OptimaStallNetFactor, f_pa_IpmTwinSplit, f_pa_OptimaTwinLabel, f_pa_PhaseSmoothing, f_pa_IpmBalanceStep, f_pa_PsscCleanupBudget, f_pa_DcMinMolecule, f_pa_IpmJumpAhead, f_pa_OptimaJumpAhead, f_pa_TracePolish, f_pa_IpmWarmAbsent
 
 } MULTI_DYNAMIC_FIELDS;
 

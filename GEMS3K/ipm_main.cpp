@@ -456,7 +456,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              " pa_OptimaLineSearch=%.6e pa_OptimaFDDiagFloor=%ld"
              " pa_OptimaLSStallEscape=%ld pa_OptimaLSWindow=%ld pa_OptimaLSRejectWorse=%ld"
              " pa_OptimaTpdAccept=%.6e pa_OptimaCgSeed=%.6e pa_OptimaColdRetry=%ld pa_OptimaFinish=%ld pa_OptimaAcceptRepair=%ld pa_NativeOptimaFinish=%ld pa_OptimaCollapseCheck=%ld"
-             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld pa_IpmTwinSplit=%g pa_OptimaTwinLabel=%ld pa_PhaseSmoothing=%ld pa_IpmBalanceStep=%ld pa_PsscCleanupBudget=%ld pa_DcMinMolecule=%ld pa_IpmJumpAhead=%ld pa_OptimaJumpAhead=%ld pa_TracePolish=%g\n",
+             " pa_OptimaFastFirst=%ld pa_OptimaFloorCurvature=%ld pa_OptimaEmptySolvent=%ld pa_OptimaTpdVeto=%ld pa_OptimaEmptyPreSolveSkip=%ld pa_OptimaTwinReadmit=%ld pa_OptimaDryRetry=%ld pa_OptimaCallCap=%ld pa_OptimaCapNudges=%ld pa_OptimaFinishFirst=%ld pa_OptimaFastFrozen=%ld pa_OptimaFastDiverge=%g pa_OptimaRedoxFree=%ld pa_OptimaFastRises=%ld pa_OptimaPreSolveSeed=%ld pa_OptimaColdLevel=%ld pa_OptimaLevelStart=%ld pa_OptimaFastCollapse=%ld pa_OptimaFrozenCut=%ld pa_OptimaDryOut=%ld pa_OptimaTailStop=%ld pa_OptimaTailStopWarm=%ld pa_OptimaTailDryOnly=%ld pa_OptimaWaterKeep=%ld pa_OptimaSnapLeaving=%ld pa_OptimaPartialPivLU=%ld pa_IpmQrSortPivot=%ld pa_OptimaLSWarmTrials=%ld pa_TpdStrongBasins=%ld pa_IpmLevelStart=%ld pa_OptimaFastAcceptCut=%ld pa_OptimaLevelFinish=%ld pa_IpmNoProgress=%ld pa_OptimaFDPureSkip=%ld pa_OptimaFinishStall=%ld pa_OptimaTraceRespread=%ld pa_FailRescue=%ld pa_RescueWalkSteps=%ld pa_RescueBudget=%ld pa_OptimaStallNetFactor=%ld pa_IpmTwinSplit=%g pa_OptimaTwinLabel=%ld pa_PhaseSmoothing=%ld pa_IpmBalanceStep=%ld pa_PsscCleanupBudget=%ld pa_DcMinMolecule=%ld pa_IpmJumpAhead=%ld pa_OptimaJumpAhead=%ld pa_TracePolish=%g pa_IpmWarmAbsent=%ld\n",
              (int)pa->PC, (int)pa->PD, (int)pa->PRD, (int)pa->PSM, (int)pa->DP,
              (int)pa->DW, (int)pa->DT, (int)pa->PLLG, (int)pa->PE, (int)pa->IIM,
              pa->DG, pa->DHB, pa->DS, pa->DK, pa->DF, pa->DFM,
@@ -487,7 +487,7 @@ void native_trace_run_header( const MULTI& pm, const BASE_PARAM* pa, long int mo
              (long)pa->OptimaPreSolveSeed, (long)pa->OptimaColdLevel, (long)pa->OptimaLevelStart,
              (long)pa->OptimaFastCollapse, (long)pa->OptimaFrozenCut, (long)pa->OptimaDryOut, (long)pa->OptimaTailStop,
              (long)pa->OptimaTailStopWarm, (long)pa->OptimaTailDryOnly, (long)pa->OptimaWaterKeep, (long)pa->OptimaSnapLeaving, (long)pa->OptimaPartialPivLU, (long)pa->IpmQrSortPivot, (long)pa->OptimaLSWarmTrials,
-             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor, pa->IpmTwinSplit, (long)pa->OptimaTwinLabel, (long)pa->PhaseSmoothing, (long)pa->IpmBalanceStep, (long)pa->PsscCleanupBudget, (long)pa->DcMinMolecule, (long)pa->IpmJumpAhead, (long)pa->OptimaJumpAhead, pa->TracePolish );
+             (long)pa->TpdStrongBasins, (long)pa->IpmLevelStart, (long)pa->OptimaFastAcceptCut, (long)pa->OptimaLevelFinish, (long)pa->IpmNoProgress, (long)pa->OptimaFDPureSkip, (long)pa->OptimaFinishStall, (long)pa->OptimaTraceRespread, (long)pa->FailRescue, (long)pa->RescueWalkSteps, (long)pa->RescueBudget, (long)pa->OptimaStallNetFactor, pa->IpmTwinSplit, (long)pa->OptimaTwinLabel, (long)pa->PhaseSmoothing, (long)pa->IpmBalanceStep, (long)pa->PsscCleanupBudget, (long)pa->DcMinMolecule, (long)pa->IpmJumpAhead, (long)pa->OptimaJumpAhead, pa->TracePolish, (long)pa->IpmWarmAbsent );
 
     // ---- EFF: the effective value of every auto-gated setting -------------
     // The SET line is literal (what the project file carries). For a three-valued field a
@@ -1541,6 +1541,36 @@ std::vector<char> TMultiBase::PhaseHessianTwins() const
             if( rows[(size_t)a].size() > 1 && rows[(size_t)a] == rows[(size_t)b] )
                 twin[(size_t)a] = twin[(size_t)b] = 1;
     return twin;
+}
+
+long int TMultiBase::WarmAbsentSolutionCheck()
+{
+    if( base_param()->IpmWarmAbsent <= 0 || !pm.Falp || !pm.XF || !pm.L1 )
+        return -1;
+    // the rough index used by phase selection can call a non-ideal solution unstable when both end members are
+    // absent; the exact index from the phase's own best composition decides here
+    if( ReportAbsentPhaseIndexes() <= 0 )
+        return -1;
+    long int kWorst = -1;
+    double worst = base_param()->DF;
+    for( long int k = 0, p0 = 0; k < pm.FIs; p0 += pm.L1[k], k++ )
+    {
+        if( !( pm.L1[k] > 1 && pm.XF[k] <= pm.DSM && pm.Falp[k] > worst ) )
+            continue;
+        // a phase whose members are all held at their upper limits cannot form, whatever its index says
+        bool canGrow = !pm.DUL;
+        for( long int j = p0; j < p0 + pm.L1[k] && !canGrow; j++ )
+            canGrow = pm.DUL[j] > pm.X[j] * ( 1. + 1e-9 );
+        if( canGrow )
+        { worst = pm.Falp[k]; kWorst = k; }
+    }
+    if( kWorst < 0 )
+        return -1;
+    native_trace_decide( "warmabsentsolution phase=%s index=%.4g df=%.3g",
+                         trace_safe_name( char_array_to_string( pm.SF[kWorst] + MAXSYMB, MAXPHNAME ) ).c_str(), worst, base_param()->DF );
+    ipm_logger->debug( "Warm start: the absent phase {} is supersaturated (stability index {:.3g}); solved again from a cold start",
+                       char_array_to_string( pm.SF[kWorst] + MAXSYMB, MAXPHNAME ), worst );
+    return kWorst;
 }
 
 bool TMultiBase::WarmTwinSplitCheck()
@@ -3692,6 +3722,9 @@ FORCED_AIA:
    // pa_IpmTwinSplit: two copies of a solid solution left at one composition where they should split
    // (a warm start keeps them equal): solve again from a cold start
    if( pm.MK != 2 && pm.pNP && IAstatus == false && WarmTwinSplitCheck() )
+       pm.MK = 2;
+   // an absent solid solution that its own exact index calls supersaturated: solve again from a cold start
+   if( pm.MK != 2 && pm.pNP && IAstatus == false && WarmAbsentSolutionCheck() >= 0 )
        pm.MK = 2;
    // testing results
    if( pm.MK == 2 )
