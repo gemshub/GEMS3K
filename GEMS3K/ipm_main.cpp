@@ -1549,8 +1549,8 @@ long int TMultiBase::WarmAbsentSolutionCheck()
         return -1;
     // the rough index used by phase selection can call a non-ideal solution unstable when both end members are
     // absent; the exact index from the phase's own best composition decides here
-    if( ReportAbsentPhaseIndexes() <= 0 )
-        return -1;
+    // a zero count means only that no index needed a new value; the scan below still reads them all
+    ReportAbsentPhaseIndexes();
     long int kWorst = -1;
     double worst = base_param()->DF;
     for( long int k = 0, p0 = 0; k < pm.FIs; p0 += pm.L1[k], k++ )
@@ -3148,6 +3148,7 @@ void TMultiBase::ActivityConsistencyCheck()
     const double mMin = 1e-13;    // molality below which a species is not checked
     long int nFound = 0, jWorst = -1;
     double worst = 0.;
+    std::vector<long int> counted;   // every species that differs by more than tol
     for( long int j = 0; j < pm.L1[0] && j < pm.L; j++ )
     {
         if( j == pm.LO || pm.DCC[j] == DC_AQ_SOLVENT || pm.DCC[j] == DC_AQ_SOLVCOM || pm.DCC[j] == DC_AQ_ELECTRON || !( pm.X[j] > 0. ) || !( pm.Y_m[j] > mMin ) || !( pm.Gamma[j] > 0. ) )
@@ -3157,6 +3158,7 @@ void TMultiBase::ActivityConsistencyCheck()
         const double dev = fabs( log10( pm.Y_m[j] * pm.Gamma[j] ) - pm.Y_la[j] );
         if( !( dev > tol ) ) continue;
         nFound++;
+        counted.push_back( j );
         if( dev > worst ) { worst = dev; jWorst = j; }
     }
     if( nFound == 0 )
@@ -3165,15 +3167,24 @@ void TMultiBase::ActivityConsistencyCheck()
     native_trace_decide( "actconsist species=%ld worst=%.3e name=%s tol=%.1e", (long)nFound, worst, name.c_str(), tol );
     // When nothing in the bulk fixes the redox level, the energy does not fix the activity of a species such as H2 or O2.
     // Only the text changes: the Optima finish still runs.
-    bool redoxNote = false;
+    bool redoxNote = false;    // the worst species is not determined by the energy
+    bool anyFixed = true;      // some species that differs is determined by the energy
 #ifdef USE_OPTIMA_SOLVER
     if( optima_control_conditions.empty() )
     {
         const RedoxFreeCheck rf = CheckRedoxFree();
-        const double e = RedoxShift( rf, jWorst );
-        redoxNote = !std::isnan( e ) && fabs( e ) > 1e-6;
-        if( redoxNote )
-            native_trace_decide( "actconsist-redoxfree name=%s shift=%g", name.c_str(), e );
+        anyFixed = false;
+        for( long int j : counted )
+        {
+            const double e = RedoxShift( rf, j );
+            const bool free = !std::isnan( e ) && fabs( e ) > 1e-6;
+            if( j == jWorst && free )
+            {
+                redoxNote = true;
+                native_trace_decide( "actconsist-redoxfree name=%s shift=%g", name.c_str(), e );
+            }
+            if( !free ) anyFixed = true;
+        }
     }
 #endif
     const std::string more = nFound > 1 ? fmt::format( " ({} dissolved species differ by more than {})", nFound, tol ) : std::string();
@@ -3185,9 +3196,9 @@ void TMultiBase::ActivityConsistencyCheck()
                        "so the result may stop short of equilibrium. Try HOP or AOP for this system.", name, worst, more );
     trace_growth_note = trace_growth_stuck ? trace_growth_note + " " + note : note;
     activity_mismatch = true;
-    // On an undetermined redox level the energy cannot rank two answers, so the Optima finish cannot improve this one:
-    // only the warning is given (owner decision 2026-11-25: either answer is correct).
-    if( !redoxNote )
+    // When every species that differs is set only by an undetermined redox level, the energy cannot rank two answers,
+    // so the Optima finish cannot improve this one: only the warning is given.
+    if( anyFixed )
         trace_growth_stuck = true;
 #ifdef USE_OPTIMA_SOLVER
     // The Optima finish reports instead; it does not run when a pH or Eh target is set.
