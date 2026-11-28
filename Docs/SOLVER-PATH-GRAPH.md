@@ -90,14 +90,18 @@ The GEMS3K IPM solver runs in AIA and SIA. It also runs as the first part of HOP
    - The descent can stop at its iteration limit. It can also stop when it cannot solve its equations.
      Then Optima finishes the result from that point.
    - The amount of a dissolved species can disagree with its activity. Then Optima also finishes the result.
+     If only species that depend on an undetermined redox level disagree, there is no finish, only a warning.
      If GEMS3K does not keep the Optima result, it puts back the result of the GEMS3K IPM solver.
      If the activity check started the finish, GEMS3K also puts back the full solver state, so a later warm start is the same.
 
 **Restarts in the solver.**
 - If a warm start (SIA) fails in one of these steps, the solver makes a new cold start in the same call.
   The status shows AIA.
-- A warm start (SIA) also makes a new cold start in two more cases. An element has no species with an amount above 0.
-  Or the result keeps a species of a present solution at 0 mol, but the species must form.
+- A warm start (SIA) also makes a new cold start in four more cases:
+  - An element has no species with an amount above 0.
+  - The result keeps a species of a present solution at 0 mol, but the species must form.
+  - Two copies of one solid solution keep one composition, but they must split (`pa_IpmTwinSplit`).
+  - A solid solution is absent, but its stability index shows that it must form (`pa_IpmWarmAbsent`).
 - If a cold start fails because the numbers grow without limit, the solver starts again one more
   time. It uses a simpler phase check. Then it stops.
 

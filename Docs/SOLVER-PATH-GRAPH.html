@@ -311,9 +311,15 @@ figcaption{font-size:.84rem;color:var(--ink-3);margin-top:.8rem;max-width:74ch}
       result but still tend to form. Then Optima finishes the result. GEMS3K keeps the new result only if it is better.
       The descent can stop at its iteration limit, or it can fail to solve its equations. Then Optima finishes the result
       from that point. The amount of a dissolved species can disagree with its activity. Then Optima also finishes
-      the result. If GEMS3K does not keep the Optima result, it puts back the result of the GEMS3K IPM solver.
+      the result. If only species that depend on an undetermined redox level disagree, there is no finish, only a warning.
+      If GEMS3K does not keep the Optima result, it puts back the result of the GEMS3K IPM solver.
       If the activity check started the finish, GEMS3K also puts back the full solver state, so a later warm start is the same.</li>
   </ol>
+  <p>A warm start (SIA) makes a new cold start in the same call when one of these steps fails. It also makes a new cold
+  start in four more cases: an element has no species with an amount above 0; the result keeps a species of a present
+  solution at 0 mol, but the species must form; two copies of one solid solution keep one composition, but they must
+  split (<code>pa_IpmTwinSplit</code>); a solid solution is absent, but its stability index shows that it must form
+  (<code>pa_IpmWarmAbsent</code>). The status then shows AIA.</p>
   <p>A cold start can fail because the numbers grow without limit. Then the solver starts again one more time.
   It uses a simpler phase check. Then it stops.</p>
 </section>
