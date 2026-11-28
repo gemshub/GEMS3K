@@ -31,7 +31,7 @@ if(USE_OPTIMA_SOLVER)
   unset(CMAKE_REQUIRED_LIBRARIES)
   if(NOT GEMS3K_OPTIMA_IS_MODIFIED)
     message(FATAL_ERROR "The Optima found in ${Optima_DIR} does not have Optima/Trace.hpp or Options::jumpahead. "
-                        "Use the modified Optima of gemshub (branch optima_develop3).")
+                        "Use the modified Optima of gemshub: https://github.com/gemshub/optima, branch optima_develop.")
   endif()
 endif()
 find_package(Eigen3 REQUIRED NO_MODULE)
